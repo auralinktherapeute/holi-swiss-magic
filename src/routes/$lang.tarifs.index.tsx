@@ -88,7 +88,7 @@ function PricingPage() {
         </div>
 
         {/* Plans grid */}
-        <div className="mt-10 grid gap-5 lg:grid-cols-3 lg:gap-6">
+        <div className="mx-auto mt-10 grid max-w-5xl gap-5 lg:grid-cols-3 lg:gap-6">
           {plans.map((p) => {
             const Icon = p.icon;
             const isHighlight = p.highlight;
