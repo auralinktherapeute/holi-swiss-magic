@@ -13,6 +13,14 @@ import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
+import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
+import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
+import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
+import { Route as LangContactIndexRouteImport } from './routes/$lang.contact.index'
+import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion.index'
+import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
+import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
+import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 
 const LangRoute = LangRouteImport.update({
   id: '/$lang',
@@ -34,16 +42,72 @@ const LangTherapeutesIndexRoute = LangTherapeutesIndexRouteImport.update({
   path: '/therapeutes/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangTarifsIndexRoute = LangTarifsIndexRouteImport.update({
+  id: '/tarifs/',
+  path: '/tarifs/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
+  id: '/inscription/',
+  path: '/inscription/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangEvenementsIndexRoute = LangEvenementsIndexRouteImport.update({
+  id: '/evenements/',
+  path: '/evenements/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangContactIndexRoute = LangContactIndexRouteImport.update({
+  id: '/contact/',
+  path: '/contact/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangConnexionIndexRoute = LangConnexionIndexRouteImport.update({
+  id: '/connexion/',
+  path: '/connexion/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangTherapeuteSlugRoute = LangTherapeuteSlugRouteImport.update({
+  id: '/therapeute/$slug',
+  path: '/therapeute/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
   '/$lang/': typeof LangIndexRoute
+  '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/$lang/blog/': typeof LangBlogIndexRoute
+  '/$lang/connexion/': typeof LangConnexionIndexRoute
+  '/$lang/contact/': typeof LangContactIndexRoute
+  '/$lang/evenements/': typeof LangEvenementsIndexRoute
+  '/$lang/inscription/': typeof LangInscriptionIndexRoute
+  '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lang': typeof LangIndexRoute
+  '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/$lang/blog': typeof LangBlogIndexRoute
+  '/$lang/connexion': typeof LangConnexionIndexRoute
+  '/$lang/contact': typeof LangContactIndexRoute
+  '/$lang/evenements': typeof LangEvenementsIndexRoute
+  '/$lang/inscription': typeof LangInscriptionIndexRoute
+  '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
 }
 export interface FileRoutesById {
@@ -51,14 +115,58 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
   '/$lang/': typeof LangIndexRoute
+  '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/$lang/blog/': typeof LangBlogIndexRoute
+  '/$lang/connexion/': typeof LangConnexionIndexRoute
+  '/$lang/contact/': typeof LangContactIndexRoute
+  '/$lang/evenements/': typeof LangEvenementsIndexRoute
+  '/$lang/inscription/': typeof LangInscriptionIndexRoute
+  '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$lang' | '/$lang/' | '/$lang/therapeutes/'
+  fullPaths:
+    | '/'
+    | '/$lang'
+    | '/$lang/'
+    | '/$lang/blog/$slug'
+    | '/$lang/therapeute/$slug'
+    | '/$lang/blog/'
+    | '/$lang/connexion/'
+    | '/$lang/contact/'
+    | '/$lang/evenements/'
+    | '/$lang/inscription/'
+    | '/$lang/tarifs/'
+    | '/$lang/therapeutes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lang' | '/$lang/therapeutes'
-  id: '__root__' | '/' | '/$lang' | '/$lang/' | '/$lang/therapeutes/'
+  to:
+    | '/'
+    | '/$lang'
+    | '/$lang/blog/$slug'
+    | '/$lang/therapeute/$slug'
+    | '/$lang/blog'
+    | '/$lang/connexion'
+    | '/$lang/contact'
+    | '/$lang/evenements'
+    | '/$lang/inscription'
+    | '/$lang/tarifs'
+    | '/$lang/therapeutes'
+  id:
+    | '__root__'
+    | '/'
+    | '/$lang'
+    | '/$lang/'
+    | '/$lang/blog/$slug'
+    | '/$lang/therapeute/$slug'
+    | '/$lang/blog/'
+    | '/$lang/connexion/'
+    | '/$lang/contact/'
+    | '/$lang/evenements/'
+    | '/$lang/inscription/'
+    | '/$lang/tarifs/'
+    | '/$lang/therapeutes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -96,16 +204,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTherapeutesIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/tarifs/': {
+      id: '/$lang/tarifs/'
+      path: '/tarifs'
+      fullPath: '/$lang/tarifs/'
+      preLoaderRoute: typeof LangTarifsIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/inscription/': {
+      id: '/$lang/inscription/'
+      path: '/inscription'
+      fullPath: '/$lang/inscription/'
+      preLoaderRoute: typeof LangInscriptionIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/evenements/': {
+      id: '/$lang/evenements/'
+      path: '/evenements'
+      fullPath: '/$lang/evenements/'
+      preLoaderRoute: typeof LangEvenementsIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/contact/': {
+      id: '/$lang/contact/'
+      path: '/contact'
+      fullPath: '/$lang/contact/'
+      preLoaderRoute: typeof LangContactIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/connexion/': {
+      id: '/$lang/connexion/'
+      path: '/connexion'
+      fullPath: '/$lang/connexion/'
+      preLoaderRoute: typeof LangConnexionIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/blog/': {
+      id: '/$lang/blog/'
+      path: '/blog'
+      fullPath: '/$lang/blog/'
+      preLoaderRoute: typeof LangBlogIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/therapeute/$slug': {
+      id: '/$lang/therapeute/$slug'
+      path: '/therapeute/$slug'
+      fullPath: '/$lang/therapeute/$slug'
+      preLoaderRoute: typeof LangTherapeuteSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/blog/$slug': {
+      id: '/$lang/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/$lang/blog/$slug'
+      preLoaderRoute: typeof LangBlogSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
   }
 }
 
 interface LangRouteChildren {
   LangIndexRoute: typeof LangIndexRoute
+  LangBlogSlugRoute: typeof LangBlogSlugRoute
+  LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
+  LangBlogIndexRoute: typeof LangBlogIndexRoute
+  LangConnexionIndexRoute: typeof LangConnexionIndexRoute
+  LangContactIndexRoute: typeof LangContactIndexRoute
+  LangEvenementsIndexRoute: typeof LangEvenementsIndexRoute
+  LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
+  LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
   LangIndexRoute: LangIndexRoute,
+  LangBlogSlugRoute: LangBlogSlugRoute,
+  LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
+  LangBlogIndexRoute: LangBlogIndexRoute,
+  LangConnexionIndexRoute: LangConnexionIndexRoute,
+  LangContactIndexRoute: LangContactIndexRoute,
+  LangEvenementsIndexRoute: LangEvenementsIndexRoute,
+  LangInscriptionIndexRoute: LangInscriptionIndexRoute,
+  LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
 }
 
