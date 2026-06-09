@@ -6,6 +6,7 @@ export interface Database {
       therapists: {
         Row: {
           id: string;
+          user_id: string | null;
           slug: string;
           display_name: string;
           bio: string | null;
