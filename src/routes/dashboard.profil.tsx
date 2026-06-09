@@ -103,7 +103,11 @@ function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase.from("therapists").select(THERAPIST_PROFILE_SELECT).eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase
+        .from("therapists")
+        .select(THERAPIST_PROFILE_SELECT)
+        .eq("user_id", user.id)
+        .maybeSingle() as any;
       if (data) {
         setRowId(data.id);
         setPhotoUrl(data.photo_url ?? "");
@@ -245,7 +249,6 @@ function ProfilePage() {
       bio: bio || null,
       google_reviews_url: googleReviewsUrl || null,
       website: website || null,
-      ide: ide || null,
       accreditations,
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
@@ -254,6 +257,15 @@ function ProfilePage() {
       : await supabase.from("therapists").insert(payload).select("id").maybeSingle();
     setSaving(false);
     if (error) return toast.error(t("profile_edit.save_error") + " — " + error.message);
+    const savedRowId = rowId ?? data?.id;
+    if (savedRowId) {
+      const { error: privateError } = await (supabase.from("therapist_private_identifiers" as any) as any)
+        .upsert(
+          { therapist_id: savedRowId, user_id: user.id, ide: ide || null },
+          { onConflict: "therapist_id" },
+        );
+      if (privateError) return toast.error(t("profile_edit.save_error") + " — " + privateError.message);
+    }
     if (data && !rowId) setRowId(data.id);
     setDirty(false);
     toast.success(t("profile_edit.saved_toast"));
