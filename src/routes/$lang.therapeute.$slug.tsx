@@ -125,6 +125,21 @@ function Page() {
             )}
           </div>
 
+          {Array.isArray((th as any).accreditations) && (th as any).accreditations.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {((th as any).accreditations as { org: string; number?: string }[]).map((a) => (
+                <span
+                  key={a.org}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                  title={a.number ? `N° ${a.number}` : undefined}
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  {t("profile_edit.approved_by")} {a.org}
+                </span>
+              ))}
+            </div>
+          )}
+
           {th.bio && <p className="mt-6 whitespace-pre-line text-foreground/80">{th.bio}</p>}
 
           {th.price_min != null && (

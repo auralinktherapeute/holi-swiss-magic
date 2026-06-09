@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
-  FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check,
+  FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check, BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   CANTONS, SPOKEN_LANGUAGES, THERAPY_SPECIALTIES, type TherapistService,
+  ACCREDITATION_ORGS, type Accreditation, normalizeSwissIde,
 } from "@/lib/constants";
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -78,9 +79,13 @@ function ProfilePage() {
   const [website, setWebsite] = useState("");
 
   // SIRET
-  const [siret, setSiret] = useState("");
-  const [siretVerified, setSiretVerified] = useState(false);
-  const [showSiret, setShowSiret] = useState(false);
+  // Swiss IDE / UID (CHE-XXX.XXX.XXX)
+  const [ide, setIde] = useState("");
+  const [ideVerified, setIdeVerified] = useState(false);
+  const [showIde, setShowIde] = useState(false);
+
+  // Accreditations (ASCA, RME, OrTra TC, ...)
+  const [accreditations, setAccreditations] = useState<Accreditation[]>([]);
 
   // Documents
   const [documents, setDocuments] = useState<DocRow[]>([]);
@@ -114,8 +119,9 @@ function ProfilePage() {
         setBio(data.bio ?? "");
         setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
         setWebsite(data.website ?? "");
-        setSiret((data as any).siret ?? "");
-        setSiretVerified((data as any).siret_verified ?? false);
+        setIde((data as any).ide ?? "");
+        setIdeVerified((data as any).ide_verified ?? false);
+        setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
 
         const { data: docs } = await supabase
           .from("therapist_documents" as any)
@@ -226,8 +232,9 @@ function ProfilePage() {
       bio: bio || null,
       google_reviews_url: googleReviewsUrl || null,
       website: website || null,
-      siret: siret || null,
-      siret_verified: siretVerified,
+      ide: ide || null,
+      ide_verified: ideVerified,
+      accreditations,
       status: "active",
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
@@ -241,10 +248,31 @@ function ProfilePage() {
     toast.success(t("profile_edit.saved_toast"));
   };
 
-  const verifySiret = () => {
-    const digits = siret.replace(/\D/g, "");
-    if (digits.length === 14) { setSiretVerified(true); markDirty(); toast.success(t("profile_edit.siret_active")); }
-    else toast.error("SIRET 14 chiffres requis");
+  const verifyIde = () => {
+    const normalized = normalizeSwissIde(ide);
+    if (!normalized) {
+      toast.error(t("profile_edit.ide_invalid"));
+      return;
+    }
+    setIde(normalized);
+    setIdeVerified(true);
+    markDirty();
+    toast.success(t("profile_edit.ide_active"));
+    // Open official UID register so user can confirm publicly
+    window.open(`https://www.uid.admin.ch/Search.aspx?uid_id=${normalized}`, "_blank", "noopener");
+  };
+
+  const toggleAccreditation = (code: string) => {
+    setAccreditations((prev) =>
+      prev.find((a) => a.org === code)
+        ? prev.filter((a) => a.org !== code)
+        : [...prev, { org: code, number: "" }],
+    );
+    markDirty();
+  };
+  const updateAccreditationNumber = (code: string, number: string) => {
+    setAccreditations((prev) => prev.map((a) => (a.org === code ? { ...a, number } : a)));
+    markDirty();
   };
 
   if (loading) {
@@ -526,34 +554,90 @@ function ProfilePage() {
           <Field label={
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[#b86ef9]" />
-              <span className="font-semibold text-white">{t("profile_edit.siret_label")}</span>
-              <span className="text-xs font-normal text-[#a89bc4]">{t("profile_edit.siret_visibility")}</span>
+              <span className="font-semibold text-white">{t("profile_edit.ide_label")}</span>
+              <span className="text-xs font-normal text-[#a89bc4]">{t("profile_edit.ide_visibility")}</span>
             </span>
           }>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Input
-                  type={showSiret ? "text" : "password"}
-                  value={siret}
-                  onChange={(e) => { setSiret(e.target.value); setSiretVerified(false); markDirty(); }}
+                  type={showIde ? "text" : "password"}
+                  value={ide}
+                  placeholder="CHE-123.456.789"
+                  onChange={(e) => { setIde(e.target.value); setIdeVerified(false); markDirty(); }}
                   className={`${inputClass} pr-10`}
                 />
-                <button type="button" onClick={() => setShowSiret((v) => !v)}
+                <button type="button" onClick={() => setShowIde((v: boolean) => !v)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-[#a89bc4] hover:bg-white/5">
-                  {showSiret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showIde ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <Button type="button" onClick={verifySiret} variant="outline"
+              <Button type="button" onClick={verifyIde} variant="outline"
                 className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
-                {t("profile_edit.siret_verify")}
+                {t("profile_edit.ide_verify")}
               </Button>
             </div>
-            <p className="mt-2 text-xs text-[#a89bc4]">{t("profile_edit.siret_helper")}</p>
-            {siretVerified && (
+            <p className="mt-2 text-xs text-[#a89bc4]">{t("profile_edit.ide_helper")}</p>
+            {ideVerified && (
               <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#10b981]/30 bg-[#10b981]/10 px-4 py-2.5 text-sm text-[#86efac]">
-                <ShieldCheck className="h-4 w-4" />{t("profile_edit.siret_active")}
+                <ShieldCheck className="h-4 w-4" />{t("profile_edit.ide_active")}
               </div>
             )}
+          </Field>
+
+          <Divider />
+
+          {/* Accreditations */}
+          <Field label={
+            <span className="inline-flex items-center gap-2">
+              <BadgeCheck className="h-4 w-4 text-[#b86ef9]" />
+              <span className="font-semibold text-white">{t("profile_edit.accreditations_label")}</span>
+            </span>
+          }>
+            <p className="mb-3 text-xs text-[#a89bc4]">{t("profile_edit.accreditations_helper")}</p>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {ACCREDITATION_ORGS.map((org) => {
+                const sel = accreditations.find((a) => a.org === org.code);
+                const active = !!sel;
+                return (
+                  <div
+                    key={org.code}
+                    className={`rounded-xl border p-3 transition ${
+                      active
+                        ? "border-[#b86ef9] bg-[#b86ef9]/10"
+                        : "border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.4)]"
+                    }`}
+                  >
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleAccreditation(org.code)}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition ${
+                          active
+                            ? "border-[#b86ef9] bg-[#b86ef9] text-white"
+                            : "border-[#b86ef9]/40 bg-transparent"
+                        }`}
+                        aria-label={org.label}
+                      >
+                        {active && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                      <div className="flex-1">
+                        <div className="font-semibold text-white">{org.label}</div>
+                        <div className="text-xs text-[#a89bc4]">{org.description}</div>
+                      </div>
+                    </label>
+                    {active && (
+                      <Input
+                        value={sel?.number ?? ""}
+                        onChange={(e) => updateAccreditationNumber(org.code, e.target.value)}
+                        placeholder={t("profile_edit.accreditation_number_placeholder")}
+                        className={`${inputClass} mt-3`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Field>
 
           {!dirty && (

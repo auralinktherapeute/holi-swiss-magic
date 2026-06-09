@@ -180,6 +180,7 @@ export type Database = {
       }
       therapists: {
         Row: {
+          accreditations: Json
           address: string | null
           approaches: string[] | null
           bio: string | null
@@ -193,6 +194,8 @@ export type Database = {
           first_name: string
           google_reviews_url: string | null
           id: string
+          ide: string | null
+          ide_verified: boolean
           insurance_accepted: boolean | null
           languages: string[] | null
           last_name: string
@@ -220,6 +223,7 @@ export type Database = {
           years_experience: number | null
         }
         Insert: {
+          accreditations?: Json
           address?: string | null
           approaches?: string[] | null
           bio?: string | null
@@ -233,6 +237,8 @@ export type Database = {
           first_name: string
           google_reviews_url?: string | null
           id?: string
+          ide?: string | null
+          ide_verified?: boolean
           insurance_accepted?: boolean | null
           languages?: string[] | null
           last_name: string
@@ -260,6 +266,7 @@ export type Database = {
           years_experience?: number | null
         }
         Update: {
+          accreditations?: Json
           address?: string | null
           approaches?: string[] | null
           bio?: string | null
@@ -273,6 +280,8 @@ export type Database = {
           first_name?: string
           google_reviews_url?: string | null
           id?: string
+          ide?: string | null
+          ide_verified?: boolean
           insurance_accepted?: boolean | null
           languages?: string[] | null
           last_name?: string
