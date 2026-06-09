@@ -75,40 +75,40 @@ function PricingPage() {
         <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-[#f0b429]/10 blur-[100px]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Hero */}
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#b86ef9]/30 bg-[#b86ef9]/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#d4a5f9]">
             <Sparkles className="h-3 w-3" /> Tarifs Thérapeutes
           </span>
-          <h1 className="mt-6 font-serif text-5xl font-bold tracking-tight text-white sm:text-6xl">
+          <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight text-white sm:text-5xl">
             Choisissez votre <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#f0b429] bg-clip-text text-transparent">formule premium</span>
           </h1>
-          <p className="mt-5 text-lg text-[#d4c4e0]">
+          <p className="mt-3 text-base text-[#d4c4e0]">
             Une plateforme pensée pour mettre en valeur votre pratique et développer votre clientèle partout en Suisse.
           </p>
         </div>
 
         {/* Plans grid */}
-        <div className="mt-16 grid gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="mt-10 grid gap-5 lg:grid-cols-3 lg:gap-6">
           {plans.map((p) => {
             const Icon = p.icon;
             const isHighlight = p.highlight;
             return (
               <div
                 key={p.key}
-                className={`group relative flex flex-col rounded-3xl p-8 transition-all duration-300 ${
+                className={`group relative flex flex-col rounded-2xl p-6 transition-all duration-300 ${
                   isHighlight
-                    ? "border-2 border-[#b86ef9] bg-gradient-to-b from-[#3d1a5c] to-[#2a1142] shadow-[0_0_60px_rgba(184,110,249,0.35)] lg:scale-[1.04]"
+                    ? "border-2 border-[#b86ef9] bg-gradient-to-b from-[#3d1a5c] to-[#2a1142] shadow-[0_0_40px_rgba(184,110,249,0.35)]"
                     : p.key === "elite"
-                    ? "border border-[#f0b429]/40 bg-gradient-to-b from-[#2a1142] to-[#1a0a2e] shadow-[0_0_40px_rgba(240,180,41,0.15)] hover:border-[#f0b429]/70"
+                    ? "border border-[#f0b429]/40 bg-gradient-to-b from-[#2a1142] to-[#1a0a2e] shadow-[0_0_30px_rgba(240,180,41,0.15)] hover:border-[#f0b429]/70"
                     : "border border-[#b86ef9]/20 bg-[#2a1142]/60 backdrop-blur hover:border-[#b86ef9]/40"
                 }`}
               >
                 {p.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1 text-[10px] font-bold uppercase tracking-widest shadow-lg ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest shadow-lg ${
                         isHighlight
                           ? "bg-gradient-to-r from-[#b86ef9] to-[#9b4ddc] text-white"
                           : "bg-gradient-to-r from-[#f0b429] to-[#e08a00] text-[#1a0a2e]"
@@ -121,51 +121,51 @@ function PricingPage() {
 
                 {/* Icon */}
                 <div
-                  className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+                  className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${
                     p.key === "elite"
                       ? "bg-gradient-to-br from-[#f0b429]/30 to-[#e08a00]/20 ring-1 ring-[#f0b429]/40"
                       : "bg-gradient-to-br from-[#b86ef9]/30 to-[#5cc8fa]/20 ring-1 ring-[#b86ef9]/30"
                   }`}
                 >
-                  <Icon className={`h-7 w-7 ${p.key === "elite" ? "text-[#f0b429]" : "text-[#d4a5f9]"}`} />
+                  <Icon className={`h-5 w-5 ${p.key === "elite" ? "text-[#f0b429]" : "text-[#d4a5f9]"}`} />
                 </div>
 
-                <h3 className="font-serif text-2xl font-semibold text-white">{p.name}</h3>
-                <p className="mt-1 text-sm text-[#d4c4e0]">{p.tagline}</p>
+                <h3 className="font-serif text-xl font-semibold text-white">{p.name}</h3>
+                <p className="mt-0.5 text-xs text-[#d4c4e0]">{p.tagline}</p>
 
-                <div className="mt-6 flex items-baseline gap-1">
-                  <span className="font-serif text-5xl font-bold text-white">
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="font-serif text-4xl font-bold text-white">
                     {p.price}
                   </span>
-                  <span className="text-xl font-semibold text-white">CHF</span>
-                  <span className="ml-1 text-sm text-[#d4c4e0]">/mois</span>
+                  <span className="text-lg font-semibold text-white">CHF</span>
+                  <span className="ml-1 text-xs text-[#d4c4e0]">/mois</span>
                 </div>
                 {p.price === 0 && (
-                  <p className="mt-1 text-xs text-[#9d8aa8]">Aucun engagement</p>
+                  <p className="mt-0.5 text-[11px] text-[#9d8aa8]">Aucun engagement</p>
                 )}
 
-                <div className="my-7 h-px w-full bg-gradient-to-r from-transparent via-[#b86ef9]/30 to-transparent" />
+                <div className="my-5 h-px w-full bg-gradient-to-r from-transparent via-[#b86ef9]/30 to-transparent" />
 
-                <ul className="flex-1 space-y-3.5">
+                <ul className="flex-1 space-y-2">
                   {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm text-white/90">
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-white/90">
                       <span
-                        className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                        className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
                           p.key === "elite"
                             ? "bg-[#f0b429]/20 text-[#f0b429]"
                             : "bg-[#b86ef9]/20 text-[#d4a5f9]"
                         }`}
                       >
-                        <Check className="h-3 w-3" strokeWidth={3} />
+                        <Check className="h-2.5 w-2.5" strokeWidth={3} />
                       </span>
-                      <span className="leading-relaxed">{f}</span>
+                      <span className="leading-snug">{f}</span>
                     </li>
                   ))}
                 </ul>
 
-                <Link to="/$lang/inscription" params={{ lang }} className="mt-8 block">
+                <Link to="/$lang/inscription" params={{ lang }} className="mt-6 block">
                   <Button
-                    className={`group/btn w-full rounded-xl py-6 text-base font-semibold transition-all ${
+                    className={`group/btn w-full rounded-xl py-5 text-sm font-semibold transition-all ${
                       isHighlight
                         ? "bg-gradient-to-r from-[#b86ef9] to-[#9b4ddc] text-white shadow-lg shadow-[#b86ef9]/40 hover:shadow-xl hover:shadow-[#b86ef9]/60"
                         : p.key === "elite"
@@ -184,7 +184,7 @@ function PricingPage() {
         </div>
 
         {/* Reassurance */}
-        <div className="mt-16 grid gap-6 rounded-2xl border border-[#b86ef9]/20 bg-[#2a1142]/40 p-8 backdrop-blur sm:grid-cols-3">
+        <div className="mt-10 grid gap-4 rounded-xl border border-[#b86ef9]/20 bg-[#2a1142]/40 p-6 backdrop-blur sm:grid-cols-3">
           {[
             { title: "Sans engagement", desc: "Annulez à tout moment, en un clic." },
             { title: "Paiement sécurisé", desc: "Transactions chiffrées, conformes RGPD." },
@@ -192,13 +192,13 @@ function PricingPage() {
           ].map((item) => (
             <div key={item.title} className="text-center sm:text-left">
               <div className="text-sm font-semibold text-white">{item.title}</div>
-              <div className="mt-1 text-sm text-[#d4c4e0]">{item.desc}</div>
+              <div className="mt-0.5 text-xs text-[#d4c4e0]">{item.desc}</div>
             </div>
           ))}
         </div>
 
         {/* FAQ teaser */}
-        <div className="mt-12 text-center text-sm text-[#d4c4e0]">
+        <div className="mt-8 text-center text-xs text-[#d4c4e0]">
           Une question ?{" "}
           <Link to="/$lang/contact" params={{ lang }} className="font-semibold text-[#d4a5f9] underline-offset-4 hover:underline">
             Contactez notre équipe
