@@ -65,13 +65,13 @@ function HomePage() {
           <div className="mx-auto mt-12 max-w-5xl">
             <div className="relative rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2.5 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl">
               <div className="flex flex-col gap-2 md:flex-row md:items-stretch">
-                <div className="relative flex items-center">
+                <div className="relative flex items-center md:flex-1 md:min-w-0">
                   <Search className="pointer-events-none absolute left-4 h-5 w-5 text-[#b9a4d4]" />
                   <input
                     type="text"
                     placeholder="Rechercher par ville ou nom du thérapeute…"
                     aria-label="Rechercher"
-                    className="h-14 w-full min-w-0 rounded-xl bg-transparent pl-12 pr-4 text-base text-white placeholder:text-[#a89bc4] focus:outline-none focus:ring-2 focus:ring-[#b86ef9]/60 md:w-auto md:flex-1"
+                    className="h-14 w-full min-w-0 rounded-xl bg-transparent pl-12 pr-4 text-base text-white placeholder:text-[#a89bc4] focus:outline-none focus:ring-2 focus:ring-[#b86ef9]/60"
                   />
                 </div>
                 <Select>
