@@ -1,0 +1,28 @@
+# Holiswiss — Plateforme suisse de thérapies holistiques
+
+> Première plateforme suisse dédiée aux thérapies holistiques et médecines douces, connectant patients et praticiens certifiés dans les 26 cantons.
+
+## À propos
+Holiswiss est la première plateforme suisse dédiée aux thérapies
+holistiques et médecines douces. Elle connecte patients et praticiens
+certifiés dans toute la Suisse (26 cantons, 4 langues : FR, DE, IT, EN).
+
+## Ce que fait Holiswiss
+- Annuaire de 280+ thérapeutes certifiés (sophrologie, hypnose,
+  naturopathie, acupuncture, ostéopathie, ayurveda, reiki, kinésiologie, etc.)
+- Réservation de séances en ligne
+- Profils vérifiés avec avis authentiques
+- Couverture : toute la Suisse, 26 cantons
+- Langues : FR, DE, IT, EN
+
+## Pages
+- [Accueil](https://holiswiss.ch/fr): Présentation de la plateforme
+- [Annuaire des thérapeutes](https://holiswiss.ch/fr/therapeutes): Recherche et filtres par spécialité, canton, langue
+- [Blog bien-être](https://holiswiss.ch/fr/blog): Articles sur les thérapies holistiques
+- [Événements](https://holiswiss.ch/fr/evenements): Ateliers, retraites, conférences
+- [Tarifs praticiens](https://holiswiss.ch/fr/tarifs): Abonnements pour thérapeutes
+- [Contact](https://holiswiss.ch/fr/contact): Nous contacter
+
+## Contact
+Site : https://holiswiss.ch
+Pays : Suisse (CH)

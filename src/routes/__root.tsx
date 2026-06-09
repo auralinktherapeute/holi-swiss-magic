@@ -91,6 +91,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
+      { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, thérapeute certifié, réservation thérapeute" },
+      { name: "robots", content: "index, follow" },
+      { property: "og:locale", content: "fr_CH" },
+      { property: "og:site_name", content: "Holiswiss" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -99,6 +103,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Holiswiss",
+          url: "https://holiswiss.ch",
+          description:
+            "Plateforme suisse de mise en relation avec des thérapeutes holistiques certifiés",
+          potentialAction: {
+            "@type": "SearchAction",
+            target:
+              "https://holiswiss.ch/fr/therapeutes?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "Holiswiss",
+            url: "https://holiswiss.ch",
+            logo: "https://holiswiss.ch/logo.png",
+            address: {
+              "@type": "PostalAddress",
+              addressCountry: "CH",
+            },
+          },
+        }),
       },
     ],
   }),

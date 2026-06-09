@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+Sitemap: https://holiswiss.ch/sitemap.xml
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /fr/connexion
+Disallow: /fr/inscription
+Disallow: /de/anmeldung
+Disallow: /de/registrierung
+Disallow: /it/accesso
+Disallow: /it/registrazione
+Disallow: /en/login
+Disallow: /en/signup
