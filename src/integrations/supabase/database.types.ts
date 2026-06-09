@@ -102,17 +102,60 @@ export interface Database {
         Row: {
           id: string;
           therapist_id: string;
+          patient_name: string;
           patient_email: string;
-          datetime: string;
+          patient_phone: string | null;
+          appointment_date: string;
+          appointment_time: string;
+          duration_minutes: number;
           status: string;
+          notes: string | null;
+          created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["appointments"]["Row"]> & {
           therapist_id: string;
+          patient_name: string;
           patient_email: string;
-          datetime: string;
-          status: string;
+          appointment_date: string;
+          appointment_time: string;
         };
         Update: Partial<Database["public"]["Tables"]["appointments"]["Row"]>;
+        Relationships: [];
+      };
+      availabilities: {
+        Row: {
+          id: string;
+          therapist_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["availabilities"]["Row"]> & {
+          therapist_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["availabilities"]["Row"]>;
+        Relationships: [];
+      };
+      blocked_periods: {
+        Row: {
+          id: string;
+          therapist_id: string;
+          start_date: string;
+          end_date: string;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["blocked_periods"]["Row"]> & {
+          therapist_id: string;
+          start_date: string;
+          end_date: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["blocked_periods"]["Row"]>;
         Relationships: [];
       };
     };
