@@ -55,6 +55,7 @@ function PricingPage() {
         "Tout l'Essentiel +",
         "✨ Badge Elite Pro OR sur profil (très visible dans les résultats)",
         "🎯 Spécialités illimitées (10+)",
+        "Priorité dans les résultats",
         "Support prioritaire 24/7",
         "Mise en avant Newsletter hebdo",
         "Accès aux Événements premium",
