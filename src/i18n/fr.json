@@ -1,0 +1,67 @@
+{
+  "brand": { "name": "Holiswiss", "tagline": "Trouvez le bon thérapeute, partout en Suisse" },
+  "nav": {
+    "therapists": "Thérapeutes",
+    "blog": "Blog",
+    "events": "Événements",
+    "pricing": "Tarifs",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "contact": "Contact",
+    "dashboard": "Tableau de bord",
+    "admin": "Administration"
+  },
+  "home": {
+    "subtitle": "{{count}} praticiens · 26 cantons · 4 langues",
+    "search": { "approach": "Approche", "canton": "Canton", "language": "Langue", "cta": "Rechercher" },
+    "trust": {
+      "verified": "Profils vérifiés",
+      "reviews": "Avis authentiques",
+      "booking": "Réservation en ligne",
+      "cantons": "26 cantons"
+    },
+    "specialties": "Approches & méthodes",
+    "featured": "Praticiens à la une",
+    "how": {
+      "title": "Comment ça marche",
+      "step1": "Recherchez par approche, canton ou langue",
+      "step2": "Consultez les profils et avis vérifiés",
+      "step3": "Réservez une séance en ligne facilement"
+    },
+    "pricingTeaser": "Choisissez votre formule",
+    "ctaFree": "Commencer gratuitement — 2 mois offerts",
+    "stats": { "practitioners": "praticiens", "cantons": "cantons", "approaches": "approches", "sessions": "séances réservées" }
+  },
+  "directory": { "title": "Annuaire des thérapeutes", "subtitle": "Trouvez un praticien près de chez vous" },
+  "profile": { "viewProfile": "Voir le profil", "from": "à partir de", "book": "Réserver une séance" },
+  "pricing": {
+    "title": "Tarifs",
+    "subtitle": "Une formule pour chaque praticien",
+    "month": "/ mois",
+    "free": { "name": "Free", "desc": "Profil de base · visible dans l'annuaire" },
+    "pro": { "name": "Pro", "desc": "Agenda · avis · articles · statistiques" },
+    "premium": { "name": "Premium", "desc": "Tout Pro + mise en avant + badge vérifié" },
+    "cta": "Choisir cette formule"
+  },
+  "auth": {
+    "loginTitle": "Connexion",
+    "signupTitle": "Créer un compte thérapeute",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "submit": "Continuer",
+    "noAccount": "Pas encore de compte ?",
+    "haveAccount": "Déjà inscrit ?"
+  },
+  "common": { "soon": "Bientôt disponible", "loading": "Chargement…", "cancel": "Annuler", "save": "Enregistrer", "all": "Tous" },
+  "dashboard": {
+    "overview": "Vue d'ensemble", "profile": "Mon profil", "agenda": "Mon agenda",
+    "reservations": "Mes réservations", "articles": "Mes articles", "reviews": "Mes avis",
+    "events": "Mes événements", "subscription": "Mon abonnement", "referral": "Parrainage"
+  },
+  "admin": {
+    "overview": "Vue d'ensemble", "therapists": "Thérapeutes", "reviews": "Avis", "articles": "Articles",
+    "events": "Événements", "users": "Utilisateurs", "subscriptions": "Abonnements",
+    "agents": "Agents IA", "emails": "Emails", "moderation": "Modération", "settings": "Paramètres"
+  },
+  "footer": { "rights": "Tous droits réservés", "legal": "Mentions légales", "privacy": "Confidentialité", "terms": "Conditions" }
+}
