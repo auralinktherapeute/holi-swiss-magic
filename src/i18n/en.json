@@ -198,7 +198,9 @@
       "add": "Add",
       "back": "Back",
       "soon": "Coming soon"
-    }
+    },
+    "demo_account": "Demo account",
+    "therapist_label": "Therapist"
   },
   "admin": {
     "overview": "Overview",
@@ -284,5 +286,23 @@
     "aromatherapie": "Aromatherapy",
     "phytotherapie": "Phytotherapy",
     "fleurs-de-bach": "Bach Flowers"
+  },
+  "dashboard_home": {
+    "greeting": "Hello 👋",
+    "overview_subtitle": "Overview of your activity",
+    "plan_active": "Pro plan · active",
+    "stat_views": "Profile views (30d)",
+    "stat_bookings": "Bookings (30d)",
+    "stat_rating": "Average rating",
+    "stat_reviews_count": "{{count}} reviews",
+    "stat_conversion": "Conversion rate",
+    "upcoming_bookings": "Upcoming bookings",
+    "see_all": "See all",
+    "quick_actions": "Quick actions",
+    "complete_profile": "Complete my profile",
+    "update_agenda": "Update calendar",
+    "write_article": "Write an article",
+    "first_session": "First session",
+    "follow_up": "Follow-up"
   }
 }

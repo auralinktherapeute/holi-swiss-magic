@@ -198,7 +198,9 @@
       "add": "Aggiungi",
       "back": "Indietro",
       "soon": "Presto disponibile"
-    }
+    },
+    "demo_account": "Account demo",
+    "therapist_label": "Terapeuta"
   },
   "admin": {
     "overview": "Panoramica",
@@ -284,5 +286,23 @@
     "aromatherapie": "Aromaterapia",
     "phytotherapie": "Fitoterapia",
     "fleurs-de-bach": "Fiori di Bach"
+  },
+  "dashboard_home": {
+    "greeting": "Ciao 👋",
+    "overview_subtitle": "Panoramica della tua attività",
+    "plan_active": "Piano Pro · attivo",
+    "stat_views": "Visite al profilo (30g)",
+    "stat_bookings": "Prenotazioni (30g)",
+    "stat_rating": "Valutazione media",
+    "stat_reviews_count": "{{count}} recensioni",
+    "stat_conversion": "Tasso di conversione",
+    "upcoming_bookings": "Prossime prenotazioni",
+    "see_all": "Vedi tutto",
+    "quick_actions": "Azioni rapide",
+    "complete_profile": "Completa il mio profilo",
+    "update_agenda": "Aggiorna il calendario",
+    "write_article": "Scrivi un articolo",
+    "first_session": "Prima seduta",
+    "follow_up": "Seguito"
   }
 }

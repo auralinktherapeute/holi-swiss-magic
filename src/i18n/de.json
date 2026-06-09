@@ -198,7 +198,9 @@
       "add": "Hinzufügen",
       "back": "Zurück",
       "soon": "Demnächst verfügbar"
-    }
+    },
+    "demo_account": "Demo-Konto",
+    "therapist_label": "Therapeut"
   },
   "admin": {
     "overview": "Übersicht",
@@ -284,5 +286,23 @@
     "aromatherapie": "Aromatherapie",
     "phytotherapie": "Phytotherapie",
     "fleurs-de-bach": "Bach-Blüten"
+  },
+  "dashboard_home": {
+    "greeting": "Hallo 👋",
+    "overview_subtitle": "Übersicht Ihrer Tätigkeit",
+    "plan_active": "Pro-Paket · aktiv",
+    "stat_views": "Profilaufrufe (30 T.)",
+    "stat_bookings": "Buchungen (30 T.)",
+    "stat_rating": "Ø Bewertung",
+    "stat_reviews_count": "{{count}} Bewertungen",
+    "stat_conversion": "Konversionsrate",
+    "upcoming_bookings": "Nächste Buchungen",
+    "see_all": "Alle anzeigen",
+    "quick_actions": "Schnellzugriff",
+    "complete_profile": "Profil vervollständigen",
+    "update_agenda": "Kalender aktualisieren",
+    "write_article": "Artikel schreiben",
+    "first_session": "Erstsitzung",
+    "follow_up": "Folgesitzung"
   }
 }
