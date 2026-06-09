@@ -6,6 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { BadgeCheck, Languages, MapPin, Star } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 
+const PUBLIC_THERAPIST_SELECT = [
+  "id", "slug", "first_name", "last_name", "title", "bio", "photo_url", "specialties",
+  "languages", "canton", "price_min", "currency", "verified", "accreditations",
+].join(",");
+
 export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
 });
@@ -19,7 +24,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("*")
+        .select(PUBLIC_THERAPIST_SELECT)
         .eq("slug", slug)
         .maybeSingle();
       if (error) throw error;
