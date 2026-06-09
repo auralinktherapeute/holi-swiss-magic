@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import "../lib/i18n";
 import { Toaster } from "../components/ui/sonner";
 import { LanguageSwitcherDevPicker } from "../components/holiswiss/LanguageSwitcher";
+import { PublicNavDevPicker } from "../components/layout/PublicNav";
 
 function NotFoundComponent() {
   return (
@@ -165,6 +166,7 @@ function RootComponent() {
       <Outlet />
       <Toaster />
       <LanguageSwitcherDevPicker />
+      <PublicNavDevPicker />
     </QueryClientProvider>
   );
 }
