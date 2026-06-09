@@ -1,0 +1,1 @@
+REVOKE SELECT (reason) ON public.blocked_periods FROM anon, authenticated;
