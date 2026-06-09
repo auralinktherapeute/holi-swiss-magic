@@ -18,11 +18,16 @@ function SignupPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -116,6 +121,21 @@ function SignupPage() {
             required
             minLength={6}
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={6}
+            aria-invalid={confirmPassword.length > 0 && confirmPassword !== password}
+          />
+          {confirmPassword.length > 0 && confirmPassword !== password && (
+            <p className="text-xs text-destructive">Les mots de passe ne correspondent pas</p>
+          )}
         </div>
         <Button className="w-full" type="submit" disabled={loading}>
           {loading ? "..." : t("auth.submit")}
