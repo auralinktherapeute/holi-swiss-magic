@@ -79,3 +79,30 @@ export type TherapistService = {
   description?: string;
   color?: string;
 };
+
+// Swiss recognized organizations that approve complementary therapists for
+// reimbursement by supplementary health insurance.
+export const ACCREDITATION_ORGS: { code: string; label: string; description: string }[] = [
+  { code: "ASCA", label: "ASCA", description: "Fondation suisse pour les médecines complémentaires" },
+  { code: "RME", label: "RME / EMR", description: "Registre de Médecine Empirique" },
+  { code: "OrTraTC", label: "OrTra TC", description: "Organisation faîtière du monde du travail Thérapie Complémentaire" },
+  { code: "NVS", label: "NVS", description: "Naturärzte Vereinigung der Schweiz" },
+  { code: "APTN", label: "APTN", description: "Association Professionnelle des Thérapeutes Naturopathes" },
+  { code: "SBO-TCM", label: "SBO-TCM", description: "Schweizer Berufsorganisation für TCM" },
+  { code: "ASMG", label: "ASMG", description: "Association Suisse de Médecine Globale" },
+  { code: "ASNB", label: "ASNB", description: "Association Suisse de Naturopathie" },
+];
+
+export type Accreditation = {
+  org: string;
+  number?: string;
+};
+
+// Swiss IDE / UID format: CHE-XXX.XXX.XXX (9 digits after CHE-)
+export const SWISS_IDE_REGEX = /^CHE-?\d{3}\.?\d{3}\.?\d{3}$/i;
+
+export function normalizeSwissIde(raw: string): string | null {
+  const digits = raw.replace(/[^0-9]/g, "");
+  if (digits.length !== 9) return null;
+  return `CHE-${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}`;
+}
