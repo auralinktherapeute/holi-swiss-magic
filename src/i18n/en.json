@@ -169,18 +169,38 @@
     "loading": "Loading…",
     "cancel": "Cancel",
     "save": "Save",
-    "all": "All"
+    "all": "All",
+    "saved": "Saved",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back"
   },
   "dashboard": {
-    "overview": "Overview",
+    "overview": "Dashboard",
     "profile": "My profile",
-    "agenda": "My agenda",
-    "reservations": "My bookings",
-    "articles": "My articles",
-    "reviews": "My reviews",
-    "events": "My events",
-    "subscription": "My subscription",
-    "referral": "Referral"
+    "agenda": "Calendar",
+    "reservations": "Bookings",
+    "reviews": "Reviews",
+    "articles": "Articles",
+    "events": "Events",
+    "referral": "Referral",
+    "subscription": "Subscription",
+    "logout": "Sign out",
+    "therapist_space": "Therapist area",
+    "common": {
+      "loading": "Loading…",
+      "save": "Save",
+      "saved": "Saved",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "back": "Back",
+      "soon": "Coming soon"
+    },
+    "demo_account": "Demo account",
+    "therapist_label": "Therapist"
   },
   "admin": {
     "overview": "Overview",
@@ -246,5 +266,43 @@
       "November",
       "December"
     ]
+  },
+  "categories": {
+    "sophrologie": "Sophrology",
+    "hypnose": "Hypnosis",
+    "naturopathie": "Naturopathy",
+    "reflexologie": "Reflexology",
+    "massage-bien-etre": "Wellness Massage",
+    "shiatsu": "Shiatsu",
+    "reiki": "Reiki",
+    "kinesiologie": "Kinesiology",
+    "acupuncture": "Acupuncture",
+    "osteopathie": "Osteopathy",
+    "psychotherapie": "Psychological Support",
+    "coaching": "Life Coaching",
+    "meditation": "Meditation",
+    "yoga": "Yoga",
+    "art-therapie": "Art Therapy",
+    "aromatherapie": "Aromatherapy",
+    "phytotherapie": "Phytotherapy",
+    "fleurs-de-bach": "Bach Flowers"
+  },
+  "dashboard_home": {
+    "greeting": "Hello 👋",
+    "overview_subtitle": "Overview of your activity",
+    "plan_active": "Pro plan · active",
+    "stat_views": "Profile views (30d)",
+    "stat_bookings": "Bookings (30d)",
+    "stat_rating": "Average rating",
+    "stat_reviews_count": "{{count}} reviews",
+    "stat_conversion": "Conversion rate",
+    "upcoming_bookings": "Upcoming bookings",
+    "see_all": "See all",
+    "quick_actions": "Quick actions",
+    "complete_profile": "Complete my profile",
+    "update_agenda": "Update calendar",
+    "write_article": "Write an article",
+    "first_session": "First session",
+    "follow_up": "Follow-up"
   }
 }

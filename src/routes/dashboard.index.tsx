@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,28 +7,27 @@ import { Eye, CalendarCheck, Star, TrendingUp, ArrowUpRight } from "lucide-react
 
 export const Route = createFileRoute("/dashboard/")({ component: Page });
 
-const stats = [
-  { label: "Vues du profil (30j)", value: "1 248", delta: "+12%", icon: Eye },
-  { label: "Réservations (30j)", value: "37", delta: "+8%", icon: CalendarCheck },
-  { label: "Note moyenne", value: "4,8", delta: "23 avis", icon: Star },
-  { label: "Taux de conversion", value: "3,0%", delta: "+0,4 pt", icon: TrendingUp },
-];
-
-const upcoming = [
-  { name: "Marie L.", when: "Aujourd'hui · 14:00", type: "Première séance" },
-  { name: "Jean P.", when: "Demain · 09:30", type: "Suivi" },
-  { name: "Sophie K.", when: "Jeu. 12 · 16:00", type: "Suivi" },
-];
-
 function Page() {
+  const { t } = useTranslation();
+  const stats = [
+    { label: t("dashboard_home.stat_views"), value: "1 248", delta: "+12%", icon: Eye },
+    { label: t("dashboard_home.stat_bookings"), value: "37", delta: "+8%", icon: CalendarCheck },
+    { label: t("dashboard_home.stat_rating"), value: "4,8", delta: t("dashboard_home.stat_reviews_count", { count: 23 }), icon: Star },
+    { label: t("dashboard_home.stat_conversion"), value: "3,0%", delta: "+0,4 pt", icon: TrendingUp },
+  ];
+  const upcoming = [
+    { name: "Marie L.", when: "14:00", type: t("dashboard_home.first_session") },
+    { name: "Jean P.", when: "09:30", type: t("dashboard_home.follow_up") },
+    { name: "Sophie K.", when: "16:00", type: t("dashboard_home.follow_up") },
+  ];
   return (
     <div className="p-6 md:p-10 space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Bonjour 👋</h1>
-          <p className="text-muted-foreground mt-1">Vue d'ensemble de votre activité</p>
+          <h1 className="text-3xl font-bold text-foreground">{t("dashboard_home.greeting")}</h1>
+          <p className="text-muted-foreground mt-1">{t("dashboard_home.overview_subtitle")}</p>
         </div>
-        <Badge variant="secondary" className="bg-primary-xlight text-primary border-primary/20">Plan Pro · actif</Badge>
+        <Badge variant="secondary" className="bg-primary-xlight text-primary border-primary/20">{t("dashboard_home.plan_active")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -51,9 +51,9 @@ function Page() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 bg-surface border-border/60">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Prochaines réservations</CardTitle>
+            <CardTitle>{t("dashboard_home.upcoming_bookings")}</CardTitle>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard/reservations">Tout voir <ArrowUpRight className="h-4 w-4 ml-1" /></Link>
+              <Link to="/dashboard/reservations">{t("dashboard_home.see_all")} <ArrowUpRight className="h-4 w-4 ml-1" /></Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -70,11 +70,11 @@ function Page() {
         </Card>
 
         <Card className="bg-surface border-border/60">
-          <CardHeader><CardTitle>Actions rapides</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("dashboard_home.quick_actions")}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/profil">Compléter mon profil</Link></Button>
-            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/agenda">Mettre à jour l'agenda</Link></Button>
-            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/articles">Écrire un article</Link></Button>
+            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/profil">{t("dashboard_home.complete_profile")}</Link></Button>
+            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/agenda">{t("dashboard_home.update_agenda")}</Link></Button>
+            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/articles">{t("dashboard_home.write_article")}</Link></Button>
           </CardContent>
         </Card>
       </div>

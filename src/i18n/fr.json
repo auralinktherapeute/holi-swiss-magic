@@ -169,18 +169,38 @@
     "loading": "Chargement…",
     "cancel": "Annuler",
     "save": "Enregistrer",
-    "all": "Tous"
+    "all": "Tous",
+    "saved": "Enregistré",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "back": "Retour"
   },
   "dashboard": {
-    "overview": "Vue d'ensemble",
+    "overview": "Tableau de bord",
     "profile": "Mon profil",
-    "agenda": "Mon agenda",
-    "reservations": "Mes réservations",
-    "articles": "Mes articles",
-    "reviews": "Mes avis",
-    "events": "Mes événements",
-    "subscription": "Mon abonnement",
-    "referral": "Parrainage"
+    "agenda": "Agenda",
+    "reservations": "Réservations",
+    "reviews": "Avis",
+    "articles": "Articles",
+    "events": "Événements",
+    "referral": "Parrainage",
+    "subscription": "Abonnement",
+    "logout": "Se déconnecter",
+    "therapist_space": "Espace thérapeute",
+    "common": {
+      "loading": "Chargement…",
+      "save": "Enregistrer",
+      "saved": "Enregistré",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "add": "Ajouter",
+      "back": "Retour",
+      "soon": "Bientôt disponible"
+    },
+    "demo_account": "Compte démo",
+    "therapist_label": "Thérapeute"
   },
   "admin": {
     "overview": "Vue d'ensemble",
@@ -246,5 +266,43 @@
       "novembre",
       "décembre"
     ]
+  },
+  "categories": {
+    "sophrologie": "Sophrologie",
+    "hypnose": "Hypnose",
+    "naturopathie": "Naturopathie",
+    "reflexologie": "Réflexologie",
+    "massage-bien-etre": "Massage bien-être",
+    "shiatsu": "Shiatsu",
+    "reiki": "Reiki",
+    "kinesiologie": "Kinésiologie",
+    "acupuncture": "Acupuncture",
+    "osteopathie": "Ostéopathie",
+    "psychotherapie": "Accompagnement psy",
+    "coaching": "Coaching de vie",
+    "meditation": "Méditation",
+    "yoga": "Yoga",
+    "art-therapie": "Art-thérapie",
+    "aromatherapie": "Aromathérapie",
+    "phytotherapie": "Phytothérapie",
+    "fleurs-de-bach": "Fleurs de Bach"
+  },
+  "dashboard_home": {
+    "greeting": "Bonjour 👋",
+    "overview_subtitle": "Vue d'ensemble de votre activité",
+    "plan_active": "Plan Pro · actif",
+    "stat_views": "Vues du profil (30j)",
+    "stat_bookings": "Réservations (30j)",
+    "stat_rating": "Note moyenne",
+    "stat_reviews_count": "{{count}} avis",
+    "stat_conversion": "Taux de conversion",
+    "upcoming_bookings": "Prochaines réservations",
+    "see_all": "Tout voir",
+    "quick_actions": "Actions rapides",
+    "complete_profile": "Compléter mon profil",
+    "update_agenda": "Mettre à jour l'agenda",
+    "write_article": "Écrire un article",
+    "first_session": "Première séance",
+    "follow_up": "Suivi"
   }
 }

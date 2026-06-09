@@ -77,8 +77,8 @@ export function TherapistNav() {
       <div className="border-t border-border p-3 flex items-center gap-3">
         <div className="h-9 w-9 rounded-full bg-primary-xlight text-primary flex items-center justify-center text-sm font-semibold">T</div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">Thérapeute</div>
-          <div className="text-xs text-muted-foreground truncate">Compte démo</div>
+          <div className="text-sm font-medium truncate">{t("dashboard.therapist_label")}</div>
+          <div className="text-xs text-muted-foreground truncate">{t("dashboard.demo_account")}</div>
         </div>
         <Settings className="h-4 w-4 text-muted-foreground" />
       </div>
