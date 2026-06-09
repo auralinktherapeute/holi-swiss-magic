@@ -1,76 +1,209 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Check } from "lucide-react";
+import { Check, Sparkles, Crown, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCHF } from "@/lib/constants";
 
 export const Route = createFileRoute("/$lang/tarifs/")({
   component: PricingPage,
 });
 
 function PricingPage() {
-  const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/tarifs/" });
 
   const plans = [
     {
-      key: "free", price: 0,
-      features: ["Profil de base", "Visible dans l'annuaire", "1 photo", "Coordonnées"],
+      key: "basic",
+      name: "Basic",
+      tagline: "Pour démarrer sur la plateforme",
+      price: 0,
+      icon: Star,
+      features: [
+        "Profil thérapeute visible",
+        "Coordonnées affichées",
+        "Jusqu'à 3 spécialités",
+        "1 photo de profil",
+        "Visible dans l'annuaire",
+      ],
+      cta: "Commencer gratuitement",
     },
     {
-      key: "pro", price: 29, highlight: true,
-      features: ["Tout Free", "Agenda en ligne", "Avis vérifiés", "Articles de blog", "Statistiques"],
+      key: "essentiel",
+      name: "Essentiel",
+      tagline: "Pour développer votre activité",
+      price: 49,
+      icon: Sparkles,
+      highlight: true,
+      badge: "RECOMMANDÉ",
+      features: [
+        "Tout le Basic +",
+        "Agenda en ligne intégré",
+        "Avis vérifiés",
+        "Articles de blog illimités",
+        "Jusqu'à 5 spécialités",
+        "Badge Essentiel visible",
+        "Priorité dans les résultats",
+      ],
+      cta: "Choisir Essentiel",
     },
     {
-      key: "premium", price: 59,
-      features: ["Tout Pro", "Mise en avant", "Badge vérifié", "Support prioritaire", "Événements"],
+      key: "elite",
+      name: "Elite Pro",
+      tagline: "Pour les professionnels exigeants",
+      price: 99,
+      icon: Crown,
+      badge: "EXCELLENCE",
+      features: [
+        "Tout l'Essentiel +",
+        "✨ Badge Elite Pro OR sur profil (très visible dans les résultats)",
+        "🎯 Spécialités illimitées (10+)",
+        "SMS auto RDV + rappels 24h avant",
+        "Dashboard stats avancées (RDV, vues, conversion)",
+        "Support prioritaire 24/7",
+        "Mise en avant Newsletter hebdo",
+        "Accès aux Événements premium",
+      ],
+      cta: "Devenir Elite Pro",
     },
-  ] as const;
+  ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight">{t("pricing.title")}</h1>
-        <p className="mt-3 text-muted-foreground">{t("pricing.subtitle")}</p>
+    <div className="relative min-h-dvh overflow-hidden bg-[#1a0a2e]">
+      {/* Ambient glow background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 left-1/2 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[#b86ef9]/20 blur-[120px]" />
+        <div className="absolute top-1/3 right-0 h-[400px] w-[400px] rounded-full bg-[#5cc8fa]/10 blur-[100px]" />
+        <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-[#f0b429]/10 blur-[100px]" />
       </div>
-      <div className="mt-12 grid gap-6 md:grid-cols-3">
-        {plans.map((p) => (
-          <div
-            key={p.key}
-            className={`rounded-2xl border bg-surface p-8 ${
-              "highlight" in p && p.highlight
-                ? "border-primary shadow-xl shadow-primary/10 ring-2 ring-primary/30 md:scale-105"
-                : "border-border"
-            }`}
-          >
-            {"highlight" in p && p.highlight && (
-              <span className="inline-block rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-                Recommandé
-              </span>
-            )}
-            <h3 className="mt-3 text-xl font-semibold">{t(`pricing.${p.key}.name`)}</h3>
-            <div className="mt-3 text-4xl font-bold">
-              {p.price === 0 ? "0 CHF" : formatCHF(p.price)}
-              {p.price > 0 && <span className="text-base font-normal text-muted-foreground">{t("pricing.month")}</span>}
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">{t(`pricing.${p.key}.desc`)}</p>
-            <ul className="mt-6 space-y-2.5">
-              {p.features.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm">
-                  <Check className="h-4 w-4 shrink-0 text-accent mt-0.5" /> {f}
-                </li>
-              ))}
-            </ul>
-            <Link to="/$lang/inscription" params={{ lang }} className="mt-8 block">
-              <Button
-                className="w-full"
-                variant={"highlight" in p && p.highlight ? "default" : "outline"}
+
+      <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        {/* Hero */}
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#b86ef9]/30 bg-[#b86ef9]/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#d4a5f9]">
+            <Sparkles className="h-3 w-3" /> Tarifs Thérapeutes
+          </span>
+          <h1 className="mt-6 font-serif text-5xl font-bold tracking-tight text-white sm:text-6xl">
+            Choisissez votre <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#f0b429] bg-clip-text text-transparent">formule premium</span>
+          </h1>
+          <p className="mt-5 text-lg text-[#d4c4e0]">
+            Une plateforme pensée pour mettre en valeur votre pratique et développer votre clientèle partout en Suisse.
+          </p>
+        </div>
+
+        {/* Plans grid */}
+        <div className="mt-16 grid gap-6 lg:grid-cols-3 lg:gap-8">
+          {plans.map((p) => {
+            const Icon = p.icon;
+            const isHighlight = p.highlight;
+            return (
+              <div
+                key={p.key}
+                className={`group relative flex flex-col rounded-3xl p-8 transition-all duration-300 ${
+                  isHighlight
+                    ? "border-2 border-[#b86ef9] bg-gradient-to-b from-[#3d1a5c] to-[#2a1142] shadow-[0_0_60px_rgba(184,110,249,0.35)] lg:scale-[1.04]"
+                    : p.key === "elite"
+                    ? "border border-[#f0b429]/40 bg-gradient-to-b from-[#2a1142] to-[#1a0a2e] shadow-[0_0_40px_rgba(240,180,41,0.15)] hover:border-[#f0b429]/70"
+                    : "border border-[#b86ef9]/20 bg-[#2a1142]/60 backdrop-blur hover:border-[#b86ef9]/40"
+                }`}
               >
-                {t("pricing.cta")}
-              </Button>
-            </Link>
-          </div>
-        ))}
+                {p.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1 text-[10px] font-bold uppercase tracking-widest shadow-lg ${
+                        isHighlight
+                          ? "bg-gradient-to-r from-[#b86ef9] to-[#9b4ddc] text-white"
+                          : "bg-gradient-to-r from-[#f0b429] to-[#e08a00] text-[#1a0a2e]"
+                      }`}
+                    >
+                      {p.badge}
+                    </span>
+                  </div>
+                )}
+
+                {/* Icon */}
+                <div
+                  className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${
+                    p.key === "elite"
+                      ? "bg-gradient-to-br from-[#f0b429]/30 to-[#e08a00]/20 ring-1 ring-[#f0b429]/40"
+                      : "bg-gradient-to-br from-[#b86ef9]/30 to-[#5cc8fa]/20 ring-1 ring-[#b86ef9]/30"
+                  }`}
+                >
+                  <Icon className={`h-7 w-7 ${p.key === "elite" ? "text-[#f0b429]" : "text-[#d4a5f9]"}`} />
+                </div>
+
+                <h3 className="font-serif text-2xl font-semibold text-white">{p.name}</h3>
+                <p className="mt-1 text-sm text-[#d4c4e0]">{p.tagline}</p>
+
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="font-serif text-5xl font-bold text-white">
+                    {p.price}
+                  </span>
+                  <span className="text-xl font-semibold text-white">CHF</span>
+                  <span className="ml-1 text-sm text-[#d4c4e0]">/mois</span>
+                </div>
+                {p.price === 0 && (
+                  <p className="mt-1 text-xs text-[#9d8aa8]">Aucun engagement</p>
+                )}
+
+                <div className="my-7 h-px w-full bg-gradient-to-r from-transparent via-[#b86ef9]/30 to-transparent" />
+
+                <ul className="flex-1 space-y-3.5">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm text-white/90">
+                      <span
+                        className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                          p.key === "elite"
+                            ? "bg-[#f0b429]/20 text-[#f0b429]"
+                            : "bg-[#b86ef9]/20 text-[#d4a5f9]"
+                        }`}
+                      >
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                      <span className="leading-relaxed">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link to="/$lang/inscription" params={{ lang }} className="mt-8 block">
+                  <Button
+                    className={`group/btn w-full rounded-xl py-6 text-base font-semibold transition-all ${
+                      isHighlight
+                        ? "bg-gradient-to-r from-[#b86ef9] to-[#9b4ddc] text-white shadow-lg shadow-[#b86ef9]/40 hover:shadow-xl hover:shadow-[#b86ef9]/60"
+                        : p.key === "elite"
+                        ? "bg-gradient-to-r from-[#f0b429] to-[#e08a00] text-[#1a0a2e] shadow-lg shadow-[#f0b429]/30 hover:shadow-xl hover:shadow-[#f0b429]/50"
+                        : "border border-[#b86ef9]/40 bg-transparent text-white hover:bg-[#b86ef9]/10"
+                    }`}
+                    variant={isHighlight || p.key === "elite" ? "default" : "outline"}
+                  >
+                    {p.cta}
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Reassurance */}
+        <div className="mt-16 grid gap-6 rounded-2xl border border-[#b86ef9]/20 bg-[#2a1142]/40 p-8 backdrop-blur sm:grid-cols-3">
+          {[
+            { title: "Sans engagement", desc: "Annulez à tout moment, en un clic." },
+            { title: "Paiement sécurisé", desc: "Transactions chiffrées, conformes RGPD." },
+            { title: "Support en français", desc: "Une équipe suisse à votre écoute." },
+          ].map((item) => (
+            <div key={item.title} className="text-center sm:text-left">
+              <div className="text-sm font-semibold text-white">{item.title}</div>
+              <div className="mt-1 text-sm text-[#d4c4e0]">{item.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* FAQ teaser */}
+        <div className="mt-12 text-center text-sm text-[#d4c4e0]">
+          Une question ?{" "}
+          <Link to="/$lang/contact" params={{ lang }} className="font-semibold text-[#d4a5f9] underline-offset-4 hover:underline">
+            Contactez notre équipe
+          </Link>
+        </div>
       </div>
     </div>
   );
