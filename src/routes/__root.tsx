@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import "../lib/i18n";
 import { Toaster } from "../components/ui/sonner";
+import lotusFavicon from "../assets/lotus-transparent.png.asset.json";
+
 
 function NotFoundComponent() {
   return (
@@ -96,6 +98,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", type: "image/png", href: lotusFavicon.url },
+      { rel: "apple-touch-icon", href: lotusFavicon.url },
     ],
   }),
   shellComponent: RootShell,
