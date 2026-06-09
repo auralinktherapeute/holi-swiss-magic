@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,23 +7,31 @@ import { Check, Sparkles, CreditCard, Download } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/abonnement")({ component: Page });
 
-const PLANS = [
-  { id: "free", name: "Free", price: "0", features: ["Fiche basique", "1 photo", "Visible dans l'annuaire"] },
-  { id: "pro", name: "Pro", price: "29", features: ["Fiche enrichie", "10 photos", "Réservation en ligne", "Articles illimités", "Statistiques avancées"], current: true },
-  { id: "premium", name: "Premium", price: "59", features: ["Tout Pro", "Mise en avant", "Badge vérifié", "Support prioritaire"] },
+const PLAN_KEYS: { id: "basic" | "essentiel" | "elite"; price: number; current?: boolean }[] = [
+  { id: "basic", price: 0 },
+  { id: "essentiel", price: 49, current: true },
+  { id: "elite", price: 99 },
 ];
 
 const INVOICES = [
-  { id: "INV-0023", date: "01 juin 2026", amount: "29.00 CHF" },
-  { id: "INV-0022", date: "01 mai 2026", amount: "29.00 CHF" },
-  { id: "INV-0021", date: "01 avr. 2026", amount: "29.00 CHF" },
+  { id: "INV-0023", date: "01 juin 2026", amount: "49.00 CHF" },
+  { id: "INV-0022", date: "01 mai 2026", amount: "49.00 CHF" },
+  { id: "INV-0021", date: "01 avr. 2026", amount: "49.00 CHF" },
 ];
 
 function Page() {
+  const { t } = useTranslation();
+  const plans = PLAN_KEYS.map((p) => ({
+    ...p,
+    name: t(`pricing.plans.${p.id}.name`),
+    tagline: t(`pricing.plans.${p.id}.tagline`),
+    features: t(`pricing.plans.${p.id}.features`, { returnObjects: true }) as string[],
+  }));
+  const active = plans.find((p) => p.current)!;
   return (
     <div className="p-6 md:p-10 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Abonnement</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t("dashboard.subscription")}</h1>
         <p className="text-muted-foreground mt-1">Plan actif et facturation</p>
       </div>
 
@@ -32,7 +41,7 @@ function Page() {
             <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center"><Sparkles className="h-6 w-6 text-primary" /></div>
             <div>
               <Badge className="bg-primary/20 text-primary border-primary/30 mb-1">Plan actif</Badge>
-              <div className="text-2xl font-bold text-foreground">Pro · 29 CHF / mois</div>
+              <div className="text-2xl font-bold text-foreground">{active.name} · {active.price} CHF / mois</div>
               <div className="text-sm text-muted-foreground">Prochain prélèvement le 1er juillet 2026</div>
             </div>
           </div>
@@ -46,13 +55,14 @@ function Page() {
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-4">Tous les plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PLANS.map((p) => (
+          {plans.map((p) => (
             <Card key={p.id} className={`bg-surface border ${p.current ? "border-primary shadow-[0_0_30px_rgba(184,110,249,0.25)]" : "border-border/60"}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>{p.name}</CardTitle>
                   {p.current && <Badge className="bg-primary text-primary-foreground">Actif</Badge>}
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">{p.tagline}</p>
                 <div className="mt-2"><span className="text-3xl font-bold text-foreground">{p.price}</span><span className="text-muted-foreground"> CHF / mois</span></div>
               </CardHeader>
               <CardContent className="space-y-3">
