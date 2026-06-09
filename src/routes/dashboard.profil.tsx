@@ -233,9 +233,7 @@ function ProfilePage() {
       google_reviews_url: googleReviewsUrl || null,
       website: website || null,
       ide: ide || null,
-      ide_verified: ideVerified,
       accreditations,
-      status: "active",
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
     const { data, error } = rowId
