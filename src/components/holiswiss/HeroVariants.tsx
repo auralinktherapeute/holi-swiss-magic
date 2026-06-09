@@ -45,8 +45,9 @@ function Wordmark() {
 
 /* ───────── Variant 1: Cinematic Dark ───────── */
 function VariantCinematic() {
+  const { t } = useTranslation();
   const [text, setText] = useState("");
-  const full = "Trouvez le bon thérapeute,\npartout en Suisse";
+  const full = `${t("hero.title_part1")} ${t("hero.title_highlight")},\n${t("hero.title_part2").replace(/^,\s*/, "")}`;
   useEffect(() => {
     let i = 0;
     const id = setInterval(() => {
@@ -55,7 +56,7 @@ function VariantCinematic() {
       if (i >= full.length) clearInterval(id);
     }, 55);
     return () => clearInterval(id);
-  }, []);
+  }, [full]);
   const particles = Array.from({ length: 12 });
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#1a0a2e] text-white">
@@ -88,7 +89,7 @@ function VariantCinematic() {
           Suisse · 26 cantons
         </div>
         <button className="hv-shimmer relative mt-10 overflow-hidden rounded-xl bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-8 py-4 text-base font-semibold text-white shadow-[0_10px_40px_-10px_rgba(184,110,249,0.8)]">
-          <span className="relative z-10 inline-flex items-center gap-2"><Search className="h-5 w-5" /> Trouver un thérapeute</span>
+          <span className="relative z-10 inline-flex items-center gap-2"><Search className="h-5 w-5" /> {t("hero.find_btn")}</span>
         </button>
       </div>
     </section>
@@ -97,6 +98,7 @@ function VariantCinematic() {
 
 /* ───────── Variant 2: Split Premium ───────── */
 function VariantSplit() {
+  const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
   return (
     <section
@@ -111,23 +113,23 @@ function VariantSplit() {
             <Wordmark />
           </div>
           <h1 className="hv-slide-up text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl" style={{ animationDelay: "150ms" }}>
-            Trouvez le bon <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">thérapeute</span>, partout en Suisse
+            {t("hero.title_part1")} <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">{t("hero.title_highlight")}</span>{t("hero.title_part2")}
           </h1>
           <p className="hv-slide-up max-w-xl text-lg text-[#d4c4e0]" style={{ animationDelay: "300ms" }}>
-            Plus de 280 praticiens vérifiés en sophrologie, hypnose, naturopathie et bien plus.
+            {t("hero.subtitle")}
           </p>
           <div className="hv-slide-up relative max-w-xl rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl" style={{ animationDelay: "450ms" }}>
             <div className="flex items-center">
               <Search className="ml-4 h-5 w-5 text-[#b9a4d4]" />
-              <input className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#a89bc4] focus:outline-none" placeholder="Spécialité, ville…" />
+              <input className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#a89bc4] focus:outline-none" placeholder={t("hero.search_placeholder")} />
               <Link to="/$lang/therapeutes" params={{ lang }}>
-                <Button className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">Chercher</Button>
+                <Button className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">{t("hero.search_btn")}</Button>
               </Link>
             </div>
           </div>
           <div className="hv-slide-up flex flex-wrap gap-5 text-sm text-[#c8b8df]" style={{ animationDelay: "600ms" }}>
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />Praticiens vérifiés</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-4 w-4 text-[#d4a5f9]" />26 cantons</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />{t("hero.trust_verified")}</span>
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-4 w-4 text-[#d4a5f9]" />{t("hero.trust_cantons")}</span>
           </div>
         </div>
         <div className="md:col-span-2 relative flex items-center justify-center">
@@ -147,6 +149,7 @@ function VariantSplit() {
 
 /* ───────── Variant 3: Glassmorphism Luxury ───────── */
 function VariantGlass() {
+  const { t } = useTranslation();
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#1a0a2e] text-white">
       <div className="hv-blob hv-blob-1" />
@@ -168,15 +171,15 @@ function VariantGlass() {
               <Wordmark />
             </div>
             <h1 className="hv-gradient-text mt-8 text-4xl font-bold leading-tight sm:text-6xl">
-              Trouvez le bon thérapeute, partout en Suisse
+              {t("hero.title_part1")} {t("hero.title_highlight")}{t("hero.title_part2")}
             </h1>
             <p className="mt-5 text-base text-[#d4c4e0] sm:text-lg">
-              La plateforme suisse du bien-être holistique.
+              {t("hero.glass_subtitle")}
             </p>
             <div className="mx-auto mt-8 flex max-w-xl items-center rounded-xl border border-[rgba(184,110,249,0.25)] bg-white/[0.04] p-1.5">
               <Search className="ml-3 h-5 w-5 text-[#b9a4d4]" />
-              <input className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#a89bc4] focus:outline-none" placeholder="Que recherchez-vous ?" />
-              <Button className="h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">Chercher</Button>
+              <input className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#a89bc4] focus:outline-none" placeholder={t("hero.glass_placeholder")} />
+              <Button className="h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">{t("hero.search_btn")}</Button>
             </div>
           </div>
         </div>
@@ -204,8 +207,10 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
   return <span>{n}{suffix}</span>;
 }
 function VariantMinimal() {
+  const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
-  const words = ["Trouvez", "le", "bon", "__LOTUS__", "thérapeute,", "partout", "en", "Suisse"];
+  const title = `${t("hero.title_part1")} __LOTUS__ ${t("hero.title_highlight")}${t("hero.title_part2")}`;
+  const words = title.split(/\s+/);
   return (
     <section className="relative flex min-h-screen items-center bg-[#2d1248] text-white">
       <div className="mx-auto w-full max-w-6xl px-6 py-24">
@@ -222,16 +227,16 @@ function VariantMinimal() {
         </h1>
         <div className="hv-accent-line mt-8 h-[2px] bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa]" />
         <div className="mt-10 grid max-w-2xl grid-cols-3 gap-6 text-center">
-          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={280} suffix="+" /></div><div className="mt-1 text-sm text-[#d4c4e0]">praticiens</div></div>
-          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={26} /></div><div className="mt-1 text-sm text-[#d4c4e0]">cantons</div></div>
-          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={4} /></div><div className="mt-1 text-sm text-[#d4c4e0]">langues</div></div>
+          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={280} suffix="+" /></div><div className="mt-1 text-sm text-[#d4c4e0]">{t("hero.stats_practitioners")}</div></div>
+          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={26} /></div><div className="mt-1 text-sm text-[#d4c4e0]">{t("hero.stats_cantons")}</div></div>
+          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={4} /></div><div className="mt-1 text-sm text-[#d4c4e0]">{t("hero.stats_languages")}</div></div>
         </div>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link to="/$lang/therapeutes" params={{ lang }}>
-            <Button size="lg" className="bg-[#b86ef9] text-white hover:bg-[#a855f7]">Trouver un thérapeute</Button>
+            <Button size="lg" className="bg-[#b86ef9] text-white hover:bg-[#a855f7]">{t("hero.find_btn")}</Button>
           </Link>
           <Link to="/$lang/inscription" params={{ lang }}>
-            <Button size="lg" variant="outline" className="border-[#b86ef9] bg-transparent text-white hover:bg-white/10">S'inscrire gratuitement</Button>
+            <Button size="lg" variant="outline" className="border-[#b86ef9] bg-transparent text-white hover:bg-white/10">{t("hero.signup_free")}</Button>
           </Link>
         </div>
       </div>

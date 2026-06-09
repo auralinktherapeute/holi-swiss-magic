@@ -13,7 +13,7 @@ function DashboardLayout() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const stored = window.localStorage.getItem("lang");
+      const stored = window.localStorage.getItem("holiswiss-lang");
       if (stored && isLang(stored) && i18n.language.split("-")[0] !== stored) {
         i18n.changeLanguage(stored);
       }

@@ -381,5 +381,22 @@
     "service_desc_placeholder": "Es. Per una seduta conoscitiva di 60 min",
     "add_service": "Aggiungi un servizio",
     "loading": "Caricamento…"
+  },
+  "hero": {
+    "title_part1": "Trova il giusto",
+    "title_highlight": "terapeuta",
+    "title_part2": ", ovunque in Svizzera",
+    "subtitle": "Oltre 280 professionisti verificati in sofrologia, ipnosi, naturopatia e molto altro.",
+    "search_placeholder": "Specialità, città…",
+    "search_btn": "Cerca",
+    "trust_verified": "Professionisti verificati",
+    "trust_cantons": "26 cantoni",
+    "find_btn": "Trova un terapeuta",
+    "signup_free": "Registrati gratis",
+    "stats_practitioners": "professionisti",
+    "stats_cantons": "cantoni",
+    "stats_languages": "lingue",
+    "glass_subtitle": "La piattaforma svizzera del benessere olistico.",
+    "glass_placeholder": "Cosa stai cercando?"
   }
 }

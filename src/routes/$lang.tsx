@@ -17,7 +17,7 @@ function LangLayout() {
   if (i18n.language.split("-")[0] !== resolved) {
     i18n.changeLanguage(resolved);
     if (typeof window !== "undefined") {
-      try { window.localStorage.setItem("lang", resolved); } catch {}
+      try { window.localStorage.setItem("holiswiss-lang", resolved); } catch {}
     }
   }
 
