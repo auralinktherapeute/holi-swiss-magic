@@ -3,8 +3,8 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import lotusAsset from "@/assets/lotus-logo.png.asset.json";
 import lotusNeonAsset from "@/assets/lotus-neon.png.asset.json";
+const lotusAsset = lotusNeonAsset;
 
 type Variant = 1 | 2 | 3 | 4;
 
@@ -16,7 +16,7 @@ function LotusGlow({ size = 80, className = "" }: { size?: number; className?: s
       width={size}
       height={size}
       className={`hv-lotus-glow ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, objectFit: "contain", mixBlendMode: "screen" }}
     />
   );
 }
@@ -29,7 +29,7 @@ function LotusNeon({ size = 80, className = "", style }: { size?: number; classN
       width={size}
       height={size}
       className={className}
-      style={{ width: size, height: size, objectFit: "contain", ...style }}
+      style={{ width: size, height: size, objectFit: "contain", mixBlendMode: "screen", ...style }}
     />
   );
 }

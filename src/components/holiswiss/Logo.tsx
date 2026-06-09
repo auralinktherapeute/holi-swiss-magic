@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { SUPPORTED_LANGS, DEFAULT_LANG } from "@/lib/i18n";
-import lotusAsset from "@/assets/lotus-logo.png.asset.json";
+import lotusAsset from "@/assets/lotus-neon.png.asset.json";
 
 export function Logo({ size = 48 }: { size?: number }) {
   // Derive lang from URL — identical on SSR and client (avoids hydration mismatch).
@@ -19,8 +19,14 @@ export function Logo({ size = 48 }: { size?: number }) {
         alt="Holiswiss"
         width={size}
         height={size}
-        className="drop-shadow-[0_0_12px_rgba(168,85,247,0.45)] transition-transform group-hover:scale-105"
-        style={{ width: size, height: size }}
+        className="transition-transform group-hover:scale-105"
+        style={{
+          width: size,
+          height: size,
+          objectFit: "contain",
+          mixBlendMode: "screen",
+          filter: "drop-shadow(0 0 12px rgba(184,110,249,0.7))",
+        }}
       />
       <span>
         <span className="font-bold text-[#b86ef9]">Holi</span>
