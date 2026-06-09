@@ -20,26 +20,26 @@ export function TherapistCard(p: TherapistCardProps) {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "fr").split("-")[0];
   return (
-    <article className="group rounded-xl border border-border bg-surface p-5 transition-all hover:border-border-purple hover:shadow-lg hover:shadow-primary/5">
+    <article className="group rounded-xl border border-[rgba(167,139,250,0.2)] bg-[#1a0a3e]/60 backdrop-blur p-5 transition-all hover:border-primary/60 hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.4)]">
       <div className="flex items-start gap-4">
-        <div className="h-14 w-14 shrink-0 rounded-full bg-primary-xlight text-primary flex items-center justify-center text-base font-semibold">
+        <div className="h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-primary/30 to-accent/20 text-white flex items-center justify-center text-base font-semibold ring-1 ring-primary/30">
           {p.initials}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-foreground truncate">{p.displayName}</h3>
+          <h3 className="font-semibold text-white truncate">{p.displayName}</h3>
           <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3" />
             <span>{p.canton}</span>
             <span className="mx-1">·</span>
             <Star className="h-3 w-3 fill-warning text-warning" />
-            <span className="font-medium text-foreground">{p.rating.toFixed(1)}</span>
+            <span className="font-medium text-white">{p.rating.toFixed(1)}</span>
             <span>({p.reviewsCount})</span>
           </div>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-1.5">
         {p.specialties.slice(0, 2).map((s) => (
-          <Badge key={s} variant="secondary" className="bg-primary-xlight text-primary hover:bg-primary-xlight">
+          <Badge key={s} variant="secondary" className="bg-primary/15 text-primary-light hover:bg-primary/20 border border-primary/20">
             {s}
           </Badge>
         ))}
@@ -47,10 +47,10 @@ export function TherapistCard(p: TherapistCardProps) {
       <div className="mt-5 flex items-center justify-between">
         <div className="text-sm">
           <span className="text-muted-foreground">{t("profile.from")} </span>
-          <span className="font-semibold text-foreground">{formatCHF(p.priceFrom)}</span>
+          <span className="font-semibold text-white">{formatCHF(p.priceFrom)}</span>
         </div>
         <Link to="/$lang/therapeute/$slug" params={{ lang, slug: p.slug }}>
-          <Button size="sm" variant="outline">{t("profile.viewProfile")}</Button>
+          <Button size="sm" variant="outline" className="border-primary/40 text-white hover:bg-primary/15 hover:text-white">{t("profile.viewProfile")}</Button>
         </Link>
       </div>
     </article>

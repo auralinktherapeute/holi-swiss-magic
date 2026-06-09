@@ -1,6 +1,5 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import fr from "@/i18n/fr.json";
 import de from "@/i18n/de.json";
 import it from "@/i18n/it.json";
@@ -12,7 +11,6 @@ export const DEFAULT_LANG: Lang = "fr";
 
 if (!i18n.isInitialized) {
   i18n
-    .use(LanguageDetector)
     .use(initReactI18next)
     .init({
       resources: {
@@ -21,15 +19,10 @@ if (!i18n.isInitialized) {
         it: { translation: it },
         en: { translation: en },
       },
+      lng: DEFAULT_LANG,
       fallbackLng: DEFAULT_LANG,
       supportedLngs: SUPPORTED_LANGS as unknown as string[],
       interpolation: { escapeValue: false },
-      detection: {
-        order: ["path", "localStorage", "navigator"],
-        lookupFromPathIndex: 0,
-        caches: ["localStorage"],
-        lookupLocalStorage: "holiswiss-lang",
-      },
     });
 }
 
