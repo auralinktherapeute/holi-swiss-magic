@@ -2,6 +2,7 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BadgeCheck, Languages, MapPin, Star } from "lucide-react";
+import { BookingWidget } from "@/components/booking/BookingWidget";
 
 export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
@@ -130,12 +131,12 @@ function Page() {
               <span className="ml-1 text-sm font-normal text-muted-foreground">/ séance</span>
             </p>
           )}
-
-          <button className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition hover:opacity-90">
-            Réserver une consultation
-          </button>
         </div>
       </div>
+
+      <section className="mt-10">
+        <BookingWidget therapistId={th.id} />
+      </section>
 
       {reviews && reviews.length > 0 && (
         <section className="mt-14">
