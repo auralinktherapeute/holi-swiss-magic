@@ -106,17 +106,17 @@ function HomePage() {
           {THERAPY_CATEGORIES.map((c) => (
             <button
               key={c.slug}
-              className="group flex flex-col items-center gap-2 rounded-xl border border-[rgba(167,139,250,0.2)] bg-white/[0.03] p-4 text-center transition-all hover:border-primary/70 hover:bg-white/[0.06] hover:shadow-[0_0_24px_-6px_rgba(168,85,247,0.5)]"
+              className="group flex flex-col items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c] p-4 text-center transition-all hover:border-[#b86ef9] hover:bg-[#522870] hover:shadow-[0_0_20px_rgba(184,110,249,0.3)]"
             >
               <span className="text-2xl">{c.emoji}</span>
-              <span className="text-xs font-medium text-white/85 group-hover:text-primary-light">{c.label}</span>
+              <span className="text-xs font-medium text-white/85 group-hover:text-[#d4a5f9]">{c.label}</span>
             </button>
           ))}
         </div>
       </section>
 
       {/* Featured therapists */}
-      <section className="bg-[#0f0624]">
+      <section className="bg-[#2d1248]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold tracking-tight text-white">{t("home.featured")}</h2>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,11 +136,11 @@ function HomePage() {
           ].map((s) => {
             const Icon = s.icon;
             return (
-              <div key={s.n} className="rounded-xl border border-[rgba(167,139,250,0.2)] bg-white/[0.03] p-6 text-center">
-                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-accent/20 text-primary-light ring-1 ring-primary/30">
+              <div key={s.n} className="rounded-xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c] p-6 text-center">
+                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#b86ef9]/30 to-[#5cc8fa]/20 text-[#d4a5f9] ring-1 ring-[#b86ef9]/30">
                   <Icon className="h-5 w-5" />
                 </div>
-                <div className="mt-3 text-xs font-semibold text-primary-light">ÉTAPE {s.n}</div>
+                <div className="mt-3 text-xs font-semibold text-[#d4a5f9]">ÉTAPE {s.n}</div>
                 <p className="mt-2 text-sm text-white/80">{s.txt}</p>
               </div>
             );
@@ -149,7 +149,7 @@ function HomePage() {
       </section>
 
       {/* Pricing teaser */}
-      <section className="bg-[#0f0624]">
+      <section className="bg-[#2d1248]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold tracking-tight text-center text-white">{t("home.pricingTeaser")}</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
@@ -160,33 +160,33 @@ function HomePage() {
             ].map((p) => (
               <div
                 key={p.name}
-                className={`rounded-2xl border bg-white/[0.04] p-6 backdrop-blur ${p.highlight ? "border-primary/60 shadow-[0_0_50px_-10px_rgba(168,85,247,0.6)] ring-1 ring-primary/40" : "border-[rgba(167,139,250,0.2)]"}`}
+                className={`rounded-2xl border p-6 backdrop-blur ${p.highlight ? "border-[#b86ef9] bg-gradient-to-br from-[#522870] to-[#3d1a5c] shadow-[0_0_30px_rgba(184,110,249,0.4)] ring-1 ring-[#b86ef9]/40" : "border-[rgba(184,110,249,0.2)] bg-[#3d1a5c]"}`}
               >
                 {p.highlight && (
-                  <span className="inline-block rounded-full bg-gradient-to-r from-primary to-primary-light px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  <span className="inline-block rounded-full bg-gradient-to-r from-[#b86ef9] to-[#d4a5f9] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                     Recommandé
                   </span>
                 )}
                 <h3 className="mt-2 text-lg font-semibold text-white">{p.name}</h3>
                 <div className="mt-2 text-3xl font-bold text-white">
                   {p.price === 0 ? "0 CHF" : `${formatCHF(p.price)}`}
-                  <span className="text-sm font-normal text-muted-foreground">{p.price > 0 ? t("pricing.month") : ""}</span>
+                  <span className="text-sm font-normal text-[#d4c4e0]">{p.price > 0 ? t("pricing.month") : ""}</span>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
+                <p className="mt-2 text-sm text-[#d4c4e0]">{p.desc}</p>
               </div>
             ))}
           </div>
           <div className="mt-8 text-center">
             <Link to="/$lang/inscription" params={{ lang }}>
-              <Button size="lg" className="gap-2 bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white shadow-lg shadow-primary/40 hover:opacity-95"><Check className="h-4 w-4" />{t("home.ctaFree")}</Button>
+              <Button size="lg" className="gap-2 bg-[#b86ef9] text-white shadow-lg shadow-[#b86ef9]/40 hover:bg-[#a855f7]"><Check className="h-4 w-4" />{t("home.ctaFree")}</Button>
             </Link>
           </div>
         </div>
       </section>
 
       {/* Stats bar */}
-      <section className="relative overflow-hidden bg-[#1e0a3c] text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.25),transparent_70%)]" />
+      <section className="relative overflow-hidden bg-[#522870] text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(184,110,249,0.25),transparent_70%)]" />
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
             { n: "280+", l: t("home.stats.practitioners") },
@@ -195,8 +195,8 @@ function HomePage() {
             { n: "12k+", l: t("home.stats.sessions") },
           ].map((s) => (
             <div key={s.l} className="relative text-center">
-              <div className="bg-gradient-to-r from-primary-light to-accent bg-clip-text text-3xl font-bold text-transparent">{s.n}</div>
-              <div className="mt-1 text-sm text-white/80">{s.l}</div>
+              <div className="text-3xl font-bold text-[#b86ef9]">{s.n}</div>
+              <div className="mt-1 text-sm text-white">{s.l}</div>
             </div>
           ))}
         </div>
@@ -214,7 +214,7 @@ function HeroTagline({ text }: { text: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <span className="bg-gradient-to-r from-[#a855f7] via-[#c084fc] to-[#22d3ee] bg-clip-text text-transparent">
+      <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#5cc8fa] bg-clip-text text-transparent">
         {match[0]}
       </span>
       {text.slice(idx + match[0].length)}
