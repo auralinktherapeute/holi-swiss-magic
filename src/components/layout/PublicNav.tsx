@@ -37,11 +37,10 @@ export function PublicNav() {
         </nav>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Link to="/$lang/connexion" params={{ lang }} className="hidden sm:inline">
-            <Button variant="ghost" size="sm" className="text-[#d4c4e0] hover:bg-white/10 hover:text-white">{t("nav.login")}</Button>
-          </Link>
-          <Link to="/$lang/inscription" params={{ lang }}>
-            <Button size="sm" className="bg-[#b86ef9] text-white hover:bg-[#a855f7]">{t("nav.signup")}</Button>
+          <Link to="/$lang/connexion" params={{ lang }}>
+            <Button size="sm" variant="outline" className="border-[rgba(184,110,249,0.3)] text-[#d4c4e0] hover:bg-white/10 hover:text-white hover:border-[#b86ef9]">
+              {t("nav.therapistSpace")}
+            </Button>
           </Link>
         </div>
       </div>
