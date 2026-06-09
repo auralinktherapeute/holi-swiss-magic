@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   CANTONS, SPOKEN_LANGUAGES, THERAPY_SPECIALTIES, type TherapistService,
+  ACCREDITATION_ORGS, type Accreditation, normalizeSwissIde,
 } from "@/lib/constants";
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -78,9 +79,13 @@ function ProfilePage() {
   const [website, setWebsite] = useState("");
 
   // SIRET
-  const [siret, setSiret] = useState("");
-  const [siretVerified, setSiretVerified] = useState(false);
-  const [showSiret, setShowSiret] = useState(false);
+  // Swiss IDE / UID (CHE-XXX.XXX.XXX)
+  const [ide, setIde] = useState("");
+  const [ideVerified, setIdeVerified] = useState(false);
+  const [showIde, setShowIde] = useState(false);
+
+  // Accreditations (ASCA, RME, OrTra TC, ...)
+  const [accreditations, setAccreditations] = useState<Accreditation[]>([]);
 
   // Documents
   const [documents, setDocuments] = useState<DocRow[]>([]);
@@ -114,8 +119,9 @@ function ProfilePage() {
         setBio(data.bio ?? "");
         setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
         setWebsite(data.website ?? "");
-        setSiret((data as any).siret ?? "");
-        setSiretVerified((data as any).siret_verified ?? false);
+        setIde((data as any).ide ?? "");
+        setIdeVerified((data as any).ide_verified ?? false);
+        setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
 
         const { data: docs } = await supabase
           .from("therapist_documents" as any)
@@ -226,8 +232,9 @@ function ProfilePage() {
       bio: bio || null,
       google_reviews_url: googleReviewsUrl || null,
       website: website || null,
-      siret: siret || null,
-      siret_verified: siretVerified,
+      ide: ide || null,
+      ide_verified: ideVerified,
+      accreditations,
       status: "active",
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
