@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/select";
 import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { TherapistCard } from "@/components/holiswiss/TherapistCard";
+import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
@@ -29,92 +30,8 @@ function HomePage() {
 
   return (
     <>
-      {/* Hero */}
-      <section
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(180deg, #2a0f44 0%, #3d1a5c 45%, #2a0f44 100%)" }}
-      >
-        {/* Soft aurora glows */}
-        <div className="pointer-events-none absolute left-1/2 top-[38%] -z-0 h-[720px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(184,110,249,0.28),transparent_70%)] blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 top-10 -z-0 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(92,200,250,0.22),transparent_70%)] blur-3xl" />
-        <div className="pointer-events-none absolute -left-32 bottom-0 -z-0 h-[420px] w-[420px] rounded-full bg-[radial-gradient(closest-side,rgba(212,165,249,0.18),transparent_70%)] blur-3xl" />
-        {/* Subtle grain */}
-        <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.06] mix-blend-overlay [background-image:radial-gradient(rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:3px_3px]" />
-
-        <div className="relative mx-auto max-w-7xl px-4 pt-20 pb-20 sm:px-6 lg:px-8 lg:pt-28">
-          <div className="mx-auto max-w-4xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.45)] bg-white/5 px-4 py-1.5 text-xs font-medium text-[#e6d7f5] backdrop-blur-md shadow-[0_0_30px_-10px_rgba(184,110,249,0.6)]">
-              <Sparkles className="h-3.5 w-3.5 text-[#d4a5f9]" />
-              {t("home.hero_badge")}
-            </span>
-            <h1 className="mt-7 font-bold tracking-tight text-white text-[2.5rem] leading-[1.05] sm:text-6xl lg:text-[4.5rem]">
-              <HeroTagline text={t("brand.tagline")} />
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base text-[#d4c4e0] sm:text-lg">
-              {t("home.subtitle_lead")} {t("home.subtitle", { count: 280 })}
-            </p>
-          </div>
-
-          {/* Search bar — single elegant row */}
-          <div className="mx-auto mt-12 max-w-5xl">
-            <div className="relative rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2.5 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl">
-              <div className="holi-search-grid">
-                <div className="relative flex items-center" style={{ minWidth: 0 }}>
-                  <Search className="pointer-events-none absolute left-4 h-5 w-5 text-[#b9a4d4]" />
-                  <input
-                    type="text"
-                    placeholder={t("home.search_placeholder")}
-                    aria-label={t("home.search_aria")}
-                    className="h-14 w-full min-w-0 rounded-xl bg-transparent pl-12 pr-4 text-base text-white placeholder:text-[#a89bc4] focus:outline-none focus:ring-2 focus:ring-[#b86ef9]/60"
-                  />
-                </div>
-                <Select>
-                  <SelectTrigger className="h-14 w-full rounded-xl border-0 bg-white/[0.04] text-white shadow-none focus:ring-2 focus:ring-[#b86ef9]/60 md:w-[220px] md:shrink-0 [&>span]:text-white/90">
-                    <Sparkles className="mr-1 h-4 w-4 text-[#d4a5f9]" />
-                    <SelectValue placeholder={t("home.specialty_placeholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {THERAPY_CATEGORIES.map((c) => (
-                      <SelectItem key={c.slug} value={c.slug}>{c.emoji} {t(`categories.${c.slug}`, c.label)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Link to="/$lang/therapeutes" params={{ lang }} className="block md:w-[180px] md:shrink-0">
-                  <Button
-                    size="lg"
-                    className="h-14 w-full gap-2 rounded-xl bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-7 text-base font-semibold text-white shadow-[0_10px_40px_-10px_rgba(184,110,249,0.8)] transition-transform hover:scale-[1.02] hover:opacity-95"
-                  >
-                    <Search className="h-5 w-5" /> {t("home.search.cta")}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* Popular searches */}
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 text-sm">
-              <span className="text-[#a89bc4]">{t("home.popular_searches_label")}</span>
-              {popularSearches.map((q) => (
-                <Link
-                  key={q}
-                  to="/$lang/therapeutes"
-                  params={{ lang }}
-                  className="rounded-full border border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.55)] px-4 py-1.5 text-[#e6d7f5] backdrop-blur transition-all hover:border-[#b86ef9] hover:bg-[#3d1a5c] hover:text-white"
-                >
-                  {q}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Trust row */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-[#c8b8df]">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />{t("home.trust.verified")}</span>
-            <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-[#f59e0b]" />{t("home.trust.reviews")}</span>
-            <span className="inline-flex items-center gap-1.5"><CalendarCheck className="h-4 w-4 text-[#d4a5f9]" />{t("home.trust.booking")}</span>
-            <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#d4a5f9]" />{t("home.trust.cantons")}</span>
-          </div>
-        </div>
-      </section>
+      {/* Hero (4 variants — dev selector bottom-right) */}
+      <HeroVariants />
 
       {/* Specialty grid */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
