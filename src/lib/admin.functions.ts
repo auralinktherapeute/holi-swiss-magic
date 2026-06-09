@@ -7,24 +7,26 @@ function throwAdminOperationError(error: unknown, context: string): never {
   throw new Error("Une erreur est survenue. Veuillez réessayer.");
 }
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
+async function userIsAdmin(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throwAdminOperationError(error, "role check failed");
-  if (!data) throw new Error("Accès refusé.");
+  return !!data;
+}
+
+async function assertAdmin(userId: string) {
+  if (!(await userIsAdmin(userId))) throw new Error("Accès refusé.");
 }
 
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (error) return { isAdmin: false };
-    return { isAdmin: !!data, userId: context.userId };
+    return { isAdmin: await userIsAdmin(context.userId), userId: context.userId };
   });
 
 export const getAdminStats = createServerFn({ method: "GET" })
