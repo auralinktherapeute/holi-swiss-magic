@@ -37,6 +37,12 @@ type DocRow = {
 
 const CURRENCIES = ["CHF", "EUR", "USD"];
 const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#ef4444"];
+const THERAPIST_PROFILE_SELECT = [
+  "id", "photo_url", "first_name", "last_name", "city", "postal_code", "address", "phone",
+  "canton", "languages", "price_min", "price_max", "currency", "years_experience",
+  "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
+  "ide_verified", "accreditations",
+].join(",");
 
 function ProfilePage() {
   const { t } = useTranslation();
@@ -97,7 +103,11 @@ function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase.from("therapists").select("*").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase
+        .from("therapists")
+        .select(THERAPIST_PROFILE_SELECT)
+        .eq("user_id", user.id)
+        .maybeSingle() as any;
       if (data) {
         setRowId(data.id);
         setPhotoUrl(data.photo_url ?? "");
@@ -119,9 +129,16 @@ function ProfilePage() {
         setBio(data.bio ?? "");
         setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
         setWebsite(data.website ?? "");
-        setIde((data as any).ide ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+
+        const { data: privateIds } = await supabase
+          .from("therapist_private_identifiers" as any)
+          .select("ide")
+          .eq("therapist_id", data.id)
+          .eq("user_id", user.id)
+          .maybeSingle() as any;
+        setIde(privateIds?.ide ?? "");
 
         const { data: docs } = await supabase
           .from("therapist_documents" as any)
@@ -232,7 +249,6 @@ function ProfilePage() {
       bio: bio || null,
       google_reviews_url: googleReviewsUrl || null,
       website: website || null,
-      ide: ide || null,
       accreditations,
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
@@ -241,6 +257,15 @@ function ProfilePage() {
       : await supabase.from("therapists").insert(payload).select("id").maybeSingle();
     setSaving(false);
     if (error) return toast.error(t("profile_edit.save_error") + " — " + error.message);
+    const savedRowId = rowId ?? data?.id;
+    if (savedRowId) {
+      const { error: privateError } = await (supabase.from("therapist_private_identifiers" as any) as any)
+        .upsert(
+          { therapist_id: savedRowId, user_id: user.id, ide: ide || null },
+          { onConflict: "therapist_id" },
+        );
+      if (privateError) return toast.error(t("profile_edit.save_error") + " — " + privateError.message);
+    }
     if (data && !rowId) setRowId(data.id);
     setDirty(false);
     toast.success(t("profile_edit.saved_toast"));

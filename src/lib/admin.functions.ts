@@ -2,30 +2,37 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin role required");
+function throwAdminOperationError(error: unknown, context: string): never {
+  console.error(`[admin] ${context}:`, error);
+  throw new Error("Une erreur est survenue. Veuillez réessayer.");
+}
+
+async function userIsAdmin(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) throwAdminOperationError(error, "role check failed");
+  return !!data;
+}
+
+async function assertAdmin(userId: string) {
+  if (!(await userIsAdmin(userId))) throw new Error("Accès refusé.");
 }
 
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (error) return { isAdmin: false };
-    return { isAdmin: !!data, userId: context.userId };
+    return { isAdmin: await userIsAdmin(context.userId), userId: context.userId };
   });
 
 export const getAdminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const sinceMonth = new Date();
@@ -96,7 +103,7 @@ export const listTherapistsAdmin = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
@@ -112,7 +119,7 @@ export const listTherapistsAdmin = createServerFn({ method: "POST" })
       q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,email.ilike.%${s}%`);
     }
     const { data: rows, count, error } = await q;
-    if (error) throw new Error(error.message);
+    if (error) throwAdminOperationError(error, "list therapists failed");
     return { rows: rows ?? [], total: count ?? 0 };
   });
 
@@ -126,13 +133,13 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("therapists")
       .update({ status: data.status })
       .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throwAdminOperationError(error, "update therapist status failed");
     return { ok: true };
   });
 
@@ -140,10 +147,10 @@ export const listUsersAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ page: z.number().int().min(1).default(1), perPage: z.number().int().min(1).max(200).default(50) }))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page: data.page, perPage: data.perPage });
-    if (error) throw new Error(error.message);
+    if (error) throwAdminOperationError(error, "list users failed");
     const ids = list.users.map((u) => u.id);
     const { data: roleRows } = await supabaseAdmin.from("user_roles").select("user_id,role").in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
     const rolesByUser = new Map<string, string[]>();
@@ -174,14 +181,14 @@ export const setUserRole = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.enabled) {
       const { error } = await supabaseAdmin.from("user_roles").upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role" });
-      if (error) throw new Error(error.message);
+      if (error) throwAdminOperationError(error, "set user role failed");
     } else {
       const { error } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId).eq("role", data.role);
-      if (error) throw new Error(error.message);
+      if (error) throwAdminOperationError(error, "remove user role failed");
     }
     return { ok: true };
   });
@@ -190,11 +197,11 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ userId: z.string().uuid() }))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     if (data.userId === context.userId) throw new Error("Cannot delete your own account");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
-    if (error) throw new Error(error.message);
+    if (error) throwAdminOperationError(error, "delete user failed");
     return { ok: true };
   });
 
@@ -202,11 +209,11 @@ export const banUserAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ userId: z.string().uuid(), ban: z.boolean() }))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
       ban_duration: data.ban ? "8760h" : "none",
     } as any);
-    if (error) throw new Error(error.message);
+    if (error) throwAdminOperationError(error, "ban user failed");
     return { ok: true };
   });
