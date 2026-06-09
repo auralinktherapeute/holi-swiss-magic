@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { Footer } from "@/components/layout/Footer";
