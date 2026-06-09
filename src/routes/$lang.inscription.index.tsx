@@ -28,7 +28,7 @@ function SignupPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
+      toast.error(t("auth.password_mismatch"));
       return;
     }
     setLoading(true);
@@ -39,7 +39,7 @@ function SignupPage() {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Compte créé — vérifiez vos emails si la confirmation est requise");
+    toast.success(t("auth.account_created"));
     navigate({ to: "/dashboard" });
   };
 
@@ -56,7 +56,7 @@ function SignupPage() {
       }
       navigate({ to: "/dashboard" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Inscription Google impossible");
+      toast.error(error instanceof Error ? error.message : t("auth.google_signup_error"));
     } finally {
       setGoogleLoading(false);
     }
@@ -66,12 +66,11 @@ function SignupPage() {
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16 sm:px-6">
       <div className="text-center">
         <p className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-primary">
-          Espace thérapeutes
+          {t("auth.therapist_space")}
         </p>
-        <h1 className="text-3xl font-bold">Créer mon profil thérapeute</h1>
+        <h1 className="text-3xl font-bold">{t("auth.signup_title")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Inscription réservée aux praticiens. Les visiteurs peuvent consulter l'annuaire librement,
-          sans compte.
+          {t("auth.signup_subtitle")}
         </p>
       </div>
 
@@ -87,7 +86,7 @@ function SignupPage() {
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
-        {googleLoading ? "Connexion…" : "Continuer avec Google"}
+        {googleLoading ? t("auth.connecting") : t("auth.google_continue")}
       </button>
 
       <div className="relative">
@@ -95,7 +94,7 @@ function SignupPage() {
           <span className="w-full border-t border-[#e2e8f0]" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">ou</span>
+          <span className="bg-white px-2 text-muted-foreground">{t("auth.or")}</span>
         </div>
       </div>
 
@@ -130,14 +129,14 @@ function SignupPage() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+          <Label htmlFor="confirmPassword">{t("auth.confirm_password")}</Label>
           <div className="relative">
             <Input
               id="confirmPassword"
@@ -153,13 +152,13 @@ function SignupPage() {
               type="button"
               onClick={() => setShowConfirmPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              aria-label={showConfirmPassword ? t("auth.hide_password") : t("auth.show_password")}
             >
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
           {confirmPassword.length > 0 && confirmPassword !== password && (
-            <p className="text-xs text-destructive">Les mots de passe ne correspondent pas</p>
+            <p className="text-xs text-destructive">{t("auth.password_mismatch")}</p>
           )}
         </div>
         <Button className="w-full" type="submit" disabled={loading}>
