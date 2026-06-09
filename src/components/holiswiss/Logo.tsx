@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { SUPPORTED_LANGS, DEFAULT_LANG } from "@/lib/i18n";
-import lotusAsset from "@/assets/lotus-neon.png.asset.json";
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 
 export function Logo({ size = 48 }: { size?: number }) {
   // Derive lang from URL — identical on SSR and client (avoids hydration mismatch).
@@ -24,7 +24,6 @@ export function Logo({ size = 48 }: { size?: number }) {
           width: size,
           height: size,
           objectFit: "contain",
-          mixBlendMode: "screen",
           filter: "drop-shadow(0 0 12px rgba(184,110,249,0.7))",
         }}
       />
