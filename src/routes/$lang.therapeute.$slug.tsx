@@ -65,6 +65,7 @@ function Page() {
     );
   }
 
+  const fullName = `${th.first_name} ${th.last_name}`.trim();
   const avg =
     reviews && reviews.length
       ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -76,10 +77,10 @@ function Page() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="aspect-square w-full bg-muted">
             {th.photo_url ? (
-              <img src={th.photo_url} alt={th.display_name} className="h-full w-full object-cover" />
+              <img src={th.photo_url} alt={fullName} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-6xl font-bold text-muted-foreground/40">
-                {th.display_name.slice(0, 1)}
+                {fullName.slice(0, 1)}
               </div>
             )}
           </div>
@@ -87,15 +88,15 @@ function Page() {
 
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">{th.display_name}</h1>
-            {th.is_verified && (
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{fullName}</h1>
+            {th.verified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                 <BadgeCheck className="h-3.5 w-3.5" /> Vérifié
               </span>
             )}
-            {th.plan && (
+            {th.title && (
               <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                {th.plan}
+                {th.title}
               </span>
             )}
           </div>
@@ -107,10 +108,10 @@ function Page() {
                 {th.languages.join(", ")}
               </span>
             ) : null}
-            {th.canton_id && (
+            {th.canton && (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin className="h-4 w-4" />
-                {th.canton_id}
+                {th.canton}
               </span>
             )}
             {avg && (
@@ -123,9 +124,9 @@ function Page() {
 
           {th.bio && <p className="mt-6 whitespace-pre-line text-foreground/80">{th.bio}</p>}
 
-          {th.price_per_session != null && (
+          {th.price_min != null && (
             <p className="mt-6 text-lg font-semibold text-foreground">
-              CHF {th.price_per_session}
+              {th.currency ?? "CHF"} {th.price_min}
               <span className="ml-1 text-sm font-normal text-muted-foreground">/ séance</span>
             </p>
           )}

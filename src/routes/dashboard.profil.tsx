@@ -22,7 +22,8 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [rowId, setRowId] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [slug, setSlug] = useState("");
   const [bio, setBio] = useState("");
   const [canton, setCanton] = useState("VD");
@@ -40,12 +41,13 @@ function Page() {
         .maybeSingle();
       if (!error && data) {
         setRowId(data.id);
-        setDisplayName(data.display_name ?? "");
+        setFirstName(data.first_name ?? "");
+        setLastName(data.last_name ?? "");
         setSlug(data.slug ?? "");
         setBio(data.bio ?? "");
-        setCanton(data.canton_id ?? "VD");
-        setPrice(data.price_per_session ?? 0);
-        setSelected(data.specialty_ids ?? []);
+        setCanton(data.canton ?? "VD");
+        setPrice(data.price_min ?? 0);
+        setSelected(data.specialties ?? []);
         setLangs(data.languages ?? []);
       }
       setLoading(false);
@@ -59,14 +61,16 @@ function Page() {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
+    const displayName = `${firstName} ${lastName}`.trim();
     const payload = {
       user_id: user.id,
       slug: slug || (displayName.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + user.id.slice(0, 6)),
-      display_name: displayName || user.email!,
+      first_name: firstName || user.email!.split("@")[0],
+      last_name: lastName || "",
       bio,
-      canton_id: canton,
-      price_per_session: price,
-      specialty_ids: selected,
+      canton,
+      price_min: price,
+      specialties: selected,
       languages: langs,
       status: "active",
     };
@@ -97,7 +101,10 @@ function Page() {
               <div className="h-20 w-20 rounded-full bg-primary-xlight border border-primary/30" />
               <Button type="button" variant="secondary" size="sm"><Upload className="h-4 w-4 mr-2" />Changer la photo</Button>
             </div>
-            <div className="space-y-2"><Label htmlFor="name">Nom affiché</Label><Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} /></div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label htmlFor="first">Prénom</Label><Input id="first" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="last">Nom</Label><Input id="last" value={lastName} onChange={(e) => setLastName(e.target.value)} /></div>
+            </div>
             <div className="space-y-2"><Label htmlFor="slug">Slug (URL publique)</Label><Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="claire-dupont" /></div>
             <div className="space-y-2">
               <Label htmlFor="bio">Présentation</Label>
