@@ -1,29 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { DEFAULT_LANG, SUPPORTED_LANGS } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
-    ],
-  }),
-  component: Index,
+  beforeLoad: () => {
+    let lang: string = DEFAULT_LANG;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("holiswiss-lang");
+        if (stored && (SUPPORTED_LANGS as readonly string[]).includes(stored)) lang = stored;
+      } catch {}
+    }
+    throw redirect({ to: "/$lang", params: { lang } });
+  },
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
