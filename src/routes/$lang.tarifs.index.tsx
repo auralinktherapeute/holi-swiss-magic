@@ -41,7 +41,6 @@ function PricingPage() {
         "Articles de blog illimités",
         "Jusqu'à 5 spécialités",
         "Badge Essentiel visible",
-        "Priorité dans les résultats",
       ],
       cta: "Choisir Essentiel",
     },
