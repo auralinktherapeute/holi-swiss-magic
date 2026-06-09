@@ -64,8 +64,8 @@ function HomePage() {
           {/* Search bar — single elegant row */}
           <div className="mx-auto mt-12 max-w-5xl">
             <div className="relative rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2.5 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl">
-              <div className="grid gap-2 md:grid-cols-[1.6fr_1fr_auto]">
-                <div className="relative flex items-center">
+              <div className="flex flex-col gap-2 md:flex-row md:items-stretch">
+                <div className="relative flex flex-1 items-center md:min-w-0">
                   <Search className="pointer-events-none absolute left-4 h-5 w-5 text-[#b9a4d4]" />
                   <input
                     type="text"
@@ -75,7 +75,7 @@ function HomePage() {
                   />
                 </div>
                 <Select>
-                  <SelectTrigger className="h-14 rounded-xl border-0 bg-white/[0.04] text-white shadow-none focus:ring-2 focus:ring-[#b86ef9]/60 [&>span]:text-white/90">
+                  <SelectTrigger className="h-14 rounded-xl border-0 bg-white/[0.04] text-white shadow-none focus:ring-2 focus:ring-[#b86ef9]/60 md:w-[220px] [&>span]:text-white/90">
                     <span className="mr-2 inline-flex h-5 w-5 items-center justify-center text-[#d4a5f9]">
                       <Sparkles className="h-4 w-4" />
                     </span>
@@ -87,7 +87,7 @@ function HomePage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Link to="/$lang/therapeutes" params={{ lang }} className="md:w-auto">
+                <Link to="/$lang/therapeutes" params={{ lang }} className="md:shrink-0">
                   <Button
                     size="lg"
                     className="h-14 w-full gap-2 rounded-xl bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-7 text-base font-semibold text-white shadow-[0_10px_40px_-10px_rgba(184,110,249,0.8)] transition-transform hover:scale-[1.02] hover:opacity-95"
