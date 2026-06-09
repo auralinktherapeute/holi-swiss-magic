@@ -248,10 +248,31 @@ function ProfilePage() {
     toast.success(t("profile_edit.saved_toast"));
   };
 
-  const verifySiret = () => {
-    const digits = siret.replace(/\D/g, "");
-    if (digits.length === 14) { setSiretVerified(true); markDirty(); toast.success(t("profile_edit.siret_active")); }
-    else toast.error("SIRET 14 chiffres requis");
+  const verifyIde = () => {
+    const normalized = normalizeSwissIde(ide);
+    if (!normalized) {
+      toast.error(t("profile_edit.ide_invalid"));
+      return;
+    }
+    setIde(normalized);
+    setIdeVerified(true);
+    markDirty();
+    toast.success(t("profile_edit.ide_active"));
+    // Open official UID register so user can confirm publicly
+    window.open(`https://www.uid.admin.ch/Search.aspx?uid_id=${normalized}`, "_blank", "noopener");
+  };
+
+  const toggleAccreditation = (code: string) => {
+    setAccreditations((prev) =>
+      prev.find((a) => a.org === code)
+        ? prev.filter((a) => a.org !== code)
+        : [...prev, { org: code, number: "" }],
+    );
+    markDirty();
+  };
+  const updateAccreditationNumber = (code: string, number: string) => {
+    setAccreditations((prev) => prev.map((a) => (a.org === code ? { ...a, number } : a)));
+    markDirty();
   };
 
   if (loading) {
