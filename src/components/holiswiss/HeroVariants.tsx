@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import lotusAsset from "@/assets/lotus-logo.png.asset.json";
+import lotusNeonAsset from "@/assets/lotus-neon.png.asset.json";
 
 type Variant = 1 | 2 | 3 | 4;
 
@@ -16,6 +17,19 @@ function LotusGlow({ size = 80, className = "" }: { size?: number; className?: s
       height={size}
       className={`hv-lotus-glow ${className}`}
       style={{ width: size, height: size }}
+    />
+  );
+}
+
+function LotusNeon({ size = 80, className = "", style }: { size?: number; className?: string; style?: React.CSSProperties }) {
+  return (
+    <img
+      src={lotusNeonAsset.url}
+      alt="Holiswiss lotus"
+      width={size}
+      height={size}
+      className={className}
+      style={{ width: size, height: size, objectFit: "contain", ...style }}
     />
   );
 }
@@ -93,7 +107,7 @@ function VariantSplit() {
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 items-center gap-10 px-6 py-24 md:grid-cols-5">
         <div className="md:col-span-3 space-y-6">
           <div className="hv-slide-up flex items-center gap-3" style={{ animationDelay: "0ms" }}>
-            <LotusGlow size={80} />
+            <LotusNeon size={80} className="hv-lotus-glow" />
             <Wordmark />
           </div>
           <h1 className="hv-slide-up text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl" style={{ animationDelay: "150ms" }}>
@@ -120,7 +134,11 @@ function VariantSplit() {
           <div className="hv-aura" />
           <div className="hv-aura hv-aura-2" />
           <div className="hv-aura hv-aura-3" />
-          <img src={lotusAsset.url} alt="" className="hv-lotus-spin relative z-10" style={{ width: 300, height: 300, filter: "drop-shadow(0 0 40px rgba(184,110,249,0.7))" }} />
+          <LotusNeon
+            size={320}
+            className="hv-lotus-spin relative z-10"
+            style={{ filter: "drop-shadow(0 0 50px rgba(184,110,249,0.85)) drop-shadow(0 0 90px rgba(92,200,250,0.45))" }}
+          />
         </div>
       </div>
     </section>
