@@ -554,34 +554,90 @@ function ProfilePage() {
           <Field label={
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[#b86ef9]" />
-              <span className="font-semibold text-white">{t("profile_edit.siret_label")}</span>
-              <span className="text-xs font-normal text-[#a89bc4]">{t("profile_edit.siret_visibility")}</span>
+              <span className="font-semibold text-white">{t("profile_edit.ide_label")}</span>
+              <span className="text-xs font-normal text-[#a89bc4]">{t("profile_edit.ide_visibility")}</span>
             </span>
           }>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Input
-                  type={showSiret ? "text" : "password"}
-                  value={siret}
-                  onChange={(e) => { setSiret(e.target.value); setSiretVerified(false); markDirty(); }}
+                  type={showIde ? "text" : "password"}
+                  value={ide}
+                  placeholder="CHE-123.456.789"
+                  onChange={(e) => { setIde(e.target.value); setIdeVerified(false); markDirty(); }}
                   className={`${inputClass} pr-10`}
                 />
-                <button type="button" onClick={() => setShowSiret((v) => !v)}
+                <button type="button" onClick={() => setShowIde((v: boolean) => !v)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-[#a89bc4] hover:bg-white/5">
-                  {showSiret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showIde ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <Button type="button" onClick={verifySiret} variant="outline"
+              <Button type="button" onClick={verifyIde} variant="outline"
                 className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
-                {t("profile_edit.siret_verify")}
+                {t("profile_edit.ide_verify")}
               </Button>
             </div>
-            <p className="mt-2 text-xs text-[#a89bc4]">{t("profile_edit.siret_helper")}</p>
-            {siretVerified && (
+            <p className="mt-2 text-xs text-[#a89bc4]">{t("profile_edit.ide_helper")}</p>
+            {ideVerified && (
               <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#10b981]/30 bg-[#10b981]/10 px-4 py-2.5 text-sm text-[#86efac]">
-                <ShieldCheck className="h-4 w-4" />{t("profile_edit.siret_active")}
+                <ShieldCheck className="h-4 w-4" />{t("profile_edit.ide_active")}
               </div>
             )}
+          </Field>
+
+          <Divider />
+
+          {/* Accreditations */}
+          <Field label={
+            <span className="inline-flex items-center gap-2">
+              <BadgeCheck className="h-4 w-4 text-[#b86ef9]" />
+              <span className="font-semibold text-white">{t("profile_edit.accreditations_label")}</span>
+            </span>
+          }>
+            <p className="mb-3 text-xs text-[#a89bc4]">{t("profile_edit.accreditations_helper")}</p>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {ACCREDITATION_ORGS.map((org) => {
+                const sel = accreditations.find((a) => a.org === org.code);
+                const active = !!sel;
+                return (
+                  <div
+                    key={org.code}
+                    className={`rounded-xl border p-3 transition ${
+                      active
+                        ? "border-[#b86ef9] bg-[#b86ef9]/10"
+                        : "border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.4)]"
+                    }`}
+                  >
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleAccreditation(org.code)}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition ${
+                          active
+                            ? "border-[#b86ef9] bg-[#b86ef9] text-white"
+                            : "border-[#b86ef9]/40 bg-transparent"
+                        }`}
+                        aria-label={org.label}
+                      >
+                        {active && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                      <div className="flex-1">
+                        <div className="font-semibold text-white">{org.label}</div>
+                        <div className="text-xs text-[#a89bc4]">{org.description}</div>
+                      </div>
+                    </label>
+                    {active && (
+                      <Input
+                        value={sel?.number ?? ""}
+                        onChange={(e) => updateAccreditationNumber(org.code, e.target.value)}
+                        placeholder={t("profile_edit.accreditation_number_placeholder")}
+                        className={`${inputClass} mt-3`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Field>
 
           {!dirty && (
