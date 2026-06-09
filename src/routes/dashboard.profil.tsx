@@ -183,10 +183,10 @@ function ProfilePage() {
     if (error) return toast.error(t("profile_edit.upload_error"));
     const { data: pub } = supabase.storage.from("therapist-documents").getPublicUrl(path);
     const { data: ins, error: insErr } = await supabase
-      .from("therapist_documents")
-      .insert({ therapist_id: rowId, file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: true })
+      .from("therapist_documents" as any)
+      .insert({ therapist_id: rowId, file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: true } as any)
       .select("id, file_url, file_name, label, is_public")
-      .single();
+      .single() as any;
     if (insErr || !ins) return toast.error(t("profile_edit.upload_error"));
     setDocuments((prev) => [ins, ...prev]);
     if (docInputRef.current) docInputRef.current.value = "";
@@ -194,11 +194,11 @@ function ProfilePage() {
 
   const updateDoc = async (id: string, patch: Partial<DocRow>) => {
     setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
-    await supabase.from("therapist_documents").update(patch).eq("id", id);
+    await (supabase.from("therapist_documents" as any).update(patch as any) as any).eq("id", id);
   };
   const deleteDoc = async (id: string) => {
     if (!confirm(t("profile_edit.delete_confirm"))) return;
-    await supabase.from("therapist_documents").delete().eq("id", id);
+    await supabase.from("therapist_documents" as any).delete().eq("id", id);
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   };
 
