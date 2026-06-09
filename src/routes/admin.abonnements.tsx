@@ -1,10 +1,87 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { PagePlaceholder } from "@/components/holiswiss/PagePlaceholder";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CreditCard, Users, TrendingUp, AlertCircle, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/admin/abonnements")({ component: Page });
 
+const STATS = [
+  { label: "MRR", value: "3 248 CHF", icon: TrendingUp, delta: "+8% vs mois -1" },
+  { label: "Abonnés actifs", value: "112", icon: Users, delta: "98 Pro · 14 Premium" },
+  { label: "Churn (30j)", value: "2,1%", icon: AlertCircle, delta: "Stable" },
+  { label: "Échecs paiement", value: "3", icon: CreditCard, delta: "À relancer" },
+];
+
+const SUBS = [
+  { id: "sub_001", customer: "Claire Dupont", plan: "Pro", amount: "29 CHF", status: "active", next: "01 juil. 2026" },
+  { id: "sub_002", customer: "Anna Bianchi", plan: "Premium", amount: "59 CHF", status: "active", next: "12 juin 2026" },
+  { id: "sub_003", customer: "Marc Reber", plan: "Pro", amount: "29 CHF", status: "past_due", next: "—" },
+  { id: "sub_004", customer: "Sofia Rossi", plan: "Pro", amount: "29 CHF", status: "canceled", next: "—" },
+];
+
+const STATUS_CLS: Record<string, string> = {
+  active: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  past_due: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  canceled: "bg-red-500/15 text-red-300 border-red-500/30",
+};
+
 function Page() {
-  const { t } = useTranslation();
-  return <PagePlaceholder title={t("admin.subscriptions")} />;
+  return (
+    <div className="p-6 md:p-10 space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Abonnements Stripe</h1>
+          <p className="text-muted-foreground mt-1">Vue d'ensemble facturation & subscriptions</p>
+        </div>
+        <Badge variant="outline" className="bg-yellow-500/15 text-yellow-300 border-yellow-500/30">⚠ Stripe non connecté (données démo)</Badge>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {STATS.map((s) => {
+          const Icon = s.icon;
+          return (
+            <Card key={s.label}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
+                <Icon className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{s.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{s.delta}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Abonnements récents</CardTitle>
+          <Button variant="secondary" size="sm"><ExternalLink className="h-4 w-4 mr-1" />Ouvrir Stripe</Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>Client</TableHead><TableHead>Plan</TableHead><TableHead>Montant</TableHead>
+              <TableHead>Statut</TableHead><TableHead>Prochain prélèvement</TableHead><TableHead>ID</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {SUBS.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.customer}</TableCell>
+                  <TableCell><Badge variant="secondary">{s.plan}</Badge></TableCell>
+                  <TableCell>{s.amount}</TableCell>
+                  <TableCell><Badge variant="outline" className={STATUS_CLS[s.status]}>{s.status}</Badge></TableCell>
+                  <TableCell className="text-muted-foreground">{s.next}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{s.id}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

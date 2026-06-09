@@ -1,10 +1,78 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { PagePlaceholder } from "@/components/holiswiss/PagePlaceholder";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Mail, Send, Pencil, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/emails")({ component: Page });
 
+type Tpl = { id: string; name: string; subject: string; trigger: string; sent: number; body: string };
+
+const TEMPLATES: Tpl[] = [
+  { id: "welcome", name: "Bienvenue thérapeute", subject: "Bienvenue sur Holiswiss 🌿", trigger: "Inscription validée", sent: 142, body: "Bonjour {{firstname}},\n\nVotre compte Holiswiss vient d'être validé. Vous pouvez désormais compléter votre profil…" },
+  { id: "booking", name: "Confirmation réservation", subject: "Votre réservation est confirmée", trigger: "Réservation acceptée", sent: 1284, body: "Bonjour {{patient}},\n\nVotre rendez-vous avec {{therapist}} est confirmé pour le {{date}}…" },
+  { id: "reminder", name: "Rappel rendez-vous", subject: "Rappel : rendez-vous demain", trigger: "J-1 réservation", sent: 974, body: "Bonjour {{patient}},\n\nPetit rappel : votre rendez-vous avec {{therapist}} a lieu demain à {{time}}…" },
+  { id: "review", name: "Demande d'avis", subject: "Comment s'est passée votre séance ?", trigger: "J+1 rendez-vous", sent: 612, body: "Bonjour {{patient}},\n\nNous espérons que votre séance s'est bien passée. Souhaitez-vous laisser un avis ?…" },
+];
+
 function Page() {
-  const { t } = useTranslation();
-  return <PagePlaceholder title={t("admin.emails")} />;
+  const [active, setActive] = useState<Tpl>(TEMPLATES[0]);
+
+  return (
+    <div className="p-6 md:p-10 space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Mail className="h-7 w-7 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Templates emails</h1>
+            <p className="text-muted-foreground">Powered by Brevo · {TEMPLATES.reduce((s, t) => s + t.sent, 0)} emails envoyés (30j)</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-yellow-500/15 text-yellow-300 border-yellow-500/30">⚠ Brevo non connecté (données démo)</Badge>
+          <Button><Plus className="h-4 w-4 mr-1" />Nouveau</Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-6">
+        <Card>
+          <CardHeader><CardTitle>Templates</CardTitle></CardHeader>
+          <CardContent className="space-y-1">
+            {TEMPLATES.map((t) => (
+              <button key={t.id} onClick={() => setActive(t)}
+                className={`w-full text-left rounded-lg p-3 transition-colors ${active.id === t.id ? "bg-primary/15 border border-primary/30" : "hover:bg-muted/40 border border-transparent"}`}>
+                <div className="font-medium text-sm">{t.name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{t.trigger}</div>
+                <div className="text-xs text-primary mt-1">{t.sent} envoyés</div>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2"><Pencil className="h-5 w-5 text-primary" />{active.name}</CardTitle>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => toast("Email test envoyé")}><Send className="h-4 w-4 mr-1" />Test</Button>
+              <Button size="sm" onClick={() => toast.success("Template sauvegardé")} className="bg-primary hover:bg-primary/90">Enregistrer</Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2"><Label htmlFor="sub">Objet</Label><Input id="sub" defaultValue={active.subject} key={`s-${active.id}`} /></div>
+            <div className="space-y-2"><Label htmlFor="trig">Déclencheur</Label><Input id="trig" defaultValue={active.trigger} key={`t-${active.id}`} /></div>
+            <div className="space-y-2">
+              <Label htmlFor="body">Corps (HTML/Markdown)</Label>
+              <Textarea id="body" rows={14} defaultValue={active.body} key={`b-${active.id}`} className="font-mono text-sm" />
+              <p className="text-xs text-muted-foreground">Variables : <code className="text-primary">{`{{firstname}}`}</code> <code className="text-primary">{`{{therapist}}`}</code> <code className="text-primary">{`{{patient}}`}</code> <code className="text-primary">{`{{date}}`}</code></p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }
