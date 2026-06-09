@@ -1,13 +1,24 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut,
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AdminNav() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const email = user?.email ?? "admin@holiswiss.ch";
+  const initial = email.charAt(0).toUpperCase();
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/$lang", params: { lang: "fr" } });
+  };
   const items = [
     { to: "/admin", icon: LayoutDashboard, label: t("admin.overview"), exact: true },
     { to: "/admin/therapeutes", icon: Users, label: t("admin.therapists") },
@@ -22,12 +33,14 @@ export function AdminNav() {
     { to: "/admin/parametres", icon: Settings, label: t("admin.settings") },
   ];
   return (
-    <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground">
-      <div className="h-16 flex items-center px-6 border-b border-border">
+    <aside
+      className="hidden md:flex w-64 shrink-0 flex-col text-sidebar-foreground"
+      style={{ background: "#0f0a1e", borderRight: "1px solid rgba(255,255,255,0.08)" }}
+    >
+      <div className="h-16 flex items-center px-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div className="flex items-center gap-1.5 text-xl font-bold">
           <span aria-hidden className="text-2xl drop-shadow-[0_0_8px_rgba(124,58,237,0.6)]">🌿</span>
-          <span className="text-primary-light">Holi</span>
-          <span className="text-white font-normal">swiss</span>
+          <span style={{ color: "#b86ef9" }}>Holiswiss</span>
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -55,13 +68,19 @@ export function AdminNav() {
           );
         })}
       </nav>
-      <div className="border-t border-border p-3 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">A</div>
+      <div className="p-3 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">{initial}</div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate">Admin</div>
-          <div className="text-xs text-sidebar-foreground/60 truncate">admin@holiswiss.ch</div>
+          <div className="text-xs text-sidebar-foreground/60 truncate">{email}</div>
         </div>
-        <LogOut className="h-4 w-4 text-sidebar-foreground/60" />
+        <button
+          onClick={signOut}
+          aria-label="Se déconnecter"
+          className="rounded-md p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
       </div>
     </aside>
   );
