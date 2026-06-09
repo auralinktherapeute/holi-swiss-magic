@@ -2,13 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+function throwAdminOperationError(error: unknown, context: string): never {
+  console.error(`[admin] ${context}:`, error);
+  throw new Error("Une erreur est survenue. Veuillez réessayer.");
+}
+
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", {
     _user_id: userId,
     _role: "admin",
   });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin role required");
+  if (error) throwAdminOperationError(error, "role check failed");
+  if (!data) throw new Error("Accès refusé.");
 }
 
 export const checkIsAdmin = createServerFn({ method: "GET" })
