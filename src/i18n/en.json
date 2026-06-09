@@ -381,5 +381,22 @@
     "service_desc_placeholder": "e.g. For a 60-minute discovery session",
     "add_service": "Add a service",
     "loading": "Loading…"
+  },
+  "hero": {
+    "title_part1": "Find the right",
+    "title_highlight": "therapist",
+    "title_part2": ", everywhere in Switzerland",
+    "subtitle": "Over 280 verified practitioners in sophrology, hypnosis, naturopathy and more.",
+    "search_placeholder": "Specialty, city…",
+    "search_btn": "Search",
+    "trust_verified": "Verified practitioners",
+    "trust_cantons": "26 cantons",
+    "find_btn": "Find a therapist",
+    "signup_free": "Sign up for free",
+    "stats_practitioners": "practitioners",
+    "stats_cantons": "cantons",
+    "stats_languages": "languages",
+    "glass_subtitle": "The Swiss holistic wellness platform.",
+    "glass_placeholder": "What are you looking for?"
   }
 }

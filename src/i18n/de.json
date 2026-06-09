@@ -381,5 +381,22 @@
     "service_desc_placeholder": "z. B. Für eine 60-minütige Kennenlernsitzung",
     "add_service": "Leistung hinzufügen",
     "loading": "Laden…"
+  },
+  "hero": {
+    "title_part1": "Finden Sie den richtigen",
+    "title_highlight": "Therapeuten",
+    "title_part2": ", überall in der Schweiz",
+    "subtitle": "Über 280 verifizierte Praktiker in Sophrologie, Hypnose, Naturheilkunde und mehr.",
+    "search_placeholder": "Spezialität, Stadt…",
+    "search_btn": "Suchen",
+    "trust_verified": "Verifizierte Praktiker",
+    "trust_cantons": "26 Kantone",
+    "find_btn": "Therapeut finden",
+    "signup_free": "Kostenlos registrieren",
+    "stats_practitioners": "Praktiker",
+    "stats_cantons": "Kantone",
+    "stats_languages": "Sprachen",
+    "glass_subtitle": "Die Schweizer Plattform für ganzheitliches Wohlbefinden.",
+    "glass_placeholder": "Wonach suchen Sie?"
   }
 }

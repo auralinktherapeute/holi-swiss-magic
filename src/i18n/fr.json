@@ -381,5 +381,22 @@
     "service_desc_placeholder": "Ex: Pour une séance de découverte de 60 min",
     "add_service": "Ajouter un service",
     "loading": "Chargement…"
+  },
+  "hero": {
+    "title_part1": "Trouvez le bon",
+    "title_highlight": "thérapeute",
+    "title_part2": ", partout en Suisse",
+    "subtitle": "Plus de 280 praticiens vérifiés en sophrologie, hypnose, naturopathie et bien plus.",
+    "search_placeholder": "Spécialité, ville…",
+    "search_btn": "Chercher",
+    "trust_verified": "Praticiens vérifiés",
+    "trust_cantons": "26 cantons",
+    "find_btn": "Trouver un thérapeute",
+    "signup_free": "S'inscrire gratuitement",
+    "stats_practitioners": "praticiens",
+    "stats_cantons": "cantons",
+    "stats_languages": "langues",
+    "glass_subtitle": "La plateforme suisse du bien-être holistique.",
+    "glass_placeholder": "Que recherchez-vous ?"
   }
 }
