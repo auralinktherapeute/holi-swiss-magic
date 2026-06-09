@@ -1,45 +1,171 @@
 {
-  "brand": { "name": "Holiswiss", "tagline": "Finden Sie den richtigen Therapeuten in der Schweiz" },
+  "brand": {
+    "name": "Holiswiss",
+    "tagline": "Finden Sie den richtigen Therapeuten in der Schweiz"
+  },
   "nav": {
-    "therapists": "Therapeuten", "blog": "Blog", "events": "Veranstaltungen", "pricing": "Preise",
-    "login": "Anmelden", "signup": "Registrieren", "therapistSpace": "Therapeutenbereich", "contact": "Kontakt",
-    "dashboard": "Dashboard", "admin": "Administration"
+    "therapists": "Therapeuten",
+    "blog": "Blog",
+    "events": "Veranstaltungen",
+    "pricing": "Preise",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "therapistSpace": "Therapeutenbereich",
+    "contact": "Kontakt",
+    "dashboard": "Dashboard",
+    "admin": "Administration"
   },
   "home": {
     "subtitle": "{{count}} Praktizierende · 26 Kantone · 4 Sprachen",
-    "search": { "approach": "Ansatz", "canton": "Kanton", "language": "Sprache", "cta": "Suchen" },
-    "trust": { "verified": "Geprüfte Profile", "reviews": "Echte Bewertungen", "booking": "Online-Buchung", "cantons": "26 Kantone" },
+    "search": {
+      "approach": "Ansatz",
+      "canton": "Kanton",
+      "language": "Sprache",
+      "cta": "Suchen"
+    },
+    "trust": {
+      "verified": "Geprüfte Profile",
+      "reviews": "Echte Bewertungen",
+      "booking": "Online-Buchung",
+      "cantons": "26 Kantone"
+    },
     "specialties": "Ansätze & Methoden",
     "featured": "Empfohlene Praktizierende",
-    "how": { "title": "So funktioniert es", "step1": "Suchen Sie nach Ansatz, Kanton oder Sprache", "step2": "Profile und geprüfte Bewertungen ansehen", "step3": "Sitzung einfach online buchen" },
+    "how": {
+      "title": "So funktioniert es",
+      "step1": "Suchen Sie nach Ansatz, Kanton oder Sprache",
+      "step2": "Profile und geprüfte Bewertungen ansehen",
+      "step3": "Sitzung einfach online buchen"
+    },
     "pricingTeaser": "Wählen Sie Ihr Paket",
     "ctaFree": "Kostenlos starten — 2 Monate gratis",
-    "stats": { "practitioners": "Praktizierende", "cantons": "Kantone", "approaches": "Ansätze", "sessions": "gebuchte Sitzungen" }
+    "stats": {
+      "practitioners": "Praktizierende",
+      "cantons": "Kantone",
+      "approaches": "Ansätze",
+      "sessions": "gebuchte Sitzungen"
+    }
   },
-  "directory": { "title": "Therapeutenverzeichnis", "subtitle": "Finden Sie einen Praktizierenden in Ihrer Nähe" },
-  "profile": { "viewProfile": "Profil ansehen", "from": "ab", "book": "Sitzung buchen" },
+  "directory": {
+    "title": "Therapeutenverzeichnis",
+    "subtitle": "Finden Sie einen Praktizierenden in Ihrer Nähe"
+  },
+  "profile": {
+    "viewProfile": "Profil ansehen",
+    "from": "ab",
+    "book": "Sitzung buchen"
+  },
   "pricing": {
-    "title": "Preise", "subtitle": "Ein Paket für jeden Praktizierenden", "month": "/ Monat",
-    "free": { "name": "Free", "desc": "Basisprofil · sichtbar im Verzeichnis" },
-    "pro": { "name": "Pro", "desc": "Agenda · Bewertungen · Artikel · Statistiken" },
-    "premium": { "name": "Premium", "desc": "Alles Pro + Hervorhebung + verifiziertes Abzeichen" },
-    "cta": "Dieses Paket wählen"
+    "badge": "Tarife für Therapeuten",
+    "title_part1": "Wählen Sie Ihr",
+    "title_highlight": "Premium-Paket",
+    "subtitle": "Eine Plattform, die Ihre Praxis hervorhebt und Ihre Kundschaft in der ganzen Schweiz erweitert.",
+    "month": "/Monat",
+    "no_commitment": "Keine Bindung",
+    "recommended": "EMPFOHLEN",
+    "excellence": "EXZELLENZ",
+    "plans": {
+      "basic": {
+        "name": "Basic",
+        "tagline": "Um auf der Plattform zu starten",
+        "features": [
+          "Therapeutenprofil sichtbar",
+          "Kontaktdaten angezeigt",
+          "Bis zu 3 Spezialgebiete",
+          "1 Profilfoto",
+          "Sichtbar im Verzeichnis"
+        ],
+        "cta": "Kostenlos starten"
+      },
+      "essentiel": {
+        "name": "Essentiel",
+        "tagline": "Um Ihre Tätigkeit auszubauen",
+        "features": [
+          "Alles aus Basic +",
+          "Integrierter Online-Terminkalender",
+          "Verifizierte Bewertungen",
+          "Unbegrenzte Blogartikel",
+          "Bis zu 5 Spezialgebiete",
+          "Essentiel-Abzeichen sichtbar"
+        ],
+        "cta": "Essentiel wählen"
+      },
+      "elite": {
+        "name": "Elite Pro",
+        "tagline": "Für anspruchsvolle Fachleute",
+        "features": [
+          "Alles aus Essentiel +",
+          "✨ Elite Pro GOLD Abzeichen auf dem Profil (sehr sichtbar in den Ergebnissen)",
+          "🎯 Unbegrenzte Spezialgebiete (10+)",
+          "Priorität in den Suchergebnissen",
+          "Prioritärer Support 24/7",
+          "Hervorhebung im wöchentlichen Newsletter",
+          "Zugang zu Premium-Veranstaltungen"
+        ],
+        "cta": "Elite Pro werden"
+      }
+    },
+    "reassurance": [
+      {
+        "title": "Keine Bindung",
+        "desc": "Jederzeit mit einem Klick kündbar."
+      },
+      {
+        "title": "Sichere Zahlung",
+        "desc": "Verschlüsselte, DSGVO-konforme Transaktionen."
+      },
+      {
+        "title": "Support auf Deutsch",
+        "desc": "Ein Schweizer Team für Sie da."
+      }
+    ],
+    "faq_question": "Eine Frage?",
+    "faq_link": "Kontaktieren Sie unser Team"
   },
   "auth": {
-    "loginTitle": "Anmelden", "signupTitle": "Therapeutenkonto erstellen",
-    "email": "E-Mail", "password": "Passwort", "submit": "Weiter",
-    "noAccount": "Noch kein Konto?", "haveAccount": "Bereits registriert?"
+    "loginTitle": "Anmelden",
+    "signupTitle": "Therapeutenkonto erstellen",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Weiter",
+    "noAccount": "Noch kein Konto?",
+    "haveAccount": "Bereits registriert?"
   },
-  "common": { "soon": "Demnächst verfügbar", "loading": "Laden…", "cancel": "Abbrechen", "save": "Speichern", "all": "Alle" },
+  "common": {
+    "soon": "Demnächst verfügbar",
+    "loading": "Laden…",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "all": "Alle"
+  },
   "dashboard": {
-    "overview": "Übersicht", "profile": "Mein Profil", "agenda": "Mein Kalender",
-    "reservations": "Meine Buchungen", "articles": "Meine Artikel", "reviews": "Meine Bewertungen",
-    "events": "Meine Veranstaltungen", "subscription": "Mein Abonnement", "referral": "Empfehlung"
+    "overview": "Übersicht",
+    "profile": "Mein Profil",
+    "agenda": "Mein Kalender",
+    "reservations": "Meine Buchungen",
+    "articles": "Meine Artikel",
+    "reviews": "Meine Bewertungen",
+    "events": "Meine Veranstaltungen",
+    "subscription": "Mein Abonnement",
+    "referral": "Empfehlung"
   },
   "admin": {
-    "overview": "Übersicht", "therapists": "Therapeuten", "reviews": "Bewertungen", "articles": "Artikel",
-    "events": "Veranstaltungen", "users": "Benutzer", "subscriptions": "Abonnements",
-    "agents": "KI-Agenten", "emails": "E-Mails", "moderation": "Moderation", "settings": "Einstellungen"
+    "overview": "Übersicht",
+    "therapists": "Therapeuten",
+    "reviews": "Bewertungen",
+    "articles": "Artikel",
+    "events": "Veranstaltungen",
+    "users": "Benutzer",
+    "subscriptions": "Abonnements",
+    "agents": "KI-Agenten",
+    "emails": "E-Mails",
+    "moderation": "Moderation",
+    "settings": "Einstellungen"
   },
-  "footer": { "rights": "Alle Rechte vorbehalten", "legal": "Impressum", "privacy": "Datenschutz", "terms": "AGB" }
+  "footer": {
+    "rights": "Alle Rechte vorbehalten",
+    "legal": "Impressum",
+    "privacy": "Datenschutz",
+    "terms": "AGB"
+  }
 }

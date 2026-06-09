@@ -1,5 +1,8 @@
 {
-  "brand": { "name": "Holiswiss", "tagline": "Trouvez le bon thérapeute, partout en Suisse" },
+  "brand": {
+    "name": "Holiswiss",
+    "tagline": "Trouvez le bon thérapeute, partout en Suisse"
+  },
   "nav": {
     "therapists": "Thérapeutes",
     "blog": "Blog",
@@ -14,7 +17,12 @@
   },
   "home": {
     "subtitle": "{{count}} praticiens · 26 cantons · 4 langues",
-    "search": { "approach": "Approche", "canton": "Canton", "language": "Langue", "cta": "Rechercher" },
+    "search": {
+      "approach": "Approche",
+      "canton": "Canton",
+      "language": "Langue",
+      "cta": "Rechercher"
+    },
     "trust": {
       "verified": "Profils vérifiés",
       "reviews": "Avis authentiques",
@@ -31,18 +39,88 @@
     },
     "pricingTeaser": "Choisissez votre formule",
     "ctaFree": "Commencer gratuitement — 2 mois offerts",
-    "stats": { "practitioners": "praticiens", "cantons": "cantons", "approaches": "approches", "sessions": "séances réservées" }
+    "stats": {
+      "practitioners": "praticiens",
+      "cantons": "cantons",
+      "approaches": "approches",
+      "sessions": "séances réservées"
+    }
   },
-  "directory": { "title": "Annuaire des thérapeutes", "subtitle": "Trouvez un praticien près de chez vous" },
-  "profile": { "viewProfile": "Voir le profil", "from": "à partir de", "book": "Réserver une séance" },
+  "directory": {
+    "title": "Annuaire des thérapeutes",
+    "subtitle": "Trouvez un praticien près de chez vous"
+  },
+  "profile": {
+    "viewProfile": "Voir le profil",
+    "from": "à partir de",
+    "book": "Réserver une séance"
+  },
   "pricing": {
-    "title": "Tarifs",
-    "subtitle": "Une formule pour chaque praticien",
-    "month": "/ mois",
-    "free": { "name": "Free", "desc": "Profil de base · visible dans l'annuaire" },
-    "pro": { "name": "Pro", "desc": "Agenda · avis · articles · statistiques" },
-    "premium": { "name": "Premium", "desc": "Tout Pro + mise en avant + badge vérifié" },
-    "cta": "Choisir cette formule"
+    "badge": "Tarifs Thérapeutes",
+    "title_part1": "Choisissez votre",
+    "title_highlight": "formule premium",
+    "subtitle": "Une plateforme pensée pour mettre en valeur votre pratique et développer votre clientèle partout en Suisse.",
+    "month": "/mois",
+    "no_commitment": "Aucun engagement",
+    "recommended": "RECOMMANDÉ",
+    "excellence": "EXCELLENCE",
+    "plans": {
+      "basic": {
+        "name": "Basic",
+        "tagline": "Pour démarrer sur la plateforme",
+        "features": [
+          "Profil thérapeute visible",
+          "Coordonnées affichées",
+          "Jusqu'à 3 spécialités",
+          "1 photo de profil",
+          "Visible dans l'annuaire"
+        ],
+        "cta": "Commencer gratuitement"
+      },
+      "essentiel": {
+        "name": "Essentiel",
+        "tagline": "Pour développer votre activité",
+        "features": [
+          "Tout le Basic +",
+          "Agenda en ligne intégré",
+          "Avis vérifiés",
+          "Articles de blog illimités",
+          "Jusqu'à 5 spécialités",
+          "Badge Essentiel visible"
+        ],
+        "cta": "Choisir Essentiel"
+      },
+      "elite": {
+        "name": "Elite Pro",
+        "tagline": "Pour les professionnels exigeants",
+        "features": [
+          "Tout l'Essentiel +",
+          "✨ Badge Elite Pro OR sur profil (très visible dans les résultats)",
+          "🎯 Spécialités illimitées (10+)",
+          "Priorité dans les résultats",
+          "Support prioritaire 24/7",
+          "Mise en avant Newsletter hebdo",
+          "Accès aux Événements premium"
+        ],
+        "cta": "Devenir Elite Pro"
+      }
+    },
+    "reassurance": [
+      {
+        "title": "Sans engagement",
+        "desc": "Annulez à tout moment, en un clic."
+      },
+      {
+        "title": "Paiement sécurisé",
+        "desc": "Transactions chiffrées, conformes RGPD."
+      },
+      {
+        "title": "Support en français",
+        "desc": "Une équipe suisse à votre écoute."
+      }
+    ],
+    "faq_question": "Une question ?",
+    "faq_link": "Contactez notre équipe"
   },
   "auth": {
     "loginTitle": "Connexion",
@@ -53,16 +131,41 @@
     "noAccount": "Pas encore de compte ?",
     "haveAccount": "Déjà inscrit ?"
   },
-  "common": { "soon": "Bientôt disponible", "loading": "Chargement…", "cancel": "Annuler", "save": "Enregistrer", "all": "Tous" },
+  "common": {
+    "soon": "Bientôt disponible",
+    "loading": "Chargement…",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "all": "Tous"
+  },
   "dashboard": {
-    "overview": "Vue d'ensemble", "profile": "Mon profil", "agenda": "Mon agenda",
-    "reservations": "Mes réservations", "articles": "Mes articles", "reviews": "Mes avis",
-    "events": "Mes événements", "subscription": "Mon abonnement", "referral": "Parrainage"
+    "overview": "Vue d'ensemble",
+    "profile": "Mon profil",
+    "agenda": "Mon agenda",
+    "reservations": "Mes réservations",
+    "articles": "Mes articles",
+    "reviews": "Mes avis",
+    "events": "Mes événements",
+    "subscription": "Mon abonnement",
+    "referral": "Parrainage"
   },
   "admin": {
-    "overview": "Vue d'ensemble", "therapists": "Thérapeutes", "reviews": "Avis", "articles": "Articles",
-    "events": "Événements", "users": "Utilisateurs", "subscriptions": "Abonnements",
-    "agents": "Agents IA", "emails": "Emails", "moderation": "Modération", "settings": "Paramètres"
+    "overview": "Vue d'ensemble",
+    "therapists": "Thérapeutes",
+    "reviews": "Avis",
+    "articles": "Articles",
+    "events": "Événements",
+    "users": "Utilisateurs",
+    "subscriptions": "Abonnements",
+    "agents": "Agents IA",
+    "emails": "Emails",
+    "moderation": "Modération",
+    "settings": "Paramètres"
   },
-  "footer": { "rights": "Tous droits réservés", "legal": "Mentions légales", "privacy": "Confidentialité", "terms": "Conditions" }
+  "footer": {
+    "rights": "Tous droits réservés",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "terms": "Conditions"
+  }
 }
