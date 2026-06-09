@@ -183,7 +183,7 @@
   grid-template-columns: 1fr;
   gap: 0.5rem;
 }
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .holi-search-grid {
     grid-template-columns: minmax(0, 1fr) 220px 180px;
     align-items: stretch;
