@@ -56,8 +56,6 @@ function PricingPage() {
         "Tout l'Essentiel +",
         "✨ Badge Elite Pro OR sur profil (très visible dans les résultats)",
         "🎯 Spécialités illimitées (10+)",
-        "SMS auto RDV + rappels 24h avant",
-        "Dashboard stats avancées (RDV, vues, conversion)",
         "Support prioritaire 24/7",
         "Mise en avant Newsletter hebdo",
         "Accès aux Événements premium",
