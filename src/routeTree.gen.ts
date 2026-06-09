@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 
 const LangRoute = LangRouteImport.update({
   id: '/$lang',
@@ -28,28 +29,36 @@ const LangIndexRoute = LangIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangTherapeutesIndexRoute = LangTherapeutesIndexRouteImport.update({
+  id: '/therapeutes/',
+  path: '/therapeutes/',
+  getParentRoute: () => LangRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
   '/$lang/': typeof LangIndexRoute
+  '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lang': typeof LangIndexRoute
+  '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
   '/$lang/': typeof LangIndexRoute
+  '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$lang' | '/$lang/'
+  fullPaths: '/' | '/$lang' | '/$lang/' | '/$lang/therapeutes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lang'
-  id: '__root__' | '/' | '/$lang' | '/$lang/'
+  to: '/' | '/$lang' | '/$lang/therapeutes'
+  id: '__root__' | '/' | '/$lang' | '/$lang/' | '/$lang/therapeutes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,15 +89,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/therapeutes/': {
+      id: '/$lang/therapeutes/'
+      path: '/therapeutes'
+      fullPath: '/$lang/therapeutes/'
+      preLoaderRoute: typeof LangTherapeutesIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
   }
 }
 
 interface LangRouteChildren {
   LangIndexRoute: typeof LangIndexRoute
+  LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
   LangIndexRoute: LangIndexRoute,
+  LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
 }
 
 const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
