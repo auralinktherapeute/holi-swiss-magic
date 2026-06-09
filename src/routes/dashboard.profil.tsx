@@ -118,11 +118,11 @@ function ProfilePage() {
         setSiretVerified((data as any).siret_verified ?? false);
 
         const { data: docs } = await supabase
-          .from("therapist_documents")
+          .from("therapist_documents" as any)
           .select("id, file_url, file_name, label, is_public")
           .eq("therapist_id", data.id)
           .order("created_at", { ascending: false });
-        setDocuments(docs ?? []);
+        setDocuments((docs as any) ?? []);
       }
       setLoading(false);
     })();
