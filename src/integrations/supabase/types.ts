@@ -178,6 +178,44 @@ export type Database = {
           },
         ]
       }
+      therapist_private_identifiers: {
+        Row: {
+          created_at: string
+          id: string
+          ide: string | null
+          siret: string | null
+          therapist_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ide?: string | null
+          siret?: string | null
+          therapist_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ide?: string | null
+          siret?: string | null
+          therapist_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_private_identifiers_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapists: {
         Row: {
           accreditations: Json
