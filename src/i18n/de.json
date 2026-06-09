@@ -1,0 +1,45 @@
+{
+  "brand": { "name": "Holiswiss", "tagline": "Finden Sie den richtigen Therapeuten in der Schweiz" },
+  "nav": {
+    "therapists": "Therapeuten", "blog": "Blog", "events": "Veranstaltungen", "pricing": "Preise",
+    "login": "Anmelden", "signup": "Registrieren", "contact": "Kontakt",
+    "dashboard": "Dashboard", "admin": "Administration"
+  },
+  "home": {
+    "subtitle": "{{count}} Praktizierende · 26 Kantone · 4 Sprachen",
+    "search": { "approach": "Ansatz", "canton": "Kanton", "language": "Sprache", "cta": "Suchen" },
+    "trust": { "verified": "Geprüfte Profile", "reviews": "Echte Bewertungen", "booking": "Online-Buchung", "cantons": "26 Kantone" },
+    "specialties": "Ansätze & Methoden",
+    "featured": "Empfohlene Praktizierende",
+    "how": { "title": "So funktioniert es", "step1": "Suchen Sie nach Ansatz, Kanton oder Sprache", "step2": "Profile und geprüfte Bewertungen ansehen", "step3": "Sitzung einfach online buchen" },
+    "pricingTeaser": "Wählen Sie Ihr Paket",
+    "ctaFree": "Kostenlos starten — 2 Monate gratis",
+    "stats": { "practitioners": "Praktizierende", "cantons": "Kantone", "approaches": "Ansätze", "sessions": "gebuchte Sitzungen" }
+  },
+  "directory": { "title": "Therapeutenverzeichnis", "subtitle": "Finden Sie einen Praktizierenden in Ihrer Nähe" },
+  "profile": { "viewProfile": "Profil ansehen", "from": "ab", "book": "Sitzung buchen" },
+  "pricing": {
+    "title": "Preise", "subtitle": "Ein Paket für jeden Praktizierenden", "month": "/ Monat",
+    "free": { "name": "Free", "desc": "Basisprofil · sichtbar im Verzeichnis" },
+    "pro": { "name": "Pro", "desc": "Agenda · Bewertungen · Artikel · Statistiken" },
+    "premium": { "name": "Premium", "desc": "Alles Pro + Hervorhebung + verifiziertes Abzeichen" },
+    "cta": "Dieses Paket wählen"
+  },
+  "auth": {
+    "loginTitle": "Anmelden", "signupTitle": "Therapeutenkonto erstellen",
+    "email": "E-Mail", "password": "Passwort", "submit": "Weiter",
+    "noAccount": "Noch kein Konto?", "haveAccount": "Bereits registriert?"
+  },
+  "common": { "soon": "Demnächst verfügbar", "loading": "Laden…", "cancel": "Abbrechen", "save": "Speichern", "all": "Alle" },
+  "dashboard": {
+    "overview": "Übersicht", "profile": "Mein Profil", "agenda": "Mein Kalender",
+    "reservations": "Meine Buchungen", "articles": "Meine Artikel", "reviews": "Meine Bewertungen",
+    "events": "Meine Veranstaltungen", "subscription": "Mein Abonnement", "referral": "Empfehlung"
+  },
+  "admin": {
+    "overview": "Übersicht", "therapists": "Therapeuten", "reviews": "Bewertungen", "articles": "Artikel",
+    "events": "Veranstaltungen", "users": "Benutzer", "subscriptions": "Abonnements",
+    "agents": "KI-Agenten", "emails": "E-Mails", "moderation": "Moderation", "settings": "Einstellungen"
+  },
+  "footer": { "rights": "Alle Rechte vorbehalten", "legal": "Impressum", "privacy": "Datenschutz", "terms": "AGB" }
+}

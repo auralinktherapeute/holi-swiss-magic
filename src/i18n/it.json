@@ -1,0 +1,45 @@
+{
+  "brand": { "name": "Holiswiss", "tagline": "Trovate il giusto terapeuta in tutta la Svizzera" },
+  "nav": {
+    "therapists": "Terapeuti", "blog": "Blog", "events": "Eventi", "pricing": "Tariffe",
+    "login": "Accedi", "signup": "Registrati", "contact": "Contatto",
+    "dashboard": "Dashboard", "admin": "Amministrazione"
+  },
+  "home": {
+    "subtitle": "{{count}} praticanti · 26 cantoni · 4 lingue",
+    "search": { "approach": "Approccio", "canton": "Cantone", "language": "Lingua", "cta": "Cerca" },
+    "trust": { "verified": "Profili verificati", "reviews": "Recensioni autentiche", "booking": "Prenotazione online", "cantons": "26 cantoni" },
+    "specialties": "Approcci e metodi",
+    "featured": "Praticanti in evidenza",
+    "how": { "title": "Come funziona", "step1": "Cerca per approccio, cantone o lingua", "step2": "Consulta i profili e le recensioni verificate", "step3": "Prenota una seduta online facilmente" },
+    "pricingTeaser": "Scegli il tuo piano",
+    "ctaFree": "Inizia gratis — 2 mesi offerti",
+    "stats": { "practitioners": "praticanti", "cantons": "cantoni", "approaches": "approcci", "sessions": "sedute prenotate" }
+  },
+  "directory": { "title": "Elenco dei terapeuti", "subtitle": "Trova un praticante vicino a te" },
+  "profile": { "viewProfile": "Vedi profilo", "from": "a partire da", "book": "Prenota una seduta" },
+  "pricing": {
+    "title": "Tariffe", "subtitle": "Un piano per ogni praticante", "month": "/ mese",
+    "free": { "name": "Free", "desc": "Profilo di base · visibile nell'elenco" },
+    "pro": { "name": "Pro", "desc": "Agenda · recensioni · articoli · statistiche" },
+    "premium": { "name": "Premium", "desc": "Tutto Pro + evidenza + badge verificato" },
+    "cta": "Scegli questo piano"
+  },
+  "auth": {
+    "loginTitle": "Accedi", "signupTitle": "Crea un account terapeuta",
+    "email": "E-mail", "password": "Password", "submit": "Continua",
+    "noAccount": "Non hai un account?", "haveAccount": "Già registrato?"
+  },
+  "common": { "soon": "Presto disponibile", "loading": "Caricamento…", "cancel": "Annulla", "save": "Salva", "all": "Tutti" },
+  "dashboard": {
+    "overview": "Panoramica", "profile": "Il mio profilo", "agenda": "La mia agenda",
+    "reservations": "Le mie prenotazioni", "articles": "I miei articoli", "reviews": "Le mie recensioni",
+    "events": "I miei eventi", "subscription": "Il mio abbonamento", "referral": "Referral"
+  },
+  "admin": {
+    "overview": "Panoramica", "therapists": "Terapeuti", "reviews": "Recensioni", "articles": "Articoli",
+    "events": "Eventi", "users": "Utenti", "subscriptions": "Abbonamenti",
+    "agents": "Agenti IA", "emails": "Email", "moderation": "Moderazione", "settings": "Impostazioni"
+  },
+  "footer": { "rights": "Tutti i diritti riservati", "legal": "Note legali", "privacy": "Privacy", "terms": "Termini" }
+}
