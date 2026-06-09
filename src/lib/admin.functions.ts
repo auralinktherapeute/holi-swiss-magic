@@ -32,7 +32,7 @@ export const checkIsAdmin = createServerFn({ method: "GET" })
 export const getAdminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const sinceMonth = new Date();
@@ -103,7 +103,7 @@ export const listTherapistsAdmin = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const from = (data.page - 1) * data.pageSize;
     const to = from + data.pageSize - 1;
@@ -133,7 +133,7 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("therapists")
@@ -147,7 +147,7 @@ export const listUsersAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ page: z.number().int().min(1).default(1), perPage: z.number().int().min(1).max(200).default(50) }))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page: data.page, perPage: data.perPage });
     if (error) throwAdminOperationError(error, "list users failed");
@@ -181,7 +181,7 @@ export const setUserRole = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.enabled) {
       const { error } = await supabaseAdmin.from("user_roles").upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role" });
@@ -197,7 +197,7 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ userId: z.string().uuid() }))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     if (data.userId === context.userId) throw new Error("Cannot delete your own account");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
@@ -209,7 +209,7 @@ export const banUserAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ userId: z.string().uuid(), ban: z.boolean() }))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
       ban_duration: data.ban ? "8760h" : "none",
