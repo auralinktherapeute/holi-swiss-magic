@@ -75,7 +75,7 @@ function HomePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {THERAPY_CATEGORIES.map((c) => (
-                      <SelectItem key={c.slug} value={c.slug}>{c.emoji} {c.label}</SelectItem>
+                      <SelectItem key={c.slug} value={c.slug}>{c.emoji} {t(`categories.${c.slug}`, c.label)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -126,7 +126,7 @@ function HomePage() {
               className="group flex flex-col items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c] p-4 text-center transition-all hover:border-[#b86ef9] hover:bg-[#522870] hover:shadow-[0_0_20px_rgba(184,110,249,0.3)]"
             >
               <span className="text-2xl">{c.emoji}</span>
-              <span className="text-xs font-medium text-white/85 group-hover:text-[#d4a5f9]">{c.label}</span>
+              <span className="text-xs font-medium text-white/85 group-hover:text-[#d4a5f9]">{t(`categories.${c.slug}`, c.label)}</span>
             </button>
           ))}
         </div>
