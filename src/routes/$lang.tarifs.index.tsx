@@ -9,60 +9,23 @@ export const Route = createFileRoute("/$lang/tarifs/")({
 
 function PricingPage() {
   const { lang } = useParams({ from: "/$lang/tarifs/" });
+  const { t } = useTranslation();
 
-  const plans = [
-    {
-      key: "basic",
-      name: "Basic",
-      tagline: "Pour démarrer sur la plateforme",
-      price: 0,
-      icon: Star,
-      features: [
-        "Profil thérapeute visible",
-        "Coordonnées affichées",
-        "Jusqu'à 3 spécialités",
-        "1 photo de profil",
-        "Visible dans l'annuaire",
-      ],
-      cta: "Commencer gratuitement",
-    },
-    {
-      key: "essentiel",
-      name: "Essentiel",
-      tagline: "Pour développer votre activité",
-      price: 49,
-      icon: Sparkles,
-      highlight: true,
-      badge: "RECOMMANDÉ",
-      features: [
-        "Tout le Basic +",
-        "Agenda en ligne intégré",
-        "Avis vérifiés",
-        "Articles de blog illimités",
-        "Jusqu'à 5 spécialités",
-        "Badge Essentiel visible",
-      ],
-      cta: "Choisir Essentiel",
-    },
-    {
-      key: "elite",
-      name: "Elite Pro",
-      tagline: "Pour les professionnels exigeants",
-      price: 99,
-      icon: Crown,
-      badge: "EXCELLENCE",
-      features: [
-        "Tout l'Essentiel +",
-        "✨ Badge Elite Pro OR sur profil (très visible dans les résultats)",
-        "🎯 Spécialités illimitées (10+)",
-        "Priorité dans les résultats",
-        "Support prioritaire 24/7",
-        "Mise en avant Newsletter hebdo",
-        "Accès aux Événements premium",
-      ],
-      cta: "Devenir Elite Pro",
-    },
+  type PlanKey = "basic" | "essentiel" | "elite";
+  const planMeta: { key: PlanKey; price: number; icon: typeof Star; highlight?: boolean; badgeKey?: "recommended" | "excellence" }[] = [
+    { key: "basic", price: 0, icon: Star },
+    { key: "essentiel", price: 49, icon: Sparkles, highlight: true, badgeKey: "recommended" },
+    { key: "elite", price: 99, icon: Crown, badgeKey: "excellence" },
   ];
+  const plans = planMeta.map((p) => ({
+    ...p,
+    name: t(`pricing.plans.${p.key}.name`),
+    tagline: t(`pricing.plans.${p.key}.tagline`),
+    features: t(`pricing.plans.${p.key}.features`, { returnObjects: true }) as string[],
+    cta: t(`pricing.plans.${p.key}.cta`),
+    badge: p.badgeKey ? t(`pricing.${p.badgeKey}`) : undefined,
+  }));
+  const reassurance = t("pricing.reassurance", { returnObjects: true }) as { title: string; desc: string }[];
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-[#1a0a2e]">
@@ -77,13 +40,13 @@ function PricingPage() {
         {/* Hero */}
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#b86ef9]/30 bg-[#b86ef9]/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[#d4a5f9]">
-            <Sparkles className="h-3 w-3" /> Tarifs Thérapeutes
+            <Sparkles className="h-3 w-3" /> {t("pricing.badge")}
           </span>
           <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            Choisissez votre <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#f0b429] bg-clip-text text-transparent">formule premium</span>
+            {t("pricing.title_part1")} <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#f0b429] bg-clip-text text-transparent">{t("pricing.title_highlight")}</span>
           </h1>
           <p className="mt-3 text-base text-[#d4c4e0]">
-            Une plateforme pensée pour mettre en valeur votre pratique et développer votre clientèle partout en Suisse.
+            {t("pricing.subtitle")}
           </p>
         </div>
 
@@ -142,10 +105,10 @@ function PricingPage() {
                     {p.price}
                   </span>
                   <span className="text-lg font-semibold text-white">CHF</span>
-                  <span className="ml-1 text-xs text-[#d4c4e0]">/mois</span>
+                  <span className="ml-1 text-xs text-[#d4c4e0]">{t("pricing.month")}</span>
                 </div>
                 {p.price === 0 && (
-                  <p className="mt-0.5 text-[11px] text-[#9d8aa8]">Aucun engagement</p>
+                  <p className="mt-0.5 text-[11px] text-[#9d8aa8]">{t("pricing.no_commitment")}</p>
                 )}
 
                 <div className="my-5 h-px w-full bg-gradient-to-r from-transparent via-[#b86ef9]/30 to-transparent" />
@@ -189,11 +152,7 @@ function PricingPage() {
 
         {/* Reassurance */}
         <div className="mt-10 grid gap-4 rounded-xl border border-[#b86ef9]/20 bg-[#2a1142]/40 p-6 backdrop-blur sm:grid-cols-3">
-          {[
-            { title: "Sans engagement", desc: "Annulez à tout moment, en un clic." },
-            { title: "Paiement sécurisé", desc: "Transactions chiffrées, conformes RGPD." },
-            { title: "Support en français", desc: "Une équipe suisse à votre écoute." },
-          ].map((item) => (
+          {reassurance.map((item) => (
             <div key={item.title} className="text-center sm:text-left">
               <div className="text-sm font-semibold text-white">{item.title}</div>
               <div className="mt-0.5 text-xs text-[#d4c4e0]">{item.desc}</div>
@@ -203,9 +162,9 @@ function PricingPage() {
 
         {/* FAQ teaser */}
         <div className="mt-8 text-center text-xs text-[#d4c4e0]">
-          Une question ?{" "}
+          {t("pricing.faq_question")}{" "}
           <Link to="/$lang/contact" params={{ lang }} className="font-semibold text-[#d4a5f9] underline-offset-4 hover:underline">
-            Contactez notre équipe
+            {t("pricing.faq_link")}
           </Link>
         </div>
       </div>
