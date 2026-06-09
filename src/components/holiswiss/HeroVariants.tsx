@@ -241,7 +241,7 @@ function VariantMinimal() {
 
 /* ───────── Wrapper with dev selector ───────── */
 export function HeroVariants() {
-  const [variant, setVariant] = useState<Variant>(1);
+  const [variant, setVariant] = useState<Variant>(2);
   useTranslation(); // ensure i18n ready
   const isDev = import.meta.env.DEV;
   return (
