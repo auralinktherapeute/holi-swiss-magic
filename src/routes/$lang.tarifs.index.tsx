@@ -88,14 +88,20 @@ function PricingPage() {
         </div>
 
         {/* Plans grid */}
-        <div className="mx-auto mt-10 grid max-w-5xl gap-5 lg:grid-cols-3 lg:gap-6">
+        <div className="mx-auto mt-10 flex max-w-6xl flex-col items-stretch justify-center gap-5 lg:flex-row lg:gap-6">
           {plans.map((p) => {
             const Icon = p.icon;
             const isHighlight = p.highlight;
+            const widthClass =
+              p.key === "basic"
+                ? "lg:max-w-[260px]"
+                : p.key === "essentiel"
+                ? "lg:max-w-[340px]"
+                : "lg:max-w-[300px]";
             return (
               <div
                 key={p.key}
-                className={`group relative flex flex-col rounded-2xl p-6 transition-all duration-300 ${
+                className={`group relative flex flex-col rounded-2xl p-6 transition-all duration-300 ${widthClass} ${
                   isHighlight
                     ? "border-2 border-[#b86ef9] bg-gradient-to-b from-[#3d1a5c] to-[#2a1142] shadow-[0_0_40px_rgba(184,110,249,0.35)]"
                     : p.key === "elite"
