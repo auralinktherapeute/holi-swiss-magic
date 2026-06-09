@@ -44,11 +44,29 @@
       "cantons": "cantons",
       "approaches": "approaches",
       "sessions": "sessions booked"
-    }
+    },
+    "hero_badge": "Switzerland's new holistic wellness platform",
+    "subtitle_lead": "Energy healers, sophrologists, naturopaths, osteopaths…",
+    "search_placeholder": "Search by city or therapist name…",
+    "search_aria": "Search",
+    "specialty_placeholder": "Specialty…",
+    "popular_searches_label": "Popular searches:",
+    "popular_searches": [
+      "Sophrologist Geneva",
+      "Hypnotherapist Lausanne",
+      "Naturopath Zurich",
+      "Osteopath Bern",
+      "Reiki Lugano"
+    ],
+    "step": "STEP",
+    "recommended": "Recommended"
   },
   "directory": {
     "title": "Therapist directory",
-    "subtitle": "Find a practitioner near you"
+    "subtitle": "Find a practitioner near you",
+    "empty": "No therapists yet.",
+    "per_session": "/ session",
+    "verified": "Verified"
   },
   "profile": {
     "viewProfile": "View profile",
@@ -129,7 +147,22 @@
     "password": "Password",
     "submit": "Continue",
     "noAccount": "No account yet?",
-    "haveAccount": "Already registered?"
+    "haveAccount": "Already registered?",
+    "therapist_space": "Therapist area",
+    "signup_title": "Create my therapist profile",
+    "signup_subtitle": "Sign-up reserved for practitioners. Visitors can browse the directory freely, without an account.",
+    "login_subtitle": "Login reserved for therapists registered on Holiswiss.",
+    "google_continue": "Continue with Google",
+    "connecting": "Signing in…",
+    "or": "or",
+    "confirm_password": "Confirm password",
+    "password_mismatch": "Passwords do not match",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
+    "google_login_error": "Google sign-in failed",
+    "google_signup_error": "Google sign-up failed",
+    "connected": "Signed in",
+    "account_created": "Account created — check your email if confirmation is required"
   },
   "common": {
     "soon": "Coming soon",
@@ -167,5 +200,51 @@
     "legal": "Legal",
     "privacy": "Privacy",
     "terms": "Terms"
+  },
+  "therapist_page": {
+    "not_found": "Therapist not found",
+    "back_to_directory": "Back to directory",
+    "reviews": "Reviews"
+  },
+  "booking": {
+    "title": "Book a consultation",
+    "prev_month": "Previous month",
+    "next_month": "Next month",
+    "available_slots": "Available slots",
+    "no_slots": "No free slot that day.",
+    "full_name": "Full name",
+    "phone_optional": "Phone (optional)",
+    "message_optional": "Message (optional)",
+    "sending": "Sending…",
+    "book_at": "Book on {{date}} at {{time}}",
+    "choose_slot": "Choose a slot",
+    "request_sent_title": "Request sent 🎉",
+    "request_sent_desc": "The therapist will get back to you by email very quickly.",
+    "request_sent_toast": "Request sent! You will receive a confirmation by email.",
+    "name_too_short": "Name too short",
+    "email_invalid": "Invalid email",
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ],
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ]
   }
 }
