@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,14 +37,16 @@ function SignupPage() {
 
   const onGoogle = async () => {
     setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/dashboard`,
     });
-    if (error) {
+    if (result.redirected) return;
+    if (result.error) {
       setGoogleLoading(false);
-      toast.error(error.message);
+      toast.error(result.error.message);
+      return;
     }
+    navigate({ to: "/dashboard" });
   };
 
   return (
