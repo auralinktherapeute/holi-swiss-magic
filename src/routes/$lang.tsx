@@ -16,6 +16,9 @@ function LangLayout() {
   // Sync i18n with URL synchronously during render so SSR and client agree.
   if (i18n.language.split("-")[0] !== resolved) {
     i18n.changeLanguage(resolved);
+    if (typeof window !== "undefined") {
+      try { window.localStorage.setItem("lang", resolved); } catch {}
+    }
   }
 
   return (
