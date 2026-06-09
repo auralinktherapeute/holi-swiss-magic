@@ -1,11 +1,161 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { PagePlaceholder } from "@/components/holiswiss/PagePlaceholder";
+import { createFileRoute, useParams, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { BadgeCheck, Languages, MapPin, Star } from "lucide-react";
 
 export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
 });
 
 function Page() {
-  const { slug } = useParams({ from: "/$lang/therapeute/$slug" });
-  return <PagePlaceholder title="Profil thérapeute" description={`Slug : ${slug}`} />;
+  const { slug, lang } = useParams({ from: "/$lang/therapeute/$slug" });
+
+  const { data: th, isLoading, error } = useQuery({
+    queryKey: ["therapist", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("therapists")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: reviews } = useQuery({
+    queryKey: ["reviews", th?.id],
+    enabled: !!th?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("id, rating, comment, created_at")
+        .eq("therapist_id", th!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="h-72 animate-pulse rounded-2xl bg-muted" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <p className="text-destructive">{(error as Error).message}</p>
+      </div>
+    );
+  }
+
+  if (!th) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold">Thérapeute introuvable</h1>
+        <Link to="/$lang/therapeutes" params={{ lang }} className="mt-4 inline-block text-primary underline">
+          Retour à l'annuaire
+        </Link>
+      </div>
+    );
+  }
+
+  const avg =
+    reviews && reviews.length
+      ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+      : null;
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="grid gap-8 md:grid-cols-[280px,1fr]">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="aspect-square w-full bg-muted">
+            {th.photo_url ? (
+              <img src={th.photo_url} alt={th.display_name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-6xl font-bold text-muted-foreground/40">
+                {th.display_name.slice(0, 1)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{th.display_name}</h1>
+            {th.is_verified && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <BadgeCheck className="h-3.5 w-3.5" /> Vérifié
+              </span>
+            )}
+            {th.plan && (
+              <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                {th.plan}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+            {th.languages?.length ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Languages className="h-4 w-4" />
+                {th.languages.join(", ")}
+              </span>
+            ) : null}
+            {th.canton_id && (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" />
+                {th.canton_id}
+              </span>
+            )}
+            {avg && (
+              <span className="inline-flex items-center gap-1.5">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                {avg} ({reviews?.length})
+              </span>
+            )}
+          </div>
+
+          {th.bio && <p className="mt-6 whitespace-pre-line text-foreground/80">{th.bio}</p>}
+
+          {th.price_per_session != null && (
+            <p className="mt-6 text-lg font-semibold text-foreground">
+              CHF {th.price_per_session}
+              <span className="ml-1 text-sm font-normal text-muted-foreground">/ séance</span>
+            </p>
+          )}
+
+          <button className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition hover:opacity-90">
+            Réserver une consultation
+          </button>
+        </div>
+      </div>
+
+      {reviews && reviews.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-xl font-semibold text-foreground">Avis</h2>
+          <ul className="mt-6 space-y-4">
+            {reviews.map((r) => (
+              <li key={r.id} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-1 text-amber-400">
+                  {Array.from({ length: r.rating }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-current" />
+                  ))}
+                </div>
+                {r.comment && <p className="mt-2 text-sm text-foreground/80">{r.comment}</p>}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {new Date(r.created_at).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
 }
