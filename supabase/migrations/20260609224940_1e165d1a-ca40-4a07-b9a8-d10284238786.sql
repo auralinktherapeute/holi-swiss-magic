@@ -1,7 +1,8 @@
+
 -- 1) Restrict public read on therapists to non-sensitive columns
 DROP POLICY IF EXISTS "public read active therapists" ON public.therapists;
 
-REVOKE SELECT ON public.therapists FROM anon, authenticated;
+REVOKE SELECT ON public.therapists FROM anon;
 
 GRANT SELECT (
   id, user_id, slug, first_name, last_name, title, short_bio, bio,
@@ -11,17 +12,27 @@ GRANT SELECT (
   website, status, verified, services, years_experience,
   google_reviews_url, accreditations, meta_title, meta_description,
   created_at, updated_at, siret_verified, ide_verified
-) ON public.therapists TO anon, authenticated;
+) ON public.therapists TO anon;
+
+GRANT SELECT (
+  id, user_id, slug, first_name, last_name, title, short_bio, bio,
+  photo_url, specialties, approaches, languages, address, postal_code,
+  city, canton, country, latitude, longitude, consultation_modes,
+  price_min, price_max, currency, insurance_accepted, email, phone,
+  website, status, verified, services, years_experience,
+  google_reviews_url, accreditations, meta_title, meta_description,
+  created_at, updated_at, siret_verified, ide_verified
+) ON public.therapists TO authenticated;
+
+-- Owners need full row access (incl. siret/ide) via "therapist manage own"
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.therapists TO authenticated;
+GRANT ALL ON public.therapists TO service_role;
 
 CREATE POLICY "public read active therapists"
 ON public.therapists
 FOR SELECT
 TO anon, authenticated
 USING (status = 'active');
-
--- Authenticated owners still need full row access via existing "therapist manage own" policy.
--- Grant all columns to authenticated so owners can read their own siret/ide.
-GRANT SELECT ON public.therapists TO authenticated;
 
 -- 2) Tighten therapist-documents storage SELECT policy
 DROP POLICY IF EXISTS "therapist documents: public read" ON storage.objects;
