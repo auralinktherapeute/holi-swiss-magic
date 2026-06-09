@@ -23,7 +23,7 @@ export function Logo({ size = 36 }: { size?: number }) {
         style={{ width: size, height: size }}
       />
       <span>
-        <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Holi</span>
+        <span className="font-bold text-[#b86ef9]">Holi</span>
         <span className="font-normal text-white">swiss</span>
       </span>
     </Link>
