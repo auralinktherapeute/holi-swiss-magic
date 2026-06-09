@@ -26,7 +26,7 @@ function Page() {
         .from("therapists")
         .select(PUBLIC_THERAPIST_SELECT)
         .eq("slug", slug)
-        .maybeSingle();
+        .maybeSingle() as any;
       if (error) throw error;
       return data;
     },
