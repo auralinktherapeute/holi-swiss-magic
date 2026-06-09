@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreditCard, Users, TrendingUp, AlertCircle, ExternalLink } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 export const Route = createFileRoute("/admin/abonnements")({ component: Page });
 
@@ -19,6 +20,12 @@ const SUBS = [
   { id: "sub_002", customer: "Anna Bianchi", plan: "Premium", amount: "59 CHF", status: "active", next: "12 juin 2026" },
   { id: "sub_003", customer: "Marc Reber", plan: "Pro", amount: "29 CHF", status: "past_due", next: "—" },
   { id: "sub_004", customer: "Sofia Rossi", plan: "Pro", amount: "29 CHF", status: "canceled", next: "—" },
+];
+
+const PLAN_REPARTITION = [
+  { name: "Free", value: 124, color: "#475569" },
+  { name: "Pro", value: 98, color: "#b86ef9" },
+  { name: "Premium", value: 14, color: "#5cc8fa" },
 ];
 
 const STATUS_CLS: Record<string, string> = {
@@ -80,6 +87,23 @@ function Page() {
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Répartition par plan</CardTitle></CardHeader>
+        <CardContent>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={PLAN_REPARTITION} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2}>
+                  {PLAN_REPARTITION.map((p) => <Cell key={p.name} fill={p.color} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: "#160d2b", border: "1px solid rgba(184,110,249,0.3)" }} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
     </div>
