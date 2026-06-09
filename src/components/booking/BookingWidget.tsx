@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,15 +16,6 @@ type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
 
 const SLOT_MIN = 60;
-const DAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-const MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-
-const schema = z.object({
-  name: z.string().trim().min(2, "Nom trop court").max(120),
-  email: z.string().trim().email("Email invalide").max(200),
-  phone: z.string().trim().max(40).optional().or(z.literal("")),
-  notes: z.string().max(1000).optional().or(z.literal("")),
-});
 
 function toISODate(d: Date) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
@@ -43,6 +35,15 @@ function buildSlots(start: string, end: string): string[] {
 }
 
 export function BookingWidget({ therapistId }: { therapistId: string }) {
+  const { t } = useTranslation();
+  const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
+  const MONTHS = t("booking.months", { returnObjects: true }) as string[];
+  const schema = z.object({
+    name: z.string().trim().min(2, t("booking.name_too_short")).max(120),
+    email: z.string().trim().email(t("booking.email_invalid")).max(200),
+    phone: z.string().trim().max(40).optional().or(z.literal("")),
+    notes: z.string().max(1000).optional().or(z.literal("")),
+  });
   const [month, setMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [avs, setAvs] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -101,7 +102,7 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDate || !selectedTime) { toast.error("Choisissez un créneau"); return; }
+    if (!selectedDate || !selectedTime) { toast.error(t("booking.choose_slot")); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSubmitting(true);
@@ -120,15 +121,15 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
     // eslint-disable-next-line no-console
     console.log("[booking] confirmation email →", parsed.data.email, { selectedDate, selectedTime });
     setSuccess(true);
-    toast.success("Demande envoyée ! Vous recevrez une confirmation par email.");
+    toast.success(t("booking.request_sent_toast"));
   };
 
   if (success) {
     return (
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="p-6 text-center space-y-3">
-          <div className="text-lg font-semibold text-foreground">Demande envoyée 🎉</div>
-          <p className="text-sm text-muted-foreground">Le thérapeute reviendra vers vous très rapidement par email.</p>
+          <div className="text-lg font-semibold text-foreground">{t("booking.request_sent_title")}</div>
+          <p className="text-sm text-muted-foreground">{t("booking.request_sent_desc")}</p>
         </CardContent>
       </Card>
     );
@@ -139,17 +140,17 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
   return (
     <Card className="border-border bg-card">
       <CardHeader>
-        <CardTitle className="text-lg">Réserver une consultation</CardTitle>
+        <CardTitle className="text-lg">{t("booking.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
           <div className="flex items-center justify-between mb-3">
-            <Button type="button" size="sm" variant="ghost" aria-label="Mois précédent"
+            <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
               onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); }}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="text-sm font-medium capitalize">{monthLabel}</div>
-            <Button type="button" size="sm" variant="ghost" aria-label="Mois suivant"
+            <Button type="button" size="sm" variant="ghost" aria-label={t("booking.next_month")}
               onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() + 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); }}>
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -177,9 +178,9 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
 
         {selectedDate && (
           <div>
-            <div className="text-sm font-medium mb-2">Créneaux disponibles</div>
+            <div className="text-sm font-medium mb-2">{t("booking.available_slots")}</div>
             {slotsForDay.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun créneau libre ce jour-là.</p>
+              <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {slotsForDay.map((s) => (
@@ -196,17 +197,17 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
         {selectedDate && selectedTime && (
           <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
             <div className="grid sm:grid-cols-2 gap-3">
-              <div><Label htmlFor="bk-name">Nom complet</Label>
+              <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
                 <Input id="bk-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={120} /></div>
-              <div><Label htmlFor="bk-email">Email</Label>
+              <div><Label htmlFor="bk-email">{t("auth.email")}</Label>
                 <Input id="bk-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required maxLength={200} /></div>
             </div>
-            <div><Label htmlFor="bk-phone">Téléphone (optionnel)</Label>
+            <div><Label htmlFor="bk-phone">{t("booking.phone_optional")}</Label>
               <Input id="bk-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} maxLength={40} /></div>
-            <div><Label htmlFor="bk-notes">Message (optionnel)</Label>
+            <div><Label htmlFor="bk-notes">{t("booking.message_optional")}</Label>
               <Textarea id="bk-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={1000} rows={3} /></div>
             <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90">
-              {submitting ? "Envoi…" : `Réserver le ${selectedDate} à ${selectedTime}`}
+              {submitting ? t("booking.sending") : t("booking.book_at", { date: selectedDate, time: selectedTime })}
             </Button>
           </form>
         )}
