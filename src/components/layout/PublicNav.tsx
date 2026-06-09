@@ -10,9 +10,9 @@ type Variant = 1 | 2 | 3 | 4;
 const STORAGE_KEY = "holiswiss-nav-variant";
 
 function readVariant(): Variant {
-  if (typeof window === "undefined") return 1;
+  if (typeof window === "undefined") return 4;
   const raw = Number(localStorage.getItem(STORAGE_KEY));
-  return ([1, 2, 3, 4].includes(raw) ? raw : 1) as Variant;
+  return ([1, 2, 3, 4].includes(raw) ? raw : 4) as Variant;
 }
 
 function useLang() {
