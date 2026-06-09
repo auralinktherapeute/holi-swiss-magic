@@ -50,7 +50,7 @@ function Page() {
       )}
 
       {!isLoading && !error && data && data.length === 0 && (
-        <p className="text-muted-foreground">Aucun thérapeute pour le moment.</p>
+        <p className="text-muted-foreground">{t("directory.empty")}</p>
       )}
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -81,7 +81,7 @@ function Page() {
             <div className="flex flex-1 flex-col p-5">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-foreground">{fullName}</h2>
-                {th.verified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Vérifié" />}
+                {th.verified && <BadgeCheck className="h-4 w-4 text-primary" aria-label={t("directory.verified")} />}
               </div>
               {th.short_bio && (
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{th.short_bio}</p>
@@ -102,7 +102,7 @@ function Page() {
               </div>
               {th.price_min != null && (
                 <p className="mt-4 text-sm font-medium text-foreground">
-                  {th.currency ?? "CHF"} {th.price_min} <span className="text-muted-foreground">/ séance</span>
+                  {th.currency ?? "CHF"} {th.price_min} <span className="text-muted-foreground">{t("directory.per_session")}</span>
                 </p>
               )}
             </div>
