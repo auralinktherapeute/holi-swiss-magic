@@ -11,7 +11,8 @@ export function LanguageSwitcher() {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const current = LANGS.find((l) => l.code === i18n.language.split("-")[0]) ?? LANGS[0];
+  const first = pathname.split("/").filter(Boolean)[0];
+  const current = LANGS.find((l) => l.code === first) ?? LANGS[0];
 
   const change = async (code: string) => {
     await i18n.changeLanguage(code);
@@ -29,7 +30,7 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1.5">
+        <Button variant="ghost" size="sm" className="gap-1.5 text-white hover:bg-white/10 hover:text-white">
           <Globe className="h-4 w-4" />
           <span aria-hidden>{current.flag}</span>
           <span className="font-medium">{current.label}</span>
