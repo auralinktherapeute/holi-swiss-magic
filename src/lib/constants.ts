@@ -15,7 +15,7 @@ export const CANTONS: { code: string; name: string }[] = [
   { code: "ZG", name: "Zoug" }, { code: "ZH", name: "Zurich" },
 ];
 
-// 18 wellness approaches — LPMéd-compliant wording (no "soin", "traitement", "guérison")
+// 18 approches bien-être — formulation conforme LPMéd (vocabulaire interdit exclu)
 export const THERAPY_CATEGORIES: { slug: string; label: string; emoji: string }[] = [
   { slug: "sophrologie", label: "Sophrologie", emoji: "🧘" },
   { slug: "hypnose", label: "Hypnose", emoji: "✨" },
