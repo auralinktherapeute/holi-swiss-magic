@@ -37,16 +37,21 @@ function SignupPage() {
 
   const onGoogle = async () => {
     setGoogleLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/dashboard`,
-    });
-    if (result.redirected) return;
-    if (result.error) {
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.redirected) return;
+      if (result.error) {
+        toast.error(result.error.message);
+        return;
+      }
+      navigate({ to: "/dashboard" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Inscription Google impossible");
+    } finally {
       setGoogleLoading(false);
-      toast.error(result.error.message);
-      return;
     }
-    navigate({ to: "/dashboard" });
   };
 
   return (
