@@ -2,7 +2,7 @@
   "brand": { "name": "Holiswiss", "tagline": "Trovate il giusto terapeuta in tutta la Svizzera" },
   "nav": {
     "therapists": "Terapeuti", "blog": "Blog", "events": "Eventi", "pricing": "Tariffe",
-    "login": "Accedi", "signup": "Registrati", "contact": "Contatto",
+    "login": "Accedi", "signup": "Registrati", "therapistSpace": "Area terapeuti", "contact": "Contatto",
     "dashboard": "Dashboard", "admin": "Amministrazione"
   },
   "home": {

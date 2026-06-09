@@ -2,7 +2,7 @@
   "brand": { "name": "Holiswiss", "tagline": "Finden Sie den richtigen Therapeuten in der Schweiz" },
   "nav": {
     "therapists": "Therapeuten", "blog": "Blog", "events": "Veranstaltungen", "pricing": "Preise",
-    "login": "Anmelden", "signup": "Registrieren", "contact": "Kontakt",
+    "login": "Anmelden", "signup": "Registrieren", "therapistSpace": "Therapeutenbereich", "contact": "Kontakt",
     "dashboard": "Dashboard", "admin": "Administration"
   },
   "home": {
