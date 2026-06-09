@@ -13,8 +13,6 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import "../lib/i18n";
 import { Toaster } from "../components/ui/sonner";
-import lotusFavicon from "../assets/lotus-transparent.png.asset.json";
-
 
 function NotFoundComponent() {
   return (
@@ -84,11 +82,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
       { name: "description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
       { name: "author", content: "Holiswiss" },
-      { property: "og:title", content: "Holiswiss" },
-      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être." },
+      { property: "og:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
+      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Holiswiss" },
+      { name: "twitter:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
+      { name: "twitter:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -98,8 +100,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", type: "image/png", href: lotusFavicon.url },
-      { rel: "apple-touch-icon", href: lotusFavicon.url },
     ],
   }),
   shellComponent: RootShell,
