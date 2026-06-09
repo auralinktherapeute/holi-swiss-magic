@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check } from "lucide-react";
+import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -25,72 +25,95 @@ function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
 
+  const popularSearches = [
+    "Sophrologue Genève",
+    "Hypnothérapeute Lausanne",
+    "Naturopathe Zurich",
+    "Ostéopathe Berne",
+    "Reiki Lugano",
+  ];
+
   return (
     <>
       {/* Hero */}
       <section
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #2d1248 0%, #3d1a5c 50%, #2d1248 100%)" }}
+        style={{ background: "linear-gradient(180deg, #2a0f44 0%, #3d1a5c 45%, #2a0f44 100%)" }}
       >
-        {/* Radial purple glow behind hero content */}
-        <div className="pointer-events-none absolute left-1/2 top-1/3 -z-0 h-[700px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(184,110,249,0.2),transparent)] blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 -z-0 h-[500px] w-[500px] rounded-full bg-[radial-gradient(closest-side,rgba(92,200,250,0.18),transparent_70%)] blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 pt-20 pb-16 sm:px-6 lg:px-8 lg:pt-28">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(184,110,249,0.4)] bg-[#522870] px-3 py-1 text-xs font-semibold text-[#d4c4e0] backdrop-blur">
-              🇨🇭 Suisse · 26 cantons
+        {/* Soft aurora glows */}
+        <div className="pointer-events-none absolute left-1/2 top-[38%] -z-0 h-[720px] w-[1100px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(184,110,249,0.28),transparent_70%)] blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 top-10 -z-0 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(92,200,250,0.22),transparent_70%)] blur-3xl" />
+        <div className="pointer-events-none absolute -left-32 bottom-0 -z-0 h-[420px] w-[420px] rounded-full bg-[radial-gradient(closest-side,rgba(212,165,249,0.18),transparent_70%)] blur-3xl" />
+        {/* Subtle grain */}
+        <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.06] mix-blend-overlay [background-image:radial-gradient(rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:3px_3px]" />
+
+        <div className="relative mx-auto max-w-7xl px-4 pt-20 pb-20 sm:px-6 lg:px-8 lg:pt-28">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.45)] bg-white/5 px-4 py-1.5 text-xs font-medium text-[#e6d7f5] backdrop-blur-md shadow-[0_0_30px_-10px_rgba(184,110,249,0.6)]">
+              <Sparkles className="h-3.5 w-3.5 text-[#d4a5f9]" />
+              Nouvelle plateforme suisse du bien-être holistique
             </span>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-7 font-bold tracking-tight text-white text-[2.5rem] leading-[1.05] sm:text-6xl lg:text-[4.5rem]">
               <HeroTagline text={t("brand.tagline")} />
             </h1>
-            <p className="mt-5 text-lg text-[#d4c4e0]">
-              {t("home.subtitle", { count: 280 })}
+            <p className="mx-auto mt-6 max-w-2xl text-base text-[#d4c4e0] sm:text-lg">
+              Énergéticiens, sophrologues, naturopathes, ostéopathes… {t("home.subtitle", { count: 280 })}
             </p>
           </div>
 
-          {/* Search bar */}
-          <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-[rgba(184,110,249,0.3)] bg-[rgba(255,255,255,0.06)] p-3 shadow-[0_0_60px_-15px_rgba(184,110,249,0.5)] backdrop-blur-xl">
-            <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
-              <Select>
-                <SelectTrigger className="h-12 border-0 bg-transparent text-white shadow-none focus:ring-2 focus:ring-primary [&>span]:text-white/90">
-                  <SelectValue placeholder={t("home.search.approach")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {THERAPY_CATEGORIES.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>{c.emoji} {c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="h-12 border-0 bg-transparent text-white shadow-none focus:ring-2 focus:ring-primary [&>span]:text-white/90">
-                  <SelectValue placeholder={t("home.search.canton")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {CANTONS.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>{c.code} — {c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="h-12 border-0 bg-transparent text-white shadow-none focus:ring-2 focus:ring-primary [&>span]:text-white/90">
-                  <SelectValue placeholder={t("home.search.language")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {SPOKEN_LANGUAGES.map((l) => (
-                    <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Link to="/$lang/therapeutes" params={{ lang }}>
-                <Button size="lg" className="h-12 w-full gap-2 bg-[#5cc8fa] text-[#0f172a] shadow-lg shadow-[#5cc8fa]/25 hover:opacity-90">
-                  <Search className="h-4 w-4" /> {t("home.search.cta")}
-                </Button>
-              </Link>
+          {/* Search bar — single elegant row */}
+          <div className="mx-auto mt-12 max-w-5xl">
+            <div className="relative rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2.5 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl">
+              <div className="holi-search-grid">
+                <div className="relative flex items-center" style={{ minWidth: 0 }}>
+                  <Search className="pointer-events-none absolute left-4 h-5 w-5 text-[#b9a4d4]" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher par ville ou nom du thérapeute…"
+                    aria-label="Rechercher"
+                    className="h-14 w-full min-w-0 rounded-xl bg-transparent pl-12 pr-4 text-base text-white placeholder:text-[#a89bc4] focus:outline-none focus:ring-2 focus:ring-[#b86ef9]/60"
+                  />
+                </div>
+                <Select>
+                  <SelectTrigger className="h-14 w-full rounded-xl border-0 bg-white/[0.04] text-white shadow-none focus:ring-2 focus:ring-[#b86ef9]/60 md:w-[220px] md:shrink-0 [&>span]:text-white/90">
+                    <Sparkles className="mr-1 h-4 w-4 text-[#d4a5f9]" />
+                    <SelectValue placeholder="Spécialité…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THERAPY_CATEGORIES.map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>{c.emoji} {c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Link to="/$lang/therapeutes" params={{ lang }} className="block md:w-[180px] md:shrink-0">
+                  <Button
+                    size="lg"
+                    className="h-14 w-full gap-2 rounded-xl bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-7 text-base font-semibold text-white shadow-[0_10px_40px_-10px_rgba(184,110,249,0.8)] transition-transform hover:scale-[1.02] hover:opacity-95"
+                  >
+                    <Search className="h-5 w-5" /> {t("home.search.cta")}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Popular searches */}
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 text-sm">
+              <span className="text-[#a89bc4]">Recherches populaires :</span>
+              {popularSearches.map((q) => (
+                <Link
+                  key={q}
+                  to="/$lang/therapeutes"
+                  params={{ lang }}
+                  className="rounded-full border border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.55)] px-4 py-1.5 text-[#e6d7f5] backdrop-blur transition-all hover:border-[#b86ef9] hover:bg-[#3d1a5c] hover:text-white"
+                >
+                  {q}
+                </Link>
+              ))}
             </div>
           </div>
 
           {/* Trust row */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-[#d4c4e0]">
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-[#c8b8df]">
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />{t("home.trust.verified")}</span>
             <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-[#f59e0b]" />{t("home.trust.reviews")}</span>
             <span className="inline-flex items-center gap-1.5"><CalendarCheck className="h-4 w-4 text-[#d4a5f9]" />{t("home.trust.booking")}</span>
@@ -214,7 +237,10 @@ function HeroTagline({ text }: { text: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#5cc8fa] bg-clip-text text-transparent">
+      <span
+        className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#5cc8fa] bg-clip-text italic text-transparent"
+        style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}
+      >
         {match[0]}
       </span>
       {text.slice(idx + match[0].length)}
