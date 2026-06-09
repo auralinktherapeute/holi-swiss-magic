@@ -7,11 +7,11 @@ import { Check, Sparkles, CreditCard, Download } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/abonnement")({ component: Page });
 
-const PLAN_KEYS = [
+const PLAN_KEYS: { id: "basic" | "essentiel" | "elite"; price: number; current?: boolean }[] = [
   { id: "basic", price: 0 },
   { id: "essentiel", price: 49, current: true },
   { id: "elite", price: 99 },
-] as const;
+];
 
 const INVOICES = [
   { id: "INV-0023", date: "01 juin 2026", amount: "49.00 CHF" },
