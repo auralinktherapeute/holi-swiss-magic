@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { SUPPORTED_LANGS, DEFAULT_LANG } from "@/lib/i18n";
 import lotusAsset from "@/assets/lotus-logo.png.asset.json";
 
-export function Logo({ size = 36 }: { size?: number }) {
+export function Logo({ size = 48 }: { size?: number }) {
   // Derive lang from URL — identical on SSR and client (avoids hydration mismatch).
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const first = pathname.split("/").filter(Boolean)[0];
