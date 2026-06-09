@@ -49,8 +49,13 @@ function SignupPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16 sm:px-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold">{t("auth.signupTitle")}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t("home.ctaFree")}</p>
+        <p className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-primary">
+          Espace thérapeutes
+        </p>
+        <h1 className="text-3xl font-bold">Créer mon profil thérapeute</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Inscription réservée aux praticiens. Les visiteurs peuvent consulter l'annuaire librement, sans compte.
+        </p>
       </div>
 
       <Button
