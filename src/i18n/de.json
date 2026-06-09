@@ -169,18 +169,36 @@
     "loading": "Laden…",
     "cancel": "Abbrechen",
     "save": "Speichern",
-    "all": "Alle"
+    "all": "Alle",
+    "saved": "Gespeichert",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "back": "Zurück"
   },
   "dashboard": {
     "overview": "Übersicht",
     "profile": "Mein Profil",
-    "agenda": "Mein Kalender",
-    "reservations": "Meine Buchungen",
-    "articles": "Meine Artikel",
-    "reviews": "Meine Bewertungen",
-    "events": "Meine Veranstaltungen",
-    "subscription": "Mein Abonnement",
-    "referral": "Empfehlung"
+    "agenda": "Kalender",
+    "reservations": "Buchungen",
+    "reviews": "Bewertungen",
+    "articles": "Artikel",
+    "events": "Veranstaltungen",
+    "referral": "Empfehlung",
+    "subscription": "Abonnement",
+    "logout": "Abmelden",
+    "therapist_space": "Therapeutenbereich",
+    "common": {
+      "loading": "Laden…",
+      "save": "Speichern",
+      "saved": "Gespeichert",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "edit": "Bearbeiten",
+      "add": "Hinzufügen",
+      "back": "Zurück",
+      "soon": "Demnächst verfügbar"
+    }
   },
   "admin": {
     "overview": "Übersicht",
@@ -246,5 +264,25 @@
       "November",
       "Dezember"
     ]
+  },
+  "categories": {
+    "sophrologie": "Sophrologie",
+    "hypnose": "Hypnose",
+    "naturopathie": "Naturheilkunde",
+    "reflexologie": "Reflexologie",
+    "massage-bien-etre": "Wellness-Massage",
+    "shiatsu": "Shiatsu",
+    "reiki": "Reiki",
+    "kinesiologie": "Kinesiologie",
+    "acupuncture": "Akupunktur",
+    "osteopathie": "Osteopathie",
+    "psychotherapie": "Psychologische Begleitung",
+    "coaching": "Life Coaching",
+    "meditation": "Meditation",
+    "yoga": "Yoga",
+    "art-therapie": "Kunsttherapie",
+    "aromatherapie": "Aromatherapie",
+    "phytotherapie": "Phytotherapie",
+    "fleurs-de-bach": "Bach-Blüten"
   }
 }

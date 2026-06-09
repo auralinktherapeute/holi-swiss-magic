@@ -169,18 +169,36 @@
     "loading": "Loading…",
     "cancel": "Cancel",
     "save": "Save",
-    "all": "All"
+    "all": "All",
+    "saved": "Saved",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back"
   },
   "dashboard": {
-    "overview": "Overview",
+    "overview": "Dashboard",
     "profile": "My profile",
-    "agenda": "My agenda",
-    "reservations": "My bookings",
-    "articles": "My articles",
-    "reviews": "My reviews",
-    "events": "My events",
-    "subscription": "My subscription",
-    "referral": "Referral"
+    "agenda": "Calendar",
+    "reservations": "Bookings",
+    "reviews": "Reviews",
+    "articles": "Articles",
+    "events": "Events",
+    "referral": "Referral",
+    "subscription": "Subscription",
+    "logout": "Sign out",
+    "therapist_space": "Therapist area",
+    "common": {
+      "loading": "Loading…",
+      "save": "Save",
+      "saved": "Saved",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "back": "Back",
+      "soon": "Coming soon"
+    }
   },
   "admin": {
     "overview": "Overview",
@@ -246,5 +264,25 @@
       "November",
       "December"
     ]
+  },
+  "categories": {
+    "sophrologie": "Sophrology",
+    "hypnose": "Hypnosis",
+    "naturopathie": "Naturopathy",
+    "reflexologie": "Reflexology",
+    "massage-bien-etre": "Wellness Massage",
+    "shiatsu": "Shiatsu",
+    "reiki": "Reiki",
+    "kinesiologie": "Kinesiology",
+    "acupuncture": "Acupuncture",
+    "osteopathie": "Osteopathy",
+    "psychotherapie": "Psychological Support",
+    "coaching": "Life Coaching",
+    "meditation": "Meditation",
+    "yoga": "Yoga",
+    "art-therapie": "Art Therapy",
+    "aromatherapie": "Aromatherapy",
+    "phytotherapie": "Phytotherapy",
+    "fleurs-de-bach": "Bach Flowers"
   }
 }

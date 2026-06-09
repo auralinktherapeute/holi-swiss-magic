@@ -169,18 +169,36 @@
     "loading": "Caricamento…",
     "cancel": "Annulla",
     "save": "Salva",
-    "all": "Tutti"
+    "all": "Tutti",
+    "saved": "Salvato",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "add": "Aggiungi",
+    "back": "Indietro"
   },
   "dashboard": {
-    "overview": "Panoramica",
+    "overview": "Dashboard",
     "profile": "Il mio profilo",
-    "agenda": "La mia agenda",
-    "reservations": "Le mie prenotazioni",
-    "articles": "I miei articoli",
-    "reviews": "Le mie recensioni",
-    "events": "I miei eventi",
-    "subscription": "Il mio abbonamento",
-    "referral": "Referral"
+    "agenda": "Calendario",
+    "reservations": "Prenotazioni",
+    "reviews": "Recensioni",
+    "articles": "Articoli",
+    "events": "Eventi",
+    "referral": "Affiliazione",
+    "subscription": "Abbonamento",
+    "logout": "Disconnetti",
+    "therapist_space": "Area terapeuta",
+    "common": {
+      "loading": "Caricamento…",
+      "save": "Salva",
+      "saved": "Salvato",
+      "cancel": "Annulla",
+      "delete": "Elimina",
+      "edit": "Modifica",
+      "add": "Aggiungi",
+      "back": "Indietro",
+      "soon": "Presto disponibile"
+    }
   },
   "admin": {
     "overview": "Panoramica",
@@ -246,5 +264,25 @@
       "novembre",
       "dicembre"
     ]
+  },
+  "categories": {
+    "sophrologie": "Sofrologia",
+    "hypnose": "Ipnosi",
+    "naturopathie": "Naturopatia",
+    "reflexologie": "Riflessologia",
+    "massage-bien-etre": "Massaggio benessere",
+    "shiatsu": "Shiatsu",
+    "reiki": "Reiki",
+    "kinesiologie": "Kinesiologia",
+    "acupuncture": "Agopuntura",
+    "osteopathie": "Osteopatia",
+    "psychotherapie": "Supporto psicologico",
+    "coaching": "Life Coaching",
+    "meditation": "Meditazione",
+    "yoga": "Yoga",
+    "art-therapie": "Arteterapia",
+    "aromatherapie": "Aromaterapia",
+    "phytotherapie": "Fitoterapia",
+    "fleurs-de-bach": "Fiori di Bach"
   }
 }
