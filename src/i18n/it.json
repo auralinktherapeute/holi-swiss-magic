@@ -1,45 +1,171 @@
 {
-  "brand": { "name": "Holiswiss", "tagline": "Trovate il giusto terapeuta in tutta la Svizzera" },
+  "brand": {
+    "name": "Holiswiss",
+    "tagline": "Trovate il giusto terapeuta in tutta la Svizzera"
+  },
   "nav": {
-    "therapists": "Terapeuti", "blog": "Blog", "events": "Eventi", "pricing": "Tariffe",
-    "login": "Accedi", "signup": "Registrati", "therapistSpace": "Area terapeuti", "contact": "Contatto",
-    "dashboard": "Dashboard", "admin": "Amministrazione"
+    "therapists": "Terapeuti",
+    "blog": "Blog",
+    "events": "Eventi",
+    "pricing": "Tariffe",
+    "login": "Accedi",
+    "signup": "Registrati",
+    "therapistSpace": "Area terapeuti",
+    "contact": "Contatto",
+    "dashboard": "Dashboard",
+    "admin": "Amministrazione"
   },
   "home": {
     "subtitle": "{{count}} praticanti · 26 cantoni · 4 lingue",
-    "search": { "approach": "Approccio", "canton": "Cantone", "language": "Lingua", "cta": "Cerca" },
-    "trust": { "verified": "Profili verificati", "reviews": "Recensioni autentiche", "booking": "Prenotazione online", "cantons": "26 cantoni" },
+    "search": {
+      "approach": "Approccio",
+      "canton": "Cantone",
+      "language": "Lingua",
+      "cta": "Cerca"
+    },
+    "trust": {
+      "verified": "Profili verificati",
+      "reviews": "Recensioni autentiche",
+      "booking": "Prenotazione online",
+      "cantons": "26 cantoni"
+    },
     "specialties": "Approcci e metodi",
     "featured": "Praticanti in evidenza",
-    "how": { "title": "Come funziona", "step1": "Cerca per approccio, cantone o lingua", "step2": "Consulta i profili e le recensioni verificate", "step3": "Prenota una seduta online facilmente" },
+    "how": {
+      "title": "Come funziona",
+      "step1": "Cerca per approccio, cantone o lingua",
+      "step2": "Consulta i profili e le recensioni verificate",
+      "step3": "Prenota una seduta online facilmente"
+    },
     "pricingTeaser": "Scegli il tuo piano",
     "ctaFree": "Inizia gratis — 2 mesi offerti",
-    "stats": { "practitioners": "praticanti", "cantons": "cantoni", "approaches": "approcci", "sessions": "sedute prenotate" }
+    "stats": {
+      "practitioners": "praticanti",
+      "cantons": "cantoni",
+      "approaches": "approcci",
+      "sessions": "sedute prenotate"
+    }
   },
-  "directory": { "title": "Elenco dei terapeuti", "subtitle": "Trova un praticante vicino a te" },
-  "profile": { "viewProfile": "Vedi profilo", "from": "a partire da", "book": "Prenota una seduta" },
+  "directory": {
+    "title": "Elenco dei terapeuti",
+    "subtitle": "Trova un praticante vicino a te"
+  },
+  "profile": {
+    "viewProfile": "Vedi profilo",
+    "from": "a partire da",
+    "book": "Prenota una seduta"
+  },
   "pricing": {
-    "title": "Tariffe", "subtitle": "Un piano per ogni praticante", "month": "/ mese",
-    "free": { "name": "Free", "desc": "Profilo di base · visibile nell'elenco" },
-    "pro": { "name": "Pro", "desc": "Agenda · recensioni · articoli · statistiche" },
-    "premium": { "name": "Premium", "desc": "Tutto Pro + evidenza + badge verificato" },
-    "cta": "Scegli questo piano"
+    "badge": "Tariffe Terapeuti",
+    "title_part1": "Scegli il tuo",
+    "title_highlight": "piano premium",
+    "subtitle": "Una piattaforma pensata per valorizzare la tua pratica e sviluppare la tua clientela in tutta la Svizzera.",
+    "month": "/mese",
+    "no_commitment": "Nessun impegno",
+    "recommended": "CONSIGLIATO",
+    "excellence": "ECCELLENZA",
+    "plans": {
+      "basic": {
+        "name": "Basic",
+        "tagline": "Per iniziare sulla piattaforma",
+        "features": [
+          "Profilo terapeuta visibile",
+          "Contatti visualizzati",
+          "Fino a 3 specialità",
+          "1 foto profilo",
+          "Visibile nell'elenco"
+        ],
+        "cta": "Inizia gratis"
+      },
+      "essentiel": {
+        "name": "Essenziale",
+        "tagline": "Per sviluppare la tua attività",
+        "features": [
+          "Tutto il Basic +",
+          "Agenda online integrata",
+          "Recensioni verificate",
+          "Articoli blog illimitati",
+          "Fino a 5 specialità",
+          "Badge Essenziale visibile"
+        ],
+        "cta": "Scegli Essenziale"
+      },
+      "elite": {
+        "name": "Elite Pro",
+        "tagline": "Per i professionisti esigenti",
+        "features": [
+          "Tutto l'Essenziale +",
+          "✨ Badge Elite Pro ORO sul profilo (molto visibile nei risultati)",
+          "🎯 Specialità illimitate (10+)",
+          "Priorità nei risultati di ricerca",
+          "Supporto prioritario 24/7",
+          "In evidenza nella newsletter settimanale",
+          "Accesso agli Eventi premium"
+        ],
+        "cta": "Diventa Elite Pro"
+      }
+    },
+    "reassurance": [
+      {
+        "title": "Nessun impegno",
+        "desc": "Cancella in qualsiasi momento, con un clic."
+      },
+      {
+        "title": "Pagamento sicuro",
+        "desc": "Transazioni crittografate e conformi al GDPR."
+      },
+      {
+        "title": "Supporto in italiano",
+        "desc": "Un team svizzero al tuo servizio."
+      }
+    ],
+    "faq_question": "Una domanda?",
+    "faq_link": "Contatta il nostro team"
   },
   "auth": {
-    "loginTitle": "Accedi", "signupTitle": "Crea un account terapeuta",
-    "email": "E-mail", "password": "Password", "submit": "Continua",
-    "noAccount": "Non hai un account?", "haveAccount": "Già registrato?"
+    "loginTitle": "Accedi",
+    "signupTitle": "Crea un account terapeuta",
+    "email": "E-mail",
+    "password": "Password",
+    "submit": "Continua",
+    "noAccount": "Non hai un account?",
+    "haveAccount": "Già registrato?"
   },
-  "common": { "soon": "Presto disponibile", "loading": "Caricamento…", "cancel": "Annulla", "save": "Salva", "all": "Tutti" },
+  "common": {
+    "soon": "Presto disponibile",
+    "loading": "Caricamento…",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "all": "Tutti"
+  },
   "dashboard": {
-    "overview": "Panoramica", "profile": "Il mio profilo", "agenda": "La mia agenda",
-    "reservations": "Le mie prenotazioni", "articles": "I miei articoli", "reviews": "Le mie recensioni",
-    "events": "I miei eventi", "subscription": "Il mio abbonamento", "referral": "Referral"
+    "overview": "Panoramica",
+    "profile": "Il mio profilo",
+    "agenda": "La mia agenda",
+    "reservations": "Le mie prenotazioni",
+    "articles": "I miei articoli",
+    "reviews": "Le mie recensioni",
+    "events": "I miei eventi",
+    "subscription": "Il mio abbonamento",
+    "referral": "Referral"
   },
   "admin": {
-    "overview": "Panoramica", "therapists": "Terapeuti", "reviews": "Recensioni", "articles": "Articoli",
-    "events": "Eventi", "users": "Utenti", "subscriptions": "Abbonamenti",
-    "agents": "Agenti IA", "emails": "Email", "moderation": "Moderazione", "settings": "Impostazioni"
+    "overview": "Panoramica",
+    "therapists": "Terapeuti",
+    "reviews": "Recensioni",
+    "articles": "Articoli",
+    "events": "Eventi",
+    "users": "Utenti",
+    "subscriptions": "Abbonamenti",
+    "agents": "Agenti IA",
+    "emails": "Email",
+    "moderation": "Moderazione",
+    "settings": "Impostazioni"
   },
-  "footer": { "rights": "Tutti i diritti riservati", "legal": "Note legali", "privacy": "Privacy", "terms": "Termini" }
+  "footer": {
+    "rights": "Tutti i diritti riservati",
+    "legal": "Note legali",
+    "privacy": "Privacy",
+    "terms": "Termini"
+  }
 }
