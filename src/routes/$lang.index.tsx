@@ -30,26 +30,26 @@ function HomePage() {
       {/* Hero */}
       <section
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0d0520 0%, #1a0a3e 50%, #0d0520 100%)" }}
+        style={{ background: "linear-gradient(160deg, #2d1248 0%, #3d1a5c 50%, #2d1248 100%)" }}
       >
         {/* Radial purple glow behind hero content */}
-        <div className="pointer-events-none absolute left-1/2 top-1/3 -z-0 h-[700px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(168,85,247,0.35),transparent_70%)] blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 -z-0 h-[500px] w-[500px] rounded-full bg-[radial-gradient(closest-side,rgba(34,211,238,0.18),transparent_70%)] blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-1/3 -z-0 h-[700px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(184,110,249,0.2),transparent)] blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-0 -z-0 h-[500px] w-[500px] rounded-full bg-[radial-gradient(closest-side,rgba(92,200,250,0.18),transparent_70%)] blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 pt-20 pb-16 sm:px-6 lg:px-8 lg:pt-28">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-light backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(184,110,249,0.4)] bg-[#522870] px-3 py-1 text-xs font-semibold text-[#d4c4e0] backdrop-blur">
               🇨🇭 Suisse · 26 cantons
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               <HeroTagline text={t("brand.tagline")} />
             </h1>
-            <p className="mt-5 text-lg text-[#c4b5fd]">
+            <p className="mt-5 text-lg text-[#d4c4e0]">
               {t("home.subtitle", { count: 280 })}
             </p>
           </div>
 
           {/* Search bar */}
-          <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-[rgba(167,139,250,0.3)] bg-white/[0.04] p-3 shadow-[0_0_60px_-15px_rgba(168,85,247,0.5)] backdrop-blur-xl">
+          <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-[rgba(184,110,249,0.3)] bg-[rgba(255,255,255,0.06)] p-3 shadow-[0_0_60px_-15px_rgba(184,110,249,0.5)] backdrop-blur-xl">
             <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
               <Select>
                 <SelectTrigger className="h-12 border-0 bg-transparent text-white shadow-none focus:ring-2 focus:ring-primary [&>span]:text-white/90">
@@ -82,7 +82,7 @@ function HomePage() {
                 </SelectContent>
               </Select>
               <Link to="/$lang/therapeutes" params={{ lang }}>
-                <Button size="lg" className="h-12 w-full gap-2 bg-gradient-to-r from-[#0e9bb5] to-accent text-[#06222a] shadow-lg shadow-accent/25 hover:opacity-95">
+                <Button size="lg" className="h-12 w-full gap-2 bg-[#5cc8fa] text-[#0f172a] shadow-lg shadow-[#5cc8fa]/25 hover:opacity-90">
                   <Search className="h-4 w-4" /> {t("home.search.cta")}
                 </Button>
               </Link>
@@ -90,11 +90,11 @@ function HomePage() {
           </div>
 
           {/* Trust row */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-white/75">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-accent" />{t("home.trust.verified")}</span>
-            <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-warning" />{t("home.trust.reviews")}</span>
-            <span className="inline-flex items-center gap-1.5"><CalendarCheck className="h-4 w-4 text-primary-light" />{t("home.trust.booking")}</span>
-            <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary-light" />{t("home.trust.cantons")}</span>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-[#d4c4e0]">
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />{t("home.trust.verified")}</span>
+            <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-[#f59e0b]" />{t("home.trust.reviews")}</span>
+            <span className="inline-flex items-center gap-1.5"><CalendarCheck className="h-4 w-4 text-[#d4a5f9]" />{t("home.trust.booking")}</span>
+            <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#d4a5f9]" />{t("home.trust.cantons")}</span>
           </div>
         </div>
       </section>
