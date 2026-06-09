@@ -53,3 +53,29 @@ export const LANGS = [
 
 export const formatCHF = (n: number) =>
   new Intl.NumberFormat("fr-CH", { style: "currency", currency: "CHF", maximumFractionDigits: 0 }).format(n);
+
+// Extended therapy specialties (holistic + manual + energetic + psycho-emotional)
+export const THERAPY_SPECIALTIES: string[] = [
+  "Énergéticien", "Magnétiseur", "Sophrologue", "Hypnothérapeute",
+  "Naturopathe", "Ostéopathe", "Réflexologue", "Kinésiologue",
+  "Acupuncteur", "Praticien Shiatsu", "Praticien Reiki", "Lithothérapeute",
+  "Radiesthésiste", "Médium", "Cartomancien", "Coach holistique",
+  "Art-thérapeute", "Aromathérapeute", "Phytothérapeute", "Fleurs de Bach",
+  "Praticien Méditation", "Yoga thérapeutique", "Ayurveda",
+  "Massage californien", "Massage suédois", "Massage thaï", "Massage lomi-lomi",
+  "Drainage lymphatique", "Réflexologie plantaire", "Fasciathérapie",
+  "Biorésonance", "EFT", "EMDR", "PNL", "Somatothérapie",
+  "Gestalt-thérapie", "Analyse transactionnelle", "Constellation familiale",
+  "Hypnose ericksonienne", "Respiration holotropique", "Sound healing",
+  "Chamanisme", "Soins esséniens", "Biomagnétisme", "Acupressure",
+  "Reboutement", "Iridologie", "Numérologie", "Médecine chinoise",
+  "Médecine ayurvédique", "Tarot thérapeutique",
+];
+
+export type TherapistService = {
+  id: string;
+  name: string;
+  duration_min: number;
+  description?: string;
+  color?: string;
+};

@@ -137,6 +137,47 @@ export type Database = {
           },
         ]
       }
+      therapist_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          is_public: boolean
+          label: string | null
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          is_public?: boolean
+          label?: string | null
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          is_public?: boolean
+          label?: string | null
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_documents_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapists: {
         Row: {
           address: string | null
@@ -150,6 +191,7 @@ export type Database = {
           currency: string | null
           email: string | null
           first_name: string
+          google_reviews_url: string | null
           id: string
           insurance_accepted: boolean | null
           languages: string[] | null
@@ -163,7 +205,10 @@ export type Database = {
           postal_code: string | null
           price_max: number | null
           price_min: number | null
+          services: Json
           short_bio: string | null
+          siret: string | null
+          siret_verified: boolean
           slug: string
           specialties: string[] | null
           status: string
@@ -172,6 +217,7 @@ export type Database = {
           user_id: string
           verified: boolean
           website: string | null
+          years_experience: number | null
         }
         Insert: {
           address?: string | null
@@ -185,6 +231,7 @@ export type Database = {
           currency?: string | null
           email?: string | null
           first_name: string
+          google_reviews_url?: string | null
           id?: string
           insurance_accepted?: boolean | null
           languages?: string[] | null
@@ -198,7 +245,10 @@ export type Database = {
           postal_code?: string | null
           price_max?: number | null
           price_min?: number | null
+          services?: Json
           short_bio?: string | null
+          siret?: string | null
+          siret_verified?: boolean
           slug: string
           specialties?: string[] | null
           status?: string
@@ -207,6 +257,7 @@ export type Database = {
           user_id: string
           verified?: boolean
           website?: string | null
+          years_experience?: number | null
         }
         Update: {
           address?: string | null
@@ -220,6 +271,7 @@ export type Database = {
           currency?: string | null
           email?: string | null
           first_name?: string
+          google_reviews_url?: string | null
           id?: string
           insurance_accepted?: boolean | null
           languages?: string[] | null
@@ -233,7 +285,10 @@ export type Database = {
           postal_code?: string | null
           price_max?: number | null
           price_min?: number | null
+          services?: Json
           short_bio?: string | null
+          siret?: string | null
+          siret_verified?: boolean
           slug?: string
           specialties?: string[] | null
           status?: string
@@ -242,6 +297,7 @@ export type Database = {
           user_id?: string
           verified?: boolean
           website?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }

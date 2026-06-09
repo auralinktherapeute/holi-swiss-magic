@@ -1,169 +1,753 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+  Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
+  FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { Upload, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  CANTONS, SPOKEN_LANGUAGES, THERAPY_SPECIALTIES, type TherapistService,
+} from "@/lib/constants";
 
-export const Route = createFileRoute("/dashboard/profil")({ component: Page });
+export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
 
-const SPECS = ["Sophrologie", "Méditation", "Naturopathie", "Hypnose", "Coaching", "Reiki", "Yoga thérapeutique", "Réflexologie"];
-const LANGS = ["Français", "Deutsch", "Italiano", "English"];
+type DocRow = {
+  id: string;
+  file_url: string;
+  file_name: string;
+  label: string | null;
+  is_public: boolean;
+};
 
-function Page() {
+const CURRENCIES = ["CHF", "EUR", "USD"];
+const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#ef4444"];
+
+function ProfilePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  // Identity
   const [rowId, setRowId] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string>("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [bio, setBio] = useState("");
-  const [canton, setCanton] = useState("VD");
-  const [price, setPrice] = useState<number>(120);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [langs, setLangs] = useState<string[]>([]);
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
 
+  // Approaches
+  const [canton, setCanton] = useState("GE");
+  const [langs, setLangs] = useState<string[]>([]);
+  const [priceMin, setPriceMin] = useState<number | "">("");
+  const [priceMax, setPriceMax] = useState<number | "">("");
+  const [currency, setCurrency] = useState("CHF");
+  const [sessionDuration, setSessionDuration] = useState<number | "">(60);
+  const [yearsExperience, setYearsExperience] = useState<number | "">("");
+
+  // Specialties
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [specSearch, setSpecSearch] = useState("");
+  const [customSpec, setCustomSpec] = useState("");
+
+  // Services
+  const [services, setServices] = useState<TherapistService[]>([]);
+
+  // Texts
+  const [shortBio, setShortBio] = useState("");
+  const [bio, setBio] = useState("");
+  const [googleReviewsUrl, setGoogleReviewsUrl] = useState("");
+  const [website, setWebsite] = useState("");
+
+  // SIRET
+  const [siret, setSiret] = useState("");
+  const [siretVerified, setSiretVerified] = useState(false);
+  const [showSiret, setShowSiret] = useState(false);
+
+  // Documents
+  const [documents, setDocuments] = useState<DocRow[]>([]);
+
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+
+  // Load
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("therapists")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!error && data) {
+      const { data } = await supabase.from("therapists").select("*").eq("user_id", user.id).maybeSingle();
+      if (data) {
         setRowId(data.id);
+        setPhotoUrl(data.photo_url ?? "");
         setFirstName(data.first_name ?? "");
         setLastName(data.last_name ?? "");
-        setSlug(data.slug ?? "");
-        setBio(data.bio ?? "");
-        setCanton(data.canton ?? "VD");
-        setPrice(data.price_min ?? 0);
-        setSelected(data.specialties ?? []);
+        setCity(data.city ?? "");
+        setPostalCode(data.postal_code ?? "");
+        setAddress(data.address ?? "");
+        setPhone(data.phone ?? "");
+        setCanton(data.canton ?? "GE");
         setLangs(data.languages ?? []);
+        setPriceMin(data.price_min ?? "");
+        setPriceMax(data.price_max ?? "");
+        setCurrency(data.currency ?? "CHF");
+        setYearsExperience((data as any).years_experience ?? "");
+        setSpecialties(data.specialties ?? []);
+        setServices(((data as any).services as TherapistService[]) ?? []);
+        setShortBio(data.short_bio ?? "");
+        setBio(data.bio ?? "");
+        setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
+        setWebsite(data.website ?? "");
+        setSiret((data as any).siret ?? "");
+        setSiretVerified((data as any).siret_verified ?? false);
+
+        const { data: docs } = await supabase
+          .from("therapist_documents" as any)
+          .select("id, file_url, file_name, label, is_public")
+          .eq("therapist_id", data.id)
+          .order("created_at", { ascending: false });
+        setDocuments((docs as any) ?? []);
       }
       setLoading(false);
     })();
   }, [user]);
 
-  const toggle = (arr: string[], v: string, set: (a: string[]) => void) =>
-    set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+  const markDirty = () => setDirty(true);
 
-  const onSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Specialty helpers
+  const filteredSpecs = useMemo(() => {
+    const q = specSearch.trim().toLowerCase();
+    if (!q) return THERAPY_SPECIALTIES;
+    return THERAPY_SPECIALTIES.filter((s) => s.toLowerCase().includes(q));
+  }, [specSearch]);
+
+  const toggleSpec = (s: string) => {
+    setSpecialties((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+    markDirty();
+  };
+  const addCustomSpec = () => {
+    const v = customSpec.trim();
+    if (!v || specialties.includes(v)) return;
+    setSpecialties((prev) => [...prev, v]);
+    setCustomSpec("");
+    markDirty();
+  };
+  const removeSpec = (s: string) => {
+    setSpecialties((prev) => prev.filter((x) => x !== s));
+    markDirty();
+  };
+
+  const toggleLang = (code: string) => {
+    setLangs((prev) => (prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]));
+    markDirty();
+  };
+
+  // Photo upload
+  const onPhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Max 5 Mo");
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("therapist-photos").upload(path, file, { upsert: true });
+    if (error) return toast.error(t("profile_edit.upload_error"));
+    const { data: pub } = supabase.storage.from("therapist-photos").getPublicUrl(path);
+    setPhotoUrl(pub.publicUrl);
+    markDirty();
+  };
+  const removePhoto = () => { setPhotoUrl(""); markDirty(); };
+
+  // Document upload
+  const onDocSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !rowId) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Max 5 Mo");
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("therapist-documents").upload(path, file);
+    if (error) return toast.error(t("profile_edit.upload_error"));
+    const { data: pub } = supabase.storage.from("therapist-documents").getPublicUrl(path);
+    const { data: ins, error: insErr } = await supabase
+      .from("therapist_documents" as any)
+      .insert({ therapist_id: rowId, file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: true } as any)
+      .select("id, file_url, file_name, label, is_public")
+      .single() as any;
+    if (insErr || !ins) return toast.error(t("profile_edit.upload_error"));
+    setDocuments((prev) => [ins, ...prev]);
+    if (docInputRef.current) docInputRef.current.value = "";
+  };
+
+  const updateDoc = async (id: string, patch: Partial<DocRow>) => {
+    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+    await (supabase.from("therapist_documents" as any).update(patch as any) as any).eq("id", id);
+  };
+  const deleteDoc = async (id: string) => {
+    if (!confirm(t("profile_edit.delete_confirm"))) return;
+    await supabase.from("therapist_documents" as any).delete().eq("id", id);
+    setDocuments((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  // Save profile
+  const onSave = async () => {
     if (!user) return;
     setSaving(true);
-    const displayName = `${firstName} ${lastName}`.trim();
-    const payload = {
+    const payload: any = {
       user_id: user.id,
-      slug: slug || (displayName.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + user.id.slice(0, 6)),
-      first_name: firstName || user.email!.split("@")[0],
+      first_name: firstName || (user.email?.split("@")[0] ?? "Thérapeute"),
       last_name: lastName || "",
-      bio,
-      canton,
-      price_min: price,
-      specialties: selected,
-      languages: langs,
+      slug: rowId
+        ? undefined
+        : (`${firstName}-${lastName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + user.id.slice(0, 6)).replace(/^-+|-+$/g, ""),
+      photo_url: photoUrl || null,
+      city, postal_code: postalCode, address, phone,
+      canton, languages: langs,
+      price_min: priceMin === "" ? null : Number(priceMin),
+      price_max: priceMax === "" ? null : Number(priceMax),
+      currency,
+      years_experience: yearsExperience === "" ? null : Number(yearsExperience),
+      specialties,
+      services,
+      short_bio: shortBio || null,
+      bio: bio || null,
+      google_reviews_url: googleReviewsUrl || null,
+      website: website || null,
+      siret: siret || null,
+      siret_verified: siretVerified,
       status: "active",
     };
-    const { error } = rowId
-      ? await supabase.from("therapists").update(payload).eq("id", rowId)
-      : await supabase.from("therapists").insert(payload);
+    Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+    const { data, error } = rowId
+      ? await supabase.from("therapists").update(payload).eq("id", rowId).select("id").maybeSingle()
+      : await supabase.from("therapists").insert(payload).select("id").maybeSingle();
     setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Profil enregistré");
+    if (error) return toast.error(t("profile_edit.save_error") + " — " + error.message);
+    if (data && !rowId) setRowId(data.id);
+    setDirty(false);
+    toast.success(t("profile_edit.saved_toast"));
+  };
+
+  const verifySiret = () => {
+    const digits = siret.replace(/\D/g, "");
+    if (digits.length === 14) { setSiretVerified(true); markDirty(); toast.success(t("profile_edit.siret_active")); }
+    else toast.error("SIRET 14 chiffres requis");
   };
 
   if (loading) {
-    return <div className="p-10 text-muted-foreground">Chargement…</div>;
+    return <div className="min-h-screen bg-[#1a0a2e] p-10 text-[#d4c4e0]">{t("profile_edit.loading")}</div>;
   }
 
+  const initial = (firstName || "T").charAt(0).toUpperCase();
+
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Mon profil</h1>
-        <p className="text-muted-foreground mt-1">Visible publiquement sur votre fiche thérapeute</p>
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#2a0f44] to-[#1a0a2e] pb-32 text-[#e6d7f5]">
+      <div className="mx-auto max-w-5xl px-4 pt-10 sm:px-6 lg:px-8">
+        {/* Header */}
+        <header className="rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md">
+          <h1 className="font-bold tracking-tight text-white text-2xl sm:text-3xl" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
+            {t("profile_edit.page_title")}
+          </h1>
+          <p className="mt-2 text-sm text-[#a89bc4]">{t("profile_edit.page_subtitle")}</p>
+        </header>
+
+        {/* Identity */}
+        <Section>
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              <div className="h-32 w-32 overflow-hidden rounded-full ring-4 ring-[#b86ef9]/40 shadow-[0_0_40px_-8px_rgba(184,110,249,0.6)]">
+                {photoUrl ? (
+                  <img src={photoUrl} alt="profile" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#3d1a5c] to-[#522870] text-5xl font-bold text-[#d4a5f9]">
+                    {initial}
+                  </div>
+                )}
+              </div>
+              {photoUrl && (
+                <button type="button" onClick={removePhoto}
+                  className="absolute -right-1 -top-1 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#ef4444] to-[#ec4899] text-white shadow-lg transition hover:scale-105">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <button type="button" onClick={() => photoInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] text-white shadow-lg transition hover:scale-105">
+                <Camera className="h-5 w-5" />
+              </button>
+              <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={onPhotoSelected} />
+            </div>
+            <p className="mt-4 text-base font-semibold text-white">{t("profile_edit.photo_title")}</p>
+            <p className="mt-1 text-xs text-[#a89bc4]">{t("profile_edit.photo_help")}</p>
+            <p className="text-xs text-[#a89bc4]">{t("profile_edit.photo_crop_note")}</p>
+          </div>
+
+          <Divider />
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label={t("profile_edit.first_name") + " *"}>
+              <Input value={firstName} onChange={(e) => { setFirstName(e.target.value); markDirty(); }} className={inputClass} />
+            </Field>
+            <Field label={t("profile_edit.last_name") + " *"}>
+              <Input value={lastName} onChange={(e) => { setLastName(e.target.value); markDirty(); }} className={inputClass} />
+            </Field>
+          </div>
+
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+            <Field label={t("profile_edit.city") + " *"}>
+              <div className="relative">
+                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
+                <Input value={city} onChange={(e) => { setCity(e.target.value); markDirty(); }} className={`${inputClass} pl-9`} />
+              </div>
+            </Field>
+            <Field label={t("profile_edit.postal_code")}>
+              <Input value={postalCode} onChange={(e) => { setPostalCode(e.target.value); markDirty(); }} className={inputClass} />
+            </Field>
+            <Field label={t("profile_edit.address")}>
+              <Input value={address} onChange={(e) => { setAddress(e.target.value); markDirty(); }} className={inputClass} />
+            </Field>
+          </div>
+
+          <div className="mt-5">
+            <Field
+              label={
+                <span className="inline-flex items-center gap-2">
+                  {t("profile_edit.phone")}
+                  <span className="text-xs font-normal text-[#a89bc4]">{t("profile_edit.phone_visibility")}</span>
+                </span>
+              }
+            >
+              <div className="relative">
+                <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
+                <Input value={phone} onChange={(e) => { setPhone(e.target.value); markDirty(); }} className={`${inputClass} pl-9`} />
+              </div>
+              <p className="mt-2 text-xs text-[#a89bc4]">{t("profile_edit.phone_protected_note")}</p>
+            </Field>
+          </div>
+        </Section>
+
+        {/* Approaches & languages */}
+        <Section title={t("profile_edit.section_approaches")}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label={t("profile_edit.canton")}>
+              <Select value={canton} onValueChange={(v) => { setCanton(v); markDirty(); }}>
+                <SelectTrigger className={selectClass}><SelectValue /></SelectTrigger>
+                <SelectContent className="max-h-[280px]">
+                  {CANTONS.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>{c.code} — {c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label={t("profile_edit.languages")}>
+              <div className="flex flex-wrap gap-2">
+                {SPOKEN_LANGUAGES.map((l) => {
+                  const active = langs.includes(l.label);
+                  return (
+                    <button key={l.code} type="button" onClick={() => toggleLang(l.label)}
+                      className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                        active
+                          ? "border-[#b86ef9] bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white shadow-md shadow-[#b86ef9]/40"
+                          : "border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.45)] text-[#d4c4e0] hover:border-[#b86ef9]"
+                      }`}>
+                      {l.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+          </div>
+
+          <div className="mt-5">
+            <Label className="text-sm font-medium text-white/90">{t("profile_edit.price_label")}</Label>
+            <div className="mt-2 grid gap-3 sm:grid-cols-[1fr_1fr_180px]">
+              <Input type="number" placeholder={t("profile_edit.price_min")} value={priceMin} onChange={(e) => { setPriceMin(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
+              <Input type="number" placeholder={t("profile_edit.price_max")} value={priceMax} onChange={(e) => { setPriceMax(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
+              <Select value={currency} onValueChange={(v) => { setCurrency(v); markDirty(); }}>
+                <SelectTrigger className={selectClass}><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c === "EUR" ? "€ (EUR)" : c === "USD" ? "$ (USD)" : "CHF"}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="mt-2 text-xs text-[#a89bc4]">
+              {t("profile_edit.price_helper", { min: priceMin || "—", max: priceMax || "—" })}
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <Field label={t("profile_edit.session_duration")}>
+              <Input type="number" value={sessionDuration} onChange={(e) => { setSessionDuration(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
+            </Field>
+            <Field label={t("profile_edit.years_experience")}>
+              <Input type="number" value={yearsExperience} onChange={(e) => { setYearsExperience(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
+            </Field>
+          </div>
+        </Section>
+
+        {/* Specialties */}
+        <Section title={t("profile_edit.section_specialties") + " *"}>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
+            <Input value={specSearch} onChange={(e) => setSpecSearch(e.target.value)} placeholder={t("profile_edit.search_specialty")} className={`${inputClass} pl-9`} />
+          </div>
+
+          {specialties.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-2 text-sm text-[#a89bc4]">{t("profile_edit.selected_count", { count: specialties.length })}</p>
+              <div className="flex flex-wrap gap-2">
+                {specialties.map((s) => {
+                  const isCustom = !THERAPY_SPECIALTIES.includes(s);
+                  return (
+                    <div key={s} className={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
+                      isCustom
+                        ? "border-[#5cc8fa]/50 bg-[#5cc8fa]/10 text-[#9be0ff]"
+                        : "border-[#b86ef9]/40 bg-[#b86ef9]/10 text-white"
+                    }`}>
+                      <span>{s}</span>
+                      {isCustom && (
+                        <span className="rounded bg-[#5cc8fa]/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[#9be0ff]">
+                          {t("profile_edit.custom_badge")}
+                        </span>
+                      )}
+                      <button type="button" onClick={() => removeSpec(s)} className="opacity-60 transition group-hover:opacity-100">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {filteredSpecs.map((s) => {
+              const active = specialties.includes(s);
+              return (
+                <button key={s} type="button" onClick={() => toggleSpec(s)}
+                  className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                    active
+                      ? "border-[#b86ef9] bg-gradient-to-br from-[#b86ef9] to-[#a855f7] text-white shadow-md shadow-[#b86ef9]/30"
+                      : "border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.5)] text-[#d4c4e0] hover:border-[#b86ef9]/60 hover:bg-[rgba(60,20,90,0.5)]"
+                  }`}>
+                  {active && <Check className="h-4 w-4" />}
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+
+          <Divider />
+
+          <Label className="text-sm font-medium text-white/90">{t("profile_edit.add_custom_specialty")}</Label>
+          <div className="mt-2 flex gap-2">
+            <Input value={customSpec} onChange={(e) => setCustomSpec(e.target.value)} placeholder={t("profile_edit.custom_placeholder")} className={inputClass}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSpec(); } }} />
+            <Button type="button" onClick={addCustomSpec} variant="outline"
+              className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
+              <Plus className="mr-1.5 h-4 w-4" />{t("profile_edit.add_btn")}
+            </Button>
+          </div>
+        </Section>
+
+        {/* Services */}
+        <Section title={t("profile_edit.section_services")} action={
+          <ServiceDialog onAdd={(s) => { setServices((prev) => [...prev, s]); markDirty(); }} />
+        } subtitle={t("profile_edit.services_help")}>
+          <div className="space-y-3">
+            {services.length === 0 && (
+              <p className="text-sm text-[#a89bc4]">—</p>
+            )}
+            {services.map((s, i) => (
+              <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.5)] p-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 text-white">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color || "#3b82f6" }} />
+                    <span className="font-semibold">{s.name}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{s.duration_min} {t("profile_edit.min_short")}</span>
+                    {s.description && <span className="truncate">· {s.description}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ServiceDialog
+                    initial={s}
+                    trigger={<button type="button" className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white"><Pencil className="h-4 w-4" /></button>}
+                    onAdd={(updated) => { setServices((prev) => prev.map((x, idx) => (idx === i ? updated : x))); markDirty(); }}
+                  />
+                  <button type="button" onClick={() => { setServices((prev) => prev.filter((_, idx) => idx !== i)); markDirty(); }}
+                    className="rounded-md p-2 text-[#ef4444] hover:bg-[#ef4444]/10">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* Bio + links */}
+        <Section>
+          <Field label={t("profile_edit.short_bio")}>
+            <Input value={shortBio} maxLength={150} onChange={(e) => { setShortBio(e.target.value); markDirty(); }} className={inputClass} />
+            <p className="mt-1.5 text-xs text-[#a89bc4]">{shortBio.length}/150</p>
+          </Field>
+
+          <div className="mt-5">
+            <Field label={t("profile_edit.full_description")}>
+              <Textarea value={bio} onChange={(e) => { setBio(e.target.value); markDirty(); }} rows={6} className={`${inputClass} resize-y`} />
+            </Field>
+          </div>
+
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <Field label={<span className="inline-flex items-center gap-2"><Link2 className="h-4 w-4" />{t("profile_edit.google_reviews_link")}</span>}>
+              <Input value={googleReviewsUrl} onChange={(e) => { setGoogleReviewsUrl(e.target.value); markDirty(); }} placeholder="https://g.page/..." className={inputClass} />
+            </Field>
+            <Field label={<span className="inline-flex items-center gap-2"><Globe className="h-4 w-4" />{t("profile_edit.website_link")}</span>}>
+              <Input value={website} onChange={(e) => { setWebsite(e.target.value); markDirty(); }} placeholder="https://" className={inputClass} />
+            </Field>
+          </div>
+
+          <Divider />
+
+          <Field label={
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[#b86ef9]" />
+              <span className="font-semibold text-white">{t("profile_edit.siret_label")}</span>
+              <span className="text-xs font-normal text-[#a89bc4]">{t("profile_edit.siret_visibility")}</span>
+            </span>
+          }>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type={showSiret ? "text" : "password"}
+                  value={siret}
+                  onChange={(e) => { setSiret(e.target.value); setSiretVerified(false); markDirty(); }}
+                  className={`${inputClass} pr-10`}
+                />
+                <button type="button" onClick={() => setShowSiret((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-[#a89bc4] hover:bg-white/5">
+                  {showSiret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <Button type="button" onClick={verifySiret} variant="outline"
+                className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
+                {t("profile_edit.siret_verify")}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-[#a89bc4]">{t("profile_edit.siret_helper")}</p>
+            {siretVerified && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#10b981]/30 bg-[#10b981]/10 px-4 py-2.5 text-sm text-[#86efac]">
+                <ShieldCheck className="h-4 w-4" />{t("profile_edit.siret_active")}
+              </div>
+            )}
+          </Field>
+
+          {!dirty && (
+            <div className="mt-5 flex items-center justify-center gap-2 rounded-lg border border-dashed border-[#b86ef9]/30 bg-[rgba(20,8,40,0.3)] px-4 py-3 text-sm text-[#d4a5f9]">
+              <Check className="h-4 w-4" />{t("profile_edit.no_changes")}
+            </div>
+          )}
+        </Section>
+
+        {/* Documents */}
+        <Section
+          title={<span className="inline-flex items-center gap-2"><FileText className="h-5 w-5 text-[#b86ef9]" />{t("profile_edit.section_documents")}</span>}
+          subtitle={t("profile_edit.documents_subtitle")}
+          action={
+            <>
+              <input ref={docInputRef} type="file" accept=".pdf,image/png,image/jpeg" className="hidden" onChange={onDocSelected} />
+              <Button type="button" onClick={() => docInputRef.current?.click()} variant="outline"
+                className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
+                <Plus className="mr-1.5 h-4 w-4" />{t("profile_edit.add_document")}
+              </Button>
+            </>
+          }
+        >
+          <div className="rounded-xl border border-dashed border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.3)] p-4 text-center text-xs text-[#a89bc4]">
+            {t("profile_edit.documents_help")}
+          </div>
+
+          {documents.length > 0 && (
+            <div className="mt-4 overflow-hidden rounded-xl border border-[rgba(184,110,249,0.18)]">
+              <div className="grid grid-cols-[2fr_2fr_1.5fr_auto] gap-3 border-b border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.5)] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[#a89bc4]">
+                <span>{t("profile_edit.col_document")}</span>
+                <span>{t("profile_edit.col_label")}</span>
+                <span>{t("profile_edit.col_visibility")}</span>
+                <span className="text-right">{t("profile_edit.col_actions")}</span>
+              </div>
+              {documents.map((d) => (
+                <div key={d.id} className="grid grid-cols-[2fr_2fr_1.5fr_auto] items-center gap-3 border-b border-[rgba(184,110,249,0.12)] px-4 py-3 last:border-0">
+                  <a href={d.file_url} target="_blank" rel="noreferrer"
+                    className="truncate rounded-md border border-[#b86ef9]/30 bg-[#b86ef9]/10 px-2.5 py-1 text-xs text-[#d4a5f9] hover:bg-[#b86ef9]/20">
+                    {d.file_name}
+                  </a>
+                  <Input
+                    defaultValue={d.label ?? ""}
+                    onBlur={(e) => { if (e.target.value !== d.label) updateDoc(d.id, { label: e.target.value }); }}
+                    className={inputClass}
+                  />
+                  <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-[#d4c4e0]">
+                    <Switch checked={d.is_public} onCheckedChange={(v) => updateDoc(d.id, { is_public: v })} />
+                    <span>{d.is_public ? t("profile_edit.visible_to_visitors") : t("profile_edit.hidden_from_visitors")}</span>
+                  </label>
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => deleteDoc(d.id)}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-[#ef4444]/40 bg-transparent px-3 py-1.5 text-xs text-[#ef4444] hover:bg-[#ef4444]/10">
+                      <Trash2 className="h-3.5 w-3.5" />{t("profile_edit.delete")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
       </div>
 
-      <form onSubmit={onSave} className="space-y-6">
-        <Card className="bg-surface border-border/60">
-          <CardHeader><CardTitle>Photo & présentation</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="h-20 w-20 rounded-full bg-primary-xlight border border-primary/30" />
-              <Button type="button" variant="secondary" size="sm"><Upload className="h-4 w-4 mr-2" />Changer la photo</Button>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label htmlFor="first">Prénom</Label><Input id="first" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></div>
-              <div className="space-y-2"><Label htmlFor="last">Nom</Label><Input id="last" value={lastName} onChange={(e) => setLastName(e.target.value)} /></div>
-            </div>
-            <div className="space-y-2"><Label htmlFor="slug">Slug (URL publique)</Label><Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="claire-dupont" /></div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Présentation</Label>
-              <Textarea id="bio" rows={6} value={bio} onChange={(e) => setBio(e.target.value)} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-surface border-border/60">
-          <CardHeader><CardTitle>Approches & langues</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Approches proposées</Label>
-              <div className="flex flex-wrap gap-2">
-                {SPECS.map((s) => (
-                  <Badge key={s} onClick={() => toggle(selected, s, setSelected)}
-                    className={`cursor-pointer ${selected.includes(s) ? "bg-primary text-primary-foreground" : "bg-surface-alt text-foreground/70 hover:bg-primary-xlight"}`}>
-                    {s} {selected.includes(s) && <X className="h-3 w-3 ml-1 inline" />}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Langues parlées</Label>
-              <div className="flex flex-wrap gap-2">
-                {LANGS.map((l) => (
-                  <Badge key={l} onClick={() => toggle(langs, l, setLangs)}
-                    className={`cursor-pointer ${langs.includes(l) ? "bg-primary text-primary-foreground" : "bg-surface-alt text-foreground/70 hover:bg-primary-xlight"}`}>
-                    {l}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-surface border-border/60">
-          <CardHeader><CardTitle>Cabinet & tarifs</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="canton">Canton</Label>
-                <Select value={canton} onValueChange={setCanton}>
-                  <SelectTrigger id="canton"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["GE","VD","VS","FR","NE","BE","ZH","TI"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2"><Label htmlFor="price">Tarif / séance (CHF)</Label><Input id="price" type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} /></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost">Annuler</Button>
-          <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">{saving ? "…" : "Enregistrer"}</Button>
+      {/* Sticky save bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.85)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-5xl items-center justify-end gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <Button type="button" variant="ghost" className="text-[#d4c4e0] hover:bg-white/5">
+            {t("profile_edit.cancel_btn")}
+          </Button>
+          <Button type="button" onClick={onSave} disabled={saving}
+            className="gap-2 bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white shadow-lg shadow-[#b86ef9]/30 hover:opacity-95">
+            <Save className="h-4 w-4" />{saving ? "…" : t("profile_edit.save_btn")}
+          </Button>
         </div>
-      </form>
+      </div>
     </div>
+  );
+}
+
+/* ---------- Helpers ---------- */
+
+const inputClass =
+  "h-11 w-full rounded-xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.55)] px-3 text-white placeholder:text-[#a89bc4] focus:border-[#b86ef9] focus-visible:ring-2 focus-visible:ring-[#b86ef9]/40";
+const selectClass =
+  "h-11 w-full rounded-xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.55)] px-3 text-white focus:ring-2 focus:ring-[#b86ef9]/40 [&>span]:text-white";
+
+function Section({
+  title, subtitle, action, children,
+}: {
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mt-6 rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md sm:p-8">
+      {(title || action) && (
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            {title && <h2 className="text-xl font-semibold text-white">{title}</h2>}
+            {subtitle && <p className="mt-1 text-sm text-[#a89bc4]">{subtitle}</p>}
+          </div>
+          {action}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+function Divider() {
+  return <div className="my-6 h-px bg-gradient-to-r from-transparent via-[#b86ef9]/30 to-transparent" />;
+}
+
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium text-white/90">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function ServiceDialog({
+  initial, onAdd, trigger,
+}: {
+  initial?: TherapistService;
+  onAdd: (s: TherapistService) => void;
+  trigger?: React.ReactNode;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [dur, setDur] = useState<number | "">(initial?.duration_min ?? 60);
+  const [desc, setDesc] = useState(initial?.description ?? "");
+  const [color, setColor] = useState(initial?.color ?? SERVICE_COLORS[1]);
+
+  const submit = () => {
+    if (!name.trim() || !dur) return;
+    onAdd({
+      id: initial?.id ?? crypto.randomUUID(),
+      name: name.trim(),
+      duration_min: Number(dur),
+      description: desc.trim() || undefined,
+      color,
+    });
+    setOpen(false);
+    if (!initial) { setName(""); setDur(60); setDesc(""); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger ?? (
+          <Button type="button" variant="outline" className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
+            <Plus className="mr-1.5 h-4 w-4" />{t("profile_edit.add_btn")}
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="border-[#b86ef9]/30 bg-[#1a0a2e] text-[#e6d7f5]">
+        <DialogHeader>
+          <DialogTitle className="text-white">
+            {initial ? t("profile_edit.edit") : t("profile_edit.add_service")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Field label={t("profile_edit.service_name")}>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("profile_edit.service_min_placeholder")} className={inputClass} />
+          </Field>
+          <Field label={t("profile_edit.service_duration")}>
+            <Input type="number" value={dur} onChange={(e) => setDur(e.target.value === "" ? "" : Number(e.target.value))} className={inputClass} />
+          </Field>
+          <Field label={t("profile_edit.service_description")}>
+            <Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t("profile_edit.service_desc_placeholder")} className={`${inputClass} resize-y`} />
+          </Field>
+          <Field label={t("profile_edit.service_color")}>
+            <div className="flex gap-2">
+              {SERVICE_COLORS.map((c) => (
+                <button key={c} type="button" onClick={() => setColor(c)}
+                  className={`h-8 w-8 rounded-full border-2 transition ${color === c ? "border-white scale-110" : "border-transparent"}`}
+                  style={{ background: c }} />
+              ))}
+            </div>
+          </Field>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="text-[#d4c4e0]">
+            {t("profile_edit.cancel_btn")}
+          </Button>
+          <Button type="button" onClick={submit} className="bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white">
+            <Save className="mr-1.5 h-4 w-4" />{t("profile_edit.save_btn")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
