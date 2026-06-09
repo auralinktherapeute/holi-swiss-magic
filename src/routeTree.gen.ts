@@ -9,9 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
+import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
+import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
+import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
+import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
+import { Route as DashboardArticlesRouteImport } from './routes/dashboard.articles'
+import { Route as DashboardAgendaRouteImport } from './routes/dashboard.agenda'
+import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abonnement'
+import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
+import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
+import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
+import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminAvisRouteImport } from './routes/admin.avis'
+import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
+import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
+import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
@@ -22,6 +44,16 @@ import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LangRoute = LangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -32,10 +64,110 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const LangIndexRoute = LangIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LangRoute,
+} as any)
+const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
+  id: '/reservations',
+  path: '/reservations',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardProfilRoute = DashboardProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardParrainageRoute = DashboardParrainageRouteImport.update({
+  id: '/parrainage',
+  path: '/parrainage',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardEvenementsRoute = DashboardEvenementsRouteImport.update({
+  id: '/evenements',
+  path: '/evenements',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAvisRoute = DashboardAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardArticlesRoute = DashboardArticlesRouteImport.update({
+  id: '/articles',
+  path: '/articles',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAbonnementRoute = DashboardAbonnementRouteImport.update({
+  id: '/abonnement',
+  path: '/abonnement',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
+  id: '/utilisateurs',
+  path: '/utilisateurs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTherapeutesRoute = AdminTherapeutesRouteImport.update({
+  id: '/therapeutes',
+  path: '/therapeutes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminParametresRoute = AdminParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModerationRoute = AdminModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEvenementsRoute = AdminEvenementsRouteImport.update({
+  id: '/evenements',
+  path: '/evenements',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmailsRoute = AdminEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAvisRoute = AdminAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminArticlesRoute = AdminArticlesRouteImport.update({
+  id: '/articles',
+  path: '/articles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAgentsRoute = AdminAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAbonnementsRoute = AdminAbonnementsRouteImport.update({
+  id: '/abonnements',
+  path: '/abonnements',
+  getParentRoute: () => AdminRoute,
 } as any)
 const LangTherapeutesIndexRoute = LangTherapeutesIndexRouteImport.update({
   id: '/therapeutes/',
@@ -86,7 +218,29 @@ const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/admin/abonnements': typeof AdminAbonnementsRoute
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/articles': typeof AdminArticlesRoute
+  '/admin/avis': typeof AdminAvisRoute
+  '/admin/emails': typeof AdminEmailsRoute
+  '/admin/evenements': typeof AdminEvenementsRoute
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/parametres': typeof AdminParametresRoute
+  '/admin/therapeutes': typeof AdminTherapeutesRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/dashboard/abonnement': typeof DashboardAbonnementRoute
+  '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/articles': typeof DashboardArticlesRoute
+  '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/parrainage': typeof DashboardParrainageRoute
+  '/dashboard/profil': typeof DashboardProfilRoute
+  '/dashboard/reservations': typeof DashboardReservationsRoute
   '/$lang/': typeof LangIndexRoute
+  '/admin/': typeof AdminIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
@@ -99,7 +253,27 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/abonnements': typeof AdminAbonnementsRoute
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/articles': typeof AdminArticlesRoute
+  '/admin/avis': typeof AdminAvisRoute
+  '/admin/emails': typeof AdminEmailsRoute
+  '/admin/evenements': typeof AdminEvenementsRoute
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/parametres': typeof AdminParametresRoute
+  '/admin/therapeutes': typeof AdminTherapeutesRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/dashboard/abonnement': typeof DashboardAbonnementRoute
+  '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/articles': typeof DashboardArticlesRoute
+  '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/parrainage': typeof DashboardParrainageRoute
+  '/dashboard/profil': typeof DashboardProfilRoute
+  '/dashboard/reservations': typeof DashboardReservationsRoute
   '/$lang': typeof LangIndexRoute
+  '/admin': typeof AdminIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog': typeof LangBlogIndexRoute
@@ -114,7 +288,29 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/admin/abonnements': typeof AdminAbonnementsRoute
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/articles': typeof AdminArticlesRoute
+  '/admin/avis': typeof AdminAvisRoute
+  '/admin/emails': typeof AdminEmailsRoute
+  '/admin/evenements': typeof AdminEvenementsRoute
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/parametres': typeof AdminParametresRoute
+  '/admin/therapeutes': typeof AdminTherapeutesRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/dashboard/abonnement': typeof DashboardAbonnementRoute
+  '/dashboard/agenda': typeof DashboardAgendaRoute
+  '/dashboard/articles': typeof DashboardArticlesRoute
+  '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/parrainage': typeof DashboardParrainageRoute
+  '/dashboard/profil': typeof DashboardProfilRoute
+  '/dashboard/reservations': typeof DashboardReservationsRoute
   '/$lang/': typeof LangIndexRoute
+  '/admin/': typeof AdminIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
@@ -130,7 +326,29 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$lang'
+    | '/admin'
+    | '/dashboard'
+    | '/admin/abonnements'
+    | '/admin/agents'
+    | '/admin/articles'
+    | '/admin/avis'
+    | '/admin/emails'
+    | '/admin/evenements'
+    | '/admin/moderation'
+    | '/admin/parametres'
+    | '/admin/therapeutes'
+    | '/admin/utilisateurs'
+    | '/dashboard/abonnement'
+    | '/dashboard/agenda'
+    | '/dashboard/articles'
+    | '/dashboard/avis'
+    | '/dashboard/evenements'
+    | '/dashboard/parrainage'
+    | '/dashboard/profil'
+    | '/dashboard/reservations'
     | '/$lang/'
+    | '/admin/'
+    | '/dashboard/'
     | '/$lang/blog/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog/'
@@ -143,7 +361,27 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin/abonnements'
+    | '/admin/agents'
+    | '/admin/articles'
+    | '/admin/avis'
+    | '/admin/emails'
+    | '/admin/evenements'
+    | '/admin/moderation'
+    | '/admin/parametres'
+    | '/admin/therapeutes'
+    | '/admin/utilisateurs'
+    | '/dashboard/abonnement'
+    | '/dashboard/agenda'
+    | '/dashboard/articles'
+    | '/dashboard/avis'
+    | '/dashboard/evenements'
+    | '/dashboard/parrainage'
+    | '/dashboard/profil'
+    | '/dashboard/reservations'
     | '/$lang'
+    | '/admin'
+    | '/dashboard'
     | '/$lang/blog/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog'
@@ -157,7 +395,29 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$lang'
+    | '/admin'
+    | '/dashboard'
+    | '/admin/abonnements'
+    | '/admin/agents'
+    | '/admin/articles'
+    | '/admin/avis'
+    | '/admin/emails'
+    | '/admin/evenements'
+    | '/admin/moderation'
+    | '/admin/parametres'
+    | '/admin/therapeutes'
+    | '/admin/utilisateurs'
+    | '/dashboard/abonnement'
+    | '/dashboard/agenda'
+    | '/dashboard/articles'
+    | '/dashboard/avis'
+    | '/dashboard/evenements'
+    | '/dashboard/parrainage'
+    | '/dashboard/profil'
+    | '/dashboard/reservations'
     | '/$lang/'
+    | '/admin/'
+    | '/dashboard/'
     | '/$lang/blog/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog/'
@@ -172,10 +432,26 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangRoute: typeof LangRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
+  DashboardRoute: typeof DashboardRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$lang': {
       id: '/$lang'
       path: '/$lang'
@@ -190,12 +466,152 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/$lang/': {
       id: '/$lang/'
       path: '/'
       fullPath: '/$lang/'
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
+    }
+    '/dashboard/reservations': {
+      id: '/dashboard/reservations'
+      path: '/reservations'
+      fullPath: '/dashboard/reservations'
+      preLoaderRoute: typeof DashboardReservationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/profil': {
+      id: '/dashboard/profil'
+      path: '/profil'
+      fullPath: '/dashboard/profil'
+      preLoaderRoute: typeof DashboardProfilRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/parrainage': {
+      id: '/dashboard/parrainage'
+      path: '/parrainage'
+      fullPath: '/dashboard/parrainage'
+      preLoaderRoute: typeof DashboardParrainageRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/evenements': {
+      id: '/dashboard/evenements'
+      path: '/evenements'
+      fullPath: '/dashboard/evenements'
+      preLoaderRoute: typeof DashboardEvenementsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/avis': {
+      id: '/dashboard/avis'
+      path: '/avis'
+      fullPath: '/dashboard/avis'
+      preLoaderRoute: typeof DashboardAvisRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/articles': {
+      id: '/dashboard/articles'
+      path: '/articles'
+      fullPath: '/dashboard/articles'
+      preLoaderRoute: typeof DashboardArticlesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agenda': {
+      id: '/dashboard/agenda'
+      path: '/agenda'
+      fullPath: '/dashboard/agenda'
+      preLoaderRoute: typeof DashboardAgendaRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/abonnement': {
+      id: '/dashboard/abonnement'
+      path: '/abonnement'
+      fullPath: '/dashboard/abonnement'
+      preLoaderRoute: typeof DashboardAbonnementRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/admin/utilisateurs': {
+      id: '/admin/utilisateurs'
+      path: '/utilisateurs'
+      fullPath: '/admin/utilisateurs'
+      preLoaderRoute: typeof AdminUtilisateursRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/therapeutes': {
+      id: '/admin/therapeutes'
+      path: '/therapeutes'
+      fullPath: '/admin/therapeutes'
+      preLoaderRoute: typeof AdminTherapeutesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/parametres': {
+      id: '/admin/parametres'
+      path: '/parametres'
+      fullPath: '/admin/parametres'
+      preLoaderRoute: typeof AdminParametresRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/moderation': {
+      id: '/admin/moderation'
+      path: '/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/evenements': {
+      id: '/admin/evenements'
+      path: '/evenements'
+      fullPath: '/admin/evenements'
+      preLoaderRoute: typeof AdminEvenementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/emails': {
+      id: '/admin/emails'
+      path: '/emails'
+      fullPath: '/admin/emails'
+      preLoaderRoute: typeof AdminEmailsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/avis': {
+      id: '/admin/avis'
+      path: '/avis'
+      fullPath: '/admin/avis'
+      preLoaderRoute: typeof AdminAvisRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/articles': {
+      id: '/admin/articles'
+      path: '/articles'
+      fullPath: '/admin/articles'
+      preLoaderRoute: typeof AdminArticlesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/agents': {
+      id: '/admin/agents'
+      path: '/agents'
+      fullPath: '/admin/agents'
+      preLoaderRoute: typeof AdminAgentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/abonnements': {
+      id: '/admin/abonnements'
+      path: '/abonnements'
+      fullPath: '/admin/abonnements'
+      preLoaderRoute: typeof AdminAbonnementsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/$lang/therapeutes/': {
       id: '/$lang/therapeutes/'
@@ -291,9 +707,69 @@ const LangRouteChildren: LangRouteChildren = {
 
 const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
 
+interface AdminRouteChildren {
+  AdminAbonnementsRoute: typeof AdminAbonnementsRoute
+  AdminAgentsRoute: typeof AdminAgentsRoute
+  AdminArticlesRoute: typeof AdminArticlesRoute
+  AdminAvisRoute: typeof AdminAvisRoute
+  AdminEmailsRoute: typeof AdminEmailsRoute
+  AdminEvenementsRoute: typeof AdminEvenementsRoute
+  AdminModerationRoute: typeof AdminModerationRoute
+  AdminParametresRoute: typeof AdminParametresRoute
+  AdminTherapeutesRoute: typeof AdminTherapeutesRoute
+  AdminUtilisateursRoute: typeof AdminUtilisateursRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAbonnementsRoute: AdminAbonnementsRoute,
+  AdminAgentsRoute: AdminAgentsRoute,
+  AdminArticlesRoute: AdminArticlesRoute,
+  AdminAvisRoute: AdminAvisRoute,
+  AdminEmailsRoute: AdminEmailsRoute,
+  AdminEvenementsRoute: AdminEvenementsRoute,
+  AdminModerationRoute: AdminModerationRoute,
+  AdminParametresRoute: AdminParametresRoute,
+  AdminTherapeutesRoute: AdminTherapeutesRoute,
+  AdminUtilisateursRoute: AdminUtilisateursRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardAbonnementRoute: typeof DashboardAbonnementRoute
+  DashboardAgendaRoute: typeof DashboardAgendaRoute
+  DashboardArticlesRoute: typeof DashboardArticlesRoute
+  DashboardAvisRoute: typeof DashboardAvisRoute
+  DashboardEvenementsRoute: typeof DashboardEvenementsRoute
+  DashboardParrainageRoute: typeof DashboardParrainageRoute
+  DashboardProfilRoute: typeof DashboardProfilRoute
+  DashboardReservationsRoute: typeof DashboardReservationsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAbonnementRoute: DashboardAbonnementRoute,
+  DashboardAgendaRoute: DashboardAgendaRoute,
+  DashboardArticlesRoute: DashboardArticlesRoute,
+  DashboardAvisRoute: DashboardAvisRoute,
+  DashboardEvenementsRoute: DashboardEvenementsRoute,
+  DashboardParrainageRoute: DashboardParrainageRoute,
+  DashboardProfilRoute: DashboardProfilRoute,
+  DashboardReservationsRoute: DashboardReservationsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangRoute: LangRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
+  DashboardRoute: DashboardRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
