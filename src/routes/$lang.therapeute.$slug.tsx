@@ -1,6 +1,7 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BadgeCheck, Languages, MapPin, Star } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
@@ -25,6 +26,42 @@ function Page() {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (!th) return;
+    const fullName = `${th.first_name ?? ""} ${th.last_name ?? ""}`.trim();
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: fullName,
+      jobTitle: Array.isArray((th as any).specialties) ? (th as any).specialties[0] : th.title ?? undefined,
+      description: th.bio ?? undefined,
+      address: {
+        "@type": "PostalAddress",
+        addressRegion: th.canton ?? undefined,
+        addressCountry: "CH",
+      },
+      url: `https://holiswiss.ch/${lang}/therapeute/${slug}`,
+      ...(th.price_min != null
+        ? {
+            offers: {
+              "@type": "Offer",
+              price: String(th.price_min),
+              priceCurrency: th.currency ?? "CHF",
+            },
+          }
+        : {}),
+    };
+    const el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.id = "therapist-jsonld";
+    el.textContent = JSON.stringify(jsonLd);
+    document.querySelectorAll("#therapist-jsonld").forEach((n) => n.remove());
+    document.head.appendChild(el);
+    return () => {
+      el.remove();
+    };
+  }, [th, lang, slug]);
 
   const { data: reviews } = useQuery({
     queryKey: ["reviews", th?.id],
