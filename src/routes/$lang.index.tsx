@@ -25,13 +25,7 @@ function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
 
-  const popularSearches = [
-    "Sophrologue Genève",
-    "Hypnothérapeute Lausanne",
-    "Naturopathe Zurich",
-    "Ostéopathe Berne",
-    "Reiki Lugano",
-  ];
+  const popularSearches = t("home.popular_searches", { returnObjects: true }) as string[];
 
   return (
     <>
@@ -51,13 +45,13 @@ function HomePage() {
           <div className="mx-auto max-w-4xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.45)] bg-white/5 px-4 py-1.5 text-xs font-medium text-[#e6d7f5] backdrop-blur-md shadow-[0_0_30px_-10px_rgba(184,110,249,0.6)]">
               <Sparkles className="h-3.5 w-3.5 text-[#d4a5f9]" />
-              Nouvelle plateforme suisse du bien-être holistique
+              {t("home.hero_badge")}
             </span>
             <h1 className="mt-7 font-bold tracking-tight text-white text-[2.5rem] leading-[1.05] sm:text-6xl lg:text-[4.5rem]">
               <HeroTagline text={t("brand.tagline")} />
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base text-[#d4c4e0] sm:text-lg">
-              Énergéticiens, sophrologues, naturopathes, ostéopathes… {t("home.subtitle", { count: 280 })}
+              {t("home.subtitle_lead")} {t("home.subtitle", { count: 280 })}
             </p>
           </div>
 
@@ -69,15 +63,15 @@ function HomePage() {
                   <Search className="pointer-events-none absolute left-4 h-5 w-5 text-[#b9a4d4]" />
                   <input
                     type="text"
-                    placeholder="Rechercher par ville ou nom du thérapeute…"
-                    aria-label="Rechercher"
+                    placeholder={t("home.search_placeholder")}
+                    aria-label={t("home.search_aria")}
                     className="h-14 w-full min-w-0 rounded-xl bg-transparent pl-12 pr-4 text-base text-white placeholder:text-[#a89bc4] focus:outline-none focus:ring-2 focus:ring-[#b86ef9]/60"
                   />
                 </div>
                 <Select>
                   <SelectTrigger className="h-14 w-full rounded-xl border-0 bg-white/[0.04] text-white shadow-none focus:ring-2 focus:ring-[#b86ef9]/60 md:w-[220px] md:shrink-0 [&>span]:text-white/90">
                     <Sparkles className="mr-1 h-4 w-4 text-[#d4a5f9]" />
-                    <SelectValue placeholder="Spécialité…" />
+                    <SelectValue placeholder={t("home.specialty_placeholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {THERAPY_CATEGORIES.map((c) => (
@@ -98,7 +92,7 @@ function HomePage() {
 
             {/* Popular searches */}
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 text-sm">
-              <span className="text-[#a89bc4]">Recherches populaires :</span>
+              <span className="text-[#a89bc4]">{t("home.popular_searches_label")}</span>
               {popularSearches.map((q) => (
                 <Link
                   key={q}
@@ -163,7 +157,7 @@ function HomePage() {
                 <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#b86ef9]/30 to-[#5cc8fa]/20 text-[#d4a5f9] ring-1 ring-[#b86ef9]/30">
                   <Icon className="h-5 w-5" />
                 </div>
-                <div className="mt-3 text-xs font-semibold text-[#d4a5f9]">ÉTAPE {s.n}</div>
+                  <div className="mt-3 text-xs font-semibold text-[#d4a5f9]">{t("home.step")} {s.n}</div>
                 <p className="mt-2 text-sm text-white/80">{s.txt}</p>
               </div>
             );
@@ -187,7 +181,7 @@ function HomePage() {
               >
                 {p.highlight && (
                   <span className="inline-block rounded-full bg-gradient-to-r from-[#b86ef9] to-[#d4a5f9] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                    Recommandé
+                    {t("home.recommended")}
                   </span>
                 )}
                 <h3 className="mt-2 text-lg font-semibold text-white">{p.name}</h3>

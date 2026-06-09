@@ -46,7 +46,7 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Connecté");
+    toast.success(t("auth.connected"));
     await redirectAfterLogin();
   };
 
@@ -63,7 +63,7 @@ function LoginPage() {
       }
       await redirectAfterLogin();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Connexion Google impossible");
+      toast.error(error instanceof Error ? error.message : t("auth.google_login_error"));
     } finally {
       setGoogleLoading(false);
     }
@@ -73,11 +73,11 @@ function LoginPage() {
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16 sm:px-6">
       <div className="text-center">
         <p className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-primary">
-          Espace thérapeutes
+          {t("auth.therapist_space")}
         </p>
         <h1 className="text-3xl font-bold">{t("auth.loginTitle")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Connexion réservée aux thérapeutes inscrits sur Holiswiss.
+          {t("auth.login_subtitle")}
         </p>
       </div>
 
@@ -105,7 +105,7 @@ function LoginPage() {
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        {googleLoading ? "Connexion…" : "Continuer avec Google"}
+        {googleLoading ? t("auth.connecting") : t("auth.google_continue")}
       </button>
 
       <div className="relative">
@@ -113,7 +113,7 @@ function LoginPage() {
           <span className="w-full border-t border-[#e2e8f0]" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">ou</span>
+          <span className="bg-white px-2 text-muted-foreground">{t("auth.or")}</span>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ function LoginPage() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>

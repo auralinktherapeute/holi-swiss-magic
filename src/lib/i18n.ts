@@ -23,6 +23,8 @@ if (!i18n.isInitialized) {
       fallbackLng: DEFAULT_LANG,
       supportedLngs: SUPPORTED_LANGS as unknown as string[],
       interpolation: { escapeValue: false },
+      returnObjects: true,
+      returnNull: false,
     });
 }
 

@@ -44,11 +44,29 @@
       "cantons": "Kantone",
       "approaches": "Ansätze",
       "sessions": "gebuchte Sitzungen"
-    }
+    },
+    "hero_badge": "Neue Schweizer Plattform für ganzheitliches Wohlbefinden",
+    "subtitle_lead": "Energetiker, Sophrologen, Naturheilpraktiker, Osteopathen…",
+    "search_placeholder": "Suche nach Stadt oder Name des Therapeuten…",
+    "search_aria": "Suchen",
+    "specialty_placeholder": "Spezialgebiet…",
+    "popular_searches_label": "Beliebte Suchen:",
+    "popular_searches": [
+      "Sophrologe Genf",
+      "Hypnotherapeut Lausanne",
+      "Naturheilpraktiker Zürich",
+      "Osteopath Bern",
+      "Reiki Lugano"
+    ],
+    "step": "SCHRITT",
+    "recommended": "Empfohlen"
   },
   "directory": {
     "title": "Therapeutenverzeichnis",
-    "subtitle": "Finden Sie einen Praktizierenden in Ihrer Nähe"
+    "subtitle": "Finden Sie einen Praktizierenden in Ihrer Nähe",
+    "empty": "Derzeit keine Therapeuten verfügbar.",
+    "per_session": "/ Sitzung",
+    "verified": "Verifiziert"
   },
   "profile": {
     "viewProfile": "Profil ansehen",
@@ -129,7 +147,22 @@
     "password": "Passwort",
     "submit": "Weiter",
     "noAccount": "Noch kein Konto?",
-    "haveAccount": "Bereits registriert?"
+    "haveAccount": "Bereits registriert?",
+    "therapist_space": "Therapeutenbereich",
+    "signup_title": "Mein Therapeutenprofil erstellen",
+    "signup_subtitle": "Registrierung nur für Therapeuten. Besucher können das Verzeichnis frei und ohne Konto einsehen.",
+    "login_subtitle": "Login nur für auf Holiswiss registrierte Therapeuten.",
+    "google_continue": "Mit Google fortfahren",
+    "connecting": "Anmelden…",
+    "or": "oder",
+    "confirm_password": "Passwort bestätigen",
+    "password_mismatch": "Die Passwörter stimmen nicht überein",
+    "show_password": "Passwort anzeigen",
+    "hide_password": "Passwort ausblenden",
+    "google_login_error": "Google-Anmeldung nicht möglich",
+    "google_signup_error": "Google-Registrierung nicht möglich",
+    "connected": "Angemeldet",
+    "account_created": "Konto erstellt — überprüfen Sie Ihre E-Mails, falls eine Bestätigung erforderlich ist"
   },
   "common": {
     "soon": "Demnächst verfügbar",
@@ -167,5 +200,51 @@
     "legal": "Impressum",
     "privacy": "Datenschutz",
     "terms": "AGB"
+  },
+  "therapist_page": {
+    "not_found": "Therapeut nicht gefunden",
+    "back_to_directory": "Zurück zum Verzeichnis",
+    "reviews": "Bewertungen"
+  },
+  "booking": {
+    "title": "Termin buchen",
+    "prev_month": "Vorheriger Monat",
+    "next_month": "Nächster Monat",
+    "available_slots": "Verfügbare Zeitfenster",
+    "no_slots": "Keine freien Zeitfenster an diesem Tag.",
+    "full_name": "Vollständiger Name",
+    "phone_optional": "Telefon (optional)",
+    "message_optional": "Nachricht (optional)",
+    "sending": "Senden…",
+    "book_at": "Am {{date}} um {{time}} buchen",
+    "choose_slot": "Wählen Sie ein Zeitfenster",
+    "request_sent_title": "Anfrage gesendet 🎉",
+    "request_sent_desc": "Der Therapeut wird sich sehr schnell per E-Mail bei Ihnen melden.",
+    "request_sent_toast": "Anfrage gesendet! Sie erhalten eine Bestätigung per E-Mail.",
+    "name_too_short": "Name zu kurz",
+    "email_invalid": "Ungültige E-Mail",
+    "days": [
+      "Mo",
+      "Di",
+      "Mi",
+      "Do",
+      "Fr",
+      "Sa",
+      "So"
+    ],
+    "months": [
+      "Januar",
+      "Februar",
+      "März",
+      "April",
+      "Mai",
+      "Juni",
+      "Juli",
+      "August",
+      "September",
+      "Oktober",
+      "November",
+      "Dezember"
+    ]
   }
 }

@@ -1,4 +1,5 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BadgeCheck, Languages, MapPin, Star } from "lucide-react";
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
 
 function Page() {
   const { slug, lang } = useParams({ from: "/$lang/therapeute/$slug" });
+  const { t } = useTranslation();
 
   const { data: th, isLoading, error } = useQuery({
     queryKey: ["therapist", slug],
@@ -58,9 +60,9 @@ function Page() {
   if (!th) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold">Thérapeute introuvable</h1>
+        <h1 className="text-2xl font-bold">{t("therapist_page.not_found")}</h1>
         <Link to="/$lang/therapeutes" params={{ lang }} className="mt-4 inline-block text-primary underline">
-          Retour à l'annuaire
+          {t("therapist_page.back_to_directory")}
         </Link>
       </div>
     );
@@ -92,7 +94,7 @@ function Page() {
             <h1 className="text-3xl font-bold tracking-tight text-foreground">{fullName}</h1>
             {th.verified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                <BadgeCheck className="h-3.5 w-3.5" /> Vérifié
+                <BadgeCheck className="h-3.5 w-3.5" /> {t("directory.verified")}
               </span>
             )}
             {th.title && (
@@ -128,7 +130,7 @@ function Page() {
           {th.price_min != null && (
             <p className="mt-6 text-lg font-semibold text-foreground">
               {th.currency ?? "CHF"} {th.price_min}
-              <span className="ml-1 text-sm font-normal text-muted-foreground">/ séance</span>
+              <span className="ml-1 text-sm font-normal text-muted-foreground">{t("directory.per_session")}</span>
             </p>
           )}
         </div>
@@ -140,7 +142,7 @@ function Page() {
 
       {reviews && reviews.length > 0 && (
         <section className="mt-14">
-          <h2 className="text-xl font-semibold text-foreground">Avis</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t("therapist_page.reviews")}</h2>
           <ul className="mt-6 space-y-4">
             {reviews.map((r) => (
               <li key={r.id} className="rounded-xl border border-border bg-card p-4">
