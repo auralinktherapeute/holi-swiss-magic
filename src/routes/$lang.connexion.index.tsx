@@ -23,6 +23,23 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const redirectAfterLogin = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      const { data: adminRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userData.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (adminRole) {
+        navigate({ to: "/admin" });
+        return;
+      }
+    }
+    navigate({ to: "/dashboard" });
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -30,7 +47,7 @@ function LoginPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Connecté");
-    navigate({ to: "/dashboard" });
+    await redirectAfterLogin();
   };
 
   const onGoogle = async () => {
@@ -44,7 +61,7 @@ function LoginPage() {
         toast.error(result.error.message);
         return;
       }
-      navigate({ to: "/dashboard" });
+      await redirectAfterLogin();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Connexion Google impossible");
     } finally {
