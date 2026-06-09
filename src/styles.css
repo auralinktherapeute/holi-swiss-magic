@@ -185,7 +185,7 @@
 }
 @media (min-width: 768px) {
   .holi-search-grid {
-    grid-template-columns: minmax(0, 1fr) 220px 180px !important;
+    grid-template-columns: minmax(0, 1fr) 220px 180px;
     align-items: stretch;
   }
 }
