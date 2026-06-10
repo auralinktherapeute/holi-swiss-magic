@@ -65,16 +65,14 @@ export function AmbientPlayer() {
     stopFade();
     const audio = audioRef.current;
     if (!audio) return;
-    fadeRef.current = setInterval(() => {
-      if (audio.volume > 0.02) {
-        audio.volume = Math.max(0, audio.volume - 0.02);
-      } else {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.volume = DEFAULT_VOLUME;
-        stopFade();
-      }
-    }, 100);
+    // Stop immediately so the user gets instant feedback on mobile/desktop.
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = DEFAULT_VOLUME;
+    } catch (err) {
+      console.warn("[AmbientPlayer] pause() failed:", err);
+    }
   };
 
   const toggle = () => {
