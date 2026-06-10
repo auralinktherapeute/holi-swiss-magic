@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 
+type Lang = "fr" | "de" | "it" | "en";
+
 function toSlug(str: string): string {
   return str
     .toLowerCase()
@@ -10,6 +12,17 @@ function toSlug(str: string): string {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+// Helpers pour récupérer le champ localisé selon la langue
+export function titleForLang(a: Record<string, unknown>, lang: Lang): string {
+  return (a[`title_${lang}`] as string) || (a["title_fr"] as string) || "";
+}
+export function bodyForLang(a: Record<string, unknown>, lang: Lang): string {
+  return (a[`body_${lang}`] as string) || (a["body_fr"] as string) || "";
+}
+export function excerptForLang(a: Record<string, unknown>, lang: Lang): string {
+  return (a[`excerpt_${lang}`] as string) || (a["excerpt_fr"] as string) || "";
 }
 
 // ── Public ────────────────────────────────────────────────────────────────────
@@ -20,11 +33,11 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("articles")
-      .select("id,title,slug,excerpt,cover_image_url,category,author,published_at,lang")
-      .eq("status", "published")
+      .select("id,slug,cover_image_url,category,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
+      .eq("status", "validated")
       .order("published_at", { ascending: false });
 
-    if (data.lang) q = q.eq("lang", data.lang);
+    if (data.lang) q = q.eq("lang", data.lang as "fr" | "de" | "it" | "en");
     if (data.limit) q = q.limit(data.limit);
 
     const { data: rows, error } = await q;
@@ -40,7 +53,7 @@ export const getArticleBySlug = createServerFn({ method: "GET" })
       .from("articles")
       .select("*")
       .eq("slug", data.slug)
-      .eq("status", "published")
+      .eq("status", "validated")
       .maybeSingle();
 
     if (error) throw new Error("Impossible de charger l'article.");
@@ -56,7 +69,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("articles")
-      .select("id,title,slug,status,lang,category,published_at,created_at,cover_image_url")
+      .select("id,slug,status,lang,category,published_at,created_at,cover_image_url,title_fr,title_de,title_it,title_en")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error("Impossible de charger les articles.");
@@ -64,15 +77,25 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
   });
 
 const ArticleInputSchema = z.object({
-  title: z.string().min(3),
+  title_fr: z.string().min(3),
+  title_de: z.string().optional().default(""),
+  title_it: z.string().optional().default(""),
+  title_en: z.string().optional().default(""),
+  body_fr: z.string().min(10),
+  body_de: z.string().optional().default(""),
+  body_it: z.string().optional().default(""),
+  body_en: z.string().optional().default(""),
+  excerpt_fr: z.string().max(300).optional().default(""),
+  excerpt_de: z.string().optional().default(""),
+  excerpt_it: z.string().optional().default(""),
+  excerpt_en: z.string().optional().default(""),
   slug: z.string().optional(),
-  content: z.string().min(10),
-  excerpt: z.string().max(300).optional(),
   cover_image_url: z.string().url().optional().or(z.literal("")),
   category: z.string().optional(),
-  author: z.string().optional(),
-  lang: z.enum(["fr", "de", "en", "it"]).default("fr"),
-  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  lang: z.enum(["fr", "de", "it", "en"]).default("fr"),
+  status: z.enum(["draft", "validated", "pending_validation", "rejected"]).default("draft"),
+  meta_title_fr: z.string().optional().default(""),
+  meta_description_fr: z.string().optional().default(""),
 });
 
 export const createArticle = createServerFn({ method: "POST" })
@@ -82,23 +105,17 @@ export const createArticle = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const slug = data.slug?.trim() || toSlug(data.title);
-    const published_at = data.status === "published" ? new Date().toISOString() : null;
+    const slug = data.slug?.trim() || toSlug(data.title_fr);
+    const published_at = data.status === "validated" ? new Date().toISOString() : null;
 
     const { data: article, error } = await supabaseAdmin
       .from("articles")
       .insert({
-        title: data.title,
+        ...data,
         slug,
-        content: data.content,
-        excerpt: data.excerpt || null,
-        cover_image_url: data.cover_image_url || null,
-        category: data.category || null,
-        author: data.author || null,
-        lang: data.lang,
-        status: data.status,
         published_at,
         author_id: context.userId,
+        cover_image_url: data.cover_image_url || null,
       })
       .select("id,slug")
       .single();
@@ -118,11 +135,11 @@ export const updateArticle = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { id, ...fields } = data;
-    const published_at = fields.status === "published" ? new Date().toISOString() : null;
+    const published_at = fields.status === "validated" ? new Date().toISOString() : null;
 
     const { error } = await supabaseAdmin
       .from("articles")
-      .update({ ...fields, published_at })
+      .update({ ...fields, published_at, cover_image_url: fields.cover_image_url || null })
       .eq("id", id);
 
     if (error) throw new Error("Impossible de mettre à jour l'article.");

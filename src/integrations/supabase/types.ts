@@ -17,51 +17,105 @@ export type Database = {
       articles: {
         Row: {
           id: string
-          title: string
-          slug: string
-          content: string | null
-          excerpt: string | null
-          cover_image_url: string | null
-          category: string | null
-          author: string | null
-          published_at: string | null
-          lang: string
-          status: string
+          created_at: string | null
+          updated_at: string | null
           author_id: string | null
-          created_at: string
-          updated_at: string
+          status: "pending_validation" | "validated" | "rejected" | "draft"
+          title_fr: string | null
+          title_de: string | null
+          title_it: string | null
+          title_en: string | null
+          body_fr: string | null
+          body_de: string | null
+          body_it: string | null
+          body_en: string | null
+          excerpt_fr: string | null
+          excerpt_de: string | null
+          excerpt_it: string | null
+          excerpt_en: string | null
+          slug: string | null
+          meta_title_fr: string | null
+          meta_title_de: string | null
+          meta_description_fr: string | null
+          meta_description_de: string | null
+          cover_image_url: string | null
+          views: number | null
+          read_time_minutes: number | null
+          validated_by: string | null
+          validated_at: string | null
+          rejection_reason: string | null
+          admin_notes: string | null
+          published_at: string | null
+          category: string | null
+          lang: "fr" | "de" | "it" | "en"
         }
         Insert: {
           id?: string
-          title: string
-          slug: string
-          content?: string | null
-          excerpt?: string | null
-          cover_image_url?: string | null
-          category?: string | null
-          author?: string | null
-          published_at?: string | null
-          lang?: string
-          status?: string
+          created_at?: string | null
+          updated_at?: string | null
           author_id?: string | null
-          created_at?: string
-          updated_at?: string
+          status?: "pending_validation" | "validated" | "rejected" | "draft"
+          title_fr?: string | null
+          title_de?: string | null
+          title_it?: string | null
+          title_en?: string | null
+          body_fr?: string | null
+          body_de?: string | null
+          body_it?: string | null
+          body_en?: string | null
+          excerpt_fr?: string | null
+          excerpt_de?: string | null
+          excerpt_it?: string | null
+          excerpt_en?: string | null
+          slug?: string | null
+          meta_title_fr?: string | null
+          meta_title_de?: string | null
+          meta_description_fr?: string | null
+          meta_description_de?: string | null
+          cover_image_url?: string | null
+          views?: number | null
+          read_time_minutes?: number | null
+          validated_by?: string | null
+          validated_at?: string | null
+          rejection_reason?: string | null
+          admin_notes?: string | null
+          published_at?: string | null
+          category?: string | null
+          lang?: "fr" | "de" | "it" | "en"
         }
         Update: {
           id?: string
-          title?: string
-          slug?: string
-          content?: string | null
-          excerpt?: string | null
-          cover_image_url?: string | null
-          category?: string | null
-          author?: string | null
-          published_at?: string | null
-          lang?: string
-          status?: string
+          created_at?: string | null
+          updated_at?: string | null
           author_id?: string | null
-          created_at?: string
-          updated_at?: string
+          status?: "pending_validation" | "validated" | "rejected" | "draft"
+          title_fr?: string | null
+          title_de?: string | null
+          title_it?: string | null
+          title_en?: string | null
+          body_fr?: string | null
+          body_de?: string | null
+          body_it?: string | null
+          body_en?: string | null
+          excerpt_fr?: string | null
+          excerpt_de?: string | null
+          excerpt_it?: string | null
+          excerpt_en?: string | null
+          slug?: string | null
+          meta_title_fr?: string | null
+          meta_title_de?: string | null
+          meta_description_fr?: string | null
+          meta_description_de?: string | null
+          cover_image_url?: string | null
+          views?: number | null
+          read_time_minutes?: number | null
+          validated_by?: string | null
+          validated_at?: string | null
+          rejection_reason?: string | null
+          admin_notes?: string | null
+          published_at?: string | null
+          category?: string | null
+          lang?: "fr" | "de" | "it" | "en"
         }
         Relationships: []
       }
