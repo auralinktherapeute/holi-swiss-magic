@@ -73,7 +73,7 @@ export function WaitingListPopup() {
     setLoading(true);
     const { error: insertError } = await supabase
       .from("waiting_list")
-      .insert({ email: clean, source: "popup" });
+      .insert({ email: clean, source: "popup" } as never);
     setLoading(false);
     if (insertError) {
       // unique violation
