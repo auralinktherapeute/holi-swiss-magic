@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
+import ambientAudio from "@/assets/ambient-handpan.mp3.asset.json";
 
 const STORAGE_KEY = "holiswiss-ambient";
 const DEFAULT_VOLUME = 0.3;
-// Direct CDN URL (CORS-enabled, audio/mpeg). Avoids the archive.org 302 redirect
-// which some browsers handle inconsistently for <audio>.
-const AUDIO_URL =
-  "https://dn710305.ca.archive.org/0/items/jamendo-625387/01-2300348-Siarhei%20Korbut-Meditation%20Handpan%20Loop%201.mp3";
+const AUDIO_URL = ambientAudio.url;
 
 export function AmbientPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -82,7 +80,6 @@ export function AmbientPlayer() {
   const toggle = () => {
     if (!audioRef.current) {
       const a = new Audio();
-      a.crossOrigin = "anonymous";
       a.preload = "auto";
       a.loop = true;
       a.volume = DEFAULT_VOLUME;
