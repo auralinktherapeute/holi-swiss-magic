@@ -213,7 +213,8 @@
     "agents": "KI-Agenten",
     "emails": "E-Mails",
     "moderation": "Moderation",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "waitlist": "Warteliste"
   },
   "footer": {
     "rights": "Alle Rechte vorbehalten",

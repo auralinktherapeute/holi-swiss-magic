@@ -213,7 +213,8 @@
     "agents": "AI Agents",
     "emails": "Emails",
     "moderation": "Moderation",
-    "settings": "Settings"
+    "settings": "Settings",
+    "waitlist": "Waiting list"
   },
   "footer": {
     "rights": "All rights reserved",
