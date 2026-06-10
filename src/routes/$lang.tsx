@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { Footer } from "@/components/layout/Footer";
 import { WaitingListPopup } from "@/components/WaitingListPopup";
+import { AmbientPlayer } from "@/components/AmbientPlayer";
 import i18n, { isLang, DEFAULT_LANG } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/$lang")({
   beforeLoad: async ({ params }) => {
