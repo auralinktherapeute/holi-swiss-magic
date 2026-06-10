@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { addMyBlockedPeriod, deleteMyBlockedPeriod, saveMyAvailabilities } from "@/lib/dashboard.functions";
+import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
@@ -21,6 +20,7 @@ type Block = { id?: string; start_date: string; end_date: string; reason: string
 
 function Page() {
   const { user } = useAuth();
+  const fetchAgenda = useServerFn(listMyAgenda);
   const addBlockedPeriod = useServerFn(addMyBlockedPeriod);
   const deleteBlockedPeriod = useServerFn(deleteMyBlockedPeriod);
   const saveAvailabilities = useServerFn(saveMyAvailabilities);
@@ -36,25 +36,24 @@ function Page() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data: th } = await supabase.from("therapists").select("id").eq("user_id", user.id).maybeSingle();
-      if (!th) { setLoading(false); return; }
-      setTherapistId(th.id);
-      const [{ data: avs }, { data: bps }] = await Promise.all([
-        supabase.from("availabilities").select("*").eq("therapist_id", th.id),
-        supabase.from("blocked_periods").select("*").eq("therapist_id", th.id).order("start_date"),
-      ]);
-      if (avs?.length) {
+      try {
+        const { therapistId: thId, availabilities: avs, blockedPeriods: bps } = await fetchAgenda();
+        setTherapistId(thId);
+        if (avs?.length) {
         setSlots(DAYS.map((_, i) => {
           const found = avs.find((a) => a.day_of_week === i);
           return found
             ? { id: found.id, day_of_week: i, start_time: found.start_time.slice(0, 5), end_time: found.end_time.slice(0, 5), is_active: found.is_active }
             : { day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: false };
         }));
+        }
+        setBlocks((bps ?? []).map((b) => ({ id: b.id, start_date: b.start_date, end_date: b.end_date, reason: b.reason ?? "" })));
+      } catch {
+        setTherapistId(null);
       }
-      setBlocks((bps ?? []).map((b) => ({ id: b.id, start_date: b.start_date, end_date: b.end_date, reason: b.reason ?? "" })));
       setLoading(false);
     })();
-  }, [user]);
+  }, [fetchAgenda, user]);
 
   const update = (i: number, patch: Partial<Slot>) =>
     setSlots((s) => s.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
