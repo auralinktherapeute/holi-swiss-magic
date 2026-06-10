@@ -398,7 +398,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_blocked_periods: {
+        Row: {
+          end_date: string | null
+          start_date: string | null
+          therapist_id: string | null
+        }
+        Insert: {
+          end_date?: string | null
+          start_date?: string | null
+          therapist_id?: string | null
+        }
+        Update: {
+          end_date?: string | null
+          start_date?: string | null
+          therapist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_periods_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
