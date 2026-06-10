@@ -3,8 +3,10 @@ import { Volume2, VolumeX } from "lucide-react";
 
 const STORAGE_KEY = "holiswiss-ambient";
 const DEFAULT_VOLUME = 0.3;
+// Direct CDN URL (CORS-enabled, audio/mpeg). Avoids the archive.org 302 redirect
+// which some browsers handle inconsistently for <audio>.
 const AUDIO_URL =
-  "https://archive.org/download/jamendo-625387/01-2300348-Siarhei%20Korbut-Meditation%20Handpan%20Loop%201.mp3";
+  "https://dn710305.ca.archive.org/0/items/jamendo-625387/01-2300348-Siarhei%20Korbut-Meditation%20Handpan%20Loop%201.mp3";
 
 export function AmbientPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -42,10 +44,15 @@ export function AmbientPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = 0;
-    audio.play().catch(() => {
-      // Autoplay blocked or other error
-      setPlaying(false);
-    });
+    const p = audio.play();
+    if (p && typeof p.then === "function") {
+      p.catch((err) => {
+        console.warn("[AmbientPlayer] play() failed:", err);
+        setPlaying(false);
+        try { localStorage.setItem(STORAGE_KEY, "off"); } catch {}
+        stopFade();
+      });
+    }
     fadeRef.current = setInterval(() => {
       if (audio.volume < DEFAULT_VOLUME - 0.02) {
         audio.volume = Math.min(DEFAULT_VOLUME, audio.volume + 0.02);
@@ -74,9 +81,16 @@ export function AmbientPlayer() {
 
   const toggle = () => {
     if (!audioRef.current) {
-      audioRef.current = new Audio(AUDIO_URL);
-      audioRef.current.loop = true;
-      audioRef.current.volume = DEFAULT_VOLUME;
+      const a = new Audio();
+      a.crossOrigin = "anonymous";
+      a.preload = "auto";
+      a.loop = true;
+      a.volume = DEFAULT_VOLUME;
+      a.src = AUDIO_URL;
+      a.addEventListener("error", () => {
+        console.warn("[AmbientPlayer] audio element error", a.error);
+      });
+      audioRef.current = a;
     }
 
     if (playing) {
