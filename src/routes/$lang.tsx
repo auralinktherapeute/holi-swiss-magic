@@ -36,6 +36,7 @@ function LangLayout() {
       </main>
       <Footer />
       <WaitingListPopup />
+      <AmbientPlayer />
     </div>
   );
 }
