@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Check, X, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyReservations, updateMyAppointmentStatus } from "@/lib/dashboard.functions";
@@ -44,19 +43,19 @@ function Page() {
 
   useEffect(() => {
     if (!user) return;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    (async () => {
+    let cancelled = false;
+    const load = async () => {
       const { therapistId: thId, rows: data } = await fetchReservations();
+      if (cancelled) return;
       setTherapistId(thId);
       setRows((data ?? []) as Row[]);
       setLoading(false);
-      channel = supabase.channel(`appts-${thId}`).on("postgres_changes",
-        { event: "*", schema: "public", table: "appointments", filter: `therapist_id=eq.${thId}` },
-        () => {
-          fetchReservations().then(({ rows: fresh }) => setRows((fresh ?? []) as Row[]));
-        }).subscribe();
+    };
+    (async () => {
+      await load();
     })();
-    return () => { if (channel) supabase.removeChannel(channel); };
+    const id = window.setInterval(load, 30000);
+    return () => { cancelled = true; window.clearInterval(id); };
   }, [fetchReservations, user]);
 
   const list = tab === "all" ? rows : rows.filter((r) => r.status === tab);
