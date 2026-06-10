@@ -1,14 +1,26 @@
-import { createFileRoute, Outlet, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { TherapistNav } from "@/components/layout/TherapistNav";
 import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
+import { checkIsAdmin } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/dashboard")({ component: DashboardLayout });
+export const Route = createFileRoute("/dashboard")({
+  ssr: false,
+  beforeLoad: async () => {
+    try {
+      // Server-validated auth check (mirrors admin guard). Throws if no session.
+      await checkIsAdmin();
+    } catch {
+      throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
+    }
+  },
+  component: DashboardLayout,
+});
 
 function DashboardLayout() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const { t, i18n } = useTranslation();
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -26,7 +38,6 @@ function DashboardLayout() {
       </div>
     );
   }
-  if (!user) return <Navigate to="/$lang/connexion" params={{ lang: "fr" }} />;
   return (
     <div className="flex min-h-screen w-full bg-background">
       <TherapistNav />
