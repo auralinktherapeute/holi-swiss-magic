@@ -369,6 +369,33 @@ export type Database = {
         }
         Relationships: []
       }
+      waiting_list: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -381,6 +408,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      waiting_list_count: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "therapist" | "user"
