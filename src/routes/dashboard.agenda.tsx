@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { Trash2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { addMyBlockedPeriod, deleteMyBlockedPeriod, saveMyAvailabilities } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
@@ -19,6 +21,9 @@ type Block = { id?: string; start_date: string; end_date: string; reason: string
 
 function Page() {
   const { user } = useAuth();
+  const addBlockedPeriod = useServerFn(addMyBlockedPeriod);
+  const deleteBlockedPeriod = useServerFn(deleteMyBlockedPeriod);
+  const saveAvailabilities = useServerFn(saveMyAvailabilities);
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>(
     DAYS.map((_, i) => ({ day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: i < 5 })),
@@ -58,34 +63,37 @@ function Page() {
     if (!therapistId || !newBlock.start_date || !newBlock.end_date) {
       toast.error("Renseignez les dates"); return;
     }
-    const { data, error } = await supabase.from("blocked_periods")
-      .insert({ therapist_id: therapistId, start_date: newBlock.start_date, end_date: newBlock.end_date, reason: newBlock.reason || null })
-      .select().single();
-    if (error) { toast.error(error.message); return; }
-    setBlocks((b) => [...b, { id: data.id, start_date: data.start_date, end_date: data.end_date, reason: data.reason ?? "" }]);
-    setNewBlock({ start_date: "", end_date: "", reason: "" });
-    toast.success("Période ajoutée");
+    try {
+      const { row } = await addBlockedPeriod({ data: { start_date: newBlock.start_date, end_date: newBlock.end_date, reason: newBlock.reason || undefined } });
+      setBlocks((b) => [...b, { id: row.id, start_date: row.start_date, end_date: row.end_date, reason: row.reason ?? "" }]);
+      setNewBlock({ start_date: "", end_date: "", reason: "" });
+      toast.success("Période ajoutée");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur d'ajout");
+    }
   };
 
   const removeBlock = async (id?: string) => {
     if (!id) return;
-    const { error } = await supabase.from("blocked_periods").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    setBlocks((b) => b.filter((x) => x.id !== id));
-    toast.success("Période supprimée");
+    try {
+      await deleteBlockedPeriod({ data: { id } });
+      setBlocks((b) => b.filter((x) => x.id !== id));
+      toast.success("Période supprimée");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur de suppression");
+    }
   };
 
   const save = async () => {
     if (!therapistId) { toast.error("Complétez votre profil avant"); return; }
     setSaving(true);
-    await supabase.from("availabilities").delete().eq("therapist_id", therapistId);
-    const rows = slots.map((s) => ({
-      therapist_id: therapistId, day_of_week: s.day_of_week,
-      start_time: s.start_time, end_time: s.end_time, is_active: s.is_active,
-    }));
-    const { error } = await supabase.from("availabilities").insert(rows);
+    try {
+      await saveAvailabilities({ data: { slots: slots.map(({ day_of_week, start_time, end_time, is_active }) => ({ day_of_week, start_time, end_time, is_active })) } });
+      toast.success("Agenda enregistré");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur d'enregistrement");
+    }
     setSaving(false);
-    if (error) toast.error(error.message); else toast.success("Agenda enregistré");
   };
 
   if (loading) return <div className="p-10 text-muted-foreground">Chargement…</div>;

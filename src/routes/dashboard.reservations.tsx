@@ -13,6 +13,8 @@ import { Check, X, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { listMyReservations, updateMyAppointmentStatus } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/dashboard/reservations")({ component: Page });
 
@@ -32,6 +34,8 @@ const CLASSES: Record<Status, string> = {
 
 function Page() {
   const { user } = useAuth();
+  const fetchReservations = useServerFn(listMyReservations);
+  const updateStatus = useServerFn(updateMyAppointmentStatus);
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<Status | "all">("all");
@@ -42,31 +46,31 @@ function Page() {
     if (!user) return;
     let channel: ReturnType<typeof supabase.channel> | null = null;
     (async () => {
-      const { data: th } = await supabase.from("therapists").select("id").eq("user_id", user.id).maybeSingle();
-      if (!th) { setLoading(false); return; }
-      setTherapistId(th.id);
-      const { data } = await supabase.from("appointments").select("*").eq("therapist_id", th.id)
-        .order("appointment_date", { ascending: false }).order("appointment_time", { ascending: false });
+      const { therapistId: thId, rows: data } = await fetchReservations();
+      setTherapistId(thId);
       setRows((data ?? []) as Row[]);
       setLoading(false);
-      channel = supabase.channel(`appts-${th.id}`).on("postgres_changes",
-        { event: "*", schema: "public", table: "appointments", filter: `therapist_id=eq.${th.id}` },
+      channel = supabase.channel(`appts-${thId}`).on("postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `therapist_id=eq.${thId}` },
         () => {
-          supabase.from("appointments").select("*").eq("therapist_id", th.id)
-            .order("appointment_date", { ascending: false }).order("appointment_time", { ascending: false })
-            .then(({ data }) => setRows((data ?? []) as Row[]));
+          fetchReservations().then(({ rows: fresh }) => setRows((fresh ?? []) as Row[]));
         }).subscribe();
     })();
     return () => { if (channel) supabase.removeChannel(channel); };
-  }, [user]);
+  }, [fetchReservations, user]);
 
   const list = tab === "all" ? rows : rows.filter((r) => r.status === tab);
 
   const apply = async () => {
     if (!pending) return;
-    const { error } = await supabase.from("appointments").update({ status: pending.action }).eq("id", pending.id);
-    if (error) toast.error(error.message);
-    else toast.success(pending.action === "confirmed" ? "Réservation confirmée" : "Réservation annulée");
+    try {
+      await updateStatus({ data: { id: pending.id, status: pending.action } });
+      const { rows: fresh } = await fetchReservations();
+      setRows((fresh ?? []) as Row[]);
+      toast.success(pending.action === "confirmed" ? "Réservation confirmée" : "Réservation annulée");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur de mise à jour");
+    }
     setPending(null);
   };
 

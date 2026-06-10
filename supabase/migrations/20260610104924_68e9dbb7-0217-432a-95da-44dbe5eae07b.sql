@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Patients read own appointments by email" ON public.appointments;

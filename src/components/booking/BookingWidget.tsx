@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getBookedAppointmentSlots } from "@/lib/public.functions";
 import { z } from "zod";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
@@ -36,6 +38,7 @@ function buildSlots(start: string, end: string): string[] {
 
 export function BookingWidget({ therapistId }: { therapistId: string }) {
   const { t } = useTranslation();
+  const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
   const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
   const MONTHS = t("booking.months", { returnObjects: true }) as string[];
   const schema = z.object({
@@ -66,11 +69,16 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
 
   useEffect(() => {
     if (!selectedDate) return;
-    supabase.from("appointments").select("appointment_date,appointment_time")
-      .eq("therapist_id", therapistId).eq("appointment_date", selectedDate)
-      .in("status", ["pending", "confirmed"])
-      .then(({ data }) => setTaken((data ?? []) as Appt[]));
-  }, [selectedDate, therapistId]);
+    let cancelled = false;
+    fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } })
+      .then(({ slots }) => {
+        if (!cancelled) setTaken(slots as Appt[]);
+      })
+      .catch(() => {
+        if (!cancelled) setTaken([]);
+      });
+    return () => { cancelled = true; };
+  }, [fetchBookedSlots, selectedDate, therapistId]);
 
   const days = useMemo(() => {
     const first = new Date(month);

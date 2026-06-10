@@ -20,10 +20,17 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
 import {
   CANTONS, SPOKEN_LANGUAGES, THERAPY_SPECIALTIES, type TherapistService,
   ACCREDITATION_ORGS, type Accreditation, normalizeSwissIde,
 } from "@/lib/constants";
+import {
+  addMyTherapistDocument,
+  deleteMyTherapistDocument,
+  saveMyTherapistProfile,
+  updateMyTherapistDocument,
+} from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
 
@@ -47,6 +54,10 @@ const THERAPIST_PROFILE_SELECT = [
 function ProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const saveProfile = useServerFn(saveMyTherapistProfile);
+  const addDocument = useServerFn(addMyTherapistDocument);
+  const updateDocument = useServerFn(updateMyTherapistDocument);
+  const deleteDocument = useServerFn(deleteMyTherapistDocument);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -205,23 +216,22 @@ function ProfilePage() {
     const { error } = await supabase.storage.from("therapist-documents").upload(path, file);
     if (error) return toast.error(t("profile_edit.upload_error"));
     const { data: pub } = supabase.storage.from("therapist-documents").getPublicUrl(path);
-    const { data: ins, error: insErr } = await supabase
-      .from("therapist_documents" as any)
-      .insert({ therapist_id: rowId, file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: true } as any)
-      .select("id, file_url, file_name, label, is_public")
-      .single() as any;
-    if (insErr || !ins) return toast.error(t("profile_edit.upload_error"));
-    setDocuments((prev) => [ins, ...prev]);
+    try {
+      const { row } = await addDocument({ data: { file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: true } });
+      setDocuments((prev) => [row as DocRow, ...prev]);
+    } catch {
+      return toast.error(t("profile_edit.upload_error"));
+    }
     if (docInputRef.current) docInputRef.current.value = "";
   };
 
   const updateDoc = async (id: string, patch: Partial<DocRow>) => {
     setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
-    await (supabase.from("therapist_documents" as any).update(patch as any) as any).eq("id", id);
+    await updateDocument({ data: { id, label: patch.label, is_public: patch.is_public } });
   };
   const deleteDoc = async (id: string) => {
     if (!confirm(t("profile_edit.delete_confirm"))) return;
-    await supabase.from("therapist_documents" as any).delete().eq("id", id);
+    await deleteDocument({ data: { id } });
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   };
 
@@ -252,21 +262,39 @@ function ProfilePage() {
       accreditations,
     };
     Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
-    const { data, error } = rowId
-      ? await supabase.from("therapists").update(payload).eq("id", rowId).select("id").maybeSingle()
-      : await supabase.from("therapists").insert(payload).select("id").maybeSingle();
-    setSaving(false);
-    if (error) return toast.error(t("profile_edit.save_error") + " — " + error.message);
-    const savedRowId = rowId ?? data?.id;
-    if (savedRowId) {
-      const { error: privateError } = await (supabase.from("therapist_private_identifiers" as any) as any)
-        .upsert(
-          { therapist_id: savedRowId, user_id: user.id, ide: ide || null },
-          { onConflict: "therapist_id" },
-        );
-      if (privateError) return toast.error(t("profile_edit.save_error") + " — " + privateError.message);
+    try {
+      const { id } = await saveProfile({
+        data: {
+          rowId,
+          photo_url: payload.photo_url,
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          city,
+          postal_code: postalCode,
+          address,
+          phone,
+          canton,
+          languages: langs,
+          price_min: payload.price_min,
+          price_max: payload.price_max,
+          currency,
+          years_experience: payload.years_experience,
+          specialties,
+          services,
+          short_bio: payload.short_bio,
+          bio: payload.bio,
+          google_reviews_url: payload.google_reviews_url,
+          website: payload.website,
+          accreditations,
+          ide: ide || null,
+        },
+      });
+      if (!rowId) setRowId(id);
+    } catch (error) {
+      setSaving(false);
+      return toast.error(t("profile_edit.save_error") + " — " + (error instanceof Error ? error.message : "Erreur"));
     }
-    if (data && !rowId) setRowId(data.id);
+    setSaving(false);
     setDirty(false);
     toast.success(t("profile_edit.saved_toast"));
   };
