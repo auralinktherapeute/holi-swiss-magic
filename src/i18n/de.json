@@ -398,5 +398,21 @@
     "stats_languages": "Sprachen",
     "glass_subtitle": "Die Schweizer Plattform für ganzheitliches Wohlbefinden.",
     "glass_placeholder": "Wonach suchen Sie?"
+  },
+  "waitlist": {
+    "badge": "🚀 Baldiger Launch",
+    "title": "Die Website ist im Aufbau",
+    "subtitle": "Tragen Sie sich jetzt in die Warteliste ein und erhalten Sie -30% auf Ihr Launch-Abo — Angebot für die ersten 70 Therapeuten.",
+    "places": "{{count}} / 70 Plätze verfügbar",
+    "urgency": "⚡ Nur noch {{count}} Plätze!",
+    "placeholder": "Ihre geschäftliche E-Mail-Adresse",
+    "cta": "Anmelden und -30% erhalten",
+    "loading": "Anmeldung läuft...",
+    "success": "Sie sind eingetragen! Wir kontaktieren Sie unter {{email}}",
+    "reserved": "Ihr -30% Rabatt ist reserviert.",
+    "already": "Sie sind bereits eingetragen!",
+    "full": "Liste voll! Hinterlassen Sie Ihre E-Mail.",
+    "privacy": "🔒 Keine Karte nötig · Abmeldung mit 1 Klick",
+    "error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
   }
 }

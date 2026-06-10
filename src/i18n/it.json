@@ -398,5 +398,21 @@
     "stats_languages": "lingue",
     "glass_subtitle": "La piattaforma svizzera del benessere olistico.",
     "glass_placeholder": "Cosa stai cercando?"
+  },
+  "waitlist": {
+    "badge": "🚀 Lancio imminente",
+    "title": "Il sito è in fase di creazione",
+    "subtitle": "Iscriviti ora alla lista d'attesa e ottieni il -30% sul tuo abbonamento di lancio — offerta riservata ai primi 70 terapisti.",
+    "places": "{{count}} / 70 posti disponibili",
+    "urgency": "⚡ Solo {{count}} posti rimasti!",
+    "placeholder": "Il tuo indirizzo email professionale",
+    "cta": "Iscrivimi e ottenere -30%",
+    "loading": "Iscrizione in corso...",
+    "success": "Sei iscritto/a! Ti contatteremo a {{email}}",
+    "reserved": "Il tuo sconto del -30% è riservato.",
+    "already": "Sei già iscritto!",
+    "full": "Lista completa! Lascia la tua email per essere avvisato.",
+    "privacy": "🔒 Nessuna carta richiesta · Cancellazione in 1 clic",
+    "error": "Si è verificato un errore. Riprova."
   }
 }

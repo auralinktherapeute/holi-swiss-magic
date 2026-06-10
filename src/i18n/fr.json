@@ -398,5 +398,21 @@
     "stats_languages": "langues",
     "glass_subtitle": "La plateforme suisse du bien-être holistique.",
     "glass_placeholder": "Que recherchez-vous ?"
+  },
+  "waitlist": {
+    "badge": "🚀 Lancement imminent",
+    "title": "Le site est en cours de création",
+    "subtitle": "Inscrivez-vous dès maintenant sur la liste d'attente et bénéficiez de -30% sur votre abonnement de lancement — offre réservée aux 70 premiers thérapeutes.",
+    "places": "{{count}} / 70 places disponibles",
+    "urgency": "⚡ Plus que {{count}} places !",
+    "placeholder": "Votre adresse email professionnelle",
+    "cta": "M'inscrire et obtenir -30%",
+    "loading": "Inscription en cours...",
+    "success": "Vous êtes inscrit(e) ! Nous vous contacterons à {{email}}",
+    "reserved": "Votre réduction de -30% est réservée.",
+    "already": "Vous êtes déjà inscrit !",
+    "full": "Liste complète ! Laissez votre email pour être notifié.",
+    "privacy": "🔒 Aucune carte requise · Désinscription en 1 clic",
+    "error": "Une erreur est survenue. Veuillez réessayer."
   }
 }
