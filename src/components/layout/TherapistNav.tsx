@@ -19,12 +19,12 @@ export function TherapistNav() {
 
   useEffect(() => {
     if (!user) return;
-    const refresh = async (id: string) => {
+    const refresh = async () => {
       const { count } = await fetchPendingCount();
       setPendingCount(count ?? 0);
     };
-    refresh(user.id);
-    const id = window.setInterval(() => refresh(user.id), 30000);
+    refresh();
+    const id = window.setInterval(refresh, 30000);
     return () => window.clearInterval(id);
   }, [fetchPendingCount, user]);
 

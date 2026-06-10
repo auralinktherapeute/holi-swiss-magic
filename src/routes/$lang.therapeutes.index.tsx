@@ -45,7 +45,7 @@ function Page() {
 
       {error && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          {(error as Error).message}
+          {t("directory.error_generic", "Impossible de charger les thérapeutes pour le moment.")}
         </p>
       )}
 

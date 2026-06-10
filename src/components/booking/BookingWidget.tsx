@@ -125,7 +125,11 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
       status: "pending",
     });
     setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      console.error("[booking] appointment insert failed", error);
+      toast.error(t("booking.error_generic", "Impossible d'envoyer la demande. Veuillez réessayer."));
+      return;
+    }
     // eslint-disable-next-line no-console
     console.log("[booking] confirmation email →", parsed.data.email, { selectedDate, selectedTime });
     setSuccess(true);
