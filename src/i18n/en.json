@@ -398,5 +398,21 @@
     "stats_languages": "languages",
     "glass_subtitle": "The Swiss holistic wellness platform.",
     "glass_placeholder": "What are you looking for?"
+  },
+  "waitlist": {
+    "badge": "🚀 Launching soon",
+    "title": "The website is being created",
+    "subtitle": "Sign up now for the waiting list and get -30% off your launch subscription — offer reserved for the first 70 therapists.",
+    "places": "{{count}} / 70 spots available",
+    "urgency": "⚡ Only {{count}} spots left!",
+    "placeholder": "Your professional email address",
+    "cta": "Sign up and get -30% off",
+    "loading": "Signing up...",
+    "success": "You're registered! We'll contact you at {{email}}",
+    "reserved": "Your -30% discount is reserved.",
+    "already": "You're already registered!",
+    "full": "List full! Leave your email to be notified.",
+    "privacy": "🔒 No card required · Unsubscribe in 1 click",
+    "error": "Something went wrong. Please try again."
   }
 }
