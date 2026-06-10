@@ -5,14 +5,17 @@ import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { getWaitingListCount } from "@/lib/public.functions";
 
 export function AdminNav() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fetchWaitingListCount = useServerFn(getWaitingListCount);
   const email = user?.email ?? "admin@holiswiss.ch";
   const initial = email.charAt(0).toUpperCase();
 
@@ -24,16 +27,13 @@ export function AdminNav() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data } = await supabase.rpc("waiting_list_count");
-      if (!cancelled && typeof data === "number") setWaitlistCount(data);
+      const { count } = await fetchWaitingListCount();
+      if (!cancelled) setWaitlistCount(count);
     };
     load();
-    const ch = supabase
-      .channel("admin-waitlist-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "waiting_list" }, () => load())
-      .subscribe();
-    return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, []);
+    const id = window.setInterval(load, 30000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [fetchWaitingListCount]);
   const items = [
     { to: "/admin", icon: LayoutDashboard, label: t("admin.overview"), exact: true },
     { to: "/admin/therapeutes", icon: Users, label: t("admin.therapists") },

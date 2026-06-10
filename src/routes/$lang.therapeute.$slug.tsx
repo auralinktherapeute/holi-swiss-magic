@@ -26,6 +26,7 @@ function Page() {
         .from("therapists")
         .select(PUBLIC_THERAPIST_SELECT)
         .eq("slug", slug)
+        .eq("status", "active")
         .maybeSingle() as any;
       if (error) throw error;
       return data;
@@ -94,7 +95,7 @@ function Page() {
   if (error) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="text-destructive">{(error as Error).message}</p>
+        <p className="text-destructive">{t("therapist_page.error_generic", "Impossible de charger ce profil pour le moment.")}</p>
       </div>
     );
   }

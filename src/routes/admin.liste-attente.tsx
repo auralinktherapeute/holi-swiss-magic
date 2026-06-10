@@ -4,12 +4,13 @@ import { toast } from "sonner";
 import {
   Mail, Check, Star, Trash2, Download, Copy, ChevronLeft, ChevronRight, Hourglass,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { deleteWaitingListEntryAdmin, listWaitingListAdmin, updateWaitingListStatusAdmin } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/liste-attente")({
   component: WaitingListAdminPage,
@@ -51,6 +52,9 @@ function fmtDate(iso: string) {
 }
 
 function WaitingListAdminPage() {
+  const fetchRows = useServerFn(listWaitingListAdmin);
+  const updateRowStatus = useServerFn(updateWaitingListStatusAdmin);
+  const deleteRow = useServerFn(deleteWaitingListEntryAdmin);
   const [rows, setRows] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -60,56 +64,40 @@ function WaitingListAdminPage() {
   const isFirstLoad = useRef(true);
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("waiting_list")
-      .select("id,email,created_at,source,status")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Erreur de chargement");
-      return;
-    }
-    const list = (data ?? []) as Entry[];
-    if (!isFirstLoad.current) {
-      // detect new entries -> flash
-      const newOnes = list.filter((r) => !knownIds.current.has(r.id)).map((r) => r.id);
-      if (newOnes.length) {
-        setFlashIds((prev) => {
-          const next = new Set(prev);
-          newOnes.forEach((id) => next.add(id));
-          return next;
-        });
-        window.setTimeout(() => {
+    try {
+      const { rows: data } = await fetchRows();
+      const list = (data ?? []) as Entry[];
+      if (!isFirstLoad.current) {
+        // detect new entries -> flash
+        const newOnes = list.filter((r) => !knownIds.current.has(r.id)).map((r) => r.id);
+        if (newOnes.length) {
           setFlashIds((prev) => {
             const next = new Set(prev);
-            newOnes.forEach((id) => next.delete(id));
+            newOnes.forEach((id) => next.add(id));
             return next;
           });
-        }, 1200);
+          window.setTimeout(() => {
+            setFlashIds((prev) => {
+              const next = new Set(prev);
+              newOnes.forEach((id) => next.delete(id));
+              return next;
+            });
+          }, 1200);
+        }
       }
+      knownIds.current = new Set(list.map((r) => r.id));
+      isFirstLoad.current = false;
+      setRows(list);
+      setLoading(false);
+    } catch {
+      toast.error("Erreur de chargement");
     }
-    knownIds.current = new Set(list.map((r) => r.id));
-    isFirstLoad.current = false;
-    setRows(list);
-    setLoading(false);
-  }, []);
+  }, [fetchRows]);
 
   useEffect(() => {
     load();
-    const ch = supabase
-      .channel("waiting_list_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "waiting_list" },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const nrow = payload.new as Entry;
-            toast.success(`🎉 Nouvel inscrit : ${maskEmail(nrow.email)}`);
-          }
-          load();
-        },
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const id = window.setInterval(load, 30000);
+    return () => window.clearInterval(id);
   }, [load]);
 
   const total = rows.length;
@@ -134,13 +122,23 @@ function WaitingListAdminPage() {
   const pageRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   async function updateStatus(id: string, status: Status) {
-    const { error } = await supabase.from("waiting_list").update({ status } as never).eq("id", id);
-    if (error) toast.error("Erreur de mise à jour"); else toast.success("Statut mis à jour");
+    try {
+      await updateRowStatus({ data: { id, status } });
+      toast.success("Statut mis à jour");
+      load();
+    } catch {
+      toast.error("Erreur de mise à jour");
+    }
   }
 
   async function remove(id: string) {
-    const { error } = await supabase.from("waiting_list").delete().eq("id", id);
-    if (error) toast.error("Suppression échouée"); else toast.success("Inscrit supprimé");
+    try {
+      await deleteRow({ data: { id } });
+      toast.success("Inscrit supprimé");
+      load();
+    } catch {
+      toast.error("Suppression échouée");
+    }
     setConfirmDelete(null);
   }
 

@@ -19,7 +19,7 @@ async function userIsAdmin(userId: string) {
   return !!data;
 }
 
-async function assertAdmin(userId: string) {
+export async function assertAdmin(userId: string) {
   if (!(await userIsAdmin(userId))) throw new Error("Accès refusé.");
 }
 
@@ -215,5 +215,40 @@ export const banUserAdmin = createServerFn({ method: "POST" })
       ban_duration: data.ban ? "8760h" : "none",
     } as any);
     if (error) throwAdminOperationError(error, "ban user failed");
+    return { ok: true };
+  });
+
+export const listWaitingListAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("waiting_list")
+      .select("id,email,created_at,source,status")
+      .order("created_at", { ascending: false });
+    if (error) throwAdminOperationError(error, "list waiting list failed");
+    return { rows: data ?? [] };
+  });
+
+export const updateWaitingListStatusAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(["pending", "contacted", "converted", "removed"]) }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("waiting_list").update({ status: data.status }).eq("id", data.id);
+    if (error) throwAdminOperationError(error, "update waiting list failed");
+    return { ok: true };
+  });
+
+export const deleteWaitingListEntryAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("waiting_list").delete().eq("id", data.id);
+    if (error) throwAdminOperationError(error, "delete waiting list failed");
     return { ok: true };
   });

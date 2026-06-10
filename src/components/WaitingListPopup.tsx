@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getWaitingListCount } from "@/lib/public.functions";
 
 const SESSION_KEY = "holiswiss-waitlist-shown";
 const TOTAL_SPOTS = 70;
@@ -9,6 +11,7 @@ const DELAY_MS = 5000;
 
 export function WaitingListPopup() {
   const { t } = useTranslation();
+  const fetchWaitingListCount = useServerFn(getWaitingListCount);
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(0);
   const [email, setEmail] = useState("");
@@ -35,11 +38,11 @@ export function WaitingListPopup() {
     if (!open) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc("waiting_list_count");
-      if (!cancelled && !error && typeof data === "number") setCount(data);
+      const { count } = await fetchWaitingListCount();
+      if (!cancelled) setCount(count);
     })();
     return () => { cancelled = true; };
-  }, [open]);
+  }, [fetchWaitingListCount, open]);
 
   // Esc + body scroll lock
   useEffect(() => {
