@@ -23,7 +23,7 @@ const CATEGORIES = [
   "shiatsu", "meditation", "coaching", "ayurveda",
 ];
 
-const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY ?? "";
+const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY ?? "jlmNqXub_Y5nbnqPauOjPStrKFNgvi3UanomxXQians";
 
 type Lang = "fr" | "de" | "it" | "en";
 type Status = "draft" | "validated" | "pending_validation" | "rejected";
