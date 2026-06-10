@@ -30,8 +30,8 @@ export function excerptForLang(a: Record<string, unknown>, lang: Lang): string {
 export const getPublishedArticles = createServerFn({ method: "GET" })
   .inputValidator(z.object({ lang: z.string().optional(), limit: z.number().optional() }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin
+    const { supabase } = await import("@/integrations/supabase/client");
+    let q = supabase
       .from("articles")
       .select("id,slug,cover_image_url,category,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
       .eq("status", "validated")
@@ -48,8 +48,8 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
 export const getArticleBySlug = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string() }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: article, error } = await supabaseAdmin
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: article, error } = await supabase
       .from("articles")
       .select("*")
       .eq("slug", data.slug)
