@@ -2,8 +2,9 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/holiswiss/Logo";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
+import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
 import {
   LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
   Star, CalendarDays, CreditCard, Gift, Settings,
@@ -13,29 +14,19 @@ export function TherapistNav() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
+  const fetchPendingCount = useServerFn(getMyPendingReservationCount);
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    let therapistId: string | null = null;
     const refresh = async (id: string) => {
-      const { count } = await supabase.from("appointments")
-        .select("id", { count: "exact", head: true })
-        .eq("therapist_id", id).eq("status", "pending");
+      const { count } = await fetchPendingCount();
       setPendingCount(count ?? 0);
     };
-    (async () => {
-      const { data: th } = await supabase.from("therapists").select("id").eq("user_id", user.id).maybeSingle();
-      if (!th) return;
-      therapistId = th.id;
-      await refresh(th.id);
-      channel = supabase.channel(`nav-appts-${th.id}`).on("postgres_changes",
-        { event: "*", schema: "public", table: "appointments", filter: `therapist_id=eq.${th.id}` },
-        () => { if (therapistId) refresh(therapistId); }).subscribe();
-    })();
-    return () => { if (channel) supabase.removeChannel(channel); };
-  }, [user]);
+    refresh(user.id);
+    const id = window.setInterval(() => refresh(user.id), 30000);
+    return () => window.clearInterval(id);
+  }, [fetchPendingCount, user]);
 
   const items = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },

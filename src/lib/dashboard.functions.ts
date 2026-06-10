@@ -56,6 +56,19 @@ export const listMyReservations = createServerFn({ method: "GET" })
     return { therapistId, rows: data ?? [] };
   });
 
+export const getMyPendingReservationCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin, therapistId } = await getOwnedTherapist(context.userId);
+    const { count, error } = await supabaseAdmin
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("therapist_id", therapistId)
+      .eq("status", "pending");
+    if (error) throw new Error("Impossible de charger les réservations.");
+    return { count: count ?? 0 };
+  });
+
 export const updateMyAppointmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(["confirmed", "cancelled"]) }))
