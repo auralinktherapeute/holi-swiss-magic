@@ -28,6 +28,7 @@ import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateu
 import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
@@ -139,6 +140,11 @@ const AdminModerationRoute = AdminModerationRouteImport.update({
   path: '/moderation',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminListeAttenteRoute = AdminListeAttenteRouteImport.update({
+  id: '/liste-attente',
+  path: '/liste-attente',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEvenementsRoute = AdminEvenementsRouteImport.update({
   id: '/evenements',
   path: '/evenements',
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
+  '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
+  '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
@@ -296,6 +304,7 @@ export interface FileRoutesById {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
+  '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/emails'
     | '/admin/evenements'
+    | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
     | '/admin/therapeutes'
@@ -367,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/emails'
     | '/admin/evenements'
+    | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
     | '/admin/therapeutes'
@@ -403,6 +414,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/emails'
     | '/admin/evenements'
+    | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
     | '/admin/therapeutes'
@@ -571,6 +583,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminModerationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/liste-attente': {
+      id: '/admin/liste-attente'
+      path: '/liste-attente'
+      fullPath: '/admin/liste-attente'
+      preLoaderRoute: typeof AdminListeAttenteRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/evenements': {
       id: '/admin/evenements'
       path: '/evenements'
@@ -714,6 +733,7 @@ interface AdminRouteChildren {
   AdminAvisRoute: typeof AdminAvisRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEvenementsRoute: typeof AdminEvenementsRoute
+  AdminListeAttenteRoute: typeof AdminListeAttenteRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminTherapeutesRoute: typeof AdminTherapeutesRoute
@@ -728,6 +748,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAvisRoute: AdminAvisRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEvenementsRoute: AdminEvenementsRoute,
+  AdminListeAttenteRoute: AdminListeAttenteRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminTherapeutesRoute: AdminTherapeutesRoute,

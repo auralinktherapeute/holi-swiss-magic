@@ -1,8 +1,9 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
-  CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut,
+  CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,9 +20,24 @@ export function AdminNav() {
     await supabase.auth.signOut();
     navigate({ to: "/$lang", params: { lang: "fr" } });
   };
+  const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase.rpc("waiting_list_count");
+      if (!cancelled && typeof data === "number") setWaitlistCount(data);
+    };
+    load();
+    const ch = supabase
+      .channel("admin-waitlist-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "waiting_list" }, () => load())
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, []);
   const items = [
     { to: "/admin", icon: LayoutDashboard, label: t("admin.overview"), exact: true },
     { to: "/admin/therapeutes", icon: Users, label: t("admin.therapists") },
+    { to: "/admin/liste-attente", icon: Hourglass, label: t("admin.waitlist"), badge: waitlistCount ?? undefined, badgeVariant: "violet" as const },
     { to: "/admin/avis", icon: Star, label: t("admin.reviews") },
     { to: "/admin/articles", icon: FileText, label: t("admin.articles") },
     { to: "/admin/evenements", icon: CalendarDays, label: t("admin.events") },
@@ -60,7 +76,14 @@ export function AdminNav() {
               <Icon className="h-4 w-4" />
               <span className="flex-1">{it.label}</span>
               {it.badge ? (
-                <span className="rounded-full bg-destructive text-destructive-foreground px-2 py-0.5 text-[10px] font-semibold">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    (it as any).badgeVariant === "violet"
+                      ? "text-white"
+                      : "bg-destructive text-destructive-foreground"
+                  }`}
+                  style={(it as any).badgeVariant === "violet" ? { background: "#b86ef9" } : undefined}
+                >
                   {it.badge}
                 </span>
               ) : null}
