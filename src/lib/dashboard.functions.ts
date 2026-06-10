@@ -70,6 +70,18 @@ export const updateMyAppointmentStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const listMyAgenda = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin, therapistId } = await getOwnedTherapist(context.userId);
+    const [{ data: availabilities, error: avError }, { data: blockedPeriods, error: bpError }] = await Promise.all([
+      supabaseAdmin.from("availabilities").select("id,day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId),
+      supabaseAdmin.from("blocked_periods").select("id,start_date,end_date,reason").eq("therapist_id", therapistId).order("start_date"),
+    ]);
+    if (avError || bpError) throw new Error("Impossible de charger l'agenda.");
+    return { therapistId, availabilities: availabilities ?? [], blockedPeriods: blockedPeriods ?? [] };
+  });
+
 export const saveMyAvailabilities = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ slots: z.array(slotSchema).min(1).max(7) }))
