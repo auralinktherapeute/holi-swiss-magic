@@ -134,7 +134,7 @@ function WaitingListAdminPage() {
   const pageRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   async function updateStatus(id: string, status: Status) {
-    const { error } = await supabase.from("waiting_list").update({ status }).eq("id", id);
+    const { error } = await supabase.from("waiting_list").update({ status } as never).eq("id", id);
     if (error) toast.error("Erreur de mise à jour"); else toast.success("Statut mis à jour");
   }
 
