@@ -293,14 +293,17 @@ function NavSpotlight() {
             {cta}
           </Link>
         </div>
-        <button
-          type="button"
-          className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
-          aria-label="Menu"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="md:hidden flex items-center gap-1">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
+            aria-label="Menu"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
       <MobilePanel open={open} onClose={() => setOpen(false)} lang={lang} links={links} ctaLabel={cta} />
     </header>
