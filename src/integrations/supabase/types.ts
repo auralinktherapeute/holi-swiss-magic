@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      articles: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          content: string | null
+          excerpt: string | null
+          cover_image_url: string | null
+          category: string | null
+          author: string | null
+          published_at: string | null
+          lang: string
+          status: string
+          author_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          content?: string | null
+          excerpt?: string | null
+          cover_image_url?: string | null
+          category?: string | null
+          author?: string | null
+          published_at?: string | null
+          lang?: string
+          status?: string
+          author_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          content?: string | null
+          excerpt?: string | null
+          cover_image_url?: string | null
+          category?: string | null
+          author?: string | null
+          published_at?: string | null
+          lang?: string
+          status?: string
+          author_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
