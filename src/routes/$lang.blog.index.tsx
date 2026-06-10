@@ -43,7 +43,14 @@ function Page() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["articles", l],
-    queryFn: () => getPublishedArticles({ data: { lang: l } }),
+    queryFn: async () => {
+      const res = await getPublishedArticles({ data: { lang: l } });
+      // Fallback FR si aucun article dans la langue sélectionnée
+      if (!res?.articles?.length && l !== "fr") {
+        return getPublishedArticles({ data: { lang: "fr" } });
+      }
+      return res;
+    },
   });
 
   const articles = data?.articles ?? [];

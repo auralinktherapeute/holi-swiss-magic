@@ -90,6 +90,7 @@ function Page() {
   const body    = bodyForLang(raw, l);
   const excerpt = excerptForLang(raw, l);
   const readTime = body ? estimateReadTime(body) : null;
+  const isFrFallback = l !== "fr" && !(raw[`body_${l}`] as string);
 
   return (
     <div className="min-h-screen bg-[#2d1248]">
@@ -139,6 +140,14 @@ function Page() {
           <p className="text-lg text-[#d4c4e0] border-l-4 border-[#b86ef9]/50 pl-5 mb-10 italic leading-relaxed">
             {excerpt}
           </p>
+        )}
+
+        {/* Badge langue de fallback */}
+        {isFrFallback && (
+          <div className="mb-6 flex items-center gap-2 rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.08)] px-4 py-2.5 text-sm text-[#f59e0b]">
+            <span>🌐</span>
+            <span>Cet article n'est pas encore disponible en {l.toUpperCase()} — affiché en français.</span>
+          </div>
         )}
 
         {/* Séparateur décoratif */}
