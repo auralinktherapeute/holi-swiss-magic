@@ -212,12 +212,13 @@ function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file || !user || !rowId) return;
     if (file.size > 5 * 1024 * 1024) return toast.error("Max 5 Mo");
-    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("therapist-documents").upload(path, file);
     if (error) return toast.error(t("profile_edit.upload_error"));
     const { data: pub } = supabase.storage.from("therapist-documents").getPublicUrl(path);
     try {
-      const { row } = await addDocument({ data: { file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: true } });
+      const { row } = await addDocument({ data: { file_url: pub.publicUrl, file_name: file.name, label: file.name.split(".")[0], is_public: false } });
       setDocuments((prev) => [row as DocRow, ...prev]);
     } catch {
       return toast.error(t("profile_edit.upload_error"));

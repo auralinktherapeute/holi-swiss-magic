@@ -42,6 +42,10 @@ async function getOwnedTherapist(userId: string) {
   return { supabaseAdmin, therapistId: data.id as string };
 }
 
+export const requireDashboardAuth = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => ({ userId: context.userId }));
+
 export const listMyReservations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

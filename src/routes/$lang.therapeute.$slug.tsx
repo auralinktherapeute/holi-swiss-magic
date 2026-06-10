@@ -26,6 +26,7 @@ function Page() {
         .from("therapists")
         .select(PUBLIC_THERAPIST_SELECT)
         .eq("slug", slug)
+        .eq("status", "active")
         .maybeSingle() as any;
       if (error) throw error;
       return data;

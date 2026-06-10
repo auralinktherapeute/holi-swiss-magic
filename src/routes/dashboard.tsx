@@ -4,14 +4,13 @@ import { useEffect } from "react";
 import { TherapistNav } from "@/components/layout/TherapistNav";
 import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
-import { checkIsAdmin } from "@/lib/admin.functions";
+import { requireDashboardAuth } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   beforeLoad: async () => {
     try {
-      // Server-validated auth check (mirrors admin guard). Throws if no session.
-      await checkIsAdmin();
+      await requireDashboardAuth();
     } catch {
       throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
     }
