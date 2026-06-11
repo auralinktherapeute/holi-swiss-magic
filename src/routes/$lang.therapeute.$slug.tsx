@@ -65,7 +65,7 @@ function Page() {
     queryFn: async () => {
       const { data } = await supabase
         .from("reviews")
-        .select("id,rating,comment,therapist_reply,replied_at,created_at")
+        .select("id,rating,comment,therapist_reply,replied_at,created_at,client_id")
         .eq("therapist_id", th!.id)
         .eq("status", "published")
         .order("created_at", { ascending: false })
@@ -366,7 +366,7 @@ function Page() {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
-                            {String(r.patient_id ?? "?")[0].toUpperCase()}
+                            {String(r.client_id ?? "?")[0].toUpperCase()}
                           </div>
                           <StarRow rating={r.rating} size={3} />
                         </div>
