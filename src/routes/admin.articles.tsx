@@ -273,7 +273,7 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const articles = (data?.articles ?? []) as ArticleRow[];
+  const articles = (data?.articles ?? []) as unknown as ArticleRow[];
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
