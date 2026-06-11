@@ -9,11 +9,15 @@ export const Route = createFileRoute("/$lang/blog/$slug")({ component: Page });
 type Lang = "fr" | "de" | "it" | "en";
 
 const CATEGORY_LABELS: Record<string, string> = {
+  remboursements: "Remboursements", kine: "Kiné & Ostéo", mental: "Santé mentale",
+  chronique: "Douleurs chroniques",
   reflexologie: "Réflexologie", reiki: "Reiki", naturopathie: "Naturopathie",
   sophrologie: "Sophrologie", acupuncture: "Acupuncture", osteopathie: "Ostéopathie",
   yoga: "Yoga", hypnose: "Hypnose", aromatherapie: "Aromathérapie",
   magnetisme: "Magnétisme", shiatsu: "Shiatsu", meditation: "Méditation",
-  coaching: "Coaching", ayurveda: "Ayurveda",
+  coaching: "Coaching", ayurveda: "Ayurveda", massage: "Massage",
+  chromotherapie: "Chromothérapie", lithotherapie: "Lithothérapie",
+  geobiologie: "Géobiologie",
 };
 
 function formatDate(iso: string | null, lang: string) {
