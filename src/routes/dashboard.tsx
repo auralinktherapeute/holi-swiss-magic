@@ -5,14 +5,29 @@ import { TherapistNav } from "@/components/layout/TherapistNav";
 import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
 import { requireDashboardAuth } from "@/lib/dashboard.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   beforeLoad: async () => {
+    // Étape 1 : vérifier la session locale (hydratée depuis localStorage).
+    // Évite une redirection vers /connexion lors d'une simple navigation
+    // entre pages du dashboard à cause d'une race ou d'un blip réseau.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
+    }
+    // Étape 2 : validation serveur (token réellement valide côté Supabase).
     try {
       await requireDashboardAuth();
-    } catch {
-      throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      // Ne rediriger que sur des erreurs d'auth réelles, pas sur un blip réseau.
+      if (msg.toLowerCase().includes("unauthorized")) {
+        throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
+      }
+      // Sinon : laisser la session locale faire foi, ne pas déconnecter l'utilisateur.
+      console.warn("[dashboard.beforeLoad] validation serveur a échoué (réseau ?):", err);
     }
   },
   component: DashboardLayout,
