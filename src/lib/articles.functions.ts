@@ -31,7 +31,7 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
   .inputValidator(z.object({ lang: z.string().optional(), limit: z.number().optional() }))
   .handler(async ({ data }) => {
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
-    let q = supabase
+    let q = (supabase as any)
       .from("articles")
       .select("id,slug,cover_image_url,category,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
       .eq("status", "validated")
@@ -49,7 +49,7 @@ export const getArticleBySlug = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string() }))
   .handler(async ({ data }) => {
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
-    const { data: article, error } = await supabase
+    const { data: article, error } = await (supabase as any)
       .from("articles")
       .select("*")
       .eq("slug", data.slug)
@@ -67,7 +67,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from("articles")
       .select("id,slug,status,lang,category,published_at,created_at,cover_image_url,title_fr,title_de,title_it,title_en")
       .order("created_at", { ascending: false });
@@ -108,7 +108,7 @@ export const createArticle = createServerFn({ method: "POST" })
     const slug = data.slug?.trim() || toSlug(data.title_fr);
     const published_at = data.status === "validated" ? new Date().toISOString() : null;
 
-    const { data: article, error } = await supabaseAdmin
+    const { data: article, error } = await (supabaseAdmin as any)
       .from("articles")
       .insert({
         ...data,
@@ -137,7 +137,7 @@ export const updateArticle = createServerFn({ method: "POST" })
     const { id, ...fields } = data;
     const published_at = fields.status === "validated" ? new Date().toISOString() : null;
 
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as any)
       .from("articles")
       .update({ ...fields, published_at, cover_image_url: fields.cover_image_url || null })
       .eq("id", id);
@@ -152,7 +152,7 @@ export const deleteArticle = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("articles").delete().eq("id", data.id);
+    const { error } = await (supabaseAdmin as any).from("articles").delete().eq("id", data.id);
     if (error) throw new Error("Impossible de supprimer l'article.");
     return { ok: true };
   });

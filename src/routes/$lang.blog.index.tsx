@@ -161,7 +161,7 @@ function Page() {
         {/* Grille des autres articles */}
         {!isLoading && rest.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rest.map(article => {
+            {rest.map((article: any) => {
               const a = article as Record<string, unknown>;
               const title = titleForLang(a, l);
               const excerpt = excerptForLang(a, l);
