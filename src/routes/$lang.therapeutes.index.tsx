@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
 
@@ -40,6 +41,7 @@ function CardSkeleton() {
 
 function Page() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
@@ -86,12 +88,12 @@ function Page() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Ville, spécialité, nom…"
+            placeholder={t("therapist_profile.search_placeholder")}
             className="w-full rounded-xl border border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.06)] py-2 pl-9 pr-4 text-sm text-white placeholder-[rgba(255,255,255,0.35)] outline-none focus:border-[#b86ef9] transition"
           />
         </div>
         <span className="hidden sm:block text-sm text-[rgba(255,255,255,0.45)]">
-          {filtered.length} thérapeute{filtered.length !== 1 ? "s" : ""}
+          {filtered.length} {filtered.length !== 1 ? t("therapist_profile.therapist_plural") : t("therapist_profile.therapist_singular")}
         </span>
         {/* Mobile tabs */}
         <div className="ml-auto flex sm:hidden rounded-xl border border-[rgba(184,110,249,0.25)] overflow-hidden">
@@ -116,17 +118,17 @@ function Page() {
           <div className="space-y-2 p-3">
             {isLoading && Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
             <AnimatePresence>
-              {filtered.map((t, i) => {
-                const fullName = `${t.first_name} ${t.last_name}`.trim();
-                const isSelected = t.id === selectedId;
-                const specs = t.specialties ?? [];
+              {filtered.map((th, i) => {
+                const fullName = `${th.first_name} ${th.last_name}`.trim();
+                const isSelected = th.id === selectedId;
+                const specs = th.specialties ?? [];
                 return (
                   <motion.div
-                    key={t.id}
+                    key={th.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03, duration: 0.2 }}
-                    onClick={() => handleCardClick(t)}
+                    onClick={() => handleCardClick(th)}
                     className={`group cursor-pointer rounded-2xl border p-4 transition-all ${
                       isSelected
                         ? "border-[#5cc8fa] bg-[rgba(92,200,250,0.06)] shadow-[0_0_20px_rgba(92,200,250,0.15)]"
@@ -141,8 +143,8 @@ function Page() {
                           style={{ background: "linear-gradient(135deg,#b86ef9,#5cc8fa)", padding: 2 }}
                         >
                           <div className="h-full w-full rounded-full overflow-hidden bg-[#1a1035]">
-                            {t.photo_url ? (
-                              <img src={t.photo_url} alt={fullName} className="h-full w-full object-cover" />
+                            {th.photo_url ? (
+                              <img src={th.photo_url} alt={fullName} className="h-full w-full object-cover" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[#b86ef9]">
                                 {fullName[0]}
@@ -151,13 +153,13 @@ function Page() {
                           </div>
                         </div>
                         {/* Badge premium */}
-                        {t.is_premium && (
-                          <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] shadow-md" title="Premium">
+                        {th.is_premium && (
+                          <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] shadow-md" title={t("therapist_profile.premium")}>
                             ⚡
                           </span>
                         )}
-                        {!t.is_premium && t.verified && (
-                          <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#b86ef9] text-[10px] shadow-md" title="Vérifié">
+                        {!th.is_premium && th.verified && (
+                          <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#b86ef9] text-[10px] shadow-md" title={t("therapist_profile.verified")}>
                             ✓
                           </span>
                         )}
@@ -169,18 +171,18 @@ function Page() {
                           <p className="font-semibold text-white truncate text-sm leading-snug">{fullName}</p>
                           <ArrowIcon />
                         </div>
-                        {t.title && (
-                          <p className="text-xs text-[#b86ef9] truncate">{t.title}</p>
+                        {th.title && (
+                          <p className="text-xs text-[#b86ef9] truncate">{th.title}</p>
                         )}
                         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[rgba(255,255,255,0.45)]">
-                          {t.city && (
+                          {th.city && (
                             <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />{t.city}
+                              <MapPin className="h-3 w-3" />{th.city}
                             </span>
                           )}
-                          {t.price_min && (
+                          {th.price_min && (
                             <span>
-                              {t.price_min}{t.price_max ? `–${t.price_max}` : ""}  {t.currency ?? "CHF"}
+                              {th.price_min}{th.price_max ? `–${th.price_max}` : ""}  {th.currency ?? "CHF"}
                             </span>
                           )}
                         </div>
@@ -204,11 +206,11 @@ function Page() {
                     {/* Lien profil */}
                     <Link
                       to="/$lang/therapeute/$slug"
-                      params={{ lang, slug: t.slug }}
+                      params={{ lang, slug: th.slug }}
                       onClick={(e) => e.stopPropagation()}
                       className="mt-3 hidden group-hover:flex items-center gap-1 text-xs font-semibold text-[#5cc8fa] hover:text-white transition"
                     >
-                      Voir le profil complet →
+                      {t("therapist_profile.see_full_profile")}
                     </Link>
                   </motion.div>
                 );
@@ -216,7 +218,7 @@ function Page() {
             </AnimatePresence>
             {!isLoading && filtered.length === 0 && (
               <div className="py-16 text-center text-[rgba(255,255,255,0.4)] text-sm">
-                Aucun thérapeute trouvé
+                {t("therapist_profile.no_therapist")}
               </div>
             )}
           </div>

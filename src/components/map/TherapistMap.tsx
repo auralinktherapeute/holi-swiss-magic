@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Star, ArrowRight, Navigation } from "lucide-react";
 
 // Fix Leaflet default icon in Vite
@@ -56,11 +57,12 @@ function createMarkerIcon(therapist: Therapist, isSelected: boolean) {
 
 function GeoButton() {
   const map = useMap();
+  const { t } = useTranslation();
   return (
     <button
       onClick={() => map.locate({ setView: true, maxZoom: 12 })}
       className="absolute bottom-20 right-3 z-[1000] flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(184,110,249,0.4)] bg-[#1a1035]/90 text-[#b86ef9] shadow-lg backdrop-blur hover:bg-[#2d1248] transition"
-      title="Près de moi"
+      title={t("therapist_profile.nearby")}
     >
       <Navigation className="h-4 w-4" />
     </button>
@@ -80,6 +82,7 @@ function FlyToSelected({ therapists, selectedId }: { therapists: Therapist[]; se
 }
 
 export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) {
+  const { t: i18n } = useTranslation();
   const positioned = therapists.filter((t) => t.latitude && t.longitude);
   const center: [number, number] =
     positioned.length > 0
@@ -143,7 +146,7 @@ export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) 
                 {t.city && <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, margin: "0 0 8px 0" }}>📍 {t.city}</p>}
                 {t.price_min && (
                   <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, margin: "0 0 8px 0" }}>
-                    À partir de {t.price_min} {t.currency ?? "CHF"}
+                    {i18n("therapist_profile.from_price")} {t.price_min} {t.currency ?? "CHF"}
                   </p>
                 )}
                 <a
@@ -154,7 +157,7 @@ export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) 
                     textDecoration: "none",
                   }}
                 >
-                  Voir le profil →
+                  {i18n("therapist_profile.see_profile")}
                 </a>
               </div>
             </Popup>

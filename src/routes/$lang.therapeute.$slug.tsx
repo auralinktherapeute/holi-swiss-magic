@@ -1,11 +1,12 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState, lazy, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
 import {
-  MapPin, Star, BadgeCheck, Globe, Heart, Share2, Navigation2,
-  Clock, MessageSquare, Shield, ChevronUp, ExternalLink, Zap,
+  MapPin, Star, BadgeCheck, Globe, Share2, Navigation2,
+  Shield, ChevronUp,
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 
@@ -15,7 +16,7 @@ const TherapistMiniMap = lazy(() =>
 
 export const Route = createFileRoute("/$lang/therapeute/$slug")({ component: Page });
 
-type ServiceEntry = { name: string; duration?: number; price?: number; format?: string; color?: string };
+type ServiceEntry = { name: string; duration?: number; price?: number; format?: string };
 type AccreditationEntry = { org: string; number?: string };
 
 const FADE_UP = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -35,6 +36,7 @@ function StarRow({ rating, size = 4 }: { rating: number; size?: number }) {
 
 function Page() {
   const { slug, lang } = useParams({ from: "/$lang/therapeute/$slug" });
+  const { t } = useTranslation();
   const [phoneVisible, setPhoneVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showTop, setShowTop] = useState(false);
@@ -103,9 +105,9 @@ function Page() {
     return (
       <div className="min-h-screen bg-[#0f0a1e] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-2xl font-bold text-white mb-4">Profil introuvable</p>
+          <p className="text-2xl font-bold text-white mb-4">{t("therapist_profile.not_found")}</p>
           <Link to="/$lang/therapeutes" params={{ lang }} className="text-[#b86ef9] underline">
-            ← Retour à l'annuaire
+            {t("therapist_profile.back")}
           </Link>
         </div>
       </div>
@@ -120,11 +122,12 @@ function Page() {
     ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
-  // Rating distribution
   const dist = [5, 4, 3, 2, 1].map((n) => ({
     n,
     count: reviews?.filter((r: any) => r.rating === n).length ?? 0,
   }));
+
+  const reviewLocale = ({ de: "de-CH", it: "it-CH", en: "en-GB" } as Record<string, string>)[lang] ?? "fr-CH";
 
   return (
     <div className="min-h-screen bg-[#0f0a1e] pb-20">
@@ -172,10 +175,10 @@ function Page() {
                   </div>
                 </div>
                 {th.is_premium && (
-                  <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-sm shadow-lg" title="Premium">⚡</span>
+                  <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-sm shadow-lg" title={t("therapist_profile.premium")}>⚡</span>
                 )}
                 {!th.is_premium && th.verified && (
-                  <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#b86ef9] shadow-lg" title="Pro vérifié">
+                  <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#b86ef9] shadow-lg" title={t("therapist_profile.verified")}>
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
                 )}
@@ -191,43 +194,40 @@ function Page() {
                   <h1 className="text-2xl sm:text-3xl font-bold text-white">{fullName}</h1>
                   {th.verified && (
                     <span className="flex items-center gap-1 rounded-full bg-[rgba(184,110,249,0.15)] border border-[rgba(184,110,249,0.3)] px-2.5 py-0.5 text-xs font-medium text-[#b86ef9]">
-                      <BadgeCheck className="h-3 w-3" /> Vérifié
+                      <BadgeCheck className="h-3 w-3" /> {t("therapist_profile.verified")}
                     </span>
                   )}
                 </div>
 
-                {/* Titre + ville */}
                 <p className="text-[#b86ef9] font-medium mb-2">
                   {th.title}{th.city ? ` · ${th.city}${th.canton ? ` (${th.canton})` : ""}` : ""}
                 </p>
 
-                {/* Méta row */}
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
                   {avg && (
                     <span className="flex items-center gap-1.5">
                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                       <span className="text-white font-semibold">{avg}</span>
-                      <span>({reviews?.length} avis)</span>
+                      <span>({t("therapist_profile.reviews_count", { count: reviews?.length })})</span>
                     </span>
                   )}
                   {th.years_experience && (
                     <span className="flex items-center gap-1.5">
-                      🏆 {th.years_experience} ans d'expérience
+                      🏆 {t("therapist_profile.experience", { n: th.years_experience })}
                     </span>
                   )}
                   {th.website && (
                     <a href={th.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[#5cc8fa] transition">
-                      <Globe className="h-3.5 w-3.5" /> Site web
+                      <Globe className="h-3.5 w-3.5" /> {t("therapist_profile.website")}
                     </a>
                   )}
                   {th.price_min && (
                     <span className="flex items-center gap-1 text-[rgba(255,255,255,0.7)]">
-                      💶 {th.price_min}{th.price_max ? `–${th.price_max}` : ""} {th.currency ?? "CHF"} / séance
+                      💶 {th.price_min}{th.price_max ? `–${th.price_max}` : ""} {th.currency ?? "CHF"} {t("therapist_profile.per_session")}
                     </span>
                   )}
                 </div>
 
-                {/* Chips spécialités */}
                 {specialties.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {specialties.map((s) => (
@@ -245,14 +245,15 @@ function Page() {
                 transition={{ delay: 0.2 }}
                 className="flex gap-2 shrink-0"
               >
-                <button onClick={share} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? "Copié !" : "Partager"}>
+                <button onClick={share} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
                   {copied ? <span className="text-[10px] font-bold text-[#5cc8fa]">✓</span> : <Share2 className="h-4 w-4" />}
                 </button>
                 {th.city && (
                   <a
                     href={`https://www.google.com/maps/search/${encodeURIComponent(th.city + " " + (th.canton ?? "") + " Suisse")}`}
                     target="_blank" rel="noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title="Itinéraire"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
+                    title={t("therapist_profile.itinerary")}
                   >
                     <Navigation2 className="h-4 w-4" />
                   </a>
@@ -275,7 +276,7 @@ function Page() {
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
-                <h2 className="mb-4 text-lg font-bold text-white">À propos</h2>
+                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.about")}</h2>
                 <p className="whitespace-pre-line text-[rgba(255,255,255,0.72)] leading-relaxed text-sm">{th.bio}</p>
               </motion.section>
             )}
@@ -285,12 +286,17 @@ function Page() {
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
-                <h2 className="mb-4 text-lg font-bold text-white">Tarifs & services</h2>
+                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-[rgba(184,110,249,0.15)]">
-                        {["Service", "Durée", "Tarif", "Format"].map((h) => (
+                        {[
+                          t("therapist_profile.service_col_name"),
+                          t("therapist_profile.service_col_duration"),
+                          t("therapist_profile.service_col_price"),
+                          t("therapist_profile.service_col_format"),
+                        ].map((h) => (
                           <th key={h} className="pb-3 text-left text-xs font-medium text-[rgba(255,255,255,0.4)] uppercase tracking-wide pr-4">{h}</th>
                         ))}
                       </tr>
@@ -301,7 +307,7 @@ function Page() {
                           <td className="py-3 pr-4 font-medium text-white">{s.name}</td>
                           <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)]">{s.duration ? `${s.duration} min` : "—"}</td>
                           <td className="py-3 pr-4 text-[#5cc8fa] font-semibold">{s.price ? `${s.price} CHF` : "—"}</td>
-                          <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{s.format ?? "présentiel"}</td>
+                          <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{s.format ?? t("therapist_profile.service_format_default")}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -315,7 +321,7 @@ function Page() {
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
-                <h2 className="mb-4 text-lg font-bold text-white">Diplômes & certifications</h2>
+                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.certifications_title")}</h2>
                 <div className="flex flex-wrap gap-2">
                   {accreditations.map((a) => (
                     <span key={a.org} className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-300">
@@ -332,18 +338,17 @@ function Page() {
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-bold text-white">Avis clients</h2>
+                  <h2 className="text-lg font-bold text-white">{t("therapist_profile.reviews_title")}</h2>
                   {avg && (
                     <div className="flex items-center gap-2">
                       <span className="text-3xl font-bold text-white">{avg}</span>
                       <div>
                         <StarRow rating={Math.round(Number(avg))} size={4} />
-                        <p className="text-xs text-[rgba(255,255,255,0.45)] mt-0.5">{reviews!.length} avis</p>
+                        <p className="text-xs text-[rgba(255,255,255,0.45)] mt-0.5">{t("therapist_profile.reviews_count", { count: reviews!.length })}</p>
                       </div>
                     </div>
                   )}
                 </div>
-                {/* Distribution */}
                 <div className="mb-5 space-y-1.5">
                   {dist.map(({ n, count }) => (
                     <div key={n} className="flex items-center gap-2 text-xs">
@@ -359,7 +364,6 @@ function Page() {
                     </div>
                   ))}
                 </div>
-                {/* Cards avis */}
                 <div className="space-y-4">
                   {reviews!.map((r: any) => (
                     <div key={r.id} className="rounded-xl border border-[rgba(184,110,249,0.12)] bg-[rgba(184,110,249,0.04)] p-4">
@@ -371,13 +375,13 @@ function Page() {
                           <StarRow rating={r.rating} size={3} />
                         </div>
                         <span className="text-xs text-[rgba(255,255,255,0.35)]">
-                          {new Date(r.created_at).toLocaleDateString("fr-CH", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(r.created_at).toLocaleDateString(reviewLocale, { day: "numeric", month: "short", year: "numeric" })}
                         </span>
                       </div>
                       {r.comment && <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">{r.comment}</p>}
                       {r.therapist_reply && (
                         <div className="mt-3 rounded-lg border-l-2 border-[#b86ef9] bg-[rgba(184,110,249,0.06)] px-4 py-3">
-                          <p className="text-xs font-semibold text-[#b86ef9] mb-1">💬 Réponse du thérapeute</p>
+                          <p className="text-xs font-semibold text-[#b86ef9] mb-1">{t("therapist_profile.therapist_reply")}</p>
                           <p className="text-sm italic text-[rgba(255,255,255,0.6)]">{r.therapist_reply}</p>
                         </div>
                       )}
@@ -393,9 +397,9 @@ function Page() {
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] overflow-hidden"
               >
                 <div className="p-4 border-b border-[rgba(184,110,249,0.12)]">
-                  <h2 className="text-lg font-bold text-white">Localisation</h2>
+                  <h2 className="text-lg font-bold text-white">{t("therapist_profile.map_title")}</h2>
                   <p className="text-sm text-[rgba(255,255,255,0.45)] mt-0.5">
-                    <MapPin className="inline h-3.5 w-3.5 mr-1" />{th.city}{th.canton ? ` (${th.canton})` : ""}, Suisse
+                    <MapPin className="inline h-3.5 w-3.5 mr-1" />{th.city}{th.canton ? ` (${th.canton})` : ""}, {t("therapist_profile.country")}
                   </p>
                 </div>
                 <div style={{ height: 220 }}>
@@ -415,18 +419,16 @@ function Page() {
           {/* ── SIDEBAR DROITE ── */}
           <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
 
-            {/* Widget réservation */}
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
               <BookingWidget therapistId={th.id} />
             </div>
 
-            {/* Widget contact */}
             <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur space-y-3">
-              <h3 className="font-semibold text-white text-sm">Contact</h3>
+              <h3 className="font-semibold text-white text-sm">{t("therapist_profile.contact_title")}</h3>
               {th.phone && (
                 <div>
                   <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1 flex items-center gap-1">
-                    <Shield className="h-3 w-3" /> Numéro protégé
+                    <Shield className="h-3 w-3" /> {t("therapist_profile.phone_protected")}
                   </p>
                   {phoneVisible ? (
                     <p className="text-sm font-semibold text-[#5cc8fa]">{th.phone}</p>
@@ -435,22 +437,21 @@ function Page() {
                       onClick={() => setPhoneVisible(true)}
                       className="text-sm font-semibold text-[#b86ef9] hover:text-white transition"
                     >
-                      📞 Afficher le numéro
+                      {t("therapist_profile.phone_show")}
                     </button>
                   )}
                 </div>
               )}
               {th.email && (
                 <a href={`mailto:${th.email}`} className="flex items-center gap-2 text-sm text-[rgba(255,255,255,0.6)] hover:text-[#5cc8fa] transition">
-                  ✉️ Envoyer un message
+                  {t("therapist_profile.email_send")}
                 </a>
               )}
             </div>
 
-            {/* Widget localisation */}
             {(th.city || th.canton) && (
               <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-                <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1">Zone d'intervention</p>
+                <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1">{t("therapist_profile.zone_label")}</p>
                 <p className="text-sm font-medium text-white flex items-center gap-1.5">
                   <MapPin className="h-4 w-4 text-[#b86ef9]" />
                   {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
@@ -463,11 +464,9 @@ function Page() {
 
       {/* ── Disclaimer ── */}
       <p className="mx-auto mt-12 max-w-2xl px-4 text-center text-[13px] italic text-[rgba(255,255,255,0.3)] leading-relaxed">
-        Cette prestation de bien-être ne remplace en aucun cas une consultation médicale.
-        En cas de problème de santé, consultez un médecin.
+        {t("therapist_profile.disclaimer")}
       </p>
 
-      {/* ── Scroll to top ── */}
       {showTop && (
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
