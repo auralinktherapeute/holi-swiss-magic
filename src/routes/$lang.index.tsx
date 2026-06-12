@@ -88,9 +88,9 @@ function HomePage() {
           <h2 className="text-2xl font-bold tracking-tight text-center text-white">{t("home.pricingTeaser")}</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              { name: t("pricing.free.name"), price: 0, desc: t("pricing.free.desc"), highlight: false },
-              { name: t("pricing.pro.name"), price: 29, desc: t("pricing.pro.desc"), highlight: true },
-              { name: t("pricing.premium.name"), price: 59, desc: t("pricing.premium.desc"), highlight: false },
+              { name: t("pricing.plans.basic.name"), price: 0, desc: t("pricing.plans.basic.tagline"), highlight: false },
+              { name: t("pricing.plans.essentiel.name"), price: 49, desc: t("pricing.plans.essentiel.tagline"), highlight: true },
+              { name: t("pricing.plans.elite.name"), price: 99, desc: t("pricing.plans.elite.tagline"), highlight: false },
             ].map((p) => (
               <div
                 key={p.name}
