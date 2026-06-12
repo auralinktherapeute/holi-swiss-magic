@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AdminNav } from "@/components/layout/AdminNav";
 import { checkIsAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
+import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -31,16 +32,11 @@ export const Route = createFileRoute("/admin")({
 
 function AdminLayout() {
   return (
-    <div className="dark" style={{ ["--admin-bg" as any]: "#07040f" }}>
-      <div
-        className="flex min-h-dvh w-full text-foreground"
-        style={{ background: "#07040f" }}
-      >
-        <AdminNav />
-        <main className="flex-1 overflow-x-hidden">
-          <Outlet />
-        </main>
-      </div>
+    <div className="adm-root" style={{ display: "flex", minHeight: "100dvh", background: "#0f0a1e" }}>
+      <AdminNav />
+      <main style={{ flex: 1, overflowX: "hidden" }}>
+        <Outlet />
+      </main>
     </div>
   );
 }

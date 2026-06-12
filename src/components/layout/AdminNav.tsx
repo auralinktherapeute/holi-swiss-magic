@@ -1,9 +1,11 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
+  Menu, X,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,11 +20,13 @@ export function AdminNav() {
   const fetchWaitingListCount = useServerFn(getWaitingListCount);
   const email = user?.email ?? "admin@holiswiss.ch";
   const initial = email.charAt(0).toUpperCase();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/$lang", params: { lang: "fr" } });
   };
+
   const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -31,80 +35,229 @@ export function AdminNav() {
       if (!cancelled) setWaitlistCount(count);
     };
     load();
-    const id = window.setInterval(load, 30000);
+    const id = window.setInterval(load, 30_000);
     return () => { cancelled = true; window.clearInterval(id); };
   }, [fetchWaitingListCount]);
+
   const items = [
-    { to: "/admin", icon: LayoutDashboard, label: t("admin.overview"), exact: true },
-    { to: "/admin/therapeutes", icon: Users, label: t("admin.therapists") },
-    { to: "/admin/liste-attente", icon: Hourglass, label: t("admin.waitlist"), badge: waitlistCount ?? undefined, badgeVariant: "violet" as const },
-    { to: "/admin/avis", icon: Star, label: t("admin.reviews") },
-    { to: "/admin/articles", icon: FileText, label: t("admin.articles") },
-    { to: "/admin/evenements", icon: CalendarDays, label: t("admin.events") },
-    { to: "/admin/utilisateurs", icon: UserCog, label: t("admin.users") },
-    { to: "/admin/abonnements", icon: CreditCard, label: t("admin.subscriptions") },
-    { to: "/admin/agents", icon: Bot, label: t("admin.agents") },
-    { to: "/admin/emails", icon: Mail, label: t("admin.emails") },
-    { to: "/admin/moderation", icon: ShieldAlert, label: t("admin.moderation"), badge: 3 },
-    { to: "/admin/parametres", icon: Settings, label: t("admin.settings") },
+    { to: "/admin",                  icon: LayoutDashboard, label: t("admin.overview"),       exact: true },
+    { to: "/admin/therapeutes",      icon: Users,           label: t("admin.therapists") },
+    { to: "/admin/liste-attente",    icon: Hourglass,       label: t("admin.waitlist"),        badge: waitlistCount ?? undefined, badgeRed: false },
+    { to: "/admin/moderation",       icon: ShieldAlert,     label: t("admin.moderation"),      badge: undefined, badgeRed: true },
+    { to: "/admin/avis",             icon: Star,            label: t("admin.reviews") },
+    { to: "/admin/articles",         icon: FileText,        label: t("admin.articles") },
+    { to: "/admin/evenements",       icon: CalendarDays,    label: t("admin.events") },
+    { to: "/admin/utilisateurs",     icon: UserCog,         label: t("admin.users") },
+    { to: "/admin/abonnements",      icon: CreditCard,      label: t("admin.subscriptions") },
+    { to: "/admin/agents",           icon: Bot,             label: t("admin.agents") },
+    { to: "/admin/emails",           icon: Mail,            label: t("admin.emails") },
+    { to: "/admin/parametres",       icon: Settings,        label: t("admin.settings") },
   ];
-  return (
-    <aside
-      className="hidden md:flex w-64 shrink-0 flex-col text-sidebar-foreground"
-      style={{ background: "#0f0a1e", borderRight: "1px solid rgba(255,255,255,0.08)" }}
-    >
-      <div className="h-16 flex items-center px-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center gap-1.5 text-xl font-bold">
-          <span aria-hidden className="text-2xl drop-shadow-[0_0_8px_rgba(124,58,237,0.6)]">🌿</span>
-          <span style={{ color: "#b86ef9" }}>Holiswiss</span>
-        </div>
+
+  const SidebarContent = () => (
+    <div style={{
+      width: 248,
+      background: "#0d0820",
+      borderRight: "1px solid rgba(255,255,255,0.06)",
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh",
+      position: "sticky",
+      top: 0,
+      fontFamily: "'Inter', system-ui, sans-serif",
+    }}>
+      {/* Logo */}
+      <div style={{
+        height: 60,
+        display: "flex",
+        alignItems: "center",
+        padding: "0 20px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        gap: 8,
+      }}>
+        <span style={{ fontSize: 22 }}>🌿</span>
+        <span style={{
+          fontSize: 16,
+          fontWeight: 700,
+          background: "linear-gradient(135deg, #b86ef9, #5cc8fa)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+        }}>
+          HoliSwiss
+        </span>
+        <span style={{
+          marginLeft: "auto",
+          fontSize: 10,
+          fontWeight: 600,
+          color: "rgba(184,110,249,0.7)",
+          background: "rgba(184,110,249,0.1)",
+          padding: "2px 7px",
+          borderRadius: 999,
+          letterSpacing: "0.05em",
+        }}>
+          ADMIN
+        </span>
       </div>
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        {items.map((it) => {
-          const Icon = it.icon;
-          const active = it.exact ? pathname === it.to : pathname.startsWith(it.to);
+
+      {/* Nav */}
+      <nav style={{ flex: 1, overflowY: "auto", padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
           return (
             <Link
-              key={it.to}
-              to={it.to}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              }`}
+              key={item.to}
+              to={item.to}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                height: 40,
+                padding: "0 12px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 500,
+                textDecoration: "none",
+                transition: "all 150ms ease",
+                borderLeft: `2px solid ${active ? "#b86ef9" : "transparent"}`,
+                background: active ? "rgba(184,110,249,0.12)" : "transparent",
+                color: active ? "#ffffff" : "rgba(255,255,255,0.6)",
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLElement).style.color = "#ffffff";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)";
+                }
+              }}
             >
-              <Icon className="h-4 w-4" />
-              <span className="flex-1">{it.label}</span>
-              {it.badge ? (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    (it as any).badgeVariant === "violet"
-                      ? "text-white"
-                      : "bg-destructive text-destructive-foreground"
-                  }`}
-                  style={(it as any).badgeVariant === "violet" ? { background: "#b86ef9" } : undefined}
-                >
-                  {it.badge}
+              <Icon size={16} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {item.label}
+              </span>
+              {item.badge != null && item.badge > 0 && (
+                <span style={{
+                  background: item.badgeRed ? "rgba(248,113,113,0.2)" : "rgba(184,110,249,0.2)",
+                  color: item.badgeRed ? "#f87171" : "#b86ef9",
+                  borderRadius: 999,
+                  padding: "1px 8px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}>
+                  {item.badge}
                 </span>
-              ) : null}
+              )}
             </Link>
           );
         })}
       </nav>
-      <div className="p-3 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">{initial}</div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">Admin</div>
-          <div className="text-xs text-sidebar-foreground/60 truncate">{email}</div>
+
+      {/* Footer */}
+      <div style={{
+        padding: 12,
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+      }}>
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #b86ef9, #5cc8fa)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: 14,
+          flexShrink: 0,
+        }}>
+          {initial}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Admin</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{email}</div>
         </div>
         <button
           onClick={signOut}
-          aria-label="Se déconnecter"
-          className="rounded-md p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+          title="Se déconnecter"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "rgba(255,255,255,0.4)",
+            borderRadius: 8,
+            padding: 6,
+            display: "flex",
+            alignItems: "center",
+            transition: "all 150ms",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.12)";
+            (e.currentTarget as HTMLElement).style.color = "#f87171";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "none";
+            (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.4)";
+          }}
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut size={16} />
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:block">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile burger */}
+      <div className="lg:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setMobileOpen(true)}
+          style={{
+            background: "rgba(13,8,32,0.95)",
+            border: "1px solid rgba(184,110,249,0.3)",
+            borderRadius: 10,
+            padding: 8,
+            color: "#b86ef9",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Menu size={18} />
+        </button>
+      </div>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 40 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{ position: "fixed", left: 0, top: 0, zIndex: 50 }}
+            >
+              <SidebarContent />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

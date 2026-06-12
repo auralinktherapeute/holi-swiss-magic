@@ -1,57 +1,84 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Check, X, Pause, Search, ExternalLink, Loader2 } from "lucide-react";
+  Search, Check, X, Pause, ExternalLink, Loader2,
+  Download, ChevronUp, ChevronDown, Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { listTherapistsAdmin, updateTherapistStatus } from "@/lib/admin.functions";
+import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/therapeutes")({ component: Page });
 
-const STATUS_CLS: Record<string, string> = {
-  pending: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-  active: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  rejected: "bg-red-500/15 text-red-300 border-red-500/30",
-  suspended: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+const STATUS_LABELS: Record<string, string> = {
+  pending: "En attente", active: "Actif", rejected: "Rejeté", suspended: "Suspendu",
 };
-const STATUS_LBL: Record<string, string> = { pending: "En attente", active: "Validé", rejected: "Rejeté", suspended: "Suspendu" };
-const CANTONS = ["all", "VD", "GE", "VS", "FR", "NE", "JU", "BE", "ZH", "BS", "BL", "AG", "SO", "LU", "ZG", "SG", "TI"];
+const CANTONS = ["all","VD","GE","VS","FR","NE","JU","BE","ZH","BS","BL","AG","SO","LU","ZG","SG","TI","TG","GR","UR","SZ","OW","NW","GL","AI","AR","SH","ZG"];
 const PAGE_SIZE = 20;
 
+type SortKey = "name" | "canton" | "status" | "created_at";
+type SortDir = "asc" | "desc";
 type Action = { id: string; name: string; type: "active" | "rejected" | "suspended" } | null;
 
+function StatusBadge({ status }: { status: string }) {
+  const cls = status === "active" ? "active" : status === "pending" ? "pending" : status === "suspended" ? "suspended" : "rejected";
+  return <span className={`adm-badge ${cls}`}>{STATUS_LABELS[status] ?? status}</span>;
+}
+
+function exportCSV(rows: any[]) {
+  const header = ["Prénom", "Nom", "Email", "Canton", "Statut", "Inscrit"];
+  const lines = rows.map((r) => [
+    r.first_name, r.last_name, r.email ?? "", r.canton ?? "",
+    STATUS_LABELS[r.status] ?? r.status,
+    new Date(r.created_at).toLocaleDateString("fr-CH"),
+  ].map((v) => `"${v}"`).join(","));
+  const csv = [header.join(","), ...lines].join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  a.download = `therapeutes_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+}
+
 function Page() {
-  const [status, setStatus] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [canton, setCanton] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [action, setAction] = useState<Action>(null);
   const [reason, setReason] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const fetchList = useServerFn(listTherapistsAdmin);
   const updateStatus = useServerFn(updateTherapistStatus);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-therapists", status, canton, search, page],
-    queryFn: () => fetchList({ data: { status, canton, search, page, pageSize: PAGE_SIZE } }),
+    queryKey: ["admin-therapists", statusFilter, canton, search, page],
+    queryFn: () => fetchList({ data: { status: statusFilter, canton, search, page, pageSize: PAGE_SIZE } }),
   });
 
-  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <ChevronUp size={12} style={{ opacity: 0.3 }} />;
+    return sortDir === "asc" ? <ChevronUp size={12} style={{ color: "#b86ef9" }} /> : <ChevronDown size={12} style={{ color: "#b86ef9" }} />;
+  };
 
   const confirmAction = async () => {
     if (!action) return;
+    if (action.type === "rejected" && reason.trim().length === 0) return;
     try {
       await updateStatus({ data: { id: action.id, status: action.type, reason: reason || undefined } });
       toast.success(`${action.name} : statut mis à jour`);
@@ -60,133 +87,313 @@ function Page() {
     } catch (e: any) {
       toast.error(e.message ?? "Erreur");
     } finally {
-      setAction(null);
-      setReason("");
+      setAction(null); setReason(""); setConfirmText("");
     }
   };
 
+  const filterTabs = [
+    { value: "all",       label: "Tous",        count: total },
+    { value: "pending",   label: "En attente" },
+    { value: "active",    label: "Actifs" },
+    { value: "suspended", label: "Suspendus" },
+    { value: "rejected",  label: "Rejetés" },
+  ];
+
   return (
-    <div className="p-6 md:p-10 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Thérapeutes</h1>
-        <p className="text-muted-foreground mt-1">Validez, rejetez ou suspendez les comptes</p>
-      </div>
+    <div className="adm-root" style={{ minHeight: "100vh", background: "#0f0a1e" }}>
+      <div className="adm-page">
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Tabs value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-          <TabsList>
-            <TabsTrigger value="all">Tous</TabsTrigger>
-            <TabsTrigger value="pending">En attente</TabsTrigger>
-            <TabsTrigger value="active">Validés</TabsTrigger>
-            <TabsTrigger value="suspended">Suspendus</TabsTrigger>
-            <TabsTrigger value="rejected">Rejetés</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <select
-          value={canton}
-          onChange={(e) => { setCanton(e.target.value); setPage(1); }}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        {/* Header */}
+        <motion.div
+          className="adm-page-header"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
         >
-          {CANTONS.map((c) => <option key={c} value={c}>{c === "all" ? "Tous cantons" : c}</option>)}
-        </select>
-        <div className="relative flex-1 max-w-sm ml-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Rechercher nom ou email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-        </div>
-      </div>
-
-      <Card style={{ background: "#160d2b", border: "1px solid rgba(184,110,249,0.20)" }}>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader><TableRow>
-              <TableHead>Thérapeute</TableHead><TableHead>Canton</TableHead>
-              <TableHead>Statut</TableHead><TableHead>Inscrit</TableHead><TableHead className="text-right">Actions</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  <Loader2 className="inline h-4 w-4 animate-spin mr-2" />Chargement…
-                </TableCell></TableRow>
-              )}
-              {!isLoading && (data?.rows ?? []).map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <div className="font-medium">{r.first_name} {r.last_name}</div>
-                    <div className="text-xs text-muted-foreground">{r.email ?? "—"}</div>
-                  </TableCell>
-                  <TableCell>{r.canton ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={STATUS_CLS[r.status] ?? ""}>{STATUS_LBL[r.status] ?? r.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString("fr-CH")}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button size="sm" variant="ghost" onClick={() => window.open(`/fr/therapeute/${r.slug}`, "_blank")}>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Button>
-                    {r.status !== "active" && (
-                      <Button size="sm" onClick={() => setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "active" })}
-                        className="bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30">
-                        <Check className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    {r.status !== "rejected" && (
-                      <Button size="sm" variant="ghost" onClick={() => setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "rejected" })}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    {r.status === "active" && (
-                      <Button size="sm" variant="ghost" onClick={() => setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "suspended" })}>
-                        <Pause className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!isLoading && (data?.rows ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-10">Aucun résultat</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{data?.total ?? 0} thérapeute(s) · page {page}/{totalPages}</p>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Précédent</Button>
-          <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Suivant</Button>
-        </div>
-      </div>
-
-      <AlertDialog open={action !== null} onOpenChange={(o) => { if (!o) { setAction(null); setReason(""); } }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {action?.type === "active" && "Valider ce thérapeute ?"}
-              {action?.type === "rejected" && "Rejeter ce thérapeute ?"}
-              {action?.type === "suspended" && "Suspendre ce thérapeute ?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>{action?.name}</AlertDialogDescription>
-          </AlertDialogHeader>
-          {action?.type === "rejected" && (
-            <Textarea
-              placeholder="Raison du rejet (obligatoire)…"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              maxLength={500}
-            />
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmAction}
-              disabled={action?.type === "rejected" && reason.trim().length === 0}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <h1 className="adm-page-title">Thérapeutes</h1>
+              <p className="adm-page-subtitle">Validation, modération et gestion des comptes</p>
+            </div>
+            <button
+              className="adm-btn adm-btn-secondary"
+              style={{ fontSize: 13 }}
+              onClick={() => exportCSV(rows)}
             >
-              Confirmer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <Download size={14} />
+              Exporter CSV
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Toolbar */}
+        <div className="adm-toolbar">
+          {/* Status tabs */}
+          <div className="adm-tabs">
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.value}
+                className={`adm-tab ${statusFilter === tab.value ? "active" : ""}`}
+                onClick={() => { setStatusFilter(tab.value); setPage(1); }}
+              >
+                {tab.label}
+                {tab.count != null && (
+                  <span style={{
+                    marginLeft: 6, fontSize: 11, fontWeight: 600,
+                    background: "rgba(255,255,255,0.1)", padding: "0 6px",
+                    borderRadius: 999, color: "rgba(255,255,255,0.6)",
+                  }}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Canton select */}
+          <select
+            className="adm-select"
+            value={canton}
+            onChange={(e) => { setCanton(e.target.value); setPage(1); }}
+          >
+            <option value="all">Tous cantons</option>
+            {CANTONS.filter((c) => c !== "all").map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
+          {/* Search */}
+          <div className="adm-search" style={{ marginLeft: "auto" }}>
+            <Search size={15} />
+            <input
+              type="text"
+              placeholder="Nom, email, spécialité…"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <motion.div
+          className="adm-card"
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+        >
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead>
+                <tr>
+                  <th onClick={() => handleSort("name")} className={sortKey === "name" ? "sorted" : ""}>
+                    Thérapeute <span className="sort-icon"><SortIcon col="name" /></span>
+                  </th>
+                  <th onClick={() => handleSort("canton")} className={sortKey === "canton" ? "sorted" : ""}>
+                    Canton <span className="sort-icon"><SortIcon col="canton" /></span>
+                  </th>
+                  <th>Spécialités</th>
+                  <th onClick={() => handleSort("status")} className={sortKey === "status" ? "sorted" : ""}>
+                    Statut <span className="sort-icon"><SortIcon col="status" /></span>
+                  </th>
+                  <th onClick={() => handleSort("created_at")} className={sortKey === "created_at" ? "sorted" : ""}>
+                    Inscrit <span className="sort-icon"><SortIcon col="created_at" /></span>
+                  </th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading
+                  ? Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i}>
+                      {[200, 60, 140, 80, 90, 80].map((w, j) => (
+                        <td key={j} style={{ padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                          <div className="adm-skeleton" style={{ height: 14, width: w }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                  : rows.map((r: any, i: number) => (
+                    <motion.tr
+                      key={r.id}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.04 }}
+                    >
+                      <td>
+                        <div style={{ fontWeight: 600, color: "#fff" }}>{r.first_name} {r.last_name}</div>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{r.email ?? "—"}</div>
+                      </td>
+                      <td>{r.canton ?? "—"}</td>
+                      <td>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {(r.specialties ?? []).slice(0, 2).map((s: string) => (
+                            <span key={s} style={{
+                              fontSize: 11, padding: "2px 8px", borderRadius: 999,
+                              background: "rgba(184,110,249,0.1)", color: "#b86ef9",
+                              border: "1px solid rgba(184,110,249,0.2)",
+                            }}>{s}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td><StatusBadge status={r.status} /></td>
+                      <td style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, whiteSpace: "nowrap" }}>
+                        {new Date(r.created_at).toLocaleDateString("fr-CH", { day: "numeric", month: "short", year: "numeric" })}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                          <button
+                            className="adm-btn adm-btn-icon"
+                            title="Voir profil"
+                            onClick={() => window.open(`/fr/therapeute/${r.slug}`, "_blank")}
+                          >
+                            <ExternalLink size={14} />
+                          </button>
+                          {r.status !== "active" && (
+                            <button
+                              className="adm-btn adm-btn-approve"
+                              onClick={() => setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "active" })}
+                            >
+                              <Check size={13} /> Valider
+                            </button>
+                          )}
+                          {r.status !== "rejected" && r.status !== "active" && (
+                            <button
+                              className="adm-btn adm-btn-reject"
+                              onClick={() => setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "rejected" })}
+                            >
+                              <X size={13} /> Rejeter
+                            </button>
+                          )}
+                          {r.status === "active" && (
+                            <button
+                              className="adm-btn adm-btn-reject"
+                              onClick={() => setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "suspended" })}
+                            >
+                              <Pause size={13} /> Suspendre
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                }
+                {!isLoading && rows.length === 0 && (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="adm-empty">
+                        <div className="adm-empty-icon"><Users size={24} /></div>
+                        <div className="adm-empty-title">Aucun thérapeute trouvé</div>
+                        <div className="adm-empty-sub">Modifiez vos filtres pour afficher d'autres résultats</div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {total > 0 && (
+            <div style={{ padding: "0 16px 16px" }}>
+              <div className="adm-pagination">
+                <span className="adm-pagination-info">
+                  {total} thérapeute{total > 1 ? "s" : ""} · page {page} / {totalPages}
+                </span>
+                <div className="adm-pagination-btns">
+                  <button className="adm-page-btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const n = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
+                    return (
+                      <button
+                        key={n}
+                        className={`adm-page-btn ${page === n ? "current" : ""}`}
+                        onClick={() => setPage(n)}
+                      >
+                        {n}
+                      </button>
+                    );
+                  })}
+                  <button className="adm-page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Modal confirmation */}
+      <AnimatePresence>
+        {action && (
+          <motion.div
+            className="adm-modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="adm-modal"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="adm-modal-title">
+                {action.type === "active"    && "✅ Valider ce thérapeute ?"}
+                {action.type === "rejected"  && "❌ Rejeter ce thérapeute ?"}
+                {action.type === "suspended" && "⏸ Suspendre ce thérapeute ?"}
+              </div>
+              <div className="adm-modal-desc">
+                <strong style={{ color: "#fff" }}>{action.name}</strong>
+                {action.type === "active" && " sera visible sur l'annuaire public."}
+                {action.type === "rejected" && " recevra une notification de rejet."}
+                {action.type === "suspended" && " sera masqué de l'annuaire."}
+              </div>
+
+              {action.type === "rejected" && (
+                <div className="adm-field">
+                  <label className="adm-label">Raison du rejet *</label>
+                  <textarea
+                    className="adm-input adm-textarea"
+                    placeholder="Expliquez la raison du rejet…"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    maxLength={500}
+                  />
+                </div>
+              )}
+
+              {action.type === "suspended" && (
+                <div className="adm-field">
+                  <label className="adm-label">Tapez CONFIRMER pour valider</label>
+                  <input
+                    className="adm-modal-input"
+                    placeholder="CONFIRMER"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <button
+                  className="adm-btn adm-btn-secondary"
+                  onClick={() => { setAction(null); setReason(""); setConfirmText(""); }}
+                >
+                  Annuler
+                </button>
+                <button
+                  className={`adm-btn ${action.type === "active" ? "adm-btn-approve" : "adm-btn-danger"}`}
+                  onClick={confirmAction}
+                  disabled={
+                    (action.type === "rejected" && reason.trim().length === 0) ||
+                    (action.type === "suspended" && confirmText !== "CONFIRMER")
+                  }
+                  style={{ opacity: (
+                    (action.type === "rejected" && reason.trim().length === 0) ||
+                    (action.type === "suspended" && confirmText !== "CONFIRMER")
+                  ) ? 0.4 : 1 }}
+                >
+                  Confirmer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
