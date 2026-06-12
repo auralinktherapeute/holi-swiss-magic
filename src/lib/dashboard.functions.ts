@@ -63,11 +63,13 @@ export const listMyReservations = createServerFn({ method: "GET" })
 export const getMyPendingReservationCount = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin, therapistId } = await getOwnedTherapist(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: t } = await supabaseAdmin.from("therapists").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!t) return { count: 0 };
     const { count, error } = await supabaseAdmin
       .from("appointments")
       .select("id", { count: "exact", head: true })
-      .eq("therapist_id", therapistId)
+      .eq("therapist_id", t.id)
       .eq("status", "pending");
     if (error) throw new Error("Impossible de charger les réservations.");
     return { count: count ?? 0 };
