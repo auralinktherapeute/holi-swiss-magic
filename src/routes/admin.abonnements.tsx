@@ -7,10 +7,10 @@ import "@/styles/admin-design-system.css";
 export const Route = createFileRoute("/admin/abonnements")({ component: Page });
 
 const SUBS = [
-  { id: "sub_001", customer: "Claire Dupont",  plan: "Pro",     amount: "29 CHF", status: "active",   next: "1 juil. 2026" },
-  { id: "sub_002", customer: "Anna Bianchi",   plan: "Premium", amount: "59 CHF", status: "active",   next: "12 juin 2026" },
-  { id: "sub_003", customer: "Marc Reber",     plan: "Pro",     amount: "29 CHF", status: "past_due", next: "—" },
-  { id: "sub_004", customer: "Sofia Rossi",    plan: "Pro",     amount: "29 CHF", status: "cancelled",next: "—" },
+  { id: "sub_001", customer: "Claire Dupont",  plan: "Essentiel", amount: "49 CHF", status: "active",   next: "1 juil. 2026" },
+  { id: "sub_002", customer: "Anna Bianchi",   plan: "Elite Pro", amount: "99 CHF", status: "active",   next: "12 juin 2026" },
+  { id: "sub_003", customer: "Marc Reber",     plan: "Essentiel", amount: "49 CHF", status: "past_due", next: "—" },
+  { id: "sub_004", customer: "Sofia Rossi",    plan: "Essentiel", amount: "49 CHF", status: "cancelled",next: "—" },
 ];
 
 const PLAN_DATA = [
