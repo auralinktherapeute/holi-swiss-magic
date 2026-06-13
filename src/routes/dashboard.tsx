@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
+import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -42,6 +43,7 @@ function DashboardLayout() {
       <main className="flex-1 overflow-x-hidden">
         <Outlet />
       </main>
+      <InactivityLogout redirectTo="/fr/connexion" />
     </div>
   );
 }
