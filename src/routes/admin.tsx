@@ -5,6 +5,7 @@ import { AdminNav } from "@/components/layout/AdminNav";
 import { checkIsAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
+import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin")({
@@ -48,6 +49,7 @@ function AdminLayout() {
       <main style={{ flex: 1, overflowX: "hidden" }}>
         <Outlet />
       </main>
+      <InactivityLogout redirectTo="/fr/connexion" />
     </div>
   );
 }
