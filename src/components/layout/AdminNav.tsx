@@ -27,6 +27,14 @@ export function AdminNav() {
     navigate({ to: "/$lang", params: { lang: "fr" } });
   };
 
+  const returnToSite = () => {
+    setMobileOpen(false);
+    try {
+      window.localStorage.setItem("holiswiss-last-auth-space", "admin");
+      window.localStorage.setItem("holiswiss-last-activity", String(Date.now()));
+    } catch {}
+  };
+
   const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +112,7 @@ export function AdminNav() {
         <Link
           to="/$lang"
           params={{ lang: "fr" }}
-          onClick={() => setMobileOpen(false)}
+          onClick={returnToSite}
           style={{
             display: "flex",
             alignItems: "center",
