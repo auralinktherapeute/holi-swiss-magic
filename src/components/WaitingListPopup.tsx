@@ -7,7 +7,7 @@ import { getWaitingListCount } from "@/lib/public.functions";
 
 const SESSION_KEY = "holiswiss-waitlist-shown";
 const TOTAL_SPOTS = 70;
-const DELAY_MS = 5000;
+const DELAY_MS = 12000;
 
 export function WaitingListPopup() {
   const { t } = useTranslation();
