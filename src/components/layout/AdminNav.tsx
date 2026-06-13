@@ -32,7 +32,9 @@ export function AdminNav() {
     try {
       window.localStorage.setItem("holiswiss-last-auth-space", "admin");
       window.localStorage.setItem("holiswiss-last-activity", String(Date.now()));
-    } catch {}
+    } catch {
+      // La navigation reste prioritaire si le stockage local est indisponible.
+    }
   };
 
   const [waitlistCount, setWaitlistCount] = useState<number | null>(null);

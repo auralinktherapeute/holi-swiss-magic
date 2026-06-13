@@ -16,7 +16,7 @@ type Props = {
 
 const LAST_AUTH_SPACE_KEY = "holiswiss-last-auth-space";
 
-function readLastAuthSpace() {
+function readLastAuthSpace(): "admin" | "dashboard" {
   if (typeof window === "undefined") return "dashboard";
   return window.localStorage.getItem(LAST_AUTH_SPACE_KEY) === "admin" ? "admin" : "dashboard";
 }
@@ -26,14 +26,27 @@ function readLastAuthSpace() {
  * son espace (admin ou thérapeute). Sinon, lien vers la connexion.
  * Évite l'illusion de déconnexion quand on revient sur le site public.
  */
-export function AccountCta({ lang, loggedOutLabel, className, style, onMouseEnter, onMouseLeave, onClick }: Props) {
+export function AccountCta({
+  lang,
+  loggedOutLabel,
+  className,
+  style,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+}: Props) {
   const { user, loading } = useAuth();
   const check = useServerFn(checkIsAdmin);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [lastAuthSpace, setLastAuthSpace] = useState<"admin" | "dashboard">(() => readLastAuthSpace());
+  const [lastAuthSpace, setLastAuthSpace] = useState<"admin" | "dashboard">(() =>
+    readLastAuthSpace(),
+  );
 
   useEffect(() => {
-    if (!user) { setIsAdmin(null); return; }
+    if (!user) {
+      setIsAdmin(null);
+      return;
+    }
     let alive = true;
     check()
       .then((r) => {
@@ -41,10 +54,16 @@ export function AccountCta({ lang, loggedOutLabel, className, style, onMouseEnte
         const nextSpace = r.isAdmin ? "admin" : "dashboard";
         setIsAdmin(!!r.isAdmin);
         setLastAuthSpace(nextSpace);
-        try { window.localStorage.setItem(LAST_AUTH_SPACE_KEY, nextSpace); } catch {}
+        try {
+          window.localStorage.setItem(LAST_AUTH_SPACE_KEY, nextSpace);
+        } catch {
+          // Le CTA reste fonctionnel même si le stockage local est indisponible.
+        }
       })
       .catch(() => alive && setIsAdmin(null));
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [user, check]);
 
   if (loading) {
