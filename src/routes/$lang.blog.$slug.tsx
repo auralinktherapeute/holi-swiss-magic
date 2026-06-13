@@ -4,7 +4,54 @@ import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang } from "@/l
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export const Route = createFileRoute("/$lang/blog/$slug")({ component: Page });
+const SITE = "https://holiswiss.ch";
+
+export const Route = createFileRoute("/$lang/blog/$slug")({
+  component: Page,
+  loader: async ({ params }) => {
+    try {
+      const { article } = await getArticleBySlug({ data: { slug: params.slug } });
+      return { article };
+    } catch {
+      return { article: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const article = loaderData?.article as Record<string, unknown> | null | undefined;
+    const url = `${SITE}/${params.lang}/blog/${params.slug}`;
+    if (!article) {
+      return {
+        meta: [
+          { title: "Article — HoliSwiss" },
+          { name: "description", content: "Conseils, dossiers et actualités sur les thérapies holistiques en Suisse." },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const lang = (params.lang as Lang) ?? "fr";
+    const rawTitle = titleForLang(article, lang) || "Article";
+    const rawExcerpt = excerptForLang(article, lang);
+    const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
+    const description = ((rawExcerpt || fallback) || "Lire l'article sur HoliSwiss.").slice(0, 160);
+    const title = `${rawTitle} | HoliSwiss`.slice(0, 60);
+    const image = (article["cover_image_url"] as string | undefined) || undefined;
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: url },
+      { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+    ];
+    if (image) {
+      meta.push({ property: "og:image", content: image });
+      meta.push({ name: "twitter:image", content: image });
+    }
+    return { meta, links: [{ rel: "canonical", href: url }] };
+  },
+});
 
 type Lang = "fr" | "de" | "it" | "en";
 

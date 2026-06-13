@@ -11,6 +11,20 @@ export const getWaitingListCount = createServerFn({ method: "GET" }).handler(asy
   return { count: count ?? 0 };
 });
 
+export const getTherapistBySlug = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ slug: z.string().min(1).max(160) }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: therapist, error } = await supabaseAdmin
+      .from("therapists")
+      .select("first_name,last_name,title,city,canton,bio,specialties,photo_url,cover_image_url")
+      .eq("slug", data.slug)
+      .eq("status", "active")
+      .maybeSingle();
+    if (error) throw new Error("Impossible de charger le thérapeute.");
+    return { therapist };
+  });
+
 export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
