@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { getWaitingListCount } from "@/lib/public.functions";
+import { sendWaitlistEmails } from "@/lib/waitlist-emails.functions";
 
 const SESSION_KEY = "holiswiss-waitlist-shown";
 const TOTAL_SPOTS = 70;
@@ -12,6 +13,7 @@ const DELAY_MS = 12000;
 export function WaitingListPopup() {
   const { t } = useTranslation();
   const fetchWaitingListCount = useServerFn(getWaitingListCount);
+  const sendEmails = useServerFn(sendWaitlistEmails);
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(0);
   const [email, setEmail] = useState("");
@@ -74,9 +76,11 @@ export function WaitingListPopup() {
       return;
     }
     setLoading(true);
-    const { error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from("waiting_list")
-      .insert({ email: clean, source: "popup" } as never);
+      .insert({ email: clean, source: "popup" } as never)
+      .select("id")
+      .maybeSingle();
     setLoading(false);
     if (insertError) {
       // unique violation
@@ -89,6 +93,14 @@ export function WaitingListPopup() {
     }
     setSuccess(true);
     setCount((c) => c + 1);
+    // Fire-and-forget email notifications (don't block UI on failure)
+    void sendEmails({
+      data: {
+        email: clean,
+        id: (inserted as { id?: string } | null)?.id,
+        source: "popup",
+      },
+    }).catch((err) => console.error("[waitlist] email send failed", err));
   }
 
   if (!open) return null;
