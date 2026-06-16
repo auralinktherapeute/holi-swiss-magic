@@ -507,7 +507,24 @@
         "canton": "Canton required",
         "terms": "Please accept the privacy policy to complete your registration."
       },
-      "privacy_policy_path": "/en/privacy-policy"
+      "privacy_policy_path": "/en/privacy-policy",
+      "specialties": {
+        "naturopathy": "Naturopathy",
+        "acupuncture": "Acupuncture",
+        "osteopathy": "Osteopathy",
+        "kinesiology": "Kinesiology",
+        "hypnotherapy": "Hypnotherapy",
+        "reflexology": "Reflexology",
+        "therapeutic_massage": "Therapeutic massage",
+        "reiki": "Reiki",
+        "sophrology": "Sophrology",
+        "holistic_coaching": "Holistic coaching",
+        "nutrition": "Nutrition",
+        "ayurveda": "Ayurveda",
+        "chinese_medicine": "Chinese medicine",
+        "aromatherapy": "Aromatherapy",
+        "other": "Other"
+      }
     }
   }
 }

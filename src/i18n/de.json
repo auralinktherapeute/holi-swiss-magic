@@ -507,7 +507,24 @@
         "canton": "Kanton erforderlich",
         "terms": "Bitte akzeptieren Sie die Datenschutzerklärung, um Ihre Anmeldung abzuschliessen."
       },
-      "privacy_policy_path": "/de/datenschutz"
+      "privacy_policy_path": "/de/datenschutz",
+      "specialties": {
+        "naturopathy": "Naturheilkunde",
+        "acupuncture": "Akupunktur",
+        "osteopathy": "Osteopathie",
+        "kinesiology": "Kinesiologie",
+        "hypnotherapy": "Hypnotherapie",
+        "reflexology": "Reflexzonenmassage",
+        "therapeutic_massage": "Therapeutische Massage",
+        "reiki": "Reiki",
+        "sophrology": "Sophrologie",
+        "holistic_coaching": "Ganzheitliches Coaching",
+        "nutrition": "Ernährungsberatung",
+        "ayurveda": "Ayurveda",
+        "chinese_medicine": "Chinesische Medizin",
+        "aromatherapy": "Aromatherapie",
+        "other": "Andere"
+      }
     }
   }
 }

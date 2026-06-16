@@ -507,7 +507,24 @@
         "canton": "Cantone richiesto",
         "terms": "Accetta l'informativa sulla privacy per completare l'iscrizione."
       },
-      "privacy_policy_path": "/it/privacy"
+      "privacy_policy_path": "/it/privacy",
+      "specialties": {
+        "naturopathy": "Naturopatia",
+        "acupuncture": "Agopuntura",
+        "osteopathy": "Osteopatia",
+        "kinesiology": "Kinesiologia",
+        "hypnotherapy": "Ipnoterapia",
+        "reflexology": "Riflessologia",
+        "therapeutic_massage": "Massaggio terapeutico",
+        "reiki": "Reiki",
+        "sophrology": "Sofrologia",
+        "holistic_coaching": "Coaching olistico",
+        "nutrition": "Nutrizione",
+        "ayurveda": "Ayurveda",
+        "chinese_medicine": "Medicina cinese",
+        "aromatherapy": "Aromaterapia",
+        "other": "Altro"
+      }
     }
   }
 }
