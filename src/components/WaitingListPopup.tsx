@@ -140,7 +140,7 @@ export function WaitingListPopup() {
       const errs: Partial<Record<keyof FormState, string>> = {};
       parsed.error.issues.forEach((i) => {
         const k = i.path[0] as keyof FormState;
-        if (!errs[k]) errs[k] = i.message;
+        if (!errs[k]) errs[k] = tp(`errors_form.${k}`) || i.message;
       });
       setErrors(errs);
       return;
@@ -160,7 +160,8 @@ export function WaitingListPopup() {
       const errs: Partial<Record<keyof FormState, string>> = {};
       parsed.error.issues.forEach((i) => {
         const k = i.path[0] as keyof FormState;
-        if (!errs[k]) errs[k] = i.message;
+        const key = k === "accepted_terms" ? "terms" : k;
+        if (!errs[k]) errs[k] = tp(`errors_form.${key}`) || i.message;
       });
       setErrors(errs);
       return;
