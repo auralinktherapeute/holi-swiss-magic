@@ -378,7 +378,10 @@ export function WaitingListPopup() {
                   }}
                 >
                   <div>👤&nbsp; <strong>{form.first_name} {form.last_name}</strong></div>
-                  <div>🏷️&nbsp; {form.specialty}</div>
+                  <div>🏷️&nbsp; {(() => {
+                    const s = SPECIALTIES.find((x) => x.value === form.specialty);
+                    return s ? tp(`specialties.${s.key}`) : form.specialty;
+                  })()}</div>
                   <div>📍&nbsp; {tp("success.canton", { canton: form.canton })}</div>
                 </div>
                 <button
