@@ -49,7 +49,37 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       meta.push({ property: "og:image", content: image });
       meta.push({ name: "twitter:image", content: image });
     }
-    return { meta, links: [{ rel: "canonical", href: url }] };
+    const publishedAt = (article["published_at"] as string | undefined) ?? undefined;
+    const updatedAt = (article["updated_at"] as string | undefined) ?? publishedAt;
+    const authorName = (article["author_name"] as string | undefined) ?? "Holiswiss";
+    const ldArticle: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: rawTitle,
+      description,
+      mainEntityOfPage: url,
+      url,
+      inLanguage: lang,
+      author: { "@type": "Organization", name: authorName },
+      publisher: {
+        "@type": "Organization",
+        name: "Holiswiss",
+        logo: { "@type": "ImageObject", url: "https://holiswiss.ch/logo.png" },
+      },
+    };
+    if (image) ldArticle.image = image;
+    if (publishedAt) ldArticle.datePublished = publishedAt;
+    if (updatedAt) ldArticle.dateModified = updatedAt;
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(ldArticle),
+        },
+      ],
+    };
   },
 });
 
