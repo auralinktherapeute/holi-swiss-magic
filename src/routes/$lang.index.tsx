@@ -8,6 +8,7 @@ import {
 import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { TherapistCard } from "@/components/holiswiss/TherapistCard";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
+import { SwissCantonsMap } from "@/components/holiswiss/SwissCantonsMap";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
@@ -118,7 +119,8 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Stats bar removed — will be replaced with concrete content */}
+      {/* Interactive Swiss cantons map */}
+      <SwissCantonsMap />
     </>
   );
 }
