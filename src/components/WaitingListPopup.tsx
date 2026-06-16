@@ -12,11 +12,22 @@ const SESSION_KEY = "holiswiss-waitlist-shown";
 const TOTAL_SPOTS = 70;
 const DELAY_MS = 12000;
 
-const SPECIALTIES = [
-  "Naturopathie", "Acupuncture", "Ostéopathie", "Kinésiologie",
-  "Hypnothérapie", "Réflexologie", "Massage thérapeutique", "Reiki",
-  "Sophrologie", "Coaching holistique", "Nutrition", "Ayurveda",
-  "Médecine chinoise", "Aromathérapie", "Autre",
+const SPECIALTIES: Array<{ value: string; key: string }> = [
+  { value: "Naturopathie", key: "naturopathy" },
+  { value: "Acupuncture", key: "acupuncture" },
+  { value: "Ostéopathie", key: "osteopathy" },
+  { value: "Kinésiologie", key: "kinesiology" },
+  { value: "Hypnothérapie", key: "hypnotherapy" },
+  { value: "Réflexologie", key: "reflexology" },
+  { value: "Massage thérapeutique", key: "therapeutic_massage" },
+  { value: "Reiki", key: "reiki" },
+  { value: "Sophrologie", key: "sophrology" },
+  { value: "Coaching holistique", key: "holistic_coaching" },
+  { value: "Nutrition", key: "nutrition" },
+  { value: "Ayurveda", key: "ayurveda" },
+  { value: "Médecine chinoise", key: "chinese_medicine" },
+  { value: "Aromathérapie", key: "aromatherapy" },
+  { value: "Autre", key: "other" },
 ];
 
 const CANTONS = [
@@ -171,7 +182,7 @@ export function WaitingListPopup() {
     }
     setLoading(true);
     const cleanEmail = form.email.trim().toLowerCase();
-    const { data: inserted, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from("waiting_list")
       .insert({
         email: cleanEmail,
@@ -183,9 +194,7 @@ export function WaitingListPopup() {
         canton: form.canton,
         message: form.message.trim() || null,
         accepted_terms: true,
-      } as never)
-      .select("id")
-      .maybeSingle();
+      } as never);
     setLoading(false);
     if (insertError) {
       if (insertError.code === "23505" || /duplicate|unique/i.test(insertError.message)) {
@@ -200,7 +209,6 @@ export function WaitingListPopup() {
     void sendEmails({
       data: {
         email: cleanEmail,
-        id: (inserted as { id?: string } | null)?.id,
         source: "popup",
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
