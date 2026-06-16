@@ -23,6 +23,12 @@ type Entry = {
   created_at: string;
   source: string | null;
   status: Status;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  specialty: string | null;
+  canton: string | null;
+  message: string | null;
 };
 
 const TOTAL_SPOTS = 70;
@@ -60,6 +66,8 @@ function WaitingListAdminPage() {
   const [page, setPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
+  const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
+  const [filterCanton, setFilterCanton] = useState<string>("all");
   const knownIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -117,9 +125,23 @@ function WaitingListAdminPage() {
     return { today: t, week: w };
   }, [rows]);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const filteredRows = useMemo(() => rows.filter((r) =>
+    (filterSpecialty === "all" || r.specialty === filterSpecialty) &&
+    (filterCanton === "all" || r.canton === filterCanton)
+  ), [rows, filterSpecialty, filterCanton]);
+
+  const specialtyOptions = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.specialty).filter(Boolean) as string[])).sort(),
+    [rows]
+  );
+  const cantonOptions = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.canton).filter(Boolean) as string[])).sort(),
+    [rows]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pageRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   async function updateStatus(id: string, status: Status) {
     try {
@@ -143,9 +165,14 @@ function WaitingListAdminPage() {
   }
 
   function exportCsv() {
-    const header = "email,date,statut\n";
-    const body = rows
-      .map((r) => `"${r.email.replace(/"/g, '""')}",${r.created_at},${r.status}`)
+    const esc = (v: string | null | undefined) => `"${String(v ?? "").replace(/"/g, '""').replace(/\n/g, " ")}"`;
+    const header = "prenom,nom,email,telephone,specialite,canton,message,source,statut,date\n";
+    const body = filteredRows
+      .map((r) => [
+        esc(r.first_name), esc(r.last_name), esc(r.email), esc(r.phone),
+        esc(r.specialty), esc(r.canton), esc(r.message),
+        esc(r.source), esc(r.status), esc(r.created_at),
+      ].join(","))
       .join("\n");
     const blob = new Blob([header + body], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -157,10 +184,10 @@ function WaitingListAdminPage() {
   }
 
   async function copyEmails() {
-    const list = rows.map((r) => r.email).join(", ");
+    const list = filteredRows.map((r) => r.email).join(", ");
     try {
       await navigator.clipboard.writeText(list);
-      toast.success(`${rows.length} emails copiés !`);
+      toast.success(`${filteredRows.length} emails copiés !`);
     } catch {
       toast.error("Impossible de copier");
     }
