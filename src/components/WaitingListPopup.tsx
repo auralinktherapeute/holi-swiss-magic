@@ -344,15 +344,16 @@ export function WaitingListPopup() {
                   <path d="M14 27 l8 8 l16 -18" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                 </motion.svg>
                 <h3 className="text-white font-bold" style={{ fontSize: 18 }}>
-                  Bienvenue chez Holiswiss ! 🎉
+                  {tp("success.title")}
                 </h3>
-                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, marginTop: 8, lineHeight: 1.55 }}>
-                  Votre inscription a bien été enregistrée, <strong style={{ color: "#fff" }}>{form.first_name}</strong> !<br />
-                  Un email de confirmation vous a été envoyé à <strong style={{ color: "#fff" }}>{form.email}</strong>.
-                </p>
-                <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, marginTop: 10 }}>
-                  💡 Pensez à vérifier votre dossier <strong style={{ color: "rgba(255,255,255,0.8)" }}>Spams</strong>.
-                </p>
+                <p
+                  style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, marginTop: 8, lineHeight: 1.55 }}
+                  dangerouslySetInnerHTML={{ __html: tp("success.body_html", { name: escapeHtml(form.first_name), email: escapeHtml(form.email) }) }}
+                />
+                <p
+                  style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, marginTop: 10 }}
+                  dangerouslySetInnerHTML={{ __html: tp("success.spam") }}
+                />
                 <div
                   className="mt-5 text-left"
                   style={{
@@ -367,7 +368,7 @@ export function WaitingListPopup() {
                 >
                   <div>👤&nbsp; <strong>{form.first_name} {form.last_name}</strong></div>
                   <div>🏷️&nbsp; {form.specialty}</div>
-                  <div>📍&nbsp; Canton {form.canton}</div>
+                  <div>📍&nbsp; {tp("success.canton", { canton: form.canton })}</div>
                 </div>
                 <button
                   type="button"
@@ -381,7 +382,7 @@ export function WaitingListPopup() {
                   onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
-                  Fermer
+                  {tp("actions.close")}
                 </button>
               </motion.div>
             ) : isFull ? (
