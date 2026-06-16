@@ -247,26 +247,69 @@ function WaitingListAdminPage() {
 
       {/* Table */}
       <div className="rounded-xl overflow-hidden" style={{ background: "#0f0a1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <label className="flex items-center gap-2 text-xs text-white/60">
+            Spécialité :
+            <select
+              value={filterSpecialty}
+              onChange={(e) => { setFilterSpecialty(e.target.value); setPage(1); }}
+              className="rounded-md px-2 py-1 text-white text-xs outline-none"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <option value="all" style={{ background: "#1a1035" }}>Toutes</option>
+              {specialtyOptions.map((o) => (
+                <option key={o} value={o} style={{ background: "#1a1035" }}>{o}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-xs text-white/60">
+            Canton :
+            <select
+              value={filterCanton}
+              onChange={(e) => { setFilterCanton(e.target.value); setPage(1); }}
+              className="rounded-md px-2 py-1 text-white text-xs outline-none"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <option value="all" style={{ background: "#1a1035" }}>Tous</option>
+              {cantonOptions.map((o) => (
+                <option key={o} value={o} style={{ background: "#1a1035" }}>{o}</option>
+              ))}
+            </select>
+          </label>
+          {(filterSpecialty !== "all" || filterCanton !== "all") && (
+            <button
+              onClick={() => { setFilterSpecialty("all"); setFilterCanton("all"); }}
+              className="text-xs text-white/60 hover:text-white underline"
+            >
+              Réinitialiser ({filteredRows.length})
+            </button>
+          )}
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: "rgba(255,255,255,0.03)" }} className="text-white/60 text-left">
                 <th className="px-4 py-3 font-medium">#</th>
+                <th className="px-4 py-3 font-medium">Nom</th>
                 <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Date inscription</th>
-                <th className="px-4 py-3 font-medium">Source</th>
+                <th className="px-4 py-3 font-medium">Téléphone</th>
+                <th className="px-4 py-3 font-medium">Spécialité</th>
+                <th className="px-4 py-3 font-medium">Canton</th>
+                <th className="px-4 py-3 font-medium">Inscrit le</th>
                 <th className="px-4 py-3 font-medium">Statut</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-white/50">Chargement…</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-white/50">Chargement…</td></tr>
               ) : pageRows.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-white/50">Aucun inscrit pour le moment.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-white/50">Aucun inscrit pour le moment.</td></tr>
               ) : pageRows.map((r, i) => {
                 const meta = STATUS_META[r.status] ?? STATUS_META.pending;
                 const flashing = flashIds.has(r.id);
+                const fullName = [r.first_name, r.last_name].filter(Boolean).join(" ") || "—";
                 return (
                   <tr
                     key={r.id}
@@ -278,9 +321,12 @@ function WaitingListAdminPage() {
                     }}
                   >
                     <td className="px-4 py-3 text-white/40">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
+                    <td className="px-4 py-3 text-white whitespace-nowrap">{fullName}</td>
                     <td className="px-4 py-3 text-white">{r.email}</td>
-                    <td className="px-4 py-3 text-white/70">{fmtDate(r.created_at)}</td>
-                    <td className="px-4 py-3 text-white/60">{r.source ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/70 whitespace-nowrap">{r.phone ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/80">{r.specialty ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/70">{r.canton ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/70 whitespace-nowrap">{fmtDate(r.created_at)}</td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
                             style={{ background: meta.bg, color: meta.color }}>
