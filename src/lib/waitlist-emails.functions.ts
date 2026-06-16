@@ -78,8 +78,30 @@ function therapistTemplate(
 </body></html>`;
 }
 
-function adminTemplate(email: string, id: string, source: string, dateStr: string, position: number, total: number): string {
+function adminTemplate(
+  email: string,
+  id: string,
+  source: string,
+  dateStr: string,
+  position: number,
+  total: number,
+  extra?: {
+    first_name?: string; last_name?: string; phone?: string;
+    specialty?: string; canton?: string; message?: string;
+  },
+): string {
   const safeEmail = escapeHtml(email);
+  const fullName = extra?.first_name || extra?.last_name
+    ? escapeHtml(`${extra.first_name ?? ""} ${extra.last_name ?? ""}`.trim())
+    : "";
+  const extraRows = `
+              ${fullName ? `<div>👤&nbsp; <strong>Nom :</strong> ${fullName}</div>` : ""}
+              ${extra?.phone ? `<div>📱&nbsp; <strong>Téléphone :</strong> <a href="tel:${escapeHtml(extra.phone)}" style="color:#5cc8fa;text-decoration:none;">${escapeHtml(extra.phone)}</a></div>` : ""}
+              ${extra?.specialty ? `<div>🏷️&nbsp; <strong>Spécialité :</strong> ${escapeHtml(extra.specialty)}</div>` : ""}
+              ${extra?.canton ? `<div>📍&nbsp; <strong>Canton :</strong> ${escapeHtml(extra.canton)}</div>` : ""}`;
+  const messageBlock = extra?.message
+    ? `<div style="margin-top:16px;background:rgba(92,200,250,0.08);border-left:3px solid #5cc8fa;border-radius:6px;padding:12px 14px;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,0.85);"><strong style="color:#5cc8fa;">Message :</strong><br>${escapeHtml(extra.message).replace(/\n/g, "<br>")}</div>`
+    : "";
   const pct = Math.min(100, Math.round((total / 70) * 100));
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nouvel inscrit liste d'attente</title></head>
@@ -97,12 +119,13 @@ function adminTemplate(email: string, id: string, source: string, dateStr: strin
           </p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1a1035;border:1px solid rgba(184,110,249,0.3);border-radius:12px;">
             <tr><td style="padding:18px 20px;font-size:14px;line-height:1.9;color:rgba(255,255,255,0.9);">
-              <div>📧&nbsp; <strong>Email :</strong> <a href="mailto:${safeEmail}" style="color:#5cc8fa;text-decoration:none;">${safeEmail}</a></div>
+              <div>📧&nbsp; <strong>Email :</strong> <a href="mailto:${safeEmail}" style="color:#5cc8fa;text-decoration:none;">${safeEmail}</a></div>${extraRows}
               <div>🏷️&nbsp; <strong>Source :</strong> ${escapeHtml(source)}</div>
               <div>📅&nbsp; <strong>Inscrit le :</strong> ${escapeHtml(dateStr)}</div>
               <div>🆔&nbsp; <strong>ID :</strong> <span style="font-family:monospace;font-size:12px;color:rgba(255,255,255,0.7);">${escapeHtml(id)}</span></div>
               <div>📊&nbsp; <strong>Position :</strong> #${position}</div>
             </td></tr>
+            ${messageBlock ? `<tr><td style="padding:0 20px 18px;">${messageBlock}</td></tr>` : ""}
           </table>
           <div style="margin:24px 0 8px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;color:rgba(255,255,255,0.7);">
@@ -168,7 +191,11 @@ async function sendOne(payload: {
 }
 
 export const sendWaitlistEmails = createServerFn({ method: "POST" })
-  .inputValidator((data: { email: string; id?: string; source?: string }) => {
+  .inputValidator((data: {
+    email: string; id?: string; source?: string;
+    first_name?: string; last_name?: string; phone?: string;
+    specialty?: string; canton?: string; message?: string;
+  }) => {
     if (!data || typeof data.email !== "string") {
       throw new Error("invalid_input");
     }
@@ -176,10 +203,18 @@ export const sendWaitlistEmails = createServerFn({ method: "POST" })
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
       throw new Error("invalid_email");
     }
+    const s = (v: unknown, max: number) =>
+      typeof v === "string" ? v.slice(0, max) : undefined;
     return {
       email,
       id: typeof data.id === "string" ? data.id : "",
       source: typeof data.source === "string" ? data.source : "popup",
+      first_name: s(data.first_name, 100),
+      last_name: s(data.last_name, 100),
+      phone: s(data.phone, 40),
+      specialty: s(data.specialty, 100),
+      canton: s(data.canton, 10),
+      message: s(data.message, 500),
     };
   })
   .handler(async ({ data }) => {
@@ -223,14 +258,21 @@ export const sendWaitlistEmails = createServerFn({ method: "POST" })
       from: FROM_THERAPIST,
       to: data.email,
       subject: "✨ Votre inscription Holiswiss.ch est confirmée",
-      html: therapistTemplate(data.email, dateStr),
+      html: therapistTemplate(data.email, dateStr, data.first_name, data.specialty, data.canton),
     });
 
     const admin = await sendOne({
       from: FROM_ADMIN,
       to: ADMIN_EMAIL,
-      subject: `🔔 Nouvel inscrit liste d'attente — ${data.email}`,
-      html: adminTemplate(data.email, recordId || "—", data.source, dateStr, position, totalCount),
+      subject: `🔔 Nouvel inscrit — ${data.first_name ? data.first_name + " " : ""}${data.email}`,
+      html: adminTemplate(data.email, recordId || "—", data.source, dateStr, position, totalCount, {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone,
+        specialty: data.specialty,
+        canton: data.canton,
+        message: data.message,
+      }),
     });
 
     return {
