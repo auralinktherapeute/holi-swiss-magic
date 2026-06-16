@@ -4,8 +4,8 @@ const LOGO_URL =
   "https://holiswiss.ch/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png";
 const SITE_URL = "https://holiswiss.ch";
 const ADMIN_EMAIL = "gerald.henry@me.com";
-const FROM_THERAPIST = "Holiswiss <noreply@holiswiss.ch>";
-const FROM_ADMIN = "Holiswiss Admin <noreply@holiswiss.ch>";
+const FROM_THERAPIST = "Holiswiss <noreply@send.holiswiss.ch>";
+const FROM_ADMIN = "Holiswiss Admin <noreply@send.holiswiss.ch>";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
 function escapeHtml(s: string): string {
@@ -44,7 +44,7 @@ function therapistTemplate(email: string, dateStr: string): string {
           </table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:6px;margin:20px 0;">
             <tr><td style="padding:14px 16px;font-size:13.5px;line-height:1.6;color:#78350f;">
-              <strong>💡 Astuce :</strong> Si vous ne trouvez pas cet email, pensez à vérifier votre dossier <strong>Spams</strong> ou <strong>Courrier indésirable</strong>. Ajoutez <strong>noreply@holiswiss.ch</strong> à vos contacts pour ne rien manquer.
+              <strong>💡 Astuce :</strong> Si vous ne trouvez pas cet email, pensez à vérifier votre dossier <strong>Spams</strong> ou <strong>Courrier indésirable</strong>. Ajoutez <strong>noreply@send.holiswiss.ch</strong> à vos contacts pour ne rien manquer.
             </td></tr>
           </table>
           <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:28px auto 8px;">
