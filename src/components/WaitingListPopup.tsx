@@ -64,7 +64,7 @@ const initialForm: FormState = {
 };
 
 export function WaitingListPopup() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const tp = (k: string, v?: Record<string, unknown>) => t(`waitlist.popup.${k}`, v ?? {}) as string;
   const fetchWaitingListCount = useServerFn(getWaitingListCount);
   const sendEmails = useServerFn(sendWaitlistEmails);
