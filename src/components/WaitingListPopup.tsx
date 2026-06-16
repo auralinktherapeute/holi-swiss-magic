@@ -451,7 +451,7 @@ export function WaitingListPopup() {
                       className="space-y-3"
                     >
                       <Field
-                        label="Votre message (optionnel)"
+                        label={tp("fields.message")}
                         error={errors.message}
                         hint={`${form.message.length} / 500`}
                       >
@@ -460,7 +460,7 @@ export function WaitingListPopup() {
                           maxLength={500}
                           value={form.message}
                           onChange={(e) => update("message", e.target.value)}
-                          placeholder="Décrivez brièvement votre approche thérapeutique, votre expérience..."
+                          placeholder={tp("fields.message_ph")}
                           className="w-full text-white outline-none transition-colors resize-none"
                           style={{
                             background: "rgba(255,255,255,0.05)",
@@ -487,13 +487,13 @@ export function WaitingListPopup() {
                           onChange={(v) => update("accepted_terms", v)}
                         />
                         <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 1.55 }}>
-                          J'ai pris connaissance de la{" "}
-                          <a href="/fr/politique-confidentialite" target="_blank" rel="noreferrer"
+                          {tp("consent.text")}{" "}
+                          <a href={tp("privacy_policy_path")} target="_blank" rel="noreferrer"
                             style={{ color: "#5cc8fa", textDecoration: "underline" }}
                             onClick={(e) => e.stopPropagation()}>
-                            politique de confidentialité
+                            {tp("consent.link")}
                           </a>{" "}
-                          de Holiswiss.ch et j'accepte que mes données soient traitées conformément à la loi suisse sur la protection des données (LPD / nLPD). *
+                          {tp("consent.after")}
                         </span>
                       </label>
                       {errors.accepted_terms && (
@@ -502,8 +502,7 @@ export function WaitingListPopup() {
                         </p>
                       )}
                       <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5 }}>
-                        Vos données sont hébergées en Suisse et ne sont jamais transmises à des tiers.
-                        Vous pouvez demander leur suppression à tout moment via{" "}
+                        {tp("privacy_note_before")}{" "}
                         <a href="mailto:contact@holiswiss.ch" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline" }}>
                           contact@holiswiss.ch
                         </a>.
@@ -528,7 +527,7 @@ export function WaitingListPopup() {
                             borderRadius: 12, padding: "13px 18px", fontSize: 14,
                           }}
                         >
-                          <ArrowLeft className="h-4 w-4" /> Retour
+                          <ArrowLeft className="h-4 w-4" /> {tp("actions.back")}
                         </button>
                         <button
                           type="submit"
@@ -550,10 +549,10 @@ export function WaitingListPopup() {
                                   borderRadius: "50%",
                                 }}
                               />
-                              Inscription en cours...
+                              {tp("actions.submitting")}
                             </>
                           ) : (
-                            "M'inscrire gratuitement"
+                            tp("actions.submit")
                           )}
                         </button>
                       </div>
