@@ -371,26 +371,47 @@ export type Database = {
       }
       waiting_list: {
         Row: {
+          accepted_terms: boolean | null
+          canton: string | null
           created_at: string
           email: string
+          first_name: string | null
           id: string
+          last_name: string | null
+          message: string | null
+          phone: string | null
           source: string
+          specialty: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          accepted_terms?: boolean | null
+          canton?: string | null
           created_at?: string
           email: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          message?: string | null
+          phone?: string | null
           source?: string
+          specialty?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          accepted_terms?: boolean | null
+          canton?: string | null
           created_at?: string
           email?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          message?: string | null
+          phone?: string | null
           source?: string
+          specialty?: string | null
           status?: string
           updated_at?: string
         }
