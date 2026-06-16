@@ -26,6 +26,10 @@ const CANTONS = [
 
 const phoneRegex = /^(\+41\s?|0)([1-9]\d(\s?\d{3}){2}|[1-9]\d{8})$/;
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 const step1Schema = z.object({
   first_name: z.string().trim().min(2, "Prénom requis (2 caractères min)").max(60),
   last_name: z.string().trim().min(2, "Nom requis (2 caractères min)").max(60),
