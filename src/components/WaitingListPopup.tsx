@@ -255,7 +255,7 @@ export function WaitingListPopup() {
         <button
           type="button"
           onClick={close}
-          aria-label="Fermer"
+          aria-label={tp("actions.close_aria")}
           className="absolute top-4 right-4 inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors z-10"
           style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.95)")}
@@ -277,16 +277,16 @@ export function WaitingListPopup() {
             <LotusIcon />
           </div>
           <h2 id="waitlist-title" className="font-bold text-white" style={{ fontSize: 22, lineHeight: 1.25 }}>
-            Rejoignez Holiswiss en avant-première
+            {tp("title")}
           </h2>
           <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 14, marginTop: 6 }}>
-            Inscription 100% gratuite · Lancement imminent
+            {tp("subtitle")}
           </p>
         </div>
 
         {!success && !isFull && (
           <div className="px-7 pt-2 pb-4">
-            <StepIndicator step={step} />
+            <StepIndicator step={step} infosLabel={tp("steps.infos")} messageLabel={tp("steps.message")} ariaLabel={tp("steps.aria", { step })} />
           </div>
         )}
 
@@ -294,7 +294,7 @@ export function WaitingListPopup() {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
               <span style={{ color: "#b86ef9", fontWeight: 600, fontSize: 13 }}>
-                {count} / {TOTAL_SPOTS} thérapeutes inscrits
+                {tp("progress", { count, total: TOTAL_SPOTS })}
               </span>
               <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{pct}%</span>
             </div>
