@@ -572,12 +572,12 @@ export function WaitingListPopup() {
   );
 }
 
-function StepIndicator({ step }: { step: 1 | 2 }) {
+function StepIndicator({ step, infosLabel, messageLabel, ariaLabel }: { step: 1 | 2; infosLabel: string; messageLabel: string; ariaLabel: string }) {
   return (
-    <div className="flex items-center justify-center gap-3" aria-label={`Étape ${step} sur 2`}>
-      <StepDot active={step >= 1} done={step > 1} num={1} label="Infos" />
+    <div className="flex items-center justify-center gap-3" aria-label={ariaLabel}>
+      <StepDot active={step >= 1} done={step > 1} num={1} label={infosLabel} />
       <div style={{ height: 2, width: 40, background: step > 1 ? "#b86ef9" : "rgba(255,255,255,0.15)", borderRadius: 2, transition: "background 0.3s" }} />
-      <StepDot active={step >= 2} done={false} num={2} label="Message" />
+      <StepDot active={step >= 2} done={false} num={2} label={messageLabel} />
     </div>
   );
 }
