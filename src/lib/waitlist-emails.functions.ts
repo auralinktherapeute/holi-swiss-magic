@@ -17,8 +17,25 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function therapistTemplate(email: string, dateStr: string): string {
+function therapistTemplate(
+  email: string,
+  dateStr: string,
+  firstName?: string,
+  specialty?: string,
+  canton?: string,
+): string {
   const safeEmail = escapeHtml(email);
+  const safeFirst = firstName ? escapeHtml(firstName) : "";
+  const safeSpec = specialty ? escapeHtml(specialty) : "";
+  const safeCanton = canton ? escapeHtml(canton) : "";
+  const greeting = safeFirst ? `Bonjour ${safeFirst},` : "Bonjour,";
+  const detailsBlock = `
+              ${safeFirst ? `<div>👤&nbsp; <strong>Prénom :</strong> ${safeFirst}</div>` : ""}
+              ${safeSpec ? `<div>🏷️&nbsp; <strong>Spécialité :</strong> ${safeSpec}</div>` : ""}
+              ${safeCanton ? `<div>📍&nbsp; <strong>Canton :</strong> ${safeCanton}</div>` : ""}
+              <div>📧&nbsp; <strong>Email :</strong> ${safeEmail}</div>
+              <div>📅&nbsp; <strong>Date :</strong> ${escapeHtml(dateStr)}</div>
+              <div>✅&nbsp; <strong>Inscription :</strong> Confirmée</div>`;
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bienvenue sur Holiswiss</title></head>
 <body style="margin:0;padding:0;background:#080514;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -31,16 +48,12 @@ function therapistTemplate(email: string, dateStr: string): string {
           <p style="margin:10px 0 0;color:rgba(255,255,255,0.7);font-size:15px;">La plateforme suisse du bien-être holistique</p>
         </td></tr>
         <tr><td style="padding:32px 28px;color:#ffffff;">
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:rgba(255,255,255,0.92);">Bonjour,</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:rgba(255,255,255,0.92);">${greeting}</p>
           <p style="margin:0 0 20px;font-size:15px;line-height:1.7;color:rgba(255,255,255,0.8);">
             Votre demande d'inscription sur <strong style="color:#b86ef9;">Holiswiss.ch</strong> a bien été enregistrée. Vous faites partie des premiers thérapeutes à rejoindre la plateforme suisse du bien-être holistique.
           </p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1a1035;border:1px solid rgba(184,110,249,0.3);border-radius:12px;margin:20px 0;">
-            <tr><td style="padding:18px 20px;font-size:14px;line-height:1.9;color:rgba(255,255,255,0.9);">
-              <div>✅&nbsp; <strong>Inscription :</strong> Confirmée</div>
-              <div>📧&nbsp; <strong>Email :</strong> ${safeEmail}</div>
-              <div>📅&nbsp; <strong>Date :</strong> ${escapeHtml(dateStr)}</div>
-            </td></tr>
+            <tr><td style="padding:18px 20px;font-size:14px;line-height:1.9;color:rgba(255,255,255,0.9);">${detailsBlock}</td></tr>
           </table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:6px;margin:20px 0;">
             <tr><td style="padding:14px 16px;font-size:13.5px;line-height:1.6;color:#78350f;">
