@@ -430,10 +430,20 @@ export function WaitingListPopup() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <Field label={tp("fields.specialty")} error={errors.specialty}>
-                          <Select value={form.specialty} onChange={(v) => update("specialty", v)} options={SPECIALTIES} placeholder={tp("fields.choose")} />
+                          <Select
+                            value={form.specialty}
+                            onChange={(v) => update("specialty", v)}
+                            options={SPECIALTIES.map((s) => ({ value: s.value, label: tp(`specialties.${s.key}`) }))}
+                            placeholder={tp("fields.choose")}
+                          />
                         </Field>
                         <Field label={tp("fields.canton")} error={errors.canton}>
-                          <Select value={form.canton} onChange={(v) => update("canton", v)} options={CANTONS} placeholder={tp("fields.choose")} />
+                          <Select
+                            value={form.canton}
+                            onChange={(v) => update("canton", v)}
+                            options={CANTONS.map((c) => ({ value: c, label: c }))}
+                            placeholder={tp("fields.choose")}
+                          />
                         </Field>
                       </div>
                       <button
@@ -668,7 +678,7 @@ function Input({
 function Select({
   value, onChange, options, placeholder,
 }: {
-  value: string; onChange: (v: string) => void; options: string[]; placeholder?: string;
+  value: string; onChange: (v: string) => void; options: Array<{ value: string; label: string }>; placeholder?: string;
 }) {
   return (
     <div className="relative">
@@ -696,8 +706,8 @@ function Select({
           {placeholder || "—"}
         </option>
         {options.map((o) => (
-          <option key={o} value={o} style={{ background: "#1a1035", color: "#fff" }}>
-            {o}
+          <option key={o.value} value={o.value} style={{ background: "#1a1035", color: "#fff" }}>
+            {o.label}
           </option>
         ))}
       </select>
