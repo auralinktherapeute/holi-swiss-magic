@@ -453,6 +453,61 @@
     "already": "Sei già iscritto!",
     "full": "Lista completa! Lascia la tua email per essere avvisato.",
     "privacy": "🔒 Nessuna carta richiesta · Cancellazione in 1 clic",
-    "error": "Si è verificato un errore. Riprova."
+    "error": "Si è verificato un errore. Riprova.",
+    "popup": {
+      "title": "Unisciti a Holiswiss in anteprima",
+      "subtitle": "Iscrizione 100% gratuita · Lancio imminente",
+      "progress": "{{count}} / {{total}} terapisti iscritti",
+      "steps": {
+        "infos": "Info",
+        "message": "Messaggio",
+        "aria": "Passaggio {{step}} di 2"
+      },
+      "fields": {
+        "first_name": "Nome *",
+        "first_name_ph": "Maria",
+        "last_name": "Cognome *",
+        "last_name_ph": "Rossi",
+        "email": "Email *",
+        "email_ph": "maria@esempio.ch",
+        "phone": "Telefono",
+        "phone_ph": "+41 79 123 45 67",
+        "specialty": "Specialità *",
+        "canton": "Cantone *",
+        "choose": "Scegli…",
+        "message": "Il tuo messaggio (opzionale)",
+        "message_ph": "Descrivi brevemente il tuo approccio terapeutico, la tua esperienza…"
+      },
+      "consent": {
+        "text": "Ho preso visione dell'",
+        "link": "informativa sulla privacy",
+        "after": "di Holiswiss.ch e accetto che i miei dati siano trattati conformemente alla legge svizzera sulla protezione dei dati (LPD / nLPD). *"
+      },
+      "privacy_note_before": "I tuoi dati sono ospitati in Svizzera e non sono mai trasmessi a terzi. Puoi richiederne la cancellazione in qualsiasi momento tramite",
+      "actions": {
+        "continue": "Continua",
+        "back": "Indietro",
+        "submit": "Iscrivimi gratuitamente",
+        "submitting": "Iscrizione in corso…",
+        "close": "Chiudi",
+        "close_aria": "Chiudi"
+      },
+      "success": {
+        "title": "Benvenuto in Holiswiss! 🎉",
+        "body_html": "La tua iscrizione è stata registrata, <strong>{{name}}</strong>!<br/>Un'email di conferma è stata inviata a <strong>{{email}}</strong>.",
+        "spam": "💡 Controlla anche la cartella <strong>Spam</strong>.",
+        "canton": "Cantone {{canton}}"
+      },
+      "errors_form": {
+        "first_name": "Nome richiesto (min. 2 caratteri)",
+        "last_name": "Cognome richiesto (min. 2 caratteri)",
+        "email": "Email non valida",
+        "phone": "Formato svizzero non valido (+41 o 0XX XXX XX XX)",
+        "specialty": "Specialità richiesta",
+        "canton": "Cantone richiesto",
+        "terms": "Accetta l'informativa sulla privacy per completare l'iscrizione."
+      },
+      "privacy_policy_path": "/it/privacy"
+    }
   }
 }

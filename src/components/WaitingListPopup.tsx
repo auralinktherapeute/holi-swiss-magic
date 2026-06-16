@@ -26,6 +26,10 @@ const CANTONS = [
 
 const phoneRegex = /^(\+41\s?|0)([1-9]\d(\s?\d{3}){2}|[1-9]\d{8})$/;
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 const step1Schema = z.object({
   first_name: z.string().trim().min(2, "Prénom requis (2 caractères min)").max(60),
   last_name: z.string().trim().min(2, "Nom requis (2 caractères min)").max(60),
@@ -61,6 +65,7 @@ const initialForm: FormState = {
 
 export function WaitingListPopup() {
   const { t } = useTranslation();
+  const tp = (k: string, v?: Record<string, unknown>) => t(`waitlist.popup.${k}`, v ?? {}) as string;
   const fetchWaitingListCount = useServerFn(getWaitingListCount);
   const sendEmails = useServerFn(sendWaitlistEmails);
   const [open, setOpen] = useState(false);
@@ -138,7 +143,7 @@ export function WaitingListPopup() {
       const errs: Partial<Record<keyof FormState, string>> = {};
       parsed.error.issues.forEach((i) => {
         const k = i.path[0] as keyof FormState;
-        if (!errs[k]) errs[k] = i.message;
+        if (!errs[k]) errs[k] = tp(`errors_form.${k}`) || i.message;
       });
       setErrors(errs);
       return;
@@ -158,7 +163,8 @@ export function WaitingListPopup() {
       const errs: Partial<Record<keyof FormState, string>> = {};
       parsed.error.issues.forEach((i) => {
         const k = i.path[0] as keyof FormState;
-        if (!errs[k]) errs[k] = i.message;
+        const key = k === "accepted_terms" ? "terms" : k;
+        if (!errs[k]) errs[k] = tp(`errors_form.${key}`) || i.message;
       });
       setErrors(errs);
       return;
@@ -252,7 +258,7 @@ export function WaitingListPopup() {
         <button
           type="button"
           onClick={close}
-          aria-label="Fermer"
+          aria-label={tp("actions.close_aria")}
           className="absolute top-4 right-4 inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors z-10"
           style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.95)")}
@@ -274,16 +280,16 @@ export function WaitingListPopup() {
             <LotusIcon />
           </div>
           <h2 id="waitlist-title" className="font-bold text-white" style={{ fontSize: 22, lineHeight: 1.25 }}>
-            Rejoignez Holiswiss en avant-première
+            {tp("title")}
           </h2>
           <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 14, marginTop: 6 }}>
-            Inscription 100% gratuite · Lancement imminent
+            {tp("subtitle")}
           </p>
         </div>
 
         {!success && !isFull && (
           <div className="px-7 pt-2 pb-4">
-            <StepIndicator step={step} />
+            <StepIndicator step={step} infosLabel={tp("steps.infos")} messageLabel={tp("steps.message")} ariaLabel={tp("steps.aria", { step })} />
           </div>
         )}
 
@@ -291,7 +297,7 @@ export function WaitingListPopup() {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
               <span style={{ color: "#b86ef9", fontWeight: 600, fontSize: 13 }}>
-                {count} / {TOTAL_SPOTS} thérapeutes inscrits
+                {tp("progress", { count, total: TOTAL_SPOTS })}
               </span>
               <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{pct}%</span>
             </div>
@@ -341,15 +347,16 @@ export function WaitingListPopup() {
                   <path d="M14 27 l8 8 l16 -18" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                 </motion.svg>
                 <h3 className="text-white font-bold" style={{ fontSize: 18 }}>
-                  Bienvenue chez Holiswiss ! 🎉
+                  {tp("success.title")}
                 </h3>
-                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, marginTop: 8, lineHeight: 1.55 }}>
-                  Votre inscription a bien été enregistrée, <strong style={{ color: "#fff" }}>{form.first_name}</strong> !<br />
-                  Un email de confirmation vous a été envoyé à <strong style={{ color: "#fff" }}>{form.email}</strong>.
-                </p>
-                <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, marginTop: 10 }}>
-                  💡 Pensez à vérifier votre dossier <strong style={{ color: "rgba(255,255,255,0.8)" }}>Spams</strong>.
-                </p>
+                <p
+                  style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, marginTop: 8, lineHeight: 1.55 }}
+                  dangerouslySetInnerHTML={{ __html: tp("success.body_html", { name: escapeHtml(form.first_name), email: escapeHtml(form.email) }) }}
+                />
+                <p
+                  style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, marginTop: 10 }}
+                  dangerouslySetInnerHTML={{ __html: tp("success.spam") }}
+                />
                 <div
                   className="mt-5 text-left"
                   style={{
@@ -364,7 +371,7 @@ export function WaitingListPopup() {
                 >
                   <div>👤&nbsp; <strong>{form.first_name} {form.last_name}</strong></div>
                   <div>🏷️&nbsp; {form.specialty}</div>
-                  <div>📍&nbsp; Canton {form.canton}</div>
+                  <div>📍&nbsp; {tp("success.canton", { canton: form.canton })}</div>
                 </div>
                 <button
                   type="button"
@@ -378,7 +385,7 @@ export function WaitingListPopup() {
                   onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
-                  Fermer
+                  {tp("actions.close")}
                 </button>
               </motion.div>
             ) : isFull ? (
@@ -398,27 +405,27 @@ export function WaitingListPopup() {
                       className="space-y-3"
                     >
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label="Prénom *" error={errors.first_name}>
-                          <Input value={form.first_name} onChange={(v) => update("first_name", v)} placeholder="Marie" autoFocus />
+                        <Field label={tp("fields.first_name")} error={errors.first_name}>
+                          <Input value={form.first_name} onChange={(v) => update("first_name", v)} placeholder={tp("fields.first_name_ph")} autoFocus />
                         </Field>
-                        <Field label="Nom *" error={errors.last_name}>
-                          <Input value={form.last_name} onChange={(v) => update("last_name", v)} placeholder="Dupont" />
-                        </Field>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <Field label="Email *" error={errors.email}>
-                          <Input type="email" value={form.email} onChange={(v) => update("email", v)} placeholder="marie@exemple.ch" />
-                        </Field>
-                        <Field label="Téléphone" error={errors.phone}>
-                          <Input type="tel" value={form.phone} onChange={(v) => update("phone", v)} placeholder="+41 79 123 45 67" />
+                        <Field label={tp("fields.last_name")} error={errors.last_name}>
+                          <Input value={form.last_name} onChange={(v) => update("last_name", v)} placeholder={tp("fields.last_name_ph")} />
                         </Field>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label="Spécialité *" error={errors.specialty}>
-                          <Select value={form.specialty} onChange={(v) => update("specialty", v)} options={SPECIALTIES} placeholder="Choisir…" />
+                        <Field label={tp("fields.email")} error={errors.email}>
+                          <Input type="email" value={form.email} onChange={(v) => update("email", v)} placeholder={tp("fields.email_ph")} />
                         </Field>
-                        <Field label="Canton *" error={errors.canton}>
-                          <Select value={form.canton} onChange={(v) => update("canton", v)} options={CANTONS} placeholder="Choisir…" />
+                        <Field label={tp("fields.phone")} error={errors.phone}>
+                          <Input type="tel" value={form.phone} onChange={(v) => update("phone", v)} placeholder={tp("fields.phone_ph")} />
+                        </Field>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label={tp("fields.specialty")} error={errors.specialty}>
+                          <Select value={form.specialty} onChange={(v) => update("specialty", v)} options={SPECIALTIES} placeholder={tp("fields.choose")} />
+                        </Field>
+                        <Field label={tp("fields.canton")} error={errors.canton}>
+                          <Select value={form.canton} onChange={(v) => update("canton", v)} options={CANTONS} placeholder={tp("fields.choose")} />
                         </Field>
                       </div>
                       <button
@@ -430,7 +437,7 @@ export function WaitingListPopup() {
                           borderRadius: 12, padding: "14px 16px", fontSize: 15, marginTop: 6,
                         }}
                       >
-                        Continuer <ArrowRight className="h-4 w-4" />
+                        {tp("actions.continue")} <ArrowRight className="h-4 w-4" />
                       </button>
                     </motion.div>
                   ) : (
@@ -443,7 +450,7 @@ export function WaitingListPopup() {
                       className="space-y-3"
                     >
                       <Field
-                        label="Votre message (optionnel)"
+                        label={tp("fields.message")}
                         error={errors.message}
                         hint={`${form.message.length} / 500`}
                       >
@@ -452,7 +459,7 @@ export function WaitingListPopup() {
                           maxLength={500}
                           value={form.message}
                           onChange={(e) => update("message", e.target.value)}
-                          placeholder="Décrivez brièvement votre approche thérapeutique, votre expérience..."
+                          placeholder={tp("fields.message_ph")}
                           className="w-full text-white outline-none transition-colors resize-none"
                           style={{
                             background: "rgba(255,255,255,0.05)",
@@ -479,13 +486,13 @@ export function WaitingListPopup() {
                           onChange={(v) => update("accepted_terms", v)}
                         />
                         <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 1.55 }}>
-                          J'ai pris connaissance de la{" "}
-                          <a href="/fr/politique-confidentialite" target="_blank" rel="noreferrer"
+                          {tp("consent.text")}{" "}
+                          <a href={tp("privacy_policy_path")} target="_blank" rel="noreferrer"
                             style={{ color: "#5cc8fa", textDecoration: "underline" }}
                             onClick={(e) => e.stopPropagation()}>
-                            politique de confidentialité
+                            {tp("consent.link")}
                           </a>{" "}
-                          de Holiswiss.ch et j'accepte que mes données soient traitées conformément à la loi suisse sur la protection des données (LPD / nLPD). *
+                          {tp("consent.after")}
                         </span>
                       </label>
                       {errors.accepted_terms && (
@@ -494,8 +501,7 @@ export function WaitingListPopup() {
                         </p>
                       )}
                       <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5 }}>
-                        Vos données sont hébergées en Suisse et ne sont jamais transmises à des tiers.
-                        Vous pouvez demander leur suppression à tout moment via{" "}
+                        {tp("privacy_note_before")}{" "}
                         <a href="mailto:contact@holiswiss.ch" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline" }}>
                           contact@holiswiss.ch
                         </a>.
@@ -520,7 +526,7 @@ export function WaitingListPopup() {
                             borderRadius: 12, padding: "13px 18px", fontSize: 14,
                           }}
                         >
-                          <ArrowLeft className="h-4 w-4" /> Retour
+                          <ArrowLeft className="h-4 w-4" /> {tp("actions.back")}
                         </button>
                         <button
                           type="submit"
@@ -542,10 +548,10 @@ export function WaitingListPopup() {
                                   borderRadius: "50%",
                                 }}
                               />
-                              Inscription en cours...
+                              {tp("actions.submitting")}
                             </>
                           ) : (
-                            "M'inscrire gratuitement"
+                            tp("actions.submit")
                           )}
                         </button>
                       </div>
@@ -569,12 +575,12 @@ export function WaitingListPopup() {
   );
 }
 
-function StepIndicator({ step }: { step: 1 | 2 }) {
+function StepIndicator({ step, infosLabel, messageLabel, ariaLabel }: { step: 1 | 2; infosLabel: string; messageLabel: string; ariaLabel: string }) {
   return (
-    <div className="flex items-center justify-center gap-3" aria-label={`Étape ${step} sur 2`}>
-      <StepDot active={step >= 1} done={step > 1} num={1} label="Infos" />
+    <div className="flex items-center justify-center gap-3" aria-label={ariaLabel}>
+      <StepDot active={step >= 1} done={step > 1} num={1} label={infosLabel} />
       <div style={{ height: 2, width: 40, background: step > 1 ? "#b86ef9" : "rgba(255,255,255,0.15)", borderRadius: 2, transition: "background 0.3s" }} />
-      <StepDot active={step >= 2} done={false} num={2} label="Message" />
+      <StepDot active={step >= 2} done={false} num={2} label={messageLabel} />
     </div>
   );
 }
