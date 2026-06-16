@@ -406,27 +406,27 @@ export function WaitingListPopup() {
                       className="space-y-3"
                     >
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label="Prénom *" error={errors.first_name}>
-                          <Input value={form.first_name} onChange={(v) => update("first_name", v)} placeholder="Marie" autoFocus />
+                        <Field label={tp("fields.first_name")} error={errors.first_name}>
+                          <Input value={form.first_name} onChange={(v) => update("first_name", v)} placeholder={tp("fields.first_name_ph")} autoFocus />
                         </Field>
-                        <Field label="Nom *" error={errors.last_name}>
-                          <Input value={form.last_name} onChange={(v) => update("last_name", v)} placeholder="Dupont" />
-                        </Field>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <Field label="Email *" error={errors.email}>
-                          <Input type="email" value={form.email} onChange={(v) => update("email", v)} placeholder="marie@exemple.ch" />
-                        </Field>
-                        <Field label="Téléphone" error={errors.phone}>
-                          <Input type="tel" value={form.phone} onChange={(v) => update("phone", v)} placeholder="+41 79 123 45 67" />
+                        <Field label={tp("fields.last_name")} error={errors.last_name}>
+                          <Input value={form.last_name} onChange={(v) => update("last_name", v)} placeholder={tp("fields.last_name_ph")} />
                         </Field>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label="Spécialité *" error={errors.specialty}>
-                          <Select value={form.specialty} onChange={(v) => update("specialty", v)} options={SPECIALTIES} placeholder="Choisir…" />
+                        <Field label={tp("fields.email")} error={errors.email}>
+                          <Input type="email" value={form.email} onChange={(v) => update("email", v)} placeholder={tp("fields.email_ph")} />
                         </Field>
-                        <Field label="Canton *" error={errors.canton}>
-                          <Select value={form.canton} onChange={(v) => update("canton", v)} options={CANTONS} placeholder="Choisir…" />
+                        <Field label={tp("fields.phone")} error={errors.phone}>
+                          <Input type="tel" value={form.phone} onChange={(v) => update("phone", v)} placeholder={tp("fields.phone_ph")} />
+                        </Field>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label={tp("fields.specialty")} error={errors.specialty}>
+                          <Select value={form.specialty} onChange={(v) => update("specialty", v)} options={SPECIALTIES} placeholder={tp("fields.choose")} />
+                        </Field>
+                        <Field label={tp("fields.canton")} error={errors.canton}>
+                          <Select value={form.canton} onChange={(v) => update("canton", v)} options={CANTONS} placeholder={tp("fields.choose")} />
                         </Field>
                       </div>
                       <button
@@ -438,7 +438,7 @@ export function WaitingListPopup() {
                           borderRadius: 12, padding: "14px 16px", fontSize: 15, marginTop: 6,
                         }}
                       >
-                        Continuer <ArrowRight className="h-4 w-4" />
+                        {tp("actions.continue")} <ArrowRight className="h-4 w-4" />
                       </button>
                     </motion.div>
                   ) : (
