@@ -64,7 +64,33 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       meta.push({ property: "og:image", content: image });
       meta.push({ name: "twitter:image", content: image });
     }
-    return { meta, links: [{ rel: "canonical", href: url }] };
+    const ld: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: fullName || "Thérapeute",
+      url,
+      description,
+    };
+    if (image) ld.image = image;
+    if (t.city || t.canton) {
+      ld.address = {
+        "@type": "PostalAddress",
+        addressLocality: t.city ?? undefined,
+        addressRegion: t.canton ?? undefined,
+        addressCountry: "CH",
+      };
+    }
+    if (t.title) ld.jobTitle = t.title;
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(ld),
+        },
+      ],
+    };
   },
 });
 
