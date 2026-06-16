@@ -215,6 +215,9 @@ export function WaitingListPopup() {
               <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, marginTop: 8 }}>
                 {t("waitlist.reserved")}
               </p>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5, marginTop: 14, lineHeight: 1.5 }}>
+                💡 Un email de confirmation vous a été envoyé. Pensez à vérifier vos <strong style={{ color: "rgba(255,255,255,0.75)" }}>spams</strong> et ajoutez <strong style={{ color: "rgba(255,255,255,0.75)" }}>noreply@holiswiss.ch</strong> à vos contacts.
+              </p>
             </div>
           ) : isFull ? (
             <p className="text-center" style={{ color: "rgba(255,255,255,0.85)", fontSize: 15 }}>
