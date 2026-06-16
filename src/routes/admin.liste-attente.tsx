@@ -23,6 +23,12 @@ type Entry = {
   created_at: string;
   source: string | null;
   status: Status;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  specialty: string | null;
+  canton: string | null;
+  message: string | null;
 };
 
 const TOTAL_SPOTS = 70;
@@ -60,6 +66,8 @@ function WaitingListAdminPage() {
   const [page, setPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
+  const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
+  const [filterCanton, setFilterCanton] = useState<string>("all");
   const knownIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -117,9 +125,23 @@ function WaitingListAdminPage() {
     return { today: t, week: w };
   }, [rows]);
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const filteredRows = useMemo(() => rows.filter((r) =>
+    (filterSpecialty === "all" || r.specialty === filterSpecialty) &&
+    (filterCanton === "all" || r.canton === filterCanton)
+  ), [rows, filterSpecialty, filterCanton]);
+
+  const specialtyOptions = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.specialty).filter(Boolean) as string[])).sort(),
+    [rows]
+  );
+  const cantonOptions = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.canton).filter(Boolean) as string[])).sort(),
+    [rows]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pageRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   async function updateStatus(id: string, status: Status) {
     try {
@@ -143,9 +165,14 @@ function WaitingListAdminPage() {
   }
 
   function exportCsv() {
-    const header = "email,date,statut\n";
-    const body = rows
-      .map((r) => `"${r.email.replace(/"/g, '""')}",${r.created_at},${r.status}`)
+    const esc = (v: string | null | undefined) => `"${String(v ?? "").replace(/"/g, '""').replace(/\n/g, " ")}"`;
+    const header = "prenom,nom,email,telephone,specialite,canton,message,source,statut,date\n";
+    const body = filteredRows
+      .map((r) => [
+        esc(r.first_name), esc(r.last_name), esc(r.email), esc(r.phone),
+        esc(r.specialty), esc(r.canton), esc(r.message),
+        esc(r.source), esc(r.status), esc(r.created_at),
+      ].join(","))
       .join("\n");
     const blob = new Blob([header + body], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -157,10 +184,10 @@ function WaitingListAdminPage() {
   }
 
   async function copyEmails() {
-    const list = rows.map((r) => r.email).join(", ");
+    const list = filteredRows.map((r) => r.email).join(", ");
     try {
       await navigator.clipboard.writeText(list);
-      toast.success(`${rows.length} emails copiés !`);
+      toast.success(`${filteredRows.length} emails copiés !`);
     } catch {
       toast.error("Impossible de copier");
     }
@@ -220,26 +247,69 @@ function WaitingListAdminPage() {
 
       {/* Table */}
       <div className="rounded-xl overflow-hidden" style={{ background: "#0f0a1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <label className="flex items-center gap-2 text-xs text-white/60">
+            Spécialité :
+            <select
+              value={filterSpecialty}
+              onChange={(e) => { setFilterSpecialty(e.target.value); setPage(1); }}
+              className="rounded-md px-2 py-1 text-white text-xs outline-none"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <option value="all" style={{ background: "#1a1035" }}>Toutes</option>
+              {specialtyOptions.map((o) => (
+                <option key={o} value={o} style={{ background: "#1a1035" }}>{o}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-xs text-white/60">
+            Canton :
+            <select
+              value={filterCanton}
+              onChange={(e) => { setFilterCanton(e.target.value); setPage(1); }}
+              className="rounded-md px-2 py-1 text-white text-xs outline-none"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <option value="all" style={{ background: "#1a1035" }}>Tous</option>
+              {cantonOptions.map((o) => (
+                <option key={o} value={o} style={{ background: "#1a1035" }}>{o}</option>
+              ))}
+            </select>
+          </label>
+          {(filterSpecialty !== "all" || filterCanton !== "all") && (
+            <button
+              onClick={() => { setFilterSpecialty("all"); setFilterCanton("all"); }}
+              className="text-xs text-white/60 hover:text-white underline"
+            >
+              Réinitialiser ({filteredRows.length})
+            </button>
+          )}
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: "rgba(255,255,255,0.03)" }} className="text-white/60 text-left">
                 <th className="px-4 py-3 font-medium">#</th>
+                <th className="px-4 py-3 font-medium">Nom</th>
                 <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Date inscription</th>
-                <th className="px-4 py-3 font-medium">Source</th>
+                <th className="px-4 py-3 font-medium">Téléphone</th>
+                <th className="px-4 py-3 font-medium">Spécialité</th>
+                <th className="px-4 py-3 font-medium">Canton</th>
+                <th className="px-4 py-3 font-medium">Inscrit le</th>
                 <th className="px-4 py-3 font-medium">Statut</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-white/50">Chargement…</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-white/50">Chargement…</td></tr>
               ) : pageRows.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-white/50">Aucun inscrit pour le moment.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-white/50">Aucun inscrit pour le moment.</td></tr>
               ) : pageRows.map((r, i) => {
                 const meta = STATUS_META[r.status] ?? STATUS_META.pending;
                 const flashing = flashIds.has(r.id);
+                const fullName = [r.first_name, r.last_name].filter(Boolean).join(" ") || "—";
                 return (
                   <tr
                     key={r.id}
@@ -251,9 +321,12 @@ function WaitingListAdminPage() {
                     }}
                   >
                     <td className="px-4 py-3 text-white/40">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
+                    <td className="px-4 py-3 text-white whitespace-nowrap">{fullName}</td>
                     <td className="px-4 py-3 text-white">{r.email}</td>
-                    <td className="px-4 py-3 text-white/70">{fmtDate(r.created_at)}</td>
-                    <td className="px-4 py-3 text-white/60">{r.source ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/70 whitespace-nowrap">{r.phone ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/80">{r.specialty ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/70">{r.canton ?? "—"}</td>
+                    <td className="px-4 py-3 text-white/70 whitespace-nowrap">{fmtDate(r.created_at)}</td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
                             style={{ background: meta.bg, color: meta.color }}>
