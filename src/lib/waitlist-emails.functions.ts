@@ -4,8 +4,8 @@ const LOGO_URL =
   "https://holiswiss.ch/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png";
 const SITE_URL = "https://holiswiss.ch";
 const ADMIN_EMAIL = "gerald.henry@me.com";
-const FROM_THERAPIST = "Holiswiss <noreply@send.holiswiss.ch>";
-const FROM_ADMIN = "Holiswiss Admin <noreply@send.holiswiss.ch>";
+const FROM_THERAPIST = "Holiswiss <noreply@holiswiss.ch>";
+const FROM_ADMIN = "Holiswiss Admin <noreply@holiswiss.ch>";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
 function escapeHtml(s: string): string {
