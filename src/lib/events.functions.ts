@@ -87,7 +87,7 @@ export const upsertMyEvent = createServerFn({ method: "POST" })
       seats: data.seats ?? null,
       enable_waitlist: data.enable_waitlist,
       image_url: data.image_url ?? null,
-      status: data.submit ? "pending_review" : "draft",
+      status: (data.submit ? "pending_review" : "draft") as "pending_review" | "draft",
     };
 
     if (data.id) {
