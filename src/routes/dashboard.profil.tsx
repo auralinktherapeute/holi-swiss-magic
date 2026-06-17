@@ -214,24 +214,6 @@ function ProfilePage() {
     markDirty();
   };
 
-  // Photo upload
-  const onPhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error("Max 5 Mo");
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("therapist-photos").upload(path, file, { upsert: true });
-    if (error) return toast.error(t("profile_edit.upload_error"));
-    const { data: pub } = supabase.storage.from("therapist-photos").getPublicUrl(path);
-    setPhotoPublicUrl(pub.publicUrl);
-    const { data: signed } = await supabase.storage
-      .from("therapist-photos")
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
-    setPhotoUrl(signed?.signedUrl ?? pub.publicUrl);
-    markDirty();
-  };
-  const removePhoto = () => { setPhotoUrl(""); setPhotoPublicUrl(""); markDirty(); };
 
   // Document upload
   const onDocSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -372,33 +354,16 @@ function ProfilePage() {
 
         {/* Identity */}
         <Section>
-          <div className="flex flex-col items-center">
-            <div className="relative">
-              <div className="h-32 w-32 overflow-hidden rounded-full ring-4 ring-[#b86ef9]/40 shadow-[0_0_40px_-8px_rgba(184,110,249,0.6)]">
-                {photoUrl ? (
-                  <img src={photoUrl} alt="profile" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#3d1a5c] to-[#522870] text-5xl font-bold text-[#d4a5f9]">
-                    {initial}
-                  </div>
-                )}
-              </div>
-              {photoUrl && (
-                <button type="button" onClick={removePhoto}
-                  className="absolute -right-1 -top-1 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#ef4444] to-[#ec4899] text-white shadow-lg transition hover:scale-105">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <button type="button" onClick={() => photoInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] text-white shadow-lg transition hover:scale-105">
-                <Camera className="h-5 w-5" />
-              </button>
-              <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={onPhotoSelected} />
-            </div>
-            <p className="mt-4 text-base font-semibold text-white">{t("profile_edit.photo_title")}</p>
-            <p className="mt-1 text-xs text-[#a89bc4]">{t("profile_edit.photo_help")}</p>
-            <p className="text-xs text-[#a89bc4]">{t("profile_edit.photo_crop_note")}</p>
-          </div>
+          <ProfilePhotoUploader
+            userId={user!.id}
+            currentPhotoUrl={photoUrl}
+            initial={initial}
+            onPhotoUpdated={(pub, prev) => {
+              setPhotoPublicUrl(pub);
+              setPhotoUrl(prev);
+              markDirty();
+            }}
+          />
 
           <Divider />
 
