@@ -25,8 +25,14 @@ type StoredDraft<T> = { data: T; updated_at: string };
 type DraftRow<T> = { data: T; updated_at: string | null };
 type DraftSelectQuery<T> = {
   select: (columns: string) => {
-    eq: (column: string, value: string) => {
-      eq: (column: string, value: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
+      eq: (
+        column: string,
+        value: string,
+      ) => {
         maybeSingle: () => Promise<{ data: DraftRow<T> | null; error: unknown }>;
       };
     };
@@ -40,7 +46,10 @@ type DraftUpsertQuery<T> = {
 };
 type DraftDeleteQuery = {
   delete: () => {
-    eq: (column: string, value: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
       eq: (column: string, value: string) => Promise<{ error: unknown }>;
     };
   };
@@ -223,10 +232,7 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
   const clearDraft = useCallback(async () => {
     try {
       if (userId) {
-        await draftsDelete()
-          .delete()
-          .eq("user_id", userId)
-          .eq("form_type", formType);
+        await draftsDelete().delete().eq("user_id", userId).eq("form_type", formType);
       }
       removeLocalDraft(formType, userId);
     } catch {
