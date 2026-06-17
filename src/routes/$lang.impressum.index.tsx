@@ -38,7 +38,6 @@ function ImpressumPage() {
       </Section>
 
       <Section title="Hébergement & infrastructure technique">
-        <p><strong className="text-white">Hébergement :</strong> Netlify, Inc. — 44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA</p>
         <p><strong className="text-white">Base de données :</strong> Supabase (serveurs en Europe — eu-west-2, Londres, Royaume-Uni)</p>
         <p><strong className="text-white">Paiements :</strong> Stripe, Inc. — 510 Townsend Street, San Francisco, CA 94103, USA</p>
       </Section>

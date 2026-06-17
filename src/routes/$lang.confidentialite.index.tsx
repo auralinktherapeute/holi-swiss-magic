@@ -113,11 +113,6 @@ function ConfidentialitePage() {
                 <td className="py-2 px-4">Base de données</td>
               </tr>
               <tr>
-                <td className="py-2 px-4 text-white">Netlify</td>
-                <td className="py-2 px-4">USA / EU</td>
-                <td className="py-2 px-4">Hébergement site</td>
-              </tr>
-              <tr>
                 <td className="py-2 px-4 text-white">Stripe</td>
                 <td className="py-2 px-4">USA</td>
                 <td className="py-2 px-4">Paiements (certifié PCI-DSS)</td>
