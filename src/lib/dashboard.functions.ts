@@ -42,6 +42,28 @@ async function getOwnedTherapist(userId: string) {
   return { supabaseAdmin, therapistId: data.id as string };
 }
 
+/**
+ * Geocode a Swiss address via Nominatim (OpenStreetMap). Returns null on any failure.
+ * Free, no API key — must send a User-Agent.
+ */
+async function geocodeSwissAddress(input: { address?: string; postal_code?: string; city?: string; canton?: string }) {
+  const parts = [input.address, input.postal_code, input.city].filter(Boolean).join(", ");
+  if (!parts.trim()) return null;
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ch&q=${encodeURIComponent(parts)}`;
+    const res = await fetch(url, { headers: { "User-Agent": "HoliSwiss/1.0 (contact@holiswiss.ch)" } });
+    if (!res.ok) return null;
+    const arr = (await res.json()) as Array<{ lat: string; lon: string }>;
+    if (!arr?.length) return null;
+    const lat = parseFloat(arr[0].lat);
+    const lon = parseFloat(arr[0].lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    return { latitude: lat, longitude: lon };
+  } catch {
+    return null;
+  }
+}
+
 export const requireDashboardAuth = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => ({ userId: context.userId }));
@@ -189,6 +211,9 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const slugBase = `${data.first_name}-${data.last_name}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "therapeute";
+    const geo = await geocodeSwissAddress({
+      address: data.address, postal_code: data.postal_code, city: data.city, canton: data.canton,
+    });
     const payload: any = {
       user_id: context.userId,
       first_name: data.first_name,
@@ -212,6 +237,10 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       website: data.website,
       accreditations: data.accreditations,
     };
+    if (geo) {
+      payload.latitude = geo.latitude;
+      payload.longitude = geo.longitude;
+    }
 
     const result = data.rowId
       ? await supabaseAdmin.from("therapists").update(payload).eq("id", data.rowId).eq("user_id", context.userId).select("id").maybeSingle()
