@@ -526,5 +526,42 @@
         "other": "Andere"
       }
     }
+  },
+  "agenda_page": {
+    "title": "Agenda & Verfügbarkeiten",
+    "subtitle": "Ihre Zeitfenster werden Besuchern bei einer Buchung angezeigt",
+    "complete_profile": "Vervollständigen Sie zuerst Ihr Profil, um Ihren Agenda zu verwalten.",
+    "weekly_hours": "Wöchentliche Öffnungszeiten",
+    "timezone": "Zeitzone Europa/Zürich",
+    "closed": "Geschlossen",
+    "unavail_title": "Abwesenheitszeiten",
+    "from": "Von",
+    "to": "Bis",
+    "reason": "Grund (optional)",
+    "reason_ph": "Ferien…",
+    "add": "Hinzufügen",
+    "no_blocks": "Keine gesperrten Zeiträume",
+    "saving": "Speichern…",
+    "save": "Speichern",
+    "loading": "Wird geladen…",
+    "fill_dates": "Bitte Datum angeben",
+    "block_added": "Zeitraum hinzugefügt",
+    "block_removed": "Zeitraum entfernt",
+    "saved": "Agenda gespeichert",
+    "days": [
+      "Montag",
+      "Dienstag",
+      "Mittwoch",
+      "Donnerstag",
+      "Freitag",
+      "Samstag",
+      "Sonntag"
+    ],
+    "note_title": "Hinweis — Praktische Infos zum Termin",
+    "note_desc": "Diese Notiz wird automatisch in die Bestätigungs- und Erinnerungs-E-Mails an den Patienten aufgenommen (Parkplatz, Kleidung, Zugang, Hauscode, Tipps vor der Sitzung usw.).",
+    "note_ph": "Z.B.: Kostenloser Parkplatz vor der Praxis. An der Tür auf den Namen Muster klingeln. Bequeme Kleidung mitbringen.",
+    "note_count": "{{n}}/{{max}} Zeichen",
+    "note_saved": "Hinweis gespeichert — wird zu den Bestätigungs- und Erinnerungs-E-Mails hinzugefügt.",
+    "note_error": "Fehler beim Speichern"
   }
 }

@@ -526,5 +526,42 @@
         "other": "Other"
       }
     }
+  },
+  "agenda_page": {
+    "title": "Agenda & availability",
+    "subtitle": "Your slots are shown to visitors when they book",
+    "complete_profile": "Complete your profile first to manage your agenda.",
+    "weekly_hours": "Weekly hours",
+    "timezone": "Europe/Zurich timezone",
+    "closed": "Closed",
+    "unavail_title": "Unavailable periods",
+    "from": "From",
+    "to": "To",
+    "reason": "Reason (optional)",
+    "reason_ph": "Holidays…",
+    "add": "Add",
+    "no_blocks": "No blocked periods",
+    "saving": "Saving…",
+    "save": "Save",
+    "loading": "Loading…",
+    "fill_dates": "Please provide dates",
+    "block_added": "Period added",
+    "block_removed": "Period removed",
+    "saved": "Agenda saved",
+    "days": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "note_title": "Note — Practical info for the appointment",
+    "note_desc": "This note will be automatically added to the confirmation and reminder emails sent to the patient (parking, dress, access, building code, tips before the session, etc.).",
+    "note_ph": "E.g.: Free parking in front of the practice. Ring the bell for Smith. Wear comfortable clothing.",
+    "note_count": "{{n}}/{{max}} characters",
+    "note_saved": "Note saved — it will be added to the confirmation and reminder emails.",
+    "note_error": "Error while saving"
   }
 }
