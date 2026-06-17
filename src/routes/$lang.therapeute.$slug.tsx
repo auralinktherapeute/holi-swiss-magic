@@ -143,14 +143,7 @@ function Page() {
     queryKey: ["reviews", th?.id],
     enabled: !!th?.id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("reviews")
-        .select("id,rating,comment,therapist_reply,replied_at,created_at,client_id")
-        .eq("therapist_id", th!.id)
-        .eq("status", "published")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      return data ?? [];
+      return [] as any[];
     },
   });
 
