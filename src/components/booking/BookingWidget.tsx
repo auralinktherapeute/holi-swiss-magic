@@ -15,6 +15,16 @@ import { z } from "zod";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
@@ -39,7 +49,7 @@ function buildSlots(start: string, end: string): string[] {
   return out;
 }
 
-export function BookingWidget({ therapistId }: { therapistId: string }) {
+export function BookingWidget({ therapistId, therapistName }: { therapistId: string; therapistName?: string }) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
   const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
@@ -61,6 +71,7 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const autoRestoredRef = useRef(false);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
@@ -137,9 +148,16 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
     return all.filter((s) => !takenSet.has(s));
   }, [selectedDate, avs, taken]);
 
-  const submit = async (e: React.FormEvent) => {
+  const openConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime) { toast.error(t("booking.choose_slot")); return; }
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
+    setConfirmOpen(true);
+  };
+
+  const confirmBooking = async () => {
+    if (!selectedDate || !selectedTime) return;
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSubmitting(true);
@@ -154,6 +172,7 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
       status: "pending",
     });
     setSubmitting(false);
+    setConfirmOpen(false);
     if (error) {
       console.error("[booking] appointment insert failed", error);
       toast.error(t("booking.error_generic", "Impossible d'envoyer la demande. Veuillez réessayer."));
@@ -237,7 +256,7 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
         )}
 
         {selectedDate && selectedTime && (
-          <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
+          <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
                 <Input id="bk-name" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} required maxLength={120} /></div>
@@ -254,6 +273,37 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
             </Button>
           </form>
         )}
+
+        <AlertDialog open={confirmOpen} onOpenChange={(o) => { if (!submitting) setConfirmOpen(o); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmer votre rendez-vous</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm">
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-foreground">
+                    {therapistName && <div><span className="text-muted-foreground">Thérapeute :</span> <strong>{therapistName}</strong></div>}
+                    {selectedDate && <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong></div>}
+                    {selectedTime && <div><span className="text-muted-foreground">Heure :</span> <strong>{selectedTime}</strong></div>}
+                    <div><span className="text-muted-foreground">Type :</span> <strong>Séance individuelle</strong></div>
+                  </div>
+                  <p className="leading-relaxed">
+                    Ce rendez-vous sera réservé exclusivement pour vous. Un thérapeute se prépare pour vous accueillir — merci de respecter cet engagement ou de l'annuler 24h avant. Merci.
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={submitting}>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={submitting}
+                onClick={(e) => { e.preventDefault(); void confirmBooking(); }}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {submitting ? "Envoi…" : "✅ Confirmer mon rendez-vous"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
