@@ -17,6 +17,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { upsertMyEvent, signEventImage } from "@/lib/events.functions";
+import { AddressAutocomplete } from "@/components/forms/AddressAutocomplete";
 
 export type EventDraft = {
   id?: string | null;
@@ -384,7 +385,13 @@ export function EventFormWizard({ initial, onSaved, onCancel }: Props) {
                 {(draft.format === "in_person" || draft.format === "hybrid") && (
                   <div className="space-y-1.5">
                     <Label htmlFor="loc">Adresse / Lieu *</Label>
-                    <Input id="loc" value={draft.location} onChange={(e) => update({ location: e.target.value })} placeholder="Rue, ville, canton" />
+                    <AddressAutocomplete
+                      id="loc"
+                      value={draft.location}
+                      onChange={(v) => update({ location: v })}
+                      placeholder="Rue, ville, canton"
+                      countries={["ch"]}
+                    />
                   </div>
                 )}
                 {(draft.format === "online" || draft.format === "hybrid") && (
