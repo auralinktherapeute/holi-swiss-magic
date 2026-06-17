@@ -38,9 +38,12 @@ import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
+import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
 import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
 import { Route as LangContactIndexRouteImport } from './routes/$lang.contact.index'
 import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion.index'
+import { Route as LangConfidentialiteIndexRouteImport } from './routes/$lang.confidentialite.index'
+import { Route as LangConditionsIndexRouteImport } from './routes/$lang.conditions.index'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -190,6 +193,11 @@ const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
   path: '/inscription/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangImpressumIndexRoute = LangImpressumIndexRouteImport.update({
+  id: '/impressum/',
+  path: '/impressum/',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangEvenementsIndexRoute = LangEvenementsIndexRouteImport.update({
   id: '/evenements/',
   path: '/evenements/',
@@ -203,6 +211,17 @@ const LangContactIndexRoute = LangContactIndexRouteImport.update({
 const LangConnexionIndexRoute = LangConnexionIndexRouteImport.update({
   id: '/connexion/',
   path: '/connexion/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangConfidentialiteIndexRoute =
+  LangConfidentialiteIndexRouteImport.update({
+    id: '/confidentialite/',
+    path: '/confidentialite/',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangConditionsIndexRoute = LangConditionsIndexRouteImport.update({
+  id: '/conditions/',
+  path: '/conditions/',
   getParentRoute: () => LangRoute,
 } as any)
 const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
@@ -251,9 +270,12 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
+  '/$lang/conditions/': typeof LangConditionsIndexRoute
+  '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
   '/$lang/connexion/': typeof LangConnexionIndexRoute
   '/$lang/contact/': typeof LangContactIndexRoute
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
+  '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
@@ -285,9 +307,12 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog': typeof LangBlogIndexRoute
+  '/$lang/conditions': typeof LangConditionsIndexRoute
+  '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
   '/$lang/connexion': typeof LangConnexionIndexRoute
   '/$lang/contact': typeof LangContactIndexRoute
   '/$lang/evenements': typeof LangEvenementsIndexRoute
+  '/$lang/impressum': typeof LangImpressumIndexRoute
   '/$lang/inscription': typeof LangInscriptionIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
@@ -323,9 +348,12 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
+  '/$lang/conditions/': typeof LangConditionsIndexRoute
+  '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
   '/$lang/connexion/': typeof LangConnexionIndexRoute
   '/$lang/contact/': typeof LangContactIndexRoute
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
+  '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
@@ -362,9 +390,12 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog/'
+    | '/$lang/conditions/'
+    | '/$lang/confidentialite/'
     | '/$lang/connexion/'
     | '/$lang/contact/'
     | '/$lang/evenements/'
+    | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
@@ -396,9 +427,12 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog'
+    | '/$lang/conditions'
+    | '/$lang/confidentialite'
     | '/$lang/connexion'
     | '/$lang/contact'
     | '/$lang/evenements'
+    | '/$lang/impressum'
     | '/$lang/inscription'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
@@ -433,9 +467,12 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog/'
+    | '/$lang/conditions/'
+    | '/$lang/confidentialite/'
     | '/$lang/connexion/'
     | '/$lang/contact/'
     | '/$lang/evenements/'
+    | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
@@ -653,6 +690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangInscriptionIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/impressum/': {
+      id: '/$lang/impressum/'
+      path: '/impressum'
+      fullPath: '/$lang/impressum/'
+      preLoaderRoute: typeof LangImpressumIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/evenements/': {
       id: '/$lang/evenements/'
       path: '/evenements'
@@ -672,6 +716,20 @@ declare module '@tanstack/react-router' {
       path: '/connexion'
       fullPath: '/$lang/connexion/'
       preLoaderRoute: typeof LangConnexionIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/confidentialite/': {
+      id: '/$lang/confidentialite/'
+      path: '/confidentialite'
+      fullPath: '/$lang/confidentialite/'
+      preLoaderRoute: typeof LangConfidentialiteIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/conditions/': {
+      id: '/$lang/conditions/'
+      path: '/conditions'
+      fullPath: '/$lang/conditions/'
+      preLoaderRoute: typeof LangConditionsIndexRouteImport
       parentRoute: typeof LangRoute
     }
     '/$lang/blog/': {
@@ -703,9 +761,12 @@ interface LangRouteChildren {
   LangBlogSlugRoute: typeof LangBlogSlugRoute
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
+  LangConditionsIndexRoute: typeof LangConditionsIndexRoute
+  LangConfidentialiteIndexRoute: typeof LangConfidentialiteIndexRoute
   LangConnexionIndexRoute: typeof LangConnexionIndexRoute
   LangContactIndexRoute: typeof LangContactIndexRoute
   LangEvenementsIndexRoute: typeof LangEvenementsIndexRoute
+  LangImpressumIndexRoute: typeof LangImpressumIndexRoute
   LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
@@ -716,9 +777,12 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogSlugRoute: LangBlogSlugRoute,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
+  LangConditionsIndexRoute: LangConditionsIndexRoute,
+  LangConfidentialiteIndexRoute: LangConfidentialiteIndexRoute,
   LangConnexionIndexRoute: LangConnexionIndexRoute,
   LangContactIndexRoute: LangContactIndexRoute,
   LangEvenementsIndexRoute: LangEvenementsIndexRoute,
+  LangImpressumIndexRoute: LangImpressumIndexRoute,
   LangInscriptionIndexRoute: LangInscriptionIndexRoute,
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
@@ -795,3 +859,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
