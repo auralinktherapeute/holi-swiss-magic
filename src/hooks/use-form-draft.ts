@@ -182,7 +182,7 @@ export function useFormDraft<T>({
       try {
         const memoryDraft = readMemoryDraft<T>(formType, userId, getCompletenessScore);
         let bestDraft: StoredDraft<T> | null = memoryDraft;
-        if (userId) {
+        if (!memoryDraft && userId) {
           const { data: row } = await draftsSelect<T>()
             .select("data, updated_at")
             .eq("user_id", userId)
