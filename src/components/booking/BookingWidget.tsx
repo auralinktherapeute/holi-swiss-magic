@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getBookedAppointmentSlots } from "@/lib/public.functions";
 import { z } from "zod";
 import { useFormDraft } from "@/hooks/use-form-draft";
-import { DraftBanner, DraftSavedIndicator } from "@/components/drafts/DraftBanner";
+import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
@@ -59,17 +59,21 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
+  const autoRestoredRef = useRef(false);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
     formType: `booking:${therapistId}`,
     data: form,
     enabled: formTouched && !success,
   });
-  const restoreDraft = () => {
-    if (initialDraft) setForm(initialDraft as typeof form);
+  useEffect(() => {
+    if (autoRestoredRef.current || !initialDraft) return;
+    autoRestoredRef.current = true;
+    setForm(initialDraft as typeof form);
+    setFormTouched(true);
     dismissDraft();
-    toast.success(t("booking.draft_restored", "Brouillon restauré"));
-  };
+  }, [dismissDraft, initialDraft]);
+
   const updateForm = (patch: Partial<typeof form>) => {
     setForm((prev) => ({ ...prev, ...patch }));
     setFormTouched(true);
@@ -232,9 +236,6 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
 
         {selectedDate && selectedTime && (
           <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
-            {initialDraft && (
-              <DraftBanner savedAt={savedAt} onRestore={restoreDraft} onDismiss={dismissDraft} />
-            )}
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
                 <Input id="bk-name" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} required maxLength={120} /></div>

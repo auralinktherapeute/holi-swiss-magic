@@ -13,6 +13,8 @@ type Options<T> = {
   enabled: boolean;
   /** Debounce in ms (default 1500). */
   debounceMs?: number;
+  /** Scores how much user-entered content exists; used to avoid overwriting rich drafts with accidental empty resets. */
+  getCompletenessScore?: (data: T) => number;
 };
 
 const LS_PREFIX = "lovable.draft.";
@@ -67,32 +69,86 @@ function draftsDelete() {
   return supabase.from("drafts" as never) as unknown as DraftDeleteQuery;
 }
 
-function readLocalDraft<T>(formType: string, userId: string | null): StoredDraft<T> | null {
+function defaultCompletenessScore(value: unknown): number {
+  if (value == null) return 0;
+  if (typeof value === "string") return value.trim() ? 1 : 0;
+  if (typeof value === "number") return Number.isFinite(value) ? 1 : 0;
+  if (typeof value === "boolean") return 0;
+  if (Array.isArray(value)) {
+    return value.reduce<number>(
+      (sum, item) => sum + Math.max(1, defaultCompletenessScore(item)),
+      0,
+    );
+  }
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).reduce<number>(
+      (sum, item) => sum + defaultCompletenessScore(item),
+      0,
+    );
+  }
+  return 0;
+}
+
+function pickBestDraft<T>(drafts: Array<StoredDraft<T> | null>, scoreDraft: (data: T) => number) {
+  return drafts.filter(Boolean).reduce<StoredDraft<T> | null>((best, draft) => {
+    if (!draft) return best;
+    if (!best) return draft;
+    const draftScore = scoreDraft(draft.data);
+    const bestScore = scoreDraft(best.data);
+    const draftIsMuchRicher = draftScore >= bestScore + 2 && bestScore <= draftScore * 0.6;
+    const bestIsMuchRicher = bestScore >= draftScore + 2 && draftScore <= bestScore * 0.6;
+    if (draftIsMuchRicher) return draft;
+    if (bestIsMuchRicher) return best;
+    return new Date(draft.updated_at).getTime() >= new Date(best.updated_at).getTime()
+      ? draft
+      : best;
+  }, null);
+}
+
+function readLocalDraft<T>(
+  formType: string,
+  userId: string | null,
+  scoreDraft: (data: T) => number,
+): StoredDraft<T> | null {
   if (typeof window === "undefined") return null;
   const candidates = [lsKey(formType, userId), ...(userId ? [lsKey(formType, null)] : [])];
+  const drafts: Array<StoredDraft<T> | null> = [];
   for (const key of candidates) {
+    const backupRaw = window.localStorage.getItem(`${key}.backup`);
+    if (backupRaw) {
+      try {
+        drafts.push(JSON.parse(backupRaw) as StoredDraft<T>);
+      } catch {
+        window.localStorage.removeItem(`${key}.backup`);
+      }
+    }
     const raw = window.localStorage.getItem(key);
     if (!raw) continue;
     try {
-      return JSON.parse(raw) as StoredDraft<T>;
+      drafts.push(JSON.parse(raw) as StoredDraft<T>);
     } catch {
       window.localStorage.removeItem(key);
     }
   }
-  return null;
+  return pickBestDraft(drafts, scoreDraft);
 }
 
 function writeLocalDraft<T>(formType: string, userId: string | null, data: T) {
   if (typeof window === "undefined") return null;
   const updated_at = new Date().toISOString();
-  window.localStorage.setItem(lsKey(formType, userId), JSON.stringify({ data, updated_at }));
+  const key = lsKey(formType, userId);
+  const previous = window.localStorage.getItem(key);
+  if (previous) window.localStorage.setItem(`${key}.backup`, previous);
+  window.localStorage.setItem(key, JSON.stringify({ data, updated_at }));
   return updated_at;
 }
 
 function removeLocalDraft(formType: string, userId: string | null) {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(lsKey(formType, userId));
-  window.localStorage.removeItem(lsKey(formType, null));
+  [lsKey(formType, userId), lsKey(formType, null)].forEach((key) => {
+    window.localStorage.removeItem(key);
+    window.localStorage.removeItem(`${key}.backup`);
+  });
 }
 
 /**
@@ -101,7 +157,13 @@ function removeLocalDraft(formType: string, userId: string | null) {
  * - Anonymous users → falls back to localStorage.
  * Returns the loaded draft (once, on mount) plus save status / actions.
  */
-export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: Options<T>) {
+export function useFormDraft<T>({
+  formType,
+  data,
+  enabled,
+  debounceMs = 1500,
+  getCompletenessScore = defaultCompletenessScore,
+}: Options<T>) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -115,10 +177,25 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
   const latestDataRef = useRef(data);
   const enabledRef = useRef(enabled);
   const loadedRef = useRef(loaded);
+  const lastSavedScoreRef = useRef(0);
 
   latestDataRef.current = data;
   enabledRef.current = enabled;
   loadedRef.current = loaded;
+
+  const writeIfSafe = useCallback(
+    (nextData: T) => {
+      const nextScore = getCompletenessScore(nextData);
+      const previousScore = lastSavedScoreRef.current;
+      const wouldEraseRichDraft =
+        previousScore >= nextScore + 2 && nextScore <= previousScore * 0.6;
+      if (wouldEraseRichDraft) return null;
+      const updatedAt = writeLocalDraft(formType, userId, nextData);
+      lastSavedScoreRef.current = nextScore;
+      return updatedAt;
+    },
+    [formType, userId, getCompletenessScore],
+  );
 
   // Initial load (once per user/formType).
   useEffect(() => {
@@ -127,7 +204,7 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
     setInitialDraft(null);
     (async () => {
       try {
-        const localDraft = readLocalDraft<T>(formType, userId);
+        const localDraft = readLocalDraft<T>(formType, userId, getCompletenessScore);
         let bestDraft: StoredDraft<T> | null = localDraft;
         if (userId) {
           const { data: row } = await draftsSelect<T>()
@@ -140,18 +217,14 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
               data: row.data,
               updated_at: row.updated_at ?? new Date().toISOString(),
             };
-            if (
-              !bestDraft ||
-              new Date(remoteDraft.updated_at).getTime() >= new Date(bestDraft.updated_at).getTime()
-            ) {
-              bestDraft = remoteDraft;
-            }
+            bestDraft = pickBestDraft([bestDraft, remoteDraft], getCompletenessScore);
           }
         }
         if (!cancelled && bestDraft?.data) {
           setInitialDraft(bestDraft.data);
           setSavedAt(bestDraft.updated_at ? new Date(bestDraft.updated_at) : null);
           lastSerializedRef.current = JSON.stringify(bestDraft.data);
+          lastSavedScoreRef.current = getCompletenessScore(bestDraft.data);
         }
       } catch {
         /* ignore */
@@ -162,7 +235,7 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
     return () => {
       cancelled = true;
     };
-  }, [userId, formType]);
+  }, [userId, formType, getCompletenessScore]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -171,7 +244,8 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
       const latestData = latestDataRef.current;
       const serialized = JSON.stringify(latestData);
       if (serialized === lastSerializedRef.current) return;
-      const updatedAt = writeLocalDraft(formType, userId, latestData);
+      const updatedAt = writeIfSafe(latestData);
+      if (!updatedAt) return;
       lastSerializedRef.current = serialized;
       if (updateState && updatedAt) {
         setSavedAt(new Date(updatedAt));
@@ -189,14 +263,15 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
       window.removeEventListener("pagehide", handlePageHide);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [formType, userId]);
+  }, [formType, userId, writeIfSafe]);
 
   // Debounced save on data change.
   useEffect(() => {
     if (!enabled || !loaded) return;
     const serialized = JSON.stringify(data);
     if (serialized === lastSerializedRef.current) return;
-    const localUpdatedAt = writeLocalDraft(formType, userId, data);
+    const localUpdatedAt = writeIfSafe(data);
+    if (!localUpdatedAt) return;
     lastSerializedRef.current = serialized;
     if (localUpdatedAt) {
       setSavedAt(new Date(localUpdatedAt));
@@ -227,7 +302,7 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [data, enabled, loaded, userId, formType, debounceMs]);
+  }, [data, enabled, loaded, userId, formType, debounceMs, writeIfSafe]);
 
   const clearDraft = useCallback(async () => {
     try {

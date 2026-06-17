@@ -33,7 +33,7 @@ import {
 } from "@/lib/dashboard.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import { useFormDraft } from "@/hooks/use-form-draft";
-import { DraftBanner, DraftSavedIndicator } from "@/components/drafts/DraftBanner";
+import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -68,6 +68,19 @@ const THERAPIST_PROFILE_SELECT = [
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations",
 ].join(",");
+
+function profileDraftScore(draft: unknown) {
+  if (!draft || typeof draft !== "object") return 0;
+  const d = draft as Record<string, unknown>;
+  return [
+    "firstName", "lastName", "city", "postalCode", "address", "phone", "priceMin", "priceMax",
+    "yearsExperience", "shortBio", "bio", "googleReviewsUrl", "website", "ide",
+  ].reduce((score, key) => score + (String(d[key] ?? "").trim() ? 1 : 0), 0)
+    + (Array.isArray(d.langs) ? d.langs.length : 0)
+    + (Array.isArray(d.specialties) ? d.specialties.length : 0)
+    + (Array.isArray(d.services) ? d.services.length * 2 : 0)
+    + (Array.isArray(d.accreditations) ? d.accreditations.length : 0);
+}
 
 function ProfilePage() {
   const { t } = useTranslation();
@@ -142,6 +155,7 @@ function ProfilePage() {
     formType: "therapist_profile",
     data: formSnapshot,
     enabled: !loading && dirty,
+    getCompletenessScore: profileDraftScore,
   });
 
   const autoRestoredRef = useRef(false);
@@ -169,13 +183,6 @@ function ProfilePage() {
     setIde(d.ide ?? "");
     setAccreditations(d.accreditations ?? []);
     setDirty(true);
-  };
-
-  const restoreDraft = () => {
-    if (!initialDraft) return;
-    applyDraft(initialDraft as typeof formSnapshot);
-    dismissDraft();
-    toast.success("Brouillon restauré");
   };
 
   // Auto-restore draft as soon as it is loaded (after DB fetch), so the user
@@ -418,12 +425,6 @@ function ProfilePage() {
             <DraftSavedIndicator status={draftStatus} savedAt={savedAt} />
           </div>
         </header>
-
-        {initialDraft && (
-          <div className="mt-4">
-            <DraftBanner savedAt={savedAt} onRestore={restoreDraft} onDismiss={dismissDraft} />
-          </div>
-        )}
 
         {/* Identity */}
         <Section>
