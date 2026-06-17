@@ -13,7 +13,7 @@ type Therapist = {
   id: string; slug: string; first_name: string; last_name: string;
   title?: string; photo_url?: string; city?: string; canton?: string;
   latitude?: number; longitude?: number; price_min?: number; currency?: string;
-  is_premium?: boolean; verified?: boolean; specialties?: string[];
+  verified?: boolean; specialties?: string[];
 };
 
 export function NearbyTherapistsSwiss() {
@@ -28,9 +28,8 @@ export function NearbyTherapistsSwiss() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,slug,first_name,last_name,title,photo_url,city,canton,latitude,longitude,price_min,currency,is_premium,verified,specialties")
+        .select("id,slug,first_name,last_name,title,photo_url,city,canton,latitude,longitude,price_min,currency,verified,specialties")
         .eq("status", "active")
-        .order("is_premium", { ascending: false })
         .order("verified", { ascending: false })
         .limit(20);
       if (error) throw error;
