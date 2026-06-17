@@ -187,7 +187,8 @@ export function useFormDraft<T>({
     (nextData: T) => {
       const nextScore = getCompletenessScore(nextData);
       const previousScore = lastSavedScoreRef.current;
-      const wouldEraseRichDraft = previousScore >= nextScore + 2 && nextScore <= previousScore * 0.6;
+      const wouldEraseRichDraft =
+        previousScore >= nextScore + 2 && nextScore <= previousScore * 0.6;
       if (wouldEraseRichDraft) return null;
       const updatedAt = writeLocalDraft(formType, userId, nextData);
       lastSavedScoreRef.current = nextScore;
