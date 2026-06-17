@@ -30,7 +30,7 @@ function DashboardLayout() {
   const ensureShell = useServerFn(ensureMyTherapistShell);
   useEffect(() => {
     if (loading) return;
-    ensureShell({ data: undefined }).catch(() => {});
+    (ensureShell as any)().catch(() => {});
   }, [loading, ensureShell]);
   useEffect(() => {
     if (typeof window === "undefined") return;
