@@ -7,6 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,7 +36,7 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
-export type BookingService = { name: string; duration?: number; price?: number; format?: string };
+export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
 
 function toISODate(d: Date) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
@@ -77,6 +84,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const selectedService: BookingService | null =
     selectedServiceIdx !== null && services[selectedServiceIdx] ? services[selectedServiceIdx] : null;
   const slotMin = Math.max(15, Number(selectedService?.duration) || 60);
+  const accent = selectedService?.color;
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
     formType: `booking:${therapistId}`,
@@ -214,28 +222,52 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         {services.length > 0 && (
           <div>
             <div className="text-sm font-medium mb-2">1. Choisissez un service</div>
-            <div className="grid gap-2">
-              {services.map((s, i) => {
-                const sel = selectedServiceIdx === i;
-                return (
-                  <button
-                    key={`${s.name}-${i}`}
-                    type="button"
-                    onClick={() => { setSelectedServiceIdx(i); setSelectedDate(null); setSelectedTime(null); }}
-                    className={`text-left rounded-md border p-3 transition-colors ${sel ? "border-primary bg-primary/10" : "border-border hover:bg-muted/40"}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium text-foreground">{s.name}</div>
-                      {s.price != null && <div className="text-sm font-semibold text-primary">{s.price} CHF</div>}
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {s.duration ? `${s.duration} min` : "Durée non précisée"}
-                      {s.format ? ` · ${s.format}` : ""}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <Select
+              value={selectedServiceIdx !== null ? String(selectedServiceIdx) : undefined}
+              onValueChange={(v) => {
+                setSelectedServiceIdx(Number(v));
+                setSelectedDate(null);
+                setSelectedTime(null);
+              }}
+            >
+              <SelectTrigger
+                className="w-full h-11 border-border bg-card/60 hover:bg-card transition-colors"
+                style={accent ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}33` } : undefined}
+              >
+                <SelectValue placeholder="Sélectionner un type de séance…">
+                  {selectedService && (
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: selectedService.color ?? "hsl(var(--primary))" }}
+                      />
+                      <span className="font-medium">{selectedService.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        · {selectedService.duration ? `${selectedService.duration} min` : "durée libre"}
+                        {selectedService.price != null ? ` · ${selectedService.price} CHF` : ""}
+                      </span>
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((s, i) => (
+                  <SelectItem key={`${s.name}-${i}`} value={String(i)}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: s.color ?? "hsl(var(--primary))" }}
+                      />
+                      <span className="font-medium">{s.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        · {s.duration ? `${s.duration} min` : "durée libre"}
+                        {s.price != null ? ` · ${s.price} CHF` : ""}
+                      </span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -265,7 +297,8 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
               if (!c.available) return <div key={i} className={`${base} text-muted-foreground/50`}>{c.date.getDate()}</div>;
               return (
                 <button key={i} type="button" onClick={() => { setSelectedDate(c.iso); setSelectedTime(null); }}
-                  className={`${base} font-medium ${isSel ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
+                  className={`${base} font-medium ${isSel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                  style={isSel && accent ? { background: accent, color: "#fff" } : isSel ? undefined : (accent ? { background: `${accent}1a`, color: accent } : undefined)}>
                   {c.date.getDate()}
                 </button>
               );
@@ -280,12 +313,16 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
               <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {slotsForDay.map((s) => (
-                  <Badge key={s} onClick={() => setSelectedTime(s)}
-                    className={`cursor-pointer px-3 py-1.5 text-sm ${selectedTime === s ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
-                    {s}
-                  </Badge>
-                ))}
+                {slotsForDay.map((s) => {
+                  const sel = selectedTime === s;
+                  return (
+                    <Badge key={s} onClick={() => setSelectedTime(s)}
+                      className={`cursor-pointer px-3 py-1.5 text-sm ${sel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                      style={sel && accent ? { background: accent, color: "#fff" } : (!sel && accent ? { background: `${accent}1a`, color: accent } : undefined)}>
+                      {s}
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -295,7 +332,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
           <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
             <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
               <div className="font-medium mb-1">Récapitulatif</div>
-              {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
+              {selectedService && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Service :</span>
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: selectedService.color ?? "hsl(var(--primary))" }} />
+                  <strong>{selectedService.name}</strong>
+                </div>
+              )}
               <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong> à <strong>{selectedTime}</strong></div>
               <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong>{selectedService?.price != null && <> · <span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></>}</div>
             </div>
@@ -324,7 +367,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
                 <div className="space-y-3 text-sm">
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-foreground">
                     {therapistName && <div><span className="text-muted-foreground">Thérapeute :</span> <strong>{therapistName}</strong></div>}
-                    {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
+                    {selectedService && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Service :</span>
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: selectedService.color ?? "hsl(var(--primary))" }} />
+                        <strong>{selectedService.name}</strong>
+                      </div>
+                    )}
                     {selectedDate && <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong></div>}
                     {selectedTime && <div><span className="text-muted-foreground">Heure :</span> <strong>{selectedTime}</strong></div>}
                     <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong></div>

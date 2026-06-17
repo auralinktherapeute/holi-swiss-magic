@@ -95,7 +95,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   },
 });
 
-type ServiceEntry = { name: string; duration?: number; price?: number; format?: string };
+type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; format?: string; color?: string; description?: string };
 type AccreditationEntry = { org: string; number?: string };
 
 const FADE_UP = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -492,7 +492,18 @@ function Page() {
           <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-              <BookingWidget therapistId={th.id} therapistName={fullName} services={services} />
+              <BookingWidget
+                therapistId={th.id}
+                therapistName={fullName}
+                services={services.map((s) => ({
+                  name: s.name,
+                  duration: s.duration ?? s.duration_min,
+                  price: s.price,
+                  format: s.format,
+                  color: s.color,
+                  description: s.description,
+                }))}
+              />
             </div>
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur space-y-3">
