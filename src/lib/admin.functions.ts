@@ -135,11 +135,34 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { data: row, error } = await supabaseAdmin
       .from("therapists")
       .update({ status: data.status })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .select("id,email,first_name,last_name,slug,status")
+      .maybeSingle();
     if (error) throwAdminOperationError(error, "update therapist status failed");
+    if (!row) throw new Error("Thérapeute introuvable.");
+    if (row.status !== data.status) {
+      throw new Error("La mise à jour du statut a été bloquée par la base de données.");
+    }
+
+    // Fire-and-forget email notification
+    if (row.email && (data.status === "active" || data.status === "rejected" || data.status === "suspended")) {
+      try {
+        const { sendTherapistStatusEmail } = await import("./therapist-status-emails.server");
+        await sendTherapistStatusEmail({
+          to: row.email,
+          firstName: row.first_name ?? undefined,
+          lastName: row.last_name ?? undefined,
+          slug: row.slug ?? undefined,
+          status: data.status,
+          reason: data.reason,
+        });
+      } catch (e) {
+        console.error("[admin] therapist status email failed", e);
+      }
+    }
     return { ok: true };
   });
 
