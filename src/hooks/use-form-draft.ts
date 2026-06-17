@@ -74,9 +74,14 @@ function defaultCompletenessScore(value: unknown): number {
   if (typeof value === "string") return value.trim() ? 1 : 0;
   if (typeof value === "number") return Number.isFinite(value) ? 1 : 0;
   if (typeof value === "boolean") return 0;
-  if (Array.isArray(value)) return value.reduce((sum, item) => sum + Math.max(1, defaultCompletenessScore(item)), 0);
+  if (Array.isArray(value)) {
+    return value.reduce<number>((sum, item) => sum + Math.max(1, defaultCompletenessScore(item)), 0);
+  }
   if (typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).reduce((sum, item) => sum + defaultCompletenessScore(item), 0);
+    return Object.values(value as Record<string, unknown>).reduce<number>(
+      (sum, item) => sum + defaultCompletenessScore(item),
+      0,
+    );
   }
   return 0;
 }
@@ -95,7 +100,7 @@ function pickBestDraft<T>(drafts: Array<StoredDraft<T> | null>, scoreDraft: (dat
   }, null);
 }
 
-function readLocalDraft<T>(formType: string, userId: string | null): StoredDraft<T> | null {
+function readLocalDraft<T>(formType: string, userId: string | null, scoreDraft: (data: T) => number): StoredDraft<T> | null {
   if (typeof window === "undefined") return null;
   const candidates = [lsKey(formType, userId), ...(userId ? [lsKey(formType, null)] : [])];
   const drafts: Array<StoredDraft<T> | null> = [];
@@ -108,7 +113,7 @@ function readLocalDraft<T>(formType: string, userId: string | null): StoredDraft
       window.localStorage.removeItem(key);
     }
   }
-  return pickBestDraft(drafts, defaultCompletenessScore);
+  return pickBestDraft(drafts, scoreDraft);
 }
 
 function writeLocalDraft<T>(formType: string, userId: string | null, data: T) {
