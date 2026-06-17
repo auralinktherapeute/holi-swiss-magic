@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
+import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -142,13 +143,11 @@ function Page() {
                           style={{ background: "linear-gradient(135deg,#b86ef9,#5cc8fa)", padding: 2 }}
                         >
                           <div className="h-full w-full rounded-full overflow-hidden bg-[#1a1035]">
-                            {th.photo_url ? (
-                              <img src={th.photo_url} alt={fullName} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[#b86ef9]">
-                                {fullName[0]}
-                              </div>
-                            )}
+                            <TherapistAvatar
+                              photoUrl={th.photo_url}
+                              alt={fullName}
+                              fallback={fullName[0]}
+                            />
                           </div>
                         </div>
                         {/* Badge premium */}

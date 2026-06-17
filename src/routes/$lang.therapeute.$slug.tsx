@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
+import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
 const TherapistMiniMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -236,13 +237,13 @@ function Page() {
                   }}
                 >
                   <div className="h-full w-full rounded-full overflow-hidden bg-[#1a1035]">
-                    {th.photo_url ? (
-                      <img src={th.photo_url} alt={fullName} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-[#b86ef9]">
-                        {fullName[0]}
-                      </div>
-                    )}
+                    <TherapistAvatar
+                      photoUrl={th.photo_url}
+                      alt={fullName}
+                      fallback={fullName[0]}
+                      className="h-full w-full object-cover"
+                      fallbackClassName="flex h-full w-full items-center justify-center text-4xl font-bold text-[#b86ef9]"
+                    />
                   </div>
                 </div>
                 {th.is_premium && (
