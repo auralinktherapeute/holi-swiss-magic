@@ -396,7 +396,16 @@ function ProfilePage() {
             {t("profile_edit.page_title")}
           </h1>
           <p className="mt-2 text-sm text-[#a89bc4]">{t("profile_edit.page_subtitle")}</p>
+          <div className="mt-3 flex justify-end">
+            <DraftSavedIndicator status={draftStatus} savedAt={savedAt} />
+          </div>
         </header>
+
+        {initialDraft && (
+          <div className="mt-4">
+            <DraftBanner savedAt={savedAt} onRestore={restoreDraft} onDismiss={dismissDraft} />
+          </div>
+        )}
 
         {/* Identity */}
         <Section>
