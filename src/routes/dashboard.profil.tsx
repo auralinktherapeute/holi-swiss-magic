@@ -34,6 +34,7 @@ import {
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
+import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -85,6 +86,7 @@ function profileDraftScore(draft: unknown) {
 function ProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const profileStatePrefix = user?.id ? `dashboard.profile.${user.id}` : "dashboard.profile.pending";
   const saveProfile = useServerFn(saveMyTherapistProfile);
   const addDocument = useServerFn(addMyTherapistDocument);
   const updateDocument = useServerFn(updateMyTherapistDocument);
@@ -94,51 +96,51 @@ function ProfilePage() {
   const [dirty, setDirty] = useState(false);
 
   // Identity
-  const [rowId, setRowId] = useState<string | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string>("");
+  const [rowId, setRowId] = useSessionState<string | null>(`${profileStatePrefix}.rowId`, null);
+  const [photoUrl, setPhotoUrl] = useSessionState<string>(`${profileStatePrefix}.photoUrl`, "");
   // The canonical public URL we persist to the DB (works on the public site once active).
-  const [photoPublicUrl, setPhotoPublicUrl] = useState<string>("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [city, setCity] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
+  const [photoPublicUrl, setPhotoPublicUrl] = useSessionState<string>(`${profileStatePrefix}.photoPublicUrl`, "");
+  const [firstName, setFirstName] = useSessionState(`${profileStatePrefix}.firstName`, "");
+  const [lastName, setLastName] = useSessionState(`${profileStatePrefix}.lastName`, "");
+  const [city, setCity] = useSessionState(`${profileStatePrefix}.city`, "");
+  const [postalCode, setPostalCode] = useSessionState(`${profileStatePrefix}.postalCode`, "");
+  const [address, setAddress] = useSessionState(`${profileStatePrefix}.address`, "");
+  const [phone, setPhone] = useSessionState(`${profileStatePrefix}.phone`, "");
 
   // Approaches
-  const [canton, setCanton] = useState("GE");
-  const [langs, setLangs] = useState<string[]>([]);
-  const [priceMin, setPriceMin] = useState<number | "">("");
-  const [priceMax, setPriceMax] = useState<number | "">("");
-  const [currency, setCurrency] = useState("CHF");
-  const [sessionDuration, setSessionDuration] = useState<number | "">(60);
-  const [yearsExperience, setYearsExperience] = useState<number | "">("");
+  const [canton, setCanton] = useSessionState(`${profileStatePrefix}.canton`, "GE");
+  const [langs, setLangs] = useSessionState<string[]>(`${profileStatePrefix}.langs`, []);
+  const [priceMin, setPriceMin] = useSessionState<number | "">(`${profileStatePrefix}.priceMin`, "");
+  const [priceMax, setPriceMax] = useSessionState<number | "">(`${profileStatePrefix}.priceMax`, "");
+  const [currency, setCurrency] = useSessionState(`${profileStatePrefix}.currency`, "CHF");
+  const [sessionDuration, setSessionDuration] = useSessionState<number | "">(`${profileStatePrefix}.sessionDuration`, 60);
+  const [yearsExperience, setYearsExperience] = useSessionState<number | "">(`${profileStatePrefix}.yearsExperience`, "");
 
   // Specialties
-  const [specialties, setSpecialties] = useState<string[]>([]);
-  const [specSearch, setSpecSearch] = useState("");
-  const [customSpec, setCustomSpec] = useState("");
+  const [specialties, setSpecialties] = useSessionState<string[]>(`${profileStatePrefix}.specialties`, []);
+  const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
+  const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
 
   // Services
-  const [services, setServices] = useState<TherapistService[]>([]);
+  const [services, setServices] = useSessionState<TherapistService[]>(`${profileStatePrefix}.services`, []);
 
   // Texts
-  const [shortBio, setShortBio] = useState("");
-  const [bio, setBio] = useState("");
-  const [googleReviewsUrl, setGoogleReviewsUrl] = useState("");
-  const [website, setWebsite] = useState("");
+  const [shortBio, setShortBio] = useSessionState(`${profileStatePrefix}.shortBio`, "");
+  const [bio, setBio] = useSessionState(`${profileStatePrefix}.bio`, "");
+  const [googleReviewsUrl, setGoogleReviewsUrl] = useSessionState(`${profileStatePrefix}.googleReviewsUrl`, "");
+  const [website, setWebsite] = useSessionState(`${profileStatePrefix}.website`, "");
 
   // SIRET
   // Swiss IDE / UID (CHE-XXX.XXX.XXX)
-  const [ide, setIde] = useState("");
-  const [ideVerified, setIdeVerified] = useState(false);
+  const [ide, setIde] = useSessionState(`${profileStatePrefix}.ide`, "");
+  const [ideVerified, setIdeVerified] = useSessionState(`${profileStatePrefix}.ideVerified`, false);
   const [showIde, setShowIde] = useState(false);
 
   // Accreditations (ASCA, RME, OrTra TC, ...)
-  const [accreditations, setAccreditations] = useState<Accreditation[]>([]);
+  const [accreditations, setAccreditations] = useSessionState<Accreditation[]>(`${profileStatePrefix}.accreditations`, []);
 
   // Documents
-  const [documents, setDocuments] = useState<DocRow[]>([]);
+  const [documents, setDocuments] = useSessionState<DocRow[]>(`${profileStatePrefix}.documents`, []);
 
   const docInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,6 +229,34 @@ function ProfilePage() {
         .eq("user_id", user.id)
         .maybeSingle() as any;
       if (data) {
+        const hasProfileSession = hasSessionState(`${profileStatePrefix}.rowId`) || hasSessionState(`${profileStatePrefix}.firstName`);
+        profileBaselineScoreRef.current = profileDraftScore({
+          firstName: data.first_name ?? "",
+          lastName: data.last_name ?? "",
+          city: data.city ?? "",
+          postalCode: data.postal_code ?? "",
+          address: data.address ?? "",
+          phone: data.phone ?? "",
+          canton: data.canton ?? "GE",
+          langs: data.languages ?? [],
+          priceMin: data.price_min ?? "",
+          priceMax: data.price_max ?? "",
+          currency: data.currency ?? "CHF",
+          sessionDuration,
+          yearsExperience: (data as any).years_experience ?? "",
+          specialties: data.specialties ?? [],
+          services: ((data as any).services as TherapistService[]) ?? [],
+          shortBio: data.short_bio ?? "",
+          bio: data.bio ?? "",
+          googleReviewsUrl: (data as any).google_reviews_url ?? "",
+          website: data.website ?? "",
+          ide: "",
+          accreditations: ((data as any).accreditations as Accreditation[]) ?? [],
+        });
+        if (hasProfileSession) {
+          setLoading(false);
+          return;
+        }
         setRowId(data.id);
         setPhotoPublicUrl(data.photo_url ?? "");
         if (data.photo_url) {
@@ -254,30 +284,6 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
-        profileBaselineScoreRef.current = profileDraftScore({
-          firstName: data.first_name ?? "",
-          lastName: data.last_name ?? "",
-          city: data.city ?? "",
-          postalCode: data.postal_code ?? "",
-          address: data.address ?? "",
-          phone: data.phone ?? "",
-          canton: data.canton ?? "GE",
-          langs: data.languages ?? [],
-          priceMin: data.price_min ?? "",
-          priceMax: data.price_max ?? "",
-          currency: data.currency ?? "CHF",
-          sessionDuration,
-          yearsExperience: (data as any).years_experience ?? "",
-          specialties: data.specialties ?? [],
-          services: ((data as any).services as TherapistService[]) ?? [],
-          shortBio: data.short_bio ?? "",
-          bio: data.bio ?? "",
-          googleReviewsUrl: (data as any).google_reviews_url ?? "",
-          website: data.website ?? "",
-          ide: "",
-          accreditations: ((data as any).accreditations as Accreditation[]) ?? [],
-        });
-
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
@@ -295,7 +301,7 @@ function ProfilePage() {
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, profileStatePrefix]);
 
   const markDirty = () => setDirty(true);
 
@@ -846,8 +852,9 @@ function ProfilePage() {
                     {d.file_name}
                   </a>
                   <Input
-                    defaultValue={d.label ?? ""}
-                    onBlur={(e) => { if (e.target.value !== d.label) updateDoc(d.id, { label: e.target.value }); }}
+                    value={d.label ?? ""}
+                    onChange={(e) => setDocuments((prev) => prev.map((doc) => (doc.id === d.id ? { ...doc, label: e.target.value } : doc)))}
+                    onBlur={(e) => updateDocument({ data: { id: d.id, label: e.target.value, is_public: d.is_public } })}
                     className={inputClass}
                   />
                   <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-[#d4c4e0]">
@@ -935,11 +942,12 @@ function ServiceDialog({
   trigger?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState(initial?.name ?? "");
-  const [dur, setDur] = useState<number | "">(initial?.duration_min ?? 60);
-  const [desc, setDesc] = useState(initial?.description ?? "");
-  const [color, setColor] = useState(initial?.color ?? SERVICE_COLORS[1]);
+  const serviceStateKey = `dashboard.profile.service.${initial?.id ?? "new"}`;
+  const [open, setOpen] = useSessionState(`${serviceStateKey}.open`, false);
+  const [name, setName] = useSessionState(`${serviceStateKey}.name`, initial?.name ?? "");
+  const [dur, setDur] = useSessionState<number | "">(`${serviceStateKey}.duration`, initial?.duration_min ?? 60);
+  const [desc, setDesc] = useSessionState(`${serviceStateKey}.description`, initial?.description ?? "");
+  const [color, setColor] = useSessionState(`${serviceStateKey}.color`, initial?.color ?? SERVICE_COLORS[1]);
 
   const submit = () => {
     if (!name.trim() || !dur) return;

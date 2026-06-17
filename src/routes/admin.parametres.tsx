@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Save, RotateCcw, Globe, CreditCard, Shield, Bell } from "lucide-react";
 import { toast } from "sonner";
+import { useSessionState } from "@/hooks/use-session-state";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/parametres")({ component: Page });
@@ -20,8 +21,6 @@ const DEFAULTS: Settings = {
   maintenance: false, retentionMonths: 36,
   emailNotifs: true, smsNotifs: false,
 };
-
-const KEY = "holiswiss:admin-settings";
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -68,20 +67,12 @@ function Section({ icon: Icon, title, children }: { icon: any; title: string; ch
 }
 
 function Page() {
-  const [s, setS] = useState<Settings>(DEFAULTS);
+  const [s, setS] = useSessionState<Settings>("admin.settings.form", DEFAULTS);
   const [dirty, setDirty] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setS({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch { /* ignore */ }
-  }, []);
 
   const update = (patch: Partial<Settings>) => { setS((prev) => ({ ...prev, ...patch })); setDirty(true); };
 
   const save = () => {
-    localStorage.setItem(KEY, JSON.stringify(s));
     toast.success("Paramètres enregistrés");
     setDirty(false);
   };

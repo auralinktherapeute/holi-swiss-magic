@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X } from "lucide-react";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, titleForLang } from "@/lib/articles.functions";
+import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
 
@@ -36,7 +37,7 @@ function toSlug(str: string) {
 interface UPhoto { id: string; urls: { small: string; regular: string }; alt_description: string; user: { name: string; links: { html: string } }; links: { download_location: string } }
 
 function UnsplashPicker({ onSelect }: { onSelect: (url: string) => void }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useSessionState("admin.articles.unsplashQuery", "");
   const [photos, setPhotos] = useState<UPhoto[]>([]);
   const [loading, setLoading] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
@@ -109,16 +110,19 @@ const EMPTY: FormData = {
 
 function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () => void; initial?: ArticleRow | null }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<FormData>(EMPTY);
+  const formKey = initial?.id ? `admin.articles.edit.${initial.id}` : "admin.articles.new";
+  const [form, setForm] = useSessionState<FormData>(formKey, EMPTY);
+  const [langTab, setLangTab] = useSessionState<Lang>(`${formKey}.langTab`, "fr");
   const [showUnsplash, setShowUnsplash] = useState(false);
 
   // Reset on open
-  useState(() => {
-    if (open) setForm(initial
+  useEffect(() => {
+    if (!open || hasSessionState(formKey)) return;
+    setForm(initial
       ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", cover_image_url: initial.cover_image_url ?? "", category: initial.category ?? "", lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
       : EMPTY
     );
-  });
+  }, [formKey, initial, open, setForm]);
 
   const set = (k: keyof FormData, v: string) => setForm(prev => {
     const next = { ...prev, [k]: v };
@@ -173,7 +177,7 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
           </div>
 
           {/* Contenu multilingue */}
-          <Tabs defaultValue="fr">
+          <Tabs value={langTab} onValueChange={(v) => setLangTab(v as Lang)}>
             <TabsList className="bg-background border border-border/60">
               {LANG_TABS.map(t => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
             </TabsList>
@@ -259,8 +263,8 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
 // ── Page ──────────────────────────────────────────────────────────────────────
 function Page() {
   const qc = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<ArticleRow | null>(null);
+  const [dialogOpen, setDialogOpen] = useSessionState("admin.articles.dialogOpen", false);
+  const [editing, setEditing] = useSessionState<ArticleRow | null>("admin.articles.editing", null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-articles"],

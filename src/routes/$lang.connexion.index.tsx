@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/$lang/connexion/")({
   component: LoginPage,
@@ -17,8 +18,8 @@ function LoginPage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/connexion/" });
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useSessionState("auth.login.email", "");
+  const [password, setPassword] = useSessionState("auth.login.password", "");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
+import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 
 interface Props {
   therapistId: string;
@@ -29,8 +30,9 @@ export default function WeeklyScheduleEditor({ therapistId }: Props) {
   const queryClient = useQueryClient();
   // i18n days are indexed Monday..Sunday (locale label order from agenda_page.days).
   const DAY_LABELS = t("agenda_page.days", { returnObjects: true }) as string[];
+  const stateKey = `dashboard.weekly-schedule.${therapistId}`;
 
-  const [rows, setRows] = useState<Record<number, DayRow>>(() =>
+  const [rows, setRows] = useSessionState<Record<number, DayRow>>(stateKey, () =>
     Object.fromEntries(DAY_ORDER.map((d) => [d, { ...DEFAULT_ROW }])),
   );
 
@@ -50,6 +52,7 @@ export default function WeeklyScheduleEditor({ therapistId }: Props) {
 
   useEffect(() => {
     if (!existing) return;
+    if (hasSessionState(stateKey)) return;
     const next: Record<number, DayRow> = Object.fromEntries(
       DAY_ORDER.map((d) => [d, { ...DEFAULT_ROW }]),
     );
@@ -71,7 +74,7 @@ export default function WeeklyScheduleEditor({ therapistId }: Props) {
       }
     }
     setRows(next);
-  }, [existing]);
+  }, [existing, setRows, stateKey]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
