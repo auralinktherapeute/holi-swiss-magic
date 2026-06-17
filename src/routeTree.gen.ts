@@ -29,7 +29,6 @@ import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
-import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
@@ -148,11 +147,6 @@ const AdminListeAttenteRoute = AdminListeAttenteRouteImport.update({
   path: '/liste-attente',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminEvenementsRoute = AdminEvenementsRouteImport.update({
-  id: '/evenements',
-  path: '/evenements',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminEmailsRoute = AdminEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
@@ -250,7 +244,6 @@ export interface FileRoutesByFullPath {
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/emails': typeof AdminEmailsRoute
-  '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -287,7 +280,6 @@ export interface FileRoutesByTo {
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/emails': typeof AdminEmailsRoute
-  '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -328,7 +320,6 @@ export interface FileRoutesById {
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/emails': typeof AdminEmailsRoute
-  '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -370,7 +361,6 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/avis'
     | '/admin/emails'
-    | '/admin/evenements'
     | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
@@ -407,7 +397,6 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/avis'
     | '/admin/emails'
-    | '/admin/evenements'
     | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
@@ -447,7 +436,6 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/avis'
     | '/admin/emails'
-    | '/admin/evenements'
     | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
@@ -627,13 +615,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminListeAttenteRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/evenements': {
-      id: '/admin/evenements'
-      path: '/evenements'
-      fullPath: '/admin/evenements'
-      preLoaderRoute: typeof AdminEvenementsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/emails': {
       id: '/admin/emails'
       path: '/emails'
@@ -796,7 +777,6 @@ interface AdminRouteChildren {
   AdminArticlesRoute: typeof AdminArticlesRoute
   AdminAvisRoute: typeof AdminAvisRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
-  AdminEvenementsRoute: typeof AdminEvenementsRoute
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminParametresRoute: typeof AdminParametresRoute
@@ -811,7 +791,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminArticlesRoute: AdminArticlesRoute,
   AdminAvisRoute: AdminAvisRoute,
   AdminEmailsRoute: AdminEmailsRoute,
-  AdminEvenementsRoute: AdminEvenementsRoute,
   AdminListeAttenteRoute: AdminListeAttenteRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminParametresRoute: AdminParametresRoute,
