@@ -3,7 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Users, MapPin, ArrowRight, BadgeCheck, Info } from "lucide-react";
-import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
+import { supabase } from "@/integrations/supabase/client";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap })),
@@ -13,7 +13,7 @@ type Therapist = {
   id: string; slug: string; first_name: string; last_name: string;
   title?: string; photo_url?: string; city?: string; canton?: string;
   latitude?: number; longitude?: number; price_min?: number; currency?: string;
-  is_premium?: boolean; verified?: boolean; specialties?: string[];
+  verified?: boolean; specialties?: string[];
 };
 
 export function NearbyTherapistsSwiss() {
@@ -28,9 +28,8 @@ export function NearbyTherapistsSwiss() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,slug,first_name,last_name,title,photo_url,city,canton,latitude,longitude,price_min,currency,is_premium,verified,specialties")
+        .select("id,slug,first_name,last_name,title,photo_url,city,canton,latitude,longitude,price_min,currency,verified,specialties")
         .eq("status", "active")
-        .order("is_premium", { ascending: false })
         .order("verified", { ascending: false })
         .limit(20);
       if (error) throw error;
@@ -90,9 +89,9 @@ export function NearbyTherapistsSwiss() {
                             <p className="truncate text-sm font-semibold text-white">
                               {th.first_name} {th.last_name}
                             </p>
-                            {th.is_premium && (
+                            {th.verified && (
                               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#d4a05a]/20 px-2 py-0.5 text-[10px] font-semibold text-[#f5c97a] ring-1 ring-[#d4a05a]/40">
-                                <BadgeCheck className="h-3 w-3" /> Pro
+                                <BadgeCheck className="h-3 w-3" /> Vérifié
                               </span>
                             )}
                           </div>

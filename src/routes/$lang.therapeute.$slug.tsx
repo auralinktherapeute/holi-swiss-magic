@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, lazy, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
+import { supabase } from "@/integrations/supabase/client";
 import {
   MapPin, Star, BadgeCheck, Globe, Share2, Navigation2,
   Shield, ChevronUp,
@@ -143,14 +143,7 @@ function Page() {
     queryKey: ["reviews", th?.id],
     enabled: !!th?.id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("reviews")
-        .select("id,rating,comment,therapist_reply,replied_at,created_at,client_id")
-        .eq("therapist_id", th!.id)
-        .eq("status", "published")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      return data ?? [];
+      return [] as any[];
     },
   });
 

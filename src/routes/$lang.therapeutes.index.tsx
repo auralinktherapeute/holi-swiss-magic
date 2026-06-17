@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
+import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
 
 const TherapistMap = lazy(() =>
@@ -51,9 +51,8 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,latitude,longitude,price_min,price_max,currency,is_premium,verified,specialties")
+        .select("id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,latitude,longitude,price_min,price_max,currency,verified,specialties")
         .eq("status", "active")
-        .order("is_premium", { ascending: false })
         .order("verified", { ascending: false })
         .limit(100);
       if (error) throw error;
