@@ -222,6 +222,7 @@ export type Database = {
           address: string | null
           approaches: string[] | null
           bio: string | null
+          booking_note: string | null
           canton: string | null
           city: string | null
           consultation_modes: string[] | null
@@ -263,6 +264,7 @@ export type Database = {
           address?: string | null
           approaches?: string[] | null
           bio?: string | null
+          booking_note?: string | null
           canton?: string | null
           city?: string | null
           consultation_modes?: string[] | null
@@ -304,6 +306,7 @@ export type Database = {
           address?: string | null
           approaches?: string[] | null
           bio?: string | null
+          booking_note?: string | null
           canton?: string | null
           city?: string | null
           consultation_modes?: string[] | null
