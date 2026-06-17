@@ -128,15 +128,15 @@ export interface Database {
         Row: {
           id: string;
           therapist_id: string;
-          day_of_week: number;
+          day_of_week: number | null;
           start_time: string;
           end_time: string;
           is_active: boolean;
           created_at: string;
+          specific_date: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["availabilities"]["Row"]> & {
           therapist_id: string;
-          day_of_week: number;
           start_time: string;
           end_time: string;
         };
