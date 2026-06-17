@@ -29,7 +29,7 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
-export type BookingService = { name: string; duration?: number; price?: number; format?: string };
+export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
 
 function toISODate(d: Date) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
