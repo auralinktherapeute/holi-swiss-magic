@@ -17,7 +17,7 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: therapist, error } = await supabaseAdmin
       .from("therapists")
-      .select("first_name,last_name,title,city,canton,bio,specialties,photo_url,cover_image_url")
+      .select("first_name,last_name,title,city,canton,bio,specialties,photo_url")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
