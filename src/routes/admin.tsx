@@ -33,7 +33,7 @@ function AdminLayout() {
         if (!alive) return;
         setState(r.isAdmin ? "ok" : "deny");
       })
-      .catch(() => alive && setState("ok")); // blip réseau : ne pas déconnecter
+      .catch(() => alive && setState("deny")); // fail-closed: ne pas exposer l'UI admin sur erreur
     return () => {
       alive = false;
     };

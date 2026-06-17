@@ -220,6 +220,25 @@ export const sendWaitlistEmails = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Proof-of-submission: only send when a waiting_list row already exists for
+    // this email (and matches the supplied id when provided, within the last 10
+    // minutes). Otherwise return silently so this endpoint cannot be abused to
+    // spam arbitrary addresses.
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    let lookup = supabaseAdmin
+      .from("waiting_list")
+      .select("id, created_at")
+      .eq("email", data.email)
+      .gte("created_at", tenMinutesAgo)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (data.id) lookup = lookup.eq("id", data.id);
+    const { data: matchRows } = await lookup;
+    const match = matchRows?.[0];
+    if (!match) {
+      return { ok: false, skipped: true } as const;
+    }
+
     // Position + total
     const { count: total } = await supabaseAdmin
       .from("waiting_list")
@@ -227,26 +246,8 @@ export const sendWaitlistEmails = createServerFn({ method: "POST" })
     const totalCount = total ?? 0;
 
     let position = totalCount;
-    let recordId = data.id;
-    let createdAt = new Date();
-    if (!recordId) {
-      const { data: row } = await supabaseAdmin
-        .from("waiting_list")
-        .select("id, created_at")
-        .eq("email", data.email)
-        .maybeSingle();
-      if (row) {
-        recordId = row.id;
-        createdAt = new Date(row.created_at);
-      }
-    } else {
-      const { data: row } = await supabaseAdmin
-        .from("waiting_list")
-        .select("created_at")
-        .eq("id", recordId)
-        .maybeSingle();
-      if (row?.created_at) createdAt = new Date(row.created_at);
-    }
+    const recordId = match.id as string;
+    const createdAt = new Date(match.created_at as string);
 
     const dateStr = createdAt.toLocaleString("fr-CH", {
       timeZone: "Europe/Zurich",

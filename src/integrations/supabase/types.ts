@@ -232,7 +232,6 @@ export type Database = {
           first_name: string
           google_reviews_url: string | null
           id: string
-          ide: string | null
           ide_verified: boolean
           insurance_accepted: boolean | null
           languages: string[] | null
@@ -248,7 +247,6 @@ export type Database = {
           price_min: number | null
           services: Json
           short_bio: string | null
-          siret: string | null
           siret_verified: boolean
           slug: string
           specialties: string[] | null
@@ -275,7 +273,6 @@ export type Database = {
           first_name: string
           google_reviews_url?: string | null
           id?: string
-          ide?: string | null
           ide_verified?: boolean
           insurance_accepted?: boolean | null
           languages?: string[] | null
@@ -291,7 +288,6 @@ export type Database = {
           price_min?: number | null
           services?: Json
           short_bio?: string | null
-          siret?: string | null
           siret_verified?: boolean
           slug: string
           specialties?: string[] | null
@@ -318,7 +314,6 @@ export type Database = {
           first_name?: string
           google_reviews_url?: string | null
           id?: string
-          ide?: string | null
           ide_verified?: boolean
           insurance_accepted?: boolean | null
           languages?: string[] | null
@@ -334,7 +329,6 @@ export type Database = {
           price_min?: number | null
           services?: Json
           short_bio?: string | null
-          siret?: string | null
           siret_verified?: boolean
           slug?: string
           specialties?: string[] | null
