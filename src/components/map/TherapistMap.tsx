@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Star, ArrowRight, Navigation } from "lucide-react";
+import { resolveTherapistPhotoUrl } from "@/lib/therapistPhoto";
 
 // Fix Leaflet default icon in Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -39,14 +40,20 @@ type Props = {
   lang: string;
 };
 
-function createMarkerIcon(therapist: Therapist, isSelected: boolean) {
+function safeInitials(therapist: Therapist): string {
+  const a = (therapist.first_name?.[0] ?? "").toUpperCase();
+  const b = (therapist.last_name?.[0] ?? "").toUpperCase();
+  return (a + b) || "?";
+}
+
+function createMarkerIcon(therapist: Therapist, isSelected: boolean, resolvedPhoto?: string) {
   const border = isSelected ? "#5cc8fa" : "#b86ef9";
   const glow = isSelected ? "0 0 12px 3px rgba(92,200,250,0.6)" : "0 0 8px 2px rgba(184,110,249,0.4)";
-  const initials = `${therapist.first_name[0]}${therapist.last_name[0]}`.toUpperCase();
-
-  const html = therapist.photo_url
+  const initials = safeInitials(therapist);
+  const photo = resolvedPhoto || "";
+  const html = photo
     ? `<div style="width:44px;height:44px;border-radius:50%;border:2.5px solid ${border};box-shadow:${glow};overflow:hidden;background:#1a1035">
-        <img src="${therapist.photo_url}" style="width:100%;height:100%;object-fit:cover" />
+        <img src="${photo}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'" />
        </div>`
     : `<div style="width:44px;height:44px;border-radius:50%;border:2.5px solid ${border};box-shadow:${glow};background:linear-gradient(135deg,#3d1a5c,#1a1035);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#b86ef9">
         ${initials}
@@ -83,7 +90,21 @@ function FlyToSelected({ therapists, selectedId }: { therapists: Therapist[]; se
 
 export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) {
   const { t: i18n } = useTranslation();
-  const positioned = therapists.filter((t) => t.latitude && t.longitude);
+  const positioned = therapists.filter((t) => t.latitude && t.longitude && (t.first_name || t.last_name));
+  const [signedPhotos, setSignedPhotos] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const toResolve = positioned.filter((t) => t.photo_url);
+    Promise.all(
+      toResolve.map(async (t) => [t.id, await resolveTherapistPhotoUrl(t.photo_url!)] as const)
+    ).then((entries) => {
+      if (cancelled) return;
+      setSignedPhotos(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, [positioned.map((t) => `${t.id}:${t.photo_url ?? ""}`).join("|")]);
+
   const center: [number, number] =
     positioned.length > 0
       ? [
@@ -112,7 +133,7 @@ export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) 
           <Marker
             key={t.id}
             position={[t.latitude!, t.longitude!]}
-            icon={createMarkerIcon(t, t.id === selectedId)}
+            icon={createMarkerIcon(t, t.id === selectedId, signedPhotos[t.id])}
             eventHandlers={{ click: () => onSelect(t.id) }}
           >
             <Popup
@@ -131,15 +152,15 @@ export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) 
                 }}
               >
                 <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-                  {t.photo_url ? (
-                    <img src={t.photo_url} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "2px solid #b86ef9", flexShrink: 0 }} />
+                  {signedPhotos[t.id] ? (
+                    <img src={signedPhotos[t.id]} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "2px solid #b86ef9", flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#3d1a5c,#1a1035)", border: "2px solid #b86ef9", display: "flex", alignItems: "center", justifyContent: "center", color: "#b86ef9", fontWeight: 700, flexShrink: 0 }}>
-                      {t.first_name[0]}
+                      {safeInitials(t)}
                     </div>
                   )}
                   <div>
-                    <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: 0 }}>{t.first_name} {t.last_name}</p>
+                    <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: 0 }}>{`${t.first_name ?? ""} ${t.last_name ?? ""}`.trim()}</p>
                     {t.title && <p style={{ color: "#b86ef9", fontSize: 12, margin: 0 }}>{t.title}</p>}
                   </div>
                 </div>
