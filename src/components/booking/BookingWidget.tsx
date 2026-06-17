@@ -222,28 +222,52 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         {services.length > 0 && (
           <div>
             <div className="text-sm font-medium mb-2">1. Choisissez un service</div>
-            <div className="grid gap-2">
-              {services.map((s, i) => {
-                const sel = selectedServiceIdx === i;
-                return (
-                  <button
-                    key={`${s.name}-${i}`}
-                    type="button"
-                    onClick={() => { setSelectedServiceIdx(i); setSelectedDate(null); setSelectedTime(null); }}
-                    className={`text-left rounded-md border p-3 transition-colors ${sel ? "border-primary bg-primary/10" : "border-border hover:bg-muted/40"}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium text-foreground">{s.name}</div>
-                      {s.price != null && <div className="text-sm font-semibold text-primary">{s.price} CHF</div>}
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {s.duration ? `${s.duration} min` : "Durée non précisée"}
-                      {s.format ? ` · ${s.format}` : ""}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <Select
+              value={selectedServiceIdx !== null ? String(selectedServiceIdx) : undefined}
+              onValueChange={(v) => {
+                setSelectedServiceIdx(Number(v));
+                setSelectedDate(null);
+                setSelectedTime(null);
+              }}
+            >
+              <SelectTrigger
+                className="w-full h-11 border-border bg-card/60 hover:bg-card transition-colors"
+                style={accent ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}33` } : undefined}
+              >
+                <SelectValue placeholder="Sélectionner un type de séance…">
+                  {selectedService && (
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: selectedService.color ?? "hsl(var(--primary))" }}
+                      />
+                      <span className="font-medium">{selectedService.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        · {selectedService.duration ? `${selectedService.duration} min` : "durée libre"}
+                        {selectedService.price != null ? ` · ${selectedService.price} CHF` : ""}
+                      </span>
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((s, i) => (
+                  <SelectItem key={`${s.name}-${i}`} value={String(i)}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: s.color ?? "hsl(var(--primary))" }}
+                      />
+                      <span className="font-medium">{s.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        · {s.duration ? `${s.duration} min` : "durée libre"}
+                        {s.price != null ? ` · ${s.price} CHF` : ""}
+                      </span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
