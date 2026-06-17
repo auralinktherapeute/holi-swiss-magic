@@ -312,7 +312,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
   };
 
   // Context menu
-  const [contextRaw, setContextRaw] = useState<AppointmentRow | null>(null);
+  const [contextRaw, setContextRaw] = useSessionState<AppointmentRow | null>(`${statePrefix}.contextRaw`, null);
   const handleContextCapture = (e: React.MouseEvent) => {
     const tgt = (e.target as HTMLElement).closest(".fc-event") as HTMLElement | null;
     if (!tgt) { setContextRaw(null); return; }
