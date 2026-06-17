@@ -297,7 +297,8 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
               if (!c.available) return <div key={i} className={`${base} text-muted-foreground/50`}>{c.date.getDate()}</div>;
               return (
                 <button key={i} type="button" onClick={() => { setSelectedDate(c.iso); setSelectedTime(null); }}
-                  className={`${base} font-medium ${isSel ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
+                  className={`${base} font-medium ${isSel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                  style={isSel && accent ? { background: accent, color: "#fff" } : isSel ? undefined : (accent ? { background: `${accent}1a`, color: accent } : undefined)}>
                   {c.date.getDate()}
                 </button>
               );
@@ -312,12 +313,16 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
               <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {slotsForDay.map((s) => (
-                  <Badge key={s} onClick={() => setSelectedTime(s)}
-                    className={`cursor-pointer px-3 py-1.5 text-sm ${selectedTime === s ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
-                    {s}
-                  </Badge>
-                ))}
+                {slotsForDay.map((s) => {
+                  const sel = selectedTime === s;
+                  return (
+                    <Badge key={s} onClick={() => setSelectedTime(s)}
+                      className={`cursor-pointer px-3 py-1.5 text-sm ${sel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                      style={sel && accent ? { background: accent, color: "#fff" } : (!sel && accent ? { background: `${accent}1a`, color: accent } : undefined)}>
+                      {s}
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
