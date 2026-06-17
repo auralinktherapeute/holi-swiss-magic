@@ -16,41 +16,53 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
-          appointment_date: string
-          appointment_time: string
+          appointment_date: string | null
+          appointment_time: string | null
           created_at: string
           duration_minutes: number
+          end_time: string | null
           id: string
           notes: string | null
-          patient_email: string
+          patient_email: string | null
           patient_name: string
           patient_phone: string | null
+          service_name: string | null
+          source: string
+          start_time: string | null
           status: string
           therapist_id: string
         }
         Insert: {
-          appointment_date: string
-          appointment_time: string
+          appointment_date?: string | null
+          appointment_time?: string | null
           created_at?: string
           duration_minutes?: number
+          end_time?: string | null
           id?: string
           notes?: string | null
-          patient_email: string
+          patient_email?: string | null
           patient_name: string
           patient_phone?: string | null
+          service_name?: string | null
+          source?: string
+          start_time?: string | null
           status?: string
           therapist_id: string
         }
         Update: {
-          appointment_date?: string
-          appointment_time?: string
+          appointment_date?: string | null
+          appointment_time?: string | null
           created_at?: string
           duration_minutes?: number
+          end_time?: string | null
           id?: string
           notes?: string | null
-          patient_email?: string
+          patient_email?: string | null
           patient_name?: string
           patient_phone?: string | null
+          service_name?: string | null
+          source?: string
+          start_time?: string | null
           status?: string
           therapist_id?: string
         }

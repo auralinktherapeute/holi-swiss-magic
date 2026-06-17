@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
 import BookingNoteEditor from "@/components/dashboard/BookingNoteEditor";
+import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
@@ -135,6 +136,15 @@ function Page() {
       </Card>
 
       {therapistId && <BookingNoteEditor therapistId={therapistId} />}
+
+      {therapistId && (
+        <Card className="bg-surface border-border/60">
+          <CardHeader><CardTitle>{t("agenda_page.title")}</CardTitle></CardHeader>
+          <CardContent>
+            <InteractiveAgenda therapistId={therapistId} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="bg-surface border-border/60">
         <CardHeader><CardTitle>{t("agenda_page.unavail_title")}</CardTitle></CardHeader>
