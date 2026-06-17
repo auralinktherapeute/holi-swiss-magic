@@ -31,6 +31,8 @@ import {
   saveMyTherapistProfile,
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
+import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
+
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
 
