@@ -62,13 +62,6 @@ export type Database = {
             referencedRelation: "therapists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "appointments_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       availabilities: {
@@ -107,13 +100,6 @@ export type Database = {
             referencedRelation: "therapists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "availabilities_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       blocked_periods: {
@@ -147,13 +133,6 @@ export type Database = {
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blocked_periods_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists_public"
             referencedColumns: ["id"]
           },
         ]
@@ -197,13 +176,6 @@ export type Database = {
             referencedRelation: "therapists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "therapist_documents_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       therapist_private_identifiers: {
@@ -242,13 +214,6 @@ export type Database = {
             referencedRelation: "therapists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "therapist_private_identifiers_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: true
-            referencedRelation: "therapists_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       therapists: {
@@ -267,7 +232,6 @@ export type Database = {
           first_name: string
           google_reviews_url: string | null
           id: string
-          ide: string | null
           ide_verified: boolean
           insurance_accepted: boolean | null
           languages: string[] | null
@@ -283,7 +247,6 @@ export type Database = {
           price_min: number | null
           services: Json
           short_bio: string | null
-          siret: string | null
           siret_verified: boolean
           slug: string
           specialties: string[] | null
@@ -310,7 +273,6 @@ export type Database = {
           first_name: string
           google_reviews_url?: string | null
           id?: string
-          ide?: string | null
           ide_verified?: boolean
           insurance_accepted?: boolean | null
           languages?: string[] | null
@@ -326,7 +288,6 @@ export type Database = {
           price_min?: number | null
           services?: Json
           short_bio?: string | null
-          siret?: string | null
           siret_verified?: boolean
           slug: string
           specialties?: string[] | null
@@ -353,7 +314,6 @@ export type Database = {
           first_name?: string
           google_reviews_url?: string | null
           id?: string
-          ide?: string | null
           ide_verified?: boolean
           insurance_accepted?: boolean | null
           languages?: string[] | null
@@ -369,7 +329,6 @@ export type Database = {
           price_min?: number | null
           services?: Json
           short_bio?: string | null
-          siret?: string | null
           siret_verified?: boolean
           slug?: string
           specialties?: string[] | null
@@ -478,137 +437,7 @@ export type Database = {
             referencedRelation: "therapists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "blocked_periods_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists_public"
-            referencedColumns: ["id"]
-          },
         ]
-      }
-      therapists_public: {
-        Row: {
-          accreditations: Json | null
-          address: string | null
-          approaches: string[] | null
-          bio: string | null
-          canton: string | null
-          city: string | null
-          consultation_modes: string[] | null
-          country: string | null
-          created_at: string | null
-          currency: string | null
-          email: string | null
-          first_name: string | null
-          google_reviews_url: string | null
-          id: string | null
-          ide_verified: boolean | null
-          insurance_accepted: boolean | null
-          languages: string[] | null
-          last_name: string | null
-          latitude: number | null
-          longitude: number | null
-          meta_description: string | null
-          meta_title: string | null
-          phone: string | null
-          photo_url: string | null
-          postal_code: string | null
-          price_max: number | null
-          price_min: number | null
-          services: Json | null
-          short_bio: string | null
-          siret_verified: boolean | null
-          slug: string | null
-          specialties: string[] | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-          verified: boolean | null
-          website: string | null
-          years_experience: number | null
-        }
-        Insert: {
-          accreditations?: Json | null
-          address?: string | null
-          approaches?: string[] | null
-          bio?: string | null
-          canton?: string | null
-          city?: string | null
-          consultation_modes?: string[] | null
-          country?: string | null
-          created_at?: string | null
-          currency?: string | null
-          email?: string | null
-          first_name?: string | null
-          google_reviews_url?: string | null
-          id?: string | null
-          ide_verified?: boolean | null
-          insurance_accepted?: boolean | null
-          languages?: string[] | null
-          last_name?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          meta_description?: string | null
-          meta_title?: string | null
-          phone?: string | null
-          photo_url?: string | null
-          postal_code?: string | null
-          price_max?: number | null
-          price_min?: number | null
-          services?: Json | null
-          short_bio?: string | null
-          siret_verified?: boolean | null
-          slug?: string | null
-          specialties?: string[] | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          verified?: boolean | null
-          website?: string | null
-          years_experience?: number | null
-        }
-        Update: {
-          accreditations?: Json | null
-          address?: string | null
-          approaches?: string[] | null
-          bio?: string | null
-          canton?: string | null
-          city?: string | null
-          consultation_modes?: string[] | null
-          country?: string | null
-          created_at?: string | null
-          currency?: string | null
-          email?: string | null
-          first_name?: string | null
-          google_reviews_url?: string | null
-          id?: string | null
-          ide_verified?: boolean | null
-          insurance_accepted?: boolean | null
-          languages?: string[] | null
-          last_name?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          meta_description?: string | null
-          meta_title?: string | null
-          phone?: string | null
-          photo_url?: string | null
-          postal_code?: string | null
-          price_max?: number | null
-          price_min?: number | null
-          services?: Json | null
-          short_bio?: string | null
-          siret_verified?: boolean | null
-          slug?: string | null
-          specialties?: string[] | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          verified?: boolean | null
-          website?: string | null
-          years_experience?: number | null
-        }
-        Relationships: []
       }
     }
     Functions: {
