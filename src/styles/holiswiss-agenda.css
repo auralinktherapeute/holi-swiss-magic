@@ -1,0 +1,289 @@
+/* ==========================================================
+   Holiswiss calendar theme — FullCalendar
+   Palette officielle Deep Violet & Sky (alignée styles.css)
+   ========================================================== */
+
+:root {
+  --hw-bg-1: #1a0828;
+  --hw-bg-2: #26103a;
+  --hw-bg-3: #3b1f52;
+  --hw-primary: #b86ef9;
+  --hw-primary-strong: #a855f7;
+  --hw-sky: #5cc8fa;
+  --hw-sky-light: #8dd9fb;
+  --hw-lavender: #d4a5f9;
+  --hw-pink: #f9a8d4;
+  --hw-text: #ffffff;
+  --hw-text-muted: #c4b5d0;
+}
+
+/* ---------- Container ---------- */
+.holiswiss-agenda .fc {
+  background: var(--hw-bg-1);
+  color: var(--hw-text);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--hw-bg-3);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ---------- Toolbar (header FC) ---------- */
+.holiswiss-agenda .fc .fc-toolbar {
+  padding: 12px 16px;
+  background: var(--hw-bg-2);
+  border-bottom: 1px solid var(--hw-bg-3);
+  margin: 0 !important;
+}
+.holiswiss-agenda .fc .fc-toolbar-title {
+  color: var(--hw-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.holiswiss-agenda .fc .fc-button {
+  background: var(--hw-bg-1);
+  border: 1px solid var(--hw-bg-3);
+  color: var(--hw-text-muted);
+  font-weight: 500;
+  text-transform: capitalize;
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+.holiswiss-agenda .fc .fc-button:hover:not(:disabled) {
+  background: var(--hw-bg-3);
+  color: var(--hw-text);
+  border-color: var(--hw-primary);
+}
+.holiswiss-agenda .fc .fc-button-primary:not(:disabled).fc-button-active,
+.holiswiss-agenda .fc .fc-today-button {
+  background: var(--hw-primary);
+  border-color: var(--hw-primary);
+  color: var(--hw-text);
+}
+.holiswiss-agenda .fc .fc-today-button:hover:not(:disabled) {
+  background: var(--hw-primary);
+  opacity: 0.9;
+}
+.holiswiss-agenda .fc .fc-button:focus,
+.holiswiss-agenda .fc .fc-button-primary:focus {
+  box-shadow: 0 0 0 2px rgba(184, 110, 249, 0.35);
+}
+
+/* ---------- Day header ---------- */
+.holiswiss-agenda .fc .fc-col-header {
+  background: var(--hw-bg-2);
+}
+.holiswiss-agenda .fc .fc-col-header-cell {
+  background: var(--hw-bg-2);
+  border-color: var(--hw-bg-3);
+  padding: 10px 4px;
+}
+.holiswiss-agenda .fc .fc-col-header-cell-cushion {
+  color: var(--hw-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  padding: 4px 6px;
+  display: inline-block;
+}
+.holiswiss-agenda .fc .fc-col-header-cell.fc-day-today {
+  background: linear-gradient(180deg, rgba(184, 110, 249, 0.18) 0%, var(--hw-bg-2) 100%);
+}
+.holiswiss-agenda .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: var(--hw-text);
+  background: var(--hw-primary);
+  border-radius: 9999px;
+  padding: 4px 14px;
+  box-shadow: 0 4px 14px rgba(184, 110, 249, 0.4);
+}
+
+/* ---------- Time grid ---------- */
+.holiswiss-agenda .fc .fc-timegrid,
+.holiswiss-agenda .fc .fc-scrollgrid,
+.holiswiss-agenda .fc .fc-scrollgrid-section > * {
+  border-color: var(--hw-bg-3) !important;
+}
+.holiswiss-agenda .fc .fc-timegrid-axis,
+.holiswiss-agenda .fc .fc-timegrid-slot-label {
+  background: var(--hw-bg-1);
+  border-color: var(--hw-bg-3);
+}
+.holiswiss-agenda .fc .fc-timegrid-slot-label-cushion,
+.holiswiss-agenda .fc .fc-timegrid-axis-cushion {
+  color: var(--hw-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 8px;
+}
+.holiswiss-agenda .fc .fc-timegrid-slot {
+  height: 28px !important;
+  border-color: var(--hw-bg-3);
+}
+.holiswiss-agenda .fc .fc-event {
+  font-size: 11px;
+  padding: 2px 6px !important;
+  line-height: 1.25;
+}
+.holiswiss-agenda .fc .fc-event-title {
+  font-size: 12px !important;
+}
+.holiswiss-agenda .fc .fc-event-time {
+  font-size: 10px !important;
+}
+.holiswiss-agenda .fc .fc-timegrid-slot-minor {
+  border-top-style: dashed;
+  border-top-color: rgba(59, 31, 82, 0.6);
+}
+.holiswiss-agenda .fc .fc-timegrid-slot-lane:nth-child(4n+1) {
+  background: var(--hw-bg-2);
+}
+
+/* Today column highlight */
+.holiswiss-agenda .fc .fc-timegrid-col.fc-day-today,
+.holiswiss-agenda .fc .fc-daygrid-day.fc-day-today {
+  background: rgba(184, 110, 249, 0.06);
+}
+
+/* Day grid (month view) */
+.holiswiss-agenda .fc .fc-daygrid-day {
+  background: var(--hw-bg-1);
+  border-color: var(--hw-bg-3);
+}
+.holiswiss-agenda .fc .fc-daygrid-day-number {
+  color: var(--hw-text-muted);
+  font-weight: 500;
+  padding: 6px 8px;
+}
+.holiswiss-agenda .fc .fc-day-today .fc-daygrid-day-number {
+  color: var(--hw-text);
+  font-weight: 700;
+}
+
+/* Now indicator */
+.holiswiss-agenda .fc .fc-timegrid-now-indicator-line {
+  border-color: var(--hw-sky);
+  border-width: 2px;
+}
+.holiswiss-agenda .fc .fc-timegrid-now-indicator-arrow {
+  border-color: var(--hw-sky);
+  color: var(--hw-sky);
+}
+
+/* ---------- Events ---------- */
+.holiswiss-agenda .fc .fc-event {
+  border-radius: 8px;
+  border-width: 1px;
+  border-left-width: 3px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+.holiswiss-agenda .fc .fc-event:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
+}
+.holiswiss-agenda .fc .fc-event-title,
+.holiswiss-agenda .fc .fc-event-time {
+  color: var(--hw-text) !important;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.holiswiss-agenda .fc .fc-event-time {
+  font-weight: 500;
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* Blocked events — striped */
+.holiswiss-agenda .fc .agenda-blocked {
+  background-color: rgba(59, 31, 82, 0.55) !important;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(59, 31, 82, 0.7) 0 8px,
+    rgba(196, 181, 208, 0.15) 8px 16px
+  ) !important;
+  border-color: var(--hw-bg-3) !important;
+  color: var(--hw-text-muted) !important;
+}
+.holiswiss-agenda .fc .agenda-blocked .fc-event-title,
+.holiswiss-agenda .fc .agenda-blocked .fc-event-time {
+  color: var(--hw-text-muted) !important;
+}
+
+/* Selection highlight */
+.holiswiss-agenda .fc .fc-highlight {
+  background: rgba(184, 110, 249, 0.25);
+}
+
+/* Scrollbar (webkit) */
+.holiswiss-agenda .fc-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.holiswiss-agenda .fc-scroller::-webkit-scrollbar-thumb {
+  background: var(--hw-bg-3);
+  border-radius: 4px;
+}
+.holiswiss-agenda .fc-scroller::-webkit-scrollbar-track {
+  background: var(--hw-bg-1);
+}
+
+/* ---------- Toolbar custom (au-dessus du FC) ---------- */
+.holiswiss-agenda-toolbar {
+  background: var(--hw-bg-2);
+  border: 1px solid var(--hw-bg-3);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.holiswiss-agenda-toolbar .hw-toggle {
+  background: var(--hw-bg-1);
+  border-radius: 9999px;
+  padding: 3px;
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid var(--hw-bg-3);
+}
+.holiswiss-agenda-toolbar .hw-toggle [data-state="on"],
+.holiswiss-agenda-toolbar .hw-toggle [aria-pressed="true"] {
+  background: var(--hw-primary) !important;
+  color: var(--hw-text) !important;
+  border-radius: 9999px !important;
+}
+.holiswiss-agenda-toolbar .hw-toggle button {
+  color: var(--hw-text-muted);
+  border: none !important;
+  border-radius: 9999px !important;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  .holiswiss-agenda .fc .fc-timegrid-slot {
+    height: 24px !important;
+  }
+}
+@media (max-width: 768px) {
+  .holiswiss-agenda .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .holiswiss-agenda .fc .fc-col-header-cell-cushion {
+    font-size: 12px;
+  }
+  .holiswiss-agenda .fc .fc-timegrid-slot {
+    height: 22px !important;
+  }
+}
