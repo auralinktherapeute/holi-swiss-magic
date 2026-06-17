@@ -84,6 +84,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const selectedService: BookingService | null =
     selectedServiceIdx !== null && services[selectedServiceIdx] ? services[selectedServiceIdx] : null;
   const slotMin = Math.max(15, Number(selectedService?.duration) || 60);
+  const accent = selectedService?.color;
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
     formType: `booking:${therapistId}`,
