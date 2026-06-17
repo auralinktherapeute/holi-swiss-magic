@@ -526,5 +526,42 @@
         "other": "Altro"
       }
     }
+  },
+  "agenda_page": {
+    "title": "Agenda e disponibilità",
+    "subtitle": "I tuoi slot appaiono ai visitatori al momento della prenotazione",
+    "complete_profile": "Completa prima il tuo profilo per gestire la tua agenda.",
+    "weekly_hours": "Orari settimanali",
+    "timezone": "Fuso Europa/Zurigo",
+    "closed": "Chiuso",
+    "unavail_title": "Periodi di indisponibilità",
+    "from": "Dal",
+    "to": "Al",
+    "reason": "Motivo (facoltativo)",
+    "reason_ph": "Vacanze…",
+    "add": "Aggiungi",
+    "no_blocks": "Nessun periodo bloccato",
+    "saving": "Salvataggio…",
+    "save": "Salva",
+    "loading": "Caricamento…",
+    "fill_dates": "Inserisci le date",
+    "block_added": "Periodo aggiunto",
+    "block_removed": "Periodo rimosso",
+    "saved": "Agenda salvata",
+    "days": [
+      "Lunedì",
+      "Martedì",
+      "Mercoledì",
+      "Giovedì",
+      "Venerdì",
+      "Sabato",
+      "Domenica"
+    ],
+    "note_title": "NB — Informazioni pratiche per l'appuntamento",
+    "note_desc": "Questa nota verrà aggiunta automaticamente alle email di conferma e promemoria inviate al paziente (parcheggio, abbigliamento, accesso, codice palazzo, consigli prima della seduta, ecc.).",
+    "note_ph": "Es.: Parcheggio gratuito davanti allo studio. Suonare al nome Rossi. Portare abbigliamento comodo.",
+    "note_count": "{{n}}/{{max}} caratteri",
+    "note_saved": "NB salvato — sarà aggiunto alle email di conferma e promemoria.",
+    "note_error": "Errore durante il salvataggio"
   }
 }

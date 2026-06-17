@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -10,15 +11,16 @@ import { Trash2, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
+import BookingNoteEditor from "@/components/dashboard/BookingNoteEditor";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
-
-const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 
 type Slot = { id?: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { id?: string; start_date: string; end_date: string; reason: string };
 
 function Page() {
+  const { t } = useTranslation();
+  const DAYS = t("agenda_page.days", { returnObjects: true }) as string[];
   const { user } = useAuth();
   const fetchAgenda = useServerFn(listMyAgenda);
   const addBlockedPeriod = useServerFn(addMyBlockedPeriod);
@@ -26,7 +28,7 @@ function Page() {
   const saveAvailabilities = useServerFn(saveMyAvailabilities);
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>(
-    DAYS.map((_, i) => ({ day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: i < 5 })),
+    Array.from({ length: 7 }, (_, i) => ({ day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: i < 5 })),
   );
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [newBlock, setNewBlock] = useState<Block>({ start_date: "", end_date: "", reason: "" });
@@ -40,7 +42,7 @@ function Page() {
         const { therapistId: thId, availabilities: avs, blockedPeriods: bps } = await fetchAgenda();
         setTherapistId(thId);
         if (avs?.length) {
-        setSlots(DAYS.map((_, i) => {
+        setSlots(Array.from({ length: 7 }, (_, i) => {
           const found = avs.find((a) => a.day_of_week === i);
           return found
             ? { id: found.id, day_of_week: i, start_time: found.start_time.slice(0, 5), end_time: found.end_time.slice(0, 5), is_active: found.is_active }
@@ -60,13 +62,13 @@ function Page() {
 
   const addBlock = async () => {
     if (!therapistId || !newBlock.start_date || !newBlock.end_date) {
-      toast.error("Renseignez les dates"); return;
+      toast.error(t("agenda_page.fill_dates")); return;
     }
     try {
       const { row } = await addBlockedPeriod({ data: { start_date: newBlock.start_date, end_date: newBlock.end_date, reason: newBlock.reason || undefined } });
       setBlocks((b) => [...b, { id: row.id, start_date: row.start_date, end_date: row.end_date, reason: row.reason ?? "" }]);
       setNewBlock({ start_date: "", end_date: "", reason: "" });
-      toast.success("Période ajoutée");
+      toast.success(t("agenda_page.block_added"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur d'ajout");
     }
@@ -77,43 +79,43 @@ function Page() {
     try {
       await deleteBlockedPeriod({ data: { id } });
       setBlocks((b) => b.filter((x) => x.id !== id));
-      toast.success("Période supprimée");
+      toast.success(t("agenda_page.block_removed"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur de suppression");
     }
   };
 
   const save = async () => {
-    if (!therapistId) { toast.error("Complétez votre profil avant"); return; }
+    if (!therapistId) { toast.error(t("agenda_page.complete_profile")); return; }
     setSaving(true);
     try {
       await saveAvailabilities({ data: { slots: slots.map(({ day_of_week, start_time, end_time, is_active }) => ({ day_of_week, start_time, end_time, is_active })) } });
-      toast.success("Agenda enregistré");
+      toast.success(t("agenda_page.saved"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur d'enregistrement");
     }
     setSaving(false);
   };
 
-  if (loading) return <div className="p-10 text-muted-foreground">Chargement…</div>;
+  if (loading) return <div className="p-10 text-muted-foreground">{t("agenda_page.loading")}</div>;
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Agenda & disponibilités</h1>
-        <p className="text-muted-foreground mt-1">Vos créneaux apparaissent aux visiteurs lors d'une réservation</p>
+        <h1 className="text-3xl font-bold text-foreground">{t("agenda_page.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("agenda_page.subtitle")}</p>
       </div>
 
       {!therapistId && (
         <Card className="border-yellow-500/30 bg-yellow-500/10">
-          <CardContent className="p-4 text-sm text-yellow-200">Complétez d'abord votre profil pour gérer votre agenda.</CardContent>
+          <CardContent className="p-4 text-sm text-yellow-200">{t("agenda_page.complete_profile")}</CardContent>
         </Card>
       )}
 
       <Card className="bg-surface border-border/60">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Horaires hebdomadaires</CardTitle>
-          <Badge className="bg-primary-xlight text-primary border-primary/20">Fuseau Europe/Zurich</Badge>
+          <CardTitle>{t("agenda_page.weekly_hours")}</CardTitle>
+          <Badge className="bg-primary-xlight text-primary border-primary/20">{t("agenda_page.timezone")}</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           {slots.map((s, i) => (
@@ -126,28 +128,30 @@ function Page() {
                   <span className="text-muted-foreground">→</span>
                   <Input type="time" value={s.end_time} onChange={(e) => update(i, { end_time: e.target.value })} className="w-32" />
                 </div>
-              ) : <span className="text-sm text-muted-foreground">Fermé</span>}
+              ) : <span className="text-sm text-muted-foreground">{t("agenda_page.closed")}</span>}
             </div>
           ))}
         </CardContent>
       </Card>
 
+      {therapistId && <BookingNoteEditor therapistId={therapistId} />}
+
       <Card className="bg-surface border-border/60">
-        <CardHeader><CardTitle>Périodes d'indisponibilité</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t("agenda_page.unavail_title")}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1"><label className="text-xs text-muted-foreground">Du</label>
+            <div className="space-y-1"><label className="text-xs text-muted-foreground">{t("agenda_page.from")}</label>
               <Input type="date" value={newBlock.start_date} onChange={(e) => setNewBlock({ ...newBlock, start_date: e.target.value })} /></div>
-            <div className="space-y-1"><label className="text-xs text-muted-foreground">Au</label>
+            <div className="space-y-1"><label className="text-xs text-muted-foreground">{t("agenda_page.to")}</label>
               <Input type="date" value={newBlock.end_date} onChange={(e) => setNewBlock({ ...newBlock, end_date: e.target.value })} /></div>
-            <div className="space-y-1 flex-1 min-w-[180px]"><label className="text-xs text-muted-foreground">Motif (optionnel)</label>
-              <Input value={newBlock.reason} placeholder="Vacances…" onChange={(e) => setNewBlock({ ...newBlock, reason: e.target.value })} /></div>
+            <div className="space-y-1 flex-1 min-w-[180px]"><label className="text-xs text-muted-foreground">{t("agenda_page.reason")}</label>
+              <Input value={newBlock.reason} placeholder={t("agenda_page.reason_ph")} onChange={(e) => setNewBlock({ ...newBlock, reason: e.target.value })} /></div>
             <Button onClick={addBlock} disabled={!therapistId} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-1" /> Ajouter
+              <Plus className="h-4 w-4 mr-1" /> {t("agenda_page.add")}
             </Button>
           </div>
           {blocks.length === 0 ? (
-            <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm text-muted-foreground">Aucune période bloquée</div>
+            <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm text-muted-foreground">{t("agenda_page.no_blocks")}</div>
           ) : (
             <ul className="space-y-2">
               {blocks.map((b) => (
@@ -168,7 +172,7 @@ function Page() {
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving || !therapistId} className="bg-primary hover:bg-primary/90">
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? t("agenda_page.saving") : t("agenda_page.save")}
         </Button>
       </div>
     </div>

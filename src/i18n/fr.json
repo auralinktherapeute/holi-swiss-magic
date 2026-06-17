@@ -526,5 +526,42 @@
         "other": "Autre"
       }
     }
+  },
+  "agenda_page": {
+    "title": "Agenda & disponibilités",
+    "subtitle": "Vos créneaux apparaissent aux visiteurs lors d'une réservation",
+    "complete_profile": "Complétez d'abord votre profil pour gérer votre agenda.",
+    "weekly_hours": "Horaires hebdomadaires",
+    "timezone": "Fuseau Europe/Zurich",
+    "closed": "Fermé",
+    "unavail_title": "Périodes d'indisponibilité",
+    "from": "Du",
+    "to": "Au",
+    "reason": "Motif (optionnel)",
+    "reason_ph": "Vacances…",
+    "add": "Ajouter",
+    "no_blocks": "Aucune période bloquée",
+    "saving": "Enregistrement…",
+    "save": "Enregistrer",
+    "loading": "Chargement…",
+    "fill_dates": "Renseignez les dates",
+    "block_added": "Période ajoutée",
+    "block_removed": "Période supprimée",
+    "saved": "Agenda enregistré",
+    "days": [
+      "Lundi",
+      "Mardi",
+      "Mercredi",
+      "Jeudi",
+      "Vendredi",
+      "Samedi",
+      "Dimanche"
+    ],
+    "note_title": "NB — Informations pratiques pour le rendez-vous",
+    "note_desc": "Cette note sera ajoutée automatiquement aux emails de confirmation et de rappel envoyés au patient (parking, tenue, accès, code immeuble, conseils avant la séance, etc.).",
+    "note_ph": "Ex : Parking gratuit devant le cabinet. Sonner à la porte au nom de Dupont. Prévoir une tenue souple.",
+    "note_count": "{{n}}/{{max}} caractères",
+    "note_saved": "NB enregistré — sera ajouté aux emails de confirmation et de rappel.",
+    "note_error": "Erreur lors de l'enregistrement"
   }
 }
