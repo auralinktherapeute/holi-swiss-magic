@@ -29,27 +29,26 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
-
-const SLOT_MIN = 60;
+export type BookingService = { name: string; duration?: number; price?: number; format?: string };
 
 function toISODate(d: Date) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 function dowMonFirst(d: Date) { return (d.getDay() + 6) % 7; } // 0=Lun
-function buildSlots(start: string, end: string): string[] {
+function buildSlots(start: string, end: string, slotMin: number): string[] {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   const out: string[] = [];
   let cur = sh * 60 + sm; const max = eh * 60 + em;
-  while (cur + SLOT_MIN <= max) {
+  while (cur + slotMin <= max) {
     out.push(`${String(Math.floor(cur / 60)).padStart(2, "0")}:${String(cur % 60).padStart(2, "0")}`);
-    cur += SLOT_MIN;
+    cur += slotMin;
   }
   return out;
 }
 
-export function BookingWidget({ therapistId, therapistName }: { therapistId: string; therapistName?: string }) {
+export function BookingWidget({ therapistId, therapistName, services = [] }: { therapistId: string; therapistName?: string; services?: BookingService[] }) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
   const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
@@ -61,6 +60,7 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
     notes: z.string().max(1000).optional().or(z.literal("")),
   });
   const statePrefix = `booking.${therapistId}`;
+  const [selectedServiceIdx, setSelectedServiceIdx] = useSessionState<number | null>(`${statePrefix}.serviceIdx`, null);
   const [month, setMonth] = useSessionState(`${statePrefix}.month`, () => { const d = new Date(); d.setDate(1); return d; });
   const [avs, setAvs] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -73,6 +73,10 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
   const [formTouched, setFormTouched] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const autoRestoredRef = useRef(false);
+
+  const selectedService: BookingService | null =
+    selectedServiceIdx !== null && services[selectedServiceIdx] ? services[selectedServiceIdx] : null;
+  const slotMin = Math.max(15, Number(selectedService?.duration) || 60);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
     formType: `booking:${therapistId}`,
@@ -143,13 +147,14 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
     if (!selectedDate) return [];
     const dow = dowMonFirst(new Date(selectedDate + "T00:00:00"));
     const dayAvs = avs.filter((a) => a.day_of_week === dow);
-    const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5)));
+    const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin));
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
     return all.filter((s) => !takenSet.has(s));
-  }, [selectedDate, avs, taken]);
+  }, [selectedDate, avs, taken, slotMin]);
 
   const openConfirm = (e: React.FormEvent) => {
     e.preventDefault();
+    if (services.length > 0 && !selectedService) { toast.error("Veuillez choisir un service."); return; }
     if (!selectedDate || !selectedTime) { toast.error(t("booking.choose_slot")); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
@@ -168,6 +173,8 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
       patient_phone: parsed.data.phone || null,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
+      duration_minutes: slotMin,
+      service_name: selectedService?.name ?? null,
       notes: parsed.data.notes || null,
       status: "pending",
     });
