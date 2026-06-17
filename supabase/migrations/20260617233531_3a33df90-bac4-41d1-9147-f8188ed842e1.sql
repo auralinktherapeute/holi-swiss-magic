@@ -1,0 +1,1 @@
+GRANT SELECT (phone, email, booking_note) ON public.therapists TO anon;
