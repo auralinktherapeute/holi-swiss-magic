@@ -121,25 +121,34 @@ export type Database = {
         Row: {
           created_at: string
           end_date: string
+          end_time: string | null
           id: string
+          is_all_day: boolean
           reason: string | null
           start_date: string
+          start_time: string | null
           therapist_id: string
         }
         Insert: {
           created_at?: string
           end_date: string
+          end_time?: string | null
           id?: string
+          is_all_day?: boolean
           reason?: string | null
           start_date: string
+          start_time?: string | null
           therapist_id: string
         }
         Update: {
           created_at?: string
           end_date?: string
+          end_time?: string | null
           id?: string
+          is_all_day?: boolean
           reason?: string | null
           start_date?: string
+          start_time?: string | null
           therapist_id?: string
         }
         Relationships: [
