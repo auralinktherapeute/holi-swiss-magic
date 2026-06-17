@@ -105,6 +105,14 @@ function readLocalDraft<T>(formType: string, userId: string | null, scoreDraft: 
   const candidates = [lsKey(formType, userId), ...(userId ? [lsKey(formType, null)] : [])];
   const drafts: Array<StoredDraft<T> | null> = [];
   for (const key of candidates) {
+    const backupRaw = window.localStorage.getItem(`${key}.backup`);
+    if (backupRaw) {
+      try {
+        drafts.push(JSON.parse(backupRaw) as StoredDraft<T>);
+      } catch {
+        window.localStorage.removeItem(`${key}.backup`);
+      }
+    }
     const raw = window.localStorage.getItem(key);
     if (!raw) continue;
     try {
@@ -119,7 +127,10 @@ function readLocalDraft<T>(formType: string, userId: string | null, scoreDraft: 
 function writeLocalDraft<T>(formType: string, userId: string | null, data: T) {
   if (typeof window === "undefined") return null;
   const updated_at = new Date().toISOString();
-  window.localStorage.setItem(lsKey(formType, userId), JSON.stringify({ data, updated_at }));
+  const key = lsKey(formType, userId);
+  const previous = window.localStorage.getItem(key);
+  if (previous) window.localStorage.setItem(`${key}.backup`, previous);
+  window.localStorage.setItem(key, JSON.stringify({ data, updated_at }));
   return updated_at;
 }
 
