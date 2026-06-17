@@ -254,6 +254,29 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+        profileBaselineScoreRef.current = profileDraftScore({
+          firstName: data.first_name ?? "",
+          lastName: data.last_name ?? "",
+          city: data.city ?? "",
+          postalCode: data.postal_code ?? "",
+          address: data.address ?? "",
+          phone: data.phone ?? "",
+          canton: data.canton ?? "GE",
+          langs: data.languages ?? [],
+          priceMin: data.price_min ?? "",
+          priceMax: data.price_max ?? "",
+          currency: data.currency ?? "CHF",
+          sessionDuration,
+          yearsExperience: (data as any).years_experience ?? "",
+          specialties: data.specialties ?? [],
+          services: ((data as any).services as TherapistService[]) ?? [],
+          shortBio: data.short_bio ?? "",
+          bio: data.bio ?? "",
+          googleReviewsUrl: (data as any).google_reviews_url ?? "",
+          website: data.website ?? "",
+          ide: "",
+          accreditations: ((data as any).accreditations as Accreditation[]) ?? [],
+        });
 
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
@@ -337,6 +360,12 @@ function ProfilePage() {
   // Save profile
   const onSave = async () => {
     if (!user) return;
+    const currentScore = profileDraftScore(formSnapshot);
+    const baselineScore = profileBaselineScoreRef.current;
+    if (baselineScore >= 4 && currentScore <= baselineScore * 0.6) {
+      toast.error("Sauvegarde bloquée : le formulaire semble incomplet. Rechargez la page avant d’enregistrer.");
+      return;
+    }
     setSaving(true);
     const payload: any = {
       user_id: user.id,
