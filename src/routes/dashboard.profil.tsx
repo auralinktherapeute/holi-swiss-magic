@@ -125,7 +125,6 @@ function ProfilePage() {
   // Documents
   const [documents, setDocuments] = useState<DocRow[]>([]);
 
-  const photoInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
 
   // Load
