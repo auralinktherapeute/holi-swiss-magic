@@ -75,7 +75,10 @@ function defaultCompletenessScore(value: unknown): number {
   if (typeof value === "number") return Number.isFinite(value) ? 1 : 0;
   if (typeof value === "boolean") return 0;
   if (Array.isArray(value)) {
-    return value.reduce<number>((sum, item) => sum + Math.max(1, defaultCompletenessScore(item)), 0);
+    return value.reduce<number>(
+      (sum, item) => sum + Math.max(1, defaultCompletenessScore(item)),
+      0,
+    );
   }
   if (typeof value === "object") {
     return Object.values(value as Record<string, unknown>).reduce<number>(
@@ -96,11 +99,17 @@ function pickBestDraft<T>(drafts: Array<StoredDraft<T> | null>, scoreDraft: (dat
     const bestIsMuchRicher = bestScore >= draftScore + 2 && draftScore <= bestScore * 0.6;
     if (draftIsMuchRicher) return draft;
     if (bestIsMuchRicher) return best;
-    return new Date(draft.updated_at).getTime() >= new Date(best.updated_at).getTime() ? draft : best;
+    return new Date(draft.updated_at).getTime() >= new Date(best.updated_at).getTime()
+      ? draft
+      : best;
   }, null);
 }
 
-function readLocalDraft<T>(formType: string, userId: string | null, scoreDraft: (data: T) => number): StoredDraft<T> | null {
+function readLocalDraft<T>(
+  formType: string,
+  userId: string | null,
+  scoreDraft: (data: T) => number,
+): StoredDraft<T> | null {
   if (typeof window === "undefined") return null;
   const candidates = [lsKey(formType, userId), ...(userId ? [lsKey(formType, null)] : [])];
   const drafts: Array<StoredDraft<T> | null> = [];
