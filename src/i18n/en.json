@@ -656,5 +656,11 @@
     "unavail_reason_personal": "Personal appointment",
     "unavail_reason_sick": "Sick leave",
     "unavail_delete_aria": "Delete"
+    ,
+    "weekly_title": "Working days and hours",
+    "weekly_desc": "Set the days you work and your opening hours. Visitors can only book within these windows — unchecked days are hidden automatically.",
+    "weekly_save": "Save my hours",
+    "weekly_saved": "Working hours saved",
+    "weekly_err_range": "{{day}}: end time must be after start time"
   }
 }
