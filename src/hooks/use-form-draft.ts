@@ -82,12 +82,9 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
       setStatus("saving");
       try {
         if (userId) {
-          const { error } = await supabase
-            .from("drafts" as never)
-            .upsert(
-              { user_id: userId, form_type: formType, data: data as any, updated_at: new Date().toISOString() },
-              { onConflict: "user_id,form_type" },
-            ) as any;
+          const payload: any = { user_id: userId, form_type: formType, data, updated_at: new Date().toISOString() };
+          const { error } = await (supabase.from("drafts" as never) as any)
+            .upsert(payload, { onConflict: "user_id,form_type" });
           if (error) throw error;
         } else if (typeof window !== "undefined") {
           window.localStorage.setItem(
