@@ -138,6 +138,8 @@ function Page() {
 
       {therapistId && <BookingNoteEditor therapistId={therapistId} />}
 
+      {therapistId && <SpecificAvailabilityManager therapistId={therapistId} />}
+
       {therapistId && (
         <Card className="bg-surface border-border/60">
           <CardHeader><CardTitle>{t("agenda_page.title")}</CardTitle></CardHeader>
