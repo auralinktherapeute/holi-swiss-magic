@@ -332,7 +332,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
           <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
             <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
               <div className="font-medium mb-1">Récapitulatif</div>
-              {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
+              {selectedService && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Service :</span>
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: selectedService.color ?? "hsl(var(--primary))" }} />
+                  <strong>{selectedService.name}</strong>
+                </div>
+              )}
               <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong> à <strong>{selectedTime}</strong></div>
               <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong>{selectedService?.price != null && <> · <span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></>}</div>
             </div>
@@ -361,7 +367,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
                 <div className="space-y-3 text-sm">
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-foreground">
                     {therapistName && <div><span className="text-muted-foreground">Thérapeute :</span> <strong>{therapistName}</strong></div>}
-                    {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
+                    {selectedService && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Service :</span>
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: selectedService.color ?? "hsl(var(--primary))" }} />
+                        <strong>{selectedService.name}</strong>
+                      </div>
+                    )}
                     {selectedDate && <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong></div>}
                     {selectedTime && <div><span className="text-muted-foreground">Heure :</span> <strong>{selectedTime}</strong></div>}
                     <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong></div>
