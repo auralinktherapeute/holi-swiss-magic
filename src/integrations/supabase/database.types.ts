@@ -104,21 +104,22 @@ export interface Database {
           id: string;
           therapist_id: string;
           patient_name: string;
-          patient_email: string;
+          patient_email: string | null;
           patient_phone: string | null;
-          appointment_date: string;
-          appointment_time: string;
+          appointment_date: string | null;
+          appointment_time: string | null;
           duration_minutes: number;
           status: string;
           notes: string | null;
+          start_time: string | null;
+          end_time: string | null;
+          service_name: string | null;
+          source: string;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["appointments"]["Row"]> & {
           therapist_id: string;
           patient_name: string;
-          patient_email: string;
-          appointment_date: string;
-          appointment_time: string;
         };
         Update: Partial<Database["public"]["Tables"]["appointments"]["Row"]>;
         Relationships: [];
