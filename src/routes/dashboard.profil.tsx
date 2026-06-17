@@ -137,7 +137,12 @@ function ProfilePage() {
         .maybeSingle() as any;
       if (data) {
         setRowId(data.id);
-        setPhotoUrl(data.photo_url ?? "");
+        setPhotoPublicUrl(data.photo_url ?? "");
+        if (data.photo_url) {
+          setPhotoUrl(await resolveOwnerPhotoPreview(data.photo_url));
+        } else {
+          setPhotoUrl("");
+        }
         setFirstName(data.first_name ?? "");
         setLastName(data.last_name ?? "");
         setCity(data.city ?? "");
@@ -218,10 +223,14 @@ function ProfilePage() {
     const { error } = await supabase.storage.from("therapist-photos").upload(path, file, { upsert: true });
     if (error) return toast.error(t("profile_edit.upload_error"));
     const { data: pub } = supabase.storage.from("therapist-photos").getPublicUrl(path);
-    setPhotoUrl(pub.publicUrl);
+    setPhotoPublicUrl(pub.publicUrl);
+    const { data: signed } = await supabase.storage
+      .from("therapist-photos")
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    setPhotoUrl(signed?.signedUrl ?? pub.publicUrl);
     markDirty();
   };
-  const removePhoto = () => { setPhotoUrl(""); markDirty(); };
+  const removePhoto = () => { setPhotoUrl(""); setPhotoPublicUrl(""); markDirty(); };
 
   // Document upload
   const onDocSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
