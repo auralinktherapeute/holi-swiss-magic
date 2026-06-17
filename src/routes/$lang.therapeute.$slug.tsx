@@ -492,7 +492,7 @@ function Page() {
           <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-              <BookingWidget therapistId={th.id} />
+              <BookingWidget therapistId={th.id} therapistName={fullName} />
             </div>
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur space-y-3">
