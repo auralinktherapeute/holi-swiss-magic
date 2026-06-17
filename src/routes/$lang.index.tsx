@@ -6,22 +6,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
-import { TherapistCard } from "@/components/holiswiss/TherapistCard";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
 });
-
-const SAMPLE = [
-  { slug: "marie-dubois", displayName: "Marie Dubois", specialties: ["Sophrologie", "Méditation"], canton: "GE", rating: 4.9, reviewsCount: 84, priceFrom: 120, initials: "MD" },
-  { slug: "thomas-meier", displayName: "Thomas Meier", specialties: ["Hypnose", "Coaching"], canton: "ZH", rating: 4.8, reviewsCount: 56, priceFrom: 150, initials: "TM" },
-  { slug: "sofia-rossi", displayName: "Sofia Rossi", specialties: ["Naturopathie"], canton: "TI", rating: 4.7, reviewsCount: 41, priceFrom: 110, initials: "SR" },
-  { slug: "luc-bernard", displayName: "Luc Bernard", specialties: ["Ostéopathie"], canton: "VD", rating: 5.0, reviewsCount: 102, priceFrom: 140, initials: "LB" },
-  { slug: "anna-keller", displayName: "Anna Keller", specialties: ["Reiki", "Aromathérapie"], canton: "BE", rating: 4.6, reviewsCount: 33, priceFrom: 95, initials: "AK" },
-  { slug: "paul-favre", displayName: "Paul Favre", specialties: ["Kinésiologie"], canton: "FR", rating: 4.9, reviewsCount: 67, priceFrom: 130, initials: "PF" },
-];
 
 function HomePage() {
   const { t } = useTranslation();
@@ -47,16 +37,6 @@ function HomePage() {
               <span className="text-xs font-medium text-white/85 group-hover:text-[#d4a5f9]">{t(`categories.${c.slug}`, c.label)}</span>
             </button>
           ))}
-        </div>
-      </section>
-
-      {/* Featured therapists */}
-      <section className="bg-[#2d1248]">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold tracking-tight text-white">{t("home.featured")}</h2>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {SAMPLE.map((s) => <TherapistCard key={s.slug} {...s} />)}
-          </div>
         </div>
       </section>
 
