@@ -151,6 +151,9 @@ export interface Database {
           end_date: string;
           reason: string | null;
           created_at: string;
+          is_all_day: boolean;
+          start_time: string | null;
+          end_time: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["blocked_periods"]["Row"]> & {
           therapist_id: string;
