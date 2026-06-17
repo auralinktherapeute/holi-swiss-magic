@@ -8,7 +8,7 @@ import {
 import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { TherapistCard } from "@/components/holiswiss/TherapistCard";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
-import { SwissCantonsMap } from "@/components/holiswiss/SwissCantonsMap";
+import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
@@ -119,8 +119,8 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Interactive Swiss cantons map */}
-      <SwissCantonsMap />
+      {/* Nearby therapists list + Swiss map */}
+      <NearbyTherapistsSwiss />
     </>
   );
 }
