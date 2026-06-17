@@ -75,14 +75,13 @@ export function NearbyTherapistsSwiss() {
                             : "border-[rgba(184,110,249,0.18)] bg-[#3d1a5c]/40 hover:border-[#b86ef9]/60 hover:bg-[#3d1a5c]/70"
                         }`}
                       >
-                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-[#b86ef9]/40">
-                          {th.photo_url ? (
-                            <img src={th.photo_url} alt={`${th.first_name} ${th.last_name}`} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#3d1a5c] to-[#1a1035] text-sm font-bold text-[#b86ef9]">
-                              {initials || "?"}
-                            </div>
-                          )}
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-[#b86ef9]/40 bg-gradient-to-br from-[#3d1a5c] to-[#1a1035]">
+                          <TherapistAvatar
+                            photoUrl={th.photo_url}
+                            alt={`${th.first_name ?? ""} ${th.last_name ?? ""}`.trim() || "Thérapeute"}
+                            fallback={initials || "?"}
+                            fallbackClassName="flex h-full w-full items-center justify-center text-sm font-bold text-[#b86ef9]"
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
