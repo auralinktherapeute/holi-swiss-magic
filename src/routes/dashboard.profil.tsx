@@ -272,7 +272,7 @@ function ProfilePage() {
       slug: rowId
         ? undefined
         : (`${firstName}-${lastName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + user.id.slice(0, 6)).replace(/^-+|-+$/g, ""),
-      photo_url: photoUrl || null,
+      photo_url: photoPublicUrl || null,
       city, postal_code: postalCode, address, phone,
       canton, languages: langs,
       price_min: priceMin === "" ? null : Number(priceMin),
