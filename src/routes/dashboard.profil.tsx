@@ -32,6 +32,8 @@ import {
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { DraftBanner, DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -126,6 +128,49 @@ function ProfilePage() {
   const [documents, setDocuments] = useState<DocRow[]>([]);
 
   const docInputRef = useRef<HTMLInputElement>(null);
+
+  // ---- Auto-save draft ----
+  const formSnapshot = useMemo(() => ({
+    firstName, lastName, city, postalCode, address, phone, canton, langs,
+    priceMin, priceMax, currency, yearsExperience, specialties, services,
+    shortBio, bio, googleReviewsUrl, website, ide, accreditations,
+  }), [firstName, lastName, city, postalCode, address, phone, canton, langs,
+      priceMin, priceMax, currency, yearsExperience, specialties, services,
+      shortBio, bio, googleReviewsUrl, website, ide, accreditations]);
+
+  const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
+    formType: "therapist_profile",
+    data: formSnapshot,
+    enabled: !loading && dirty,
+  });
+
+  const restoreDraft = () => {
+    if (!initialDraft) return;
+    const d = initialDraft as typeof formSnapshot;
+    setFirstName(d.firstName ?? "");
+    setLastName(d.lastName ?? "");
+    setCity(d.city ?? "");
+    setPostalCode(d.postalCode ?? "");
+    setAddress(d.address ?? "");
+    setPhone(d.phone ?? "");
+    setCanton(d.canton ?? "GE");
+    setLangs(d.langs ?? []);
+    setPriceMin(d.priceMin ?? "");
+    setPriceMax(d.priceMax ?? "");
+    setCurrency(d.currency ?? "CHF");
+    setYearsExperience(d.yearsExperience ?? "");
+    setSpecialties(d.specialties ?? []);
+    setServices(d.services ?? []);
+    setShortBio(d.shortBio ?? "");
+    setBio(d.bio ?? "");
+    setGoogleReviewsUrl(d.googleReviewsUrl ?? "");
+    setWebsite(d.website ?? "");
+    setIde(d.ide ?? "");
+    setAccreditations(d.accreditations ?? []);
+    setDirty(true);
+    dismissDraft();
+    toast.success("Brouillon restauré");
+  };
 
   // Load
   useEffect(() => {
@@ -305,6 +350,7 @@ function ProfilePage() {
     }
     setSaving(false);
     setDirty(false);
+    await clearDraft();
     toast.success(t("profile_edit.saved_toast"));
   };
 
