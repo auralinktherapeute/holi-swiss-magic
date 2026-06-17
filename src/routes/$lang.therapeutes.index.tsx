@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
+import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
 
 const TherapistMap = lazy(() =>
