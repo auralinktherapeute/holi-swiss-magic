@@ -159,29 +159,42 @@ function ProfilePage() {
   });
 
   const autoRestoredRef = useRef(false);
+  const profileBaselineScoreRef = useRef(0);
 
   const applyDraft = (d: typeof formSnapshot) => {
-    setFirstName(d.firstName ?? "");
-    setLastName(d.lastName ?? "");
-    setCity(d.city ?? "");
-    setPostalCode(d.postalCode ?? "");
-    setAddress(d.address ?? "");
-    setPhone(d.phone ?? "");
+    const keepText = (next: unknown, current: string, fallback = "") => {
+      if (next === undefined || next === null) return current || fallback;
+      const value = String(next);
+      return value.trim() || !current.trim() ? value : current;
+    };
+    const keepNumber = (next: number | "" | undefined, current: number | "", fallback: number | "" = "") => (
+      next === undefined || next === "" ? (current === "" ? fallback : current) : next
+    );
+    const keepArray = <V,>(next: V[] | undefined, current: V[]) => (
+      Array.isArray(next) && (next.length > 0 || current.length === 0) ? next : current
+    );
+
+    setFirstName(keepText(d.firstName, firstName));
+    setLastName(keepText(d.lastName, lastName));
+    setCity(keepText(d.city, city));
+    setPostalCode(keepText(d.postalCode, postalCode));
+    setAddress(keepText(d.address, address));
+    setPhone(keepText(d.phone, phone));
     setCanton(d.canton ?? "GE");
-    setLangs(d.langs ?? []);
-    setPriceMin(d.priceMin ?? "");
-    setPriceMax(d.priceMax ?? "");
+    setLangs(keepArray(d.langs, langs));
+    setPriceMin(keepNumber(d.priceMin, priceMin));
+    setPriceMax(keepNumber(d.priceMax, priceMax));
     setCurrency(d.currency ?? "CHF");
     setSessionDuration(d.sessionDuration ?? 60);
-    setYearsExperience(d.yearsExperience ?? "");
-    setSpecialties(d.specialties ?? []);
-    setServices(d.services ?? []);
-    setShortBio(d.shortBio ?? "");
-    setBio(d.bio ?? "");
-    setGoogleReviewsUrl(d.googleReviewsUrl ?? "");
-    setWebsite(d.website ?? "");
-    setIde(d.ide ?? "");
-    setAccreditations(d.accreditations ?? []);
+    setYearsExperience(keepNumber(d.yearsExperience, yearsExperience));
+    setSpecialties(keepArray(d.specialties, specialties));
+    setServices(keepArray(d.services, services));
+    setShortBio(keepText(d.shortBio, shortBio));
+    setBio(keepText(d.bio, bio));
+    setGoogleReviewsUrl(keepText(d.googleReviewsUrl, googleReviewsUrl));
+    setWebsite(keepText(d.website, website));
+    setIde(keepText(d.ide, ide));
+    setAccreditations(keepArray(d.accreditations, accreditations));
     setDirty(true);
   };
 
@@ -191,6 +204,13 @@ function ProfilePage() {
     if (loading) return;
     if (autoRestoredRef.current) return;
     if (!initialDraft) return;
+    const draftScore = profileDraftScore(initialDraft);
+    const currentScore = profileDraftScore(formSnapshot);
+    if (draftScore <= 0 || (currentScore >= 2 && draftScore < currentScore)) {
+      autoRestoredRef.current = true;
+      dismissDraft();
+      return;
+    }
     autoRestoredRef.current = true;
     applyDraft(initialDraft as typeof formSnapshot);
     dismissDraft();
@@ -234,6 +254,29 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+        profileBaselineScoreRef.current = profileDraftScore({
+          firstName: data.first_name ?? "",
+          lastName: data.last_name ?? "",
+          city: data.city ?? "",
+          postalCode: data.postal_code ?? "",
+          address: data.address ?? "",
+          phone: data.phone ?? "",
+          canton: data.canton ?? "GE",
+          langs: data.languages ?? [],
+          priceMin: data.price_min ?? "",
+          priceMax: data.price_max ?? "",
+          currency: data.currency ?? "CHF",
+          sessionDuration,
+          yearsExperience: (data as any).years_experience ?? "",
+          specialties: data.specialties ?? [],
+          services: ((data as any).services as TherapistService[]) ?? [],
+          shortBio: data.short_bio ?? "",
+          bio: data.bio ?? "",
+          googleReviewsUrl: (data as any).google_reviews_url ?? "",
+          website: data.website ?? "",
+          ide: "",
+          accreditations: ((data as any).accreditations as Accreditation[]) ?? [],
+        });
 
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
@@ -317,6 +360,12 @@ function ProfilePage() {
   // Save profile
   const onSave = async () => {
     if (!user) return;
+    const currentScore = profileDraftScore(formSnapshot);
+    const baselineScore = profileBaselineScoreRef.current;
+    if (baselineScore >= 4 && currentScore <= baselineScore * 0.6) {
+      toast.error("Sauvegarde bloquée : le formulaire semble incomplet. Rechargez la page avant d’enregistrer.");
+      return;
+    }
     setSaving(true);
     const payload: any = {
       user_id: user.id,

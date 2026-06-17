@@ -164,7 +164,7 @@ export function useFormDraft<T>({
   debounceMs = 1500,
   getCompletenessScore = defaultCompletenessScore,
 }: Options<T>) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const userId = user?.id ?? null;
 
   const [initialDraft, setInitialDraft] = useState<T | null>(null);
@@ -199,6 +199,7 @@ export function useFormDraft<T>({
 
   // Initial load (once per user/formType).
   useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
     setLoaded(false);
     setInitialDraft(null);
@@ -235,7 +236,7 @@ export function useFormDraft<T>({
     return () => {
       cancelled = true;
     };
-  }, [userId, formType, getCompletenessScore]);
+  }, [authLoading, userId, formType, getCompletenessScore]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -296,7 +297,7 @@ export function useFormDraft<T>({
         setSavedAt(new Date());
         setStatus("saved");
       } catch {
-        setStatus(localUpdatedAt ? "saved" : "error");
+        setStatus("error");
       }
     }, debounceMs);
     return () => {
