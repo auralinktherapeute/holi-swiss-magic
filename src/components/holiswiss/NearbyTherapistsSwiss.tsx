@@ -89,9 +89,9 @@ export function NearbyTherapistsSwiss() {
                             <p className="truncate text-sm font-semibold text-white">
                               {th.first_name} {th.last_name}
                             </p>
-                            {th.is_premium && (
+                            {th.verified && (
                               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#d4a05a]/20 px-2 py-0.5 text-[10px] font-semibold text-[#f5c97a] ring-1 ring-[#d4a05a]/40">
-                                <BadgeCheck className="h-3 w-3" /> Pro
+                                <BadgeCheck className="h-3 w-3" /> Vérifié
                               </span>
                             )}
                           </div>
