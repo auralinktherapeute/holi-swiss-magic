@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookedAppointmentSlots } from "@/lib/public.functions";
 import { z } from "zod";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { DraftBanner, DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
@@ -56,6 +58,22 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [formTouched, setFormTouched] = useState(false);
+
+  const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
+    formType: `booking:${therapistId}`,
+    data: form,
+    enabled: formTouched && !success,
+  });
+  const restoreDraft = () => {
+    if (initialDraft) setForm(initialDraft as typeof form);
+    dismissDraft();
+    toast.success(t("booking.draft_restored", "Brouillon restauré"));
+  };
+  const updateForm = (patch: Partial<typeof form>) => {
+    setForm((prev) => ({ ...prev, ...patch }));
+    setFormTouched(true);
+  };
 
   useEffect(() => {
     (async () => {
@@ -138,6 +156,7 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
     // eslint-disable-next-line no-console
     console.log("[booking] confirmation email →", parsed.data.email, { selectedDate, selectedTime });
     setSuccess(true);
+    await clearDraft();
     toast.success(t("booking.request_sent_toast"));
   };
 
@@ -213,16 +232,20 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
 
         {selectedDate && selectedTime && (
           <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
+            {initialDraft && (
+              <DraftBanner savedAt={savedAt} onRestore={restoreDraft} onDismiss={dismissDraft} />
+            )}
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
-                <Input id="bk-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={120} /></div>
+                <Input id="bk-name" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} required maxLength={120} /></div>
               <div><Label htmlFor="bk-email">{t("auth.email")}</Label>
-                <Input id="bk-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required maxLength={200} /></div>
+                <Input id="bk-email" type="email" value={form.email} onChange={(e) => updateForm({ email: e.target.value })} required maxLength={200} /></div>
             </div>
             <div><Label htmlFor="bk-phone">{t("booking.phone_optional")}</Label>
-              <Input id="bk-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} maxLength={40} /></div>
+              <Input id="bk-phone" type="tel" value={form.phone} onChange={(e) => updateForm({ phone: e.target.value })} maxLength={40} /></div>
             <div><Label htmlFor="bk-notes">{t("booking.message_optional")}</Label>
-              <Textarea id="bk-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={1000} rows={3} /></div>
+              <Textarea id="bk-notes" value={form.notes} onChange={(e) => updateForm({ notes: e.target.value })} maxLength={1000} rows={3} /></div>
+            <div className="flex justify-end"><DraftSavedIndicator status={draftStatus} savedAt={savedAt} /></div>
             <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90">
               {submitting ? t("booking.sending") : t("booking.book_at", { date: selectedDate, time: selectedTime })}
             </Button>
