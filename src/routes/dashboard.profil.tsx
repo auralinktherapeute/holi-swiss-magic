@@ -132,10 +132,10 @@ function ProfilePage() {
   // ---- Auto-save draft ----
   const formSnapshot = useMemo(() => ({
     firstName, lastName, city, postalCode, address, phone, canton, langs,
-    priceMin, priceMax, currency, yearsExperience, specialties, services,
+    priceMin, priceMax, currency, sessionDuration, yearsExperience, specialties, services,
     shortBio, bio, googleReviewsUrl, website, ide, accreditations,
   }), [firstName, lastName, city, postalCode, address, phone, canton, langs,
-      priceMin, priceMax, currency, yearsExperience, specialties, services,
+      priceMin, priceMax, currency, sessionDuration, yearsExperience, specialties, services,
       shortBio, bio, googleReviewsUrl, website, ide, accreditations]);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
@@ -158,6 +158,7 @@ function ProfilePage() {
     setPriceMin(d.priceMin ?? "");
     setPriceMax(d.priceMax ?? "");
     setCurrency(d.currency ?? "CHF");
+    setSessionDuration(d.sessionDuration ?? 60);
     setYearsExperience(d.yearsExperience ?? "");
     setSpecialties(d.specialties ?? []);
     setServices(d.services ?? []);
