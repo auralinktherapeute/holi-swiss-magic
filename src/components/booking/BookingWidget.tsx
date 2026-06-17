@@ -29,27 +29,26 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
-
-const SLOT_MIN = 60;
+export type BookingService = { name: string; duration?: number; price?: number; format?: string };
 
 function toISODate(d: Date) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 function dowMonFirst(d: Date) { return (d.getDay() + 6) % 7; } // 0=Lun
-function buildSlots(start: string, end: string): string[] {
+function buildSlots(start: string, end: string, slotMin: number): string[] {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   const out: string[] = [];
   let cur = sh * 60 + sm; const max = eh * 60 + em;
-  while (cur + SLOT_MIN <= max) {
+  while (cur + slotMin <= max) {
     out.push(`${String(Math.floor(cur / 60)).padStart(2, "0")}:${String(cur % 60).padStart(2, "0")}`);
-    cur += SLOT_MIN;
+    cur += slotMin;
   }
   return out;
 }
 
-export function BookingWidget({ therapistId, therapistName }: { therapistId: string; therapistName?: string }) {
+export function BookingWidget({ therapistId, therapistName, services = [] }: { therapistId: string; therapistName?: string; services?: BookingService[] }) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
   const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
@@ -61,6 +60,7 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
     notes: z.string().max(1000).optional().or(z.literal("")),
   });
   const statePrefix = `booking.${therapistId}`;
+  const [selectedServiceIdx, setSelectedServiceIdx] = useSessionState<number | null>(`${statePrefix}.serviceIdx`, null);
   const [month, setMonth] = useSessionState(`${statePrefix}.month`, () => { const d = new Date(); d.setDate(1); return d; });
   const [avs, setAvs] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -73,6 +73,10 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
   const [formTouched, setFormTouched] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const autoRestoredRef = useRef(false);
+
+  const selectedService: BookingService | null =
+    selectedServiceIdx !== null && services[selectedServiceIdx] ? services[selectedServiceIdx] : null;
+  const slotMin = Math.max(15, Number(selectedService?.duration) || 60);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
     formType: `booking:${therapistId}`,
@@ -143,13 +147,14 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
     if (!selectedDate) return [];
     const dow = dowMonFirst(new Date(selectedDate + "T00:00:00"));
     const dayAvs = avs.filter((a) => a.day_of_week === dow);
-    const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5)));
+    const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin));
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
     return all.filter((s) => !takenSet.has(s));
-  }, [selectedDate, avs, taken]);
+  }, [selectedDate, avs, taken, slotMin]);
 
   const openConfirm = (e: React.FormEvent) => {
     e.preventDefault();
+    if (services.length > 0 && !selectedService) { toast.error("Veuillez choisir un service."); return; }
     if (!selectedDate || !selectedTime) { toast.error(t("booking.choose_slot")); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
@@ -168,6 +173,8 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
       patient_phone: parsed.data.phone || null,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
+      duration_minutes: slotMin,
+      service_name: selectedService?.name ?? null,
       notes: parsed.data.notes || null,
       status: "pending",
     });
@@ -204,7 +211,36 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
         <CardTitle className="text-lg">{t("booking.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div>
+        {services.length > 0 && (
+          <div>
+            <div className="text-sm font-medium mb-2">1. Choisissez un service</div>
+            <div className="grid gap-2">
+              {services.map((s, i) => {
+                const sel = selectedServiceIdx === i;
+                return (
+                  <button
+                    key={`${s.name}-${i}`}
+                    type="button"
+                    onClick={() => { setSelectedServiceIdx(i); setSelectedDate(null); setSelectedTime(null); }}
+                    className={`text-left rounded-md border p-3 transition-colors ${sel ? "border-primary bg-primary/10" : "border-border hover:bg-muted/40"}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium text-foreground">{s.name}</div>
+                      {s.price != null && <div className="text-sm font-semibold text-primary">{s.price} CHF</div>}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {s.duration ? `${s.duration} min` : "Durée non précisée"}
+                      {s.format ? ` · ${s.format}` : ""}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className={services.length > 0 && !selectedService ? "pointer-events-none opacity-40" : ""} aria-disabled={services.length > 0 && !selectedService}>
+          {services.length > 0 && <div className="text-sm font-medium mb-2">2. Choisissez une date</div>}
           <div className="flex items-center justify-between mb-3">
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
               onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); }}>
@@ -255,8 +291,14 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
           </div>
         )}
 
-        {selectedDate && selectedTime && (
+        {selectedDate && selectedTime && (services.length === 0 || selectedService) && (
           <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
+            <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
+              <div className="font-medium mb-1">Récapitulatif</div>
+              {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
+              <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong> à <strong>{selectedTime}</strong></div>
+              <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong>{selectedService?.price != null && <> · <span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></>}</div>
+            </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
                 <Input id="bk-name" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} required maxLength={120} /></div>
@@ -282,9 +324,11 @@ export function BookingWidget({ therapistId, therapistName }: { therapistId: str
                 <div className="space-y-3 text-sm">
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-foreground">
                     {therapistName && <div><span className="text-muted-foreground">Thérapeute :</span> <strong>{therapistName}</strong></div>}
+                    {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
                     {selectedDate && <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong></div>}
                     {selectedTime && <div><span className="text-muted-foreground">Heure :</span> <strong>{selectedTime}</strong></div>}
-                    <div><span className="text-muted-foreground">Type :</span> <strong>Séance individuelle</strong></div>
+                    <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong></div>
+                    {selectedService?.price != null && <div><span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></div>}
                   </div>
                   <p className="leading-relaxed">
                     Ce rendez-vous sera réservé exclusivement pour vous. Un thérapeute se prépare pour vous accueillir — merci de respecter cet engagement ou de l'annuler 24h avant. Merci.
