@@ -324,9 +324,11 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
                 <div className="space-y-3 text-sm">
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-foreground">
                     {therapistName && <div><span className="text-muted-foreground">Thérapeute :</span> <strong>{therapistName}</strong></div>}
+                    {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
                     {selectedDate && <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong></div>}
                     {selectedTime && <div><span className="text-muted-foreground">Heure :</span> <strong>{selectedTime}</strong></div>}
-                    <div><span className="text-muted-foreground">Type :</span> <strong>Séance individuelle</strong></div>
+                    <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong></div>
+                    {selectedService?.price != null && <div><span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></div>}
                   </div>
                   <p className="leading-relaxed">
                     Ce rendez-vous sera réservé exclusivement pour vous. Un thérapeute se prépare pour vous accueillir — merci de respecter cet engagement ou de l'annuler 24h avant. Merci.
