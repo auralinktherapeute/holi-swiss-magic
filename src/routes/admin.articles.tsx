@@ -112,6 +112,7 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
   const qc = useQueryClient();
   const formKey = initial?.id ? `admin.articles.edit.${initial.id}` : "admin.articles.new";
   const [form, setForm] = useSessionState<FormData>(formKey, EMPTY);
+  const [langTab, setLangTab] = useSessionState<Lang>(`${formKey}.langTab`, "fr");
   const [showUnsplash, setShowUnsplash] = useState(false);
 
   // Reset on open
@@ -176,7 +177,7 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
           </div>
 
           {/* Contenu multilingue */}
-          <Tabs defaultValue="fr">
+          <Tabs value={langTab} onValueChange={(v) => setLangTab(v as Lang)}>
             <TabsList className="bg-background border border-border/60">
               {LANG_TABS.map(t => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
             </TabsList>
