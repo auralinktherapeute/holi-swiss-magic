@@ -3,7 +3,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Users, MapPin, ArrowRight, BadgeCheck, Info } from "lucide-react";
-import { holiswissPublic as supabase } from "@/integrations/supabase/holiswiss-public";
+import { supabase } from "@/integrations/supabase/client";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap })),
