@@ -136,8 +136,10 @@ function writeLocalDraft<T>(formType: string, userId: string | null, data: T) {
 
 function removeLocalDraft(formType: string, userId: string | null) {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(lsKey(formType, userId));
-  window.localStorage.removeItem(lsKey(formType, null));
+  [lsKey(formType, userId), lsKey(formType, null)].forEach((key) => {
+    window.localStorage.removeItem(key);
+    window.localStorage.removeItem(`${key}.backup`);
+  });
 }
 
 /**
