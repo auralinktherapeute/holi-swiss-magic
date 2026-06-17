@@ -7,33 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
+import { listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
 import BookingNoteEditor from "@/components/dashboard/BookingNoteEditor";
 import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
 import SpecificAvailabilityManager from "@/components/dashboard/SpecificAvailabilityManager";
+import UnavailabilityManager from "@/components/dashboard/UnavailabilityManager";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
 type Slot = { id?: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean };
-type Block = { id?: string; start_date: string; end_date: string; reason: string };
 
 function Page() {
   const { t } = useTranslation();
   const DAYS = t("agenda_page.days", { returnObjects: true }) as string[];
   const { user } = useAuth();
   const fetchAgenda = useServerFn(listMyAgenda);
-  const addBlockedPeriod = useServerFn(addMyBlockedPeriod);
-  const deleteBlockedPeriod = useServerFn(deleteMyBlockedPeriod);
   const saveAvailabilities = useServerFn(saveMyAvailabilities);
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>(
     Array.from({ length: 7 }, (_, i) => ({ day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: i < 5 })),
   );
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [newBlock, setNewBlock] = useState<Block>({ start_date: "", end_date: "", reason: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -41,7 +37,7 @@ function Page() {
     if (!user) return;
     (async () => {
       try {
-        const { therapistId: thId, availabilities: avs, blockedPeriods: bps } = await fetchAgenda();
+        const { therapistId: thId, availabilities: avs } = await fetchAgenda();
         setTherapistId(thId);
         if (avs?.length) {
         setSlots(Array.from({ length: 7 }, (_, i) => {
@@ -51,7 +47,6 @@ function Page() {
             : { day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: false };
         }));
         }
-        setBlocks((bps ?? []).map((b) => ({ id: b.id, start_date: b.start_date, end_date: b.end_date, reason: b.reason ?? "" })));
       } catch {
         setTherapistId(null);
       }
@@ -61,31 +56,6 @@ function Page() {
 
   const update = (i: number, patch: Partial<Slot>) =>
     setSlots((s) => s.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
-
-  const addBlock = async () => {
-    if (!therapistId || !newBlock.start_date || !newBlock.end_date) {
-      toast.error(t("agenda_page.fill_dates")); return;
-    }
-    try {
-      const { row } = await addBlockedPeriod({ data: { start_date: newBlock.start_date, end_date: newBlock.end_date, reason: newBlock.reason || undefined } });
-      setBlocks((b) => [...b, { id: row.id, start_date: row.start_date, end_date: row.end_date, reason: row.reason ?? "" }]);
-      setNewBlock({ start_date: "", end_date: "", reason: "" });
-      toast.success(t("agenda_page.block_added"));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur d'ajout");
-    }
-  };
-
-  const removeBlock = async (id?: string) => {
-    if (!id) return;
-    try {
-      await deleteBlockedPeriod({ data: { id } });
-      setBlocks((b) => b.filter((x) => x.id !== id));
-      toast.success(t("agenda_page.block_removed"));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur de suppression");
-    }
-  };
 
   const save = async () => {
     if (!therapistId) { toast.error(t("agenda_page.complete_profile")); return; }
