@@ -7,33 +7,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
+import { listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
 import BookingNoteEditor from "@/components/dashboard/BookingNoteEditor";
 import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
 import SpecificAvailabilityManager from "@/components/dashboard/SpecificAvailabilityManager";
+import UnavailabilityManager from "@/components/dashboard/UnavailabilityManager";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
 type Slot = { id?: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean };
-type Block = { id?: string; start_date: string; end_date: string; reason: string };
 
 function Page() {
   const { t } = useTranslation();
   const DAYS = t("agenda_page.days", { returnObjects: true }) as string[];
   const { user } = useAuth();
   const fetchAgenda = useServerFn(listMyAgenda);
-  const addBlockedPeriod = useServerFn(addMyBlockedPeriod);
-  const deleteBlockedPeriod = useServerFn(deleteMyBlockedPeriod);
   const saveAvailabilities = useServerFn(saveMyAvailabilities);
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>(
     Array.from({ length: 7 }, (_, i) => ({ day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: i < 5 })),
   );
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [newBlock, setNewBlock] = useState<Block>({ start_date: "", end_date: "", reason: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -41,7 +36,7 @@ function Page() {
     if (!user) return;
     (async () => {
       try {
-        const { therapistId: thId, availabilities: avs, blockedPeriods: bps } = await fetchAgenda();
+        const { therapistId: thId, availabilities: avs } = await fetchAgenda();
         setTherapistId(thId);
         if (avs?.length) {
         setSlots(Array.from({ length: 7 }, (_, i) => {
@@ -51,7 +46,6 @@ function Page() {
             : { day_of_week: i, start_time: "09:00", end_time: "18:00", is_active: false };
         }));
         }
-        setBlocks((bps ?? []).map((b) => ({ id: b.id, start_date: b.start_date, end_date: b.end_date, reason: b.reason ?? "" })));
       } catch {
         setTherapistId(null);
       }
@@ -61,31 +55,6 @@ function Page() {
 
   const update = (i: number, patch: Partial<Slot>) =>
     setSlots((s) => s.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
-
-  const addBlock = async () => {
-    if (!therapistId || !newBlock.start_date || !newBlock.end_date) {
-      toast.error(t("agenda_page.fill_dates")); return;
-    }
-    try {
-      const { row } = await addBlockedPeriod({ data: { start_date: newBlock.start_date, end_date: newBlock.end_date, reason: newBlock.reason || undefined } });
-      setBlocks((b) => [...b, { id: row.id, start_date: row.start_date, end_date: row.end_date, reason: row.reason ?? "" }]);
-      setNewBlock({ start_date: "", end_date: "", reason: "" });
-      toast.success(t("agenda_page.block_added"));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur d'ajout");
-    }
-  };
-
-  const removeBlock = async (id?: string) => {
-    if (!id) return;
-    try {
-      await deleteBlockedPeriod({ data: { id } });
-      setBlocks((b) => b.filter((x) => x.id !== id));
-      toast.success(t("agenda_page.block_removed"));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur de suppression");
-    }
-  };
 
   const save = async () => {
     if (!therapistId) { toast.error(t("agenda_page.complete_profile")); return; }
@@ -149,39 +118,7 @@ function Page() {
         </Card>
       )}
 
-      <Card className="bg-surface border-border/60">
-        <CardHeader><CardTitle>{t("agenda_page.unavail_title")}</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1"><label className="text-xs text-muted-foreground">{t("agenda_page.from")}</label>
-              <Input type="date" value={newBlock.start_date} onChange={(e) => setNewBlock({ ...newBlock, start_date: e.target.value })} /></div>
-            <div className="space-y-1"><label className="text-xs text-muted-foreground">{t("agenda_page.to")}</label>
-              <Input type="date" value={newBlock.end_date} onChange={(e) => setNewBlock({ ...newBlock, end_date: e.target.value })} /></div>
-            <div className="space-y-1 flex-1 min-w-[180px]"><label className="text-xs text-muted-foreground">{t("agenda_page.reason")}</label>
-              <Input value={newBlock.reason} placeholder={t("agenda_page.reason_ph")} onChange={(e) => setNewBlock({ ...newBlock, reason: e.target.value })} /></div>
-            <Button onClick={addBlock} disabled={!therapistId} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-1" /> {t("agenda_page.add")}
-            </Button>
-          </div>
-          {blocks.length === 0 ? (
-            <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm text-muted-foreground">{t("agenda_page.no_blocks")}</div>
-          ) : (
-            <ul className="space-y-2">
-              {blocks.map((b) => (
-                <li key={b.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 p-3 text-sm">
-                  <div>
-                    <span className="font-medium text-foreground">{b.start_date} → {b.end_date}</span>
-                    {b.reason && <span className="ml-2 text-muted-foreground">— {b.reason}</span>}
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => removeBlock(b.id)}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      {therapistId && <UnavailabilityManager therapistId={therapistId} />}
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving || !therapistId} className="bg-primary hover:bg-primary/90">

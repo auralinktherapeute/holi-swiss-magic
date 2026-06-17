@@ -61,10 +61,14 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
     (async () => {
       const [{ data: a }, { data: b }] = await Promise.all([
         supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("day_of_week", "is", null),
-        supabase.from("public_blocked_periods" as never).select("start_date,end_date").eq("therapist_id", therapistId),
+        supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day").eq("therapist_id", therapistId),
       ]);
       setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
-      setBlocks(b ?? []);
+      // Only all-day blocks fully prevent date selection; partial-time blocks remain
+      // (the booking widget operates at day granularity for now).
+      setBlocks(((b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean }>)
+        .filter((x) => x.is_all_day !== false)
+        .map(({ start_date, end_date }) => ({ start_date, end_date })));
     })();
   }, [therapistId]);
 

@@ -1,0 +1,4 @@
+ALTER TABLE public.blocked_periods
+  ADD COLUMN IF NOT EXISTS is_all_day BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS start_time TIME,
+  ADD COLUMN IF NOT EXISTS end_time TIME;
