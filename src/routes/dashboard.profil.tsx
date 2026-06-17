@@ -144,9 +144,9 @@ function ProfilePage() {
     enabled: !loading && dirty,
   });
 
-  const restoreDraft = () => {
-    if (!initialDraft) return;
-    const d = initialDraft as typeof formSnapshot;
+  const autoRestoredRef = useRef(false);
+
+  const applyDraft = (d: typeof formSnapshot) => {
     setFirstName(d.firstName ?? "");
     setLastName(d.lastName ?? "");
     setCity(d.city ?? "");
@@ -169,9 +169,26 @@ function ProfilePage() {
     setIde(d.ide ?? "");
     setAccreditations(d.accreditations ?? []);
     setDirty(true);
+  };
+
+  const restoreDraft = () => {
+    if (!initialDraft) return;
+    applyDraft(initialDraft as typeof formSnapshot);
     dismissDraft();
     toast.success("Brouillon restauré");
   };
+
+  // Auto-restore draft as soon as it is loaded (after DB fetch), so the user
+  // never sees empty fields when a draft exists.
+  useEffect(() => {
+    if (loading) return;
+    if (autoRestoredRef.current) return;
+    if (!initialDraft) return;
+    autoRestoredRef.current = true;
+    applyDraft(initialDraft as typeof formSnapshot);
+    dismissDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, initialDraft]);
 
   // Load
   useEffect(() => {
