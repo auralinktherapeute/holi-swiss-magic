@@ -60,10 +60,11 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
   useEffect(() => {
     (async () => {
       const [{ data: a }, { data: b }] = await Promise.all([
-        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true),
+        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("day_of_week", "is", null),
         supabase.from("public_blocked_periods" as never).select("start_date,end_date").eq("therapist_id", therapistId),
       ]);
-      setAvs(a ?? []); setBlocks(b ?? []);
+      setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
+      setBlocks(b ?? []);
     })();
   }, [therapistId]);
 
