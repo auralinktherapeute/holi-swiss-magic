@@ -13,6 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
 import BookingNoteEditor from "@/components/dashboard/BookingNoteEditor";
 import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
+import SpecificAvailabilityManager from "@/components/dashboard/SpecificAvailabilityManager";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
