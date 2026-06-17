@@ -443,17 +443,26 @@ export type Database = {
       public_blocked_periods: {
         Row: {
           end_date: string | null
+          end_time: string | null
+          is_all_day: boolean | null
           start_date: string | null
+          start_time: string | null
           therapist_id: string | null
         }
         Insert: {
           end_date?: string | null
+          end_time?: string | null
+          is_all_day?: boolean | null
           start_date?: string | null
+          start_time?: string | null
           therapist_id?: string | null
         }
         Update: {
           end_date?: string | null
+          end_time?: string | null
+          is_all_day?: boolean | null
           start_date?: string | null
+          start_time?: string | null
           therapist_id?: string | null
         }
         Relationships: [
