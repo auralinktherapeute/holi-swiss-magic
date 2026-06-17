@@ -209,6 +209,108 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          category: Database["public"]["Enums"]["event_category"]
+          created_at: string
+          enable_waitlist: boolean
+          end_time: string | null
+          event_date: string | null
+          format: Database["public"]["Enums"]["event_format"]
+          id: string
+          image_url: string | null
+          is_paid: boolean
+          location: string | null
+          long_description: string | null
+          online_link: string | null
+          price: number | null
+          price_description: string | null
+          reduced_price: number | null
+          reduced_price_description: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seats: number | null
+          short_description: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["event_status"]
+          therapist_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["event_category"]
+          created_at?: string
+          enable_waitlist?: boolean
+          end_time?: string | null
+          event_date?: string | null
+          format?: Database["public"]["Enums"]["event_format"]
+          id?: string
+          image_url?: string | null
+          is_paid?: boolean
+          location?: string | null
+          long_description?: string | null
+          online_link?: string | null
+          price?: number | null
+          price_description?: string | null
+          reduced_price?: number | null
+          reduced_price_description?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seats?: number | null
+          short_description?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["event_status"]
+          therapist_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["event_category"]
+          created_at?: string
+          enable_waitlist?: boolean
+          end_time?: string | null
+          event_date?: string | null
+          format?: Database["public"]["Enums"]["event_format"]
+          id?: string
+          image_url?: string | null
+          is_paid?: boolean
+          location?: string | null
+          long_description?: string | null
+          online_link?: string | null
+          price?: number | null
+          price_description?: string | null
+          reduced_price?: number | null
+          reduced_price_description?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seats?: number | null
+          short_description?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["event_status"]
+          therapist_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_documents: {
         Row: {
           created_at: string
@@ -677,6 +779,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "therapist" | "user"
+      event_category:
+        | "atelier"
+        | "conference"
+        | "retraite"
+        | "cercle"
+        | "meditation"
+        | "autre"
+      event_format: "in_person" | "online" | "hybrid"
+      event_status: "draft" | "pending_review" | "published" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -805,6 +916,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "therapist", "user"],
+      event_category: [
+        "atelier",
+        "conference",
+        "retraite",
+        "cercle",
+        "meditation",
+        "autre",
+      ],
+      event_format: ["in_person", "online", "hybrid"],
+      event_status: ["draft", "pending_review", "published", "rejected"],
     },
   },
 } as const
