@@ -13,6 +13,8 @@ type Options<T> = {
   enabled: boolean;
   /** Debounce in ms (default 1500). */
   debounceMs?: number;
+  /** Scores how much user-entered content exists; used to avoid overwriting rich drafts with accidental empty resets. */
+  getCompletenessScore?: (data: T) => number;
 };
 
 const LS_PREFIX = "lovable.draft.";
@@ -67,19 +69,46 @@ function draftsDelete() {
   return supabase.from("drafts" as never) as unknown as DraftDeleteQuery;
 }
 
+function defaultCompletenessScore(value: unknown): number {
+  if (value == null) return 0;
+  if (typeof value === "string") return value.trim() ? 1 : 0;
+  if (typeof value === "number") return Number.isFinite(value) ? 1 : 0;
+  if (typeof value === "boolean") return 0;
+  if (Array.isArray(value)) return value.reduce((sum, item) => sum + Math.max(1, defaultCompletenessScore(item)), 0);
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).reduce((sum, item) => sum + defaultCompletenessScore(item), 0);
+  }
+  return 0;
+}
+
+function pickBestDraft<T>(drafts: Array<StoredDraft<T> | null>, scoreDraft: (data: T) => number) {
+  return drafts.filter(Boolean).reduce<StoredDraft<T> | null>((best, draft) => {
+    if (!draft) return best;
+    if (!best) return draft;
+    const draftScore = scoreDraft(draft.data);
+    const bestScore = scoreDraft(best.data);
+    const draftIsMuchRicher = draftScore >= bestScore + 2 && bestScore <= draftScore * 0.6;
+    const bestIsMuchRicher = bestScore >= draftScore + 2 && draftScore <= bestScore * 0.6;
+    if (draftIsMuchRicher) return draft;
+    if (bestIsMuchRicher) return best;
+    return new Date(draft.updated_at).getTime() >= new Date(best.updated_at).getTime() ? draft : best;
+  }, null);
+}
+
 function readLocalDraft<T>(formType: string, userId: string | null): StoredDraft<T> | null {
   if (typeof window === "undefined") return null;
   const candidates = [lsKey(formType, userId), ...(userId ? [lsKey(formType, null)] : [])];
+  const drafts: Array<StoredDraft<T> | null> = [];
   for (const key of candidates) {
     const raw = window.localStorage.getItem(key);
     if (!raw) continue;
     try {
-      return JSON.parse(raw) as StoredDraft<T>;
+      drafts.push(JSON.parse(raw) as StoredDraft<T>);
     } catch {
       window.localStorage.removeItem(key);
     }
   }
-  return null;
+  return pickBestDraft(drafts, defaultCompletenessScore);
 }
 
 function writeLocalDraft<T>(formType: string, userId: string | null, data: T) {
