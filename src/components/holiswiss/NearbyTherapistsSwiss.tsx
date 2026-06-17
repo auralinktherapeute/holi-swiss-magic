@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Users, MapPin, ArrowRight, BadgeCheck, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap })),
