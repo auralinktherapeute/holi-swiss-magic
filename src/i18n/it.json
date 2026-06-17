@@ -656,5 +656,11 @@
     "unavail_reason_personal": "Appuntamento personale",
     "unavail_reason_sick": "Malattia",
     "unavail_delete_aria": "Elimina"
+    ,
+    "weekly_title": "Giorni e orari di lavoro",
+    "weekly_desc": "Imposta i tuoi giorni lavorativi e gli orari di apertura. I visitatori potranno prenotare solo in queste fasce — i giorni non selezionati saranno nascosti.",
+    "weekly_save": "Salva i miei orari",
+    "weekly_saved": "Orari di lavoro salvati",
+    "weekly_err_range": "{{day}}: l'ora di fine deve essere dopo l'ora di inizio"
   }
 }

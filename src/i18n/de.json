@@ -656,5 +656,11 @@
     "unavail_reason_personal": "Privater Termin",
     "unavail_reason_sick": "Krankheit",
     "unavail_delete_aria": "Löschen"
+    ,
+    "weekly_title": "Arbeitstage und -zeiten",
+    "weekly_desc": "Legen Sie Ihre Arbeitstage und Öffnungszeiten fest. Buchungen sind nur in diesen Fenstern möglich – nicht angekreuzte Tage werden ausgeblendet.",
+    "weekly_save": "Zeiten speichern",
+    "weekly_saved": "Arbeitszeiten gespeichert",
+    "weekly_err_range": "{{day}}: Die Endzeit muss nach der Startzeit liegen"
   }
 }
