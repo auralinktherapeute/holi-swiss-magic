@@ -15,6 +15,7 @@ import {
 import { Ban, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateOnly, parseDateOnly, localeForI18n } from "@/lib/dateUtils";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export interface Unavailability {
   id: string;
@@ -37,7 +38,8 @@ export default function UnavailabilityManager({ therapistId, quickBlockDate, onQ
   const { t, i18n } = useTranslation();
   const locale = localeForI18n(i18n.language);
   const queryClient = useQueryClient();
-  const [showAll, setShowAll] = useState(false);
+  const statePrefix = `dashboard.unavailability.${therapistId}`;
+  const [showAll, setShowAll] = useSessionState(`${statePrefix}.showAll`, false);
 
   const REASON_CHIPS = [
     t("agenda_page.unavail_reason_holiday"),
@@ -46,20 +48,20 @@ export default function UnavailabilityManager({ therapistId, quickBlockDate, onQ
     t("agenda_page.unavail_reason_sick"),
   ];
 
-  const [quickOpen, setQuickOpen] = useState(false);
-  const [quickMode, setQuickMode] = useState<"all" | "range">("all");
-  const [quickStart, setQuickStart] = useState("09:00");
-  const [quickEnd, setQuickEnd] = useState("12:00");
-  const [quickReason, setQuickReason] = useState("");
-  const [quickDate, setQuickDate] = useState("");
+  const [quickOpen, setQuickOpen] = useSessionState(`${statePrefix}.quickOpen`, false);
+  const [quickMode, setQuickMode] = useSessionState<"all" | "range">(`${statePrefix}.quickMode`, "all");
+  const [quickStart, setQuickStart] = useSessionState(`${statePrefix}.quickStart`, "09:00");
+  const [quickEnd, setQuickEnd] = useSessionState(`${statePrefix}.quickEnd`, "12:00");
+  const [quickReason, setQuickReason] = useSessionState(`${statePrefix}.quickReason`, "");
+  const [quickDate, setQuickDate] = useSessionState(`${statePrefix}.quickDate`, "");
 
-  const [periodOpen, setPeriodOpen] = useState(false);
-  const [periodFrom, setPeriodFrom] = useState("");
-  const [periodTo, setPeriodTo] = useState("");
-  const [periodAllDay, setPeriodAllDay] = useState(true);
-  const [periodStart, setPeriodStart] = useState("09:00");
-  const [periodEnd, setPeriodEnd] = useState("18:00");
-  const [periodReason, setPeriodReason] = useState("");
+  const [periodOpen, setPeriodOpen] = useSessionState(`${statePrefix}.periodOpen`, false);
+  const [periodFrom, setPeriodFrom] = useSessionState(`${statePrefix}.periodFrom`, "");
+  const [periodTo, setPeriodTo] = useSessionState(`${statePrefix}.periodTo`, "");
+  const [periodAllDay, setPeriodAllDay] = useSessionState(`${statePrefix}.periodAllDay`, true);
+  const [periodStart, setPeriodStart] = useSessionState(`${statePrefix}.periodStart`, "09:00");
+  const [periodEnd, setPeriodEnd] = useSessionState(`${statePrefix}.periodEnd`, "18:00");
+  const [periodReason, setPeriodReason] = useSessionState(`${statePrefix}.periodReason`, "");
 
   useEffect(() => {
     if (quickBlockDate) {

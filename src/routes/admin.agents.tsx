@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Bot, MessageSquare, ShieldCheck, FileSearch, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/admin/agents")({ component: Page });
 
@@ -20,6 +21,10 @@ const AGENTS = [
 
 function Page() {
   const [agents, setAgents] = useState(AGENTS);
+  const [systemPrompt, setSystemPrompt] = useSessionState(
+    "admin.agents.systemPrompt",
+    "Vous êtes un agent au service de Holiswiss, annuaire suisse de thérapeutes en approches complémentaires. Vous devez impérativement éviter tout vocabulaire médical réservé (soin, guérison, traitement, diagnostic, prescription) conformément à la LPMéd.",
+  );
   const toggle = (id: string) => setAgents((a) => a.map((x) => (x.id === id ? { ...x, enabled: !x.enabled } : x)));
 
   return (
@@ -60,7 +65,7 @@ function Page() {
         <CardHeader><CardTitle>Prompt système global</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Label htmlFor="sp" className="text-xs text-muted-foreground">Appliqué à tous les agents (compliance LPMéd)</Label>
-          <Textarea id="sp" rows={6} defaultValue="Vous êtes un agent au service de Holiswiss, annuaire suisse de thérapeutes en approches complémentaires. Vous devez impérativement éviter tout vocabulaire médical réservé (soin, guérison, traitement, diagnostic, prescription) conformément à la LPMéd." />
+          <Textarea id="sp" rows={6} value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} />
           <div className="flex justify-end"><Button onClick={() => toast.success("Prompt sauvegardé")} className="bg-primary hover:bg-primary/90">Enregistrer</Button></div>
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import {
 import { CalendarPlus, Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseDateOnly, localeForI18n } from "@/lib/dateUtils";
+import { useSessionState } from "@/hooks/use-session-state";
 
 interface SpecificSlot {
   id: string;
@@ -29,13 +30,14 @@ export default function SpecificAvailabilityManager({ therapistId }: Props) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const locale = localeForI18n(i18n.language);
+  const statePrefix = `dashboard.specific-availability.${therapistId}`;
 
-  const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [date, setDate] = useState("");
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("12:00");
-  const [showAll, setShowAll] = useState(false);
+  const [open, setOpen] = useSessionState(`${statePrefix}.open`, false);
+  const [editingId, setEditingId] = useSessionState<string | null>(`${statePrefix}.editingId`, null);
+  const [date, setDate] = useSessionState(`${statePrefix}.date`, "");
+  const [start, setStart] = useSessionState(`${statePrefix}.start`, "09:00");
+  const [end, setEnd] = useSessionState(`${statePrefix}.end`, "12:00");
+  const [showAll, setShowAll] = useSessionState(`${statePrefix}.showAll`, false);
 
   const formatLabel = (slot: SpecificSlot) => {
     const d = parseDateOnly(slot.specific_date);

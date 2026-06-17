@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,13 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Info, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 
 const MAX_LEN = 500;
 
 export default function BookingNoteEditor({ therapistId }: { therapistId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [value, setValue] = useState("");
+  const stateKey = `dashboard.booking-note.${therapistId}`;
+  const [value, setValue] = useSessionState(stateKey, "");
 
   const { data, isLoading } = useQuery({
     queryKey: ["therapist-booking-note", therapistId],
@@ -30,8 +32,9 @@ export default function BookingNoteEditor({ therapistId }: { therapistId: string
   });
 
   useEffect(() => {
+    if (hasSessionState(stateKey)) return;
     setValue(data?.booking_note ?? "");
-  }, [data?.booking_note]);
+  }, [data?.booking_note, setValue, stateKey]);
 
   const saveMutation = useMutation({
     mutationFn: async (note: string) => {

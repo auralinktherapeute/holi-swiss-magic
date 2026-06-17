@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { useSessionState } from "@/hooks/use-session-state";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -43,9 +44,9 @@ function CardSkeleton() {
 function Page() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mobileTab, setMobileTab] = useState<"list" | "map">("list");
-  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useSessionState<string | null>("therapists.selectedId", null);
+  const [mobileTab, setMobileTab] = useSessionState<"list" | "map">("therapists.mobileTab", "list");
+  const [search, setSearch] = useSessionState("therapists.search", "");
 
   const { data, isLoading } = useQuery({
     queryKey: ["therapists-map"],

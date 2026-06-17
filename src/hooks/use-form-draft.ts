@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { readSessionState, removeSessionState, writeSessionState } from "@/hooks/use-session-state";
 
 export type DraftStatus = "idle" | "saving" | "saved" | "error";
 
@@ -17,10 +18,10 @@ type Options<T> = {
   getCompletenessScore?: (data: T) => number;
 };
 
-const LS_PREFIX = "lovable.draft.";
+const MEMORY_PREFIX = "draft.";
 
-function lsKey(formType: string, userId: string | null) {
-  return `${LS_PREFIX}${userId ?? "anon"}.${formType}`;
+function memoryKey(formType: string, userId: string | null) {
+  return `${MEMORY_PREFIX}${userId ?? "anon"}.${formType}`;
 }
 
 type StoredDraft<T> = { data: T; updated_at: string };
@@ -105,56 +106,30 @@ function pickBestDraft<T>(drafts: Array<StoredDraft<T> | null>, scoreDraft: (dat
   }, null);
 }
 
-function readLocalDraft<T>(
+function readMemoryDraft<T>(
   formType: string,
   userId: string | null,
   scoreDraft: (data: T) => number,
 ): StoredDraft<T> | null {
-  if (typeof window === "undefined") return null;
-  const candidates = [lsKey(formType, userId), ...(userId ? [lsKey(formType, null)] : [])];
-  const drafts: Array<StoredDraft<T> | null> = [];
-  for (const key of candidates) {
-    const backupRaw = window.localStorage.getItem(`${key}.backup`);
-    if (backupRaw) {
-      try {
-        drafts.push(JSON.parse(backupRaw) as StoredDraft<T>);
-      } catch {
-        window.localStorage.removeItem(`${key}.backup`);
-      }
-    }
-    const raw = window.localStorage.getItem(key);
-    if (!raw) continue;
-    try {
-      drafts.push(JSON.parse(raw) as StoredDraft<T>);
-    } catch {
-      window.localStorage.removeItem(key);
-    }
-  }
+  const candidates = [memoryKey(formType, userId), ...(userId ? [memoryKey(formType, null)] : [])];
+  const drafts = candidates.map((key) => readSessionState<T>(key));
   return pickBestDraft(drafts, scoreDraft);
 }
 
-function writeLocalDraft<T>(formType: string, userId: string | null, data: T) {
-  if (typeof window === "undefined") return null;
+function writeMemoryDraft<T>(formType: string, userId: string | null, data: T) {
   const updated_at = new Date().toISOString();
-  const key = lsKey(formType, userId);
-  const previous = window.localStorage.getItem(key);
-  if (previous) window.localStorage.setItem(`${key}.backup`, previous);
-  window.localStorage.setItem(key, JSON.stringify({ data, updated_at }));
+  writeSessionState(memoryKey(formType, userId), data);
   return updated_at;
 }
 
-function removeLocalDraft(formType: string, userId: string | null) {
-  if (typeof window === "undefined") return;
-  [lsKey(formType, userId), lsKey(formType, null)].forEach((key) => {
-    window.localStorage.removeItem(key);
-    window.localStorage.removeItem(`${key}.backup`);
-  });
+function removeMemoryDraft(formType: string, userId: string | null) {
+  [memoryKey(formType, userId), memoryKey(formType, null)].forEach(removeSessionState);
 }
 
 /**
  * Generic draft auto-save hook.
- * - Authenticated users → persists in Supabase `drafts` (RLS scoped to user).
- * - Anonymous users → falls back to localStorage.
+ * - Current browser session → persists in an in-memory store, no localStorage/sessionStorage.
+ * - Authenticated users → also syncs to the `drafts` table when possible.
  * Returns the loaded draft (once, on mount) plus save status / actions.
  */
 export function useFormDraft<T>({
@@ -190,7 +165,7 @@ export function useFormDraft<T>({
       const wouldEraseRichDraft =
         previousScore >= nextScore + 2 && nextScore <= previousScore * 0.6;
       if (wouldEraseRichDraft) return null;
-      const updatedAt = writeLocalDraft(formType, userId, nextData);
+      const updatedAt = writeMemoryDraft(formType, userId, nextData);
       lastSavedScoreRef.current = nextScore;
       return updatedAt;
     },
@@ -205,8 +180,8 @@ export function useFormDraft<T>({
     setInitialDraft(null);
     (async () => {
       try {
-        const localDraft = readLocalDraft<T>(formType, userId, getCompletenessScore);
-        let bestDraft: StoredDraft<T> | null = localDraft;
+        const memoryDraft = readMemoryDraft<T>(formType, userId, getCompletenessScore);
+        let bestDraft: StoredDraft<T> | null = memoryDraft;
         if (userId) {
           const { data: row } = await draftsSelect<T>()
             .select("data, updated_at")
@@ -241,7 +216,7 @@ export function useFormDraft<T>({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const persistLocalLatest = (updateState: boolean) => {
-      if (!enabledRef.current || !loadedRef.current) return;
+      if (!enabledRef.current) return;
       const latestData = latestDataRef.current;
       const serialized = JSON.stringify(latestData);
       if (serialized === lastSerializedRef.current) return;
@@ -268,7 +243,7 @@ export function useFormDraft<T>({
 
   // Debounced save on data change.
   useEffect(() => {
-    if (!enabled || !loaded) return;
+    if (!enabled) return;
     const serialized = JSON.stringify(data);
     if (serialized === lastSerializedRef.current) return;
     const localUpdatedAt = writeIfSafe(data);
@@ -310,7 +285,7 @@ export function useFormDraft<T>({
       if (userId) {
         await draftsDelete().delete().eq("user_id", userId).eq("form_type", formType);
       }
-      removeLocalDraft(formType, userId);
+      removeMemoryDraft(formType, userId);
     } catch {
       /* ignore */
     }

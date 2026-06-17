@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut } from "lucide-react";
+import { useSessionState } from "@/hooks/use-session-state";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -44,13 +45,14 @@ export default function ProfilePhotoUploader({
   onPhotoUpdated,
   initial = "T",
 }: ProfilePhotoUploaderProps) {
+  const statePrefix = `dashboard.profile.photo.${userId}`;
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const [cropFileName, setCropFileName] = useState<string>("avatar.jpg");
-  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [cropSrc, setCropSrc] = useSessionState<string | null>(`${statePrefix}.cropSrc`, null);
+  const [cropFileName, setCropFileName] = useSessionState<string>(`${statePrefix}.cropFileName`, "avatar.jpg");
+  const [crop, setCrop] = useSessionState<{ x: number; y: number }>(`${statePrefix}.crop`, { x: 0, y: 0 });
+  const [zoom, setZoom] = useSessionState(`${statePrefix}.zoom`, 1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useSessionState<Area | null>(`${statePrefix}.croppedAreaPixels`, null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

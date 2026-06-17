@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/$lang/inscription/")({
   component: SignupPage,
@@ -17,9 +18,9 @@ function SignupPage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/inscription/" });
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useSessionState("auth.signup.email", "");
+  const [password, setPassword] = useSessionState("auth.signup.password", "");
+  const [confirmPassword, setConfirmPassword] = useSessionState("auth.signup.confirmPassword", "");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);

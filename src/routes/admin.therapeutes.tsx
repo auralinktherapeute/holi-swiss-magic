@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { listTherapistsAdmin, updateTherapistStatus } from "@/lib/admin.functions";
+import { useSessionState } from "@/hooks/use-session-state";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/therapeutes")({ component: Page });
@@ -43,15 +43,15 @@ function exportCSV(rows: any[]) {
 }
 
 function Page() {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [canton, setCanton] = useState("all");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [action, setAction] = useState<Action>(null);
-  const [reason, setReason] = useState("");
-  const [confirmText, setConfirmText] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("created_at");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [statusFilter, setStatusFilter] = useSessionState("admin.therapists.statusFilter", "all");
+  const [canton, setCanton] = useSessionState("admin.therapists.canton", "all");
+  const [search, setSearch] = useSessionState("admin.therapists.search", "");
+  const [page, setPage] = useSessionState("admin.therapists.page", 1);
+  const [action, setAction] = useSessionState<Action>("admin.therapists.action", null);
+  const [reason, setReason] = useSessionState("admin.therapists.reason", "");
+  const [confirmText, setConfirmText] = useSessionState("admin.therapists.confirmText", "");
+  const [sortKey, setSortKey] = useSessionState<SortKey>("admin.therapists.sortKey", "created_at");
+  const [sortDir, setSortDir] = useSessionState<SortDir>("admin.therapists.sortDir", "desc");
 
   const fetchList = useServerFn(listTherapistsAdmin);
   const updateStatus = useServerFn(updateTherapistStatus);

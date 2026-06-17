@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, Send, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/admin/emails")({ component: Page });
 
@@ -21,7 +22,13 @@ const TEMPLATES: Tpl[] = [
 ];
 
 function Page() {
-  const [active, setActive] = useState<Tpl>(TEMPLATES[0]);
+  const [activeId, setActiveId] = useSessionState("admin.emails.activeId", TEMPLATES[0].id);
+  const [drafts, setDrafts] = useSessionState<Record<string, Pick<Tpl, "subject" | "trigger" | "body">>>("admin.emails.drafts", {});
+  const active = TEMPLATES.find((tpl) => tpl.id === activeId) ?? TEMPLATES[0];
+  const draft = drafts[active.id] ?? { subject: active.subject, trigger: active.trigger, body: active.body };
+  const updateDraft = (patch: Partial<typeof draft>) => {
+    setDrafts((prev) => ({ ...prev, [active.id]: { ...draft, ...patch } }));
+  };
 
   return (
     <div className="p-6 md:p-10 space-y-6">
@@ -44,7 +51,7 @@ function Page() {
           <CardHeader><CardTitle>Templates</CardTitle></CardHeader>
           <CardContent className="space-y-1">
             {TEMPLATES.map((t) => (
-              <button key={t.id} onClick={() => setActive(t)}
+              <button key={t.id} onClick={() => setActiveId(t.id)}
                 className={`w-full text-left rounded-lg p-3 transition-colors ${active.id === t.id ? "bg-primary/15 border border-primary/30" : "hover:bg-muted/40 border border-transparent"}`}>
                 <div className="font-medium text-sm">{t.name}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">{t.trigger}</div>
@@ -63,11 +70,11 @@ function Page() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="sub">Objet</Label><Input id="sub" defaultValue={active.subject} key={`s-${active.id}`} /></div>
-            <div className="space-y-2"><Label htmlFor="trig">Déclencheur</Label><Input id="trig" defaultValue={active.trigger} key={`t-${active.id}`} /></div>
+            <div className="space-y-2"><Label htmlFor="sub">Objet</Label><Input id="sub" value={draft.subject} onChange={(e) => updateDraft({ subject: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="trig">Déclencheur</Label><Input id="trig" value={draft.trigger} onChange={(e) => updateDraft({ trigger: e.target.value })} /></div>
             <div className="space-y-2">
               <Label htmlFor="body">Corps (HTML/Markdown)</Label>
-              <Textarea id="body" rows={14} defaultValue={active.body} key={`b-${active.id}`} className="font-mono text-sm" />
+              <Textarea id="body" rows={14} value={draft.body} onChange={(e) => updateDraft({ body: e.target.value })} className="font-mono text-sm" />
               <p className="text-xs text-muted-foreground">Variables : <code className="text-primary">{`{{firstname}}`}</code> <code className="text-primary">{`{{therapist}}`}</code> <code className="text-primary">{`{{patient}}`}</code> <code className="text-primary">{`{{date}}`}</code></p>
             </div>
           </CardContent>

@@ -14,6 +14,7 @@ import { getBookedAppointmentSlots } from "@/lib/public.functions";
 import { z } from "zod";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
+import { useSessionState } from "@/hooks/use-session-state";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
@@ -49,13 +50,14 @@ export function BookingWidget({ therapistId }: { therapistId: string }) {
     phone: z.string().trim().max(40).optional().or(z.literal("")),
     notes: z.string().max(1000).optional().or(z.literal("")),
   });
-  const [month, setMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
+  const statePrefix = `booking.${therapistId}`;
+  const [month, setMonth] = useSessionState(`${statePrefix}.month`, () => { const d = new Date(); d.setDate(1); return d; });
   const [avs, setAvs] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [taken, setTaken] = useState<Appt[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
+  const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
+  const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formTouched, setFormTouched] = useState(false);

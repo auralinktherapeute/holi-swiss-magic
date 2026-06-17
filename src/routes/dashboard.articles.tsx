@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/dashboard/articles")({ component: Page });
 
@@ -21,7 +21,9 @@ const ARTICLES: Article[] = [
 ];
 
 function Page() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useSessionState("dashboard.articles.dialogOpen", false);
+  const [title, setTitle] = useSessionState("dashboard.articles.title", "");
+  const [body, setBody] = useSessionState("dashboard.articles.body", "");
   return (
     <div className="p-6 md:p-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -36,8 +38,8 @@ function Page() {
           <DialogContent className="bg-surface border-border/60 max-w-2xl">
             <DialogHeader><DialogTitle>Nouvel article</DialogTitle></DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); setOpen(false); toast.success("Brouillon enregistré"); }} className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="t">Titre</Label><Input id="t" placeholder="Mon titre…" required /></div>
-              <div className="space-y-2"><Label htmlFor="b">Contenu</Label><Textarea id="b" rows={10} placeholder="Rédigez votre article…" required /></div>
+              <div className="space-y-2"><Label htmlFor="t">Titre</Label><Input id="t" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mon titre…" required /></div>
+              <div className="space-y-2"><Label htmlFor="b">Contenu</Label><Textarea id="b" value={body} onChange={(e) => setBody(e.target.value)} rows={10} placeholder="Rédigez votre article…" required /></div>
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
                 <Button type="submit" variant="secondary">Enregistrer en brouillon</Button>

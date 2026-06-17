@@ -25,6 +25,7 @@ import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Trash2, Copy, Pencil, Ban, Undo2, Redo2, StickyNote } from "lucide-react";
+import { useSessionState } from "@/hooks/use-session-state";
 
 type AppointmentRow = {
   id: string;
@@ -70,8 +71,6 @@ type UndoAction =
   | { type: "update"; before: AppointmentRow; after: AppointmentRow }
   | { type: "delete"; before: AppointmentRow };
 
-const STORAGE_KEY = "holiswiss_agenda_prefs";
-
 const toLocalInput = (d: Date) => {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -81,23 +80,15 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const calendarRef = useRef<FullCalendar | null>(null);
+  const statePrefix = `dashboard.interactive-agenda.${therapistId}`;
 
   const locale = useMemo(() => {
     const l = i18n.language?.split("-")[0];
     return l === "de" ? deLocale : l === "it" ? itLocale : l === "en" ? enLocale : frLocale;
   }, [i18n.language]);
 
-  const [slotDuration, setSlotDuration] = useState<"00:30:00" | "01:00:00">(() => {
-    try { return (JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}").slotDuration) ?? "01:00:00"; }
-    catch { return "01:00:00"; }
-  });
-  const [view, setView] = useState<"timeGridDay" | "timeGridWeek" | "dayGridMonth">(() => {
-    try { return (JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}").view) ?? "timeGridWeek"; }
-    catch { return "timeGridWeek"; }
-  });
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ slotDuration, view }));
-  }, [slotDuration, view]);
+  const [slotDuration, setSlotDuration] = useSessionState<"00:30:00" | "01:00:00">(`${statePrefix}.slotDuration`, "01:00:00");
+  const [view, setView] = useSessionState<"timeGridDay" | "timeGridWeek" | "dayGridMonth">(`${statePrefix}.view`, "timeGridWeek");
 
   const range = useMemo(() => {
     const s = new Date(); s.setDate(s.getDate() - 21); s.setHours(0, 0, 0, 0);
@@ -199,8 +190,8 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
   }), [appointments, t]);
 
   // Editor
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editing, setEditing] = useState<Editing | null>(null);
+  const [editorOpen, setEditorOpen] = useSessionState(`${statePrefix}.editorOpen`, false);
+  const [editing, setEditing] = useSessionState<Editing | null>(`${statePrefix}.editing`, null);
 
   const openCreate = (start: Date, end?: Date) => {
     const e = end ?? new Date(start.getTime() + defaultDuration * 60000);

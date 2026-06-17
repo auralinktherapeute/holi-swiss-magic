@@ -11,6 +11,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { deleteWaitingListEntryAdmin, listWaitingListAdmin, updateWaitingListStatusAdmin } from "@/lib/admin.functions";
+import { useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/admin/liste-attente")({
   component: WaitingListAdminPage,
@@ -63,11 +64,11 @@ function WaitingListAdminPage() {
   const deleteRow = useServerFn(deleteWaitingListEntryAdmin);
   const [rows, setRows] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
+  const [page, setPage] = useSessionState("admin.waiting-list.page", 1);
+  const [confirmDelete, setConfirmDelete] = useSessionState<Entry | null>("admin.waiting-list.confirmDelete", null);
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
-  const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
-  const [filterCanton, setFilterCanton] = useState<string>("all");
+  const [filterSpecialty, setFilterSpecialty] = useSessionState<string>("admin.waiting-list.filterSpecialty", "all");
+  const [filterCanton, setFilterCanton] = useSessionState<string>("admin.waiting-list.filterCanton", "all");
   const knownIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 

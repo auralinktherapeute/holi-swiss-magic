@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Ban, ShieldCheck, Download, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { listUsersAdmin, setUserRole, deleteUserAdmin, banUserAdmin } from "@/lib/admin.functions";
+import { useSessionState } from "@/hooks/use-session-state";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/utilisateurs")({ component: Page });
@@ -44,8 +44,8 @@ function Page() {
     queryFn: () => fetchUsers({ data: { page: 1, perPage: 100 } }),
   });
 
-  const [toDelete, setToDelete] = useState<{ id: string; email: string } | null>(null);
-  const [confirmText, setConfirmText] = useState("");
+  const [toDelete, setToDelete] = useSessionState<{ id: string; email: string } | null>("admin.users.toDelete", null);
+  const [confirmText, setConfirmText] = useSessionState("admin.users.confirmText", "");
 
   const toggleRole = async (userId: string, role: string, enabled: boolean) => {
     try {
