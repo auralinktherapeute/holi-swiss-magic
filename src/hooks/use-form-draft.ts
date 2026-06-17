@@ -130,7 +130,13 @@ function removeLocalDraft(formType: string, userId: string | null) {
  * - Anonymous users → falls back to localStorage.
  * Returns the loaded draft (once, on mount) plus save status / actions.
  */
-export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: Options<T>) {
+export function useFormDraft<T>({
+  formType,
+  data,
+  enabled,
+  debounceMs = 1500,
+  getCompletenessScore = defaultCompletenessScore,
+}: Options<T>) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -144,10 +150,24 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
   const latestDataRef = useRef(data);
   const enabledRef = useRef(enabled);
   const loadedRef = useRef(loaded);
+  const lastSavedScoreRef = useRef(0);
 
   latestDataRef.current = data;
   enabledRef.current = enabled;
   loadedRef.current = loaded;
+
+  const writeIfSafe = useCallback(
+    (nextData: T) => {
+      const nextScore = getCompletenessScore(nextData);
+      const previousScore = lastSavedScoreRef.current;
+      const wouldEraseRichDraft = previousScore >= nextScore + 2 && nextScore <= previousScore * 0.6;
+      if (wouldEraseRichDraft) return null;
+      const updatedAt = writeLocalDraft(formType, userId, nextData);
+      lastSavedScoreRef.current = nextScore;
+      return updatedAt;
+    },
+    [formType, userId, getCompletenessScore],
+  );
 
   // Initial load (once per user/formType).
   useEffect(() => {
@@ -156,7 +176,7 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
     setInitialDraft(null);
     (async () => {
       try {
-        const localDraft = readLocalDraft<T>(formType, userId);
+        const localDraft = readLocalDraft<T>(formType, userId, getCompletenessScore);
         let bestDraft: StoredDraft<T> | null = localDraft;
         if (userId) {
           const { data: row } = await draftsSelect<T>()
@@ -169,18 +189,14 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
               data: row.data,
               updated_at: row.updated_at ?? new Date().toISOString(),
             };
-            if (
-              !bestDraft ||
-              new Date(remoteDraft.updated_at).getTime() >= new Date(bestDraft.updated_at).getTime()
-            ) {
-              bestDraft = remoteDraft;
-            }
+            bestDraft = pickBestDraft([bestDraft, remoteDraft], getCompletenessScore);
           }
         }
         if (!cancelled && bestDraft?.data) {
           setInitialDraft(bestDraft.data);
           setSavedAt(bestDraft.updated_at ? new Date(bestDraft.updated_at) : null);
           lastSerializedRef.current = JSON.stringify(bestDraft.data);
+          lastSavedScoreRef.current = getCompletenessScore(bestDraft.data);
         }
       } catch {
         /* ignore */
@@ -191,7 +207,7 @@ export function useFormDraft<T>({ formType, data, enabled, debounceMs = 1500 }: 
     return () => {
       cancelled = true;
     };
-  }, [userId, formType]);
+  }, [userId, formType, getCompletenessScore]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
