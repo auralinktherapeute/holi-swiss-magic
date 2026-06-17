@@ -34,6 +34,20 @@ import {
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
 
+// Extract the object path from a Supabase storage public URL, if applicable.
+function pathFromPhotoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/\/storage\/v1\/object\/(?:public|sign)\/therapist-photos\/([^?]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+async function resolveOwnerPhotoPreview(url: string): Promise<string> {
+  const path = pathFromPhotoUrl(url);
+  if (!path) return url;
+  const { data } = await supabase.storage.from("therapist-photos").createSignedUrl(path, 60 * 60 * 24 * 7);
+  return data?.signedUrl ?? url;
+}
+
 type DocRow = {
   id: string;
   file_url: string;
@@ -65,6 +79,8 @@ function ProfilePage() {
   // Identity
   const [rowId, setRowId] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  // The canonical public URL we persist to the DB (works on the public site once active).
+  const [photoPublicUrl, setPhotoPublicUrl] = useState<string>("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
