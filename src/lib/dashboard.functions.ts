@@ -46,6 +46,51 @@ export const requireDashboardAuth = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => ({ userId: context.userId }));
 
+/**
+ * Ensures the signed-in user has a `therapists` row. New signups (email or Google)
+ * land in the admin list immediately as "pending", and the profile/photo upload
+ * flow can rely on a stable therapist id.
+ */
+export const ensureMyTherapistShell = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("therapists")
+      .select("id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (existing?.id) return { id: existing.id, created: false };
+
+    const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const email = userRes?.user?.email ?? null;
+    const meta = (userRes?.user?.user_metadata ?? {}) as Record<string, unknown>;
+    const fullName =
+      (typeof meta.full_name === "string" && meta.full_name) ||
+      (typeof meta.name === "string" && meta.name) ||
+      (email ? email.split("@")[0] : "Therapeute");
+    const [firstGuess, ...rest] = String(fullName).trim().split(/\s+/);
+    const firstName = firstGuess || "Therapeute";
+    const lastName = rest.join(" ");
+    const slugBase = `${firstName}-${lastName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "therapeute";
+    const slug = `${slugBase}-${context.userId.slice(0, 6)}`;
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("therapists")
+      .insert({
+        user_id: context.userId,
+        slug,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+    if (error || !inserted) throw new Error("Impossible de créer le profil thérapeute.");
+    return { id: inserted.id as string, created: true };
+  });
+
 export const listMyReservations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
