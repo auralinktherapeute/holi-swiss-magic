@@ -211,7 +211,36 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         <CardTitle className="text-lg">{t("booking.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div>
+        {services.length > 0 && (
+          <div>
+            <div className="text-sm font-medium mb-2">1. Choisissez un service</div>
+            <div className="grid gap-2">
+              {services.map((s, i) => {
+                const sel = selectedServiceIdx === i;
+                return (
+                  <button
+                    key={`${s.name}-${i}`}
+                    type="button"
+                    onClick={() => { setSelectedServiceIdx(i); setSelectedDate(null); setSelectedTime(null); }}
+                    className={`text-left rounded-md border p-3 transition-colors ${sel ? "border-primary bg-primary/10" : "border-border hover:bg-muted/40"}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium text-foreground">{s.name}</div>
+                      {s.price != null && <div className="text-sm font-semibold text-primary">{s.price} CHF</div>}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {s.duration ? `${s.duration} min` : "Durée non précisée"}
+                      {s.format ? ` · ${s.format}` : ""}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className={services.length > 0 && !selectedService ? "pointer-events-none opacity-40" : ""} aria-disabled={services.length > 0 && !selectedService}>
+          {services.length > 0 && <div className="text-sm font-medium mb-2">2. Choisissez une date</div>}
           <div className="flex items-center justify-between mb-3">
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
               onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); }}>
@@ -262,8 +291,14 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
           </div>
         )}
 
-        {selectedDate && selectedTime && (
+        {selectedDate && selectedTime && (services.length === 0 || selectedService) && (
           <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
+            <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
+              <div className="font-medium mb-1">Récapitulatif</div>
+              {selectedService && <div><span className="text-muted-foreground">Service :</span> <strong>{selectedService.name}</strong></div>}
+              <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong> à <strong>{selectedTime}</strong></div>
+              <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong>{selectedService?.price != null && <> · <span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></>}</div>
+            </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
                 <Input id="bk-name" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} required maxLength={120} /></div>
