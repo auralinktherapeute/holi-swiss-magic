@@ -9,12 +9,90 @@ import {
   Shield, ChevronUp,
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { getTherapistBySlug } from "@/lib/public.functions";
 
 const TherapistMiniMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
 );
 
-export const Route = createFileRoute("/$lang/therapeute/$slug")({ component: Page });
+const SITE = "https://holiswiss.ch";
+
+export const Route = createFileRoute("/$lang/therapeute/$slug")({
+  component: Page,
+  loader: async ({ params }) => {
+    try {
+      const { therapist } = await getTherapistBySlug({ data: { slug: params.slug } });
+      return { therapist };
+    } catch {
+      return { therapist: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const t = loaderData?.therapist as
+      | { first_name?: string; last_name?: string; title?: string; city?: string; canton?: string; bio?: string; photo_url?: string; cover_image_url?: string }
+      | null
+      | undefined;
+    const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
+    if (!t) {
+      return {
+        meta: [
+          { title: "Thérapeute — HoliSwiss" },
+          { name: "description", content: "Découvrez ce thérapeute holistique sur HoliSwiss, l'annuaire des praticiens en Suisse." },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const fullName = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
+    const place = [t.city, t.canton].filter(Boolean).join(", ");
+    const role = t.title ? `${t.title}${place ? ` à ${place}` : ""}` : place;
+    const title = `${fullName}${role ? ` — ${role}` : ""} | HoliSwiss`.slice(0, 60);
+    const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
+    const fallback = `Profil de ${fullName}${role ? `, ${role}` : ""}. Prenez rendez-vous sur HoliSwiss.`;
+    const description = (bio.length >= 50 ? bio : fallback).slice(0, 160);
+    const image = t.cover_image_url || t.photo_url;
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "profile" },
+      { property: "og:url", content: url },
+      { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+    ];
+    if (image) {
+      meta.push({ property: "og:image", content: image });
+      meta.push({ name: "twitter:image", content: image });
+    }
+    const ld: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: fullName || "Thérapeute",
+      url,
+      description,
+    };
+    if (image) ld.image = image;
+    if (t.city || t.canton) {
+      ld.address = {
+        "@type": "PostalAddress",
+        addressLocality: t.city ?? undefined,
+        addressRegion: t.canton ?? undefined,
+        addressCountry: "CH",
+      };
+    }
+    if (t.title) ld.jobTitle = t.title;
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(ld),
+        },
+      ],
+    };
+  },
+});
 
 type ServiceEntry = { name: string; duration?: number; price?: number; format?: string };
 type AccreditationEntry = { org: string; number?: string };

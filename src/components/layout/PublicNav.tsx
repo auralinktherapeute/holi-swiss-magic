@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/holiswiss/Logo";
 import { LanguageSwitcher } from "@/components/holiswiss/LanguageSwitcher";
+import { AccountCta } from "@/components/holiswiss/AccountCta";
 import { SUPPORTED_LANGS, DEFAULT_LANG } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
@@ -72,14 +73,12 @@ function MobilePanel({
             {l.label}
           </Link>
         ))}
-        <Link
-          to="/$lang/connexion"
-          params={{ lang }}
+        <AccountCta
+          lang={lang}
+          loggedOutLabel={ctaLabel}
           onClick={onClose}
           className="mt-2 rounded-lg border border-[#b86ef9] px-3 py-3 text-center text-[15px] font-semibold text-[#b86ef9]"
-        >
-          {ctaLabel}
-        </Link>
+        />
       </div>
     </div>
   );
@@ -132,14 +131,12 @@ function NavFrosted() {
         </nav>
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <Link
-            to="/$lang/connexion"
-            params={{ lang }}
+          <AccountCta
+            lang={lang}
+            loggedOutLabel={cta}
             className="inline-flex items-center rounded-lg border-[1.5px] border-[#b86ef9] px-5 py-2 text-sm font-semibold text-[#b86ef9] transition-all duration-200 hover:bg-[#b86ef9] hover:text-white"
             style={{ boxShadow: "0 0 12px rgba(184,110,249,0.4)" }}
-          >
-            {cta}
-          </Link>
+          />
         </div>
         <div className="md:hidden flex items-center gap-1">
           <LanguageSwitcher />
@@ -200,17 +197,15 @@ function NavGlowLine() {
         </nav>
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <Link
-            to="/$lang/connexion"
-            params={{ lang }}
+          <AccountCta
+            lang={lang}
+            loggedOutLabel={cta}
             className="inline-flex items-center rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all duration-150 hover:opacity-90 hover:scale-[1.02]"
             style={{
               background: "linear-gradient(135deg, #b86ef9, #5cc8fa)",
               boxShadow: "0 4px 15px rgba(184,110,249,0.35)",
             }}
-          >
-            {cta}
-          </Link>
+          />
         </div>
         <div className="md:hidden flex items-center gap-1">
           <LanguageSwitcher />
@@ -281,17 +276,15 @@ function NavSpotlight() {
         </nav>
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <Link
-            to="/$lang/connexion"
-            params={{ lang }}
+          <AccountCta
+            lang={lang}
+            loggedOutLabel={cta}
             className="nv3-cta inline-flex items-center rounded-lg px-5 py-2 text-sm font-semibold text-white transition-colors"
             style={{
               background: "#1a0a3a",
               border: "1px solid rgba(184,110,249,0.4)",
             }}
-          >
-            {cta}
-          </Link>
+          />
         </div>
         <div className="md:hidden flex items-center gap-1">
           <LanguageSwitcher />
@@ -365,9 +358,9 @@ function NavAurora() {
         </nav>
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <Link
-            to="/$lang/connexion"
-            params={{ lang }}
+          <AccountCta
+            lang={lang}
+            loggedOutLabel={cta}
             className="nv4-cta inline-flex items-center rounded-lg px-5 py-2 text-sm font-semibold transition-colors"
             style={{
               background: "rgba(184,110,249,0.2)",
@@ -382,9 +375,7 @@ function NavAurora() {
               e.currentTarget.style.background = "rgba(184,110,249,0.2)";
               e.currentTarget.style.color = "#d4a8ff";
             }}
-          >
-            {cta}
-          </Link>
+          />
         </div>
         <div className="md:hidden flex items-center gap-1">
           <LanguageSwitcher />

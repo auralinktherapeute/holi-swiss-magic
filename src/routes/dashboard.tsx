@@ -4,30 +4,19 @@ import { useEffect } from "react";
 import { TherapistNav } from "@/components/layout/TherapistNav";
 import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
-import { requireDashboardAuth } from "@/lib/dashboard.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
+import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   beforeLoad: async () => {
-    // Étape 1 : vérifier la session locale (hydratée depuis localStorage).
-    // Évite une redirection vers /connexion lors d'une simple navigation
-    // entre pages du dashboard à cause d'une race ou d'un blip réseau.
+    // Seule la session locale est vérifiée ici pour éviter toute déconnexion
+    // intempestive lors de la navigation. Les server functions appelées
+    // ensuite valident le token côté serveur (requireSupabaseAuth).
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
       throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
-    }
-    // Étape 2 : validation serveur (token réellement valide côté Supabase).
-    try {
-      await requireDashboardAuth();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      // Ne rediriger que sur des erreurs d'auth réelles, pas sur un blip réseau.
-      if (msg.toLowerCase().includes("unauthorized")) {
-        throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
-      }
-      // Sinon : laisser la session locale faire foi, ne pas déconnecter l'utilisateur.
-      console.warn("[dashboard.beforeLoad] validation serveur a échoué (réseau ?):", err);
     }
   },
   component: DashboardLayout,
@@ -35,7 +24,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardLayout() {
   const { loading } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -46,11 +35,7 @@ function DashboardLayout() {
     } catch {}
   }, [i18n]);
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
-        {t("common.loading")}
-      </div>
-    );
+    return <LoadingScreen />;
   }
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -58,6 +43,7 @@ function DashboardLayout() {
       <main className="flex-1 overflow-x-hidden">
         <Outlet />
       </main>
+      <InactivityLogout redirectTo="/fr/connexion" />
     </div>
   );
 }

@@ -453,6 +453,78 @@
     "already": "Vous êtes déjà inscrit !",
     "full": "Liste complète ! Laissez votre email pour être notifié.",
     "privacy": "🔒 Aucune carte requise · Désinscription en 1 clic",
-    "error": "Une erreur est survenue. Veuillez réessayer."
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "popup": {
+      "title": "Rejoignez Holiswiss en avant-première",
+      "subtitle": "Inscription 100% gratuite · Lancement imminent",
+      "progress": "{{count}} / {{total}} thérapeutes inscrits",
+      "steps": {
+        "infos": "Infos",
+        "message": "Message",
+        "aria": "Étape {{step}} sur 2"
+      },
+      "fields": {
+        "first_name": "Prénom *",
+        "first_name_ph": "Marie",
+        "last_name": "Nom *",
+        "last_name_ph": "Dupont",
+        "email": "Email *",
+        "email_ph": "marie@exemple.ch",
+        "phone": "Téléphone",
+        "phone_ph": "+41 79 123 45 67",
+        "specialty": "Spécialité *",
+        "canton": "Canton *",
+        "choose": "Choisir…",
+        "message": "Votre message (optionnel)",
+        "message_ph": "Décrivez brièvement votre approche thérapeutique, votre expérience…"
+      },
+      "consent": {
+        "text": "J'ai pris connaissance de la",
+        "link": "politique de confidentialité",
+        "after": "de Holiswiss.ch et j'accepte que mes données soient traitées conformément à la loi suisse sur la protection des données (LPD / nLPD). *"
+      },
+      "privacy_note_before": "Vos données sont hébergées en Suisse et ne sont jamais transmises à des tiers. Vous pouvez demander leur suppression à tout moment via",
+      "actions": {
+        "continue": "Continuer",
+        "back": "Retour",
+        "submit": "M'inscrire gratuitement",
+        "submitting": "Inscription en cours…",
+        "close": "Fermer",
+        "close_aria": "Fermer"
+      },
+      "success": {
+        "title": "Bienvenue chez Holiswiss ! 🎉",
+        "body_html": "Votre inscription a bien été enregistrée, <strong>{{name}}</strong> !<br/>Un email de confirmation vous a été envoyé à <strong>{{email}}</strong>.",
+        "spam": "💡 Pensez à vérifier votre dossier <strong>Spams</strong>.",
+        "canton": "Canton {{canton}}"
+      },
+      "errors_form": {
+        "first_name": "Prénom requis (2 caractères min)",
+        "last_name": "Nom requis (2 caractères min)",
+        "email": "Email invalide",
+        "phone": "Format suisse invalide (+41 ou 0XX XXX XX XX)",
+        "specialty": "Spécialité requise",
+        "canton": "Canton requis",
+        "terms": "Veuillez accepter la politique de confidentialité pour finaliser votre inscription."
+      },
+      "privacy_policy_path": "/fr/politique-confidentialite",
+      "specialties": {
+        "naturopathy": "Naturopathie",
+        "acupuncture": "Acupuncture",
+        "osteopathy": "Ostéopathie",
+        "kinesiology": "Kinésiologie",
+        "hypnotherapy": "Hypnothérapie",
+        "reflexology": "Réflexologie",
+        "therapeutic_massage": "Massage thérapeutique",
+        "reiki": "Reiki",
+        "sophrology": "Sophrologie",
+        "holistic_coaching": "Coaching holistique",
+        "nutrition": "Nutrition",
+        "ayurveda": "Ayurveda",
+        "chinese_medicine": "Médecine chinoise",
+        "aromatherapy": "Aromathérapie",
+        "other": "Autre"
+      }
+    }
   }
 }

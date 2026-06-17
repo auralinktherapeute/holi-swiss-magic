@@ -453,6 +453,78 @@
     "already": "Sie sind bereits eingetragen!",
     "full": "Liste voll! Hinterlassen Sie Ihre E-Mail.",
     "privacy": "🔒 Keine Karte nötig · Abmeldung mit 1 Klick",
-    "error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen."
+    "error": "Ein Fehler ist aufgetreten. Bitte erneut versuchen.",
+    "popup": {
+      "title": "Werden Sie Holiswiss-Pionier:in",
+      "subtitle": "100% kostenlose Anmeldung · Launch steht bevor",
+      "progress": "{{count}} / {{total}} angemeldete Therapeut:innen",
+      "steps": {
+        "infos": "Infos",
+        "message": "Nachricht",
+        "aria": "Schritt {{step}} von 2"
+      },
+      "fields": {
+        "first_name": "Vorname *",
+        "first_name_ph": "Marie",
+        "last_name": "Nachname *",
+        "last_name_ph": "Müller",
+        "email": "E-Mail *",
+        "email_ph": "marie@beispiel.ch",
+        "phone": "Telefon",
+        "phone_ph": "+41 79 123 45 67",
+        "specialty": "Spezialgebiet *",
+        "canton": "Kanton *",
+        "choose": "Wählen…",
+        "message": "Ihre Nachricht (optional)",
+        "message_ph": "Beschreiben Sie kurz Ihren therapeutischen Ansatz, Ihre Erfahrung…"
+      },
+      "consent": {
+        "text": "Ich habe die",
+        "link": "Datenschutzerklärung",
+        "after": "von Holiswiss.ch zur Kenntnis genommen und stimme zu, dass meine Daten gemäss dem Schweizer Datenschutzgesetz (DSG / revDSG) verarbeitet werden. *"
+      },
+      "privacy_note_before": "Ihre Daten werden in der Schweiz gehostet und niemals an Dritte weitergegeben. Sie können deren Löschung jederzeit beantragen über",
+      "actions": {
+        "continue": "Weiter",
+        "back": "Zurück",
+        "submit": "Kostenlos anmelden",
+        "submitting": "Anmeldung läuft…",
+        "close": "Schliessen",
+        "close_aria": "Schliessen"
+      },
+      "success": {
+        "title": "Willkommen bei Holiswiss! 🎉",
+        "body_html": "Ihre Anmeldung wurde erfasst, <strong>{{name}}</strong>!<br/>Eine Bestätigungs-E-Mail wurde an <strong>{{email}}</strong> gesendet.",
+        "spam": "💡 Bitte prüfen Sie auch Ihren <strong>Spam</strong>-Ordner.",
+        "canton": "Kanton {{canton}}"
+      },
+      "errors_form": {
+        "first_name": "Vorname erforderlich (min. 2 Zeichen)",
+        "last_name": "Nachname erforderlich (min. 2 Zeichen)",
+        "email": "Ungültige E-Mail",
+        "phone": "Ungültiges Schweizer Format (+41 oder 0XX XXX XX XX)",
+        "specialty": "Spezialgebiet erforderlich",
+        "canton": "Kanton erforderlich",
+        "terms": "Bitte akzeptieren Sie die Datenschutzerklärung, um Ihre Anmeldung abzuschliessen."
+      },
+      "privacy_policy_path": "/de/datenschutz",
+      "specialties": {
+        "naturopathy": "Naturheilkunde",
+        "acupuncture": "Akupunktur",
+        "osteopathy": "Osteopathie",
+        "kinesiology": "Kinesiologie",
+        "hypnotherapy": "Hypnotherapie",
+        "reflexology": "Reflexzonenmassage",
+        "therapeutic_massage": "Therapeutische Massage",
+        "reiki": "Reiki",
+        "sophrology": "Sophrologie",
+        "holistic_coaching": "Ganzheitliches Coaching",
+        "nutrition": "Ernährungsberatung",
+        "ayurveda": "Ayurveda",
+        "chinese_medicine": "Chinesische Medizin",
+        "aromatherapy": "Aromatherapie",
+        "other": "Andere"
+      }
+    }
   }
 }

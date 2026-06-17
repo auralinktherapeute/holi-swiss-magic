@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
-  Menu, X,
+  Menu, X, Home,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
@@ -25,6 +25,16 @@ export function AdminNav() {
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/$lang", params: { lang: "fr" } });
+  };
+
+  const returnToSite = () => {
+    setMobileOpen(false);
+    try {
+      window.localStorage.setItem("holiswiss-last-auth-space", "admin");
+      window.localStorage.setItem("holiswiss-last-activity", String(Date.now()));
+    } catch {
+      // La navigation reste prioritaire si le stockage local est indisponible.
+    }
   };
 
   const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
@@ -101,6 +111,35 @@ export function AdminNav() {
 
       {/* Nav */}
       <nav style={{ flex: 1, overflowY: "auto", padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+        <Link
+          to="/$lang"
+          params={{ lang: "fr" }}
+          onClick={returnToSite}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            height: 40,
+            padding: "0 12px",
+            borderRadius: 10,
+            fontSize: 14,
+            fontWeight: 500,
+            textDecoration: "none",
+            transition: "all 150ms ease",
+            background: "rgba(92,200,250,0.08)",
+            color: "#5cc8fa",
+            marginBottom: 6,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(92,200,250,0.16)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(92,200,250,0.08)";
+          }}
+        >
+          <Home size={16} style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1 }}>Retour au site</span>
+        </Link>
         {items.map((item) => {
           const Icon = item.icon;
           const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
