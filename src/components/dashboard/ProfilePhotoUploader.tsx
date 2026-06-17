@@ -2,6 +2,11 @@ import { useRef, useState } from "react";
 import { Camera, Loader2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import Cropper, { type Area } from "react-easy-crop";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { ZoomIn, ZoomOut } from "lucide-react";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -41,6 +46,11 @@ export default function ProfilePhotoUploader({
 }: ProfilePhotoUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropFileName, setCropFileName] = useState<string>("avatar.jpg");
+  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,6 +67,19 @@ export default function ProfilePhotoUploader({
       return;
     }
 
+    // Open crop modal instead of uploading immediately
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropFileName(file.name);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadBlob = async (blob: Blob, originalName: string) => {
     setIsUploading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -64,12 +87,12 @@ export default function ProfilePhotoUploader({
       if (!authUserId) throw new Error("Session expirée. Reconnectez-vous.");
       if (authUserId !== userId) throw new Error("Utilisateur non autorisé.");
 
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const ext = (originalName.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `${authUserId}/avatar-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET)
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, blob, { cacheControl: "3600", upsert: false, contentType: blob.type || "image/jpeg" });
       if (uploadError) throw new Error(`Upload refusé : ${uploadError.message}`);
 
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
@@ -84,7 +107,18 @@ export default function ProfilePhotoUploader({
       toast.error(err instanceof Error ? err.message : "Impossible d'uploader la photo.");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropConfirm = async () => {
+    if (!cropSrc || !croppedAreaPixels) return;
+    try {
+      const blob = await getCroppedBlob(cropSrc, croppedAreaPixels);
+      setCropSrc(null);
+      await uploadBlob(blob, cropFileName);
+    } catch (err) {
+      console.error(err);
+      toast.error("Recadrage impossible.");
     }
   };
 
@@ -141,6 +175,90 @@ export default function ProfilePhotoUploader({
       <p className="mt-1 text-xs text-[#a89bc4]">
         JPG, PNG, WEBP, GIF, AVIF, BMP, TIFF, HEIC, HEIF (max 5 Mo)
       </p>
+
+      <Dialog open={!!cropSrc} onOpenChange={(o) => !o && setCropSrc(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Recadrer la photo</DialogTitle>
+          </DialogHeader>
+          <div className="relative h-80 w-full overflow-hidden rounded-lg bg-black">
+            {cropSrc && (
+              <Cropper
+                image={cropSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                minZoom={1}
+                maxZoom={4}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_a, areaPixels) => setCroppedAreaPixels(areaPixels)}
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-3 px-1">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(1, +(z - 0.2).toFixed(2)))}
+              aria-label="Zoom arrière"
+              className="grid h-9 w-9 place-items-center rounded-full border border-border hover:bg-accent"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <Slider
+              value={[zoom]}
+              min={1}
+              max={4}
+              step={0.05}
+              onValueChange={(v) => setZoom(v[0])}
+              className="flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(4, +(z + 0.2).toFixed(2)))}
+              aria-label="Zoom avant"
+              className="grid h-9 w-9 place-items-center rounded-full border border-border hover:bg-accent"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCropSrc(null)} disabled={isUploading}>
+              Annuler
+            </Button>
+            <Button onClick={handleCropConfirm} disabled={isUploading}>
+              {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+async function getCroppedBlob(src: string, area: Area): Promise<Blob> {
+  const img = await loadImage(src);
+  const size = Math.max(1, Math.round(Math.min(area.width, area.height)));
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponible");
+  ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, size, size);
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/jpeg", 0.92);
+  });
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
 }
