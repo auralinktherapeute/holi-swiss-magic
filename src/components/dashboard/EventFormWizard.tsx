@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { upsertMyEvent, signEventImage } from "@/lib/events.functions";
 import { AddressAutocomplete } from "@/components/forms/AddressAutocomplete";
+import { EventFlyer } from "@/components/events/EventFlyer";
 
 export type EventDraft = {
   id?: string | null;
@@ -506,6 +507,30 @@ export function EventFormWizard({ initial, onSaved, onCancel }: Props) {
                     <li>{draft.is_paid ? `${draft.price || "?"} CHF` : "Gratuit"} · {draft.seats || "?"} places</li>
                   </ul>
                 </div>
+                {draft.id && draft.title && (
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="text-sm font-medium mb-1">Flyer à partager (Instagram / Facebook)</div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Le QR code redirige vers la page publique de l'événement (réservation).
+                    </p>
+                    <EventFlyer
+                      data={{
+                        title: draft.title,
+                        category: CATEGORY_LABEL[draft.category],
+                        dateLabel: draft.event_date
+                          ? new Date(draft.event_date).toLocaleDateString("fr-CH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+                          : "Date à définir",
+                        timeLabel: draft.start_time ? `${draft.start_time}${draft.end_time ? `–${draft.end_time}` : ""}` : null,
+                        location: (draft.format === "in_person" || draft.format === "hybrid") ? draft.location : null,
+                        priceLabel: draft.is_paid ? (draft.price ? `${draft.price} CHF` : "Tarif à définir") : "Gratuit",
+                        therapistName: null,
+                        coverUrl: signedImage,
+                        targetUrl: `${typeof window !== "undefined" ? window.location.origin : "https://holiswiss.ch"}/fr/evenements/${draft.id}`,
+                      }}
+                      filename={`holiswiss-${draft.title.toLowerCase().replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}.png`}
+                    />
+                  </div>
+                )}
               </>
             )}
           </motion.div>
