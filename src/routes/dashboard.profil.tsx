@@ -34,6 +34,20 @@ import {
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
 
+// Extract the object path from a Supabase storage public URL, if applicable.
+function pathFromPhotoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/\/storage\/v1\/object\/(?:public|sign)\/therapist-photos\/([^?]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+async function resolveOwnerPhotoPreview(url: string): Promise<string> {
+  const path = pathFromPhotoUrl(url);
+  if (!path) return url;
+  const { data } = await supabase.storage.from("therapist-photos").createSignedUrl(path, 60 * 60 * 24 * 7);
+  return data?.signedUrl ?? url;
+}
+
 type DocRow = {
   id: string;
   file_url: string;
@@ -65,6 +79,8 @@ function ProfilePage() {
   // Identity
   const [rowId, setRowId] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  // The canonical public URL we persist to the DB (works on the public site once active).
+  const [photoPublicUrl, setPhotoPublicUrl] = useState<string>("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
@@ -121,7 +137,12 @@ function ProfilePage() {
         .maybeSingle() as any;
       if (data) {
         setRowId(data.id);
-        setPhotoUrl(data.photo_url ?? "");
+        setPhotoPublicUrl(data.photo_url ?? "");
+        if (data.photo_url) {
+          setPhotoUrl(await resolveOwnerPhotoPreview(data.photo_url));
+        } else {
+          setPhotoUrl("");
+        }
         setFirstName(data.first_name ?? "");
         setLastName(data.last_name ?? "");
         setCity(data.city ?? "");
@@ -202,10 +223,14 @@ function ProfilePage() {
     const { error } = await supabase.storage.from("therapist-photos").upload(path, file, { upsert: true });
     if (error) return toast.error(t("profile_edit.upload_error"));
     const { data: pub } = supabase.storage.from("therapist-photos").getPublicUrl(path);
-    setPhotoUrl(pub.publicUrl);
+    setPhotoPublicUrl(pub.publicUrl);
+    const { data: signed } = await supabase.storage
+      .from("therapist-photos")
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    setPhotoUrl(signed?.signedUrl ?? pub.publicUrl);
     markDirty();
   };
-  const removePhoto = () => { setPhotoUrl(""); markDirty(); };
+  const removePhoto = () => { setPhotoUrl(""); setPhotoPublicUrl(""); markDirty(); };
 
   // Document upload
   const onDocSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,7 +272,7 @@ function ProfilePage() {
       slug: rowId
         ? undefined
         : (`${firstName}-${lastName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + user.id.slice(0, 6)).replace(/^-+|-+$/g, ""),
-      photo_url: photoUrl || null,
+      photo_url: photoPublicUrl || null,
       city, postal_code: postalCode, address, phone,
       canton, languages: langs,
       price_min: priceMin === "" ? null : Number(priceMin),

@@ -7,6 +7,8 @@ import { isLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
 import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
+import { useServerFn } from "@tanstack/react-start";
+import { ensureMyTherapistShell } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -25,6 +27,11 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardLayout() {
   const { loading } = useAuth();
   const { i18n } = useTranslation();
+  const ensureShell = useServerFn(ensureMyTherapistShell);
+  useEffect(() => {
+    if (loading) return;
+    (ensureShell as any)().catch(() => {});
+  }, [loading, ensureShell]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
