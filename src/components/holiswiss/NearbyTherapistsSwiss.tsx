@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,8 @@ export function NearbyTherapistsSwiss() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => { setIsClient(true); }, []);
 
   const { data } = useQuery({
     queryKey: ["home-nearby-therapists"],
@@ -145,7 +147,8 @@ export function NearbyTherapistsSwiss() {
               </p>
             </div>
             <div className="mt-4 h-[520px] w-full overflow-hidden rounded-xl">
-              <Suspense
+              {isClient ? (
+                <Suspense
                 fallback={
                   <div className="flex h-full w-full items-center justify-center bg-[#0f0a1e]">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#b86ef9] border-t-transparent" />
@@ -158,7 +161,12 @@ export function NearbyTherapistsSwiss() {
                   onSelect={setSelectedId}
                   lang={lang}
                 />
-              </Suspense>
+                </Suspense>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[#0f0a1e]">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#b86ef9] border-t-transparent" />
+                </div>
+              )}
             </div>
           </div>
         </div>
