@@ -119,39 +119,7 @@ function Page() {
         </Card>
       )}
 
-      <Card className="bg-surface border-border/60">
-        <CardHeader><CardTitle>{t("agenda_page.unavail_title")}</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1"><label className="text-xs text-muted-foreground">{t("agenda_page.from")}</label>
-              <Input type="date" value={newBlock.start_date} onChange={(e) => setNewBlock({ ...newBlock, start_date: e.target.value })} /></div>
-            <div className="space-y-1"><label className="text-xs text-muted-foreground">{t("agenda_page.to")}</label>
-              <Input type="date" value={newBlock.end_date} onChange={(e) => setNewBlock({ ...newBlock, end_date: e.target.value })} /></div>
-            <div className="space-y-1 flex-1 min-w-[180px]"><label className="text-xs text-muted-foreground">{t("agenda_page.reason")}</label>
-              <Input value={newBlock.reason} placeholder={t("agenda_page.reason_ph")} onChange={(e) => setNewBlock({ ...newBlock, reason: e.target.value })} /></div>
-            <Button onClick={addBlock} disabled={!therapistId} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-1" /> {t("agenda_page.add")}
-            </Button>
-          </div>
-          {blocks.length === 0 ? (
-            <div className="rounded-lg border border-border/60 bg-background/40 p-4 text-sm text-muted-foreground">{t("agenda_page.no_blocks")}</div>
-          ) : (
-            <ul className="space-y-2">
-              {blocks.map((b) => (
-                <li key={b.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 p-3 text-sm">
-                  <div>
-                    <span className="font-medium text-foreground">{b.start_date} → {b.end_date}</span>
-                    {b.reason && <span className="ml-2 text-muted-foreground">— {b.reason}</span>}
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => removeBlock(b.id)}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      {therapistId && <UnavailabilityManager therapistId={therapistId} />}
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving || !therapistId} className="bg-primary hover:bg-primary/90">
