@@ -165,7 +165,7 @@ export function TherapistMap({ therapists, selectedId, onSelect, lang }: Props) 
         ))}
       </MapContainer>
       <style>{`
-        .leaflet-container { background: #0f0a1e; }
+        .leaflet-container { background: #e8f0f5; }
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
         .leaflet-popup-content { margin: 0 !important; }
         .holiswiss-popup .leaflet-popup-content-wrapper { padding: 0; }
