@@ -221,7 +221,8 @@ export function useFormDraft<T>({
       const latestData = latestDataRef.current;
       const serialized = JSON.stringify(latestData);
       if (serialized === lastSerializedRef.current) return;
-      const updatedAt = writeLocalDraft(formType, userId, latestData);
+      const updatedAt = writeIfSafe(latestData);
+      if (!updatedAt) return;
       lastSerializedRef.current = serialized;
       if (updateState && updatedAt) {
         setSavedAt(new Date(updatedAt));
@@ -239,14 +240,15 @@ export function useFormDraft<T>({
       window.removeEventListener("pagehide", handlePageHide);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [formType, userId]);
+  }, [formType, userId, writeIfSafe]);
 
   // Debounced save on data change.
   useEffect(() => {
     if (!enabled || !loaded) return;
     const serialized = JSON.stringify(data);
     if (serialized === lastSerializedRef.current) return;
-    const localUpdatedAt = writeLocalDraft(formType, userId, data);
+    const localUpdatedAt = writeIfSafe(data);
+    if (!localUpdatedAt) return;
     lastSerializedRef.current = serialized;
     if (localUpdatedAt) {
       setSavedAt(new Date(localUpdatedAt));
@@ -277,7 +279,7 @@ export function useFormDraft<T>({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [data, enabled, loaded, userId, formType, debounceMs]);
+  }, [data, enabled, loaded, userId, formType, debounceMs, writeIfSafe]);
 
   const clearDraft = useCallback(async () => {
     try {
