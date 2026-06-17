@@ -13,6 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { addMyBlockedPeriod, deleteMyBlockedPeriod, listMyAgenda, saveMyAvailabilities } from "@/lib/dashboard.functions";
 import BookingNoteEditor from "@/components/dashboard/BookingNoteEditor";
 import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
+import SpecificAvailabilityManager from "@/components/dashboard/SpecificAvailabilityManager";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
@@ -136,6 +137,8 @@ function Page() {
       </Card>
 
       {therapistId && <BookingNoteEditor therapistId={therapistId} />}
+
+      {therapistId && <SpecificAvailabilityManager therapistId={therapistId} />}
 
       {therapistId && (
         <Card className="bg-surface border-border/60">
