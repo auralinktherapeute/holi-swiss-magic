@@ -46,6 +46,7 @@ import { Route as LangConfidentialiteIndexRouteImport } from './routes/$lang.con
 import { Route as LangConditionsIndexRouteImport } from './routes/$lang.conditions.index'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
+import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 
 const DashboardRoute = DashboardRouteImport.update({
@@ -234,6 +235,11 @@ const LangTherapeuteSlugRoute = LangTherapeuteSlugRouteImport.update({
   path: '/therapeute/$slug',
   getParentRoute: () => LangRoute,
 } as any)
+const LangEvenementsIdRoute = LangEvenementsIdRouteImport.update({
+  id: '/evenements/$id',
+  path: '/evenements/$id',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/$lang/blog/$slug'
+    | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -425,6 +435,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/$lang/blog/$slug'
+    | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog'
     | '/$lang/conditions'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/$lang/blog/$slug'
+    | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -746,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTherapeuteSlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/evenements/$id': {
+      id: '/$lang/evenements/$id'
+      path: '/evenements/$id'
+      fullPath: '/$lang/evenements/$id'
+      preLoaderRoute: typeof LangEvenementsIdRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/blog/$slug': {
       id: '/$lang/blog/$slug'
       path: '/blog/$slug'
@@ -759,6 +778,7 @@ declare module '@tanstack/react-router' {
 interface LangRouteChildren {
   LangIndexRoute: typeof LangIndexRoute
   LangBlogSlugRoute: typeof LangBlogSlugRoute
+  LangEvenementsIdRoute: typeof LangEvenementsIdRoute
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
   LangConditionsIndexRoute: typeof LangConditionsIndexRoute
@@ -775,6 +795,7 @@ interface LangRouteChildren {
 const LangRouteChildren: LangRouteChildren = {
   LangIndexRoute: LangIndexRoute,
   LangBlogSlugRoute: LangBlogSlugRoute,
+  LangEvenementsIdRoute: LangEvenementsIdRoute,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
   LangConditionsIndexRoute: LangConditionsIndexRoute,
