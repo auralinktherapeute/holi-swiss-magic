@@ -309,9 +309,9 @@ function SeoPage() {
             color: "rgba(255,255,255,0.65)", fontSize: 13,
           }}>
             <Clock size={14} color="#a78bfa" />
-            Dernier audit complet : {new Date(data.lastAuditAt).toLocaleString("fr-CH", {
-              dateStyle: "medium", timeStyle: "short",
-            })}
+            Dernier audit complet : {data.lastAuditAt
+              ? new Date(data.lastAuditAt).toLocaleString("fr-CH", { dateStyle: "medium", timeStyle: "short" })
+              : "aucun audit pour le moment"}
           </div>
         </div>
       </motion.section>
