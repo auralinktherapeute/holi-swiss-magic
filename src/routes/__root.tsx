@@ -97,6 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "robots", content: "index, follow" },
       { property: "og:locale", content: "fr_CH" },
       { property: "og:site_name", content: "Holiswiss" },
+      { name: "google-site-verification", content: "d9t25eV3fX7zo8MSf8MpCrcbPMfyayZR68oY3i4yXeg" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
