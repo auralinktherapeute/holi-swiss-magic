@@ -100,6 +100,13 @@ export function WaitingListPopup() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onOpen = () => setOpen(true);
+    window.addEventListener("open-waitlist", onOpen);
+    return () => window.removeEventListener("open-waitlist", onOpen);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     let cancelled = false;
     (async () => {
