@@ -3,7 +3,6 @@ import { Star, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
 
 const sb = supabase as any;
 
@@ -16,7 +15,6 @@ export function ReviewForm({
   therapistId: string;
   onSubmitted?: () => void;
 }) {
-  const { t } = useTranslation();
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: any } | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [existing, setExisting] = useState<Existing>(null);
