@@ -304,7 +304,14 @@
     "update_agenda": "Update calendar",
     "write_article": "Write an article",
     "first_session": "First session",
-    "follow_up": "Follow-up"
+    "follow_up": "Follow-up",
+    "progress_title": "Complete your profile to stand out",
+    "step_profile": "Complete your profile to improve your visibility",
+    "step_profile_cta": "Complete",
+    "step_agenda": "Add your availability to receive your first bookings",
+    "step_agenda_cta": "Add",
+    "step_content": "Publish an article or event to gain visibility",
+    "step_content_cta": "Publish"
   },
   "profile_edit": {
     "page_title": "Edit my profile",

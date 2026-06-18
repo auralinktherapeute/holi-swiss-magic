@@ -304,7 +304,14 @@
     "update_agenda": "Mettre à jour l'agenda",
     "write_article": "Écrire un article",
     "first_session": "Première séance",
-    "follow_up": "Suivi"
+    "follow_up": "Suivi",
+    "progress_title": "Complétez votre profil pour briller",
+    "step_profile": "Complétez votre profil pour améliorer votre visibilité",
+    "step_profile_cta": "Compléter",
+    "step_agenda": "Ajoutez vos disponibilités pour recevoir vos premières réservations",
+    "step_agenda_cta": "Ajouter",
+    "step_content": "Publiez un article ou un événement pour gagner en visibilité",
+    "step_content_cta": "Publier"
   },
   "profile_edit": {
     "page_title": "Modifier mon profil",
