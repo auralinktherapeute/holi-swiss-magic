@@ -10,14 +10,14 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { getWaitingListCount } from "@/lib/public.functions";
+import { getAdminBadgeCounts } from "@/lib/admin.functions";
 
 export function AdminNav() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const navigate = useNavigate();
-  const fetchWaitingListCount = useServerFn(getWaitingListCount);
+  const fetchBadgeCounts = useServerFn(getAdminBadgeCounts);
   const email = user?.email ?? "admin@holiswiss.ch";
   const initial = email.charAt(0).toUpperCase();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -37,32 +37,52 @@ export function AdminNav() {
     }
   };
 
-  const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
+  const [counts, setCounts] = useState<{
+    therapists: number; waitlist: number; events: number;
+    moderation: number; reviews: number; articles: number; subscriptions: number;
+  }>({ therapists: 0, waitlist: 0, events: 0, moderation: 0, reviews: 0, articles: 0, subscriptions: 0 });
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { count } = await fetchWaitingListCount();
-      if (!cancelled) setWaitlistCount(count);
+      try {
+        const c = await fetchBadgeCounts();
+        if (!cancelled) setCounts(c);
+      } catch {
+        // user may not be admin yet; ignore
+      }
     };
     load();
-    const id = window.setInterval(load, 30_000);
-    return () => { cancelled = true; window.clearInterval(id); };
-  }, [fetchWaitingListCount]);
+    const channel = supabase
+      .channel("admin-badges")
+      .on("postgres_changes", { event: "*", schema: "public", table: "therapists" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "waiting_list" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, load)
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [fetchBadgeCounts]);
+
+  // Hide the badge for the section the admin is currently viewing.
+  const visibleCount = (path: string, value: number) =>
+    pathname.startsWith(path) ? 0 : value;
 
   const items = [
     { to: "/admin",                  icon: LayoutDashboard, label: t("admin.overview"),       exact: true },
-    { to: "/admin/therapeutes",      icon: Users,           label: t("admin.therapists") },
-    { to: "/admin/liste-attente",    icon: Hourglass,       label: t("admin.waitlist"),        badge: waitlistCount ?? undefined, badgeRed: false },
-    { to: "/admin/moderation",       icon: ShieldAlert,     label: t("admin.moderation"),      badge: undefined, badgeRed: true },
-    { to: "/admin/avis",             icon: Star,            label: t("admin.reviews") },
-    { to: "/admin/articles",         icon: FileText,        label: t("admin.articles") },
-    { to: "/admin/evenements",       icon: CalendarDays,    label: t("admin.events") },
+    { to: "/admin/therapeutes",      icon: Users,           label: t("admin.therapists"),     badge: visibleCount("/admin/therapeutes", counts.therapists) },
+    { to: "/admin/liste-attente",    icon: Hourglass,       label: t("admin.waitlist"),       badge: visibleCount("/admin/liste-attente", counts.waitlist) },
+    { to: "/admin/moderation",       icon: ShieldAlert,     label: t("admin.moderation"),     badge: visibleCount("/admin/moderation", counts.moderation) },
+    { to: "/admin/avis",             icon: Star,            label: t("admin.reviews"),        badge: visibleCount("/admin/avis", counts.reviews) },
+    { to: "/admin/articles",         icon: FileText,        label: t("admin.articles"),       badge: visibleCount("/admin/articles", counts.articles) },
+    { to: "/admin/evenements",       icon: CalendarDays,    label: t("admin.events"),         badge: visibleCount("/admin/evenements", counts.events) },
     { to: "/admin/utilisateurs",     icon: UserCog,         label: t("admin.users") },
-    { to: "/admin/abonnements",      icon: CreditCard,      label: t("admin.subscriptions") },
+    { to: "/admin/abonnements",      icon: CreditCard,      label: t("admin.subscriptions"),  badge: visibleCount("/admin/abonnements", counts.subscriptions) },
     { to: "/admin/agents",           icon: Bot,             label: t("admin.agents") },
     { to: "/admin/emails",           icon: Mail,            label: t("admin.emails") },
     { to: "/admin/parametres",       icon: Settings,        label: t("admin.settings") },
-  ];
+  ] as Array<{ to: string; icon: typeof LayoutDashboard; label: string; exact?: boolean; badge?: number }>;
 
   const SidebarContent = () => (
     <div style={{
@@ -181,15 +201,24 @@ export function AdminNav() {
                 {item.label}
               </span>
               {item.badge != null && item.badge > 0 && (
-                <span style={{
-                  background: item.badgeRed ? "rgba(248,113,113,0.2)" : "rgba(184,110,249,0.2)",
-                  color: item.badgeRed ? "#f87171" : "#b86ef9",
-                  borderRadius: 999,
-                  padding: "1px 8px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                }}>
-                  {item.badge}
+                <span
+                  aria-label={`${item.badge} en attente`}
+                  style={{
+                    background: "#ef4444",
+                    color: "#ffffff",
+                    borderRadius: 999,
+                    minWidth: 20,
+                    height: 20,
+                    padding: "0 6px",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 0 0 2px #0d0820",
+                  }}
+                >
+                  {item.badge > 99 ? "99+" : item.badge}
                 </span>
               )}
             </Link>

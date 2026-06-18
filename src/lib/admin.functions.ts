@@ -29,6 +29,27 @@ export const checkIsAdmin = createServerFn({ method: "GET" })
     return { isAdmin: await userIsAdmin(context.userId), userId: context.userId };
   });
 
+export const getAdminBadgeCounts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [therapists, waitlist, events] = await Promise.all([
+      supabaseAdmin.from("therapists").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabaseAdmin.from("waiting_list").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabaseAdmin.from("events").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+    ]);
+    return {
+      therapists: therapists.count ?? 0,
+      waitlist: waitlist.count ?? 0,
+      events: events.count ?? 0,
+      moderation: 0,
+      reviews: 0,
+      articles: 0,
+      subscriptions: 0,
+    };
+  });
+
 export const getAdminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
