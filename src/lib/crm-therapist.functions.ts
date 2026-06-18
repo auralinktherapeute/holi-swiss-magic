@@ -19,17 +19,6 @@ export type ClientContact = {
   updated_at: string;
 };
 
-async function getMyTherapistId(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("therapists")
-    .select("id, subscription_plan")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (error || !data) throw new Error("Profil thérapeute introuvable.");
-  return data.id as string;
-}
-
 async function assertElitePro(userId: string): Promise<string> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -225,6 +214,3 @@ export const completeContactTask = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-
-// expose helper so loaders can know without importing assertElitePro
-export const __noop = getMyTherapistId; // keep ref
