@@ -512,10 +512,27 @@ function Page() {
                     <tbody>
                       {services.map((s, i) => (
                         <tr key={i} className="border-b border-[rgba(184,110,249,0.08)] hover:bg-[rgba(184,110,249,0.04)] transition">
-                          <td className="py-3 pr-4 font-medium text-white">{s.name}</td>
-                          <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)]">{s.duration ? `${s.duration} min` : "—"}</td>
-                          <td className="py-3 pr-4 text-[#5cc8fa] font-semibold">{s.price ? `${s.price} CHF` : "—"}</td>
-                          <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{s.format ?? t("therapist_profile.service_format_default")}</td>
+                          {(() => {
+                            const duration = (s as any).duration_min ?? s.duration;
+                            const price = (s as any).price_chf ?? s.price;
+                            const formatKey = (s as any).format as string | undefined;
+                            const formatLabel = formatKey
+                              ? (t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey)
+                              : t("therapist_profile.service_format_default");
+                            const missing = (
+                              <span className="text-[rgba(255,255,255,0.35)] italic">
+                                {t("therapist_profile.value_missing", { defaultValue: "À renseigner" })}
+                              </span>
+                            );
+                            return (
+                              <>
+                                <td className="py-3 pr-4 font-medium text-white">{s.name}</td>
+                                <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)]">{duration ? `${duration} min` : missing}</td>
+                                <td className="py-3 pr-4 text-[#5cc8fa] font-semibold">{price != null && price !== "" ? `${price} CHF` : missing}</td>
+                                <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{formatLabel}</td>
+                              </>
+                            );
+                          })()}
                         </tr>
                       ))}
                     </tbody>
@@ -650,8 +667,8 @@ function Page() {
                 therapistName={fullName}
                 services={services.map((s) => ({
                   name: s.name,
-                  duration: s.duration ?? s.duration_min,
-                  price: s.price,
+                  duration: (s as any).duration_min ?? s.duration,
+                  price: (s as any).price_chf ?? s.price,
                   format: s.format,
                   color: s.color,
                   description: s.description,
