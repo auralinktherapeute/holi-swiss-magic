@@ -445,6 +445,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       style={{
         padding: "8px 14px", borderRadius: 999,
         background: active ? "linear-gradient(135deg, #8b5cf6, #6366f1)" : "rgba(255,255,255,0.04)",
