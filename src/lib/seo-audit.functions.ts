@@ -88,3 +88,66 @@ export const getSeoHistory = createServerFn({ method: "GET" })
       hasReport: !!r.summary,
     }));
   });
+
+export type LatestAudit = {
+  global: number;
+  seo: number;
+  geo: number;
+  lastAuditAt: string | null;
+  critical_count: number;
+  resolved_count: number;
+};
+
+export const getLatestAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<LatestAudit> => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("seo_audit_history")
+      .select("audit_date,seo_score,geo_score,global_score,critical_count,resolved_count,created_at")
+      .order("audit_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) {
+      return { global: 0, seo: 0, geo: 0, lastAuditAt: null, critical_count: 0, resolved_count: 0 };
+    }
+    return {
+      global: data.global_score as number,
+      seo: data.seo_score as number,
+      geo: data.geo_score as number,
+      lastAuditAt: (data.created_at as string) ?? null,
+      critical_count: (data.critical_count as number) ?? 0,
+      resolved_count: (data.resolved_count as number) ?? 0,
+    };
+  });
+
+export type RunAuditResult = {
+  seo_score: number;
+  geo_score: number;
+  global_score: number;
+  critical_count: number;
+  resolved_count: number;
+  audited_urls: number;
+  audit_date: string;
+};
+
+export const runSeoAuditNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<RunAuditResult> => {
+    await assertAdmin(context.userId);
+    const { runSeoAudit, getPreviousCriticalCodes, notifyCriticalIssues } =
+      await import("@/lib/seo-audit-runner.server");
+    const prev = await getPreviousCriticalCodes();
+    const r = await runSeoAudit();
+    await notifyCriticalIssues(prev, r.issues);
+    return {
+      seo_score: r.seo_score,
+      geo_score: r.geo_score,
+      global_score: r.global_score,
+      critical_count: r.critical_count,
+      resolved_count: r.resolved_count,
+      audited_urls: r.audited_urls,
+      audit_date: r.audit_date,
+    };
+  });

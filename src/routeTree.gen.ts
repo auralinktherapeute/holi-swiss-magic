@@ -52,6 +52,7 @@ import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeut
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
+import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -270,6 +271,12 @@ const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => LangRoute,
 } as any)
+const ApiPublicHooksSeoAuditAgentRoute =
+  ApiPublicHooksSeoAuditAgentRouteImport.update({
+    id: '/api/public/hooks/seo-audit-agent',
+    path: '/api/public/hooks/seo-audit-agent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -357,6 +365,7 @@ export interface FileRoutesByTo {
   '/$lang/inscription': typeof LangInscriptionIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
+  '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -403,6 +412,7 @@ export interface FileRoutesById {
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/$lang/inscription/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/api/public/hooks/seo-audit-agent'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/$lang/inscription'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
+    | '/api/public/hooks/seo-audit-agent'
   id:
     | '__root__'
     | '/'
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/$lang/inscription/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/api/public/hooks/seo-audit-agent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -546,6 +559,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
+  ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -851,6 +865,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangBlogSlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/api/public/hooks/seo-audit-agent': {
+      id: '/api/public/hooks/seo-audit-agent'
+      path: '/api/public/hooks/seo-audit-agent'
+      fullPath: '/api/public/hooks/seo-audit-agent'
+      preLoaderRoute: typeof ApiPublicHooksSeoAuditAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -961,6 +982,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
+  ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
