@@ -12,6 +12,9 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ReviewForm } from "@/components/reviews/ReviewForm";
+import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
+import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TherapistMiniMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -328,15 +331,15 @@ function Page() {
                 <button onClick={share} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
                   {copied ? <span className="text-[10px] font-bold text-[#5cc8fa]">✓</span> : <Share2 className="h-4 w-4" />}
                 </button>
-                {th.city && (
-                  <a
-                    href={`https://www.google.com/maps/search/${encodeURIComponent(th.city + " " + (th.canton ?? "") + " Suisse")}`}
-                    target="_blank" rel="noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
+                <FavoriteButton therapistId={th.id} />
+                {(th.city || th.address) && (
+                  <ItineraryButton
+                    address={th.address}
+                    city={th.city}
+                    canton={th.canton}
+                    postalCode={th.postal_code}
                     title={t("therapist_profile.itinerary")}
-                  >
-                    <Navigation2 className="h-4 w-4" />
-                  </a>
+                  />
                 )}
               </motion.div>
             </div>
@@ -402,13 +405,24 @@ function Page() {
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.certifications_title")}</h2>
-                <div className="flex flex-wrap gap-2">
-                  {accreditations.map((a) => (
-                    <span key={a.org} className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-300">
-                      <BadgeCheck className="h-4 w-4" /> {a.org} {a.number ? `· ${a.number}` : ""}
-                    </span>
-                  ))}
-                </div>
+                <TooltipProvider delayDuration={150}>
+                  <div className="flex flex-wrap gap-2">
+                    {accreditations.map((a) => (
+                      <Tooltip key={a.org}>
+                        <TooltipTrigger asChild>
+                          <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-300 cursor-help">
+                            <BadgeCheck className="h-4 w-4" /> {a.org}{a.number ? ` · ${a.number}` : ""}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs border-emerald-500/30 bg-[#0f0a1e] text-white">
+                          {a.org === "ASCA" && "Fondation suisse pour les médecines complémentaires — agréée par la plupart des assurances complémentaires."}
+                          {a.org === "RME" && "Registre de Médecine Empirique — label de qualité reconnu par les assurances complémentaires en Suisse."}
+                          {a.org !== "ASCA" && a.org !== "RME" && `Certification ${a.org}${a.number ? ` (n° ${a.number})` : ""}.`}
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </TooltipProvider>
               </motion.section>
             )}
 
