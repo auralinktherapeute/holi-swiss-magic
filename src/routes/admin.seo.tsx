@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Gauge, RefreshCw, Sparkles, Search, Clock,
   CheckCircle2, AlertTriangle, AlertOctagon, Filter, Loader2, TrendingUp,
@@ -13,6 +14,7 @@ import {
 } from "recharts";
 import {
   listSeoFindings, updateSeoFindingStatus, getSeoHistory,
+  getLatestAudit, runSeoAuditNow,
   type SeoFinding, type SeoHistoryPoint,
 } from "@/lib/seo-audit.functions";
 import "@/styles/admin-design-system.css";
@@ -23,15 +25,7 @@ type AuditData = {
   global: number;
   seo: number;
   geo: number;
-  lastAuditAt: string; // ISO
-};
-
-// Mock seed — Part 2 will replace this with a real server fn + DB persistence.
-const SEED: AuditData = {
-  global: 78,
-  seo: 82,
-  geo: 74,
-  lastAuditAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+  lastAuditAt: string | null;
 };
 
 function scoreColor(v: number) {
@@ -152,7 +146,8 @@ function MiniScore({
   );
 }
 
-function formatRelative(iso: string) {
+function formatRelative(iso: string | null) {
+  if (!iso) return "jamais";
   const diff = Date.now() - new Date(iso).getTime();
   const min = Math.round(diff / 60000);
   if (min < 1) return "à l'instant";
@@ -164,24 +159,57 @@ function formatRelative(iso: string) {
 }
 
 function SeoPage() {
-  const [data, setData] = useState<AuditData>(SEED);
+  const fetchLatest = useServerFn(getLatestAudit);
+  const runNow = useServerFn(runSeoAuditNow);
+  const qc = useQueryClient();
+
+  const { data: latest } = useQuery({
+    queryKey: ["seo-latest-audit"],
+    queryFn: () => fetchLatest(),
+    staleTime: 30_000,
+  });
+
+  const data: AuditData = {
+    global: latest?.global ?? 0,
+    seo: latest?.seo ?? 0,
+    geo: latest?.geo ?? 0,
+    lastAuditAt: latest?.lastAuditAt ?? null,
+  };
+
   const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const lastLabel = useMemo(() => formatRelative(data.lastAuditAt), [data.lastAuditAt]);
 
   const runAudit = async () => {
     if (running) return;
     setRunning(true);
-    // Part 2 will hit a real createServerFn here. For now we simulate.
-    await new Promise((r) => setTimeout(r, 2200));
-    setData((d) => ({
-      ...d,
-      global: Math.max(40, Math.min(99, d.global + Math.round((Math.random() - 0.3) * 6))),
-      seo: Math.max(40, Math.min(99, d.seo + Math.round((Math.random() - 0.3) * 6))),
-      geo: Math.max(40, Math.min(99, d.geo + Math.round((Math.random() - 0.3) * 6))),
-      lastAuditAt: new Date().toISOString(),
-    }));
-    setRunning(false);
+    setProgress(5);
+    const start = Date.now();
+    const tick = setInterval(() => {
+      const elapsed = Date.now() - start;
+      // ease toward 90% over ~20s; the real call settles the rest.
+      setProgress((p) => Math.min(90, Math.max(p, Math.round(5 + (elapsed / 220)))));
+    }, 200);
+    try {
+      const r = await runNow({});
+      setProgress(100);
+      toast.success(`Audit terminé — Score SEO : ${r.seo_score} / Score GEO : ${r.geo_score}`, {
+        description: r.critical_count
+          ? `${r.critical_count} point(s) critique(s) détecté(s) — ${r.audited_urls} URLs analysées.`
+          : `${r.audited_urls} URLs analysées. Aucun point critique.`,
+      });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["seo-latest-audit"] }),
+        qc.invalidateQueries({ queryKey: ["seo-history"] }),
+        qc.invalidateQueries({ queryKey: ["seo-findings"] }),
+      ]);
+    } catch (e) {
+      toast.error("L'audit a échoué", { description: (e as Error).message });
+    } finally {
+      clearInterval(tick);
+      setTimeout(() => { setRunning(false); setProgress(0); }, 600);
+    }
   };
 
   return (
@@ -294,14 +322,72 @@ function SeoPage() {
       {/* Part 3 — Evolution chart */}
       <EvolutionChart />
 
-      {/* Placeholder for Part 4 */}
-      <div style={{
-        marginTop: 24, padding: 24, borderRadius: 16,
-        border: "1px dashed rgba(255,255,255,0.12)",
-        color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center",
+      {/* Part 4 — Automated agent status */}
+      <section style={{
+        marginTop: 24, padding: 18, borderRadius: 16,
+        background: "linear-gradient(180deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02))",
+        border: "1px solid rgba(34,197,94,0.18)",
+        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        color: "rgba(255,255,255,0.75)", fontSize: 13.5,
       }}>
-        Agent d'audit automatisé : à venir (partie 4).
-      </div>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: "rgba(34,197,94,0.15)", color: "#86efac",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <Sparkles size={18} />
+        </div>
+        <div style={{ flex: 1, minWidth: 260 }}>
+          <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>
+            Agent d'audit automatisé activé
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12.5, marginTop: 2 }}>
+            Analyse quotidienne planifiée à 06:00 UTC · 7 URLs principales surveillées · alerte admin en cas de point critique.
+          </div>
+        </div>
+      </section>
+
+      {/* Audit progress overlay */}
+      {running && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(8,4,24,0.72)", backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }}
+          role="status" aria-live="polite"
+        >
+          <div style={{
+            background: "linear-gradient(180deg, #1a1140, #110a26)",
+            border: "1px solid rgba(139,92,246,0.35)",
+            borderRadius: 20, padding: 28, width: "min(420px, 100%)",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <Loader2 size={20} color="#a78bfa" style={{ animation: "adm-spin 1s linear infinite" }} />
+              <div style={{ color: "#fff", fontWeight: 600, fontSize: 15 }}>Analyse SEO & GEO en cours…</div>
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, marginBottom: 14 }}>
+              Le robot parcourt les pages clés du site et évalue leur visibilité.
+            </div>
+            <div style={{ height: 10, borderRadius: 999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+              <motion.div
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                style={{
+                  height: "100%", borderRadius: 999,
+                  background: "linear-gradient(90deg, #8b5cf6, #22d3ee)",
+                  boxShadow: "0 0 16px rgba(139,92,246,0.6)",
+                }}
+              />
+            </div>
+            <div style={{ marginTop: 8, color: "rgba(255,255,255,0.5)", fontSize: 12, textAlign: "right" }}>
+              {progress}%
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <style>{`@keyframes adm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
