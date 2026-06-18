@@ -15,6 +15,12 @@ import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SPOKEN_LANGUAGES } from "@/lib/constants";
+
+const LANG_FLAG: Record<string, string> = {
+  fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
+  ru: "🇷🇺", ar: "🇸🇦", zh: "🇨🇳", ja: "🇯🇵", nl: "🇳🇱", tr: "🇹🇷",
+};
 
 const TherapistMiniMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -135,7 +141,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
+        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,cover_image_url,gallery_urls,is_premium,phone,email,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
