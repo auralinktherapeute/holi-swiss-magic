@@ -45,6 +45,7 @@ import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion
 import { Route as LangConfidentialiteIndexRouteImport } from './routes/$lang.confidentialite.index'
 import { Route as LangConditionsIndexRouteImport } from './routes/$lang.conditions.index'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
+import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -230,6 +231,11 @@ const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => LangRoute,
 } as any)
+const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
+  id: '/api/public/admin-notify',
+  path: '/api/public/admin-notify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LangTherapeuteSlugRoute = LangTherapeuteSlugRouteImport.update({
   id: '/therapeute/$slug',
   path: '/therapeute/$slug',
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
   '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -399,6 +408,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
+    | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
+    | '/api/public/admin-notify'
     | '/$lang/blog'
     | '/$lang/conditions'
     | '/$lang/confidentialite'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
+    | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -495,6 +507,7 @@ export interface RootRouteChildren {
   LangRoute: typeof LangRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
+  ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -751,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangBlogIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/api/public/admin-notify': {
+      id: '/api/public/admin-notify'
+      path: '/api/public/admin-notify'
+      fullPath: '/api/public/admin-notify'
+      preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$lang/therapeute/$slug': {
       id: '/$lang/therapeute/$slug'
       path: '/therapeute/$slug'
@@ -876,6 +896,7 @@ const rootRouteChildren: RootRouteChildren = {
   LangRoute: LangRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
+  ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
