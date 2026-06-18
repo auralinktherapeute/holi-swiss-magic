@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LangRouteImport } from './routes/$lang'
@@ -51,6 +52,11 @@ import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/$lang': typeof LangRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/$lang': typeof LangRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
@@ -393,6 +402,7 @@ export interface FileRouteTypes {
     | '/$lang'
     | '/admin'
     | '/dashboard'
+    | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
     | '/admin/articles'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
     | '/admin/articles'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/$lang'
     | '/admin'
     | '/dashboard'
+    | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
     | '/admin/articles'
@@ -520,11 +532,19 @@ export interface RootRouteChildren {
   LangRoute: typeof LangRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -918,6 +938,7 @@ const rootRouteChildren: RootRouteChildren = {
   LangRoute: LangRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
 }
 export const routeTree = rootRouteImport
