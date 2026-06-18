@@ -53,15 +53,15 @@ export function AdminNav() {
       }
     };
     load();
-    const channel = supabase
-      .channel("admin-badges")
-      .on("postgres_changes", { event: "*", schema: "public", table: "therapists" }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "waiting_list" }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, load)
-      .subscribe();
+    // Sensitive tables (therapists, waiting_list) are NOT in the Realtime publication
+    // to avoid broadcasting PII. Use lightweight polling + a refresh on tab focus.
+    const interval = window.setInterval(load, 20_000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
     };
   }, [fetchBadgeCounts]);
 
