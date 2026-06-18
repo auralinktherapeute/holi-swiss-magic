@@ -64,6 +64,9 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Reassurance block — early access / waiting list */}
+      <WaitlistReassuranceBlock />
+
       {/* Pricing teaser */}
       <section className="bg-[#2d1248]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
