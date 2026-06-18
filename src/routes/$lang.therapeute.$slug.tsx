@@ -11,6 +11,7 @@ import {
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { ReviewForm } from "@/components/reviews/ReviewForm";
 
 const TherapistMiniMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -144,7 +145,14 @@ function Page() {
     queryKey: ["reviews", th?.id],
     enabled: !!th?.id,
     queryFn: async () => {
-      return [] as any[];
+      const { data, error } = await (supabase as any)
+        .from("reviews")
+        .select("id,rating,comment,author_name,author_avatar_url,created_at")
+        .eq("therapist_id", th!.id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+      if (error) return [];
+      return data ?? [];
     },
   });
 
@@ -405,8 +413,7 @@ function Page() {
             )}
 
             {/* Avis */}
-            {(reviews?.length ?? 0) > 0 && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+            <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <div className="flex items-center justify-between mb-5">
@@ -421,6 +428,11 @@ function Page() {
                     </div>
                   )}
                 </div>
+                <div className="mb-5">
+                  <ReviewForm therapistId={th.id} />
+                </div>
+                {(reviews?.length ?? 0) > 0 && (
+                <>
                 <div className="mb-5 space-y-1.5">
                   {dist.map(({ n, count }) => (
                     <div key={n} className="flex items-center gap-2 text-xs">
@@ -441,27 +453,29 @@ function Page() {
                     <div key={r.id} className="rounded-xl border border-[rgba(184,110,249,0.12)] bg-[rgba(184,110,249,0.04)] p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
-                            {String(r.client_id ?? "?")[0].toUpperCase()}
-                          </div>
+                          {r.author_avatar_url ? (
+                            <img src={r.author_avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
+                              {String(r.author_name ?? "?")[0]?.toUpperCase() ?? "?"}
+                            </div>
+                          )}
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-white">{r.author_name ?? "Anonyme"}</span>
                           <StarRow rating={r.rating} size={3} />
+                          </div>
                         </div>
                         <span className="text-xs text-[rgba(255,255,255,0.35)]">
                           {new Date(r.created_at).toLocaleDateString(reviewLocale, { day: "numeric", month: "short", year: "numeric" })}
                         </span>
                       </div>
                       {r.comment && <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">{r.comment}</p>}
-                      {r.therapist_reply && (
-                        <div className="mt-3 rounded-lg border-l-2 border-[#b86ef9] bg-[rgba(184,110,249,0.06)] px-4 py-3">
-                          <p className="text-xs font-semibold text-[#b86ef9] mb-1">{t("therapist_profile.therapist_reply")}</p>
-                          <p className="text-sm italic text-[rgba(255,255,255,0.6)]">{r.therapist_reply}</p>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
+                </>
+                )}
               </motion.section>
-            )}
 
             {/* Mini carte */}
             {th.latitude && th.longitude && (
