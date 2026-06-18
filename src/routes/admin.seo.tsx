@@ -669,17 +669,20 @@ function FindingsReport() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filtered.map((f) => (
-            <FindingCard
-              key={f.id}
-              finding={f}
-              busy={mutation.isPending && mutation.variables?.code === f.code}
-              onResolve={() => mutation.mutate({
-                code: f.code,
-                status: f.status === "resolved" ? "open" : "resolved",
-              })}
-            />
-          ))}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {filtered.map((f, i) => (
+              <FindingCard
+                key={f.id}
+                index={i}
+                finding={f}
+                busy={mutation.isPending && mutation.variables?.code === f.code}
+                onResolve={() => mutation.mutate({
+                  code: f.code,
+                  status: f.status === "resolved" ? "open" : "resolved",
+                })}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </section>
