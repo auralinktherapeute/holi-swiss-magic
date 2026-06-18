@@ -16,6 +16,7 @@ import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
+import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 const LANG_FLAG: Record<string, string> = {
   fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
@@ -40,10 +41,31 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   },
   head: ({ params, loaderData }) => {
     const t = loaderData?.therapist as
-      | { first_name?: string; last_name?: string; title?: string; city?: string; canton?: string; bio?: string; photo_url?: string }
+      | {
+          first_name?: string;
+          last_name?: string;
+          title?: string;
+          city?: string;
+          canton?: string;
+          bio?: string;
+          photo_url?: string;
+          address?: string | null;
+          postal_code?: string | null;
+          country?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          website?: string | null;
+          price_min?: number | null;
+          price_max?: number | null;
+          currency?: string | null;
+          languages?: string[] | null;
+          specialties?: string[] | null;
+          years_experience?: number | null;
+        }
       | null
       | undefined;
     const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
+    const altLinks = hreflangLinks(`/therapeute/${params.slug}`);
     if (!t) {
       return {
         meta: [
@@ -51,7 +73,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
           { name: "description", content: "Découvrez ce thérapeute holistique sur HoliSwiss, l'annuaire des praticiens en Suisse." },
           { property: "og:url", content: url },
         ],
-        links: [{ rel: "canonical", href: url }],
+        links: [{ rel: "canonical", href: url }, ...altLinks],
       };
     }
     const fullName = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
@@ -69,6 +91,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       { property: "og:description", content: description },
       { property: "og:type", content: "profile" },
       { property: "og:url", content: url },
+      { property: "og:locale", content: ogLocale(params.lang) },
       { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
     ];
     if (image) {
@@ -77,24 +100,52 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     }
     const ld: Record<string, unknown> = {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": ["LocalBusiness", "HealthAndBeautyBusiness"],
+      "@id": url,
       name: fullName || "Thérapeute",
       url,
       description,
     };
     if (image) ld.image = image;
-    if (t.city || t.canton) {
+    if (t.address || t.city || t.canton || t.postal_code) {
       ld.address = {
         "@type": "PostalAddress",
+        streetAddress: t.address ?? undefined,
+        postalCode: t.postal_code ?? undefined,
         addressLocality: t.city ?? undefined,
         addressRegion: t.canton ?? undefined,
-        addressCountry: "CH",
+        addressCountry: t.country ?? "CH",
       };
+    }
+    if (typeof t.latitude === "number" && typeof t.longitude === "number") {
+      ld.geo = {
+        "@type": "GeoCoordinates",
+        latitude: t.latitude,
+        longitude: t.longitude,
+      };
+    }
+    if (t.canton) {
+      ld.areaServed = { "@type": "AdministrativeArea", name: t.canton };
+    }
+    if (t.website) {
+      ld.sameAs = [t.website];
+    }
+    if (t.price_min) {
+      const cur = t.currency ?? "CHF";
+      ld.priceRange = t.price_max
+        ? `${t.price_min}–${t.price_max} ${cur}`
+        : `${t.price_min} ${cur}`;
+    }
+    if (Array.isArray(t.languages) && t.languages.length) {
+      ld.availableLanguage = t.languages;
+    }
+    if (Array.isArray(t.specialties) && t.specialties.length) {
+      ld.knowsAbout = t.specialties;
     }
     if (t.title) ld.jobTitle = t.title;
     return {
       meta,
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...altLinks],
       scripts: [
         {
           type: "application/ld+json",
