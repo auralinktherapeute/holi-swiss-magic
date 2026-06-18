@@ -278,6 +278,7 @@ function SeoPage() {
           alignItems: "center",
           flexWrap: "wrap",
           overflow: "hidden",
+          backdropFilter: "blur(8px)",
         }}
       >
         <div style={{ display: "flex", justifyContent: "center", flex: "0 0 auto" }}>
