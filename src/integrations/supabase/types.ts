@@ -182,6 +182,261 @@ export type Database = {
           },
         ]
       }
+      crm_activities: {
+        Row: {
+          body: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          owner_id: string | null
+          therapist_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          owner_id?: string | null
+          therapist_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          owner_id?: string | null
+          therapist_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_client_contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_booking_at: string | null
+          last_name: string
+          next_booking_at: string | null
+          phone: string | null
+          private_notes: string | null
+          relation_status: string
+          session_type: string | null
+          tags: string[]
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_booking_at?: string | null
+          last_name: string
+          next_booking_at?: string | null
+          phone?: string | null
+          private_notes?: string | null
+          relation_status?: string
+          session_type?: string | null
+          tags?: string[]
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_booking_at?: string | null
+          last_name?: string
+          next_booking_at?: string | null
+          phone?: string | null
+          private_notes?: string | null
+          relation_status?: string
+          session_type?: string | null
+          tags?: string[]
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_client_contacts_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_client_contacts_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          assigned_to: string | null
+          canton: string | null
+          converted_therapist_id: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_contact_at: string | null
+          last_name: string
+          notes: string | null
+          phone: string | null
+          priority: string
+          source: string
+          specialty: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          canton?: string | null
+          converted_therapist_id?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_contact_at?: string | null
+          last_name: string
+          notes?: string | null
+          phone?: string | null
+          priority?: string
+          source?: string
+          specialty?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          canton?: string | null
+          converted_therapist_id?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_contact_at?: string | null
+          last_name?: string
+          notes?: string | null
+          phone?: string | null
+          priority?: string
+          source?: string
+          specialty?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_leads_converted_therapist_id_fkey"
+            columns: ["converted_therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_leads_converted_therapist_id_fkey"
+            columns: ["converted_therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          done_at: string | null
+          due_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          owner_id: string | null
+          priority: string
+          therapist_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          done_at?: string | null
+          due_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          owner_id?: string | null
+          priority?: string
+          therapist_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          done_at?: string | null
+          due_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          owner_id?: string | null
+          priority?: string
+          therapist_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tasks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drafts: {
         Row: {
           created_at: string
@@ -615,6 +870,7 @@ export type Database = {
           slug: string
           specialties: string[] | null
           status: string
+          subscription_plan: string
           title: string | null
           updated_at: string
           user_id: string
@@ -658,6 +914,7 @@ export type Database = {
           slug: string
           specialties?: string[] | null
           status?: string
+          subscription_plan?: string
           title?: string | null
           updated_at?: string
           user_id: string
@@ -701,6 +958,7 @@ export type Database = {
           slug?: string
           specialties?: string[] | null
           status?: string
+          subscription_plan?: string
           title?: string | null
           updated_at?: string
           user_id?: string
@@ -953,6 +1211,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
       notify_admin_event: {
         Args: {
           _kind: string
