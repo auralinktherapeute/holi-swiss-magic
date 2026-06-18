@@ -18,16 +18,12 @@ export function hreflangLinks(
 ) {
   const clean = pathWithoutLang.startsWith("/") ? pathWithoutLang : `/${pathWithoutLang}`;
   const tail = clean === "/" ? "" : clean;
-  const links = LANGS.map((l) => ({
-    rel: "alternate" as const,
+  const links: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.map((l) => ({
+    rel: "alternate",
     hreflang: l,
     href: `${SITE}/${l}${tail}`,
   }));
-  links.push({
-    rel: "alternate" as const,
-    hreflang: "x-default",
-    href: `${SITE}/${defaultLang}${tail}`,
-  });
+  links.push({ rel: "alternate", hreflang: "x-default", href: `${SITE}/${defaultLang}${tail}` });
   return links;
 }
 
