@@ -471,6 +471,52 @@
       "body": "Le site arrive très bientôt. En attendant, les inscriptions fonctionnent déjà et la liste d'attente est ouverte pour accueillir les premiers praticiens.",
       "cta": "Je rejoins la liste d'attente",
       "footnote": "Accès prioritaire · Places limitées"
+    },
+    "popup": {
+      "title": "Rejoignez la liste d'attente",
+      "subtitle": "Holiswiss ouvre bientôt — réservez votre place dès maintenant.",
+      "progress": "{{count}} / {{total}} praticiens déjà inscrits",
+      "privacy_policy_path": "/fr/confidentialite",
+      "privacy_note_before": "Vos données sont protégées.",
+      "steps": {
+        "infos": "Vos informations",
+        "message": "Votre message",
+        "aria": "Étape {{step}} sur 2"
+      },
+      "fields": {
+        "first_name": "Prénom",
+        "first_name_ph": "Votre prénom",
+        "last_name": "Nom",
+        "last_name_ph": "Votre nom",
+        "email": "Email",
+        "email_ph": "vous@exemple.ch",
+        "phone": "Téléphone",
+        "phone_ph": "+41 ...",
+        "specialty": "Spécialité",
+        "canton": "Canton",
+        "choose": "Choisir...",
+        "message": "Message (optionnel)",
+        "message_ph": "Quelques mots sur votre activité..."
+      },
+      "consent": {
+        "text": "J'accepte la",
+        "link": "politique de confidentialité",
+        "after": "."
+      },
+      "actions": {
+        "close": "Fermer",
+        "close_aria": "Fermer la fenêtre",
+        "continue": "Continuer",
+        "back": "Retour",
+        "submit": "Valider mon inscription",
+        "submitting": "Envoi en cours..."
+      },
+      "success": {
+        "title": "Inscription confirmée 🎉",
+        "body_html": "Merci <strong>{{name}}</strong>, un email de confirmation a été envoyé à <strong>{{email}}</strong>.",
+        "spam": "Pensez à vérifier vos <em>spams</em> si vous ne le voyez pas.",
+        "canton": "Canton : {{canton}}"
+      }
     }
   },
   "agenda_page": {
