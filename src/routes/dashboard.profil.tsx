@@ -680,6 +680,12 @@ function ProfilePage() {
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{s.duration_min} {t("profile_edit.min_short")}</span>
+                    {s.price_chf != null && (
+                      <span className="text-[#5cc8fa] font-medium">· {s.price_chf} CHF</span>
+                    )}
+                    {s.format && (
+                      <span className="capitalize">· {t(`profile_edit.format_${s.format}`, { defaultValue: s.format })}</span>
+                    )}
                     {s.description && <span className="truncate">· {s.description}</span>}
                   </div>
                 </div>
