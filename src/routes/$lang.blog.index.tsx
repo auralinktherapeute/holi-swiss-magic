@@ -83,7 +83,7 @@ function Page() {
               className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent"
               style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
             >
-              conseils holistiques
+              conseils
             </span>
           </h1>
           <p className="text-lg text-[#d4c4e0] max-w-xl mx-auto">
