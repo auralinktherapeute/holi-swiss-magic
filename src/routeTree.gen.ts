@@ -27,6 +27,7 @@ import { Route as DashboardAgendaRouteImport } from './routes/dashboard.agenda'
 import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abonnement'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
+import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
@@ -140,6 +141,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
 const AdminTherapeutesRoute = AdminTherapeutesRouteImport.update({
   id: '/therapeutes',
   path: '/therapeutes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSeoRoute = AdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminParametresRoute = AdminParametresRouteImport.update({
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
+  '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/dashboard/abonnement': typeof DashboardAbonnementRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
+  '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/dashboard/abonnement': typeof DashboardAbonnementRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/parametres': typeof AdminParametresRoute
+  '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/dashboard/abonnement': typeof DashboardAbonnementRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
+    | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
     | '/dashboard/abonnement'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
+    | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
     | '/dashboard/abonnement'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/moderation'
     | '/admin/parametres'
+    | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
     | '/dashboard/abonnement'
@@ -662,6 +674,13 @@ declare module '@tanstack/react-router' {
       path: '/therapeutes'
       fullPath: '/admin/therapeutes'
       preLoaderRoute: typeof AdminTherapeutesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/seo': {
+      id: '/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AdminSeoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/parametres': {
@@ -883,6 +902,7 @@ interface AdminRouteChildren {
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminParametresRoute: typeof AdminParametresRoute
+  AdminSeoRoute: typeof AdminSeoRoute
   AdminTherapeutesRoute: typeof AdminTherapeutesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -898,6 +918,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminListeAttenteRoute: AdminListeAttenteRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminParametresRoute: AdminParametresRoute,
+  AdminSeoRoute: AdminSeoRoute,
   AdminTherapeutesRoute: AdminTherapeutesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
   AdminIndexRoute: AdminIndexRoute,
