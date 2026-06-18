@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  MapPin, Star, BadgeCheck, Globe, Share2, Navigation2,
+  MapPin, Star, BadgeCheck, Globe, Share2,
   Shield, ChevronUp,
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
