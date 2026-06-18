@@ -143,7 +143,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,gallery_urls,is_premium,phone,email,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
+        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,gallery_urls,is_premium,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
