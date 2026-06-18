@@ -304,7 +304,14 @@
     "update_agenda": "Kalender aktualisieren",
     "write_article": "Artikel schreiben",
     "first_session": "Erstsitzung",
-    "follow_up": "Folgesitzung"
+    "follow_up": "Folgesitzung",
+    "progress_title": "Vervollständigen Sie Ihr Profil, um aufzufallen",
+    "step_profile": "Vervollständigen Sie Ihr Profil, um Ihre Sichtbarkeit zu verbessern",
+    "step_profile_cta": "Vervollständigen",
+    "step_agenda": "Fügen Sie Ihre Verfügbarkeiten hinzu, um erste Buchungen zu erhalten",
+    "step_agenda_cta": "Hinzufügen",
+    "step_content": "Veröffentlichen Sie einen Artikel oder eine Veranstaltung, um sichtbarer zu werden",
+    "step_content_cta": "Veröffentlichen"
   },
   "profile_edit": {
     "page_title": "Mein Profil bearbeiten",
