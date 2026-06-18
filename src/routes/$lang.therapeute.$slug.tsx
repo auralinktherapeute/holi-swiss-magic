@@ -40,7 +40,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   },
   head: ({ params, loaderData }) => {
     const t = loaderData?.therapist as
-      | { first_name?: string; last_name?: string; title?: string; city?: string; canton?: string; bio?: string; photo_url?: string; cover_image_url?: string }
+      | { first_name?: string; last_name?: string; title?: string; city?: string; canton?: string; bio?: string; photo_url?: string }
       | null
       | undefined;
     const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
     const fallback = `Profil de ${fullName}${role ? `, ${role}` : ""}. Prenez rendez-vous sur HoliSwiss.`;
     const description = (bio.length >= 50 ? bio : fallback).slice(0, 160);
-    const image = t.cover_image_url || t.photo_url;
+    const image = t.photo_url;
     const meta: Array<Record<string, string>> = [
       { title },
       { name: "description", content: description },
@@ -143,7 +143,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,cover_image_url,gallery_urls,is_premium,phone,email,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
+        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,gallery_urls,is_premium,phone,email,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
@@ -229,17 +229,10 @@ function Page() {
 
       {/* ── HERO ── */}
       <div className="relative overflow-hidden">
-        {th.cover_image_url ? (
-          <>
-            <img src={th.cover_image_url} alt="" className="h-64 w-full object-cover opacity-40" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0f0a1e]/60 to-[#0f0a1e]" />
-          </>
-        ) : (
-          <div
-            className="h-64 w-full"
-            style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
-          />
-        )}
+        <div
+          className="h-64 w-full"
+          style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
+        />
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-8 pt-4 sm:px-8">
           <div className="mx-auto max-w-5xl">
