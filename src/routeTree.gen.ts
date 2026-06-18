@@ -33,6 +33,7 @@ import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
 import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
@@ -174,6 +175,11 @@ const AdminEmailsRoute = AdminEmailsRouteImport.update({
   path: '/emails',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAvisRoute = AdminAvisRouteImport.update({
   id: '/avis',
   path: '/avis',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
@@ -331,6 +338,7 @@ export interface FileRoutesByTo {
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
@@ -378,6 +386,7 @@ export interface FileRoutesById {
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/admin/agents'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/liste-attente'
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/admin/agents'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/liste-attente'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/admin/agents'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/liste-attente'
@@ -732,6 +744,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/crm': {
+      id: '/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/avis': {
       id: '/admin/avis'
       path: '/avis'
@@ -918,6 +937,7 @@ interface AdminRouteChildren {
   AdminAgentsRoute: typeof AdminAgentsRoute
   AdminArticlesRoute: typeof AdminArticlesRoute
   AdminAvisRoute: typeof AdminAvisRoute
+  AdminCrmRoute: typeof AdminCrmRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEvenementsRoute: typeof AdminEvenementsRoute
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
@@ -934,6 +954,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAgentsRoute: AdminAgentsRoute,
   AdminArticlesRoute: AdminArticlesRoute,
   AdminAvisRoute: AdminAvisRoute,
+  AdminCrmRoute: AdminCrmRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEvenementsRoute: AdminEvenementsRoute,
   AdminListeAttenteRoute: AdminListeAttenteRoute,
