@@ -6,13 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Search, Users, TrendingUp, Crown, BellRing, Plus, X, Send,
-  CheckCircle2, Circle, Clock, AlertTriangle,
+  CheckCircle2, Circle, Clock, AlertTriangle, LayoutGrid, List as ListIcon, CheckSquare, BellRing as BellRingIcon,
 } from "lucide-react";
 import {
   listCrmLeads, getCrmAdminOverview, getCrmLeadDetail,
   updateCrmLeadStatus, addCrmNote, createCrmLead, listAdminTasks,
   completeCrmTask, createCrmTask, type CrmLead,
 } from "@/lib/crm.functions";
+import { LeadsListView, TasksCenter, RelancesCenter } from "@/components/crm/AdminCrmViews";
 
 export const Route = createFileRoute("/admin/crm")({
   component: AdminCrmPage,
@@ -77,6 +78,7 @@ function AdminCrmPage() {
   const [sourceFilter, setSourceFilter] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [showNewLead, setShowNewLead] = useState(false);
+  const [tab, setTab] = useState<"pipeline" | "list" | "tasks" | "relances">("pipeline");
 
   const overview = useQuery({
     queryKey: ["crm","overview"],
@@ -189,11 +191,46 @@ function AdminCrmPage() {
             <option value="import">Import</option>
           </select>
         </div>
+
+        {/* Onglets de vues */}
+        <nav aria-label="Vues CRM" style={{
+          display: "inline-flex", gap: 4, padding: 4, marginTop: 16,
+          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 12,
+        }}>
+          {([
+            { id: "pipeline", label: "Pipeline", icon: LayoutGrid },
+            { id: "list",     label: "Liste",    icon: ListIcon },
+            { id: "tasks",    label: "Tâches",   icon: CheckSquare },
+            { id: "relances", label: "Relances", icon: BellRingIcon },
+          ] as const).map((t) => {
+            const active = tab === t.id;
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                aria-pressed={active}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "8px 14px", minHeight: 36, borderRadius: 8,
+                  border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                  background: active ? "linear-gradient(135deg,#7c3aed,#5cc8fa)" : "transparent",
+                  color: active ? "white" : "#cbd5e1",
+                  transition: "background 160ms ease",
+                }}
+              >
+                <Icon size={14} aria-hidden /> {t.label}
+              </button>
+            );
+          })}
+        </nav>
       </header>
 
-      {/* Main: Kanban + sidebar */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 280px", gap: 16 }}>
-        <section aria-label="Pipeline des leads" style={{ overflowX: "auto" }}>
+      {/* Main : vue active + sidebar tâches (sauf si onglet Tâches/Relances dédié) */}
+      <div style={{ display: "grid", gridTemplateColumns: tab === "pipeline" ? "minmax(0,1fr) 280px" : "minmax(0,1fr)", gap: 16 }}>
+        <section aria-label="Vue CRM active" style={{ overflowX: "auto", minWidth: 0 }}>
+        {tab === "pipeline" && (
           <div style={{ display: "flex", gap: 12, minWidth: "fit-content", paddingBottom: 8 }}>
             {STATUS_COLUMNS.map((col) => {
               const items = grouped.get(col.id) ?? [];
@@ -263,9 +300,14 @@ function AdminCrmPage() {
               );
             })}
           </div>
+        )}
+        {tab === "list" && <LeadsListView leads={leadsQ.data ?? []} onOpen={(id) => setOpenLeadId(id)} />}
+        {tab === "tasks" && <TasksCenter />}
+        {tab === "relances" && <RelancesCenter onOpen={(id) => setOpenLeadId(id)} />}
         </section>
 
         {/* Sidebar tâches */}
+        {tab === "pipeline" && (
         <aside aria-label="Tâches admin">
           <Card>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
