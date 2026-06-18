@@ -598,3 +598,287 @@ function FilterRow({
     </div>
   );
 }
+
+/* ---------------------------------------------------------------- */
+/* Part 3 — Evolution chart                                          */
+/* ---------------------------------------------------------------- */
+
+type Period = 7 | 30 | 60 | 90;
+const PERIODS: { value: Period; label: string }[] = [
+  { value: 7,  label: "7 jours" },
+  { value: 30, label: "30 jours" },
+  { value: 60, label: "60 jours" },
+  { value: 90, label: "90 jours" },
+];
+
+function fmtDate(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("fr-CH", { day: "2-digit", month: "short" });
+}
+
+function ChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0].payload as SeoHistoryPoint & {
+    prevSeo?: number; prevGeo?: number; prevGlobal?: number;
+  };
+  const delta = (cur: number, prev?: number) => {
+    if (prev == null) return null;
+    const d = cur - prev;
+    if (d === 0) return <span style={{ color: "rgba(255,255,255,0.4)" }}> · =</span>;
+    return (
+      <span style={{ color: d > 0 ? "#86efac" : "#fca5a5", marginLeft: 4 }}>
+        {d > 0 ? "+" : ""}{d}
+      </span>
+    );
+  };
+  return (
+    <div style={{
+      background: "rgba(13,8,32,0.96)",
+      border: "1px solid rgba(139,92,246,0.35)",
+      borderRadius: 12, padding: "12px 14px",
+      color: "#fff", fontSize: 12.5, minWidth: 180,
+      boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
+    }}>
+      <div style={{ fontWeight: 600, marginBottom: 8, color: "#c4b5fd" }}>
+        {new Date(label + "T00:00:00").toLocaleDateString("fr-CH", {
+          weekday: "short", day: "2-digit", month: "long",
+        })}
+      </div>
+      <Row color="#fbbf24" label="Global" value={p.global} delta={delta(p.global, p.prevGlobal)} />
+      <Row color="#a78bfa" label="SEO"    value={p.seo}    delta={delta(p.seo,    p.prevSeo)} />
+      <Row color="#22d3ee" label="GEO"    value={p.geo}    delta={delta(p.geo,    p.prevGeo)} />
+      {p.hasReport && (
+        <div style={{
+          marginTop: 8, paddingTop: 8,
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          color: "rgba(255,255,255,0.6)", fontSize: 11,
+        }}>
+          📋 Rapport disponible — cliquez sur le point
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ color, label, value, delta }: { color: string; label: string; value: number; delta: ReactNode }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "2px 0" }}>
+      <span style={{ width: 8, height: 8, borderRadius: 999, background: color }} />
+      <span style={{ flex: 1, color: "rgba(255,255,255,0.7)" }}>{label}</span>
+      <span style={{ fontWeight: 700 }}>{value}</span>
+      {delta}
+    </div>
+  );
+}
+
+function EvolutionChart() {
+  const fetchHistory = useServerFn(getSeoHistory);
+  const [period, setPeriod] = useState<Period>(30);
+  const [selectedDay, setSelectedDay] = useState<SeoHistoryPoint | null>(null);
+
+  const { data: history = [], isLoading, error } = useQuery({
+    queryKey: ["seo-history", period],
+    queryFn: () => fetchHistory({ data: { days: period } }),
+    staleTime: 60_000,
+  });
+
+  // Enrich with previous-day values for tooltip delta.
+  const enriched = useMemo(() => {
+    return history.map((p, i) => ({
+      ...p,
+      prevSeo:    i > 0 ? history[i - 1].seo    : undefined,
+      prevGeo:    i > 0 ? history[i - 1].geo    : undefined,
+      prevGlobal: i > 0 ? history[i - 1].global : undefined,
+    }));
+  }, [history]);
+
+  // Report markers: a few days flagged as "audit complet" (every ~7d + last point).
+  const reportDays = useMemo(() => {
+    if (history.length === 0) return [] as SeoHistoryPoint[];
+    const step = Math.max(1, Math.floor(history.length / 6));
+    const picks: SeoHistoryPoint[] = [];
+    for (let i = history.length - 1; i >= 0; i -= step) picks.push(history[i]);
+    return picks;
+  }, [history]);
+
+  return (
+    <section style={{ marginTop: 28 }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexWrap: "wrap", gap: 12, marginBottom: 16,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <TrendingUp size={20} color="#a78bfa" />
+          <h2 style={{ margin: 0, color: "#fff", fontSize: 20, fontWeight: 700 }}>
+            Évolution des scores
+          </h2>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {PERIODS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => setPeriod(p.value)}
+              aria-pressed={period === p.value}
+              style={{
+                padding: "8px 14px", borderRadius: 10,
+                background: period === p.value
+                  ? "linear-gradient(135deg, #8b5cf6, #6366f1)"
+                  : "rgba(255,255,255,0.04)",
+                border: `1px solid ${period === p.value ? "transparent" : "rgba(255,255,255,0.08)"}`,
+                color: period === p.value ? "#fff" : "rgba(255,255,255,0.7)",
+                fontSize: 13, fontWeight: 600, cursor: "pointer", minHeight: 36,
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{
+        background: "linear-gradient(180deg, #181034, #110a26)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 20, padding: 20,
+      }}>
+        {isLoading ? (
+          <div style={{ height: 320, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.5)" }}>
+            <Loader2 size={22} style={{ animation: "adm-spin 1s linear infinite" }} />
+          </div>
+        ) : error ? (
+          <div style={{ padding: 24, color: "#fca5a5", fontSize: 13 }}>
+            Impossible de charger l'historique. {(error as Error).message}
+          </div>
+        ) : enriched.length === 0 ? (
+          <div style={{ padding: 24, color: "rgba(255,255,255,0.5)", fontSize: 13, textAlign: "center" }}>
+            Pas encore de données d'audit pour cette période.
+          </div>
+        ) : (
+          <>
+            {/* Legend */}
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 12, fontSize: 12.5 }}>
+              <LegendDot color="#fbbf24" label="Score combiné" />
+              <LegendDot color="#a78bfa" label="SEO" />
+              <LegendDot color="#22d3ee" label="GEO" />
+              <span style={{ color: "rgba(255,255,255,0.4)", marginLeft: "auto" }}>
+                Les bulles dorées marquent un audit complet — cliquez pour ouvrir le rapport du jour.
+              </span>
+            </div>
+
+            <div style={{ width: "100%", height: 340 }}>
+              <ResponsiveContainer>
+                <LineChart data={enriched} margin={{ top: 16, right: 12, left: -10, bottom: 4 }}>
+                  <defs>
+                    <filter id="seo-glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="2.5" result="b" />
+                      <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={fmtDate}
+                    stroke="rgba(255,255,255,0.35)"
+                    tick={{ fontSize: 11 }}
+                    minTickGap={24}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    stroke="rgba(255,255,255,0.35)"
+                    tick={{ fontSize: 11 }}
+                    width={36}
+                  />
+                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(167,139,250,0.3)", strokeWidth: 1 }} />
+                  <Line
+                    type="monotone" dataKey="seo" stroke="#a78bfa" strokeWidth={2}
+                    dot={false} activeDot={{ r: 5, stroke: "#fff", strokeWidth: 1 }}
+                    isAnimationActive animationDuration={1200} animationEasing="ease-out"
+                  />
+                  <Line
+                    type="monotone" dataKey="geo" stroke="#22d3ee" strokeWidth={2}
+                    dot={false} activeDot={{ r: 5, stroke: "#fff", strokeWidth: 1 }}
+                    isAnimationActive animationDuration={1400} animationEasing="ease-out"
+                  />
+                  <Line
+                    type="monotone" dataKey="global" stroke="#fbbf24" strokeWidth={2.5}
+                    dot={false} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 1.5 }}
+                    style={{ filter: "url(#seo-glow)" }}
+                    isAnimationActive animationDuration={1600} animationEasing="ease-out"
+                  />
+                  {reportDays.map((d) => (
+                    <ReferenceDot
+                      key={d.date}
+                      x={d.date}
+                      y={d.global}
+                      r={6}
+                      fill="#fbbf24"
+                      stroke="#fff"
+                      strokeWidth={1.5}
+                      onClick={() => setSelectedDay(d)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Day report drawer */}
+      {selectedDay && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            marginTop: 12, padding: 16, borderRadius: 14,
+            background: "rgba(251,191,36,0.08)",
+            border: "1px solid rgba(251,191,36,0.35)",
+            display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+          }}
+        >
+          <div style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: "rgba(251,191,36,0.18)", color: "#fbbf24",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <TrendingUp size={18} />
+          </div>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>
+              Audit du {new Date(selectedDay.date + "T00:00:00").toLocaleDateString("fr-CH", {
+                weekday: "long", day: "2-digit", month: "long", year: "numeric",
+              })}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, marginTop: 4 }}>
+              Global <strong style={{ color: "#fbbf24" }}>{selectedDay.global}</strong> ·
+              SEO <strong style={{ color: "#a78bfa" }}> {selectedDay.seo}</strong> ·
+              GEO <strong style={{ color: "#22d3ee" }}> {selectedDay.geo}</strong>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedDay(null)}
+            style={{
+              padding: "8px 14px", borderRadius: 10,
+              background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.8)",
+              border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer",
+              fontSize: 13, minHeight: 36,
+            }}
+          >
+            Fermer
+          </button>
+        </motion.div>
+      )}
+    </section>
+  );
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.7)" }}>
+      <span style={{ width: 10, height: 10, borderRadius: 999, background: color, boxShadow: `0 0 8px ${color}55` }} />
+      {label}
+    </span>
+  );
+}
