@@ -74,7 +74,10 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     };
     return {
       meta,
-      links: [{ rel: "canonical", href: url }],
+      links: [
+        { rel: "canonical", href: url },
+        ...hreflangLinks(`/evenements/${params.id}`),
+      ],
       scripts: [
         { type: "application/ld+json", children: JSON.stringify(eventLd) },
       ],
