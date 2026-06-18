@@ -311,6 +311,60 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          author_avatar_url: string | null
+          author_name: string | null
+          comment: string
+          created_at: string
+          id: string
+          rating: number
+          status: string
+          therapist_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_avatar_url?: string | null
+          author_name?: string | null
+          comment: string
+          created_at?: string
+          id?: string
+          rating: number
+          status?: string
+          therapist_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_avatar_url?: string | null
+          author_name?: string | null
+          comment?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          status?: string
+          therapist_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_documents: {
         Row: {
           created_at: string
@@ -785,6 +839,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }
       waiting_list_count: { Args: never; Returns: number }
     }
     Enums: {
