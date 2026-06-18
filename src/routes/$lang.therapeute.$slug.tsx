@@ -668,6 +668,22 @@ function Page() {
           <ChevronUp className="h-5 w-5" />
         </motion.button>
       )}
+
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 cursor-zoom-out"
+        >
+          <img
+            src={lightbox}
+            alt=""
+            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
