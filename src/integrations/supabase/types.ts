@@ -768,12 +768,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_badge_counts: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      notify_admin_event: {
+        Args: {
+          _kind: string
+          _link?: string
+          _subject: string
+          _summary: string
+        }
+        Returns: undefined
       }
       waiting_list_count: { Args: never; Returns: number }
     }
