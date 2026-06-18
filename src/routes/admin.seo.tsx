@@ -5,9 +5,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Gauge, RefreshCw, Sparkles, Search, Clock,
-  CheckCircle2, AlertTriangle, AlertOctagon, Filter, Loader2,
+  CheckCircle2, AlertTriangle, AlertOctagon, Filter, Loader2, TrendingUp,
 } from "lucide-react";
-import { listSeoFindings, updateSeoFindingStatus, type SeoFinding } from "@/lib/seo-audit.functions";
+import {
+  LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  CartesianGrid, ReferenceDot,
+} from "recharts";
+import {
+  listSeoFindings, updateSeoFindingStatus, getSeoHistory,
+  type SeoFinding, type SeoHistoryPoint,
+} from "@/lib/seo-audit.functions";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/seo")({ component: SeoPage });
@@ -284,13 +291,16 @@ function SeoPage() {
       {/* Part 2 — Detailed audit report */}
       <FindingsReport />
 
-      {/* Placeholder for Parts 3-4 */}
+      {/* Part 3 — Evolution chart */}
+      <EvolutionChart />
+
+      {/* Placeholder for Part 4 */}
       <div style={{
         marginTop: 24, padding: 24, borderRadius: 16,
         border: "1px dashed rgba(255,255,255,0.12)",
         color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center",
       }}>
-        Graphique d'évolution &amp; audit automatisé : à venir (parties 3 et 4).
+        Agent d'audit automatisé : à venir (partie 4).
       </div>
 
       <style>{`@keyframes adm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
