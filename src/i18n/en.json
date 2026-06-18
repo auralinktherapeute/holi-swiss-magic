@@ -471,6 +471,52 @@
       "body": "The site is arriving very soon. In the meantime, sign-ups are already working and the waiting list is open to welcome the first practitioners.",
       "cta": "Join the waiting list",
       "footnote": "Priority access · Limited spots"
+    },
+    "popup": {
+      "title": "Join the waiting list",
+      "subtitle": "Holiswiss is launching soon — reserve your spot now.",
+      "progress": "{{count}} / {{total}} practitioners already registered",
+      "privacy_policy_path": "/en/confidentialite",
+      "privacy_note_before": "Your data is protected.",
+      "steps": {
+        "infos": "Your details",
+        "message": "Your message",
+        "aria": "Step {{step}} of 2"
+      },
+      "fields": {
+        "first_name": "First name",
+        "first_name_ph": "Your first name",
+        "last_name": "Last name",
+        "last_name_ph": "Your last name",
+        "email": "Email",
+        "email_ph": "you@example.ch",
+        "phone": "Phone",
+        "phone_ph": "+41 ...",
+        "specialty": "Specialty",
+        "canton": "Canton",
+        "choose": "Choose...",
+        "message": "Message (optional)",
+        "message_ph": "A few words about your practice..."
+      },
+      "consent": {
+        "text": "I accept the",
+        "link": "privacy policy",
+        "after": "."
+      },
+      "actions": {
+        "close": "Close",
+        "close_aria": "Close window",
+        "continue": "Continue",
+        "back": "Back",
+        "submit": "Confirm registration",
+        "submitting": "Submitting..."
+      },
+      "success": {
+        "title": "Registration confirmed 🎉",
+        "body_html": "Thank you <strong>{{name}}</strong>, a confirmation email has been sent to <strong>{{email}}</strong>.",
+        "spam": "Remember to check your <em>spam</em> folder if you don't see it.",
+        "canton": "Canton: {{canton}}"
+      }
     }
   },
   "agenda_page": {

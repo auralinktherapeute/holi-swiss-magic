@@ -471,6 +471,52 @@
       "body": "Die Plattform startet in Kürze. Die Anmeldungen funktionieren bereits und die Warteliste ist offen, um die ersten Praktizierenden willkommen zu heißen.",
       "cta": "Ich trete der Warteliste bei",
       "footnote": "Prioritätszugang · Begrenzte Plätze"
+    },
+    "popup": {
+      "title": "Auf die Warteliste setzen",
+      "subtitle": "Holiswiss startet bald — sichern Sie sich jetzt Ihren Platz.",
+      "progress": "{{count}} / {{total}} Praktizierende bereits registriert",
+      "privacy_policy_path": "/de/confidentialite",
+      "privacy_note_before": "Ihre Daten sind geschützt.",
+      "steps": {
+        "infos": "Ihre Angaben",
+        "message": "Ihre Nachricht",
+        "aria": "Schritt {{step}} von 2"
+      },
+      "fields": {
+        "first_name": "Vorname",
+        "first_name_ph": "Ihr Vorname",
+        "last_name": "Nachname",
+        "last_name_ph": "Ihr Nachname",
+        "email": "E-Mail",
+        "email_ph": "sie@beispiel.ch",
+        "phone": "Telefon",
+        "phone_ph": "+41 ...",
+        "specialty": "Fachgebiet",
+        "canton": "Kanton",
+        "choose": "Auswählen...",
+        "message": "Nachricht (optional)",
+        "message_ph": "Ein paar Worte zu Ihrer Tätigkeit..."
+      },
+      "consent": {
+        "text": "Ich akzeptiere die",
+        "link": "Datenschutzerklärung",
+        "after": "."
+      },
+      "actions": {
+        "close": "Schliessen",
+        "close_aria": "Fenster schliessen",
+        "continue": "Weiter",
+        "back": "Zurück",
+        "submit": "Registrierung bestätigen",
+        "submitting": "Wird gesendet..."
+      },
+      "success": {
+        "title": "Registrierung bestätigt 🎉",
+        "body_html": "Vielen Dank <strong>{{name}}</strong>, eine Bestätigungs-E-Mail wurde an <strong>{{email}}</strong> gesendet.",
+        "spam": "Bitte prüfen Sie auch Ihren <em>Spam</em>-Ordner.",
+        "canton": "Kanton: {{canton}}"
+      }
     }
   },
   "agenda_page": {
