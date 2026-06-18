@@ -401,6 +401,54 @@ export type Database = {
           },
         ]
       }
+      seo_findings: {
+        Row: {
+          action: string
+          category: string
+          code: string
+          created_at: string
+          description: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          category: string
+          code: string
+          created_at?: string
+          description: string
+          id?: string
+          priority: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       therapist_documents: {
         Row: {
           created_at: string
