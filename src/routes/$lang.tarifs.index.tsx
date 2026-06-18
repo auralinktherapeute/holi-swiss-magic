@@ -5,6 +5,35 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/$lang/tarifs/")({
   component: PricingPage,
+  head: ({ params }) => {
+    const lang = params.lang;
+    const titles: Record<string, string> = {
+      fr: "Tarifs Holiswiss — Plans pour thérapeutes",
+      de: "Holiswiss Preise — Pläne für Therapeuten",
+      it: "Prezzi Holiswiss — Piani per terapeuti",
+      en: "Holiswiss Pricing — Plans for therapists",
+    };
+    const descs: Record<string, string> = {
+      fr: "Comparez les plans Holiswiss : gratuit, Essentiel à 49 CHF, Élite à 99 CHF. Visibilité, réservation en ligne, statistiques et support dédié.",
+      de: "Vergleichen Sie Holiswiss-Pläne: kostenlos, Essentiel zu 49 CHF, Élite zu 99 CHF. Sichtbarkeit, Online-Buchung, Statistiken, dedizierter Support.",
+      it: "Confronta i piani Holiswiss: gratuito, Essentiel a 49 CHF, Élite a 99 CHF. Visibilità, prenotazione online, statistiche e supporto dedicato.",
+      en: "Compare Holiswiss plans: free, Essentiel at CHF 49, Élite at CHF 99. Visibility, online booking, analytics and dedicated support.",
+    };
+    const title = titles[lang] ?? titles.fr;
+    const description = descs[lang] ?? descs.fr;
+    const url = `https://holiswiss.ch/${lang}/tarifs`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
 });
 
 function PricingPage() {

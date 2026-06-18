@@ -52,7 +52,33 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
       meta.push({ property: "og:image", content: e.image_signed_url });
       meta.push({ name: "twitter:image", content: e.image_signed_url });
     }
-    return { meta, links: [{ rel: "canonical", href: url }] };
+    const startDate = e.start_time
+      ? `${e.event_date}T${e.start_time}`
+      : e.event_date;
+    const eventLd: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: e.title,
+      startDate,
+      description: e.short_description || e.long_description || undefined,
+      eventStatus: "https://schema.org/EventScheduled",
+      eventAttendanceMode: e.is_online
+        ? "https://schema.org/OnlineEventAttendanceMode"
+        : "https://schema.org/OfflineEventAttendanceMode",
+      location: e.is_online
+        ? { "@type": "VirtualLocation", url }
+        : { "@type": "Place", name: e.location || "Suisse", address: e.location || "Suisse" },
+      image: e.image_signed_url ? [e.image_signed_url] : undefined,
+      organizer: { "@type": "Organization", name: "HoliSwiss", url: SITE },
+      url,
+    };
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        { type: "application/ld+json", children: JSON.stringify(eventLd) },
+      ],
+    };
   },
 });
 

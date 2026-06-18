@@ -3,7 +3,7 @@ import { ArrowLeft, CalendarDays, Clock, Tag, Sparkles, Heart, Brain, Wind, Shie
 
 const SITE = "https://holiswiss.ch";
 const SLUG = "qu-est-ce-que-la-sophrologie";
-const TITLE = "Qu'est-ce que la sophrologie ? Bienfaits et fonctionnement";
+const TITLE = "Sophrologie : bienfaits et déroulement d'une séance";
 const DESCRIPTION =
   "Découvrez la sophrologie : méthode douce de relaxation et de gestion du stress. Bienfaits, déroulement d'une séance, et comment trouver un sophrologue en Suisse.";
 const PUBLISHED_AT = "2026-06-18";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
   component: Page,
   head: ({ params }) => {
     const url = `${SITE}/${params.lang}/blog/${SLUG}`;
-    const title = `${TITLE} | HoliSwiss`.slice(0, 70);
+    const title = `${TITLE} | HoliSwiss`;
     return {
       meta: [
         { title },

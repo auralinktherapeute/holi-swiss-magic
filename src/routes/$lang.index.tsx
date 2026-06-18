@@ -12,6 +12,35 @@ import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassur
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
+  head: ({ params }) => {
+    const lang = params.lang;
+    const titles: Record<string, string> = {
+      fr: "Holiswiss — Thérapeutes holistiques en Suisse",
+      de: "Holiswiss — Ganzheitliche Therapeuten in der Schweiz",
+      it: "Holiswiss — Terapeuti olistici in Svizzera",
+      en: "Holiswiss — Holistic therapists across Switzerland",
+    };
+    const descs: Record<string, string> = {
+      fr: "Trouvez un thérapeute certifié près de chez vous : sophrologie, hypnose, naturopathie, méditation. 26 cantons, profils vérifiés, réservation en ligne.",
+      de: "Finden Sie zertifizierte Therapeuten in Ihrer Nähe: Sophrologie, Hypnose, Naturheilkunde, Meditation. 26 Kantone, geprüfte Profile, Online-Buchung.",
+      it: "Trova terapeuti certificati vicino a te: sofrologia, ipnosi, naturopatia, meditazione. 26 cantoni, profili verificati, prenotazione online.",
+      en: "Find certified holistic therapists near you: sophrology, hypnosis, naturopathy, meditation. 26 cantons, verified profiles, online booking.",
+    };
+    const title = titles[lang] ?? titles.fr;
+    const description = descs[lang] ?? descs.fr;
+    const url = `https://holiswiss.ch/${lang}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
 });
 
 function HomePage() {
