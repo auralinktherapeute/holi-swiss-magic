@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Gauge, RefreshCw, Sparkles, Search, Clock,
@@ -389,7 +389,21 @@ function SeoPage() {
         </motion.div>
       )}
 
-      <style>{`@keyframes adm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes adm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes adm-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); }
+          50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+        }
+        .adm-critical-badge { animation: adm-pulse 1.8s ease-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
