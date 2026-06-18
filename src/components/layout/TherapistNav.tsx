@@ -5,6 +5,7 @@ import { Logo } from "@/components/holiswiss/Logo";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
+import { AccountManageDialog } from "@/components/dashboard/AccountManageDialog";
 import {
   LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
   Star, CalendarDays, CreditCard, Gift, Settings,
@@ -70,6 +71,7 @@ export function TherapistNav() {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate">{t("dashboard.therapist_label")}</div>
           <div className="text-xs text-muted-foreground truncate">{t("dashboard.demo_account")}</div>
+          <div className="mt-1"><AccountManageDialog /></div>
         </div>
         <Settings className="h-4 w-4 text-muted-foreground" />
       </div>
