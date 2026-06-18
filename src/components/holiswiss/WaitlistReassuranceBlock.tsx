@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function openWaitlist() {
   if (typeof window === "undefined") return;
@@ -9,6 +10,7 @@ function openWaitlist() {
  * Reassurance block for the homepage — luminous glass refinement direction.
  */
 export function WaitlistReassuranceBlock() {
+  const { t } = useTranslation();
   return (
     <section
       aria-labelledby="waitlist-reassurance-title"
@@ -29,13 +31,11 @@ export function WaitlistReassuranceBlock() {
             className="mb-4 font-serif italic text-2xl sm:text-3xl text-white"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
-            Ouverture imminente
+            {t("waitlist.reassurance.title")}
           </h2>
 
           <p className="mb-8 max-w-md text-sm sm:text-base leading-relaxed text-purple-100/75">
-            Le site arrive très bientôt. En attendant, les inscriptions fonctionnent
-            déjà et la liste d&apos;attente est ouverte pour accueillir les premiers
-            praticiens.
+            {t("waitlist.reassurance.body")}
           </p>
 
           <button
@@ -43,11 +43,11 @@ export function WaitlistReassuranceBlock() {
             onClick={openWaitlist}
             className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-sm font-semibold text-[#0a0514] shadow-[0_0_24px_rgba(255,255,255,0.18)] transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
           >
-            Je rejoins la liste d&apos;attente
+            {t("waitlist.reassurance.cta")}
           </button>
 
           <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-purple-300/60 font-medium">
-            Accès prioritaire · Places limitées
+            {t("waitlist.reassurance.footnote")}
           </p>
         </div>
       </div>
