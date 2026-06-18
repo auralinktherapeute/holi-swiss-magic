@@ -8,6 +8,7 @@ import {
 import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
+import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
@@ -62,6 +63,9 @@ function HomePage() {
           })}
         </div>
       </section>
+
+      {/* Reassurance block — early access / waiting list */}
+      <WaitlistReassuranceBlock />
 
       {/* Pricing teaser */}
       <section className="bg-[#2d1248]">
