@@ -30,7 +30,7 @@ export type CrmActivity = {
   type: "email" | "call" | "note" | "status_change" | "task" | "booking" | "review" | "message";
   title: string;
   body: string | null;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, string | number | boolean | null>;
   occurred_at: string;
 };
 
