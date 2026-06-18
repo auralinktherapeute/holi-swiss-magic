@@ -52,3 +52,39 @@ export const updateSeoFindingStatus = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type SeoHistoryPoint = {
+  date: string;       // ISO yyyy-mm-dd
+  seo: number;
+  geo: number;
+  global: number;
+  hasReport: boolean; // whether a full report exists for that day
+};
+
+export const getSeoHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { days: number }) =>
+    z.object({ days: z.number().int().min(1).max(365) }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<SeoHistoryPoint[]> => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date();
+    since.setDate(since.getDate() - (data.days - 1));
+    const sinceStr = since.toISOString().slice(0, 10);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("seo_audit_history")
+      .select("audit_date,seo_score,geo_score,global_score,summary")
+      .gte("audit_date", sinceStr)
+      .order("audit_date", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    return (rows ?? []).map((r) => ({
+      date: r.audit_date as string,
+      seo: r.seo_score as number,
+      geo: r.geo_score as number,
+      global: r.global_score as number,
+      hasReport: !!r.summary,
+    }));
+  });
