@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -329,7 +329,7 @@ type PriorityFilter = "all" | SeoFinding["priority"];
 
 function FilterChip({
   active, onClick, children,
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+}: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
@@ -573,7 +573,7 @@ function FindingsReport() {
 
 function FilterRow({
   label, icon, children,
-}: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+}: { label: string; icon?: ReactNode; children: ReactNode }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <div style={{
