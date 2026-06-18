@@ -461,8 +461,8 @@ function FilterChip({
 }
 
 function FindingCard({
-  finding, onResolve, busy,
-}: { finding: SeoFinding; onResolve: () => void; busy: boolean }) {
+  finding, onResolve, busy, index,
+}: { finding: SeoFinding; onResolve: () => void; busy: boolean; index: number }) {
   const sev = SEVERITY_META[finding.severity];
   const prio = PRIORITY_META[finding.priority];
   const resolved = finding.status === "resolved";
@@ -471,9 +471,10 @@ function FindingCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      exit={{ opacity: 0, y: -8, transition: { duration: 0.18 } }}
+      transition={{ duration: 0.32, ease: "easeOut", delay: Math.min(index, 10) * 0.08 }}
       style={{
         background: resolved
           ? "linear-gradient(180deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02))"
@@ -497,7 +498,9 @@ function FindingCard({
           <span style={{
             padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 600,
             background: sev.bg, color: sev.color, letterSpacing: 0.3,
-          }}>{sev.label}</span>
+          }}
+          className={finding.severity === "critical" && !resolved ? "adm-critical-badge" : undefined}
+          >{sev.label}</span>
           <span style={{
             padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 600,
             background: prio.bg, color: prio.color,
