@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang } from "@/lib/articles.functions";
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { hreflangLinks } from "@/lib/seo";
 
 const SITE = "https://holiswiss.ch";
 
@@ -72,7 +73,10 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     if (updatedAt) ldArticle.dateModified = updatedAt;
     return {
       meta,
-      links: [{ rel: "canonical", href: url }],
+      links: [
+        { rel: "canonical", href: url },
+        ...hreflangLinks(`/blog/${params.slug}`),
+      ],
       scripts: [
         {
           type: "application/ld+json",
