@@ -12,7 +12,38 @@ const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
 );
 
-export const Route = createFileRoute("/$lang/therapeutes/")({ component: Page });
+export const Route = createFileRoute("/$lang/therapeutes/")({
+  component: Page,
+  head: ({ params }) => {
+    const lang = params.lang;
+    const titles: Record<string, string> = {
+      fr: "Trouver un thérapeute en Suisse — Holiswiss",
+      de: "Therapeuten in der Schweiz finden — Holiswiss",
+      it: "Trovare un terapeuta in Svizzera — Holiswiss",
+      en: "Find a therapist in Switzerland — Holiswiss",
+    };
+    const descs: Record<string, string> = {
+      fr: "Annuaire des thérapeutes holistiques en Suisse : carte interactive, 26 cantons, filtres par spécialité et langue. Profils vérifiés et avis authentiques.",
+      de: "Verzeichnis ganzheitlicher Therapeuten in der Schweiz: interaktive Karte, 26 Kantone, Filter nach Fachgebiet und Sprache. Geprüfte Profile und echte Bewertungen.",
+      it: "Elenco dei terapeuti olistici in Svizzera: mappa interattiva, 26 cantoni, filtri per specialità e lingua. Profili verificati e recensioni autentiche.",
+      en: "Directory of holistic therapists in Switzerland: interactive map, 26 cantons, filters by specialty and language. Verified profiles and authentic reviews.",
+    };
+    const title = titles[lang] ?? titles.fr;
+    const description = descs[lang] ?? descs.fr;
+    const url = `https://holiswiss.ch/${lang}/therapeutes`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
+});
 
 type Therapist = {
   id: string; slug: string; first_name: string; last_name: string;
@@ -84,13 +115,16 @@ function Page() {
 
       {/* ── Header barre ── */}
       <div className="flex items-center gap-3 border-b border-[rgba(184,110,249,0.15)] bg-[#0f0a1e] px-4 py-3">
+        <h1 className="sr-only">{t("therapists_directory.h1", "Trouver un thérapeute en Suisse")}</h1>
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.35)]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label={t("therapist_profile.search_placeholder")}
+            type="search"
             placeholder={t("therapist_profile.search_placeholder")}
-            className="w-full rounded-xl border border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.06)] py-2 pl-9 pr-4 text-sm text-white placeholder-[rgba(255,255,255,0.35)] outline-none focus:border-[#b86ef9] transition"
+            className="w-full rounded-xl border border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.06)] py-2 pl-9 pr-4 text-sm text-white placeholder-[rgba(255,255,255,0.6)] outline-none focus:border-[#b86ef9] transition"
           />
         </div>
         <span className="hidden sm:block text-sm text-[rgba(255,255,255,0.45)]">

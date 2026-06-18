@@ -121,7 +121,12 @@ function VariantSplit() {
           <div className="hv-slide-up relative max-w-xl rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl" style={{ animationDelay: "450ms" }}>
             <div className="flex items-center">
               <Search className="ml-4 h-5 w-5 text-[#b9a4d4]" />
-              <input className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#a89bc4] focus:outline-none" placeholder={t("hero.search_placeholder")} />
+              <input
+                type="search"
+                aria-label={t("hero.search_placeholder")}
+                className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#c4b5dd] focus:outline-none"
+                placeholder={t("hero.search_placeholder")}
+              />
               <Link to="/$lang/therapeutes" params={{ lang }}>
                 <Button className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">{t("hero.search_btn")}</Button>
               </Link>
@@ -178,7 +183,12 @@ function VariantGlass() {
             </p>
             <div className="mx-auto mt-8 flex max-w-xl items-center rounded-xl border border-[rgba(184,110,249,0.25)] bg-white/[0.04] p-1.5">
               <Search className="ml-3 h-5 w-5 text-[#b9a4d4]" />
-              <input className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#a89bc4] focus:outline-none" placeholder={t("hero.glass_placeholder")} />
+              <input
+                type="search"
+                aria-label={t("hero.glass_placeholder")}
+                className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#c4b5dd] focus:outline-none"
+                placeholder={t("hero.glass_placeholder")}
+              />
               <Button className="h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">{t("hero.search_btn")}</Button>
             </div>
           </div>
