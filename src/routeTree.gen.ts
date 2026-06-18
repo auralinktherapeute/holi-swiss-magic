@@ -21,6 +21,7 @@ import { Route as DashboardReservationsRouteImport } from './routes/dashboard.re
 import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
 import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
+import { Route as DashboardCrmRouteImport } from './routes/dashboard.crm'
 import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
 import { Route as DashboardArticlesRouteImport } from './routes/dashboard.articles'
 import { Route as DashboardAgendaRouteImport } from './routes/dashboard.agenda'
@@ -33,6 +34,7 @@ import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
 import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
@@ -114,6 +116,11 @@ const DashboardEvenementsRoute = DashboardEvenementsRouteImport.update({
   path: '/evenements',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardCrmRoute = DashboardCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAvisRoute = DashboardAvisRouteImport.update({
   id: '/avis',
   path: '/avis',
@@ -172,6 +179,11 @@ const AdminEvenementsRoute = AdminEvenementsRouteImport.update({
 const AdminEmailsRoute = AdminEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAvisRoute = AdminAvisRouteImport.update({
@@ -288,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
@@ -300,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
   '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
@@ -331,6 +345,7 @@ export interface FileRoutesByTo {
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
@@ -343,6 +358,7 @@ export interface FileRoutesByTo {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
   '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
@@ -378,6 +394,7 @@ export interface FileRoutesById {
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
@@ -390,6 +407,7 @@ export interface FileRoutesById {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
   '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
@@ -426,6 +444,7 @@ export interface FileRouteTypes {
     | '/admin/agents'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/liste-attente'
@@ -438,6 +457,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/articles'
     | '/dashboard/avis'
+    | '/dashboard/crm'
     | '/dashboard/evenements'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
@@ -469,6 +489,7 @@ export interface FileRouteTypes {
     | '/admin/agents'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/liste-attente'
@@ -481,6 +502,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/articles'
     | '/dashboard/avis'
+    | '/dashboard/crm'
     | '/dashboard/evenements'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
@@ -515,6 +537,7 @@ export interface FileRouteTypes {
     | '/admin/agents'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/liste-attente'
@@ -527,6 +550,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/articles'
     | '/dashboard/avis'
+    | '/dashboard/crm'
     | '/dashboard/evenements'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
@@ -648,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEvenementsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/crm': {
+      id: '/dashboard/crm'
+      path: '/crm'
+      fullPath: '/dashboard/crm'
+      preLoaderRoute: typeof DashboardCrmRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/avis': {
       id: '/dashboard/avis'
       path: '/avis'
@@ -730,6 +761,13 @@ declare module '@tanstack/react-router' {
       path: '/emails'
       fullPath: '/admin/emails'
       preLoaderRoute: typeof AdminEmailsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/crm': {
+      id: '/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/avis': {
@@ -918,6 +956,7 @@ interface AdminRouteChildren {
   AdminAgentsRoute: typeof AdminAgentsRoute
   AdminArticlesRoute: typeof AdminArticlesRoute
   AdminAvisRoute: typeof AdminAvisRoute
+  AdminCrmRoute: typeof AdminCrmRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEvenementsRoute: typeof AdminEvenementsRoute
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
@@ -934,6 +973,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAgentsRoute: AdminAgentsRoute,
   AdminArticlesRoute: AdminArticlesRoute,
   AdminAvisRoute: AdminAvisRoute,
+  AdminCrmRoute: AdminCrmRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEvenementsRoute: AdminEvenementsRoute,
   AdminListeAttenteRoute: AdminListeAttenteRoute,
@@ -952,6 +992,7 @@ interface DashboardRouteChildren {
   DashboardAgendaRoute: typeof DashboardAgendaRoute
   DashboardArticlesRoute: typeof DashboardArticlesRoute
   DashboardAvisRoute: typeof DashboardAvisRoute
+  DashboardCrmRoute: typeof DashboardCrmRoute
   DashboardEvenementsRoute: typeof DashboardEvenementsRoute
   DashboardParrainageRoute: typeof DashboardParrainageRoute
   DashboardProfilRoute: typeof DashboardProfilRoute
@@ -964,6 +1005,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAgendaRoute: DashboardAgendaRoute,
   DashboardArticlesRoute: DashboardArticlesRoute,
   DashboardAvisRoute: DashboardAvisRoute,
+  DashboardCrmRoute: DashboardCrmRoute,
   DashboardEvenementsRoute: DashboardEvenementsRoute,
   DashboardParrainageRoute: DashboardParrainageRoute,
   DashboardProfilRoute: DashboardProfilRoute,
