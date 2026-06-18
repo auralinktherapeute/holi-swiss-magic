@@ -8,7 +8,7 @@ import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
 import { AccountManageDialog } from "@/components/dashboard/AccountManageDialog";
 import {
   LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
-  Star, CalendarDays, CreditCard, Gift, Settings,
+  Star, CalendarDays, CreditCard, Gift, Settings, Crown,
 } from "lucide-react";
 
 export function TherapistNav() {
@@ -37,6 +37,7 @@ export function TherapistNav() {
     { to: "/dashboard/articles", icon: FileText, label: t("dashboard.articles") },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
+    { to: "/dashboard/crm", icon: Crown, label: "CRM Elite" },
     { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
   ];
