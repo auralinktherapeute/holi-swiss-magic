@@ -262,3 +262,49 @@ export const listAdminTasks = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []) as CrmTask[];
   });
+
+/** Centre des tâches admin — toutes tâches (non liées à un thérapeute) + filtres. */
+export const listAdminTasksAll = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { status?: "open" | "done" | "overdue"; priority?: "low" | "normal" | "high" }) =>
+    z.object({
+      status: z.enum(["open","done","overdue"]).optional(),
+      priority: z.enum(["low","normal","high"]).optional(),
+    }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<CrmTask[]> => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin.from("crm_tasks").select("*").is("therapist_id", null).limit(200);
+    if (data.priority) q = q.eq("priority", data.priority);
+    if (data.status === "open") q = q.is("done_at", null);
+    if (data.status === "done") q = q.not("done_at", "is", null);
+    if (data.status === "overdue") q = q.is("done_at", null).lt("due_at", new Date().toISOString());
+    q = q.order("due_at", { ascending: true, nullsFirst: false });
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as CrmTask[];
+  });
+
+/** Centre de relances admin — leads en statut followup + leads sans contact > seuil. */
+export const listAdminRelances = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const thresholds = [7, 14, 30];
+    const since = (days: number) => new Date(Date.now() - days * 86400_000).toISOString();
+    const [followup, stale7, stale14, stale30] = await Promise.all([
+      supabaseAdmin.from("crm_leads").select("*").eq("status", "followup").order("updated_at", { ascending: true }).limit(200),
+      supabaseAdmin.from("crm_leads").select("id,first_name,last_name,email,canton,specialty,status,priority,last_contact_at,created_at", { count: "exact", head: false })
+        .in("status", ["new","pending","contacted"]).lt("created_at", since(7)).is("last_contact_at", null).limit(200),
+      supabaseAdmin.from("crm_leads").select("id", { count: "exact", head: true }).in("status", ["new","pending","contacted"]).lt("created_at", since(14)),
+      supabaseAdmin.from("crm_leads").select("id", { count: "exact", head: true }).in("status", ["new","pending","contacted"]).lt("created_at", since(30)),
+    ]);
+    return {
+      followup: (followup.data ?? []) as CrmLead[],
+      staleLeads: (stale7.data ?? []) as CrmLead[],
+      buckets: { d7: (stale7.data ?? []).length, d14: stale14.count ?? 0, d30: stale30.count ?? 0 },
+      thresholds,
+    };
+  });
