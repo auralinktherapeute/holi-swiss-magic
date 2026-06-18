@@ -509,6 +509,7 @@ export type Database = {
           currency: string | null
           email: string | null
           first_name: string
+          gallery_urls: Json
           google_reviews_url: string | null
           id: string
           ide_verified: boolean
@@ -551,6 +552,7 @@ export type Database = {
           currency?: string | null
           email?: string | null
           first_name: string
+          gallery_urls?: Json
           google_reviews_url?: string | null
           id?: string
           ide_verified?: boolean
@@ -593,6 +595,7 @@ export type Database = {
           currency?: string | null
           email?: string | null
           first_name?: string
+          gallery_urls?: Json
           google_reviews_url?: string | null
           id?: string
           ide_verified?: boolean
