@@ -8,6 +8,7 @@ import {
 import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
+import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
