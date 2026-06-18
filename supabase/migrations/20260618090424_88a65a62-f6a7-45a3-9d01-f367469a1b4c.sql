@@ -1,0 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+ALTER TABLE public.seo_audit_history
+  ADD COLUMN IF NOT EXISTS critical_count integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS resolved_count integer NOT NULL DEFAULT 0;

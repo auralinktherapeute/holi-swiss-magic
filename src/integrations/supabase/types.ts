@@ -405,27 +405,33 @@ export type Database = {
         Row: {
           audit_date: string
           created_at: string
+          critical_count: number
           geo_score: number
           global_score: number
           id: string
+          resolved_count: number
           seo_score: number
           summary: Json | null
         }
         Insert: {
           audit_date: string
           created_at?: string
+          critical_count?: number
           geo_score: number
           global_score: number
           id?: string
+          resolved_count?: number
           seo_score: number
           summary?: Json | null
         }
         Update: {
           audit_date?: string
           created_at?: string
+          critical_count?: number
           geo_score?: number
           global_score?: number
           id?: string
+          resolved_count?: number
           seo_score?: number
           summary?: Json | null
         }
