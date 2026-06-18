@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Star, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+
+const sb = supabase as any;
 
 type Existing = { id: string; rating: number; comment: string; status: string } | null;
 
@@ -45,7 +47,7 @@ export function ReviewForm({
       setExisting(null);
       return;
     }
-    supabase
+    sb
       .from("reviews")
       .select("id,rating,comment,status")
       .eq("therapist_id", therapistId)
@@ -94,8 +96,8 @@ export function ReviewForm({
     };
 
     const res = existing
-      ? await supabase.from("reviews").update(payload).eq("id", existing.id)
-      : await supabase.from("reviews").insert(payload);
+      ? await sb.from("reviews").update(payload).eq("id", existing.id)
+      : await sb.from("reviews").insert(payload);
 
     setSubmitting(false);
     if (res.error) {
@@ -107,7 +109,7 @@ export function ReviewForm({
     onSubmitted?.();
     // refresh local existing
     if (user) {
-      const { data } = await supabase
+      const { data } = await sb
         .from("reviews")
         .select("id,rating,comment,status")
         .eq("therapist_id", therapistId)
