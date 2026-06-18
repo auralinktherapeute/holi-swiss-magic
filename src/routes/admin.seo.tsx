@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Gauge, RefreshCw, Sparkles, Search, Clock } from "lucide-react";
+import {
+  Gauge, RefreshCw, Sparkles, Search, Clock,
+  CheckCircle2, AlertTriangle, AlertOctagon, Filter, Loader2,
+} from "lucide-react";
+import { listSeoFindings, updateSeoFindingStatus, type SeoFinding } from "@/lib/seo-audit.functions";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/seo")({ component: SeoPage });
@@ -275,16 +281,310 @@ function SeoPage() {
         </div>
       </motion.section>
 
-      {/* Placeholder for Parts 2-4 */}
+      {/* Part 2 — Detailed audit report */}
+      <FindingsReport />
+
+      {/* Placeholder for Parts 3-4 */}
       <div style={{
         marginTop: 24, padding: 24, borderRadius: 16,
         border: "1px dashed rgba(255,255,255,0.12)",
         color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center",
       }}>
-        Rapport détaillé et graphique d'évolution : à venir (parties 2, 3 et 4).
+        Graphique d'évolution &amp; audit automatisé : à venir (parties 3 et 4).
       </div>
 
       <style>{`@keyframes adm-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Part 2 — Detailed findings report                                 */
+/* ---------------------------------------------------------------- */
+
+const CATEGORY_LABELS: Record<SeoFinding["category"], string> = {
+  seo_onpage: "SEO On-Page",
+  seo_technical: "SEO Technique",
+  seo_local: "SEO Local",
+  geo: "GEO (IA)",
+  multilang: "Multilingue",
+  accessibility: "Accessibilité",
+};
+
+const SEVERITY_META: Record<SeoFinding["severity"], { color: string; bg: string; icon: any; label: string; dot: string }> = {
+  critical: { color: "#fca5a5", bg: "rgba(239,68,68,0.12)", icon: AlertOctagon, label: "Critique", dot: "🔴" },
+  warning:  { color: "#fbbf24", bg: "rgba(245,158,11,0.12)", icon: AlertTriangle, label: "À améliorer", dot: "🟡" },
+  good:     { color: "#86efac", bg: "rgba(34,197,94,0.12)",  icon: CheckCircle2, label: "Bon", dot: "🟢" },
+};
+
+const PRIORITY_META: Record<SeoFinding["priority"], { color: string; bg: string; label: string }> = {
+  P1: { color: "#fca5a5", bg: "rgba(239,68,68,0.15)",  label: "P1 · Urgent" },
+  P2: { color: "#fbbf24", bg: "rgba(245,158,11,0.15)", label: "P2 · Important" },
+  P3: { color: "#a5b4fc", bg: "rgba(99,102,241,0.15)", label: "P3 · À planifier" },
+};
+
+type StatusFilter = "all" | "critical" | "warning" | "resolved";
+type CategoryFilter = "all" | SeoFinding["category"];
+type PriorityFilter = "all" | SeoFinding["priority"];
+
+function FilterChip({
+  active, onClick, children,
+}: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: "8px 14px", borderRadius: 999,
+        background: active ? "linear-gradient(135deg, #8b5cf6, #6366f1)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${active ? "transparent" : "rgba(255,255,255,0.08)"}`,
+        color: active ? "#fff" : "rgba(255,255,255,0.7)",
+        fontSize: 13, fontWeight: 500, cursor: "pointer",
+        minHeight: 36, transition: "background .15s ease",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FindingCard({
+  finding, onResolve, busy,
+}: { finding: SeoFinding; onResolve: () => void; busy: boolean }) {
+  const sev = SEVERITY_META[finding.severity];
+  const prio = PRIORITY_META[finding.priority];
+  const resolved = finding.status === "resolved";
+  const Icon = sev.icon;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      style={{
+        background: resolved
+          ? "linear-gradient(180deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02))"
+          : "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))",
+        border: `1px solid ${resolved ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`,
+        borderRadius: 16, padding: 18,
+        display: "flex", gap: 16, alignItems: "flex-start",
+      }}
+    >
+      <div style={{
+        width: 40, height: 40, borderRadius: 12, flex: "0 0 auto",
+        background: resolved ? "rgba(34,197,94,0.15)" : sev.bg,
+        color: resolved ? "#86efac" : sev.color,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        {resolved ? <CheckCircle2 size={20} /> : <Icon size={20} />}
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
+          <span style={{
+            padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+            background: sev.bg, color: sev.color, letterSpacing: 0.3,
+          }}>{sev.label}</span>
+          <span style={{
+            padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+            background: prio.bg, color: prio.color,
+          }}>{prio.label}</span>
+          <span style={{
+            padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 500,
+            background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)",
+          }}>{CATEGORY_LABELS[finding.category]}</span>
+          {resolved && (
+            <span style={{
+              padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+              background: "rgba(34,197,94,0.15)", color: "#86efac",
+            }}>✓ Résolu</span>
+          )}
+        </div>
+        <h3 style={{
+          margin: "0 0 4px", color: "#fff", fontSize: 16, fontWeight: 600,
+          textDecoration: resolved ? "line-through" : "none",
+          opacity: resolved ? 0.7 : 1,
+        }}>{finding.title}</h3>
+        <p style={{ margin: "0 0 10px", color: "rgba(255,255,255,0.65)", fontSize: 13.5, lineHeight: 1.5 }}>
+          {finding.description}
+        </p>
+        <div style={{
+          padding: "10px 12px", borderRadius: 10,
+          background: "rgba(139,92,246,0.08)",
+          border: "1px solid rgba(139,92,246,0.2)",
+          color: "rgba(255,255,255,0.8)", fontSize: 13, lineHeight: 1.45,
+        }}>
+          <strong style={{ color: "#c4b5fd" }}>Action recommandée : </strong>
+          {finding.action}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onResolve}
+        disabled={busy}
+        aria-label={resolved ? "Rouvrir ce point" : "Marquer comme résolu"}
+        style={{
+          flex: "0 0 auto",
+          padding: "8px 14px", borderRadius: 10,
+          background: resolved ? "rgba(255,255,255,0.06)" : "rgba(34,197,94,0.15)",
+          border: `1px solid ${resolved ? "rgba(255,255,255,0.12)" : "rgba(34,197,94,0.35)"}`,
+          color: resolved ? "rgba(255,255,255,0.7)" : "#86efac",
+          fontSize: 12.5, fontWeight: 600, cursor: busy ? "wait" : "pointer",
+          minHeight: 36, display: "inline-flex", alignItems: "center", gap: 6,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {busy ? <Loader2 size={14} style={{ animation: "adm-spin 1s linear infinite" }} /> :
+          resolved ? "Rouvrir" : <><CheckCircle2 size={14} /> Marquer résolu</>}
+      </button>
+    </motion.div>
+  );
+}
+
+function FindingsReport() {
+  const list = useServerFn(listSeoFindings);
+  const update = useServerFn(updateSeoFindingStatus);
+  const qc = useQueryClient();
+
+  const { data: findings = [], isLoading, error } = useQuery({
+    queryKey: ["seo-findings"],
+    queryFn: () => list(),
+    staleTime: 30_000,
+  });
+
+  const mutation = useMutation({
+    mutationFn: (vars: { code: string; status: "open" | "resolved" }) => update({ data: vars }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["seo-findings"] }),
+  });
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+
+  const filtered = useMemo(() => {
+    return findings.filter((f) => {
+      if (statusFilter === "resolved" && f.status !== "resolved") return false;
+      if (statusFilter === "critical" && (f.severity !== "critical" || f.status === "resolved")) return false;
+      if (statusFilter === "warning"  && (f.severity !== "warning"  || f.status === "resolved")) return false;
+      if (statusFilter === "all"      && f.status === "resolved") return false;
+      if (categoryFilter !== "all" && f.category !== categoryFilter) return false;
+      if (priorityFilter !== "all" && f.priority !== priorityFilter) return false;
+      return true;
+    });
+  }, [findings, statusFilter, categoryFilter, priorityFilter]);
+
+  const counts = useMemo(() => ({
+    total: findings.length,
+    critical: findings.filter((f) => f.severity === "critical" && f.status !== "resolved").length,
+    warning: findings.filter((f) => f.severity === "warning" && f.status !== "resolved").length,
+    resolved: findings.filter((f) => f.status === "resolved").length,
+  }), [findings]);
+
+  return (
+    <section style={{ marginTop: 28 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <h2 style={{ margin: 0, color: "#fff", fontSize: 20, fontWeight: 700 }}>
+          Rapport d'audit détaillé
+        </h2>
+        <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
+          {counts.total} points · {counts.critical} critiques · {counts.warning} à améliorer · {counts.resolved} résolus
+        </span>
+      </div>
+
+      {/* Filters */}
+      <div style={{
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 16, padding: 16, marginBottom: 16,
+        display: "flex", flexDirection: "column", gap: 12,
+      }}>
+        <FilterRow label="Statut" icon={<Filter size={14} />}>
+          {([
+            ["all", "Tous (ouverts)"],
+            ["critical", "🔴 Critiques"],
+            ["warning", "🟡 À améliorer"],
+            ["resolved", "✓ Résolus"],
+          ] as [StatusFilter, string][]).map(([k, l]) => (
+            <FilterChip key={k} active={statusFilter === k} onClick={() => setStatusFilter(k)}>{l}</FilterChip>
+          ))}
+        </FilterRow>
+
+        <FilterRow label="Catégorie">
+          <FilterChip active={categoryFilter === "all"} onClick={() => setCategoryFilter("all")}>Toutes</FilterChip>
+          {(Object.keys(CATEGORY_LABELS) as SeoFinding["category"][]).map((c) => (
+            <FilterChip key={c} active={categoryFilter === c} onClick={() => setCategoryFilter(c)}>
+              {CATEGORY_LABELS[c]}
+            </FilterChip>
+          ))}
+        </FilterRow>
+
+        <FilterRow label="Priorité">
+          <FilterChip active={priorityFilter === "all"} onClick={() => setPriorityFilter("all")}>Toutes</FilterChip>
+          {(["P1", "P2", "P3"] as const).map((p) => (
+            <FilterChip key={p} active={priorityFilter === p} onClick={() => setPriorityFilter(p)}>
+              {PRIORITY_META[p].label}
+            </FilterChip>
+          ))}
+        </FilterRow>
+      </div>
+
+      {/* List */}
+      {isLoading ? (
+        <div style={{ padding: 32, textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
+          <Loader2 size={20} style={{ animation: "adm-spin 1s linear infinite", display: "inline-block" }} />
+          <div style={{ marginTop: 8, fontSize: 13 }}>Chargement de l'audit…</div>
+        </div>
+      ) : error ? (
+        <div style={{
+          padding: 20, borderRadius: 12,
+          background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+          color: "#fca5a5", fontSize: 13.5,
+        }}>
+          Impossible de charger le rapport d'audit. {(error as Error).message}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{
+          padding: 32, textAlign: "center", borderRadius: 16,
+          border: "1px dashed rgba(255,255,255,0.1)",
+          color: "rgba(255,255,255,0.5)", fontSize: 14,
+        }}>
+          Aucun point ne correspond à ces filtres. 🎉
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {filtered.map((f) => (
+            <FindingCard
+              key={f.id}
+              finding={f}
+              busy={mutation.isPending && mutation.variables?.code === f.code}
+              onResolve={() => mutation.mutate({
+                code: f.code,
+                status: f.status === "resolved" ? "open" : "resolved",
+              })}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FilterRow({
+  label, icon, children,
+}: { label: string; icon?: ReactNode; children: ReactNode }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      <div style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        color: "rgba(255,255,255,0.5)", fontSize: 12,
+        fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase",
+        minWidth: 80,
+      }}>
+        {icon} {label}
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{children}</div>
     </div>
   );
 }
