@@ -1,58 +1,70 @@
-# Refonte page « Mon profil » thérapeute
+# Migration i18n complète — Plan d'exécution
 
-## Objectif
-Reproduire le design premium des captures (photo + recadrage, identité/adresse, spécialités recherchables avec ajout custom, services & durées multiples, fourchette de tarifs, SIRET, certificats/diplômes) et tout traduire dans la langue choisie. Étendre les spécialités à ~50 thérapies et lister les 26 cantons suisses.
+## État actuel
 
-## Sections de la page (ordre vertical)
+- **Infra OK** : `i18next` + `react-i18next` déjà configurés (`src/lib/i18n.ts`), 4 fichiers de langue présents (`fr/de/en/it.json`), `useTranslation()` déjà utilisé dans ~30 fichiers.
+- **Problème réel** : textes en dur dans une partie des composants (ex. `WaitlistBanner`, `WaitlistReassuranceBlock` 100% français), pas de détection des clés manquantes, pas d'audit systématique.
 
-1. **Identité & contact** : photo (upload + recadrage carré), prénom*, nom*, ville*, code postal, adresse, téléphone (avec note de confidentialité).
-2. **Approches & langues** : canton (26), langues parlées (FR/DE/IT/EN), tarif/séance OU fourchette min/max + devise.
-3. **Spécialités** : barre de recherche, chips des sélectionnées, grille de boutons (sélectionnés en violet/coché), input « Ajouter une spécialité personnalisée » + bouton Ajouter.
-4. **Mes services & durées** : liste de services (nom, durée min, description), boutons ajouter/modifier/supprimer (dialog).
-5. **Bio courte (150 car.)** + **Description complète** (textarea), **Lien Google avis**, **Lien site personnel**, **Années d'expérience**.
-6. **N° SIRET** (optionnel, masqué) + bouton Vérifier (placeholder visuel pour l'instant).
-7. **Mes certificats & diplômes** : upload PDF/JPG/PNG (5 Mo), liste avec nom modifiable, toggle visible aux visiteurs, supprimer.
-8. Footer sticky : Annuler / Enregistrer.
+Vu l'ampleur (60+ fichiers à auditer), je propose une exécution en **4 lots livrables séparément** plutôt qu'un méga-changement risqué.
 
-## Données
+---
 
-Le schéma `therapists` couvre déjà : first_name, last_name, address, postal_code, city, canton, phone, email, website, specialties, languages, price_min, price_max, currency, bio, short_bio, photo_url.
+## Lot 1 — Quick wins visibles + outillage (immédiat, ce tour)
 
-Nouvelle migration nécessaire pour :
-- `services jsonb` (liste `{name, duration_min, description, color}`)
-- `years_experience int`
-- `google_reviews_url text`
-- `siret text` (chiffré côté app — stocké brut pour MVP, non exposé via la policy publique : on retirera siret de la projection publique)
-- `siret_verified boolean default false`
-- table `therapist_documents` (id, therapist_id, file_url, label, is_public, created_at) avec bucket Storage `therapist-documents`.
+1. **Traduire les blocs liste d'attente** (cités explicitement) :
+   - `WaitlistBanner.tsx` → clés `waitlist.banner.*`
+   - `WaitlistReassuranceBlock.tsx` → clés `waitlist.reassurance.*`
+   - Ajouter les 4 langues dans `fr/de/en/it.json`.
 
-## i18n
+2. **Détection des clés manquantes** dans `src/lib/i18n.ts` :
+   - Activer `saveMissing: true` + `missingKeyHandler` qui `console.warn` en dev.
+   - Conserver le fallback `fr` existant.
 
-Ajout d'un namespace `profile_edit` complet dans fr/de/en/it avec toutes les labels (titres sections, placeholders, boutons, helpers, toasts). Le menu sidebar reste branché sur `dashboard.*` (déjà traduit) ; le dashboard layout doit se trouver sous `/$lang/dashboard` pour propager la langue — actuellement il est sur `/dashboard` sans préfixe. **Décision** : on garde `/dashboard` mais on lit la langue depuis `i18n.language` (déjà setté par la route `$lang`) — la sidebar utilise donc déjà `t()`, donc OK. Si la langue n'est pas appliquée, c'est que l'utilisateur arrive directement sur `/dashboard` sans passer par `/$lang/...`. On ajoutera un effet dans `dashboard.tsx` qui lit `localStorage` ou le détecte via le referrer pour fixer la langue.
+3. **Helper de scan** : script `scripts/i18n-audit.ts` (Node) qui parcourt `src/**/*.tsx`, détecte les chaînes JSX/attributs visibles non interpolées et liste les fichiers à migrer (sortie triée par nombre d'occurrences).
 
-## Constantes
+## Lot 2 — Composants partagés (priorité haute)
 
-- `SWISS_CANTONS` : 26 cantons avec code + nom (AG, AI, AR, BE, BL, BS, FR, GE, GL, GR, JU, LU, NE, NW, OW, SG, SH, SO, SZ, TG, TI, UR, VD, VS, ZG, ZH).
-- `THERAPY_SPECIALTIES` : ~50 thérapies holistiques (énergéticien, magnétiseur, sophrologue, hypnothérapeute, naturopathe, ostéopathe, réflexologue, kinésiologue, acupuncteur, shiatsu, reiki, lithothérapeute, radiesthésiste, médium, cartomancie, coach holistique, art-thérapeute, aromathérapeute, phytothérapeute, fleurs de Bach, méditation, yoga thérapeutique, ayurveda, massage californien/suédois/thaï/lomi-lomi, drainage lymphatique, réflexologie plantaire, fasciathérapie, biorésonance, EFT, EMDR, PNL, somatothérapie, gestalt, analyse transactionnelle, constellation familiale, hypnose ericksonienne, respiration holotropique, sound healing, chamanisme, soins esséniens, biomagnétisme…).
+Ordre :
+- `components/layout/` : `Footer`, `PublicNav`, `TherapistNav`, `AdminNav` (sous-menus, items conditionnels)
+- `components/holiswiss/` : `TherapistCard`, `PagePlaceholder`, `NearbyTherapistsSwiss`, `WaitingListPopup`
+- `components/booking/BookingWidget`
+- `components/dashboard/` : `AccountManageDialog`, `WeeklyScheduleEditor`, `UnavailabilityManager`
 
-## Fichiers à créer/modifier
+Pour chaque fichier : repérer toutes les chaînes affichées (texte, `aria-label`, `placeholder`, `title`, messages d'erreur, toasts), créer des clés sous le namespace du composant, remplacer par `t('...')`, ajouter les 4 traductions.
 
-- `src/lib/constants.ts` : exporter `SWISS_CANTONS`, `THERAPY_SPECIALTIES`.
-- `src/i18n/[lang].json` : ajouter namespace `profile_edit`.
-- Migration SQL pour `services`, `years_experience`, `google_reviews_url`, `siret`, `siret_verified`, table `therapist_documents`, bucket `therapist-documents`.
-- `src/routes/dashboard.profil.tsx` : refonte complète multi-sections.
-- (optionnel) sous-composants dans `src/components/dashboard/profile/` pour photo, spécialités, services, documents.
+## Lot 3 — Routes publiques
 
-## Sécurité
+`$lang.index`, `$lang.therapeutes.index`, `$lang.therapeute.$slug`, `$lang.tarifs.index`, `$lang.contact.index`, `$lang.inscription.index`, `$lang.connexion.index`, `$lang.blog.*`, `$lang.tsx` (banner inclus).
 
-- RLS sur `therapist_documents` : owner full CRUD, public SELECT uniquement si `is_public = true`.
-- Validation Zod côté client (lengths, regex, max files).
-- Bucket Storage : règles owner only.
+Vérification systématique : titres SEO (`head()`), badges, CTA, états vides/erreur, modals déclenchés depuis ces pages.
 
-## Hors scope (pour ne pas exploser le delivery)
+## Lot 4 — Dashboard thérapeute
 
-- Vraie vérification SIRET via API officielle → bouton présent mais stub (badge « Statut Pro actif » apparaît si siret rempli + 14 chiffres).
-- Recadrage d'image avancé → on garde un upload simple avec preview + bouton remplacer (le recadrage interactif arrivera dans un 2ème temps).
-- Lien Google reviews scraping → simple champ URL.
+`dashboard.*` : index, profil, agenda, avis, abonnement, parrainage, dashboard.tsx (layout). Inclut les bouts du bloc d'onboarding récent, toasts, validation de formulaires, modals (suppression/pause de compte).
 
-Confirme-moi si je peux partir comme ça, ou si je dois ajuster (par ex. retirer SIRET/certificats pour un premier jet plus rapide, ou inclure tout de suite le recadrage interactif).
+---
+
+## Convention de clés (appliquée dès le lot 1)
+
+```text
+{scope}.{component}.{element}
+ex : waitlist.banner.message
+     waitlist.reassurance.title
+     dashboard.account.delete.confirm
+     therapist.booking.chooseService
+```
+
+- Un namespace par grande zone (`nav`, `home`, `therapist`, `dashboard`, `waitlist`, `auth`, `common`).
+- `common.*` réservé aux libellés vraiment partagés (Annuler, Enregistrer, Erreur, etc.).
+- Pas d'imbrication >4 niveaux.
+
+## Détails techniques
+
+- **Pas de modif** de `src/integrations/supabase/*` ni `routeTree.gen.ts` (auto-généré).
+- Traductions DE/EN/IT : générées par moi avec relecture courte, gardées sobres et professionnelles. Si une formulation vous semble inadaptée, vous me dites et je corrige par lot.
+- Le `missingKeyHandler` est désactivé en production (`import.meta.env.DEV`) pour ne pas polluer le console réel.
+- Les `aria-label` et messages `toast` sont inclus dans le scope i18n.
+
+## Livraison
+
+Je commence par le **Lot 1** maintenant si vous validez. Les lots 2/3/4 viennent après votre go (ils ouvrent chacun ~15-25 fichiers et méritent un commit séparé pour pouvoir relire les traductions).

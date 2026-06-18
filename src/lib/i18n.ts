@@ -25,6 +25,13 @@ if (!i18n.isInitialized) {
       interpolation: { escapeValue: false },
       returnObjects: true,
       returnNull: false,
+      saveMissing: import.meta.env?.DEV ?? false,
+      missingKeyHandler: (lngs, ns, key) => {
+        if (typeof console !== "undefined" && (import.meta.env?.DEV ?? false)) {
+          // eslint-disable-next-line no-console
+          console.warn(`[i18n] missing key "${key}" for ${lngs.join(",")}`);
+        }
+      },
     });
 }
 
