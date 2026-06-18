@@ -78,6 +78,8 @@ export type TherapistService = {
   duration_min: number;
   description?: string;
   color?: string;
+  price_chf?: number;
+  format?: "in_person" | "online" | "hybrid";
 };
 
 // Swiss recognized organizations that approve complementary therapists for

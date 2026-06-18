@@ -680,6 +680,12 @@ function ProfilePage() {
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{s.duration_min} {t("profile_edit.min_short")}</span>
+                    {s.price_chf != null && (
+                      <span className="text-[#5cc8fa] font-medium">· {s.price_chf} CHF</span>
+                    )}
+                    {s.format && (
+                      <span className="capitalize">· {t(`profile_edit.format_${s.format}`, { defaultValue: s.format })}</span>
+                    )}
                     {s.description && <span className="truncate">· {s.description}</span>}
                   </div>
                 </div>
@@ -946,6 +952,8 @@ function ServiceDialog({
   const [open, setOpen] = useSessionState(`${serviceStateKey}.open`, false);
   const [name, setName] = useSessionState(`${serviceStateKey}.name`, initial?.name ?? "");
   const [dur, setDur] = useSessionState<number | "">(`${serviceStateKey}.duration`, initial?.duration_min ?? 60);
+  const [price, setPrice] = useSessionState<number | "">(`${serviceStateKey}.price`, initial?.price_chf ?? "");
+  const [format, setFormat] = useSessionState<"in_person" | "online" | "hybrid">(`${serviceStateKey}.format`, initial?.format ?? "in_person");
   const [desc, setDesc] = useSessionState(`${serviceStateKey}.description`, initial?.description ?? "");
   const [color, setColor] = useSessionState(`${serviceStateKey}.color`, initial?.color ?? SERVICE_COLORS[1]);
 
@@ -955,11 +963,13 @@ function ServiceDialog({
       id: initial?.id ?? crypto.randomUUID(),
       name: name.trim(),
       duration_min: Number(dur),
+      price_chf: price === "" ? undefined : Number(price),
+      format,
       description: desc.trim() || undefined,
       color,
     });
     setOpen(false);
-    if (!initial) { setName(""); setDur(60); setDesc(""); }
+    if (!initial) { setName(""); setDur(60); setPrice(""); setFormat("in_person"); setDesc(""); }
   };
 
   return (
@@ -983,6 +993,26 @@ function ServiceDialog({
           </Field>
           <Field label={t("profile_edit.service_duration")}>
             <Input type="number" value={dur} onChange={(e) => setDur(e.target.value === "" ? "" : Number(e.target.value))} className={inputClass} />
+          </Field>
+          <Field label={t("profile_edit.service_price", { defaultValue: "Tarif (CHF)" })}>
+            <Input
+              type="number"
+              min={0}
+              value={price}
+              onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="Ex: 120"
+              className={inputClass}
+            />
+          </Field>
+          <Field label={t("profile_edit.service_format", { defaultValue: "Format" })}>
+            <Select value={format} onValueChange={(v) => setFormat(v as "in_person" | "online" | "hybrid")}>
+              <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="in_person">{t("profile_edit.format_in_person", { defaultValue: "Présentiel" })}</SelectItem>
+                <SelectItem value="online">{t("profile_edit.format_online", { defaultValue: "En ligne" })}</SelectItem>
+                <SelectItem value="hybrid">{t("profile_edit.format_hybrid", { defaultValue: "Hybride" })}</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
           <Field label={t("profile_edit.service_description")}>
             <Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t("profile_edit.service_desc_placeholder")} className={`${inputClass} resize-y`} />
