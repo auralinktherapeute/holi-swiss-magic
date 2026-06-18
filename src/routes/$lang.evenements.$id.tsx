@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, Video, Users, ArrowLeft } from "lucide-react";
 import { getPublishedEvent } from "@/lib/public.functions";
 import { EventFlyer } from "@/components/events/EventFlyer";
 import { Button } from "@/components/ui/button";
+import { hreflangLinks } from "@/lib/seo";
 
 const SITE = "https://holiswiss.ch";
 
@@ -74,7 +75,10 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     };
     return {
       meta,
-      links: [{ rel: "canonical", href: url }],
+      links: [
+        { rel: "canonical", href: url },
+        ...hreflangLinks(`/evenements/${params.id}`),
+      ],
       scripts: [
         { type: "application/ld+json", children: JSON.stringify(eventLd) },
       ],

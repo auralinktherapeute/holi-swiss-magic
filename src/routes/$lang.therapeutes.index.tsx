@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
+import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -39,8 +40,9 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
         { property: "og:description", content: description },
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
+        { property: "og:locale", content: ogLocale(lang) },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks("/therapeutes")],
     };
   },
 });

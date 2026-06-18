@@ -9,6 +9,7 @@ import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
+import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
@@ -37,8 +38,9 @@ export const Route = createFileRoute("/$lang/")({
         { property: "og:description", content: description },
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
+        { property: "og:locale", content: ogLocale(lang) },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks("/")],
     };
   },
 });

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Clock, MapPin, Video, Users } from "lucide-react";
 import { listPublishedEvents } from "@/lib/public.functions";
+import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 const SITE = "https://holiswiss.ch";
 
@@ -20,8 +21,9 @@ export const Route = createFileRoute("/$lang/evenements/")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: url },
+        { property: "og:locale", content: ogLocale(params.lang) },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks("/evenements")],
     };
   },
 });
