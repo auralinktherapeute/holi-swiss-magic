@@ -1,0 +1,1 @@
+ALTER TABLE public.therapists ADD COLUMN IF NOT EXISTS gallery_urls jsonb NOT NULL DEFAULT '[]'::jsonb;

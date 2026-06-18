@@ -15,6 +15,12 @@ import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SPOKEN_LANGUAGES } from "@/lib/constants";
+
+const LANG_FLAG: Record<string, string> = {
+  fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
+  ru: "🇷🇺", ar: "🇸🇦", zh: "🇨🇳", ja: "🇯🇵", nl: "🇳🇱", tr: "🇹🇷",
+};
 
 const TherapistMiniMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -123,6 +129,8 @@ function Page() {
   const [phoneVisible, setPhoneVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showTop, setShowTop] = useState(false);
+  const [bioExpanded, setBioExpanded] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = () => setShowTop(window.scrollY > 400);
@@ -135,7 +143,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
+        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,cover_image_url,gallery_urls,is_premium,phone,email,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,siret_verified,ide_verified,accreditations")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
@@ -201,6 +209,10 @@ function Page() {
   const services: ServiceEntry[] = Array.isArray(th.services) ? th.services : [];
   const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations) ? th.accreditations : [];
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
+  const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
+  const gallery: string[] = Array.isArray(th.gallery_urls) ? th.gallery_urls.filter((u: any) => typeof u === "string" && u.length > 0) : [];
+  const showGallery = !!th.is_premium && gallery.length > 0;
+  const bioIsLong = (th.bio ?? "").length > 280;
   const avg = reviews?.length
     ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
@@ -360,7 +372,76 @@ function Page() {
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.about")}</h2>
-                <p className="whitespace-pre-line text-[rgba(255,255,255,0.72)] leading-relaxed text-sm">{th.bio}</p>
+                <p
+                  className={`whitespace-pre-line text-[rgba(255,255,255,0.72)] leading-relaxed text-sm ${
+                    bioIsLong && !bioExpanded ? "line-clamp-3" : ""
+                  }`}
+                >
+                  {th.bio}
+                </p>
+                {bioIsLong && (
+                  <button
+                    onClick={() => setBioExpanded((v) => !v)}
+                    className="mt-3 text-xs font-semibold text-[#b86ef9] hover:text-white transition"
+                  >
+                    {bioExpanded ? t("therapist_profile.read_less") : t("therapist_profile.read_more")}
+                  </button>
+                )}
+              </motion.section>
+            )}
+
+            {/* Galerie photos (Premium) */}
+            {showGallery && (
+              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="rounded-2xl border border-amber-400/25 bg-gradient-to-br from-[#1a0a2e] to-[#1f1235] p-6"
+              >
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">⚡ Premium</span>
+                  <h2 className="text-lg font-bold text-white">{t("therapist_profile.gallery_title")}</h2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {gallery.slice(0, 6).map((url, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setLightbox(url)}
+                      className="group relative aspect-square overflow-hidden rounded-lg border border-[rgba(184,110,249,0.15)] focus:outline-none focus:ring-2 focus:ring-[#b86ef9]"
+                      aria-label={t("therapist_profile.gallery_open")}
+                    >
+                      <img
+                        src={url}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition group-hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
+            {/* Langues parlées */}
+            {languages.length > 0 && (
+              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+              >
+                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.languages_title")}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {languages.map((code) => {
+                    const meta = SPOKEN_LANGUAGES.find((l) => l.code === code);
+                    const label = meta?.label ?? code;
+                    const flag = LANG_FLAG[code] ?? "🌐";
+                    return (
+                      <span
+                        key={code}
+                        className="inline-flex items-center gap-2 rounded-full border border-[rgba(92,200,250,0.25)] bg-[rgba(92,200,250,0.08)] px-3 py-1.5 text-sm text-white"
+                      >
+                        <span aria-hidden className="text-base leading-none">{flag}</span>
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
               </motion.section>
             )}
 
@@ -586,6 +667,22 @@ function Page() {
         >
           <ChevronUp className="h-5 w-5" />
         </motion.button>
+      )}
+
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 cursor-zoom-out"
+        >
+          <img
+            src={lightbox}
+            alt=""
+            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       )}
     </div>
   );

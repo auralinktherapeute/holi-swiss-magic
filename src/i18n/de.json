@@ -437,7 +437,12 @@
     "no_therapist": "Kein Therapeut gefunden",
     "search_placeholder": "Stadt, Spezialität, Name…",
     "therapist_singular": "Therapeut",
-    "therapist_plural": "Therapeuten"
+    "therapist_plural": "Therapeuten",
+    "read_more": "Mehr lesen",
+    "read_less": "Weniger anzeigen",
+    "gallery_title": "Fotogalerie",
+    "gallery_open": "Bild vergrößern",
+    "languages_title": "Gesprochene Sprachen"
   },
   "waitlist": {
     "badge": "🚀 Baldiger Launch",
@@ -655,8 +660,7 @@
     "unavail_reason_training": "Fortbildung",
     "unavail_reason_personal": "Privater Termin",
     "unavail_reason_sick": "Krankheit",
-    "unavail_delete_aria": "Löschen"
-    ,
+    "unavail_delete_aria": "Löschen",
     "weekly_title": "Arbeitstage und -zeiten",
     "weekly_desc": "Legen Sie Ihre Arbeitstage und Öffnungszeiten fest. Buchungen sind nur in diesen Fenstern möglich – nicht angekreuzte Tage werden ausgeblendet.",
     "weekly_save": "Zeiten speichern",
