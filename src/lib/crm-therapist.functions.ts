@@ -214,3 +214,98 @@ export const completeContactTask = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Centre des rappels — toutes les tâches du thérapeute Elite Pro avec contact lié. */
+export const listMyReminders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { status?: "open" | "done" | "overdue" }) =>
+    z.object({ status: z.enum(["open","done","overdue"]).optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const therapistId = await assertElitePro(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("crm_tasks")
+      .select("id,title,description,due_at,done_at,priority,entity_type,entity_id")
+      .eq("therapist_id", therapistId)
+      .order("due_at", { ascending: true, nullsFirst: false })
+      .limit(200);
+    if (data.status === "open") q = q.is("done_at", null);
+    if (data.status === "done") q = q.not("done_at", "is", null);
+    if (data.status === "overdue") q = q.is("done_at", null).lt("due_at", new Date().toISOString());
+    const { data: tasks, error } = await q;
+    if (error) throw new Error(error.message);
+
+    // Enrichir avec nom du contact lié
+    const contactIds = Array.from(new Set((tasks ?? [])
+      .filter((t) => t.entity_type === "client_contact" && t.entity_id)
+      .map((t) => t.entity_id as string)));
+    let contactsMap = new Map<string, { first_name: string; last_name: string }>();
+    if (contactIds.length > 0) {
+      const { data: contacts } = await supabaseAdmin
+        .from("crm_client_contacts")
+        .select("id,first_name,last_name")
+        .in("id", contactIds);
+      contactsMap = new Map((contacts ?? []).map((c: any) => [c.id, { first_name: c.first_name, last_name: c.last_name }]));
+    }
+    return (tasks ?? []).map((t) => ({
+      ...t,
+      contact: t.entity_id ? contactsMap.get(t.entity_id as string) ?? null : null,
+    }));
+  });
+
+/** Notes récentes du thérapeute Elite Pro (toutes fiches confondues). */
+export const listMyRecentNotes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const therapistId = await assertElitePro(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: notes, error } = await supabaseAdmin
+      .from("crm_activities")
+      .select("id,title,body,occurred_at,entity_id")
+      .eq("therapist_id", therapistId)
+      .eq("type", "note")
+      .order("occurred_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    const ids = Array.from(new Set((notes ?? []).map((n) => n.entity_id).filter(Boolean) as string[]));
+    let cmap = new Map<string, { first_name: string; last_name: string }>();
+    if (ids.length > 0) {
+      const { data: contacts } = await supabaseAdmin
+        .from("crm_client_contacts").select("id,first_name,last_name").in("id", ids);
+      cmap = new Map((contacts ?? []).map((c: any) => [c.id, { first_name: c.first_name, last_name: c.last_name }]));
+    }
+    return (notes ?? []).map((n) => ({
+      ...n,
+      contact: n.entity_id ? cmap.get(n.entity_id as string) ?? null : null,
+    }));
+  });
+
+/** Segmentation : compte de contacts par statut et par tag pour le thérapeute. */
+export const getMySegmentation = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const therapistId = await assertElitePro(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: contacts, error } = await supabaseAdmin
+      .from("crm_client_contacts")
+      .select("relation_status,tags,last_booking_at")
+      .eq("therapist_id", therapistId)
+      .limit(2000);
+    if (error) throw new Error(error.message);
+    const byStatus: Record<string, number> = {};
+    const byTag: Record<string, number> = {};
+    let withRecentBooking = 0;
+    const thirtyDays = Date.now() - 30 * 86400_000;
+    (contacts ?? []).forEach((c: any) => {
+      byStatus[c.relation_status] = (byStatus[c.relation_status] ?? 0) + 1;
+      (c.tags ?? []).forEach((t: string) => { byTag[t] = (byTag[t] ?? 0) + 1; });
+      if (c.last_booking_at && new Date(c.last_booking_at).getTime() > thirtyDays) withRecentBooking++;
+    });
+    return {
+      total: contacts?.length ?? 0,
+      byStatus,
+      byTag,
+      withRecentBooking,
+    };
+  });

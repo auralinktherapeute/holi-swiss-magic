@@ -6,13 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Crown, Search, Plus, LayoutGrid, List as ListIcon, X, Tag as TagIcon,
-  Phone, Mail, Calendar, BellPlus, Trash2, Send,
+  Phone, Mail, Calendar, BellPlus, Trash2, Send, BellRing, FileText, PieChart, Users as UsersIcon,
 } from "lucide-react";
 import {
   checkElitePro, listMyContacts, upsertContact, deleteContact,
   addContactNote, getContactDetail, createContactReminder,
   type ClientContact,
 } from "@/lib/crm-therapist.functions";
+import { RemindersView, NotesView, SegmentationView } from "@/components/crm/TherapistCrmViews";
 
 export const Route = createFileRoute("/dashboard/crm")({
   component: TherapistCrmPage,
@@ -107,6 +108,7 @@ function ElitePropCrm() {
   const [editing, setEditing] = useState<ClientContact | null>(null);
   const [creating, setCreating] = useState(false);
   const [openContactId, setOpenContactId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"contacts" | "reminders" | "notes" | "segments">("contacts");
 
   const contactsQ = useQuery({
     queryKey: ["crm-th","contacts", debounced, statusFilter, tagFilter],
@@ -136,6 +138,8 @@ function ElitePropCrm() {
             Vos contacts, leur historique et vos relances.
           </p>
         </div>
+        {tab === "contacts" && (
+        <>
         <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "var(--muted)", borderRadius: 10 }}>
           <button onClick={() => setView("cards")} aria-pressed={view === "cards"} aria-label="Vue cartes"
             style={{ padding: "8px 12px", minHeight: 36, borderRadius: 8, border: "none", background: view === "cards" ? "var(--primary)" : "transparent", color: view === "cards" ? "white" : "var(--foreground)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13 }}>
@@ -156,8 +160,42 @@ function ElitePropCrm() {
         >
           <Plus size={16} aria-hidden /> Nouveau contact
         </button>
+        </>
+        )}
       </header>
 
+      {/* Onglets CRM */}
+      <nav aria-label="Vues CRM Elite Pro" style={{
+        display: "inline-flex", gap: 4, padding: 4, marginBottom: 16,
+        background: "var(--muted)", borderRadius: 10,
+      }}>
+        {([
+          { id: "contacts",  label: "Contacts",     icon: UsersIcon },
+          { id: "reminders", label: "Rappels",      icon: BellRing },
+          { id: "notes",     label: "Notes",        icon: FileText },
+          { id: "segments",  label: "Segmentation", icon: PieChart },
+        ] as const).map((t) => {
+          const active = tab === t.id;
+          const Icon = t.icon;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)} aria-pressed={active}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 14px", minHeight: 36, borderRadius: 8, border: "none", cursor: "pointer",
+                fontSize: 13, fontWeight: 600,
+                background: active ? "var(--primary)" : "transparent",
+                color: active ? "white" : "var(--foreground)",
+                transition: "background 160ms ease",
+              }}
+            >
+              <Icon size={14} aria-hidden /> {t.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {tab === "contacts" && (
+      <>
       {/* Filtres */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 16 }}>
         <div style={{ position: "relative", flex: "1 1 240px", maxWidth: 360 }}>
@@ -197,6 +235,12 @@ function ElitePropCrm() {
       ) : (
         <ContactsTable contacts={contactsQ.data ?? []} onOpen={(c) => setOpenContactId(c.id)} onEdit={(c) => setEditing(c)} />
       )}
+      </>
+      )}
+
+      {tab === "reminders" && <RemindersView onOpenContact={(id) => setOpenContactId(id)} />}
+      {tab === "notes" && <NotesView onOpenContact={(id) => setOpenContactId(id)} />}
+      {tab === "segments" && <SegmentationView />}
 
       {/* Drawer fiche */}
       <AnimatePresence>
