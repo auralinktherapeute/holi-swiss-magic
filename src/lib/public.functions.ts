@@ -12,7 +12,7 @@ export const getWaitingListCount = createServerFn({ method: "GET" }).handler(asy
 });
 
 export const getTherapistBySlug = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ slug: z.string().min(1).max(160) }))
+  .inputValidator((data) => z.object({ slug: z.string().min(1).max(160) }).parse(data))
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
     const supabase = createClient(
@@ -108,7 +108,7 @@ export const listPublishedEvents = createServerFn({ method: "GET" }).handler(asy
 });
 
 export const getPublishedEvent = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ id: z.string().uuid() }))
+  .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: e, error } = await supabaseAdmin
