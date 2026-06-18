@@ -14,10 +14,15 @@ export const getWaitingListCount = createServerFn({ method: "GET" }).handler(asy
 export const getTherapistBySlug = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string().min(1).max(160) }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: therapist, error } = await supabaseAdmin
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: therapist, error } = await supabase
       .from("therapists")
-      .select("first_name,last_name,title,city,canton,bio,specialties,photo_url")
+      .select("*")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
