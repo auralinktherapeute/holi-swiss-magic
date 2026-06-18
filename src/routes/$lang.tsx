@@ -5,6 +5,7 @@ import { PublicNav } from "@/components/layout/PublicNav";
 import { Footer } from "@/components/layout/Footer";
 import { WaitingListPopup } from "@/components/WaitingListPopup";
 import { AmbientPlayer } from "@/components/AmbientPlayer";
+import { WaitlistBanner } from "@/components/holiswiss/WaitlistBanner";
 import i18n, { isLang, DEFAULT_LANG } from "@/lib/i18n";
 
 
@@ -31,6 +32,7 @@ function LangLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <PublicNav />
+      <WaitlistBanner />
       <main className="flex-1">
         <Outlet />
       </main>
