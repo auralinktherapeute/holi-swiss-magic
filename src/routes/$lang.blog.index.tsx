@@ -3,8 +3,41 @@ import { useQuery } from "@tanstack/react-query";
 import { getPublishedArticles, titleForLang, excerptForLang } from "@/lib/articles.functions";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ArrowRight, BookOpen } from "lucide-react";
+import { hreflangLinks, ogLocale } from "@/lib/seo";
 
-export const Route = createFileRoute("/$lang/blog/")({ component: Page });
+export const Route = createFileRoute("/$lang/blog/")({
+  component: Page,
+  head: ({ params }) => {
+    const lang = params.lang;
+    const titles: Record<string, string> = {
+      fr: "Blog bien-être & thérapies holistiques — Holiswiss",
+      de: "Blog Wohlbefinden & ganzheitliche Therapien — Holiswiss",
+      it: "Blog benessere & terapie olistiche — Holiswiss",
+      en: "Wellness & holistic therapies blog — Holiswiss",
+    };
+    const descs: Record<string, string> = {
+      fr: "Conseils, dossiers et actualités sur les thérapies holistiques en Suisse : sophrologie, hypnose, naturopathie, méditation et plus.",
+      de: "Ratgeber, Hintergrundartikel und News zu ganzheitlichen Therapien in der Schweiz: Sophrologie, Hypnose, Naturheilkunde, Meditation und mehr.",
+      it: "Consigli, approfondimenti e notizie sulle terapie olistiche in Svizzera: sofrologia, ipnosi, naturopatia, meditazione e altro.",
+      en: "Tips, deep-dives and news on holistic therapies in Switzerland: sophrology, hypnosis, naturopathy, meditation and more.",
+    };
+    const title = titles[lang] ?? titles.fr;
+    const description = descs[lang] ?? descs.fr;
+    const url = `https://holiswiss.ch/${lang}/blog`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+        { property: "og:locale", content: ogLocale(lang) },
+      ],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks("/blog")],
+    };
+  },
+});
 
 type Lang = "fr" | "de" | "it" | "en";
 
