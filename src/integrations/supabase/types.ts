@@ -401,6 +401,36 @@ export type Database = {
           },
         ]
       }
+      seo_audit_history: {
+        Row: {
+          audit_date: string
+          created_at: string
+          geo_score: number
+          global_score: number
+          id: string
+          seo_score: number
+          summary: Json | null
+        }
+        Insert: {
+          audit_date: string
+          created_at?: string
+          geo_score: number
+          global_score: number
+          id?: string
+          seo_score: number
+          summary?: Json | null
+        }
+        Update: {
+          audit_date?: string
+          created_at?: string
+          geo_score?: number
+          global_score?: number
+          id?: string
+          seo_score?: number
+          summary?: Json | null
+        }
+        Relationships: []
+      }
       seo_findings: {
         Row: {
           action: string
