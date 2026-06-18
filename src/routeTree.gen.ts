@@ -48,6 +48,7 @@ import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
+import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 
 const DashboardRoute = DashboardRouteImport.update({
@@ -246,6 +247,12 @@ const LangEvenementsIdRoute = LangEvenementsIdRouteImport.update({
   path: '/evenements/$id',
   getParentRoute: () => LangRoute,
 } as any)
+const LangBlogQuEstCeQueLaSophrologieRoute =
+  LangBlogQuEstCeQueLaSophrologieRouteImport.update({
+    id: '/blog/qu-est-ce-que-la-sophrologie',
+    path: '/blog/qu-est-ce-que-la-sophrologie',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -319,6 +327,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -362,6 +371,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
+  '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/$lang/blog/$slug'
+    | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/$lang/blog/$slug'
+    | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -487,6 +499,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/$lang/blog/$slug'
+    | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -785,6 +798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangEvenementsIdRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/blog/qu-est-ce-que-la-sophrologie': {
+      id: '/$lang/blog/qu-est-ce-que-la-sophrologie'
+      path: '/blog/qu-est-ce-que-la-sophrologie'
+      fullPath: '/$lang/blog/qu-est-ce-que-la-sophrologie'
+      preLoaderRoute: typeof LangBlogQuEstCeQueLaSophrologieRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/blog/$slug': {
       id: '/$lang/blog/$slug'
       path: '/blog/$slug'
@@ -798,6 +818,7 @@ declare module '@tanstack/react-router' {
 interface LangRouteChildren {
   LangIndexRoute: typeof LangIndexRoute
   LangBlogSlugRoute: typeof LangBlogSlugRoute
+  LangBlogQuEstCeQueLaSophrologieRoute: typeof LangBlogQuEstCeQueLaSophrologieRoute
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
@@ -815,6 +836,7 @@ interface LangRouteChildren {
 const LangRouteChildren: LangRouteChildren = {
   LangIndexRoute: LangIndexRoute,
   LangBlogSlugRoute: LangBlogSlugRoute,
+  LangBlogQuEstCeQueLaSophrologieRoute: LangBlogQuEstCeQueLaSophrologieRoute,
   LangEvenementsIdRoute: LangEvenementsIdRoute,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
