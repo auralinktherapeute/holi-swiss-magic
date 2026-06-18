@@ -437,7 +437,12 @@
     "no_therapist": "No therapist found",
     "search_placeholder": "City, specialty, name…",
     "therapist_singular": "therapist",
-    "therapist_plural": "therapists"
+    "therapist_plural": "therapists",
+    "read_more": "Read more",
+    "read_less": "Show less",
+    "gallery_title": "Photo gallery",
+    "gallery_open": "Open image",
+    "languages_title": "Languages spoken"
   },
   "waitlist": {
     "badge": "🚀 Launching soon",
@@ -655,8 +660,7 @@
     "unavail_reason_training": "Training",
     "unavail_reason_personal": "Personal appointment",
     "unavail_reason_sick": "Sick leave",
-    "unavail_delete_aria": "Delete"
-    ,
+    "unavail_delete_aria": "Delete",
     "weekly_title": "Working days and hours",
     "weekly_desc": "Set the days you work and your opening hours. Visitors can only book within these windows — unchecked days are hidden automatically.",
     "weekly_save": "Save my hours",

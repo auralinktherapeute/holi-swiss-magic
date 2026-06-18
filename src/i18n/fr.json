@@ -437,7 +437,12 @@
     "no_therapist": "Aucun thérapeute trouvé",
     "search_placeholder": "Ville, spécialité, nom…",
     "therapist_singular": "thérapeute",
-    "therapist_plural": "thérapeutes"
+    "therapist_plural": "thérapeutes",
+    "read_more": "Lire la suite",
+    "read_less": "Réduire",
+    "gallery_title": "Galerie photos",
+    "gallery_open": "Agrandir l'image",
+    "languages_title": "Langues parlées"
   },
   "waitlist": {
     "badge": "🚀 Lancement imminent",
@@ -655,8 +660,7 @@
     "unavail_reason_training": "Formation",
     "unavail_reason_personal": "Rendez-vous personnel",
     "unavail_reason_sick": "Maladie",
-    "unavail_delete_aria": "Supprimer"
-    ,
+    "unavail_delete_aria": "Supprimer",
     "weekly_title": "Jours et horaires de travail",
     "weekly_desc": "Définissez vos jours travaillés et vos horaires d'ouverture. Les visiteurs ne pourront réserver que dans ces plages — les jours non cochés seront automatiquement masqués.",
     "weekly_save": "Enregistrer mes horaires",
