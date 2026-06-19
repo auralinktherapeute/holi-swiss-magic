@@ -96,12 +96,12 @@ export function MobileDashboardBottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const tabs = [
+  const tabs: Array<{ to: string; icon: typeof LayoutDashboard; label: string; exact?: boolean }> = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
     { to: "/dashboard/profil", icon: User, label: t("dashboard.profile") },
     { to: "/dashboard/agenda", icon: Calendar, label: t("dashboard.agenda") },
     { to: "/dashboard/articles", icon: FileText, label: "Publier" },
-  ] as const;
+  ];
 
   const moreItems = [
     { to: "/dashboard/reservations", icon: BookmarkCheck, label: t("dashboard.reservations") },
@@ -131,7 +131,7 @@ export function MobileDashboardBottomNav() {
             return (
               <li key={tab.to}>
                 <Link
-                  to={tab.to}
+                  to={tab.to as any}
                   aria-current={active ? "page" : undefined}
                   className={`flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors ${
                     active ? "text-primary" : "text-foreground/60 hover:text-foreground"
