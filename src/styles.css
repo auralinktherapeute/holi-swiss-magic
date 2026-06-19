@@ -190,3 +190,113 @@
     align-items: stretch;
   }
 }
+
+/* ============================================================
+ * Waitlist card — premium animated orange→red borders (3 variants)
+ * V1: soft pulse  ·  V2: moving conic gradient  ·  V3: light sweep
+ * ============================================================ */
+:root {
+  --wl-orange: #ff8a3d;
+  --wl-red: #e0413a;
+  --wl-deep: #7a1f15;
+}
+
+.wl-card { position: relative; isolation: isolate; }
+.wl-card::before,
+.wl-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- V1 : Soft pulse border ---------- */
+.wl-v1::before {
+  padding: 1.5px;
+  background: linear-gradient(135deg, var(--wl-orange), var(--wl-red));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0.9;
+}
+.wl-v1::after {
+  box-shadow:
+    0 0 0 1px rgba(224, 65, 58, 0.08),
+    0 0 28px -6px rgba(255, 138, 61, 0.35);
+  animation: wl-pulse 4.5s ease-in-out infinite;
+}
+@keyframes wl-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(224,65,58,0.08), 0 0 18px -8px rgba(255,138,61,0.25); }
+  50%      { box-shadow: 0 0 0 1px rgba(224,65,58,0.16), 0 0 42px -4px rgba(255,138,61,0.55); }
+}
+
+/* ---------- V2 : Moving gradient border ---------- */
+.wl-v2 { --wl-angle: 0deg; }
+.wl-v2::before {
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--wl-angle),
+    var(--wl-deep) 0deg,
+    var(--wl-orange) 90deg,
+    var(--wl-red) 180deg,
+    var(--wl-orange) 270deg,
+    var(--wl-deep) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: wl-spin 8s linear infinite;
+}
+@property --wl-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes wl-spin { to { --wl-angle: 360deg; } }
+
+/* ---------- V3 : Light sweep border ---------- */
+.wl-v3::before {
+  padding: 1.5px;
+  background:
+    linear-gradient(135deg, var(--wl-deep), #4a1410 40%, var(--wl-deep) 60%, #4a1410);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0.85;
+}
+.wl-v3::after {
+  padding: 1.5px;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 170, 110, 0.0) 42%,
+    rgba(255, 190, 130, 0.85) 50%,
+    rgba(255, 170, 110, 0.0) 58%,
+    transparent 70%
+  );
+  background-size: 250% 250%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: wl-sweep 6s ease-in-out infinite;
+}
+@keyframes wl-sweep {
+  0%   { background-position: -50% -50%; }
+  100% { background-position: 150% 150%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-v1::after,
+  .wl-v2::before,
+  .wl-v3::after { animation: none; }
+}

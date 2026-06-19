@@ -6,17 +6,29 @@ function openWaitlist() {
   window.dispatchEvent(new Event("open-waitlist"));
 }
 
+const VARIANTS = [
+  { cls: "wl-v1", label: "V1 — Soft pulse" },
+  { cls: "wl-v2", label: "V2 — Moving gradient" },
+  { cls: "wl-v3", label: "V3 — Light sweep" },
+] as const;
+
 /**
  * Reassurance block for the homepage — luminous glass refinement direction.
+ * Renders 3 animated-border variants stacked for visual comparison.
  */
 export function WaitlistReassuranceBlock() {
   const { t } = useTranslation();
   return (
     <section
       aria-labelledby="waitlist-reassurance-title"
-      className="mx-auto w-full max-w-2xl px-5 py-12 sm:py-16"
+      className="mx-auto w-full max-w-2xl px-5 py-12 sm:py-16 space-y-10"
     >
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-purple-900/25 to-indigo-950/50 p-8 sm:p-10 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      {VARIANTS.map((v, i) => (
+      <div key={v.cls}>
+        <p className="mb-3 text-center text-[10px] uppercase tracking-[0.22em] text-orange-300/70 font-medium">
+          {v.label}
+        </p>
+      <div className={`wl-card ${v.cls} relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-purple-900/25 to-indigo-950/50 p-8 sm:p-10 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]`}>
         {/* Subtle background glows */}
         <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-purple-600/15 blur-[60px]" aria-hidden />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-indigo-600/15 blur-[60px]" aria-hidden />
@@ -27,7 +39,7 @@ export function WaitlistReassuranceBlock() {
           </div>
 
           <h2
-            id="waitlist-reassurance-title"
+            id={i === 0 ? "waitlist-reassurance-title" : undefined}
             className="mb-4 font-serif italic text-2xl sm:text-3xl text-white"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
@@ -51,6 +63,8 @@ export function WaitlistReassuranceBlock() {
           </p>
         </div>
       </div>
+      </div>
+      ))}
     </section>
   );
 }
