@@ -99,10 +99,10 @@ function HomePage() {
       <WaitlistReassuranceBlock />
 
       {/* Pricing teaser */}
-      <section className="bg-[#2d1248]">
+      <section className="eg-reveal eg-reveal--delay bg-[#2d1248]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold tracking-tight text-center text-white">{t("home.pricingTeaser")}</h2>
-          <div className="mx-auto mt-4 flex max-w-2xl flex-col items-center gap-1 rounded-2xl border border-[#5cc8fa]/40 bg-[#5cc8fa]/10 px-5 py-3 text-center backdrop-blur">
+          <div className="eg-beta-glow mx-auto mt-4 flex max-w-2xl flex-col items-center gap-1 rounded-2xl border border-[#5cc8fa]/40 bg-[#5cc8fa]/10 px-5 py-3 text-center backdrop-blur">
             <div className="text-sm font-semibold text-[#5cc8fa]">{t("pricing.beta_notice_title")}</div>
             <div className="text-xs text-[#d4c4e0]">{t("pricing.beta_notice_desc")}</div>
           </div>
