@@ -41,6 +41,7 @@ import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
 import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
+import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
 import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
@@ -216,6 +217,12 @@ const LangTarifsIndexRoute = LangTarifsIndexRouteImport.update({
   path: '/tarifs/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangMotDePasseOublieIndexRoute =
+  LangMotDePasseOublieIndexRouteImport.update({
+    id: '/mot-de-passe-oublie/',
+    path: '/mot-de-passe-oublie/',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
   id: '/inscription/',
   path: '/inscription/',
@@ -334,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
+  '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
@@ -379,6 +387,7 @@ export interface FileRoutesByTo {
   '/$lang/evenements': typeof LangEvenementsIndexRoute
   '/$lang/impressum': typeof LangImpressumIndexRoute
   '/$lang/inscription': typeof LangInscriptionIndexRoute
+  '/$lang/mot-de-passe-oublie': typeof LangMotDePasseOublieIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
@@ -428,6 +437,7 @@ export interface FileRoutesById {
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
+  '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
@@ -478,6 +488,7 @@ export interface FileRouteTypes {
     | '/$lang/evenements/'
     | '/$lang/impressum/'
     | '/$lang/inscription/'
+    | '/$lang/mot-de-passe-oublie/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/api/public/hooks/seo-audit-agent'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/$lang/evenements'
     | '/$lang/impressum'
     | '/$lang/inscription'
+    | '/$lang/mot-de-passe-oublie'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
     | '/api/public/hooks/seo-audit-agent'
@@ -571,6 +583,7 @@ export interface FileRouteTypes {
     | '/$lang/evenements/'
     | '/$lang/impressum/'
     | '/$lang/inscription/'
+    | '/$lang/mot-de-passe-oublie/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/api/public/hooks/seo-audit-agent'
@@ -812,6 +825,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTarifsIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/mot-de-passe-oublie/': {
+      id: '/$lang/mot-de-passe-oublie/'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/$lang/mot-de-passe-oublie/'
+      preLoaderRoute: typeof LangMotDePasseOublieIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/inscription/': {
       id: '/$lang/inscription/'
       path: '/inscription'
@@ -927,6 +947,7 @@ interface LangRouteChildren {
   LangEvenementsIndexRoute: typeof LangEvenementsIndexRoute
   LangImpressumIndexRoute: typeof LangImpressumIndexRoute
   LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
+  LangMotDePasseOublieIndexRoute: typeof LangMotDePasseOublieIndexRoute
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
 }
@@ -945,6 +966,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangEvenementsIndexRoute: LangEvenementsIndexRoute,
   LangImpressumIndexRoute: LangImpressumIndexRoute,
   LangInscriptionIndexRoute: LangInscriptionIndexRoute,
+  LangMotDePasseOublieIndexRoute: LangMotDePasseOublieIndexRoute,
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
 }
