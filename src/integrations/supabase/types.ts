@@ -974,6 +974,7 @@ export type Database = {
           email: string | null
           first_name: string
           gallery_urls: Json
+          geom: unknown
           google_reviews_url: string | null
           id: string
           ide_verified: boolean
@@ -1018,6 +1019,7 @@ export type Database = {
           email?: string | null
           first_name: string
           gallery_urls?: Json
+          geom?: unknown
           google_reviews_url?: string | null
           id?: string
           ide_verified?: boolean
@@ -1062,6 +1064,7 @@ export type Database = {
           email?: string | null
           first_name?: string
           gallery_urls?: Json
+          geom?: unknown
           google_reviews_url?: string | null
           id?: string
           ide_verified?: boolean
@@ -1348,6 +1351,28 @@ export type Database = {
         Returns: undefined
       }
       therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }
+      therapists_within_radius: {
+        Args: { _lat: number; _lng: number; _radius_m?: number }
+        Returns: {
+          canton: string
+          city: string
+          currency: string
+          distance_m: number
+          first_name: string
+          id: string
+          last_name: string
+          latitude: number
+          longitude: number
+          photo_url: string
+          price_max: number
+          price_min: number
+          short_bio: string
+          slug: string
+          specialties: string[]
+          title: string
+          verified: boolean
+        }[]
+      }
       waiting_list_count: { Args: never; Returns: number }
     }
     Enums: {
