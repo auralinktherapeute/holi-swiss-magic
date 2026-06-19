@@ -237,3 +237,39 @@
 @media (prefers-reduced-motion: reduce) {
   .wl-v1::after { animation: none; }
 }
+
+/* ============================================================
+ * Ethereal glow transition — premium reveal for the
+ * "Ouverture imminente" + "Choisissez votre formule" duo.
+ * - Staggered fade-up entrance on scroll into view
+ * - Soft cyan breathing glow on the beta notice
+ * ============================================================ */
+@keyframes eg-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes eg-pulse-soft {
+  0%, 100% { opacity: 0.85; transform: scale(1);
+             box-shadow: 0 0 12px rgba(92, 200, 250, 0.10), 0 0 0 1px rgba(92, 200, 250, 0.18); }
+  50%      { opacity: 1;    transform: scale(1.008);
+             box-shadow: 0 0 28px rgba(92, 200, 250, 0.22), 0 0 0 1px rgba(92, 200, 250, 0.32); }
+}
+
+.eg-reveal {
+  opacity: 0;
+  animation: eg-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.eg-reveal--delay {
+  animation-delay: 0.22s;
+}
+
+.eg-beta-glow {
+  animation: eg-pulse-soft 3.4s ease-in-out infinite;
+  will-change: box-shadow, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eg-reveal,
+  .eg-reveal--delay { opacity: 1; animation: none; transform: none; }
+  .eg-beta-glow { animation: none; }
+}
