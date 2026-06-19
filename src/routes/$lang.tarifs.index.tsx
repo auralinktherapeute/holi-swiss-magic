@@ -78,6 +78,15 @@ function PricingPage() {
           <p className="mt-3 text-base text-[#d4c4e0]">
             {t("pricing.subtitle")}
           </p>
+          {/* Beta free-access notice (payment disabled during development) */}
+          <div className="mt-6 inline-flex max-w-2xl flex-col items-center gap-1 rounded-2xl border border-[#5cc8fa]/40 bg-[#5cc8fa]/10 px-5 py-3 text-center backdrop-blur">
+            <div className="text-sm font-semibold text-[#5cc8fa]">
+              {t("pricing.beta_notice_title")}
+            </div>
+            <div className="text-xs text-[#d4c4e0]">
+              {t("pricing.beta_notice_desc")}
+            </div>
+          </div>
         </div>
 
         {/* Plans grid */}
@@ -160,9 +169,9 @@ function PricingPage() {
                   ))}
                 </ul>
 
-                <Link to="/$lang/inscription" params={{ lang }} className="mt-6 block">
-                  <Button
-                    className={`group/btn w-full rounded-xl py-5 text-sm font-semibold transition-all ${
+                <Button
+                  asChild
+                  className={`group/btn mt-6 w-full rounded-xl py-5 text-sm font-semibold transition-all ${
                       isHighlight
                         ? "bg-gradient-to-r from-[#b86ef9] to-[#9b4ddc] text-white shadow-lg shadow-[#b86ef9]/40 hover:shadow-xl hover:shadow-[#b86ef9]/60"
                         : p.key === "elite"
@@ -171,10 +180,11 @@ function PricingPage() {
                     }`}
                     variant={isHighlight || p.key === "elite" ? "default" : "outline"}
                   >
-                    {p.cta}
+                  <Link to="/$lang/inscription" params={{ lang }}>
+                    {t("pricing.beta_cta")}
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             );
           })}
