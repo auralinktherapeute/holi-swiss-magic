@@ -255,6 +255,11 @@ function Page() {
                               <MapPin className="h-3 w-3" />{th.city}
                             </span>
                           )}
+                          {typeof th.distance_m === "number" && (
+                            <span className="rounded-full bg-[rgba(92,200,250,0.12)] border border-[rgba(92,200,250,0.3)] px-2 py-0.5 text-[10px] text-[#5cc8fa]">
+                              {(th.distance_m / 1000).toFixed(th.distance_m < 10000 ? 1 : 0)} km
+                            </span>
+                          )}
                           {th.price_min && (
                             <span>
                               {th.price_min}{th.price_max ? `–${th.price_max}` : ""}  {th.currency ?? "CHF"}
