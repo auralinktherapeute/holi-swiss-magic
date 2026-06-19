@@ -103,14 +103,14 @@ export function MobileDashboardBottomNav() {
     { to: "/dashboard/articles", icon: FileText, label: "Publier" },
   ];
 
-  const moreItems = [
+  const moreItems: Array<{ to: string; icon: typeof LayoutDashboard; label: string }> = [
     { to: "/dashboard/reservations", icon: BookmarkCheck, label: t("dashboard.reservations") },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
     { to: "/dashboard/crm", icon: Crown, label: "CRM Elite" },
     { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
-  ] as const;
+  ];
 
   const onLogout = async () => {
     await supabase.auth.signOut();
@@ -202,7 +202,7 @@ export function MobileDashboardBottomNav() {
                     return (
                       <Link
                         key={it.to}
-                        to={it.to}
+                        to={it.to as any}
                         onClick={() => setMenuOpen(false)}
                         className="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-foreground/80 hover:bg-muted"
                       >
