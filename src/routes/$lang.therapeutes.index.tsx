@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,8 @@ import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } f
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { useServerFn } from "@tanstack/react-start";
+import { geocodeCity } from "@/lib/geocode.functions";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -53,6 +55,7 @@ type Therapist = {
   city?: string; canton?: string; latitude?: number; longitude?: number;
   price_min?: number; price_max?: number; currency?: string;
   is_premium?: boolean; verified?: boolean; specialties?: string[];
+  distance_m?: number;
 };
 
 const CANTON_LABELS: Record<string, string> = {
@@ -80,9 +83,24 @@ function Page() {
   const [selectedId, setSelectedId] = useSessionState<string | null>("therapists.selectedId", null);
   const [mobileTab, setMobileTab] = useSessionState<"list" | "map">("therapists.mobileTab", "list");
   const [search, setSearch] = useSessionState("therapists.search", "");
+  const [debounced, setDebounced] = useState(search);
+  const geocode = useServerFn(geocodeCity);
 
-  const { data, isLoading } = useQuery({
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(search.trim()), 400);
+    return () => clearTimeout(id);
+  }, [search]);
+
+  const geo = useQuery({
+    queryKey: ["geocode-city", debounced],
+    enabled: debounced.length >= 2,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => geocode({ data: { query: debounced } }),
+  });
+
+  const defaultList = useQuery({
     queryKey: ["therapists-map"],
+    enabled: debounced.length < 2,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
@@ -95,17 +113,29 @@ function Page() {
     },
   });
 
-  const therapists = data ?? [];
-  const filtered = therapists.filter((t) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      `${t.first_name} ${t.last_name}`.toLowerCase().includes(q) ||
-      t.city?.toLowerCase().includes(q) ||
-      t.title?.toLowerCase().includes(q) ||
-      t.specialties?.some((s) => s.toLowerCase().includes(q))
-    );
+  const nearby = useQuery({
+    queryKey: ["therapists-nearby", geo.data?.ok ? [geo.data.lat, geo.data.lng] : null],
+    enabled: !!(geo.data && geo.data.ok),
+    queryFn: async () => {
+      if (!geo.data || !geo.data.ok) return [];
+      const { data, error } = await (supabase.rpc as any)("therapists_within_radius", {
+        _lat: geo.data.lat,
+        _lng: geo.data.lng,
+        _radius_m: 80000,
+      });
+      if (error) throw error;
+      return (data ?? []) as Therapist[];
+    },
   });
+
+  const isSearching = debounced.length >= 2;
+  const isLoading =
+    (!isSearching && defaultList.isLoading) ||
+    (isSearching && (geo.isLoading || (!!geo.data?.ok && nearby.isLoading)));
+  const cityNotFound = isSearching && !!geo.data && !geo.data.ok;
+  const filtered: Therapist[] = isSearching
+    ? (geo.data?.ok ? (nearby.data ?? []) : [])
+    : (defaultList.data ?? []);
 
   const handleCardClick = (t: Therapist) => {
     setSelectedId(t.id);
