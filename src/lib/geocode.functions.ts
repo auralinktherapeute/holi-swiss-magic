@@ -7,17 +7,22 @@ export const geocodeCity = createServerFn({ method: "POST" })
     return { query: q };
   })
   .handler(async ({ data }) => {
-    const key = process.env.GOOGLE_MAPS_API_KEY;
-    if (!key) return { ok: false as const, reason: "no_key" };
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const connKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!lovableKey || !connKey) return { ok: false as const, reason: "no_key" };
 
-    const url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
+    const url = new URL("https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json");
     url.searchParams.set("address", data.query);
     url.searchParams.set("components", "country:CH");
     url.searchParams.set("language", "fr");
-    url.searchParams.set("key", key);
 
     try {
-      const res = await fetch(url.toString());
+      const res = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": connKey,
+        },
+      });
       const json = (await res.json()) as {
         status: string;
         results?: Array<{
