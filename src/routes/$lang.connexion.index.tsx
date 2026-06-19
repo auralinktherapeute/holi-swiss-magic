@@ -134,7 +134,16 @@ function LoginPage() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">{t("auth.password")}</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">{t("auth.password")}</Label>
+            <Link
+              to="/$lang/mot-de-passe-oublie"
+              params={{ lang }}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {t("auth.forgot_password")}
+            </Link>
+          </div>
           <div className="relative">
             <Input
               id="password"
