@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { TherapistNav } from "@/components/layout/TherapistNav";
+import { MobileDashboardHeader, MobileDashboardBottomNav } from "@/components/layout/MobileDashboardNav";
 import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,9 +48,13 @@ function DashboardLayout() {
   return (
     <div className="flex min-h-screen w-full bg-background">
       <TherapistNav />
-      <main className="flex-1 overflow-x-hidden">
-        <Outlet />
-      </main>
+      <div className="flex flex-1 flex-col overflow-x-hidden">
+        <MobileDashboardHeader />
+        <main className="flex-1 pb-20 md:pb-0">
+          <Outlet />
+        </main>
+      </div>
+      <MobileDashboardBottomNav />
       <InactivityLogout redirectTo="/fr/connexion" />
     </div>
   );
