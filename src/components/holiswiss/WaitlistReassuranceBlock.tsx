@@ -14,7 +14,7 @@ export function WaitlistReassuranceBlock() {
   return (
     <section
       aria-labelledby="waitlist-reassurance-title"
-      className="mx-auto w-full max-w-2xl px-5 py-12 sm:py-16"
+      className="eg-reveal mx-auto w-full max-w-2xl px-5 py-12 sm:py-16"
     >
       <div className="wl-card wl-v1 relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-purple-900/25 to-indigo-950/50 p-8 sm:p-10 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         {/* Subtle background glows */}
