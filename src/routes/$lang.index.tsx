@@ -102,6 +102,10 @@ function HomePage() {
       <section className="bg-[#2d1248]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold tracking-tight text-center text-white">{t("home.pricingTeaser")}</h2>
+          <div className="mx-auto mt-4 flex max-w-2xl flex-col items-center gap-1 rounded-2xl border border-[#5cc8fa]/40 bg-[#5cc8fa]/10 px-5 py-3 text-center backdrop-blur">
+            <div className="text-sm font-semibold text-[#5cc8fa]">{t("pricing.beta_notice_title")}</div>
+            <div className="text-xs text-[#d4c4e0]">{t("pricing.beta_notice_desc")}</div>
+          </div>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
               { name: t("pricing.plans.basic.name"), price: 0, desc: t("pricing.plans.basic.tagline"), highlight: false },
@@ -127,9 +131,12 @@ function HomePage() {
             ))}
           </div>
           <div className="mt-8 text-center">
-            <Link to="/$lang/inscription" params={{ lang }}>
-              <Button size="lg" className="gap-2 bg-[#b86ef9] text-white shadow-lg shadow-[#b86ef9]/40 hover:bg-[#a855f7]"><Check className="h-4 w-4" />{t("home.ctaFree")}</Button>
-            </Link>
+            <Button asChild size="lg" className="gap-2 bg-[#b86ef9] text-white shadow-lg shadow-[#b86ef9]/40 hover:bg-[#a855f7]">
+              <Link to="/$lang/inscription" params={{ lang }}>
+                <Check className="h-4 w-4" />
+                {t("pricing.beta_cta")}
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
