@@ -80,6 +80,9 @@
     "subtitle": "A platform designed to highlight your practice and grow your clientele across Switzerland.",
     "month": "/month",
     "no_commitment": "No commitment",
+    "beta_notice_title": "Free access during the test phase",
+    "beta_notice_desc": "No payment required for now — create your account and enjoy all features for free during the beta.",
+    "beta_cta": "Get free beta access",
     "recommended": "RECOMMENDED",
     "excellence": "EXCELLENCE",
     "plans": {
