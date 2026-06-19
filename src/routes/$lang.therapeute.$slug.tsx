@@ -61,6 +61,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
           languages?: string[] | null;
           specialties?: string[] | null;
           years_experience?: number | null;
+          phone?: string | null;
         }
       | null
       | undefined;
@@ -129,6 +130,9 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     }
     if (t.website) {
       ld.sameAs = [t.website];
+    }
+    if (t.phone) {
+      ld.telephone = t.phone;
     }
     if (t.price_min) {
       const cur = t.currency ?? "CHF";

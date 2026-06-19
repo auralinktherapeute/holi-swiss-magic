@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, Clock, Tag, Sparkles, Heart, Brain, Wind, ShieldCheck } from "lucide-react";
+import { hreflangLinks } from "@/lib/seo";
 
 const SITE = "https://holiswiss.ch";
 const SLUG = "qu-est-ce-que-la-sophrologie";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
         { name: "twitter:card", content: "summary_large_image" },
         { name: "keywords", content: "sophrologie, sophrologue, relaxation, gestion du stress, bien-être, Suisse, thérapie holistique" },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/blog/${SLUG}`)],
       scripts: [
         {
           type: "application/ld+json",

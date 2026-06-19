@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { PagePlaceholder } from "@/components/holiswiss/PagePlaceholder";
+import { hreflangLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/contact/")({
   component: Page,
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/$lang/contact/")({
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks("/contact")],
     };
   },
 });
