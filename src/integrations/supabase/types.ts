@@ -182,6 +182,39 @@ export type Database = {
           },
         ]
       }
+      cities: {
+        Row: {
+          aliases: string[]
+          canonical_name: string
+          country: string
+          created_at: string
+          display_name: string
+          id: string
+          lat: number
+          lng: number
+        }
+        Insert: {
+          aliases?: string[]
+          canonical_name: string
+          country?: string
+          created_at?: string
+          display_name: string
+          id?: string
+          lat: number
+          lng: number
+        }
+        Update: {
+          aliases?: string[]
+          canonical_name?: string
+          country?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          lat?: number
+          lng?: number
+        }
+        Relationships: []
+      }
       crm_activities: {
         Row: {
           body: string | null
@@ -1341,6 +1374,7 @@ export type Database = {
         Returns: boolean
       }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
+      normalize_city_text: { Args: { _input: string }; Returns: string }
       notify_admin_event: {
         Args: {
           _kind: string
@@ -1349,6 +1383,15 @@ export type Database = {
           _summary: string
         }
         Returns: undefined
+      }
+      resolve_city: {
+        Args: { _input: string }
+        Returns: {
+          canonical_name: string
+          display_name: string
+          lat: number
+          lng: number
+        }[]
       }
       therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }
       therapists_within_radius: {
