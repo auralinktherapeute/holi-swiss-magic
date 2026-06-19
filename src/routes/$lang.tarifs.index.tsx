@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Check, Sparkles, Crown, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { hreflangLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/tarifs/")({
   component: PricingPage,
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/$lang/tarifs/")({
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, ...hreflangLinks("/tarifs")],
     };
   },
 });
