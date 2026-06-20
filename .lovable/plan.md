@@ -1,131 +1,53 @@
-## Objectif
 
-Mettre en place un CRM premium dans Holiswiss avec deux périmètres :
-1. **CRM Admin** (rubrique du dashboard `/admin/crm`)
-2. **CRM Thérapeute** (rubrique du dashboard pro `/dashboard/crm`), accessible uniquement aux comptes `plan = elite_pro` (teaser verrouillé sinon).
+## Audit de l'existant (vérifié)
 
-Style : cohérent avec l'admin SEO/GEO existant (dark violet, glassmorphism subtil, framer-motion sobre, Lucide icons, design tokens sémantiques uniquement).
+**Déjà en place et fonctionnel — ne rien refaire :**
 
----
+| Élément | État |
+|---|---|
+| Tables `crm_leads`, `crm_client_contacts`, `crm_tasks`, `crm_activities`, `crm_tags`, `crm_contact_tags`, `crm_pipelines`, `crm_stages` | ✅ créées avec colonnes complètes (notes, tags, private_notes, relation_status, last/next_booking_at, etc.) |
+| RLS isolation thérapeute ↔ thérapeute | ✅ policies scoppées via `therapists.user_id = auth.uid()` ; admin lecture seule sur leads, **pas** sur `private_notes` des contacts (à vérifier) |
+| Trigger `therapist_to_crm_lead` (inscription → lead auto) | ✅ activé |
+| Trigger `appointment_to_crm_contact` (RDV → contact CRM auto) | ✅ activé, Elite Pro only |
+| Trigger `appointment_cancel_crm` (annulation → tag "a_relancer") | ✅ activé |
+| Trigger `waitlist_to_crm_lead` | ✅ activé |
+| Trigger `trg_crm_plan_change` (changement de plan logué) | ✅ existe |
+| Routes `/admin/crm` (Pipeline/Liste/Tâches/Relances) | ✅ 579 lignes, UI conservée |
+| Route `/dashboard/crm` (CRM thérapeute) | ✅ 607 lignes, style violet sombre |
+| Fonction `crm_daily_maintenance` (auto inactif 60j) | ✅ existe |
 
-## Étape 1 — Fondations base de données + accès
+## Vrais manques détectés
 
-### Tables (migration unique, RLS + GRANT)
+1. **Backfill manquant** : 5 thérapeutes existent en base, **0 lead** dans le CRM admin. Les triggers ont été créés après leur inscription → ils n'ont jamais été remontés. Aucun n'apparaît dans `/admin/crm`.
+2. **Pipeline stages demandés** : `NOUVEAU → EN ATTENTE → CONTACTÉ → ACTIF → FIDÉLISÉ → INACTIF`. L'UI actuelle utilise `new/pending/contacted/...` mais il faut vérifier que `ACTIF` et `FIDÉLISÉ` existent (sinon ajouter `active` + `loyal` aux statuts acceptés).
+3. **Sécurité notes privées** : la policy admin sur `crm_client_contacts` autorise actuellement la lecture de `private_notes` (RLS `OR has_role(admin)`). Le brief demande : *"Admin can read all therapist records but cannot access individual therapist-patient notes"* → restreindre via vue publique sans `private_notes` pour l'admin, ou retirer l'accès admin sur cette table.
+4. **Plan d'abonnement dans la fiche lead admin** : affichage du `subscription_plan` du thérapeute lié (déjà présent en base, juste à afficher dans la carte du pipeline).
 
-- `crm_leads` — leads thérapeutes (avant inscription)
-  - `first_name`, `last_name`, `email`, `phone`, `canton`, `specialty`, `source` (form/landing/import/manual), `status` (`new`/`pending`/`contacted`/`followup`/`converted`/`elite_pro`/`suspended`), `assigned_to` (uuid admin), `notes`, `priority` (`low`/`normal`/`high`), `last_contact_at`, `converted_therapist_id` (FK therapists nullable)
-- `crm_activities` — timeline polymorphique
-  - `entity_type` (`lead`/`therapist`/`client_contact`), `entity_id`, `owner_id` (uuid auteur), `type` (`email`/`call`/`note`/`status_change`/`task`/`booking`/`review`/`message`), `title`, `body`, `metadata jsonb`, `occurred_at`
-- `crm_tasks` — rappels et tâches
-  - `owner_id`, `entity_type`, `entity_id`, `title`, `description`, `due_at`, `done_at`, `priority`
-- `crm_client_contacts` — carnet client du thérapeute Elite Pro
-  - `therapist_id` (FK therapists, owner), `first_name`, `last_name`, `email`, `phone`, `session_type`, `relation_status` (`prospect`/`new`/`active`/`followup`/`inactive`), `tags text[]`, `last_booking_at`, `next_booking_at`, `private_notes`
+## Plan d'action (3 étapes minimales)
 
-### RLS
+### Étape 1 — Migration SQL (un seul appel)
+- Backfill : insérer dans `crm_leads` une ligne pour chaque thérapeute existant sans lead (`source='inscription'`, `status` dérivé de `therapists.status`).
+- Ajouter `'active'` et `'loyal'` (FIDÉLISÉ) aux statuts autorisés côté UI (pas de contrainte SQL stricte, juste docs).
+- Créer une vue `crm_client_contacts_admin` exposant tout **sauf** `private_notes`, et restreindre la policy admin SELECT sur la table de base pour interdire la lecture directe des notes privées.
+- Trigger auto‑promotion : passer le lead à `active` quand `therapists.status='active'` et à `loyal` après N (>=10) RDV honorés.
 
-- **Admin tables** (`crm_leads`, `crm_activities` côté admin, `crm_tasks` côté admin) : accès via `has_role(auth.uid(),'admin')`.
-- **`crm_client_contacts`** + activities/tasks scoped therapist : `therapist_id = (select id from therapists where user_id = auth.uid())`. Service role full pour seeding/admin.
-- GRANT explicites `authenticated` + `service_role` sur chaque table (jamais `anon`).
+### Étape 2 — UI Admin CRM (`admin.crm.tsx` + `AdminCrmViews.tsx`)
+- Ajouter colonnes pipeline `ACTIF` et `FIDÉLISÉ` (les autres existent déjà).
+- Afficher dans chaque carte lead : badge plan (Basic / Essentiel / Elite Pro), canton, dernière activité.
+- Filtre additionnel "Plan" (déjà : canton, source, recherche).
+- Aucun changement de layout.
 
-### Accès Elite Pro
+### Étape 3 — Vérifications (sans nouveau code)
+- Confirmer que `/dashboard/crm` (déjà mobile/desktop, déjà violet sombre) liste bien les contacts du thérapeute connecté uniquement → test rapide en base + Playwright si besoin.
+- Confirmer que l'admin connecté à `/admin/crm` voit les 5 nouveaux leads après backfill.
 
-- Helper SQL `is_elite_pro(_user_id uuid) returns boolean` (security definer) : lit `therapists.subscription_plan = 'elite_pro'` (vérifier le nom exact de la colonne via `read_query` avant la migration).
-- Server function `useElitePro` côté thérapeute pour gate UI.
+## Hors scope (déjà fait — ne rien toucher)
+- Création des tables, RLS isolation thérapeute, triggers RDV→contact, daily maintenance, UI dashboard thérapeute, design violet sombre.
 
----
-
-## Étape 2 — CRM Admin (`/admin/crm`)
-
-Route : `src/routes/admin.crm.tsx` + entrée dans `AdminNav`.
-
-### Layout (3 zones, responsive)
-```text
-┌───────────────────────────────────────────────────────┐
-│ Header : recherche globale + filtres avancés + KPIs   │
-├──────────────┬────────────────────────┬───────────────┤
-│ Pipeline     │ Liste / fiche détaillée│ Sidebar :     │
-│ Kanban       │ (drawer ou colonne)    │ tâches,       │
-│ (7 colonnes) │                        │ rappels,      │
-│              │                        │ alertes       │
-└──────────────┴────────────────────────┴───────────────┘
-```
-
-### Composants
-- **KPIs en-tête** : leads ce mois, taux de conversion, Elite Pro actifs, relances en retard.
-- **Recherche globale** debouncée (nom, email, canton, spécialité).
-- **Filtres** : statut, plan d'abonnement, canton, spécialité, période d'inscription, source.
-- **Kanban** drag-and-drop léger (framer-motion `Reorder` ou simple boutons "déplacer") avec colonnes : new / pending / contacted / followup / converted / elite_pro / suspended. Carte = nom + canton + badge priorité + date dernier contact.
-- **Fiche détaillée** (drawer Sheet) :
-  - infos profil + statut validation + plan actif
-  - timeline `crm_activities` (filtrable par type)
-  - notes internes (textarea avec save)
-  - liens vers articles/événements/réservations/avis du thérapeute s'il est converti
-  - actions : changer statut, assigner admin, ajouter note, créer tâche
-- **Sidebar** : mes tâches du jour, rappels en retard (rouge pulse), alertes auto (ex: lead inactif >14j).
-
-### Server functions (`src/lib/crm.functions.ts`)
-- `listLeads({ search, filters, status })`
-- `getLeadDetail(id)` → lead + activities + tasks + therapist lié
-- `updateLeadStatus(id, status)` + log auto dans activities
-- `addNote(entityType, entityId, body)`
-- `createTask({...})` / `completeTask(id)`
-- `assignLead(id, adminId)`
-
-Toutes protégées par `requireSupabaseAuth` + check `has_role admin`.
+## Risques / points d'attention
+- La migration backfill est idempotente (`ON CONFLICT DO NOTHING` sur `converted_therapist_id`) → safe à rejouer.
+- La vue admin nécessite que tout le code admin existant lise désormais `crm_client_contacts_admin` au lieu de la table directe pour les fiches contact (à grep avant migration).
 
 ---
 
-## Étape 3 — CRM Thérapeute Elite Pro (`/dashboard/crm`)
-
-Route : `src/routes/dashboard.crm.tsx` + entrée dans `TherapistNav`.
-
-### Gate Elite Pro
-```tsx
-const { isElitePro } = useElitePro();
-if (!isElitePro) return <ElitePropTeaser />;
-```
-Teaser : card glassmorphism, icône Crown, titre "CRM Elite Pro", texte court, CTA "Passer à Elite Pro" → `/dashboard/abonnement`. L'entrée du nav reste visible mais badge "Elite" doré.
-
-### Fonctionnalités
-- **Vue switcher** Tableau / Cartes (toggle, animation fade).
-- **Recherche + filtres** : statut relation, tags, période dernière réservation.
-- **Fiche contact** (drawer) :
-  - identité, email, téléphone, type de séance
-  - dernière + prochaine réservation (liées à `appointments` quand `email`/`phone` matche, sinon manuel)
-  - statut relation (select : prospect/new/active/followup/inactive)
-  - tags multi-select (chips colorés : stress, sommeil, énergétique, fidélisation, VIP, custom)
-  - notes privées (markdown light)
-  - timeline : réservations + annulations (depuis `appointments`), avis laissés (`reviews`), notes du thérapeute
-  - rappels personnalisés (createTask scope therapist) — preset "Relancer dans 7j" / "Reprendre contact" / "Proposer nouvelle séance"
-- **Vue tableau** : tri colonnes, badge statut coloré, dernière réservation, prochain rappel.
-- **Vue cartes** : grille responsive, avatar initiales, statut + tags visibles.
-
-### Server functions (`src/lib/crm-therapist.functions.ts`)
-- `listMyContacts({ search, status, tags })`
-- `getContactDetail(id)` → contact + activities + tasks + bookings/reviews liés (par email)
-- `upsertContact(payload)` / `deleteContact(id)`
-- `addContactNote(id, body)` / `setRelationStatus(id, status)` / `setTags(id, tags[])`
-- `createReminder({ contactId, preset|dueAt, title })`
-
-Toutes scopées `therapist_id = current`.
-
----
-
-## Détails techniques transverses
-
-- **Styles** : réutiliser tokens `src/styles.css` + `admin-design-system.css`. Aucune couleur en dur.
-- **Animations** : framer-motion `AnimatePresence` + `motion.div` stagger 60ms ; `prefers-reduced-motion` respecté (déjà global).
-- **Icônes** : Lucide (`Users`, `Inbox`, `Workflow`, `KanbanSquare`, `Bell`, `Crown`, `Tag`, `CalendarClock`).
-- **Accessibilité** : `aria-label` sur boutons icône, focus rings visibles, drawer trap focus (shadcn Sheet), targets ≥44px.
-- **Performance** : TanStack Query `ensureQueryData` dans loaders `_authenticated` ; pagination côté serveur pour leads/contacts (limit 50).
-- **Aucune régression** sur SEO/GEO ou pages publiques — toutes les routes ajoutées sont sous `/admin/*` ou `/dashboard/*`.
-
----
-
-## Livraison en 3 commits logiques
-
-1. **Migration + server functions admin + types** (étape 1 + base étape 2).
-2. **Route `/admin/crm` complète** (UI + Kanban + drawer + sidebar).
-3. **Route `/dashboard/crm` + teaser Elite Pro + server functions therapist**.
-
-Validation finale : build OK, `linter` Supabase clean, navigation visible dans les deux dashboards, gate Elite Pro testée avec un compte sans plan.
+**Confirme ce plan et je lance l'étape 1 (migration SQL).** Si tu veux que j'ignore la restriction sur les notes privées admin (point 3 — vue séparée), dis‑le, ça simplifie la migration.

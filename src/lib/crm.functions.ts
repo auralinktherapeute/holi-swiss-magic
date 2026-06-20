@@ -12,7 +12,7 @@ export type CrmLead = {
   canton: string | null;
   specialty: string | null;
   source: string;
-  status: "new" | "pending" | "contacted" | "followup" | "converted" | "elite_pro" | "suspended";
+  status: "new" | "pending" | "contacted" | "followup" | "active" | "loyal" | "converted" | "elite_pro" | "suspended";
   priority: "low" | "normal" | "high";
   assigned_to: string | null;
   notes: string | null;
@@ -47,7 +47,7 @@ export type CrmTask = {
   priority: "low" | "normal" | "high";
 };
 
-const LEAD_STATUSES = ["new","pending","contacted","followup","converted","elite_pro","suspended"] as const;
+const LEAD_STATUSES = ["new","pending","contacted","followup","active","loyal","converted","elite_pro","suspended"] as const;
 
 export const listCrmLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

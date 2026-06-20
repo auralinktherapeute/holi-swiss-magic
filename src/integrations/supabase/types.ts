@@ -1446,6 +1446,16 @@ export type Database = {
     }
     Functions: {
       admin_badge_counts: { Args: never; Returns: Json }
+      admin_therapist_client_stats: {
+        Args: never
+        Returns: {
+          active_contacts: number
+          last_booking_at: string
+          recent_contacts: number
+          therapist_id: string
+          total_contacts: number
+        }[]
+      }
       crm_daily_maintenance: { Args: never; Returns: Json }
       has_role: {
         Args: {
