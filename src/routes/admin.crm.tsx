@@ -20,13 +20,12 @@ export const Route = createFileRoute("/admin/crm")({
 });
 
 const STATUS_COLUMNS: Array<{ id: CrmLead["status"]; label: string; color: string }> = [
-  { id: "new",        label: "Nouveau lead",  color: "#5cc8fa" },
+  { id: "new",        label: "Nouveau",       color: "#5cc8fa" },
   { id: "pending",    label: "En attente",    color: "#facc15" },
   { id: "contacted",  label: "Contacté",      color: "#a78bfa" },
-  { id: "followup",   label: "Relancé",       color: "#fb923c" },
-  { id: "converted",  label: "Inscrit",       color: "#34d399" },
-  { id: "elite_pro",  label: "Elite Pro",     color: "#f472b6" },
-  { id: "suspended",  label: "Suspendu",      color: "#94a3b8" },
+  { id: "active",     label: "Actif",         color: "#34d399" },
+  { id: "loyal",      label: "Fidélisé",      color: "#f472b6" },
+  { id: "suspended",  label: "Inactif",       color: "#94a3b8" },
 ];
 
 const PRIORITY_LABEL: Record<string, { label: string; color: string }> = {
