@@ -83,6 +83,87 @@ export type Database = {
           },
         ]
       }
+      articles: {
+        Row: {
+          author_id: string | null
+          body_de: string | null
+          body_en: string | null
+          body_fr: string
+          body_it: string | null
+          category: string | null
+          cover_image_url: string | null
+          created_at: string
+          excerpt_de: string | null
+          excerpt_en: string | null
+          excerpt_fr: string | null
+          excerpt_it: string | null
+          id: string
+          lang: string
+          meta_description_fr: string | null
+          meta_title_fr: string | null
+          published_at: string | null
+          slug: string
+          status: string
+          title_de: string | null
+          title_en: string | null
+          title_fr: string
+          title_it: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body_de?: string | null
+          body_en?: string | null
+          body_fr: string
+          body_it?: string | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt_de?: string | null
+          excerpt_en?: string | null
+          excerpt_fr?: string | null
+          excerpt_it?: string | null
+          id?: string
+          lang?: string
+          meta_description_fr?: string | null
+          meta_title_fr?: string | null
+          published_at?: string | null
+          slug: string
+          status?: string
+          title_de?: string | null
+          title_en?: string | null
+          title_fr: string
+          title_it?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body_de?: string | null
+          body_en?: string | null
+          body_fr?: string
+          body_it?: string | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt_de?: string | null
+          excerpt_en?: string | null
+          excerpt_fr?: string | null
+          excerpt_it?: string | null
+          id?: string
+          lang?: string
+          meta_description_fr?: string | null
+          meta_title_fr?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: string
+          title_de?: string | null
+          title_en?: string | null
+          title_fr?: string
+          title_it?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       availabilities: {
         Row: {
           created_at: string
