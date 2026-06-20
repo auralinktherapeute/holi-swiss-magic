@@ -38,9 +38,12 @@ export function AccountCta({
   const { user, loading } = useAuth();
   const check = useServerFn(checkIsAdmin);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [lastAuthSpace, setLastAuthSpace] = useState<"admin" | "dashboard">(() =>
-    readLastAuthSpace(),
-  );
+  // Valeur initiale SSR-safe ; localStorage lu après montage côté client
+  const [lastAuthSpace, setLastAuthSpace] = useState<"admin" | "dashboard">("dashboard");
+
+  useEffect(() => {
+    setLastAuthSpace(readLastAuthSpace());
+  }, []);
 
   useEffect(() => {
     if (!user) {
