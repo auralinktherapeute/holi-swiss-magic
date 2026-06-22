@@ -69,7 +69,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     // Use authenticated user client (RLS policy admin_all_articles allows admins to see all statuses)
     const { data, error } = await (context.supabase as any)
       .from("articles")
-      .select("id,slug,status,lang,category,published_at,created_at,cover_image_url,title_fr,title_de,title_it,title_en")
+      .select("id,slug,status,lang,category,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,meta_title_fr,meta_description_fr")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(`Impossible de charger les articles: ${error.message}`);
