@@ -266,9 +266,10 @@ function Page() {
   const [dialogOpen, setDialogOpen] = useSessionState("admin.articles.dialogOpen", false);
   const [editing, setEditing] = useSessionState<ArticleRow | null>("admin.articles.editing", null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["admin-articles"],
     queryFn: () => getAllArticlesAdmin(),
+    retry: false,
   });
 
   const deleteMutation = useMutation({
@@ -306,7 +307,16 @@ function Page() {
 
       {isLoading && <p className="text-muted-foreground">Chargement...</p>}
 
-      {!isLoading && articles.length === 0 && (
+      {!isLoading && error && (
+        <Card className="bg-surface border-destructive/40">
+          <CardContent className="p-6 text-center text-destructive">
+            <p className="font-semibold">Erreur de chargement</p>
+            <p className="text-sm mt-1 text-muted-foreground">{(error as Error).message}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && !error && articles.length === 0 && (
         <Card className="bg-surface border-border/60">
           <CardContent className="p-10 text-center text-muted-foreground">Aucun article. Créez le premier !</CardContent>
         </Card>
