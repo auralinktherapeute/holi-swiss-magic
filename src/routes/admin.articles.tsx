@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X } from "lucide-react";
-import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, titleForLang } from "@/lib/articles.functions";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Progress } from "@/components/ui/progress";
+import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
+import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
@@ -88,7 +91,14 @@ function UnsplashPicker({ onSelect }: { onSelect: (url: string) => void }) {
 }
 
 // ── Article form ──────────────────────────────────────────────────────────────
-type ArticleRow = { id: string; slug: string | null; status: string; lang: string; category: string | null; published_at: string | null; created_at: string | null; cover_image_url: string | null; title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null };
+type ArticleRow = {
+  id: string; slug: string | null; status: string; lang: string;
+  category: string | null; published_at: string | null; created_at: string | null;
+  updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
+  title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null;
+  excerpt_fr?: string | null; body_fr?: string | null;
+  meta_title_fr?: string | null; meta_description_fr?: string | null;
+};
 
 type FormData = {
   id?: string;
@@ -260,11 +270,135 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Status meta ───────────────────────────────────────────────────────────────
+type StatusFilter = "all" | "validated" | "pending_validation" | "rejected" | "draft";
+
+const STATUS_META: Record<Exclude<StatusFilter, "all">, { label: string; emoji: string; cls: string; chip: string }> = {
+  validated:          { label: "Publiés",    emoji: "✅", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",     chip: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+  pending_validation: { label: "En attente", emoji: "⏳", cls: "border-orange-500/40 bg-orange-500/10 text-orange-300",        chip: "bg-orange-500/15 text-orange-300 border-orange-500/30" },
+  rejected:           { label: "Refusés",    emoji: "❌", cls: "border-red-500/40 bg-red-500/10 text-red-300",                  chip: "bg-red-500/15 text-red-300 border-red-500/30" },
+  draft:              { label: "Brouillons", emoji: "📝", cls: "border-slate-500/40 bg-slate-500/10 text-slate-300",            chip: "bg-slate-500/15 text-slate-300 border-slate-500/30" },
+};
+
+type ScoredArticle = ArticleRow & {
+  _seo: ReturnType<typeof computeSeo>;
+  _geo: ReturnType<typeof computeGeo>;
+  _title: string;
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const meta = STATUS_META[status as keyof typeof STATUS_META];
+  if (!meta) return <Badge variant="outline">{status}</Badge>;
+  return <Badge variant="outline" className={meta.chip}>{meta.emoji} {meta.label.replace(/s$/, "")}</Badge>;
+}
+
+function ScorePill({ value, kind }: { value: number; kind: "seo" | "geo" }) {
+  const c = scoreColor(value);
+  const label = kind === "seo" ? "SEO" : "GEO";
+  const Icon = kind === "seo" ? Sparkles : Globe2;
+  return (
+    <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${c.bg} ${c.text} ${c.border}`} title={c.label}>
+      <Icon className="h-3 w-3" />
+      <span>{label}</span>
+      <span className="tabular-nums">{value}/100</span>
+    </div>
+  );
+}
+
+function ArticleCard({
+  a, onEdit, onDelete, onTogglePublish, onImprove,
+}: {
+  a: ScoredArticle;
+  onEdit: () => void;
+  onDelete: () => void;
+  onTogglePublish: () => void;
+  onImprove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const isPublished = a.status === "validated";
+
+  return (
+    <Card className="bg-surface border-border/60 overflow-hidden">
+      <CardContent className="p-4 md:p-5">
+        <div className="flex items-start gap-4">
+          {a.cover_image_url
+            ? <img src={a.cover_image_url} alt="" className="w-24 h-20 object-cover rounded-lg shrink-0" loading="lazy" />
+            : <div className="w-24 h-20 bg-background rounded-lg shrink-0 flex items-center justify-center text-muted-foreground border border-border/60"><Image className="h-6 w-6" /></div>
+          }
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <StatusBadge status={a.status} />
+              <Badge variant="outline" className="border-border/60 text-xs uppercase tracking-wide">{a.lang}</Badge>
+              {a.category && <Badge variant="secondary" className="text-xs">{a.category}</Badge>}
+              <ScorePill value={a._seo.score} kind="seo" />
+              <ScorePill value={a._geo.score} kind="geo" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground leading-tight truncate">
+              {a._title || <span className="italic text-muted-foreground">Sans titre</span>}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {a.author_id ? <>Auteur <span className="font-mono">{a.author_id.slice(0, 8)}</span> · </> : null}
+              {a.published_at
+                ? <>Publié le {new Date(a.published_at).toLocaleDateString("fr-CH")}</>
+                : <>Créé le {a.created_at ? new Date(a.created_at).toLocaleDateString("fr-CH") : "—"}</>}
+              {a.slug ? <> · <span className="font-mono">/{a.slug}</span></> : null}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" title={isPublished ? "Dépublier" : "Publier"} onClick={onTogglePublish}>
+                {isPublished ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+              <Button size="sm" variant="ghost" title="Éditer" onClick={onEdit}><Pencil className="h-4 w-4" /></Button>
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" title="Supprimer" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10" onClick={onImprove}>
+              <Sparkles className="h-3.5 w-3.5 mr-1" />Améliorer le SEO
+            </Button>
+          </div>
+        </div>
+
+        {/* Expandable SEO checklist */}
+        <button type="button" onClick={() => setOpen(v => !v)}
+          className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          Checklist SEO ({a._seo.checklist.filter(c => c.ok).length}/{a._seo.checklist.length})
+        </button>
+        {open && (
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-1.5 rounded-lg border border-border/40 bg-background/40 p-3">
+            {a._seo.checklist.map(item => (
+              <div key={item.key} className="flex items-start gap-2 text-xs">
+                <span className={item.ok ? "text-emerald-400" : "text-red-400"}>{item.ok ? "✓" : "✗"}</span>
+                <div className="min-w-0">
+                  <div className={item.ok ? "text-foreground" : "text-foreground/80"}>{item.label}</div>
+                  {item.hint && <div className="text-muted-foreground">{item.hint}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function Page() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useSessionState("admin.articles.dialogOpen", false);
   const [editing, setEditing] = useSessionState<ArticleRow | null>("admin.articles.editing", null);
+
+  // Filters
+  const [statusFilter, setStatusFilter] = useSessionState<StatusFilter>("admin.articles.f.status", "all");
+  const [langFilter, setLangFilter] = useSessionState<string>("admin.articles.f.lang", "all");
+  const [sortBy, setSortBy] = useSessionState<string>("admin.articles.f.sort", "date_desc");
+  const [search, setSearch] = useSessionState<string>("admin.articles.f.search", "");
+  const [seoMin, setSeoMin] = useSessionState<number>("admin.articles.f.seoMin", 0);
+  const [geoMin, setGeoMin] = useSessionState<number>("admin.articles.f.geoMin", 0);
+
+  // Side panel
+  const [improving, setImproving] = useState<ScoredArticle | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-articles"],
@@ -278,34 +412,155 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const articles = (data?.articles ?? []) as unknown as ArticleRow[];
+  const statusMutation = useMutation({
+    mutationFn: (p: { id: string; status: "draft" | "validated" | "pending_validation" | "rejected" }) =>
+      setArticleStatus({ data: p }),
+    onSuccess: () => { toast.success("Statut mis à jour."); qc.invalidateQueries({ queryKey: ["admin-articles"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      validated: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-      draft: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-      pending_validation: "bg-blue-500/15 text-blue-300 border-blue-500/30",
-      rejected: "bg-destructive/15 text-destructive border-destructive/30",
-    };
-    const label: Record<string, string> = { validated: "Publié", draft: "Brouillon", pending_validation: "En validation", rejected: "Rejeté" };
-    return <Badge variant="outline" className={map[status] ?? ""}>{label[status] ?? status}</Badge>;
-  };
+  const rawArticles = (data?.articles ?? []) as unknown as ArticleRow[];
+
+  const scored: ScoredArticle[] = useMemo(() => rawArticles.map(a => ({
+    ...a,
+    _seo: computeSeo(a),
+    _geo: computeGeo(a),
+    _title: titleForLang(a as Record<string, unknown>, (a.lang as Lang) ?? "fr"),
+  })), [rawArticles]);
+
+  const counts = useMemo(() => ({
+    all: scored.length,
+    validated: scored.filter(a => a.status === "validated").length,
+    pending_validation: scored.filter(a => a.status === "pending_validation").length,
+    rejected: scored.filter(a => a.status === "rejected").length,
+    draft: scored.filter(a => a.status === "draft").length,
+  }), [scored]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = scored.filter(a => {
+      if (statusFilter !== "all" && a.status !== statusFilter) return false;
+      if (langFilter !== "all" && a.lang !== langFilter) return false;
+      if (a._seo.score < seoMin) return false;
+      if (a._geo.score < geoMin) return false;
+      if (q && !(a._title.toLowerCase().includes(q) || (a.slug ?? "").toLowerCase().includes(q))) return false;
+      return true;
+    });
+    const ts = (s: string | null | undefined) => (s ? new Date(s).getTime() : 0);
+    list.sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":  return ts(a.created_at) - ts(b.created_at);
+        case "seo_asc":   return a._seo.score - b._seo.score;
+        case "seo_desc":  return b._seo.score - a._seo.score;
+        case "geo_asc":   return a._geo.score - b._geo.score;
+        case "geo_desc":  return b._geo.score - a._geo.score;
+        case "status":    return a.status.localeCompare(b.status);
+        case "date_desc":
+        default:          return ts(b.created_at) - ts(a.created_at);
+      }
+    });
+    return list;
+  }, [scored, statusFilter, langFilter, seoMin, geoMin, sortBy, search]);
 
   return (
     <div className="p-6 md:p-10 space-y-6">
+      {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Articles de blog</h1>
-          <p className="text-muted-foreground mt-1">{articles.length} article{articles.length !== 1 ? "s" : ""}</p>
+          <p className="text-muted-foreground mt-1">
+            {counts.all} article{counts.all !== 1 ? "s" : ""} au total
+            {filtered.length !== counts.all && <> · {filtered.length} affiché{filtered.length !== 1 ? "s" : ""}</>}
+          </p>
         </div>
         <Button className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />Nouvel article
         </Button>
       </div>
 
+      {/* Status summary badges */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <button onClick={() => setStatusFilter("all")}
+          className={`rounded-xl border p-3 text-left transition-all ${statusFilter === "all" ? "border-primary/60 bg-primary/10 ring-1 ring-primary/40" : "border-border/60 bg-surface hover:bg-surface/70"}`}>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">📚 Total</div>
+          <div className="text-2xl font-bold text-foreground mt-1">{counts.all}</div>
+        </button>
+        {(Object.keys(STATUS_META) as Array<keyof typeof STATUS_META>).map(k => {
+          const m = STATUS_META[k];
+          const active = statusFilter === k;
+          return (
+            <button key={k} onClick={() => setStatusFilter(active ? "all" : k)}
+              className={`rounded-xl border p-3 text-left transition-all ${active ? `${m.cls} ring-1 ring-current/30` : "border-border/60 bg-surface hover:bg-surface/70"}`}>
+              <div className={`text-xs uppercase tracking-wider ${active ? "" : "text-muted-foreground"}`}>{m.emoji} {m.label}</div>
+              <div className="text-2xl font-bold mt-1">{counts[k]}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Filters bar */}
+      <Card className="bg-surface border-border/60">
+        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+          <div className="md:col-span-4 space-y-1">
+            <Label className="text-xs text-muted-foreground"><Search className="inline h-3 w-3 mr-1" />Recherche</Label>
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Titre ou slug…" className="bg-background border-border/60" />
+          </div>
+          <div className="md:col-span-2 space-y-1">
+            <Label className="text-xs text-muted-foreground">Langue</Label>
+            <Select value={langFilter} onValueChange={setLangFilter}>
+              <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-surface border-border/60">
+                <SelectItem value="all">Toutes</SelectItem>
+                <SelectItem value="fr">🇫🇷 FR</SelectItem>
+                <SelectItem value="de">🇩🇪 DE</SelectItem>
+                <SelectItem value="it">🇮🇹 IT</SelectItem>
+                <SelectItem value="en">🇬🇧 EN</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2 space-y-1">
+            <Label className="text-xs text-muted-foreground">SEO min</Label>
+            <Select value={String(seoMin)} onValueChange={v => setSeoMin(Number(v))}>
+              <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-surface border-border/60">
+                <SelectItem value="0">Tous</SelectItem>
+                <SelectItem value="50">≥ 50</SelectItem>
+                <SelectItem value="80">≥ 80</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2 space-y-1">
+            <Label className="text-xs text-muted-foreground">GEO min</Label>
+            <Select value={String(geoMin)} onValueChange={v => setGeoMin(Number(v))}>
+              <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-surface border-border/60">
+                <SelectItem value="0">Tous</SelectItem>
+                <SelectItem value="50">≥ 50</SelectItem>
+                <SelectItem value="80">≥ 80</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2 space-y-1">
+            <Label className="text-xs text-muted-foreground"><Filter className="inline h-3 w-3 mr-1" />Tri</Label>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-surface border-border/60">
+                <SelectItem value="date_desc">Date ↓</SelectItem>
+                <SelectItem value="date_asc">Date ↑</SelectItem>
+                <SelectItem value="seo_asc">SEO faible d'abord</SelectItem>
+                <SelectItem value="seo_desc">SEO élevé d'abord</SelectItem>
+                <SelectItem value="geo_asc">GEO faible d'abord</SelectItem>
+                <SelectItem value="geo_desc">GEO élevé d'abord</SelectItem>
+                <SelectItem value="status">Statut</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       <Separator className="bg-border/40" />
 
-      {isLoading && <p className="text-muted-foreground">Chargement...</p>}
+      {isLoading && <p className="text-muted-foreground">Chargement…</p>}
 
       {!isLoading && error && (
         <Card className="bg-surface border-destructive/40">
@@ -316,44 +571,96 @@ function Page() {
         </Card>
       )}
 
-      {!isLoading && !error && articles.length === 0 && (
+      {!isLoading && !error && filtered.length === 0 && (
         <Card className="bg-surface border-border/60">
-          <CardContent className="p-10 text-center text-muted-foreground">Aucun article. Créez le premier !</CardContent>
+          <CardContent className="p-10 text-center text-muted-foreground">
+            {counts.all === 0 ? "Aucun article. Créez le premier !" : "Aucun article ne correspond aux filtres."}
+          </CardContent>
         </Card>
       )}
 
       <div className="grid gap-3">
-        {articles.map(a => (
-          <Card key={a.id} className="bg-surface border-border/60">
-            <CardContent className="p-4 flex items-center gap-4">
-              {a.cover_image_url
-                ? <img src={a.cover_image_url} alt="" className="w-20 h-14 object-cover rounded-md shrink-0" />
-                : <div className="w-20 h-14 bg-surface-alt rounded-md shrink-0 flex items-center justify-center text-muted-foreground"><Image className="h-5 w-5" /></div>
-              }
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {statusBadge(a.status)}
-                  {a.category && <Badge variant="secondary" className="text-xs">{a.category}</Badge>}
-                  <span className="text-xs text-muted-foreground uppercase">{a.lang}</span>
-                </div>
-                <p className="font-semibold text-foreground truncate">
-                  {titleForLang(a as Record<string, unknown>, a.lang as Lang) || <span className="text-muted-foreground italic">Sans titre</span>}
-                </p>
-                <p className="text-xs text-muted-foreground font-mono">{a.slug}</p>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <Button size="sm" variant="ghost" onClick={() => { setEditing(a); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive"
-                  onClick={() => { if (confirm(`Supprimer cet article ?`)) deleteMutation.mutate(a.id); }}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {filtered.map(a => (
+          <ArticleCard
+            key={a.id}
+            a={a}
+            onEdit={() => { setEditing(a); setDialogOpen(true); }}
+            onDelete={() => { if (confirm(`Supprimer « ${a._title || a.slug} » ?`)) deleteMutation.mutate(a.id); }}
+            onTogglePublish={() => statusMutation.mutate({ id: a.id, status: a.status === "validated" ? "draft" : "validated" })}
+            onImprove={() => setImproving(a)}
+          />
         ))}
       </div>
 
       <ArticleDialog open={dialogOpen} onClose={() => setDialogOpen(false)} initial={editing} />
+
+      {/* Side panel — SEO recommendations */}
+      <Sheet open={!!improving} onOpenChange={v => !v && setImproving(null)}>
+        <SheetContent className="bg-surface border-border/60 w-full sm:max-w-lg overflow-y-auto">
+          {improving && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="text-foreground flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Améliorer le SEO
+                </SheetTitle>
+                <SheetDescription className="truncate">{improving._title || improving.slug}</SheetDescription>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-5">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Score SEO</span>
+                    <span className="font-bold text-foreground">{improving._seo.score}/100</span>
+                  </div>
+                  <Progress value={improving._seo.score} className="h-2" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Score GEO (pertinence Suisse)</span>
+                    <span className="font-bold text-foreground">{improving._geo.score}/100</span>
+                  </div>
+                  <Progress value={improving._geo.score} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    Villes : {improving._geo.cities.length || "—"} · Cantons : {improving._geo.cantons.length || "—"} · Mots-clés : {improving._geo.keywords.length || "—"}
+                  </p>
+                </div>
+
+                <Separator className="bg-border/40" />
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground">Recommandations prioritaires</h4>
+                  {improving._seo.checklist.filter(c => !c.ok).length === 0 ? (
+                    <p className="text-sm text-emerald-300">🎉 Tous les critères SEO sont validés.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {improving._seo.checklist.filter(c => !c.ok).map(c => (
+                        <li key={c.key} className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                          <div className="text-sm font-medium text-foreground">❌ {c.label}</div>
+                          {c.hint && <div className="text-xs text-muted-foreground mt-0.5">{c.hint}</div>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {improving._geo.score < 50 && (
+                  <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-3 text-sm">
+                    <div className="font-medium text-foreground">🌍 Renforcer le GEO</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Mentionnez explicitement des villes (Lausanne, Genève, Zurich…), cantons (Vaud, Valais…) et le contexte suisse (« Suisse romande », « Helvétique »).
+                    </p>
+                  </div>
+                )}
+
+                <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => { setEditing(improving); setDialogOpen(true); setImproving(null); }}>
+                  <Pencil className="h-4 w-4 mr-2" />Éditer l'article
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

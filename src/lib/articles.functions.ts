@@ -69,7 +69,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     // Use authenticated user client (RLS policy admin_all_articles allows admins to see all statuses)
     const { data, error } = await (context.supabase as any)
       .from("articles")
-      .select("id,slug,status,lang,category,published_at,created_at,cover_image_url,title_fr,title_de,title_it,title_en")
+      .select("id,slug,status,lang,category,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,meta_title_fr,meta_description_fr")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(`Impossible de charger les articles: ${error.message}`);
@@ -154,5 +154,21 @@ export const deleteArticle = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await (supabaseAdmin as any).from("articles").delete().eq("id", data.id);
     if (error) throw new Error("Impossible de supprimer l'article.");
+    return { ok: true };
+  });
+
+export const setArticleStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    status: z.enum(["draft", "validated", "pending_validation", "rejected"]),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = { status: data.status };
+    patch.published_at = data.status === "validated" ? new Date().toISOString() : null;
+    const { error } = await (supabaseAdmin as any).from("articles").update(patch).eq("id", data.id);
+    if (error) throw new Error("Impossible de modifier le statut.");
     return { ok: true };
   });
