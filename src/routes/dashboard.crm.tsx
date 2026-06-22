@@ -1,608 +1,865 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useMemo, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Crown, Search, Plus, LayoutGrid, List as ListIcon, X, Tag as TagIcon,
-  Phone, Mail, Calendar, BellPlus, Trash2, Send, BellRing, FileText, PieChart, Users as UsersIcon,
+  Users, LayoutGrid, CheckSquare, FileText, Plus, Pencil, Trash2, X,
+  Phone, Mail, Calendar, Tag, ChevronRight, Check, Clock, AlertCircle,
+  QrCode, Download, Send, Eye, Settings, ArrowRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import {
-  checkElitePro, listMyContacts, upsertContact, deleteContact,
-  addContactNote, getContactDetail, createContactReminder,
-  type ClientContact,
+  listMyContacts, upsertContact, deleteContact, addContactNote, listContactNotes,
+  listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask, type ContactNote,
 } from "@/lib/crm-therapist.functions";
-import { RemindersView, NotesView, SegmentationView } from "@/components/crm/TherapistCrmViews";
+import {
+  listMyInvoices, upsertInvoice, deleteInvoice, updateInvoiceStatus,
+  getTherapistBranding, updateTherapistBranding, type Invoice, type InvoiceItem,
+} from "@/lib/invoice.functions";
 
-export const Route = createFileRoute("/dashboard/crm")({
-  component: TherapistCrmPage,
-});
+export const Route = createFileRoute("/dashboard/crm")({ component: CrmPage });
 
-const RELATION_STATUSES = [
-  { id: "prospect",  label: "Prospect",       color: "#5cc8fa" },
-  { id: "new",       label: "Nouveau client", color: "#a78bfa" },
-  { id: "active",    label: "Client actif",   color: "#34d399" },
-  { id: "followup",  label: "À relancer",     color: "#fb923c" },
-  { id: "inactive",  label: "Inactif",        color: "#94a3b8" },
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const STATUSES = [
+  { id: "prospect",  label: "Prospect",       color: "#5cc8fa", bg: "rgba(92,200,250,0.15)" },
+  { id: "new",       label: "Nouveau",         color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
+  { id: "active",    label: "Actif",           color: "#34d399", bg: "rgba(52,211,153,0.15)" },
+  { id: "followup",  label: "À relancer",      color: "#fb923c", bg: "rgba(251,146,60,0.15)" },
+  { id: "inactive",  label: "Inactif",         color: "#94a3b8", bg: "rgba(148,163,184,0.15)" },
 ] as const;
-const TAG_PRESETS = ["stress", "sommeil", "énergétique", "fidélisation", "VIP"];
 
-function TherapistCrmPage() {
-  const checkFn = useServerFn(checkElitePro);
-  const eliteQ = useQuery({ queryKey: ["crm-th","elite"], queryFn: () => checkFn() });
+type StatusId = typeof STATUSES[number]["id"];
 
-  if (eliteQ.isLoading) {
-    return <div style={{ padding: 48, color: "var(--muted-foreground)" }}>Chargement…</div>;
-  }
-  if (!eliteQ.data?.isElitePro) {
-    return <ElitePropTeaser />;
-  }
-  return <ElitePropCrm />;
+const STATUS_MAP = Object.fromEntries(STATUSES.map(s => [s.id, s])) as Record<StatusId, typeof STATUSES[number]>;
+
+const TAG_PRESETS = ["stress", "sommeil", "énergie", "VIP", "fidélisation", "suivi", "sport"];
+
+const PRIORITY_MAP = {
+  low:    { label: "Basse",   color: "#94a3b8" },
+  normal: { label: "Normale", color: "#a78bfa" },
+  high:   { label: "Haute",   color: "#fb923c" },
+};
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+
+function fmt(amount: number, currency = "CHF") {
+  return new Intl.NumberFormat("fr-CH", { style: "currency", currency }).format(amount);
 }
 
-function ElitePropTeaser() {
+function fmtDate(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("fr-CH", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// ── Status Badge ──────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_MAP[status as StatusId];
+  if (!s) return null;
   return (
-    <div style={{ padding: "48px 24px", maxWidth: 720, margin: "0 auto" }}>
-      <div
-        style={{
-          background: "linear-gradient(140deg, rgba(124,58,237,0.18), rgba(92,200,250,0.14))",
-          border: "1px solid rgba(124,58,237,0.35)",
-          borderRadius: 24,
-          padding: 36,
-          textAlign: "center",
-          backdropFilter: "blur(10px)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{
-          width: 64, height: 64, borderRadius: "50%",
-          background: "linear-gradient(135deg, #b86ef9, #f59e0b)",
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 18px",
-          boxShadow: "0 8px 30px rgba(245,158,11,0.35)",
-        }}>
-          <Crown size={32} color="white" aria-hidden />
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600,
+      padding: "2px 8px", borderRadius: 99,
+      background: s.bg, color: s.color, border: `1px solid ${s.color}40`,
+    }}>{s.label}</span>
+  );
+}
+
+// ── Contact Dialog ────────────────────────────────────────────────────────────
+
+type ContactForm = {
+  id?: string; first_name: string; last_name: string; email: string; phone: string;
+  session_type: string; relation_status: StatusId; tags: string[];
+  private_notes: string; payment_link: string;
+};
+const EMPTY_CONTACT: ContactForm = {
+  first_name: "", last_name: "", email: "", phone: "", session_type: "",
+  relation_status: "prospect", tags: [], private_notes: "", payment_link: "",
+};
+
+function ContactDialog({ open, onClose, initial, contacts }: {
+  open: boolean; onClose: () => void;
+  initial?: ClientContact | null; contacts: ClientContact[];
+}) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<ContactForm>(
+    initial ? { ...EMPTY_CONTACT, ...initial, email: initial.email ?? "", phone: initial.phone ?? "",
+      session_type: initial.session_type ?? "", private_notes: initial.private_notes ?? "",
+      payment_link: initial.payment_link ?? "" } : EMPTY_CONTACT
+  );
+  const [tagInput, setTagInput] = useState("");
+  const [notes, setNotes] = useState<ContactNote[]>([]);
+  const [noteText, setNoteText] = useState("");
+
+  const notesQ = useQuery({
+    queryKey: ["contact-notes", initial?.id],
+    queryFn: () => listContactNotes({ data: { contact_id: initial!.id } }),
+    enabled: !!initial?.id,
+  });
+
+  const saveMut = useMutation({
+    mutationFn: () => upsertContact({ data: { ...form, email: form.email || null, phone: form.phone || null } as any }),
+    onSuccess: () => { toast.success("Contact sauvegardé"); qc.invalidateQueries({ queryKey: ["crm-contacts"] }); onClose(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const addNoteMut = useMutation({
+    mutationFn: () => addContactNote({ data: { contact_id: initial!.id, content: noteText } }),
+    onSuccess: () => { setNoteText(""); qc.invalidateQueries({ queryKey: ["contact-notes", initial?.id] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const set = (k: keyof ContactForm, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const addTag = (t: string) => { const tag = t.trim().toLowerCase(); if (tag && !form.tags.includes(tag)) set("tags", [...form.tags, tag]); setTagInput(""); };
+  const removeTag = (t: string) => set("tags", form.tags.filter(x => x !== t));
+
+  return (
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="bg-surface border-border/60 max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{initial ? "Modifier le contact" : "Nouveau contact"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1"><Label>Prénom *</Label><Input value={form.first_name} onChange={e => set("first_name", e.target.value)} className="bg-background border-border/60" /></div>
+            <div className="space-y-1"><Label>Nom</Label><Input value={form.last_name} onChange={e => set("last_name", e.target.value)} className="bg-background border-border/60" /></div>
+            <div className="space-y-1"><Label>Email</Label><Input value={form.email} onChange={e => set("email", e.target.value)} type="email" className="bg-background border-border/60" /></div>
+            <div className="space-y-1"><Label>Téléphone</Label><Input value={form.phone} onChange={e => set("phone", e.target.value)} className="bg-background border-border/60" /></div>
+            <div className="space-y-1"><Label>Type de séance</Label><Input value={form.session_type} onChange={e => set("session_type", e.target.value)} placeholder="Ex: Reiki, Sophrologie…" className="bg-background border-border/60" /></div>
+            <div className="space-y-1">
+              <Label>Statut</Label>
+              <Select value={form.relation_status} onValueChange={v => set("relation_status", v as StatusId)}>
+                <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-surface border-border/60">
+                  {STATUSES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label>Tags</Label>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {form.tags.map(t => (
+                <span key={t} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary-foreground border border-primary/30">
+                  {t}<button type="button" onClick={() => removeTag(t)}><X className="h-2.5 w-2.5" /></button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag(tagInput))} placeholder="Ajouter un tag…" className="bg-background border-border/60" />
+              <Button type="button" variant="outline" size="sm" onClick={() => addTag(tagInput)}>+</Button>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {TAG_PRESETS.filter(t => !form.tags.includes(t)).map(t => (
+                <button key={t} type="button" onClick={() => addTag(t)} className="text-xs px-2 py-0.5 rounded-full border border-border/40 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors">{t}</button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label>Lien de paiement (Stripe, Twint, PayPal…)</Label>
+            <Input value={form.payment_link} onChange={e => set("payment_link", e.target.value)} placeholder="https://buy.stripe.com/…" className="bg-background border-border/60" />
+          </div>
+          <div className="space-y-1">
+            <Label>Notes privées</Label>
+            <Textarea value={form.private_notes} onChange={e => set("private_notes", e.target.value)} rows={3} className="bg-background border-border/60 resize-none" />
+          </div>
+
+          {initial && (
+            <div className="space-y-2 border-t border-border/40 pt-3">
+              <Label>Notes & historique</Label>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {(notesQ.data ?? []).map(n => (
+                  <div key={n.id} className="text-sm bg-background rounded-lg p-2 border border-border/40">
+                    <p className="text-foreground">{n.content}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(n.created_at)}</p>
+                  </div>
+                ))}
+                {(notesQ.data ?? []).length === 0 && <p className="text-xs text-muted-foreground">Aucune note.</p>}
+              </div>
+              <div className="flex gap-2">
+                <Input value={noteText} onChange={e => setNoteText(e.target.value)} onKeyDown={e => e.key === "Enter" && noteText.trim() && addNoteMut.mutate()} placeholder="Ajouter une note…" className="bg-background border-border/60" />
+                <Button type="button" size="sm" variant="secondary" onClick={() => noteText.trim() && addNoteMut.mutate()}>Ajouter</Button>
+              </div>
+            </div>
+          )}
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: "var(--foreground)" }}>CRM Elite Pro</h1>
-        <p style={{ marginTop: 12, fontSize: 15, color: "var(--muted-foreground)", lineHeight: 1.6, maxWidth: 480, marginInline: "auto" }}>
-          Passez à <strong>Elite Pro</strong> pour gérer vos contacts, vos clients et vos relances
-          depuis un espace CRM dédié, intégré à votre agenda Holiswiss.
-        </p>
-        <ul style={{ listStyle: "none", padding: 0, margin: "20px auto 24px", maxWidth: 380, textAlign: "left", color: "var(--muted-foreground)", fontSize: 13, display: "flex", flexDirection: "column", gap: 8 }}>
-          <li>✓ Fiches clients enrichies (notes privées, tags, statut relation)</li>
-          <li>✓ Timeline complète : réservations, messages, avis</li>
-          <li>✓ Rappels personnalisés et relances automatiques</li>
-          <li>✓ Vue tableau et vue cartes</li>
-        </ul>
-        <Link
-          to="/dashboard/abonnement"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "12px 24px", minHeight: 44, borderRadius: 12,
-            background: "linear-gradient(135deg, #b86ef9, #f59e0b)",
-            color: "white", fontWeight: 600, textDecoration: "none", fontSize: 14,
-            boxShadow: "0 6px 24px rgba(184,110,249,0.35)",
-          }}
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Annuler</Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => saveMut.mutate()} disabled={saveMut.isPending || !form.first_name.trim()}>
+            {saveMut.isPending ? "…" : "Sauvegarder"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Pipeline (Kanban) ─────────────────────────────────────────────────────────
+
+function PipelineTab({ contacts, onEdit }: { contacts: ClientContact[]; onEdit: (c: ClientContact) => void }) {
+  const qc = useQueryClient();
+  const moveMut = useMutation({
+    mutationFn: ({ id, relation_status }: { id: string; relation_status: string }) =>
+      upsertContact({ data: { id, relation_status } as any }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm-contacts"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [dragging, setDragging] = useState<string | null>(null);
+
+  const byStatus = useMemo(() => {
+    const map: Record<string, ClientContact[]> = {};
+    STATUSES.forEach(s => { map[s.id] = []; });
+    contacts.forEach(c => { (map[c.relation_status] ??= []).push(c); });
+    return map;
+  }, [contacts]);
+
+  const onDrop = (status: string) => {
+    if (dragging && dragging !== status) {
+      const contact = contacts.find(c => c.id === dragging);
+      if (contact) moveMut.mutate({ id: dragging, relation_status: status });
+    }
+    setDragging(null);
+  };
+
+  return (
+    <div className="flex gap-4 overflow-x-auto pb-4 min-h-[500px]">
+      {STATUSES.map(col => (
+        <div
+          key={col.id}
+          className="flex-shrink-0 w-56 rounded-xl border border-border/40 bg-surface/60"
+          style={{ borderTop: `3px solid ${col.color}` }}
+          onDragOver={e => e.preventDefault()}
+          onDrop={() => onDrop(col.id)}
         >
-          <Crown size={16} aria-hidden /> Passer à Elite Pro
-        </Link>
+          <div className="p-3 border-b border-border/30 flex items-center justify-between">
+            <span className="text-sm font-semibold" style={{ color: col.color }}>{col.label}</span>
+            <span className="text-xs text-muted-foreground bg-background rounded-full px-2 py-0.5">{byStatus[col.id]?.length ?? 0}</span>
+          </div>
+          <div className="p-2 space-y-2">
+            {(byStatus[col.id] ?? []).map(c => (
+              <div
+                key={c.id}
+                draggable
+                onDragStart={() => setDragging(c.id)}
+                onDragEnd={() => setDragging(null)}
+                className="bg-background rounded-lg p-2.5 border border-border/40 cursor-grab hover:border-primary/40 transition-colors group"
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <p className="text-sm font-medium text-foreground leading-tight">{c.first_name} {c.last_name}</p>
+                  <button onClick={() => onEdit(c)} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <Pencil className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                  </button>
+                </div>
+                {c.session_type && <p className="text-xs text-muted-foreground mt-0.5">{c.session_type}</p>}
+                {c.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {c.tags.slice(0, 2).map(t => (
+                      <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">{t}</span>
+                    ))}
+                    {c.tags.length > 2 && <span className="text-[10px] text-muted-foreground">+{c.tags.length - 2}</span>}
+                  </div>
+                )}
+                {c.email && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><Mail className="h-2.5 w-2.5" />{c.email}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Contacts List ─────────────────────────────────────────────────────────────
+
+function ContactsTab({ contacts, onEdit, onDelete }: {
+  contacts: ClientContact[];
+  onEdit: (c: ClientContact) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+
+  const filtered = useMemo(() => contacts.filter(c => {
+    if (filterStatus && c.relation_status !== filterStatus) return false;
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      return `${c.first_name} ${c.last_name} ${c.email ?? ""} ${c.phone ?? ""}`.toLowerCase().includes(s);
+    }
+    return true;
+  }), [contacts, search, filterStatus]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3">
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-surface border-border/60 max-w-xs" />
+        <Select value={filterStatus || "all"} onValueChange={v => setFilterStatus(v === "all" ? "" : v)}>
+          <SelectTrigger className="bg-surface border-border/60 w-40"><SelectValue placeholder="Tous" /></SelectTrigger>
+          <SelectContent className="bg-surface border-border/60">
+            <SelectItem value="all">Tous</SelectItem>
+            {STATUSES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-2">
+        {filtered.map(c => (
+          <Card key={c.id} className="bg-surface border-border/60 hover:border-primary/30 transition-colors">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                {c.first_name[0]}{c.last_name?.[0] ?? ""}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-foreground">{c.first_name} {c.last_name}</p>
+                  <StatusBadge status={c.relation_status} />
+                  {c.tags.map(t => <span key={t} className="text-xs px-1.5 py-0.5 rounded-full bg-background border border-border/40 text-muted-foreground">{t}</span>)}
+                </div>
+                <div className="flex gap-4 mt-1 text-xs text-muted-foreground flex-wrap">
+                  {c.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{c.email}</span>}
+                  {c.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{c.phone}</span>}
+                  {c.session_type && <span className="flex items-center gap-1"><Tag className="h-3 w-3" />{c.session_type}</span>}
+                </div>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button size="sm" variant="ghost" onClick={() => onEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { if (confirm("Supprimer ce contact ?")) onDelete(c.id); }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {filtered.length === 0 && <p className="text-center text-muted-foreground py-10">Aucun contact trouvé.</p>}
       </div>
     </div>
   );
 }
 
-function ElitePropCrm() {
+// ── Tasks ─────────────────────────────────────────────────────────────────────
+
+function TaskDialog({ open, onClose, contacts }: { open: boolean; onClose: () => void; contacts: ClientContact[] }) {
   const qc = useQueryClient();
-  const listFn = useServerFn(listMyContacts);
-  const upsertFn = useServerFn(upsertContact);
-  const deleteFn = useServerFn(deleteContact);
+  const [form, setForm] = useState({ title: "", description: "", due_at: "", priority: "normal" as "low" | "normal" | "high", contact_id: "" });
+  const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const mut = useMutation({
+    mutationFn: () => upsertTask({ data: { ...form, due_at: form.due_at || null, contact_id: form.contact_id || null } as any }),
+    onSuccess: () => { toast.success("Tâche créée"); qc.invalidateQueries({ queryKey: ["crm-tasks"] }); onClose(); setForm({ title: "", description: "", due_at: "", priority: "normal", contact_id: "" }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="bg-surface border-border/60 max-w-md">
+        <DialogHeader><DialogTitle>Nouvelle tâche / relance</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1"><Label>Titre *</Label><Input value={form.title} onChange={e => set("title", e.target.value)} className="bg-background border-border/60" /></div>
+          <div className="space-y-1"><Label>Contact lié</Label>
+            <Select value={form.contact_id || "none"} onValueChange={v => set("contact_id", v === "none" ? "" : v)}>
+              <SelectTrigger className="bg-background border-border/60"><SelectValue placeholder="Optionnel" /></SelectTrigger>
+              <SelectContent className="bg-surface border-border/60">
+                <SelectItem value="none">Aucun</SelectItem>
+                {contacts.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1"><Label>Échéance</Label><Input type="datetime-local" value={form.due_at} onChange={e => set("due_at", e.target.value)} className="bg-background border-border/60" /></div>
+            <div className="space-y-1"><Label>Priorité</Label>
+              <Select value={form.priority} onValueChange={v => set("priority", v)}>
+                <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-surface border-border/60">
+                  <SelectItem value="low">Basse</SelectItem>
+                  <SelectItem value="normal">Normale</SelectItem>
+                  <SelectItem value="high">Haute</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1"><Label>Description</Label><Textarea value={form.description} onChange={e => set("description", e.target.value)} rows={2} className="bg-background border-border/60 resize-none" /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Annuler</Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => mut.mutate()} disabled={mut.isPending || !form.title.trim()}>Créer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-  const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
-  useEffect(() => { const t = setTimeout(() => setDebounced(search), 300); return () => clearTimeout(t); }, [search]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [tagFilter, setTagFilter] = useState("");
-  const [view, setView] = useState<"cards" | "table">("cards");
-  const [editing, setEditing] = useState<ClientContact | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [openContactId, setOpenContactId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"contacts" | "reminders" | "notes" | "segments">("contacts");
+function TasksTab({ contacts }: { contacts: ClientContact[] }) {
+  const qc = useQueryClient();
+  const [showDone, setShowDone] = useState(false);
+  const [newTask, setNewTask] = useState(false);
+  const tasksQ = useQuery({ queryKey: ["crm-tasks", showDone], queryFn: () => listMyTasks({ data: { done: showDone } }) });
 
-  const contactsQ = useQuery({
-    queryKey: ["crm-th","contacts", debounced, statusFilter, tagFilter],
-    queryFn: () => listFn({ data: { search: debounced, status: statusFilter || undefined, tag: tagFilter || undefined } }),
+  const toggleMut = useMutation({
+    mutationFn: (t: CrmTask) => upsertTask({ data: { ...t, done: !t.done, contact_id: t.contact_id || null } as any }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm-tasks"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const delMut = useMutation({
+    mutationFn: (id: string) => deleteTask({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm-tasks"] }),
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  const allTags = useMemo(() => {
-    const set = new Set<string>(TAG_PRESETS);
-    (contactsQ.data ?? []).forEach((c) => c.tags?.forEach((t) => set.add(t)));
-    return Array.from(set);
-  }, [contactsQ.data]);
+  const tasks = (tasksQ.data ?? []) as any[];
+  const overdue = tasks.filter(t => !t.done && t.due_at && new Date(t.due_at) < new Date());
 
-  const removeMut = useMutation({
-    mutationFn: (id: string) => deleteFn({ data: { id } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["crm-th","contacts"] }); toast.success("Contact supprimé"); },
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <Button size="sm" variant={!showDone ? "default" : "outline"} className={!showDone ? "bg-primary" : ""} onClick={() => setShowDone(false)}>En cours</Button>
+          <Button size="sm" variant={showDone ? "default" : "outline"} className={showDone ? "bg-primary" : ""} onClick={() => setShowDone(true)}>Terminées</Button>
+        </div>
+        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => setNewTask(true)}>
+          <Plus className="h-4 w-4 mr-1" />Tâche
+        </Button>
+      </div>
+
+      {overdue.length > 0 && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+          <p className="text-sm text-destructive">{overdue.length} tâche{overdue.length > 1 ? "s" : ""} en retard</p>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {tasks.map((t: any) => {
+          const isLate = !t.done && t.due_at && new Date(t.due_at) < new Date();
+          const contactName = t.crm_client_contacts ? `${t.crm_client_contacts.first_name} ${t.crm_client_contacts.last_name}` : null;
+          return (
+            <Card key={t.id} className={`border-border/60 transition-colors ${t.done ? "bg-surface/40 opacity-60" : "bg-surface"}`}>
+              <CardContent className="p-3 flex items-start gap-3">
+                <button onClick={() => toggleMut.mutate(t)} className="mt-0.5 shrink-0 text-muted-foreground hover:text-primary transition-colors">
+                  {t.done ? <Check className="h-4 w-4 text-green-400" /> : <div className="h-4 w-4 rounded border-2 border-muted-foreground" />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className={`text-sm font-medium ${t.done ? "line-through text-muted-foreground" : "text-foreground"}`}>{t.title}</p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full border" style={{ color: PRIORITY_MAP[t.priority as keyof typeof PRIORITY_MAP]?.color, borderColor: `${PRIORITY_MAP[t.priority as keyof typeof PRIORITY_MAP]?.color}50` }}>
+                      {PRIORITY_MAP[t.priority as keyof typeof PRIORITY_MAP]?.label}
+                    </span>
+                  </div>
+                  <div className="flex gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                    {contactName && <span className="flex items-center gap-1"><Users className="h-3 w-3" />{contactName}</span>}
+                    {t.due_at && <span className={`flex items-center gap-1 ${isLate ? "text-destructive" : ""}`}><Clock className="h-3 w-3" />{fmtDate(t.due_at)}</span>}
+                  </div>
+                  {t.description && <p className="text-xs text-muted-foreground mt-1">{t.description}</p>}
+                </div>
+                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive shrink-0" onClick={() => { if (confirm("Supprimer ?")) delMut.mutate(t.id); }}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+        {tasks.length === 0 && <p className="text-center text-muted-foreground py-10">{showDone ? "Aucune tâche terminée." : "Aucune tâche en cours. Bien joué ! 🎉"}</p>}
+      </div>
+
+      <TaskDialog open={newTask} onClose={() => setNewTask(false)} contacts={contacts} />
+    </div>
+  );
+}
+
+// ── Invoice ───────────────────────────────────────────────────────────────────
+
+function QRCodeDisplay({ url }: { url: string }) {
+  const size = 140;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=1a0a2e`;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <img src={qrUrl} alt="QR code paiement" width={size} height={size} className="rounded-lg border border-border/40" />
+      <p className="text-xs text-muted-foreground text-center max-w-[140px] break-all">{url.length > 40 ? url.slice(0, 40) + "…" : url}</p>
+    </div>
+  );
+}
+
+type InvoiceForm = {
+  id?: string; contact_id: string; client_name: string; client_address: string;
+  status: "draft" | "sent" | "paid" | "cancelled";
+  issued_at: string; due_at: string; notes: string; payment_link: string; currency: string;
+  items: { description: string; quantity: number; unit_price: number }[];
+};
+
+const EMPTY_INV: InvoiceForm = {
+  client_name: "", client_address: "", contact_id: "", status: "draft",
+  issued_at: new Date().toISOString().slice(0, 10), due_at: "", notes: "", payment_link: "", currency: "CHF",
+  items: [{ description: "", quantity: 1, unit_price: 0 }],
+};
+
+function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
+  open: boolean; onClose: () => void;
+  initial?: Invoice | null; contacts: ClientContact[];
+  branding: any;
+}) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<InvoiceForm>(
+    initial
+      ? { ...EMPTY_INV, ...initial, contact_id: initial.contact_id ?? "", due_at: initial.due_at ?? "", client_address: initial.client_address ?? "", notes: initial.notes ?? "", payment_link: initial.payment_link ?? "", items: initial.invoice_items?.map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })) ?? EMPTY_INV.items }
+      : { ...EMPTY_INV, payment_link: branding?.payment_link ?? "" }
+  );
+  const [preview, setPreview] = useState(false);
+
+  const set = (k: keyof InvoiceForm, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const setItem = (i: number, k: string, v: any) => setForm(p => ({
+    ...p, items: p.items.map((it, idx) => idx === i ? { ...it, [k]: v } : it),
+  }));
+  const addItem = () => setForm(p => ({ ...p, items: [...p.items, { description: "", quantity: 1, unit_price: 0 }] }));
+  const removeItem = (i: number) => setForm(p => ({ ...p, items: p.items.filter((_, idx) => idx !== i) }));
+  const total = form.items.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unit_price) || 0), 0);
+
+  const mut = useMutation({
+    mutationFn: () => upsertInvoice({ data: { ...form, contact_id: form.contact_id || null, due_at: form.due_at || null, items: form.items as any } as any }),
+    onSuccess: () => { toast.success("Facture sauvegardée"); qc.invalidateQueries({ queryKey: ["invoices"] }); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
-    <div style={{ padding: "24px 28px", maxWidth: 1400, margin: "0 auto" }}>
-      <header style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 18 }}>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, display: "inline-flex", alignItems: "center", gap: 8, color: "var(--foreground)" }}>
-            <Crown size={20} style={{ color: "#f59e0b" }} aria-hidden /> CRM Elite Pro
-          </h1>
-          <p style={{ color: "var(--muted-foreground)", fontSize: 13, marginTop: 4 }}>
-            Vos contacts, leur historique et vos relances.
-          </p>
-        </div>
-        {tab === "contacts" && (
-        <>
-        <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "var(--muted)", borderRadius: 10 }}>
-          <button onClick={() => setView("cards")} aria-pressed={view === "cards"} aria-label="Vue cartes"
-            style={{ padding: "8px 12px", minHeight: 36, borderRadius: 8, border: "none", background: view === "cards" ? "var(--primary)" : "transparent", color: view === "cards" ? "white" : "var(--foreground)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13 }}>
-            <LayoutGrid size={14} aria-hidden /> Cartes
-          </button>
-          <button onClick={() => setView("table")} aria-pressed={view === "table"} aria-label="Vue tableau"
-            style={{ padding: "8px 12px", minHeight: 36, borderRadius: 8, border: "none", background: view === "table" ? "var(--primary)" : "transparent", color: view === "table" ? "white" : "var(--foreground)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13 }}>
-            <ListIcon size={14} aria-hidden /> Tableau
-          </button>
-        </div>
-        <button
-          onClick={() => { setEditing(null); setCreating(true); }}
-          aria-label="Nouveau contact"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 16px", minHeight: 44, borderRadius: 12,
-            background: "var(--primary)", border: "none", color: "white", fontWeight: 600, cursor: "pointer", fontSize: 14,
-          }}
-        >
-          <Plus size={16} aria-hidden /> Nouveau contact
-        </button>
-        </>
-        )}
-      </header>
-
-      {/* Onglets CRM */}
-      <nav aria-label="Vues CRM Elite Pro" style={{
-        display: "inline-flex", gap: 4, padding: 4, marginBottom: 16,
-        background: "var(--muted)", borderRadius: 10,
-      }}>
-        {([
-          { id: "contacts",  label: "Contacts",     icon: UsersIcon },
-          { id: "reminders", label: "Rappels",      icon: BellRing },
-          { id: "notes",     label: "Notes",        icon: FileText },
-          { id: "segments",  label: "Segmentation", icon: PieChart },
-        ] as const).map((t) => {
-          const active = tab === t.id;
-          const Icon = t.icon;
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)} aria-pressed={active}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 14px", minHeight: 36, borderRadius: 8, border: "none", cursor: "pointer",
-                fontSize: 13, fontWeight: 600,
-                background: active ? "var(--primary)" : "transparent",
-                color: active ? "white" : "var(--foreground)",
-                transition: "background 160ms ease",
-              }}
-            >
-              <Icon size={14} aria-hidden /> {t.label}
-            </button>
-          );
-        })}
-      </nav>
-
-      {tab === "contacts" && (
-      <>
-      {/* Filtres */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 16 }}>
-        <div style={{ position: "relative", flex: "1 1 240px", maxWidth: 360 }}>
-          <Search size={16} aria-hidden style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)" }} />
-          <input
-            type="search"
-            placeholder="Rechercher un contact…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Rechercher un contact"
-            style={{ width: "100%", padding: "10px 12px 10px 36px", minHeight: 44, borderRadius: 12, background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 14 }}
-          />
-        </div>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filtrer par statut"
-          style={{ minHeight: 44, padding: "10px 12px", borderRadius: 12, background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 14 }}>
-          <option value="">Tous les statuts</option>
-          {RELATION_STATUSES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-        </select>
-        <select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} aria-label="Filtrer par tag"
-          style={{ minHeight: 44, padding: "10px 12px", borderRadius: 12, background: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 14 }}>
-          <option value="">Tous les tags</option>
-          {allTags.map((t) => <option key={t} value={t}>#{t}</option>)}
-        </select>
-      </div>
-
-      {/* Vue */}
-      {contactsQ.isLoading ? (
-        <div style={{ color: "var(--muted-foreground)", padding: 24 }}>Chargement…</div>
-      ) : (contactsQ.data ?? []).length === 0 ? (
-        <div style={{ textAlign: "center", padding: 48, color: "var(--muted-foreground)", border: "1px dashed var(--border)", borderRadius: 16 }}>
-          Aucun contact pour l'instant. Créez votre premier contact ci-dessus.
-        </div>
-      ) : view === "cards" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-          {(contactsQ.data ?? []).map((c, idx) => <ContactCard key={c.id} contact={c} index={idx} onOpen={() => setOpenContactId(c.id)} onEdit={() => setEditing(c)} onDelete={() => { if (confirm("Supprimer ce contact ?")) removeMut.mutate(c.id); }} />)}
-        </div>
-      ) : (
-        <ContactsTable contacts={contactsQ.data ?? []} onOpen={(c) => setOpenContactId(c.id)} onEdit={(c) => setEditing(c)} />
-      )}
-      </>
-      )}
-
-      {tab === "reminders" && <RemindersView onOpenContact={(id) => setOpenContactId(id)} />}
-      {tab === "notes" && <NotesView onOpenContact={(id) => setOpenContactId(id)} />}
-      {tab === "segments" && <SegmentationView />}
-
-      {/* Drawer fiche */}
-      <AnimatePresence>
-        {openContactId && (
-          <ContactDrawer id={openContactId} onClose={() => setOpenContactId(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Modal édition/création */}
-      <AnimatePresence>
-        {(creating || editing) && (
-          <ContactForm
-            contact={editing}
-            onClose={() => { setCreating(false); setEditing(null); }}
-            onSubmit={async (payload) => {
-              await upsertFn({ data: payload });
-              qc.invalidateQueries({ queryKey: ["crm-th","contacts"] });
-              toast.success(editing ? "Contact mis à jour" : "Contact créé");
-              setCreating(false);
-              setEditing(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function statusMeta(id: string) {
-  return RELATION_STATUSES.find((s) => s.id === id) ?? RELATION_STATUSES[0];
-}
-
-function ContactCard({ contact, index, onOpen, onEdit, onDelete }: { contact: ClientContact; index: number; onOpen: () => void; onEdit: () => void; onDelete: () => void }) {
-  const initials = `${contact.first_name?.[0] ?? ""}${contact.last_name?.[0] ?? ""}`.toUpperCase();
-  const s = statusMeta(contact.relation_status);
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index, 8) * 0.04 } }}
-      style={{
-        background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, padding: 14,
-        display: "flex", flexDirection: "column", gap: 8,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--primary-xlight, rgba(124,58,237,0.15))", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
-          {initials || "?"}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)" }}>{contact.first_name} {contact.last_name}</div>
-          <div style={{ fontSize: 11, color: "var(--muted-foreground)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {contact.email ?? contact.phone ?? "—"}
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="bg-surface border-border/60 max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{initial ? `Facture ${initial.invoice_number}` : "Nouvelle facture"}</DialogTitle>
+            <Button size="sm" variant="outline" onClick={() => setPreview(p => !p)}>
+              <Eye className="h-4 w-4 mr-1" />{preview ? "Éditer" : "Aperçu"}
+            </Button>
           </div>
-        </div>
-        <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: `${s.color}22`, color: s.color, whiteSpace: "nowrap" }}>{s.label}</span>
-      </div>
-      {contact.tags?.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {contact.tags.slice(0, 4).map((t) => (
-            <span key={t} style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "var(--muted)", color: "var(--muted-foreground)" }}>#{t}</span>
-          ))}
-        </div>
-      )}
-      {(contact.last_booking_at || contact.next_booking_at) && (
-        <div style={{ fontSize: 11, color: "var(--muted-foreground)", display: "flex", alignItems: "center", gap: 4 }}>
-          <Calendar size={11} aria-hidden /> {contact.next_booking_at ? `Prochain : ${new Date(contact.next_booking_at).toLocaleDateString("fr-CH")}` : `Dernier : ${new Date(contact.last_booking_at!).toLocaleDateString("fr-CH")}`}
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-        <button onClick={onOpen} aria-label="Ouvrir la fiche"
-          style={{ flex: 1, padding: "8px 10px", minHeight: 36, borderRadius: 8, background: "var(--primary)", border: "none", color: "white", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Ouvrir</button>
-        <button onClick={onEdit} aria-label="Modifier" style={{ padding: "8px 10px", minHeight: 36, borderRadius: 8, background: "transparent", border: "1px solid var(--border)", color: "var(--foreground)", cursor: "pointer", fontSize: 12 }}>Modifier</button>
-        <button onClick={onDelete} aria-label="Supprimer" style={{ padding: "8px 10px", minHeight: 36, borderRadius: 8, background: "transparent", border: "1px solid var(--border)", color: "#ef4444", cursor: "pointer" }}>
-          <Trash2 size={14} aria-hidden />
-        </button>
-      </div>
-    </motion.div>
+        </DialogHeader>
+
+        {preview ? (
+          <InvoicePreview form={form} total={total} branding={branding} />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Client *</Label>
+                <Select value={form.contact_id || "manual"} onValueChange={v => {
+                  if (v === "manual") { set("contact_id", ""); return; }
+                  const c = contacts.find(x => x.id === v);
+                  if (c) { set("contact_id", v); set("client_name", `${c.first_name} ${c.last_name}`); }
+                }}>
+                  <SelectTrigger className="bg-background border-border/60"><SelectValue placeholder="Sélectionner…" /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60">
+                    <SelectItem value="manual">Saisie manuelle</SelectItem>
+                    {contacts.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1"><Label>Nom client *</Label><Input value={form.client_name} onChange={e => set("client_name", e.target.value)} className="bg-background border-border/60" /></div>
+              <div className="space-y-1"><Label>Date d'émission</Label><Input type="date" value={form.issued_at} onChange={e => set("issued_at", e.target.value)} className="bg-background border-border/60" /></div>
+              <div className="space-y-1"><Label>Date d'échéance</Label><Input type="date" value={form.due_at} onChange={e => set("due_at", e.target.value)} className="bg-background border-border/60" /></div>
+              <div className="space-y-1 col-span-2"><Label>Adresse client</Label><Input value={form.client_address} onChange={e => set("client_address", e.target.value)} className="bg-background border-border/60" /></div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Prestations</Label>
+              {form.items.map((item, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <Input value={item.description} onChange={e => setItem(i, "description", e.target.value)} placeholder="Description" className="bg-background border-border/60 flex-1" />
+                  <Input value={item.quantity} onChange={e => setItem(i, "quantity", parseFloat(e.target.value) || 0)} type="number" min={0} step={0.5} className="bg-background border-border/60 w-16" placeholder="Qté" />
+                  <Input value={item.unit_price} onChange={e => setItem(i, "unit_price", parseFloat(e.target.value) || 0)} type="number" min={0} step={5} className="bg-background border-border/60 w-24" placeholder="Prix" />
+                  <span className="text-sm text-muted-foreground w-20 text-right shrink-0">{fmt(item.quantity * item.unit_price, form.currency)}</span>
+                  {form.items.length > 1 && <Button size="sm" variant="ghost" onClick={() => removeItem(i)}><X className="h-3 w-3" /></Button>}
+                </div>
+              ))}
+              <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Ajouter une ligne</Button>
+              <div className="flex justify-end">
+                <p className="text-lg font-bold text-foreground">Total : {fmt(total, form.currency)}</p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label>Lien de paiement (QR code)</Label>
+              <Input value={form.payment_link} onChange={e => set("payment_link", e.target.value)} placeholder="https://buy.stripe.com/…" className="bg-background border-border/60" />
+              {form.payment_link && (
+                <div className="flex justify-center mt-2 p-3 bg-background rounded-lg border border-border/40">
+                  <QRCodeDisplay url={form.payment_link} />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Statut</Label>
+                <Select value={form.status} onValueChange={v => set("status", v)}>
+                  <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60">
+                    <SelectItem value="draft">Brouillon</SelectItem>
+                    <SelectItem value="sent">Envoyée</SelectItem>
+                    <SelectItem value="paid">Payée ✓</SelectItem>
+                    <SelectItem value="cancelled">Annulée</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Devise</Label>
+                <Select value={form.currency} onValueChange={v => set("currency", v)}>
+                  <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60">
+                    <SelectItem value="CHF">CHF</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1"><Label>Notes</Label><Textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} className="bg-background border-border/60 resize-none" /></div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Annuler</Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => mut.mutate()} disabled={mut.isPending || !form.client_name.trim()}>
+            {mut.isPending ? "…" : "Sauvegarder"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function ContactsTable({ contacts, onOpen, onEdit }: { contacts: ClientContact[]; onOpen: (c: ClientContact) => void; onEdit: (c: ClientContact) => void }) {
+function InvoicePreview({ form, total, branding }: { form: InvoiceForm; total: number; branding: any }) {
   return (
-    <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--card)" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-        <thead style={{ background: "var(--muted)" }}>
-          <tr>
-            {["Nom","Contact","Statut","Tags","Prochaine séance",""].map((h) => (
-              <th key={h} style={{ textAlign: "left", padding: "10px 12px", fontSize: 11, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
+    <div className="bg-white text-gray-900 rounded-xl p-6 text-sm space-y-4">
+      <div className="flex items-start justify-between">
+        <div>
+          {branding?.logo_url
+            ? <img src={branding.logo_url} alt="Logo" className="h-14 object-contain mb-2" />
+            : <div className="text-lg font-bold text-purple-700">{branding?.first_name} {branding?.last_name}</div>
+          }
+          <p className="text-gray-500 text-xs">{branding?.email}</p>
+          <p className="text-gray-500 text-xs">{branding?.phone}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-purple-700">FACTURE</p>
+          <p className="text-gray-500 text-xs">Émise le {form.issued_at}</p>
+          {form.due_at && <p className="text-gray-500 text-xs">Échéance : {form.due_at}</p>}
+        </div>
+      </div>
+      <div className="border-t border-gray-200 pt-3">
+        <p className="font-semibold">{form.client_name}</p>
+        {form.client_address && <p className="text-gray-500 text-xs whitespace-pre-line">{form.client_address}</p>}
+      </div>
+      <table className="w-full text-xs">
+        <thead><tr className="bg-purple-50 text-purple-700"><th className="text-left p-2">Description</th><th className="text-center p-2">Qté</th><th className="text-right p-2">Prix unit.</th><th className="text-right p-2">Total</th></tr></thead>
         <tbody>
-          {contacts.map((c) => {
-            const s = statusMeta(c.relation_status);
-            return (
-              <tr key={c.id} style={{ borderTop: "1px solid var(--border)" }}>
-                <td style={{ padding: "10px 12px", color: "var(--foreground)", fontWeight: 500 }}>{c.first_name} {c.last_name}</td>
-                <td style={{ padding: "10px 12px", color: "var(--muted-foreground)" }}>{c.email ?? c.phone ?? "—"}</td>
-                <td style={{ padding: "10px 12px" }}>
-                  <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: `${s.color}22`, color: s.color }}>{s.label}</span>
-                </td>
-                <td style={{ padding: "10px 12px", color: "var(--muted-foreground)" }}>{(c.tags ?? []).slice(0, 3).map((t) => `#${t}`).join(" ")}</td>
-                <td style={{ padding: "10px 12px", color: "var(--muted-foreground)" }}>{c.next_booking_at ? new Date(c.next_booking_at).toLocaleDateString("fr-CH") : "—"}</td>
-                <td style={{ padding: "10px 12px", textAlign: "right" }}>
-                  <button onClick={() => onOpen(c)} style={{ padding: "6px 12px", minHeight: 32, borderRadius: 8, background: "var(--primary)", border: "none", color: "white", fontSize: 12, cursor: "pointer", marginRight: 4 }}>Ouvrir</button>
-                  <button onClick={() => onEdit(c)} style={{ padding: "6px 12px", minHeight: 32, borderRadius: 8, background: "transparent", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 12, cursor: "pointer" }}>Modifier</button>
-                </td>
-              </tr>
-            );
-          })}
+          {form.items.map((it, i) => (
+            <tr key={i} className="border-b border-gray-100">
+              <td className="p-2">{it.description || "—"}</td>
+              <td className="p-2 text-center">{it.quantity}</td>
+              <td className="p-2 text-right">{fmt(it.unit_price, form.currency)}</td>
+              <td className="p-2 text-right font-medium">{fmt(it.quantity * it.unit_price, form.currency)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
+      <div className="flex justify-between items-end">
+        <div>
+          {form.notes && <p className="text-gray-500 text-xs max-w-xs">{form.notes}</p>}
+          {form.payment_link && <div className="mt-2"><QRCodeDisplay url={form.payment_link} /></div>}
+        </div>
+        <div className="text-right bg-purple-50 rounded-lg p-3">
+          <p className="text-xs text-gray-500">Total à payer</p>
+          <p className="text-xl font-bold text-purple-700">{fmt(total, form.currency)}</p>
+        </div>
+      </div>
     </div>
   );
 }
 
-function ContactDrawer({ id, onClose }: { id: string; onClose: () => void }) {
+const INV_STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  draft:     { label: "Brouillon", color: "#94a3b8", bg: "rgba(148,163,184,0.15)" },
+  sent:      { label: "Envoyée",   color: "#5cc8fa", bg: "rgba(92,200,250,0.15)" },
+  paid:      { label: "Payée ✓",  color: "#34d399", bg: "rgba(52,211,153,0.15)" },
+  cancelled: { label: "Annulée",   color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
+};
+
+function InvoicesTab({ contacts, branding }: { contacts: ClientContact[]; branding: any }) {
   const qc = useQueryClient();
-  const detailFn = useServerFn(getContactDetail);
-  const noteFn = useServerFn(addContactNote);
-  const reminderFn = useServerFn(createContactReminder);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Invoice | null>(null);
+  const [showBranding, setShowBranding] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(branding?.logo_url ?? "");
+  const [paymentLink, setPaymentLink] = useState(branding?.payment_link ?? "");
 
-  const detailQ = useQuery({ queryKey: ["crm-th","contact", id], queryFn: () => detailFn({ data: { id } }) });
-  const [note, setNote] = useState("");
+  const invQ = useQuery({ queryKey: ["invoices"], queryFn: () => listMyInvoices({ data: {} }) });
+  const invoices = (invQ.data ?? []) as Invoice[];
 
-  const addReminder = async (days: number, title: string) => {
-    await reminderFn({ data: { contactId: id, title, daysFromNow: days } });
-    qc.invalidateQueries({ queryKey: ["crm-th","contact", id] });
-    toast.success("Rappel créé");
-  };
-
-  const c = detailQ.data?.contact;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 50 }}
-    >
-      <motion.div
-        initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 28, stiffness: 220 }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog" aria-label="Fiche contact"
-        style={{
-          position: "absolute", top: 0, right: 0, bottom: 0, width: "min(560px, 100%)",
-          background: "var(--background)", borderLeft: "1px solid var(--border)",
-          padding: 22, overflowY: "auto",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}>Fiche contact</h3>
-          <button onClick={onClose} aria-label="Fermer" style={{ background: "transparent", border: "none", color: "var(--muted-foreground)", cursor: "pointer", padding: 4 }}><X size={18} aria-hidden /></button>
-        </div>
-        {detailQ.isLoading || !c ? (
-          <p style={{ color: "var(--muted-foreground)" }}>Chargement…</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--foreground)" }}>{c.first_name} {c.last_name}</div>
-              <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
-                {c.email && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Mail size={11} aria-hidden /> {c.email}</span>}
-                {c.phone && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Phone size={11} aria-hidden /> {c.phone}</span>}
-                {c.session_type && <span>Type : {c.session_type}</span>}
-              </div>
-              {c.tags?.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
-                  {c.tags.map((t) => (
-                    <span key={t} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "var(--muted)", color: "var(--muted-foreground)", display: "inline-flex", alignItems: "center", gap: 4 }}><TagIcon size={10} aria-hidden /> {t}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Rappels rapides */}
-            <div>
-              <div style={{ fontSize: 11, color: "var(--muted-foreground)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Rappels rapides</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                <button onClick={() => addReminder(7, "Relancer ce contact")}
-                  style={{ padding: "8px 12px", minHeight: 40, borderRadius: 10, background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)", cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <BellPlus size={12} aria-hidden /> Relancer dans 7j
-                </button>
-                <button onClick={() => addReminder(14, "Reprendre contact")}
-                  style={{ padding: "8px 12px", minHeight: 40, borderRadius: 10, background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)", cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <BellPlus size={12} aria-hidden /> Reprendre contact (14j)
-                </button>
-                <button onClick={() => addReminder(30, "Proposer une nouvelle séance")}
-                  style={{ padding: "8px 12px", minHeight: 40, borderRadius: 10, background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)", cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <BellPlus size={12} aria-hidden /> Nouvelle séance (30j)
-                </button>
-              </div>
-            </div>
-
-            {/* Ajout note */}
-            <div>
-              <label htmlFor="contact-note" style={{ fontSize: 11, color: "var(--muted-foreground)", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Ajouter une note privée</label>
-              <textarea id="contact-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3}
-                style={{ width: "100%", padding: 10, borderRadius: 10, background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 13, resize: "vertical" }} />
-              <button disabled={!note.trim()}
-                onClick={async () => { await noteFn({ data: { id, body: note.trim() } }); setNote(""); qc.invalidateQueries({ queryKey: ["crm-th","contact", id] }); toast.success("Note ajoutée"); }}
-                style={{ marginTop: 8, padding: "8px 14px", minHeight: 40, borderRadius: 10, background: "var(--primary)", border: "none", color: "white", fontSize: 13, cursor: note.trim() ? "pointer" : "not-allowed", opacity: note.trim() ? 1 : 0.5, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Send size={12} aria-hidden /> Enregistrer
-              </button>
-              {c.private_notes && (
-                <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: "var(--muted)", fontSize: 12, color: "var(--foreground)", whiteSpace: "pre-wrap" }}>
-                  <div style={{ fontSize: 10, color: "var(--muted-foreground)", marginBottom: 4, textTransform: "uppercase" }}>Notes privées</div>
-                  {c.private_notes}
-                </div>
-              )}
-            </div>
-
-            {/* Timeline */}
-            <div>
-              <div style={{ fontSize: 11, color: "var(--muted-foreground)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Timeline</div>
-              {detailQ.data!.activities.length === 0 ? (
-                <p style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Aucune activité.</p>
-              ) : (
-                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-                  {detailQ.data!.activities.map((a) => (
-                    <li key={a.id} style={{ borderLeft: "2px solid var(--primary)", paddingLeft: 12 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{a.title}</div>
-                      {a.body && <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2, whiteSpace: "pre-wrap" }}>{a.body}</div>}
-                      <div style={{ fontSize: 10, color: "var(--muted-foreground)", marginTop: 2 }}>{new Date(a.occurred_at).toLocaleString("fr-CH")}</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Tâches */}
-            <div>
-              <div style={{ fontSize: 11, color: "var(--muted-foreground)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Rappels programmés</div>
-              {detailQ.data!.tasks.length === 0 ? (
-                <p style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Aucun rappel.</p>
-              ) : (
-                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                  {detailQ.data!.tasks.map((t) => (
-                    <li key={t.id} style={{ padding: 10, borderRadius: 10, background: "var(--muted)", fontSize: 12, color: "var(--foreground)", display: "flex", justifyContent: "space-between", gap: 8 }}>
-                      <span>{t.title}</span>
-                      <span style={{ color: "var(--muted-foreground)", fontSize: 11 }}>{t.due_at ? new Date(t.due_at).toLocaleDateString("fr-CH") : "—"}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function ContactForm({ contact, onClose, onSubmit }: { contact: ClientContact | null; onClose: () => void; onSubmit: (p: any) => Promise<void> }) {
-  const [form, setForm] = useState({
-    first_name: contact?.first_name ?? "",
-    last_name: contact?.last_name ?? "",
-    email: contact?.email ?? "",
-    phone: contact?.phone ?? "",
-    session_type: contact?.session_type ?? "",
-    relation_status: contact?.relation_status ?? "prospect",
-    tags: contact?.tags ?? [],
-    private_notes: contact?.private_notes ?? "",
+  const delMut = useMutation({
+    mutationFn: (id: string) => deleteInvoice({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
+    onError: (e: Error) => toast.error(e.message),
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [tagInput, setTagInput] = useState("");
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
-  const toggleTag = (t: string) => set("tags", form.tags.includes(t) ? form.tags.filter((x: string) => x !== t) : [...form.tags, t]);
-  const valid = form.first_name.trim() && form.last_name.trim();
+
+  const statusMut = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: Invoice["status"] }) => updateInvoiceStatus({ data: { id, status } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const brandingMut = useMutation({
+    mutationFn: () => updateTherapistBranding({ data: { logo_url: logoUrl || null, payment_link: paymentLink || null } }),
+    onSuccess: () => { toast.success("Paramètres sauvegardés"); setShowBranding(false); qc.invalidateQueries({ queryKey: ["branding"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const totalPaid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + Number(i.total_amount), 0);
+  const totalPending = invoices.filter(i => i.status === "sent").reduce((s, i) => s + Number(i.total_amount), 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-    >
-      <motion.form
-        initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (!valid || submitting) return;
-          setSubmitting(true);
-          try {
-            const payload: any = { ...form };
-            if (contact) payload.id = contact.id;
-            await onSubmit(payload);
-          } finally { setSubmitting(false); }
-        }}
-        role="dialog" aria-label={contact ? "Modifier le contact" : "Nouveau contact"}
-        style={{ width: "min(560px, 100%)", maxHeight: "90vh", overflowY: "auto", background: "var(--background)", border: "1px solid var(--border)", borderRadius: 16, padding: 22, display: "flex", flexDirection: "column", gap: 12 }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}>{contact ? "Modifier le contact" : "Nouveau contact"}</h3>
-          <button type="button" onClick={onClose} aria-label="Fermer" style={{ background: "transparent", border: "none", color: "var(--muted-foreground)", cursor: "pointer", padding: 4 }}><X size={18} aria-hidden /></button>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <TField label="Prénom *" value={form.first_name} onChange={(v) => set("first_name", v)} required />
-          <TField label="Nom *" value={form.last_name} onChange={(v) => set("last_name", v)} required />
-          <TField label="Email" type="email" value={form.email} onChange={(v) => set("email", v)} />
-          <TField label="Téléphone" value={form.phone} onChange={(v) => set("phone", v)} />
-          <TField label="Type de séance" value={form.session_type} onChange={(v) => set("session_type", v)} />
-          <div>
-            <label style={{ fontSize: 11, color: "var(--muted-foreground)", display: "block", marginBottom: 4 }}>Statut relation</label>
-            <select value={form.relation_status} onChange={(e) => set("relation_status", e.target.value)}
-              style={{ width: "100%", minHeight: 40, padding: "8px 10px", borderRadius: 8, background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 13 }}>
-              {RELATION_STATUSES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select>
-          </div>
-        </div>
-        <div>
-          <label style={{ fontSize: 11, color: "var(--muted-foreground)", display: "block", marginBottom: 4 }}>Tags</label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
-            {TAG_PRESETS.map((t) => {
-              const on = form.tags.includes(t);
-              return (
-                <button type="button" key={t} onClick={() => toggleTag(t)} aria-pressed={on}
-                  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", background: on ? "var(--primary)" : "transparent", color: on ? "white" : "var(--foreground)", fontSize: 12, cursor: "pointer" }}>
-                  #{t}
-                </button>
-              );
-            })}
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Ajouter un tag personnalisé"
-              style={{ flex: 1, minHeight: 36, padding: "6px 10px", borderRadius: 8, background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 12 }} />
-            <button type="button" onClick={() => { if (tagInput.trim()) { toggleTag(tagInput.trim()); setTagInput(""); } }}
-              style={{ padding: "6px 12px", minHeight: 36, borderRadius: 8, background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)", cursor: "pointer", fontSize: 12 }}>Ajouter</button>
-          </div>
-          {form.tags.filter((t: string) => !TAG_PRESETS.includes(t)).length > 0 && (
-            <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
-              {form.tags.filter((t: string) => !TAG_PRESETS.includes(t)).map((t: string) => (
-                <span key={t} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "var(--primary)", color: "white", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  #{t}
-                  <button type="button" onClick={() => toggleTag(t)} aria-label={`Retirer ${t}`} style={{ background: "transparent", border: "none", color: "white", cursor: "pointer", padding: 0, display: "inline-flex" }}><X size={10} aria-hidden /></button>
-                </span>
-              ))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="bg-surface border-border/60"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Total encaissé</p><p className="text-xl font-bold text-green-400">{fmt(totalPaid)}</p></CardContent></Card>
+        <Card className="bg-surface border-border/60"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">En attente</p><p className="text-xl font-bold text-yellow-400">{fmt(totalPending)}</p></CardContent></Card>
+        <Card className="bg-surface border-border/60"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Factures</p><p className="text-xl font-bold text-foreground">{invoices.length}</p></CardContent></Card>
+      </div>
+
+      <div className="flex gap-2 justify-between">
+        <Button size="sm" variant="outline" onClick={() => setShowBranding(true)}><Settings className="h-4 w-4 mr-1" />Logo & paiement</Button>
+        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" />Nouvelle facture
+        </Button>
+      </div>
+
+      {showBranding && (
+        <Card className="bg-surface border-primary/30">
+          <CardHeader className="pb-2"><p className="text-sm font-semibold">Paramètres facturation</p></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1">
+              <Label>URL Logo (lien image)</Label>
+              <div className="flex gap-2">
+                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://…/logo.png" className="bg-background border-border/60" />
+                {logoUrl && <img src={logoUrl} alt="logo" className="h-9 w-auto rounded border border-border/40 object-contain" />}
+              </div>
             </div>
-          )}
-        </div>
-        <div>
-          <label style={{ fontSize: 11, color: "var(--muted-foreground)", display: "block", marginBottom: 4 }}>Notes privées</label>
-          <textarea value={form.private_notes} onChange={(e) => set("private_notes", e.target.value)} rows={3}
-            style={{ width: "100%", padding: 10, borderRadius: 8, background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 13, resize: "vertical" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
-          <button type="button" onClick={onClose} style={{ padding: "10px 16px", minHeight: 44, borderRadius: 10, background: "transparent", border: "1px solid var(--border)", color: "var(--foreground)", cursor: "pointer", fontSize: 13 }}>Annuler</button>
-          <button type="submit" disabled={!valid || submitting} style={{ padding: "10px 16px", minHeight: 44, borderRadius: 10, background: "var(--primary)", border: "none", color: "white", fontWeight: 600, cursor: valid && !submitting ? "pointer" : "not-allowed", opacity: valid && !submitting ? 1 : 0.5, fontSize: 13 }}>
-            {contact ? "Mettre à jour" : "Créer"}
-          </button>
-        </div>
-      </motion.form>
-    </motion.div>
+            <div className="space-y-1">
+              <Label>Lien de paiement par défaut</Label>
+              <Input value={paymentLink} onChange={e => setPaymentLink(e.target.value)} placeholder="https://buy.stripe.com/…" className="bg-background border-border/60" />
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setShowBranding(false)}>Annuler</Button>
+              <Button size="sm" className="bg-primary" onClick={() => brandingMut.mutate()} disabled={brandingMut.isPending}>Sauvegarder</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-2">
+        {invoices.map(inv => {
+          const s = INV_STATUS_MAP[inv.status] ?? INV_STATUS_MAP.draft;
+          return (
+            <Card key={inv.id} className="bg-surface border-border/60 hover:border-primary/30 transition-colors">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs text-muted-foreground">{inv.invoice_number}</span>
+                    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.color}40` }} className="text-xs font-semibold px-2 py-0.5 rounded-full">{s.label}</span>
+                  </div>
+                  <p className="font-semibold text-foreground mt-0.5">{inv.client_name}</p>
+                  <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
+                    <span>{fmtDate(inv.issued_at)}</span>
+                    {inv.due_at && <span>Échéance : {fmtDate(inv.due_at)}</span>}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-foreground">{fmt(Number(inv.total_amount), inv.currency)}</p>
+                  {inv.status === "sent" && (
+                    <Button size="sm" variant="ghost" className="text-green-400 hover:text-green-300 text-xs mt-1 h-6"
+                      onClick={() => statusMut.mutate({ id: inv.id, status: "paid" })}>
+                      <Check className="h-3 w-3 mr-1" />Marquer payée
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" onClick={() => { setEditing(inv); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { if (confirm("Supprimer cette facture ?")) delMut.mutate(inv.id); }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+        {invoices.length === 0 && <p className="text-center text-muted-foreground py-10">Aucune facture. Créez-en une !</p>}
+      </div>
+
+      <InvoiceDialog open={dialogOpen} onClose={() => setDialogOpen(false)} initial={editing} contacts={contacts} branding={branding} />
+    </div>
   );
 }
 
-function TField({ label, value, onChange, type = "text", required }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
+function CrmPage() {
+  const qc = useQueryClient();
+  const [tab, setTab] = useState("pipeline");
+  const [contactDialog, setContactDialog] = useState(false);
+  const [editingContact, setEditingContact] = useState<ClientContact | null>(null);
+
+  const contactsQ = useQuery({ queryKey: ["crm-contacts"], queryFn: () => listMyContacts({ data: {} }) });
+  const brandingQ = useQuery({ queryKey: ["branding"], queryFn: () => getTherapistBranding() });
+  const contacts = (contactsQ.data ?? []) as ClientContact[];
+  const branding = brandingQ.data;
+
+  const delContactMut = useMutation({
+    mutationFn: (id: string) => deleteContact({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm-contacts"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openEdit = (c: ClientContact) => { setEditingContact(c); setContactDialog(true); };
+
   return (
-    <div>
-      <label style={{ fontSize: 11, color: "var(--muted-foreground)", display: "block", marginBottom: 4 }}>{label}</label>
-      <input type={type} value={value} required={required} onChange={(e) => onChange(e.target.value)}
-        style={{ width: "100%", minHeight: 40, padding: "8px 10px", borderRadius: 8, background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: 13 }} />
+    <div className="p-6 md:p-10 space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">CRM Patients</h1>
+          <p className="text-muted-foreground mt-1">{contacts.length} contact{contacts.length !== 1 ? "s" : ""}</p>
+        </div>
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => { setEditingContact(null); setContactDialog(true); }}>
+          <Plus className="h-4 w-4 mr-2" />Nouveau contact
+        </Button>
+      </div>
+
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="bg-surface border border-border/60">
+          <TabsTrigger value="pipeline" className="flex items-center gap-1.5"><LayoutGrid className="h-4 w-4" />Pipeline</TabsTrigger>
+          <TabsTrigger value="contacts" className="flex items-center gap-1.5"><Users className="h-4 w-4" />Contacts</TabsTrigger>
+          <TabsTrigger value="tasks" className="flex items-center gap-1.5"><CheckSquare className="h-4 w-4" />Tâches</TabsTrigger>
+          <TabsTrigger value="invoices" className="flex items-center gap-1.5"><FileText className="h-4 w-4" />Facturation</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pipeline" className="mt-4">
+          <PipelineTab contacts={contacts} onEdit={openEdit} />
+        </TabsContent>
+        <TabsContent value="contacts" className="mt-4">
+          <ContactsTab contacts={contacts} onEdit={openEdit} onDelete={id => delContactMut.mutate(id)} />
+        </TabsContent>
+        <TabsContent value="tasks" className="mt-4">
+          <TasksTab contacts={contacts} />
+        </TabsContent>
+        <TabsContent value="invoices" className="mt-4">
+          <InvoicesTab contacts={contacts} branding={branding} />
+        </TabsContent>
+      </Tabs>
+
+      <ContactDialog
+        open={contactDialog}
+        onClose={() => setContactDialog(false)}
+        initial={editingContact}
+        contacts={contacts}
+      />
     </div>
   );
 }
