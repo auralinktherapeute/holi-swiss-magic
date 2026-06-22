@@ -15,35 +15,48 @@ export type ClientContact = {
   last_booking_at: string | null;
   next_booking_at: string | null;
   private_notes: string | null;
+  payment_link: string | null;
   created_at: string;
   updated_at: string;
 };
 
-async function assertElitePro(userId: string): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
+export type CrmTask = {
+  id: string;
+  therapist_id: string;
+  contact_id: string | null;
+  title: string;
+  description: string | null;
+  due_at: string | null;
+  done: boolean;
+  priority: "low" | "normal" | "high";
+  created_at: string;
+};
+
+export type ContactNote = {
+  id: string;
+  contact_id: string;
+  content: string;
+  created_at: string;
+};
+
+async function getTherapistId(supabase: any, userId: string): Promise<string> {
+  const { data, error } = await supabase
     .from("therapists")
-    .select("id, subscription_plan")
+    .select("id")
     .eq("user_id", userId)
     .maybeSingle();
   if (error || !data) throw new Error("Profil thérapeute introuvable.");
-  if ((data as any).subscription_plan !== "elite_pro") {
-    throw new Error("Réservé à l'offre Elite Pro.");
-  }
   return data.id as string;
 }
 
+// ── Check Elite Pro (kept for backward compat but always returns true now) ──
 export const checkElitePro = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("therapists")
-      .select("subscription_plan")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    return { isElitePro: (data as any)?.subscription_plan === "elite_pro" };
+  .handler(async () => {
+    return { isElitePro: true };
   });
+
+// ── Contacts ──────────────────────────────────────────────────────────────────
 
 export const listMyContacts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -55,9 +68,8 @@ export const listMyContacts = createServerFn({ method: "GET" })
     }).parse(input ?? {}),
   )
   .handler(async ({ data, context }): Promise<ClientContact[]> => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    let q = (context.supabase as any)
       .from("crm_client_contacts")
       .select("*")
       .eq("therapist_id", therapistId)
@@ -74,238 +86,143 @@ export const listMyContacts = createServerFn({ method: "GET" })
     return (rows ?? []) as ClientContact[];
   });
 
+const ContactSchema = z.object({
+  id: z.string().optional(),
+  first_name: z.string().min(1),
+  last_name: z.string().optional().default(""),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  session_type: z.string().optional().nullable(),
+  relation_status: z.enum(["prospect", "new", "active", "followup", "inactive"]).default("prospect"),
+  tags: z.array(z.string()).default([]),
+  private_notes: z.string().optional().nullable(),
+  payment_link: z.string().optional().nullable(),
+  last_booking_at: z.string().optional().nullable(),
+  next_booking_at: z.string().optional().nullable(),
+});
+
 export const upsertContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: Partial<ClientContact> & { id?: string }) =>
-    z.object({
-      id: z.string().uuid().optional(),
-      first_name: z.string().trim().min(1).max(100),
-      last_name: z.string().trim().min(1).max(100),
-      email: z.string().email().max(255).optional().nullable().or(z.literal("")),
-      phone: z.string().max(50).optional().nullable().or(z.literal("")),
-      session_type: z.string().max(120).optional().nullable().or(z.literal("")),
-      relation_status: z.enum(["prospect","new","active","followup","inactive"]).default("prospect"),
-      tags: z.array(z.string().max(40)).max(20).default([]),
-      private_notes: z.string().max(4000).optional().nullable().or(z.literal("")),
-    }).parse(input),
-  )
+  .inputValidator((input: unknown) => ContactSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const payload: any = { ...data, therapist_id: therapistId };
-    ["email","phone","session_type","private_notes"].forEach((k) => {
-      if (payload[k] === "") payload[k] = null;
-    });
-    if (data.id) {
-      const { error } = await supabaseAdmin.from("crm_client_contacts").update(payload).eq("id", data.id).eq("therapist_id", therapistId);
-      if (error) throw new Error(error.message);
-      return { id: data.id };
-    }
-    const { data: row, error } = await supabaseAdmin.from("crm_client_contacts").insert(payload).select("id").maybeSingle();
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { id, ...rest } = data;
+    const payload = { ...rest, therapist_id: therapistId, updated_at: new Date().toISOString() };
+    let q = (context.supabase as any).from("crm_client_contacts");
+    const { data: row, error } = id
+      ? await q.update(payload).eq("id", id).select().maybeSingle()
+      : await q.insert({ ...payload }).select().maybeSingle();
     if (error) throw new Error(error.message);
-    return { id: (row as any)?.id };
+    return row as ClientContact;
   });
 
 export const deleteContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("crm_client_contacts").delete().eq("id", data.id).eq("therapist_id", therapistId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-export const addContactNote = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; body: string }) =>
-    z.object({ id: z.string().uuid(), body: z.string().trim().min(1).max(4000) }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("crm_activities").insert({
-      entity_type: "client_contact",
-      entity_id: data.id,
-      owner_id: context.userId,
-      therapist_id: therapistId,
-      type: "note",
-      title: "Note",
-      body: data.body,
-    });
+    const { error } = await (context.supabase as any)
+      .from("crm_client_contacts")
+      .delete()
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const getContactDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: contact, error } = await supabaseAdmin
-      .from("crm_client_contacts").select("*").eq("id", data.id).eq("therapist_id", therapistId).maybeSingle();
-    if (error) throw new Error(error.message);
-    const { data: activities } = await supabaseAdmin
-      .from("crm_activities")
-      .select("id,type,title,body,occurred_at,metadata")
-      .eq("entity_type", "client_contact")
-      .eq("entity_id", data.id)
-      .order("occurred_at", { ascending: false })
-      .limit(100);
-    const { data: tasks } = await supabaseAdmin
-      .from("crm_tasks")
-      .select("id,title,due_at,done_at,priority,description")
-      .eq("entity_type", "client_contact")
-      .eq("entity_id", data.id)
-      .order("due_at", { ascending: true, nullsFirst: false })
-      .limit(50);
-    return {
-      contact: contact as ClientContact | null,
-      activities: (activities ?? []) as Array<{ id: string; type: string; title: string; body: string | null; occurred_at: string; metadata: Record<string, string | number | boolean | null> }>,
-      tasks: (tasks ?? []) as Array<{ id: string; title: string; due_at: string | null; done_at: string | null; priority: string; description: string | null }>,
-    };
-  });
-
-export const createContactReminder = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { contactId: string; title: string; daysFromNow?: number; description?: string }) =>
-    z.object({
-      contactId: z.string().uuid(),
-      title: z.string().trim().min(1).max(200),
-      daysFromNow: z.number().int().min(0).max(365).optional(),
-      description: z.string().max(2000).optional(),
-    }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const due = data.daysFromNow !== undefined
-      ? new Date(Date.now() + data.daysFromNow * 86400_000).toISOString()
-      : null;
-    const { error } = await supabaseAdmin.from("crm_tasks").insert({
-      therapist_id: therapistId,
-      owner_id: context.userId,
-      entity_type: "client_contact",
-      entity_id: data.contactId,
-      title: data.title,
-      description: data.description ?? null,
-      due_at: due,
-      priority: "normal",
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-export const completeContactTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; done: boolean }) =>
-    z.object({ id: z.string().uuid(), done: z.boolean() }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("crm_tasks")
-      .update({ done_at: data.done ? new Date().toISOString() : null })
-      .eq("id", data.id)
-      .eq("therapist_id", therapistId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-/** Centre des rappels — toutes les tâches du thérapeute Elite Pro avec contact lié. */
-export const listMyReminders = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { status?: "open" | "done" | "overdue" }) =>
-    z.object({ status: z.enum(["open","done","overdue"]).optional() }).parse(input ?? {}),
-  )
-  .handler(async ({ data, context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin
-      .from("crm_tasks")
-      .select("id,title,description,due_at,done_at,priority,entity_type,entity_id")
-      .eq("therapist_id", therapistId)
-      .order("due_at", { ascending: true, nullsFirst: false })
-      .limit(200);
-    if (data.status === "open") q = q.is("done_at", null);
-    if (data.status === "done") q = q.not("done_at", "is", null);
-    if (data.status === "overdue") q = q.is("done_at", null).lt("due_at", new Date().toISOString());
-    const { data: tasks, error } = await q;
-    if (error) throw new Error(error.message);
-
-    // Enrichir avec nom du contact lié
-    const contactIds = Array.from(new Set((tasks ?? [])
-      .filter((t) => t.entity_type === "client_contact" && t.entity_id)
-      .map((t) => t.entity_id as string)));
-    let contactsMap = new Map<string, { first_name: string; last_name: string }>();
-    if (contactIds.length > 0) {
-      const { data: contacts } = await supabaseAdmin
-        .from("crm_client_contacts")
-        .select("id,first_name,last_name")
-        .in("id", contactIds);
-      contactsMap = new Map((contacts ?? []).map((c: any) => [c.id, { first_name: c.first_name, last_name: c.last_name }]));
-    }
-    return (tasks ?? []).map((t) => ({
-      ...t,
-      contact: t.entity_id ? contactsMap.get(t.entity_id as string) ?? null : null,
-    }));
-  });
-
-/** Notes récentes du thérapeute Elite Pro (toutes fiches confondues). */
-export const listMyRecentNotes = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: notes, error } = await supabaseAdmin
-      .from("crm_activities")
-      .select("id,title,body,occurred_at,entity_id")
-      .eq("therapist_id", therapistId)
-      .eq("type", "note")
-      .order("occurred_at", { ascending: false })
-      .limit(50);
-    if (error) throw new Error(error.message);
-    const ids = Array.from(new Set((notes ?? []).map((n) => n.entity_id).filter(Boolean) as string[]));
-    let cmap = new Map<string, { first_name: string; last_name: string }>();
-    if (ids.length > 0) {
-      const { data: contacts } = await supabaseAdmin
-        .from("crm_client_contacts").select("id,first_name,last_name").in("id", ids);
-      cmap = new Map((contacts ?? []).map((c: any) => [c.id, { first_name: c.first_name, last_name: c.last_name }]));
-    }
-    return (notes ?? []).map((n) => ({
-      ...n,
-      contact: n.entity_id ? cmap.get(n.entity_id as string) ?? null : null,
-    }));
-  });
-
-/** Segmentation : compte de contacts par statut et par tag pour le thérapeute. */
-export const getMySegmentation = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const therapistId = await assertElitePro(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: contacts, error } = await supabaseAdmin
+    const { data: contact, error } = await (context.supabase as any)
       .from("crm_client_contacts")
-      .select("relation_status,tags,last_booking_at")
-      .eq("therapist_id", therapistId)
-      .limit(2000);
+      .select("*, crm_contact_notes(*)")
+      .eq("id", data.id)
+      .maybeSingle();
     if (error) throw new Error(error.message);
-    const byStatus: Record<string, number> = {};
-    const byTag: Record<string, number> = {};
-    let withRecentBooking = 0;
-    const thirtyDays = Date.now() - 30 * 86400_000;
-    (contacts ?? []).forEach((c: any) => {
-      byStatus[c.relation_status] = (byStatus[c.relation_status] ?? 0) + 1;
-      (c.tags ?? []).forEach((t: string) => { byTag[t] = (byTag[t] ?? 0) + 1; });
-      if (c.last_booking_at && new Date(c.last_booking_at).getTime() > thirtyDays) withRecentBooking++;
-    });
-    return {
-      total: contacts?.length ?? 0,
-      byStatus,
-      byTag,
-      withRecentBooking,
-    };
+    return contact;
   });
+
+// ── Notes ─────────────────────────────────────────────────────────────────────
+
+export const addContactNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ contact_id: z.string().uuid(), content: z.string().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: note, error } = await (context.supabase as any)
+      .from("crm_contact_notes")
+      .insert({ contact_id: data.contact_id, content: data.content })
+      .select()
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return note as ContactNote;
+  });
+
+export const listContactNotes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ contact_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: notes, error } = await (context.supabase as any)
+      .from("crm_contact_notes")
+      .select("*")
+      .eq("contact_id", data.contact_id)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (notes ?? []) as ContactNote[];
+  });
+
+// ── Tasks ─────────────────────────────────────────────────────────────────────
+
+export const listMyTasks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ done: z.boolean().optional() }).parse(input ?? {}))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    let q = (context.supabase as any)
+      .from("crm_tasks")
+      .select("*, crm_client_contacts(first_name, last_name)")
+      .eq("therapist_id", therapistId)
+      .order("due_at", { ascending: true, nullsFirst: false });
+    if (data.done !== undefined) q = q.eq("done", data.done);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as (CrmTask & { crm_client_contacts: { first_name: string; last_name: string } | null })[];
+  });
+
+const TaskSchema = z.object({
+  id: z.string().optional(),
+  contact_id: z.string().uuid().optional().nullable(),
+  title: z.string().min(1),
+  description: z.string().optional().nullable(),
+  due_at: z.string().optional().nullable(),
+  priority: z.enum(["low", "normal", "high"]).default("normal"),
+  done: z.boolean().default(false),
+});
+
+export const upsertTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TaskSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { id, ...rest } = data;
+    const payload = { ...rest, therapist_id: therapistId };
+    let q = (context.supabase as any).from("crm_tasks");
+    const { data: row, error } = id
+      ? await q.update(payload).eq("id", id).select().maybeSingle()
+      : await q.insert(payload).select().maybeSingle();
+    if (error) throw new Error(error.message);
+    return row as CrmTask;
+  });
+
+export const deleteTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any).from("crm_tasks").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ── Reminders (alias createContactReminder for backward compat) ────────────────
+export const createContactReminder = upsertTask;
+
+// ── Views (kept for backward compat) ─────────────────────────────────────────
+export { RemindersView, NotesView, SegmentationView } from "@/components/crm/TherapistCrmViews";
