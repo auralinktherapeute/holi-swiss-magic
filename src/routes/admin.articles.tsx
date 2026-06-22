@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X } from "lucide-react";
-import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, titleForLang } from "@/lib/articles.functions";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Progress } from "@/components/ui/progress";
+import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
+import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
