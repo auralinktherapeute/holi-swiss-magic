@@ -91,7 +91,14 @@ function UnsplashPicker({ onSelect }: { onSelect: (url: string) => void }) {
 }
 
 // ── Article form ──────────────────────────────────────────────────────────────
-type ArticleRow = { id: string; slug: string | null; status: string; lang: string; category: string | null; published_at: string | null; created_at: string | null; cover_image_url: string | null; title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null };
+type ArticleRow = {
+  id: string; slug: string | null; status: string; lang: string;
+  category: string | null; published_at: string | null; created_at: string | null;
+  updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
+  title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null;
+  excerpt_fr?: string | null; body_fr?: string | null;
+  meta_title_fr?: string | null; meta_description_fr?: string | null;
+};
 
 type FormData = {
   id?: string;
