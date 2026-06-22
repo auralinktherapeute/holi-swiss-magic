@@ -156,3 +156,19 @@ export const deleteArticle = createServerFn({ method: "POST" })
     if (error) throw new Error("Impossible de supprimer l'article.");
     return { ok: true };
   });
+
+export const setArticleStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    status: z.enum(["draft", "validated", "pending_validation", "rejected"]),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = { status: data.status };
+    patch.published_at = data.status === "validated" ? new Date().toISOString() : null;
+    const { error } = await (supabaseAdmin as any).from("articles").update(patch).eq("id", data.id);
+    if (error) throw new Error("Impossible de modifier le statut.");
+    return { ok: true };
+  });
