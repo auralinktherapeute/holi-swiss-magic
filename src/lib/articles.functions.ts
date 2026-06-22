@@ -66,13 +66,13 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await (supabaseAdmin as any)
+    // Use authenticated user client (RLS policy admin_all_articles allows admins to see all statuses)
+    const { data, error } = await (context.supabase as any)
       .from("articles")
       .select("id,slug,status,lang,category,published_at,created_at,cover_image_url,title_fr,title_de,title_it,title_en")
       .order("created_at", { ascending: false });
 
-    if (error) throw new Error("Impossible de charger les articles.");
+    if (error) throw new Error(`Impossible de charger les articles: ${error.message}`);
     return { articles: data ?? [] };
   });
 
