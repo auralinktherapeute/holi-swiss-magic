@@ -1,10 +1,18 @@
-// Client Supabase public pour le projet Holiswiss (gpldaaqwvwopttachrma)
-// Clé anon publique — lecture seule sur les articles validés (RLS)
+// Public read-only Supabase client — points to the Lovable Cloud project
+// (the unique source of truth for articles). Safe for server functions:
+// no session persistence, no localStorage access.
 import { createClient } from '@supabase/supabase-js';
 
-const HOLISWISS_URL = "https://gpldaaqwvwopttachrma.supabase.co";
-const HOLISWISS_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbGRhYXF3dndvcHR0YWNocm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODIyOTAsImV4cCI6MjA5NjU1ODI5MH0.BKuw_l2YrTZXTDHFlMcTC0yoH003_naKeoJXYs61fQg";
+const URL =
+  (typeof process !== 'undefined' && process.env?.SUPABASE_URL) ||
+  (import.meta as any).env?.VITE_SUPABASE_URL ||
+  'https://qqwudmnfavvaukuldulr.supabase.co';
 
-export const holiswissPublic = createClient(HOLISWISS_URL, HOLISWISS_ANON, {
-  auth: { persistSession: false, autoRefreshToken: false },
+const ANON =
+  (typeof process !== 'undefined' && process.env?.SUPABASE_PUBLISHABLE_KEY) ||
+  (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd3VkbW5mYXZ2YXVrdWxkdWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg2MjUsImV4cCI6MjA5NjU3NDYyNX0.P-8PAwboYoul28Iqx_UMGH0c9_NPwBTsJPCkRMXKEpY';
+
+export const holiswissPublic = createClient(URL, ANON, {
+  auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
 });
