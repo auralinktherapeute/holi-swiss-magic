@@ -128,6 +128,73 @@ export const deleteContact = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ── Bulk import (CSV / XLSX) ──────────────────────────────────────────────────
+
+const ImportRowSchema = z.object({
+  first_name: z.string().min(1),
+  last_name: z.string().optional().default(""),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
+  private_notes: z.string().optional().nullable(),
+});
+
+export const bulkImportContacts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      rows: z.array(ImportRowSchema).min(1).max(2000),
+      onDuplicate: z.enum(["skip", "update"]).default("skip"),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    let imported = 0, updated = 0, skipped = 0;
+
+    // Pre-fetch existing emails to detect duplicates
+    const emails = data.rows.map(r => r.email?.trim().toLowerCase()).filter(Boolean) as string[];
+    const existingByEmail = new Map<string, string>();
+    if (emails.length > 0) {
+      const { data: existing } = await sb
+        .from("crm_client_contacts")
+        .select("id,email")
+        .eq("therapist_id", therapistId)
+        .in("email", emails);
+      for (const e of existing ?? []) {
+        if (e.email) existingByEmail.set(String(e.email).toLowerCase(), e.id);
+      }
+    }
+
+    for (const r of data.rows) {
+      const emailKey = r.email?.trim().toLowerCase();
+      const dup = emailKey ? existingByEmail.get(emailKey) : undefined;
+      const payload: Record<string, any> = {
+        first_name: r.first_name.trim(),
+        last_name: (r.last_name ?? "").trim(),
+        email: r.email?.trim() || null,
+        phone: r.phone?.trim() || null,
+        date_of_birth: r.date_of_birth || null,
+        private_notes: r.private_notes?.trim() || null,
+      };
+      if (dup) {
+        if (data.onDuplicate === "skip") { skipped++; continue; }
+        const { error } = await sb.from("crm_client_contacts")
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq("id", dup);
+        if (error) { skipped++; continue; }
+        updated++;
+      } else {
+        const { error } = await sb.from("crm_client_contacts")
+          .insert({ ...payload, therapist_id: therapistId, relation_status: "prospect", tags: [] });
+        if (error) { skipped++; continue; }
+        imported++;
+      }
+    }
+
+    return { imported, updated, skipped, total: data.rows.length };
+  });
+
 export const getContactDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
