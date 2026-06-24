@@ -33,7 +33,7 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
     let q = (supabase as any)
       .from("articles")
-      .select("id,slug,cover_image_url,category,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
+      .select("id,slug,cover_image_url,category,secondary_tags,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
       .eq("status", "validated")
       .order("published_at", { ascending: false });
 
@@ -42,6 +42,22 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await q;
     if (error) throw new Error("Impossible de charger les articles.");
+    return { articles: rows ?? [] };
+  });
+
+export const getArticlesByCategory = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ slug: z.string(), lang: z.string().optional() }))
+  .handler(async ({ data }) => {
+    const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
+    let q = (supabase as any)
+      .from("articles")
+      .select("id,slug,cover_image_url,category,secondary_tags,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
+      .eq("status", "validated")
+      .or(`category.eq.${data.slug},secondary_tags.cs.{${data.slug}}`)
+      .order("published_at", { ascending: false });
+    if (data.lang) q = q.eq("lang", data.lang as "fr" | "de" | "it" | "en");
+    const { data: rows, error } = await q;
+    if (error) throw new Error("Impossible de charger les articles de cette catégorie.");
     return { articles: rows ?? [] };
   });
 
@@ -70,7 +86,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("articles")
-      .select("id,slug,status,lang,category,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,meta_title_fr,meta_description_fr")
+      .select("id,slug,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,meta_title_fr,meta_description_fr")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(`Impossible de charger les articles: ${error.message}`);
@@ -97,6 +113,7 @@ const ArticleInputSchema = z.object({
   status: z.enum(["draft", "validated", "pending_validation", "rejected"]).default("draft"),
   meta_title_fr: z.string().optional().default(""),
   meta_description_fr: z.string().optional().default(""),
+  secondary_tags: z.array(z.string()).optional().default([]),
 });
 
 export const createArticle = createServerFn({ method: "POST" })

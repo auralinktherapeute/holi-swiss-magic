@@ -18,14 +18,9 @@ import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
+import { groupedCategories } from "@/lib/article-categories";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
-
-const CATEGORIES = [
-  "reflexologie", "reiki", "naturopathie", "sophrologie", "acupuncture",
-  "osteopathie", "yoga", "hypnose", "aromatherapie", "magnetisme",
-  "shiatsu", "meditation", "coaching", "ayurveda",
-];
 
 const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY ?? "";
 
@@ -93,7 +88,7 @@ function UnsplashPicker({ onSelect }: { onSelect: (url: string) => void }) {
 // ── Article form ──────────────────────────────────────────────────────────────
 type ArticleRow = {
   id: string; slug: string | null; status: string; lang: string;
-  category: string | null; published_at: string | null; created_at: string | null;
+  category: string | null; secondary_tags?: string[] | null; published_at: string | null; created_at: string | null;
   updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
   title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null;
   excerpt_fr?: string | null; body_fr?: string | null;
@@ -105,7 +100,7 @@ type FormData = {
   title_fr: string; title_de: string; title_it: string; title_en: string;
   body_fr: string; body_de: string; body_it: string; body_en: string;
   excerpt_fr: string; excerpt_de: string; excerpt_it: string; excerpt_en: string;
-  slug: string; cover_image_url: string; category: string;
+  slug: string; cover_image_url: string; category: string; secondary_tags: string[];
   lang: Lang; status: Status;
   meta_title_fr: string; meta_description_fr: string;
 };
@@ -114,7 +109,7 @@ const EMPTY: FormData = {
   title_fr: "", title_de: "", title_it: "", title_en: "",
   body_fr: "", body_de: "", body_it: "", body_en: "",
   excerpt_fr: "", excerpt_de: "", excerpt_it: "", excerpt_en: "",
-  slug: "", cover_image_url: "", category: "", lang: "fr", status: "draft",
+  slug: "", cover_image_url: "", category: "", secondary_tags: [], lang: "fr", status: "draft",
   meta_title_fr: "", meta_description_fr: "",
 };
 
@@ -129,16 +124,23 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
   useEffect(() => {
     if (!open || hasSessionState(formKey)) return;
     setForm(initial
-      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", cover_image_url: initial.cover_image_url ?? "", category: initial.category ?? "", lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
+      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", cover_image_url: initial.cover_image_url ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
       : EMPTY
     );
   }, [formKey, initial, open, setForm]);
 
-  const set = (k: keyof FormData, v: string) => setForm(prev => {
-    const next = { ...prev, [k]: v };
-    if (k === "title_fr" && !prev.id) next.slug = toSlug(v);
+  const set = <K extends keyof FormData>(k: K, v: FormData[K]) => setForm(prev => {
+    const next = { ...prev, [k]: v } as FormData;
+    if (k === "title_fr" && !prev.id) next.slug = toSlug(v as string);
     return next;
   });
+
+  const toggleTag = (slug: string) => {
+    setForm(prev => {
+      const tags = prev.secondary_tags ?? [];
+      return { ...prev, secondary_tags: tags.includes(slug) ? tags.filter(t => t !== slug) : [...tags, slug] };
+    });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (f: FormData) => {
@@ -227,8 +229,17 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
               <Label>Catégorie</Label>
               <Select value={form.category} onValueChange={v => set("category", v)}>
                 <SelectTrigger className="bg-background border-border/60"><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent className="bg-surface border-border/60">
-                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                <SelectContent className="bg-surface border-border/60 max-h-80">
+                  {groupedCategories("fr").map(group => (
+                    <div key={group.key}>
+                      <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        {group.label}
+                      </div>
+                      {group.items.map(c => (
+                        <SelectItem key={c.slug} value={c.slug}>{c.name_fr}</SelectItem>
+                      ))}
+                    </div>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -255,6 +266,42 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
                   <SelectItem value="rejected">Rejeté</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Tags secondaires (multi-sélection) */}
+          <div className="space-y-2">
+            <Label>
+              Tags secondaires <span className="text-muted-foreground text-xs">(facultatif, plusieurs possibles)</span>
+            </Label>
+            <div className="rounded-lg border border-border/60 bg-background p-3 max-h-56 overflow-y-auto space-y-3">
+              {groupedCategories("fr").map(group => (
+                <div key={group.key}>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+                    {group.label}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.items.filter(c => c.slug !== form.category).map(c => {
+                      const active = (form.secondary_tags ?? []).includes(c.slug);
+                      return (
+                        <button
+                          key={c.slug}
+                          type="button"
+                          onClick={() => toggleTag(c.slug)}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                            active
+                              ? "bg-primary/20 border-primary/60 text-primary"
+                              : "bg-surface border-border/60 text-muted-foreground hover:text-foreground"
+                          }`}
+                          aria-pressed={active}
+                        >
+                          {active ? "✓ " : ""}{c.name_fr}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
