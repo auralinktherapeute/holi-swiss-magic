@@ -416,6 +416,7 @@ export type Database = {
       crm_client_contacts: {
         Row: {
           created_at: string
+          date_of_birth: string | null
           email: string | null
           first_name: string
           id: string
@@ -433,6 +434,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           first_name: string
           id?: string
@@ -450,6 +452,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           first_name?: string
           id?: string

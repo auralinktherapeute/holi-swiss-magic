@@ -1,0 +1,1 @@
+ALTER TABLE public.crm_client_contacts ADD COLUMN IF NOT EXISTS date_of_birth date;
