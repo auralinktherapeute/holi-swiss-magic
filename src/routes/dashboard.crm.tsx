@@ -600,6 +600,34 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
               )}
             </div>
 
+            <div className="space-y-2 rounded-lg border border-border/40 p-3 bg-background/40">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Moyens de paiement sur cette facture</Label>
+                <a href="/dashboard/profil" className="text-xs text-primary hover:underline">Configurer</a>
+              </div>
+              {paymentMethods.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Aucun moyen de paiement configuré. Ajoutez-en depuis votre profil pour les proposer sur vos factures.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {paymentMethods.map(m => (
+                    <label key={m.id} className="flex items-start gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-background/60">
+                      <Checkbox
+                        checked={form.payment_method_ids.includes(m.id)}
+                        onCheckedChange={() => togglePM(m.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-foreground">{PM_LABEL[m.method_type]}{m.label ? ` — ${m.label}` : ""}</div>
+                        <div className="text-xs text-muted-foreground truncate">{m.value}{m.bank_name ? ` · ${m.bank_name}` : ""}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Statut</Label>
