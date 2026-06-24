@@ -1062,6 +1062,120 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          total: number | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          total?: number | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          total?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          client_address: string | null
+          client_name: string
+          contact_id: string | null
+          created_at: string
+          currency: string
+          due_at: string | null
+          id: string
+          invoice_number: string
+          issued_at: string
+          notes: string | null
+          payment_link: string | null
+          status: string
+          therapist_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          client_address?: string | null
+          client_name: string
+          contact_id?: string | null
+          created_at?: string
+          currency?: string
+          due_at?: string | null
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          notes?: string | null
+          payment_link?: string | null
+          status?: string
+          therapist_id: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          client_address?: string | null
+          client_name?: string
+          contact_id?: string | null
+          created_at?: string
+          currency?: string
+          due_at?: string | null
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          notes?: string | null
+          payment_link?: string | null
+          status?: string
+          therapist_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           author_avatar_url: string | null
@@ -1314,12 +1428,15 @@ export type Database = {
           id: string
           ide_verified: boolean
           insurance_accepted: boolean | null
+          invoice_counter: number
           languages: string[] | null
           last_name: string
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
           meta_description: string | null
           meta_title: string | null
+          payment_link: string | null
           phone: string | null
           photo_url: string | null
           postal_code: string | null
@@ -1359,12 +1476,15 @@ export type Database = {
           id?: string
           ide_verified?: boolean
           insurance_accepted?: boolean | null
+          invoice_counter?: number
           languages?: string[] | null
           last_name: string
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          payment_link?: string | null
           phone?: string | null
           photo_url?: string | null
           postal_code?: string | null
@@ -1404,12 +1524,15 @@ export type Database = {
           id?: string
           ide_verified?: boolean
           insurance_accepted?: boolean | null
+          invoice_counter?: number
           languages?: string[] | null
           last_name?: string
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          payment_link?: string | null
           phone?: string | null
           photo_url?: string | null
           postal_code?: string | null
