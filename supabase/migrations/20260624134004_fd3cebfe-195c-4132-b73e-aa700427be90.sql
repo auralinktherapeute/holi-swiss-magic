@@ -1,0 +1,1 @@
+ALTER TABLE public.crm_client_contacts ADD COLUMN IF NOT EXISTS payment_link text;

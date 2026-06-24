@@ -422,6 +422,7 @@ export type Database = {
           last_booking_at: string | null
           last_name: string
           next_booking_at: string | null
+          payment_link: string | null
           phone: string | null
           private_notes: string | null
           relation_status: string
@@ -438,6 +439,7 @@ export type Database = {
           last_booking_at?: string | null
           last_name: string
           next_booking_at?: string | null
+          payment_link?: string | null
           phone?: string | null
           private_notes?: string | null
           relation_status?: string
@@ -454,6 +456,7 @@ export type Database = {
           last_booking_at?: string | null
           last_name?: string
           next_booking_at?: string | null
+          payment_link?: string | null
           phone?: string | null
           private_notes?: string | null
           relation_status?: string
