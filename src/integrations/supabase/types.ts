@@ -1113,6 +1113,7 @@ export type Database = {
           issued_at: string
           notes: string | null
           payment_link: string | null
+          payment_method_ids: string[]
           status: string
           therapist_id: string
           total_amount: number
@@ -1130,6 +1131,7 @@ export type Database = {
           issued_at?: string
           notes?: string | null
           payment_link?: string | null
+          payment_method_ids?: string[]
           status?: string
           therapist_id: string
           total_amount?: number
@@ -1147,6 +1149,7 @@ export type Database = {
           issued_at?: string
           notes?: string | null
           payment_link?: string | null
+          payment_method_ids?: string[]
           status?: string
           therapist_id?: string
           total_amount?: number
@@ -1361,6 +1364,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      therapist_payment_methods: {
+        Row: {
+          bank_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string | null
+          method_type: string
+          updated_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          method_type: string
+          updated_at?: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          method_type?: string
+          updated_at?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
       }
       therapist_private_identifiers: {
         Row: {
