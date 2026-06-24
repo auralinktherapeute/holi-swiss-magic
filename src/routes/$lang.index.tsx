@@ -10,7 +10,7 @@ import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
-import { GLOBAL_FAQ, FAQ_TITLES, type FaqLang } from "@/lib/faq-content";
+import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/")({
@@ -147,11 +147,16 @@ function HomePage() {
       <NearbyTherapistsSwiss />
 
       {/* SEO/AI FAQ section */}
-      <FaqSection
-        items={GLOBAL_FAQ[(lang as FaqLang) in GLOBAL_FAQ ? (lang as FaqLang) : "fr"]}
-        title={FAQ_TITLES[(lang as FaqLang) in FAQ_TITLES ? (lang as FaqLang) : "fr"].title}
-        subtitle={FAQ_TITLES[(lang as FaqLang) in FAQ_TITLES ? (lang as FaqLang) : "fr"].subtitle}
-      />
+      {(() => {
+        const fl = asFaqLang(lang);
+        return (
+          <FaqSection
+            items={GLOBAL_FAQ[fl]}
+            title={FAQ_TITLES[fl].title}
+            subtitle={FAQ_TITLES[fl].subtitle}
+          />
+        );
+      })()}
     </>
   );
 }
