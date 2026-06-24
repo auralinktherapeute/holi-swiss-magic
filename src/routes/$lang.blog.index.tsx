@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedArticles, titleForLang, excerptForLang } from "@/lib/articles.functions";
-import { useTranslation } from "react-i18next";
 import { CalendarDays, ArrowRight, BookOpen } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { categoryLabel } from "@/lib/article-categories";
+import { blogCopy } from "@/lib/blog-copy";
 
 export const Route = createFileRoute("/$lang/blog/")({
   component: Page,
@@ -64,8 +64,8 @@ function CardSkeleton() {
 
 function Page() {
   const { lang } = useParams({ from: "/$lang/blog/" });
-  const { t } = useTranslation();
   const l = (lang as Lang) ?? "fr";
+  const copy = blogCopy(l);
 
   const { data, isLoading } = useQuery({
     queryKey: ["articles", l],
@@ -97,19 +97,19 @@ function Page() {
         <div className="relative mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.1)] px-4 py-1.5 text-sm text-[#d4a5f9] mb-6">
             <BookOpen className="h-4 w-4" />
-            Blog bien-être
+            {copy.badge}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
-            Inspirations &{" "}
+            {copy.heroTitlePart1} {" "}
             <span
               className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent"
               style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
             >
-              conseils
+              {copy.heroTitleHighlight}
             </span>
           </h1>
           <p className="text-lg text-[#d4c4e0] max-w-xl mx-auto">
-            Pratiques, guides et témoignages pour prendre soin de vous — corps, âme et esprit.
+            {copy.heroSubtitle}
           </p>
         </div>
       </section>
@@ -130,8 +130,8 @@ function Page() {
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(184,110,249,0.1)] border border-[rgba(184,110,249,0.2)] mb-4">
               <BookOpen className="h-7 w-7 text-[#b86ef9]" />
             </div>
-            <p className="text-lg font-semibold text-white">Aucun article pour l'instant</p>
-            <p className="text-[#d4c4e0] text-sm mt-1">Revenez bientôt !</p>
+            <p className="text-lg font-semibold text-white">{copy.emptyTitle}</p>
+            <p className="text-[#d4c4e0] text-sm mt-1">{copy.emptySubtitle}</p>
           </div>
         )}
 
@@ -160,7 +160,7 @@ function Page() {
                     </span>
                   )}
                   <span className="inline-flex items-center rounded-full bg-gradient-to-r from-[#b86ef9]/20 to-[#5cc8fa]/20 border border-[#5cc8fa]/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#5cc8fa]">
-                    À la une
+                    {copy.featured}
                   </span>
                 </div>
                 <h2 className="text-2xl font-bold text-white leading-tight mb-3 group-hover:text-[#d4a5f9] transition-colors">
@@ -173,7 +173,7 @@ function Page() {
                   </p>
                 )}
                 <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#b86ef9] group-hover:text-[#d4a5f9] transition-colors">
-                  Lire l'article <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  {copy.readArticle} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               </div>
             </Link>
@@ -220,7 +220,7 @@ function Page() {
                       <p className="text-[#d4c4e0] text-sm line-clamp-3 flex-1 leading-relaxed">{excerpt}</p>
                     )}
                     <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-[#b86ef9] group-hover:text-[#d4a5f9] transition-colors">
-                      Lire <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      {copy.read} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
