@@ -39,7 +39,7 @@ export function RemindersView({ onOpenContact }: { onOpenContact: (id: string) =
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
-      {q.data.map((t, i) => {
+      {q.data.map((t: any, i: number) => {
         const overdue = !t.done_at && t.due_at && new Date(t.due_at) < new Date();
         return (
           <motion.div
@@ -99,7 +99,7 @@ export function NotesView({ onOpenContact }: { onOpenContact: (id: string) => vo
   if (!q.data?.length) return <div style={{ ...surface, textAlign: "center", color: "var(--muted-foreground)" }}>Aucune note pour l'instant.</div>;
   return (
     <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-      {q.data.map((n, i) => (
+      {q.data.map((n: any, i: number) => (
         <motion.li
           key={n.id}
           initial={{ opacity: 0, y: 6 }}
@@ -130,8 +130,8 @@ export function SegmentationView() {
   const q = useQuery({ queryKey: ["crm-th","segmentation"], queryFn: () => listFn() });
   if (q.isLoading) return <div style={{ color: "var(--muted-foreground)" }}>Chargement…</div>;
   const d = q.data!;
-  const maxStatus = Math.max(1, ...Object.values(d.byStatus));
-  const maxTag = Math.max(1, ...Object.values(d.byTag));
+  const maxStatus = Math.max(1, ...(Object.values(d.byStatus) as number[]));
+  const maxTag = Math.max(1, ...(Object.values(d.byTag) as number[]));
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
@@ -146,7 +146,7 @@ export function SegmentationView() {
       <div style={surface}>
         <h3 style={h3}>Par statut de relation</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-          {Object.entries(d.byStatus).map(([k, v]) => {
+          {(Object.entries(d.byStatus) as [string, number][]).map(([k, v]) => {
             const meta = RELATION_LABELS[k] ?? { label: k, color: "#94a3b8" };
             return (
               <div key={k}>
@@ -170,7 +170,7 @@ export function SegmentationView() {
       <div style={surface}>
         <h3 style={h3}>Par tag</h3>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
-          {Object.entries(d.byTag)
+          {(Object.entries(d.byTag) as [string, number][])
             .sort(([,a],[,b]) => b - a)
             .map(([k, v]) => (
               <span key={k} style={{

@@ -66,8 +66,9 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    // Use authenticated user client (RLS policy admin_all_articles allows admins to see all statuses)
-    const { data, error } = await (context.supabase as any)
+    // Use admin client to avoid RLS / has_role permission issues at runtime
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as any)
       .from("articles")
       .select("id,slug,status,lang,category,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,meta_title_fr,meta_description_fr")
       .order("created_at", { ascending: false });
