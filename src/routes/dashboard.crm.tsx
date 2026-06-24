@@ -18,9 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import LogoUploader from "@/components/dashboard/LogoUploader";
 import ImportContactsDialog from "@/components/dashboard/ImportContactsDialog";
+import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import {
-  listMyContacts, upsertContact, deleteContact, addContactNote, listContactNotes,
-  listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask, type ContactNote,
+  listMyContacts, upsertContact, deleteContact,
+  listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask,
 } from "@/lib/crm-therapist.functions";
 import {
   listMyInvoices, upsertInvoice, deleteInvoice, updateInvoiceStatus,
@@ -99,24 +100,10 @@ function ContactDialog({ open, onClose, initial, contacts }: {
       payment_link: initial.payment_link ?? "" } : EMPTY_CONTACT
   );
   const [tagInput, setTagInput] = useState("");
-  const [notes, setNotes] = useState<ContactNote[]>([]);
-  const [noteText, setNoteText] = useState("");
-
-  const notesQ = useQuery({
-    queryKey: ["contact-notes", initial?.id],
-    queryFn: () => listContactNotes({ data: { contact_id: initial!.id } }),
-    enabled: !!initial?.id,
-  });
 
   const saveMut = useMutation({
     mutationFn: () => upsertContact({ data: { ...form, email: form.email || null, phone: form.phone || null } as any }),
     onSuccess: () => { toast.success("Contact sauvegardé"); qc.invalidateQueries({ queryKey: ["crm-contacts"] }); onClose(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const addNoteMut = useMutation({
-    mutationFn: () => addContactNote({ data: { contact_id: initial!.id, content: noteText } }),
-    onSuccess: () => { setNoteText(""); qc.invalidateQueries({ queryKey: ["contact-notes", initial?.id] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -182,22 +169,7 @@ function ContactDialog({ open, onClose, initial, contacts }: {
           </div>
 
           {initial && (
-            <div className="space-y-2 border-t border-border/40 pt-3">
-              <Label>Notes & historique</Label>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {(notesQ.data ?? []).map(n => (
-                  <div key={n.id} className="text-sm bg-background rounded-lg p-2 border border-border/40">
-                    <p className="text-foreground">{n.content}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(n.created_at)}</p>
-                  </div>
-                ))}
-                {(notesQ.data ?? []).length === 0 && <p className="text-xs text-muted-foreground">Aucune note.</p>}
-              </div>
-              <div className="flex gap-2">
-                <Input value={noteText} onChange={e => setNoteText(e.target.value)} onKeyDown={e => e.key === "Enter" && noteText.trim() && addNoteMut.mutate()} placeholder="Ajouter une note…" className="bg-background border-border/60" />
-                <Button type="button" size="sm" variant="secondary" onClick={() => noteText.trim() && addNoteMut.mutate()}>Ajouter</Button>
-              </div>
-            </div>
+            <SessionNotesPanel contactId={initial.id} contactName={`${initial.first_name} ${initial.last_name ?? ""}`.trim()} />
           )}
         </div>
         <DialogFooter>
