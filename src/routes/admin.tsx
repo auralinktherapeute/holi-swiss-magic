@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
 import { AdminNav } from "@/components/layout/AdminNav";
 import { checkIsAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,14 +28,16 @@ function AdminLayout() {
   const check = useServerFn(checkIsAdmin);
   const [state, setState] = useState<"loading" | "ok" | "deny">("loading");
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  const navigate = useNavigate();
   useEffect(() => {
     let alive = true;
     check()
       .then((r) => {
         if (!alive) return;
         if (!r.isAdmin) {
-          console.warn("[admin] access denied — user is not admin", r);
-          setErrMsg("Votre compte n'a pas le rôle administrateur.");
+          console.warn("[admin] access denied — user is not admin, redirecting to /dashboard", r);
+          navigate({ to: "/dashboard", replace: true });
+          return;
         }
         setState(r.isAdmin ? "ok" : "deny");
       })
@@ -47,7 +50,7 @@ function AdminLayout() {
     return () => {
       alive = false;
     };
-  }, [check]);
+  }, [check, navigate]);
   if (state === "deny") {
     return (
       <div style={{ minHeight: "100dvh", display: "grid", placeItems: "center", padding: 24, background: "#0f0a1e", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
