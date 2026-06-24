@@ -400,16 +400,16 @@ export const listMyRecentNotes = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<NoteRow[]> => {
     const therapistId = await getTherapistId(context.supabase, context.userId);
     const { data, error } = await (context.supabase as any)
-      .from("crm_contact_notes")
-      .select("id,content,created_at,contact_id,crm_client_contacts!inner(first_name,last_name,therapist_id)")
-      .eq("crm_client_contacts.therapist_id", therapistId)
-      .order("created_at", { ascending: false })
+      .from("crm_session_notes")
+      .select("id,content,session_date,created_at,title,template,soap_subjective,contact_id,crm_client_contacts!inner(first_name,last_name)")
+      .eq("therapist_id", therapistId)
+      .order("session_date", { ascending: false })
       .limit(50);
     if (error) return [];
     return (data ?? []).map((n: any) => ({
       id: n.id,
-      occurred_at: n.created_at,
-      body: n.content,
+      occurred_at: n.session_date ?? n.created_at,
+      body: n.title || n.content || n.soap_subjective || `Note (${n.template})`,
       entity_id: n.contact_id,
       contact: n.crm_client_contacts ? { first_name: n.crm_client_contacts.first_name, last_name: n.crm_client_contacts.last_name } : null,
     }));
