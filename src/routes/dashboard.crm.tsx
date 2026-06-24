@@ -688,7 +688,7 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
   );
 }
 
-function InvoicePreview({ form, total, branding }: { form: InvoiceForm; total: number; branding: any }) {
+function InvoicePreview({ form, total, branding, methods }: { form: InvoiceForm; total: number; branding: any; methods: PaymentMethod[] }) {
   return (
     <div className="bg-white text-gray-900 rounded-xl p-6 text-sm space-y-4">
       <div className="flex items-start justify-between">
@@ -723,6 +723,23 @@ function InvoicePreview({ form, total, branding }: { form: InvoiceForm; total: n
           ))}
         </tbody>
       </table>
+      {methods.length > 0 && (
+        <div className="border-t border-gray-200 pt-3">
+          <p className="text-xs font-semibold text-gray-700 mb-2">Modes de paiement acceptés</p>
+          <div className="space-y-1 mb-3">
+            {methods.map(m => (
+              <div key={m.id} className="text-xs text-gray-700">
+                <span className="font-semibold">{PM_LABEL[m.method_type]}</span>
+                {m.label ? ` (${m.label})` : ""} : <span className="font-mono">{m.value}</span>
+                {m.bank_name && <span className="text-gray-500"> · {m.bank_name}</span>}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {methods.map(m => <PaymentMethodQR key={m.id} method={m} />)}
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-end">
         <div>
           {form.notes && <p className="text-gray-500 text-xs max-w-xs">{form.notes}</p>}
