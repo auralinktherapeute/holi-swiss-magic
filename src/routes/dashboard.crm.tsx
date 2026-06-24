@@ -168,6 +168,12 @@ function ContactDialog({ open, onClose, initial, contacts }: {
           <div className="space-y-1">
             <Label>Lien de paiement (Stripe, Twint, PayPal…)</Label>
             <Input value={form.payment_link} onChange={e => set("payment_link", e.target.value)} placeholder="https://buy.stripe.com/…" className="bg-background border-border/60" />
+            {!form.payment_link?.trim() && (
+              <p className="text-xs text-amber-400/90 flex items-start gap-1.5 mt-1">
+                <span aria-hidden>⚠️</span>
+                <span>Aucun lien de paiement renseigné — vous pourrez l'ajouter plus tard depuis cette fiche.</span>
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label>Notes privées</Label>
