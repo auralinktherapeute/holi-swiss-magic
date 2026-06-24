@@ -92,6 +92,7 @@ type ArticleRow = {
   updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
   title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null;
   excerpt_fr?: string | null; body_fr?: string | null;
+  body_de?: string | null; body_it?: string | null; body_en?: string | null;
   meta_title_fr?: string | null; meta_description_fr?: string | null;
 };
 
