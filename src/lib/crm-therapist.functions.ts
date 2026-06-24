@@ -35,8 +35,16 @@ export type CrmTask = {
 export type ContactNote = {
   id: string;
   contact_id: string;
-  content: string;
+  session_date: string;
+  title: string | null;
+  template: "free" | "soap";
+  content: string | null;
+  soap_subjective: string | null;
+  soap_objective: string | null;
+  soap_assessment: string | null;
+  soap_plan: string | null;
   created_at: string;
+  updated_at: string;
 };
 
 async function getTherapistId(supabase: any, userId: string): Promise<string> {
