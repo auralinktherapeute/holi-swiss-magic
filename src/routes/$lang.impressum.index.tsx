@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/impressum/")({
   component: ImpressumPage,
+  head: ({ params }) => ({
+    meta: [
+      { title: "Mentions légales / Impressum — Holiswiss" },
+      { name: "description", content: "Mentions légales / Impressum de Holiswiss : éditeur, hébergement et conditions d'utilisation conformes au droit suisse." },
+      { name: "robots", content: "noindex, follow" },
+    ],
+    links: seoLinks(params.lang, "/impressum"),
+  }),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
