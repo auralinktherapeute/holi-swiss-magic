@@ -475,6 +475,26 @@ function QRCodeDisplay({ url }: { url: string }) {
   );
 }
 
+const PM_LABEL: Record<PaymentMethodType, string> = {
+  twint: "TWINT",
+  revolut: "Revolut",
+  paypal: "PayPal",
+  postfinance: "PostFinance",
+  iban: "Virement IBAN",
+  other: "Autre",
+};
+
+function PaymentMethodQR({ method }: { method: PaymentMethod }) {
+  const size = 90;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(method.value)}&bgcolor=ffffff&color=1a0a2e`;
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <img src={qrUrl} alt={`QR ${PM_LABEL[method.method_type]}`} width={size} height={size} className="rounded border border-gray-200" />
+      <p className="text-[10px] font-semibold text-gray-700">{PM_LABEL[method.method_type]}</p>
+    </div>
+  );
+}
+
 type InvoiceForm = {
   id?: string; contact_id: string; client_name: string; client_address: string;
   status: "draft" | "sent" | "paid" | "cancelled";
