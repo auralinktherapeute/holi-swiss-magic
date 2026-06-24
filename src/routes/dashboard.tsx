@@ -10,6 +10,8 @@ import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
 import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyTherapistShell } from "@/lib/dashboard.functions";
+import { checkIsAdmin } from "@/lib/admin.functions";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -29,6 +31,16 @@ function DashboardLayout() {
   const { loading } = useAuth();
   const { i18n } = useTranslation();
   const ensureShell = useServerFn(ensureMyTherapistShell);
+  const check = useServerFn(checkIsAdmin);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (loading) return;
+    (check as any)()
+      .then((r: { isAdmin: boolean }) => {
+        if (r?.isAdmin) navigate({ to: "/admin", replace: true });
+      })
+      .catch(() => {});
+  }, [loading, check, navigate]);
   useEffect(() => {
     if (loading) return;
     (ensureShell as any)().catch(() => {});
