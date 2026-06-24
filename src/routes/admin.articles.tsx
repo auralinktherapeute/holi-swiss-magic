@@ -355,16 +355,19 @@ function ScorePill({ value, kind }: { value: number; kind: "seo" | "geo" }) {
 }
 
 function ArticleCard({
-  a, onEdit, onDelete, onTogglePublish, onImprove,
+  a, onEdit, onDelete, onTogglePublish, onImprove, onTranslate, translating,
 }: {
   a: ScoredArticle;
   onEdit: () => void;
   onDelete: () => void;
   onTogglePublish: () => void;
   onImprove: () => void;
+  onTranslate: () => void;
+  translating: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const isPublished = a.status === "validated";
+  const missingLangs = (["de","it","en"] as const).filter(l => !(a as any)[`body_${l}`]);
 
   return (
     <Card className="bg-surface border-border/60 overflow-hidden">
@@ -381,6 +384,11 @@ function ArticleCard({
               {a.category && <Badge variant="secondary" className="text-xs">{a.category}</Badge>}
               <ScorePill value={a._seo.score} kind="seo" />
               <ScorePill value={a._geo.score} kind="geo" />
+              {missingLangs.length > 0 && (
+                <Badge variant="outline" className="border-amber-500/50 text-amber-400 text-xs">
+                  Manque : {missingLangs.join(", ").toUpperCase()}
+                </Badge>
+              )}
             </div>
             <h3 className="text-lg font-bold text-foreground leading-tight truncate">
               {a._title || <span className="italic text-muted-foreground">Sans titre</span>}
@@ -406,6 +414,16 @@ function ArticleCard({
             <Button size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10" onClick={onImprove}>
               <Sparkles className="h-3.5 w-3.5 mr-1" />Améliorer le SEO
             </Button>
+            {missingLangs.length > 0 && (
+              <Button size="sm" variant="outline"
+                className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                onClick={onTranslate} disabled={translating}>
+                {translating
+                  ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                  : <Languages className="h-3.5 w-3.5 mr-1" />}
+                Traduire ({missingLangs.length})
+              </Button>
+            )}
           </div>
         </div>
 
