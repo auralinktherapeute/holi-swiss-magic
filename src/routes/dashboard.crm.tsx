@@ -865,6 +865,7 @@ function CrmPage() {
       </Tabs>
 
       <ContactDialog
+        key={editingContact?.id ?? "new"}
         open={contactDialog}
         onClose={() => setContactDialog(false)}
         initial={editingContact}
