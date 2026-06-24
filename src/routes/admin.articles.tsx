@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
+import { translateArticle, translateAllMissingArticles } from "@/lib/article-agent.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
@@ -92,6 +93,7 @@ type ArticleRow = {
   updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
   title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null;
   excerpt_fr?: string | null; body_fr?: string | null;
+  body_de?: string | null; body_it?: string | null; body_en?: string | null;
   meta_title_fr?: string | null; meta_description_fr?: string | null;
 };
 
@@ -353,16 +355,19 @@ function ScorePill({ value, kind }: { value: number; kind: "seo" | "geo" }) {
 }
 
 function ArticleCard({
-  a, onEdit, onDelete, onTogglePublish, onImprove,
+  a, onEdit, onDelete, onTogglePublish, onImprove, onTranslate, translating,
 }: {
   a: ScoredArticle;
   onEdit: () => void;
   onDelete: () => void;
   onTogglePublish: () => void;
   onImprove: () => void;
+  onTranslate: () => void;
+  translating: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const isPublished = a.status === "validated";
+  const missingLangs = (["de","it","en"] as const).filter(l => !(a as any)[`body_${l}`]);
 
   return (
     <Card className="bg-surface border-border/60 overflow-hidden">
@@ -379,6 +384,11 @@ function ArticleCard({
               {a.category && <Badge variant="secondary" className="text-xs">{a.category}</Badge>}
               <ScorePill value={a._seo.score} kind="seo" />
               <ScorePill value={a._geo.score} kind="geo" />
+              {missingLangs.length > 0 && (
+                <Badge variant="outline" className="border-amber-500/50 text-amber-400 text-xs">
+                  Manque : {missingLangs.join(", ").toUpperCase()}
+                </Badge>
+              )}
             </div>
             <h3 className="text-lg font-bold text-foreground leading-tight truncate">
               {a._title || <span className="italic text-muted-foreground">Sans titre</span>}
@@ -404,6 +414,16 @@ function ArticleCard({
             <Button size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10" onClick={onImprove}>
               <Sparkles className="h-3.5 w-3.5 mr-1" />Améliorer le SEO
             </Button>
+            {missingLangs.length > 0 && (
+              <Button size="sm" variant="outline"
+                className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                onClick={onTranslate} disabled={translating}>
+                {translating
+                  ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                  : <Languages className="h-3.5 w-3.5 mr-1" />}
+                Traduire ({missingLangs.length})
+              </Button>
+            )}
           </div>
         </div>
 
@@ -466,6 +486,25 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const translateMutation = useMutation({
+    mutationFn: (id: string) => translateArticle({ data: { id } }),
+    onSuccess: (r) => {
+      const langs = (r as any)?.updated ?? [];
+      toast.success(langs.length ? `Traduit en ${langs.join(", ").toUpperCase()}.` : "Aucune langue à traduire.");
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const translateAllMutation = useMutation({
+    mutationFn: () => translateAllMissingArticles(),
+    onSuccess: (r: any) => {
+      toast.success(`Traductions : ${r.success}/${r.total} OK${r.failed ? `, ${r.failed} échouées` : ""}.`);
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const rawArticles = (data?.articles ?? []) as unknown as ArticleRow[];
 
   const scored: ScoredArticle[] = useMemo(() => rawArticles.map(a => ({
@@ -520,9 +559,20 @@ function Page() {
             {filtered.length !== counts.all && <> · {filtered.length} affiché{filtered.length !== 1 ? "s" : ""}</>}
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />Nouvel article
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline"
+            className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+            onClick={() => translateAllMutation.mutate()}
+            disabled={translateAllMutation.isPending}>
+            {translateAllMutation.isPending
+              ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              : <Languages className="h-4 w-4 mr-2" />}
+            Traduire les articles manquants
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+            <Plus className="h-4 w-4 mr-2" />Nouvel article
+          </Button>
+        </div>
       </div>
 
       {/* Status summary badges */}
@@ -635,6 +685,8 @@ function Page() {
             onDelete={() => { if (confirm(`Supprimer « ${a._title || a.slug} » ?`)) deleteMutation.mutate(a.id); }}
             onTogglePublish={() => statusMutation.mutate({ id: a.id, status: a.status === "validated" ? "draft" : "validated" })}
             onImprove={() => setImproving(a)}
+            onTranslate={() => translateMutation.mutate(a.id)}
+            translating={translateMutation.isPending && translateMutation.variables === a.id}
           />
         ))}
       </div>
