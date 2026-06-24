@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, Chevr
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
+import { translateArticle, translateAllMissingArticles } from "@/lib/article-agent.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
