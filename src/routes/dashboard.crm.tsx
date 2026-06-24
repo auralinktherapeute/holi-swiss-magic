@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import LogoUploader from "@/components/dashboard/LogoUploader";
 import {
   listMyContacts, upsertContact, deleteContact, addContactNote, listContactNotes,
   listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask, type ContactNote,
