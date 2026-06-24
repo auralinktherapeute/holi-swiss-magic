@@ -192,7 +192,7 @@ async function translateArticleRow(articleId: string): Promise<{ updated: string
   if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
 
   const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-  const { generateText, Output } = await import("ai");
+  const { generateText } = await import("ai");
 
   const provider = createOpenAICompatible({
     name: "lovable",
@@ -204,45 +204,43 @@ async function translateArticleRow(articleId: string): Promise<{ updated: string
   const patch: Record<string, string> = {};
 
   for (const t of TARGET_LANGS) {
-    // Skip si déjà traduit (titre ET body présents)
-    if ((row as any)[`title_${t.code}`] && (row as any)[`body_${t.code}`]) continue;
-
-    const schema = z.object({
-      title: z.string(),
-      excerpt: z.string(),
-      body: z.string(),
-      meta_title: z.string(),
-      meta_description: z.string(),
-    });
+    // Skip si déjà traduit (titre ET body non vides)
+    const existingTitle = ((row as any)[`title_${t.code}`] ?? "").toString().trim();
+    const existingBody = ((row as any)[`body_${t.code}`] ?? "").toString().trim();
+    if (existingTitle && existingBody) continue;
 
     const system = `Tu es traducteur SEO/GEO pour HoliSwiss. Traduis fidèlement vers le ${t.label}.
-Règles : conserver le markdown (## titres, listes), garder les noms propres suisses (Genève, Lausanne…), respecter la LPMéd (pas de "guérison/traitement/diagnostic"). Adapte les expressions idiomatiques.`;
+Règles : conserver le markdown (## titres, listes), garder les noms propres suisses (Genève, Lausanne…), respecter la LPMéd (pas de "guérison/traitement/diagnostic"). Adapte les expressions idiomatiques.
+IMPORTANT : tu réponds UNIQUEMENT avec la traduction demandée, sans préambule, sans guillemets englobants, sans commentaire.`;
 
-    const prompt = `Traduis cet article du français vers le ${t.label}.
-
-TITLE_FR: ${row.title_fr}
-EXCERPT_FR: ${row.excerpt_fr ?? ""}
-META_TITLE_FR: ${row.meta_title_fr ?? ""}
-META_DESCRIPTION_FR: ${row.meta_description_fr ?? ""}
-
-BODY_FR (markdown) :
-${row.body_fr}
-
-Retourne uniquement la traduction structurée.`;
-
-    try {
+    const translateField = async (label: string, value: string, isMarkdown = false): Promise<string> => {
+      const v = (value ?? "").toString();
+      if (!v.trim()) return "";
+      const prompt = isMarkdown
+        ? `Traduis ce contenu Markdown (${label}) du français vers le ${t.label}. Garde la structure markdown intacte. Réponds uniquement avec la traduction.\n\n---\n${v}\n---`
+        : `Traduis ce ${label} du français vers le ${t.label}. Réponds uniquement avec la traduction, sans guillemets.\n\nTEXTE : ${v}`;
       const result = await generateText({
         model: provider("google/gemini-3-flash-preview"),
         system,
         prompt,
-        experimental_output: Output.object({ schema }),
       });
-      const out = (result as any).experimental_output as z.infer<typeof schema>;
-      patch[`title_${t.code}`] = out.title;
-      patch[`excerpt_${t.code}`] = out.excerpt;
-      patch[`body_${t.code}`] = out.body;
-      patch[`meta_title_${t.code}`] = out.meta_title;
-      patch[`meta_description_${t.code}`] = out.meta_description;
+      return ((result as any).text as string).trim().replace(/^---\s*|\s*---$/g, "").trim();
+    };
+
+    try {
+      const [title, excerpt, body, metaTitle, metaDesc] = await Promise.all([
+        translateField("titre", row.title_fr),
+        translateField("extrait", row.excerpt_fr ?? ""),
+        translateField("corps de l'article", row.body_fr, true),
+        translateField("meta title SEO", row.meta_title_fr ?? ""),
+        translateField("meta description SEO", row.meta_description_fr ?? ""),
+      ]);
+      if (!title || !body) throw new Error("Champs vides retournés par l'IA");
+      patch[`title_${t.code}`] = title;
+      if (excerpt) patch[`excerpt_${t.code}`] = excerpt;
+      patch[`body_${t.code}`] = body;
+      if (metaTitle) patch[`meta_title_${t.code}`] = metaTitle;
+      if (metaDesc) patch[`meta_description_${t.code}`] = metaDesc;
       updated.push(t.code);
     } catch (e) {
       console.warn(`[translate] ${t.code} failed:`, (e as Error).message);
