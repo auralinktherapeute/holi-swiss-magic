@@ -175,11 +175,11 @@ export const getTherapistBranding = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await (context.supabase as any)
       .from("therapists")
-      .select("id, first_name, last_name, email, phone, logo_url, payment_link, currency")
+      .select("id, first_name, last_name, email, phone, logo_url, payment_link, currency, slug")
       .eq("user_id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data as { id: string; first_name: string; last_name: string; email: string; phone: string; logo_url: string | null; payment_link: string | null; currency: string };
+    return data as { id: string; first_name: string; last_name: string; email: string; phone: string; logo_url: string | null; payment_link: string | null; currency: string; slug: string | null };
   });
 
 export const updateTherapistBranding = createServerFn({ method: "POST" })
