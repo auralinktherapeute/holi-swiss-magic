@@ -498,10 +498,21 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
   const qc = useQueryClient();
   const [form, setForm] = useState<InvoiceForm>(
     initial
-      ? { ...EMPTY_INV, ...initial, contact_id: initial.contact_id ?? "", due_at: initial.due_at ?? "", client_address: initial.client_address ?? "", notes: initial.notes ?? "", payment_link: initial.payment_link ?? "", items: initial.invoice_items?.map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })) ?? EMPTY_INV.items }
+      ? { ...EMPTY_INV, ...initial, contact_id: initial.contact_id ?? "", due_at: initial.due_at ?? "", client_address: initial.client_address ?? "", notes: initial.notes ?? "", payment_link: initial.payment_link ?? "", payment_method_ids: initial.payment_method_ids ?? [], items: initial.invoice_items?.map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })) ?? EMPTY_INV.items }
       : { ...EMPTY_INV, payment_link: branding?.payment_link ?? "" }
   );
   const [preview, setPreview] = useState(false);
+
+  const pmQ = useQuery({ queryKey: ["payment-methods"], queryFn: () => listMyPaymentMethods() });
+  const paymentMethods = (pmQ.data ?? []) as PaymentMethod[];
+  const selectedMethods = paymentMethods.filter(m => form.payment_method_ids.includes(m.id));
+
+  const togglePM = (id: string) => setForm(p => ({
+    ...p,
+    payment_method_ids: p.payment_method_ids.includes(id)
+      ? p.payment_method_ids.filter(x => x !== id)
+      : [...p.payment_method_ids, id],
+  }));
 
   const set = (k: keyof InvoiceForm, v: any) => setForm(p => ({ ...p, [k]: v }));
   const setItem = (i: number, k: string, v: any) => setForm(p => ({
