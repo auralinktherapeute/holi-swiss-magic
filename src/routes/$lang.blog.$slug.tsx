@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { hreflangLinks } from "@/lib/seo";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
+import { categoryLabel } from "@/lib/article-categories";
 
 const SITE = "https://holiswiss.ch";
 
@@ -91,18 +92,6 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
 
 type Lang = "fr" | "de" | "it" | "en";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  remboursements: "Remboursements", kine: "Kiné & Ostéo", mental: "Santé mentale",
-  chronique: "Douleurs chroniques",
-  reflexologie: "Réflexologie", reiki: "Reiki", naturopathie: "Naturopathie",
-  sophrologie: "Sophrologie", acupuncture: "Acupuncture", osteopathie: "Ostéopathie",
-  yoga: "Yoga", hypnose: "Hypnose", aromatherapie: "Aromathérapie",
-  magnetisme: "Magnétisme", shiatsu: "Shiatsu", meditation: "Méditation",
-  coaching: "Coaching", ayurveda: "Ayurveda", massage: "Massage",
-  chromotherapie: "Chromothérapie", lithotherapie: "Lithothérapie",
-  geobiologie: "Géobiologie",
-};
-
 function formatDate(iso: string | null, lang: string) {
   if (!iso) return "";
   const locale = { de: "de-CH", it: "it-CH", en: "en-GB" }[lang] ?? "fr-CH";
@@ -162,11 +151,11 @@ function Page() {
       <div className="min-h-screen bg-[#2d1248] flex items-center justify-center">
         <div className="text-center px-4">
           <div className="text-6xl mb-4">🌿</div>
-          <p className="text-2xl font-bold text-white mb-2">Article introuvable</p>
-          <p className="text-[#d4c4e0] mb-8">Cet article n'existe pas ou n'est plus disponible.</p>
+          <p className="text-2xl font-bold text-white mb-2">{t("blog.not_found_title")}</p>
+          <p className="text-[#d4c4e0] mb-8">{t("blog.not_found_subtitle")}</p>
           <Link to="/$lang/blog" params={{ lang: l }}
             className="inline-flex items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.1)] px-5 py-2.5 text-sm font-medium text-[#d4a5f9] hover:bg-[rgba(184,110,249,0.2)] transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Retour au blog
+            <ArrowLeft className="h-4 w-4" /> {t("blog.back_to_blog")}
           </Link>
         </div>
       </div>
@@ -204,7 +193,7 @@ function Page() {
           {article.category && (
             <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-medium text-[#d4a5f9]">
               <Tag className="h-3 w-3" />
-              {CATEGORY_LABELS[article.category] ?? article.category}
+              {categoryLabel(article.category, l)}
             </span>
           )}
           {article.published_at && (
@@ -214,7 +203,7 @@ function Page() {
           )}
           {readTime && (
             <span className="text-sm text-[#d4c4e0]/60 flex items-center gap-1">
-              <Clock className="h-4 w-4" />{readTime} min de lecture
+              <Clock className="h-4 w-4" />{t("blog.read_time", { count: readTime })}
             </span>
           )}
         </div>
@@ -233,7 +222,7 @@ function Page() {
         {isFrFallback && (
           <div className="mb-6 flex items-center gap-2 rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.08)] px-4 py-2.5 text-sm text-[#f59e0b]">
             <span>🌐</span>
-            <span>Cet article n'est pas encore disponible en {l.toUpperCase()} — affiché en français.</span>
+            <span>{t("blog.language_fallback", { lang: l.toUpperCase() })}</span>
           </div>
         )}
 
@@ -258,17 +247,17 @@ function Page() {
             <span className="text-xl">🌿</span>
           </div>
           <h3 className="text-xl font-bold text-white mb-2">
-            Trouver un thérapeute en Suisse
+            {t("blog.cta_title")}
           </h3>
           <p className="text-[#d4c4e0] text-sm mb-6 max-w-sm mx-auto">
-            Découvrez nos praticiens holistiques qualifiés, partout en Suisse.
+            {t("blog.cta_subtitle")}
           </p>
           <Link
             to="/$lang/therapeutes"
             params={{ lang: l }}
             className="inline-flex items-center gap-2 rounded-xl bg-[#b86ef9] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[#b86ef9]/30 hover:bg-[#a855f7] hover:shadow-[#b86ef9]/40 transition-all"
           >
-            Voir les thérapeutes →
+            {t("blog.cta_button")} →
           </Link>
         </div>
 
@@ -276,7 +265,7 @@ function Page() {
         <div className="mt-10 text-center">
           <Link to="/$lang/blog" params={{ lang: l }}
             className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/60 hover:text-[#d4a5f9] transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Tous les articles
+            <ArrowLeft className="h-4 w-4" /> {t("blog.all_articles")}
           </Link>
         </div>
 
