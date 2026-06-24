@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
 import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
@@ -98,6 +99,11 @@ const LangIndexRoute = LangIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LangRoute,
+} as any)
+const IntakeSlugRoute = IntakeSlugRouteImport.update({
+  id: '/intake/$slug',
+  path: '/intake/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
   id: '/reservations',
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
+  '/intake/$slug': typeof IntakeSlugRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -386,6 +393,7 @@ export interface FileRoutesByTo {
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
+  '/intake/$slug': typeof IntakeSlugRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -438,6 +446,7 @@ export interface FileRoutesById {
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
+  '/intake/$slug': typeof IntakeSlugRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -491,6 +500,7 @@ export interface FileRouteTypes {
     | '/dashboard/parrainage'
     | '/dashboard/profil'
     | '/dashboard/reservations'
+    | '/intake/$slug'
     | '/$lang/'
     | '/admin/'
     | '/dashboard/'
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/dashboard/parrainage'
     | '/dashboard/profil'
     | '/dashboard/reservations'
+    | '/intake/$slug'
     | '/$lang'
     | '/admin'
     | '/dashboard'
@@ -590,6 +601,7 @@ export interface FileRouteTypes {
     | '/dashboard/parrainage'
     | '/dashboard/profil'
     | '/dashboard/reservations'
+    | '/intake/$slug'
     | '/$lang/'
     | '/admin/'
     | '/dashboard/'
@@ -620,6 +632,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  IntakeSlugRoute: typeof IntakeSlugRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
 }
@@ -681,6 +694,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$lang/'
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
+    }
+    '/intake/$slug': {
+      id: '/intake/$slug'
+      path: '/intake/$slug'
+      fullPath: '/intake/$slug'
+      preLoaderRoute: typeof IntakeSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/reservations': {
       id: '/dashboard/reservations'
@@ -1088,6 +1108,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  IntakeSlugRoute: IntakeSlugRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
 }
