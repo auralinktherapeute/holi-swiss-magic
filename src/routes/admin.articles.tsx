@@ -18,14 +18,9 @@ import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
+import { groupedCategories } from "@/lib/article-categories";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
-
-const CATEGORIES = [
-  "reflexologie", "reiki", "naturopathie", "sophrologie", "acupuncture",
-  "osteopathie", "yoga", "hypnose", "aromatherapie", "magnetisme",
-  "shiatsu", "meditation", "coaching", "ayurveda",
-];
 
 const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY ?? "";
 
