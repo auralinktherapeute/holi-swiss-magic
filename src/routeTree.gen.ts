@@ -57,6 +57,7 @@ import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
+import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -303,6 +304,11 @@ const ApiPublicHooksSeoAuditAgentRoute =
     path: '/api/public/hooks/seo-audit-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
+  id: '/blog/categorie/$slug',
+  path: '/blog/categorie/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -352,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesByTo {
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/$lang/reinitialiser-mot-de-passe': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
+  '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesById {
@@ -450,6 +458,7 @@ export interface FileRoutesById {
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRouteTypes {
@@ -502,6 +511,7 @@ export interface FileRouteTypes {
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/$lang/blog/categorie/$slug'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -549,6 +559,7 @@ export interface FileRouteTypes {
     | '/$lang/reinitialiser-mot-de-passe'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
+    | '/$lang/blog/categorie/$slug'
     | '/api/public/hooks/seo-audit-agent'
   id:
     | '__root__'
@@ -599,6 +610,7 @@ export interface FileRouteTypes {
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/$lang/blog/categorie/$slug'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesById: FileRoutesById
 }
@@ -950,6 +962,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSeoAuditAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/blog/categorie/$slug': {
+      id: '/$lang/blog/categorie/$slug'
+      path: '/blog/categorie/$slug'
+      fullPath: '/$lang/blog/categorie/$slug'
+      preLoaderRoute: typeof LangBlogCategorieSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
   }
 }
 
@@ -971,6 +990,7 @@ interface LangRouteChildren {
   LangReinitialiserMotDePasseIndexRoute: typeof LangReinitialiserMotDePasseIndexRoute
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
+  LangBlogCategorieSlugRoute: typeof LangBlogCategorieSlugRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
@@ -991,6 +1011,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangReinitialiserMotDePasseIndexRoute: LangReinitialiserMotDePasseIndexRoute,
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
+  LangBlogCategorieSlugRoute: LangBlogCategorieSlugRoute,
 }
 
 const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
