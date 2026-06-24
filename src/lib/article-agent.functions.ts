@@ -159,5 +159,133 @@ Slug : kebab-case sans accents, suffixé par "-suisse" si pertinent.`;
       .single();
 
     if (error) throw new Error(`Insertion échouée : ${error.message}`);
+
+    // Auto-translation FR → DE/IT/EN (best-effort, ne bloque pas la création)
+    try {
+      await translateArticleRow(inserted.id);
+    } catch (e) {
+      console.warn("[article-agent] auto-translation failed:", (e as Error).message);
+    }
+
     return { article: inserted };
+  });
+
+// ── Translation ──────────────────────────────────────────────────────────────
+
+const TARGET_LANGS = [
+  { code: "de", label: "allemand (Hochdeutsch standard suisse)" },
+  { code: "it", label: "italien (italien de Suisse italienne)" },
+  { code: "en", label: "anglais (international, ton britannique neutre)" },
+] as const;
+
+async function translateArticleRow(articleId: string): Promise<{ updated: string[] }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: row, error } = await (supabaseAdmin as any)
+    .from("articles")
+    .select("id,title_fr,excerpt_fr,body_fr,meta_title_fr,meta_description_fr,title_de,title_it,title_en,body_de,body_it,body_en")
+    .eq("id", articleId)
+    .maybeSingle();
+  if (error || !row) throw new Error("Article introuvable.");
+  if (!row.title_fr || !row.body_fr) throw new Error("Article FR incomplet : impossible de traduire.");
+
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
+
+  const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+  const { generateText, Output } = await import("ai");
+
+  const provider = createOpenAICompatible({
+    name: "lovable",
+    baseURL: "https://ai.gateway.lovable.dev/v1",
+    headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+  });
+
+  const updated: string[] = [];
+  const patch: Record<string, string> = {};
+
+  for (const t of TARGET_LANGS) {
+    // Skip si déjà traduit (titre ET body présents)
+    if ((row as any)[`title_${t.code}`] && (row as any)[`body_${t.code}`]) continue;
+
+    const schema = z.object({
+      title: z.string(),
+      excerpt: z.string(),
+      body: z.string(),
+      meta_title: z.string(),
+      meta_description: z.string(),
+    });
+
+    const system = `Tu es traducteur SEO/GEO pour HoliSwiss. Traduis fidèlement vers le ${t.label}.
+Règles : conserver le markdown (## titres, listes), garder les noms propres suisses (Genève, Lausanne…), respecter la LPMéd (pas de "guérison/traitement/diagnostic"). Adapte les expressions idiomatiques.`;
+
+    const prompt = `Traduis cet article du français vers le ${t.label}.
+
+TITLE_FR: ${row.title_fr}
+EXCERPT_FR: ${row.excerpt_fr ?? ""}
+META_TITLE_FR: ${row.meta_title_fr ?? ""}
+META_DESCRIPTION_FR: ${row.meta_description_fr ?? ""}
+
+BODY_FR (markdown) :
+${row.body_fr}
+
+Retourne uniquement la traduction structurée.`;
+
+    try {
+      const result = await generateText({
+        model: provider("google/gemini-3-flash-preview"),
+        system,
+        prompt,
+        experimental_output: Output.object({ schema }),
+      });
+      const out = (result as any).experimental_output as z.infer<typeof schema>;
+      patch[`title_${t.code}`] = out.title;
+      patch[`excerpt_${t.code}`] = out.excerpt;
+      patch[`body_${t.code}`] = out.body;
+      patch[`meta_title_${t.code}`] = out.meta_title;
+      patch[`meta_description_${t.code}`] = out.meta_description;
+      updated.push(t.code);
+    } catch (e) {
+      console.warn(`[translate] ${t.code} failed:`, (e as Error).message);
+    }
+  }
+
+  if (Object.keys(patch).length > 0) {
+    const { error: upErr } = await (supabaseAdmin as any)
+      .from("articles")
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq("id", articleId);
+    if (upErr) throw new Error(`Échec mise à jour : ${upErr.message}`);
+  }
+
+  return { updated };
+}
+
+export const translateArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const res = await translateArticleRow(data.id);
+    return res;
+  });
+
+export const translateAllMissingArticles = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await (supabaseAdmin as any)
+      .from("articles")
+      .select("id,title_fr,body_fr,body_de,body_it,body_en")
+      .not("body_fr", "is", null);
+    if (error) throw new Error("Impossible de lister les articles.");
+    const toTranslate = (rows ?? []).filter((r: any) =>
+      r.body_fr && (!r.body_de || !r.body_it || !r.body_en)
+    );
+    let success = 0, failed = 0;
+    for (const r of toTranslate) {
+      try { await translateArticleRow(r.id); success++; }
+      catch { failed++; }
+    }
+    return { total: toTranslate.length, success, failed };
   });
