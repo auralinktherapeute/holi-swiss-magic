@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Users, LayoutGrid, CheckSquare, FileText, Plus, Pencil, Trash2, X,
   Phone, Mail, Calendar, Tag, ChevronRight, Check, Clock, AlertCircle,
-  QrCode, Download, Send, Eye, Settings, ArrowRight, Upload,
+  QrCode, Download, Send, Eye, Settings, ArrowRight, Upload, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import LogoUploader from "@/components/dashboard/LogoUploader";
 import ImportContactsDialog from "@/components/dashboard/ImportContactsDialog";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
+import IntakePanel from "@/components/dashboard/IntakePanel";
 import {
   listMyContacts, upsertContact, deleteContact,
   listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask,
@@ -828,6 +829,7 @@ function CrmPage() {
           <TabsTrigger value="contacts" className="flex items-center gap-1.5"><Users className="h-4 w-4" />Contacts</TabsTrigger>
           <TabsTrigger value="tasks" className="flex items-center gap-1.5"><CheckSquare className="h-4 w-4" />Tâches</TabsTrigger>
           <TabsTrigger value="invoices" className="flex items-center gap-1.5"><FileText className="h-4 w-4" />Facturation</TabsTrigger>
+          <TabsTrigger value="intake" className="flex items-center gap-1.5"><ClipboardList className="h-4 w-4" />Admission</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pipeline" className="mt-4">
@@ -841,6 +843,9 @@ function CrmPage() {
         </TabsContent>
         <TabsContent value="invoices" className="mt-4">
           <InvoicesTab contacts={contacts} branding={branding} />
+        </TabsContent>
+        <TabsContent value="intake" className="mt-4">
+          <IntakePanel slug={branding?.slug ?? null} />
         </TabsContent>
       </Tabs>
 

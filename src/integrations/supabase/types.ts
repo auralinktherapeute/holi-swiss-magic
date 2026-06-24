@@ -518,6 +518,91 @@ export type Database = {
           },
         ]
       }
+      crm_intake_submissions: {
+        Row: {
+          allergies: string | null
+          birth_date: string | null
+          consent_at: string | null
+          consent_rgpd: boolean
+          consent_signature: string | null
+          consultation_reason: string | null
+          converted_contact_id: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          medical_history: string | null
+          medications: string | null
+          phone: string | null
+          status: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string | null
+          birth_date?: string | null
+          consent_at?: string | null
+          consent_rgpd?: boolean
+          consent_signature?: string | null
+          consultation_reason?: string | null
+          converted_contact_id?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          medical_history?: string | null
+          medications?: string | null
+          phone?: string | null
+          status?: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string | null
+          birth_date?: string | null
+          consent_at?: string | null
+          consent_rgpd?: boolean
+          consent_signature?: string | null
+          consultation_reason?: string | null
+          converted_contact_id?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          medical_history?: string | null
+          medications?: string | null
+          phone?: string | null
+          status?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_intake_submissions_converted_contact_id_fkey"
+            columns: ["converted_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_intake_submissions_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_intake_submissions_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_leads: {
         Row: {
           assigned_to: string | null
@@ -1593,6 +1678,17 @@ export type Database = {
         }[]
       }
       crm_daily_maintenance: { Args: never; Returns: Json }
+      get_therapist_intake_header: {
+        Args: { _slug: string }
+        Returns: {
+          city: string
+          first_name: string
+          id: string
+          last_name: string
+          photo_url: string
+          title: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
