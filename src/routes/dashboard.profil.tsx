@@ -826,6 +826,14 @@ function ProfilePage() {
           )}
         </Section>
 
+        {/* Payment methods (private, used only on invoices) */}
+        <Section
+          title={<span className="inline-flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-[#b86ef9]" />Moyens de paiement</span>}
+          subtitle="Configurez vos liens de paiement. Vous choisirez ensuite, facture par facture, lesquels y faire apparaître."
+        >
+          <PaymentMethodsPanel />
+        </Section>
+
         {/* Documents */}
         <Section
           title={<span className="inline-flex items-center gap-2"><FileText className="h-5 w-5 text-[#b86ef9]" />{t("profile_edit.section_documents")}</span>}
