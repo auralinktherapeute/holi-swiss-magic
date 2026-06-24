@@ -4,6 +4,7 @@ import { getPublishedArticles, titleForLang, excerptForLang } from "@/lib/articl
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ArrowRight, BookOpen } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { categoryLabel } from "@/lib/article-categories";
 
 export const Route = createFileRoute("/$lang/blog/")({
   component: Page,
@@ -40,18 +41,6 @@ export const Route = createFileRoute("/$lang/blog/")({
 });
 
 type Lang = "fr" | "de" | "it" | "en";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  remboursements: "Remboursements", kine: "Kiné & Ostéo", mental: "Santé mentale",
-  chronique: "Douleurs chroniques",
-  reflexologie: "Réflexologie", reiki: "Reiki", naturopathie: "Naturopathie",
-  sophrologie: "Sophrologie", acupuncture: "Acupuncture", osteopathie: "Ostéopathie",
-  yoga: "Yoga", hypnose: "Hypnose", aromatherapie: "Aromathérapie",
-  magnetisme: "Magnétisme", shiatsu: "Shiatsu", meditation: "Méditation",
-  coaching: "Coaching", ayurveda: "Ayurveda", massage: "Massage",
-  chromotherapie: "Chromothérapie", lithotherapie: "Lithothérapie",
-  geobiologie: "Géobiologie",
-};
 
 function formatDate(iso: string | null, lang: string) {
   if (!iso) return "";
@@ -167,7 +156,7 @@ function Page() {
                 <div className="flex items-center gap-2 mb-3">
                   {featured.category && (
                     <span className="inline-flex items-center rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-medium text-[#d4a5f9]">
-                      {CATEGORY_LABELS[featured.category] ?? featured.category}
+                      {categoryLabel(featured.category, l)}
                     </span>
                   )}
                   <span className="inline-flex items-center rounded-full bg-gradient-to-r from-[#b86ef9]/20 to-[#5cc8fa]/20 border border-[#5cc8fa]/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#5cc8fa]">
@@ -215,7 +204,7 @@ function Page() {
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       {article.category && (
                         <span className="rounded-full border border-[rgba(184,110,249,0.35)] bg-[rgba(184,110,249,0.1)] px-2.5 py-0.5 text-[11px] font-medium text-[#d4a5f9]">
-                          {CATEGORY_LABELS[article.category] ?? article.category}
+                          {categoryLabel(article.category, l)}
                         </span>
                       )}
                       {article.published_at && (
