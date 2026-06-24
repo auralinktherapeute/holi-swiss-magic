@@ -87,7 +87,7 @@ export const getInvoice = createServerFn({ method: "GET" })
 
 const ItemSchema = z.object({
   id: z.string().optional(),
-  description: z.string().min(1),
+  description: z.string().trim().min(1, "Description requise"),
   quantity: z.number().min(0),
   unit_price: z.number().min(0),
 });
@@ -103,7 +103,7 @@ const InvoiceSchema = z.object({
   notes: z.string().optional().nullable(),
   payment_link: z.string().optional().nullable(),
   currency: z.string().default("CHF"),
-  items: z.array(ItemSchema).default([]),
+  items: z.array(ItemSchema).min(1, "Ajoutez au moins une ligne de facture").default([]),
 });
 
 export const upsertInvoice = createServerFn({ method: "POST" })
