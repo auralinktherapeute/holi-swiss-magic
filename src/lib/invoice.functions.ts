@@ -25,6 +25,7 @@ export type Invoice = {
   payment_link: string | null;
   currency: string;
   total_amount: number;
+  payment_method_ids: string[];
   created_at: string;
   updated_at: string;
   invoice_items?: InvoiceItem[];
@@ -103,6 +104,7 @@ const InvoiceSchema = z.object({
   notes: z.string().optional().nullable(),
   payment_link: z.string().optional().nullable(),
   currency: z.string().default("CHF"),
+  payment_method_ids: z.array(z.string().uuid()).default([]),
   items: z.array(ItemSchema).min(1, "Ajoutez au moins une ligne de facture").default([]),
 });
 

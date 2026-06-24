@@ -35,6 +35,7 @@ import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
+import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -823,6 +824,14 @@ function ProfilePage() {
               <Check className="h-4 w-4" />{t("profile_edit.no_changes")}
             </div>
           )}
+        </Section>
+
+        {/* Payment methods (private, used only on invoices) */}
+        <Section
+          title={<span className="inline-flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-[#b86ef9]" />Moyens de paiement</span>}
+          subtitle="Configurez vos liens de paiement. Vous choisirez ensuite, facture par facture, lesquels y faire apparaître."
+        >
+          <PaymentMethodsPanel />
         </Section>
 
         {/* Documents */}

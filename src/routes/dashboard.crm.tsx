@@ -28,6 +28,10 @@ import {
   listMyInvoices, upsertInvoice, deleteInvoice, updateInvoiceStatus,
   getTherapistBranding, updateTherapistBranding, type Invoice, type InvoiceItem,
 } from "@/lib/invoice.functions";
+import {
+  listMyPaymentMethods, type PaymentMethod, type PaymentMethodType,
+} from "@/lib/payment-methods.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/dashboard/crm")({ component: CrmPage });
 
@@ -471,16 +475,38 @@ function QRCodeDisplay({ url }: { url: string }) {
   );
 }
 
+const PM_LABEL: Record<PaymentMethodType, string> = {
+  twint: "TWINT",
+  revolut: "Revolut",
+  paypal: "PayPal",
+  postfinance: "PostFinance",
+  iban: "Virement IBAN",
+  other: "Autre",
+};
+
+function PaymentMethodQR({ method }: { method: PaymentMethod }) {
+  const size = 90;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(method.value)}&bgcolor=ffffff&color=1a0a2e`;
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <img src={qrUrl} alt={`QR ${PM_LABEL[method.method_type]}`} width={size} height={size} className="rounded border border-gray-200" />
+      <p className="text-[10px] font-semibold text-gray-700">{PM_LABEL[method.method_type]}</p>
+    </div>
+  );
+}
+
 type InvoiceForm = {
   id?: string; contact_id: string; client_name: string; client_address: string;
   status: "draft" | "sent" | "paid" | "cancelled";
   issued_at: string; due_at: string; notes: string; payment_link: string; currency: string;
+  payment_method_ids: string[];
   items: { description: string; quantity: number; unit_price: number }[];
 };
 
 const EMPTY_INV: InvoiceForm = {
   client_name: "", client_address: "", contact_id: "", status: "draft",
   issued_at: new Date().toISOString().slice(0, 10), due_at: "", notes: "", payment_link: "", currency: "CHF",
+  payment_method_ids: [],
   items: [{ description: "", quantity: 1, unit_price: 0 }],
 };
 
@@ -492,10 +518,21 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
   const qc = useQueryClient();
   const [form, setForm] = useState<InvoiceForm>(
     initial
-      ? { ...EMPTY_INV, ...initial, contact_id: initial.contact_id ?? "", due_at: initial.due_at ?? "", client_address: initial.client_address ?? "", notes: initial.notes ?? "", payment_link: initial.payment_link ?? "", items: initial.invoice_items?.map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })) ?? EMPTY_INV.items }
+      ? { ...EMPTY_INV, ...initial, contact_id: initial.contact_id ?? "", due_at: initial.due_at ?? "", client_address: initial.client_address ?? "", notes: initial.notes ?? "", payment_link: initial.payment_link ?? "", payment_method_ids: initial.payment_method_ids ?? [], items: initial.invoice_items?.map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })) ?? EMPTY_INV.items }
       : { ...EMPTY_INV, payment_link: branding?.payment_link ?? "" }
   );
   const [preview, setPreview] = useState(false);
+
+  const pmQ = useQuery({ queryKey: ["payment-methods"], queryFn: () => listMyPaymentMethods() });
+  const paymentMethods = (pmQ.data ?? []) as PaymentMethod[];
+  const selectedMethods = paymentMethods.filter(m => form.payment_method_ids.includes(m.id));
+
+  const togglePM = (id: string) => setForm(p => ({
+    ...p,
+    payment_method_ids: p.payment_method_ids.includes(id)
+      ? p.payment_method_ids.filter(x => x !== id)
+      : [...p.payment_method_ids, id],
+  }));
 
   const set = (k: keyof InvoiceForm, v: any) => setForm(p => ({ ...p, [k]: v }));
   const setItem = (i: number, k: string, v: any) => setForm(p => ({
@@ -532,7 +569,7 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
         </DialogHeader>
 
         {preview ? (
-          <InvoicePreview form={form} total={total} branding={branding} />
+          <InvoicePreview form={form} total={total} branding={branding} methods={selectedMethods} />
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -583,6 +620,34 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
               )}
             </div>
 
+            <div className="space-y-2 rounded-lg border border-border/40 p-3 bg-background/40">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Moyens de paiement sur cette facture</Label>
+                <a href="/dashboard/profil" className="text-xs text-primary hover:underline">Configurer</a>
+              </div>
+              {paymentMethods.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Aucun moyen de paiement configuré. Ajoutez-en depuis votre profil pour les proposer sur vos factures.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {paymentMethods.map(m => (
+                    <label key={m.id} className="flex items-start gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-background/60">
+                      <Checkbox
+                        checked={form.payment_method_ids.includes(m.id)}
+                        onCheckedChange={() => togglePM(m.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-foreground">{PM_LABEL[m.method_type]}{m.label ? ` — ${m.label}` : ""}</div>
+                        <div className="text-xs text-muted-foreground truncate">{m.value}{m.bank_name ? ` · ${m.bank_name}` : ""}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Statut</Label>
@@ -623,7 +688,7 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
   );
 }
 
-function InvoicePreview({ form, total, branding }: { form: InvoiceForm; total: number; branding: any }) {
+function InvoicePreview({ form, total, branding, methods }: { form: InvoiceForm; total: number; branding: any; methods: PaymentMethod[] }) {
   return (
     <div className="bg-white text-gray-900 rounded-xl p-6 text-sm space-y-4">
       <div className="flex items-start justify-between">
@@ -658,6 +723,23 @@ function InvoicePreview({ form, total, branding }: { form: InvoiceForm; total: n
           ))}
         </tbody>
       </table>
+      {methods.length > 0 && (
+        <div className="border-t border-gray-200 pt-3">
+          <p className="text-xs font-semibold text-gray-700 mb-2">Modes de paiement acceptés</p>
+          <div className="space-y-1 mb-3">
+            {methods.map(m => (
+              <div key={m.id} className="text-xs text-gray-700">
+                <span className="font-semibold">{PM_LABEL[m.method_type]}</span>
+                {m.label ? ` (${m.label})` : ""} : <span className="font-mono">{m.value}</span>
+                {m.bank_name && <span className="text-gray-500"> · {m.bank_name}</span>}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {methods.map(m => <PaymentMethodQR key={m.id} method={m} />)}
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-end">
         <div>
           {form.notes && <p className="text-gray-500 text-xs max-w-xs">{form.notes}</p>}
