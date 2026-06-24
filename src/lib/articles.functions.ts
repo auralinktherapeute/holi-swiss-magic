@@ -86,7 +86,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("articles")
-      .select("id,slug,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,meta_title_fr,meta_description_fr")
+      .select("id,slug,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(`Impossible de charger les articles: ${error.message}`);
