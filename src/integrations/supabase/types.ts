@@ -620,6 +620,76 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_session_notes: {
+        Row: {
+          contact_id: string
+          content: string | null
+          created_at: string
+          id: string
+          session_date: string
+          soap_assessment: string | null
+          soap_objective: string | null
+          soap_plan: string | null
+          soap_subjective: string | null
+          template: string
+          therapist_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          contact_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          session_date?: string
+          soap_assessment?: string | null
+          soap_objective?: string | null
+          soap_plan?: string | null
+          soap_subjective?: string | null
+          template?: string
+          therapist_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          session_date?: string
+          soap_assessment?: string | null
+          soap_objective?: string | null
+          soap_plan?: string | null
+          soap_subjective?: string | null
+          template?: string
+          therapist_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_session_notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_session_notes_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_session_notes_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_stages: {
         Row: {
           color: string | null
