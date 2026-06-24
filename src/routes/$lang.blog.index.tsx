@@ -97,19 +97,19 @@ function Page() {
         <div className="relative mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.1)] px-4 py-1.5 text-sm text-[#d4a5f9] mb-6">
             <BookOpen className="h-4 w-4" />
-            Blog bien-être
+            {t("blog.badge")}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
-            Inspirations &{" "}
+            {t("blog.hero_title_part1")} {" "}
             <span
               className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent"
               style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
             >
-              conseils
+              {t("blog.hero_title_highlight")}
             </span>
           </h1>
           <p className="text-lg text-[#d4c4e0] max-w-xl mx-auto">
-            Pratiques, guides et témoignages pour prendre soin de vous — corps, âme et esprit.
+            {t("blog.hero_subtitle")}
           </p>
         </div>
       </section>
@@ -130,8 +130,8 @@ function Page() {
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(184,110,249,0.1)] border border-[rgba(184,110,249,0.2)] mb-4">
               <BookOpen className="h-7 w-7 text-[#b86ef9]" />
             </div>
-            <p className="text-lg font-semibold text-white">Aucun article pour l'instant</p>
-            <p className="text-[#d4c4e0] text-sm mt-1">Revenez bientôt !</p>
+            <p className="text-lg font-semibold text-white">{t("blog.empty_title")}</p>
+            <p className="text-[#d4c4e0] text-sm mt-1">{t("blog.empty_subtitle")}</p>
           </div>
         )}
 
@@ -160,7 +160,7 @@ function Page() {
                     </span>
                   )}
                   <span className="inline-flex items-center rounded-full bg-gradient-to-r from-[#b86ef9]/20 to-[#5cc8fa]/20 border border-[#5cc8fa]/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#5cc8fa]">
-                    À la une
+                    {t("blog.featured")}
                   </span>
                 </div>
                 <h2 className="text-2xl font-bold text-white leading-tight mb-3 group-hover:text-[#d4a5f9] transition-colors">
@@ -173,7 +173,7 @@ function Page() {
                   </p>
                 )}
                 <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#b86ef9] group-hover:text-[#d4a5f9] transition-colors">
-                  Lire l'article <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  {t("blog.read_article")} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               </div>
             </Link>
@@ -220,7 +220,7 @@ function Page() {
                       <p className="text-[#d4c4e0] text-sm line-clamp-3 flex-1 leading-relaxed">{excerpt}</p>
                     )}
                     <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-[#b86ef9] group-hover:text-[#d4a5f9] transition-colors">
-                      Lire <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      {t("blog.read")} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
