@@ -224,5 +224,112 @@ export const deleteTask = createServerFn({ method: "POST" })
 // ── Reminders (alias createContactReminder for backward compat) ────────────────
 export const createContactReminder = upsertTask;
 
+// ── Backward-compat exports used by TherapistCrmViews ─────────────────────────
+
+type ReminderRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  due_at: string | null;
+  done_at: string | null;
+  priority: "low" | "normal" | "high";
+  entity_id: string | null;
+  contact: { first_name: string; last_name: string } | null;
+};
+
+export const listMyReminders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({}).optional().parse(input ?? {}))
+  .handler(async ({ context }): Promise<ReminderRow[]> => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data, error } = await (context.supabase as any)
+      .from("crm_tasks")
+      .select("id,title,description,due_at,done,priority,contact_id,crm_client_contacts(first_name,last_name)")
+      .eq("therapist_id", therapistId)
+      .order("due_at", { ascending: true, nullsFirst: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r: any) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      due_at: r.due_at,
+      done_at: r.done ? r.created_at ?? new Date().toISOString() : null,
+      priority: (r.priority ?? "normal") as "low" | "normal" | "high",
+      entity_id: r.contact_id,
+      contact: r.crm_client_contacts ?? null,
+    }));
+  });
+
+export const completeContactTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), done: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any)
+      .from("crm_tasks")
+      .update({ done: data.done })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+type NoteRow = {
+  id: string;
+  occurred_at: string;
+  body: string | null;
+  entity_id: string | null;
+  contact: { first_name: string; last_name: string } | null;
+};
+
+export const listMyRecentNotes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<NoteRow[]> => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data, error } = await (context.supabase as any)
+      .from("crm_contact_notes")
+      .select("id,content,created_at,contact_id,crm_client_contacts!inner(first_name,last_name,therapist_id)")
+      .eq("crm_client_contacts.therapist_id", therapistId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) return [];
+    return (data ?? []).map((n: any) => ({
+      id: n.id,
+      occurred_at: n.created_at,
+      body: n.content,
+      entity_id: n.contact_id,
+      contact: n.crm_client_contacts ? { first_name: n.crm_client_contacts.first_name, last_name: n.crm_client_contacts.last_name } : null,
+    }));
+  });
+
+type Segmentation = {
+  total: number;
+  withRecentBooking: number;
+  byStatus: Record<string, number>;
+  byTag: Record<string, number>;
+};
+
+export const getMySegmentation = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<Segmentation> => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data, error } = await (context.supabase as any)
+      .from("crm_client_contacts")
+      .select("relation_status,tags,last_booking_at")
+      .eq("therapist_id", therapistId);
+    if (error) return { total: 0, withRecentBooking: 0, byStatus: {}, byTag: {} };
+    const rows = (data ?? []) as Array<{ relation_status: string | null; tags: string[] | null; last_booking_at: string | null }>;
+    const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
+    const byStatus: Record<string, number> = {};
+    const byTag: Record<string, number> = {};
+    let withRecentBooking = 0;
+    for (const r of rows) {
+      const s = r.relation_status ?? "prospect";
+      byStatus[s] = (byStatus[s] ?? 0) + 1;
+      for (const t of r.tags ?? []) byTag[t] = (byTag[t] ?? 0) + 1;
+      if (r.last_booking_at && new Date(r.last_booking_at).getTime() >= cutoff) withRecentBooking++;
+    }
+    return { total: rows.length, withRecentBooking, byStatus, byTag };
+  });
+
 // ── Views (kept for backward compat) ─────────────────────────────────────────
 export { RemindersView, NotesView, SegmentationView } from "@/components/crm/TherapistCrmViews";
