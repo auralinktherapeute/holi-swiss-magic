@@ -353,6 +353,7 @@ function ContactsTab({ contacts, onEdit, onDelete }: {
         ))}
         {filtered.length === 0 && <p className="text-center text-muted-foreground py-10">Aucun contact trouvé.</p>}
       </div>
+      <ImportContactsDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }
