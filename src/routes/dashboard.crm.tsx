@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Users, LayoutGrid, CheckSquare, FileText, Plus, Pencil, Trash2, X,
   Phone, Mail, Calendar, Tag, ChevronRight, Check, Clock, AlertCircle,
-  QrCode, Download, Send, Eye, Settings, ArrowRight,
+  QrCode, Download, Send, Eye, Settings, ArrowRight, Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import LogoUploader from "@/components/dashboard/LogoUploader";
+import ImportContactsDialog from "@/components/dashboard/ImportContactsDialog";
 import {
   listMyContacts, upsertContact, deleteContact, addContactNote, listContactNotes,
   listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask, type ContactNote,
@@ -295,6 +296,7 @@ function ContactsTab({ contacts, onEdit, onDelete }: {
 }) {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => contacts.filter(c => {
     if (filterStatus && c.relation_status !== filterStatus) return false;
@@ -307,7 +309,7 @@ function ContactsTab({ contacts, onEdit, onDelete }: {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap items-center">
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-surface border-border/60 max-w-xs" />
         <Select value={filterStatus || "all"} onValueChange={v => setFilterStatus(v === "all" ? "" : v)}>
           <SelectTrigger className="bg-surface border-border/60 w-40"><SelectValue placeholder="Tous" /></SelectTrigger>
@@ -316,6 +318,9 @@ function ContactsTab({ contacts, onEdit, onDelete }: {
             {STATUSES.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} className="ml-auto">
+          <Upload className="h-4 w-4 mr-2" />Importer des contacts
+        </Button>
       </div>
 
       <div className="grid gap-2">
