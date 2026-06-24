@@ -2,11 +2,11 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang } from "@/lib/articles.functions";
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { hreflangLinks } from "@/lib/seo";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { categoryLabel } from "@/lib/article-categories";
+import { blogCopy } from "@/lib/blog-copy";
 
 const SITE = "https://holiswiss.ch";
 
@@ -133,8 +133,8 @@ function SkeletonPage() {
 
 function Page() {
   const { lang, slug } = useParams({ from: "/$lang/blog/$slug" });
-  const { t } = useTranslation();
   const l = (lang as Lang) ?? "fr";
+  const copy = blogCopy(l);
 
   const { data, isLoading } = useQuery({
     queryKey: ["article", slug],
@@ -151,11 +151,11 @@ function Page() {
       <div className="min-h-screen bg-[#2d1248] flex items-center justify-center">
         <div className="text-center px-4">
           <div className="text-6xl mb-4">🌿</div>
-          <p className="text-2xl font-bold text-white mb-2">{t("blog.not_found_title")}</p>
-          <p className="text-[#d4c4e0] mb-8">{t("blog.not_found_subtitle")}</p>
+          <p className="text-2xl font-bold text-white mb-2">{copy.notFoundTitle}</p>
+          <p className="text-[#d4c4e0] mb-8">{copy.notFoundSubtitle}</p>
           <Link to="/$lang/blog" params={{ lang: l }}
             className="inline-flex items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.1)] px-5 py-2.5 text-sm font-medium text-[#d4a5f9] hover:bg-[rgba(184,110,249,0.2)] transition-colors">
-            <ArrowLeft className="h-4 w-4" /> {t("blog.back_to_blog")}
+            <ArrowLeft className="h-4 w-4" /> {copy.backToBlog}
           </Link>
         </div>
       </div>
@@ -185,7 +185,7 @@ function Page() {
         {/* Retour */}
         <Link to="/$lang/blog" params={{ lang: l }}
           className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/70 hover:text-[#d4a5f9] transition-colors mb-8">
-          <ArrowLeft className="h-4 w-4" /> {t("nav.blog")}
+          <ArrowLeft className="h-4 w-4" /> {copy.navBlog}
         </Link>
 
         {/* Meta */}
@@ -203,7 +203,7 @@ function Page() {
           )}
           {readTime && (
             <span className="text-sm text-[#d4c4e0]/60 flex items-center gap-1">
-              <Clock className="h-4 w-4" />{t("blog.read_time", { count: readTime })}
+              <Clock className="h-4 w-4" />{copy.readTime(readTime)}
             </span>
           )}
         </div>
@@ -222,7 +222,7 @@ function Page() {
         {isFrFallback && (
           <div className="mb-6 flex items-center gap-2 rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.08)] px-4 py-2.5 text-sm text-[#f59e0b]">
             <span>🌐</span>
-            <span>{t("blog.language_fallback", { lang: l.toUpperCase() })}</span>
+            <span>{copy.languageFallback(l.toUpperCase())}</span>
           </div>
         )}
 
@@ -247,17 +247,17 @@ function Page() {
             <span className="text-xl">🌿</span>
           </div>
           <h3 className="text-xl font-bold text-white mb-2">
-            {t("blog.cta_title")}
+            {copy.ctaTitle}
           </h3>
           <p className="text-[#d4c4e0] text-sm mb-6 max-w-sm mx-auto">
-            {t("blog.cta_subtitle")}
+            {copy.ctaSubtitle}
           </p>
           <Link
             to="/$lang/therapeutes"
             params={{ lang: l }}
             className="inline-flex items-center gap-2 rounded-xl bg-[#b86ef9] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[#b86ef9]/30 hover:bg-[#a855f7] hover:shadow-[#b86ef9]/40 transition-all"
           >
-            {t("blog.cta_button")} →
+            {copy.ctaButton} →
           </Link>
         </div>
 
@@ -265,7 +265,7 @@ function Page() {
         <div className="mt-10 text-center">
           <Link to="/$lang/blog" params={{ lang: l }}
             className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/60 hover:text-[#d4a5f9] transition-colors">
-            <ArrowLeft className="h-4 w-4" /> {t("blog.all_articles")}
+            <ArrowLeft className="h-4 w-4" /> {copy.allArticles}
           </Link>
         </div>
 

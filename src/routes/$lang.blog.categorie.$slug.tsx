@@ -4,7 +4,7 @@ import { getArticlesByCategory, titleForLang, excerptForLang } from "@/lib/artic
 import { categoryLabel, getCategory, GROUP_LABELS, type GroupKey } from "@/lib/article-categories";
 import { CalendarDays, ArrowRight, BookOpen, ArrowLeft } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
-import { useTranslation } from "react-i18next";
+import { blogCopy } from "@/lib/blog-copy";
 
 type Lang = "fr" | "de" | "it" | "en";
 
@@ -65,8 +65,8 @@ function formatDate(iso: string | null, lang: string) {
 
 function Page() {
   const { lang, slug } = useParams({ from: "/$lang/blog/categorie/$slug" });
-  const { t } = useTranslation();
   const l = (lang as Lang) ?? "fr";
+  const copy = blogCopy(l);
   const cat = getCategory(slug);
 
   if (!cat) {
@@ -102,7 +102,7 @@ function Page() {
             params={{ lang: l }}
             className="inline-flex items-center gap-1 text-sm text-[#d4a5f9] hover:text-white mb-4"
           >
-            <ArrowLeft className="h-4 w-4" /> {t("nav.blog")}
+            <ArrowLeft className="h-4 w-4" /> {copy.navBlog}
           </Link>
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.1)] px-4 py-1.5 text-xs uppercase tracking-wider text-[#d4a5f9] mb-4">
             <BookOpen className="h-4 w-4" />
@@ -113,8 +113,8 @@ function Page() {
           </h1>
           <p className="text-[#d4c4e0]">
             {articles.length > 0
-              ? t("blog.category_count", { count: articles.length })
-              : t("blog.category_coming_soon")}
+              ? copy.categoryCount(articles.length)
+              : copy.categoryComingSoon}
           </p>
         </div>
       </section>
@@ -139,13 +139,13 @@ function Page() {
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(184,110,249,0.1)] border border-[rgba(184,110,249,0.2)] mb-4">
               <BookOpen className="h-7 w-7 text-[#b86ef9]" />
             </div>
-            <p className="text-lg font-semibold text-white">{t("blog.category_empty", { name })}</p>
+            <p className="text-lg font-semibold text-white">{copy.categoryEmpty(name)}</p>
             <Link
               to="/$lang/blog"
               params={{ lang: l }}
               className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#b86ef9] hover:text-[#d4a5f9]"
             >
-              {t("blog.see_all_blog")} <ArrowRight className="h-4 w-4" />
+              {copy.seeAllBlog} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         )}
@@ -190,7 +190,7 @@ function Page() {
                       <p className="text-[#d4c4e0] text-sm line-clamp-3 flex-1 leading-relaxed">{excerpt}</p>
                     )}
                     <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-[#b86ef9] group-hover:text-[#d4a5f9] transition-colors">
-                      {t("blog.read")} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      {copy.read} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
