@@ -269,6 +269,42 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
             </div>
           </div>
 
+          {/* Tags secondaires (multi-sélection) */}
+          <div className="space-y-2">
+            <Label>
+              Tags secondaires <span className="text-muted-foreground text-xs">(facultatif, plusieurs possibles)</span>
+            </Label>
+            <div className="rounded-lg border border-border/60 bg-background p-3 max-h-56 overflow-y-auto space-y-3">
+              {groupedCategories("fr").map(group => (
+                <div key={group.key}>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+                    {group.label}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.items.filter(c => c.slug !== form.category).map(c => {
+                      const active = (form.secondary_tags ?? []).includes(c.slug);
+                      return (
+                        <button
+                          key={c.slug}
+                          type="button"
+                          onClick={() => toggleTag(c.slug)}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                            active
+                              ? "bg-primary/20 border-primary/60 text-primary"
+                              : "bg-surface border-border/60 text-muted-foreground hover:text-foreground"
+                          }`}
+                          aria-pressed={active}
+                        >
+                          {active ? "✓ " : ""}{c.name_fr}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>Annuler</Button>
             <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={saveMutation.isPending}>
