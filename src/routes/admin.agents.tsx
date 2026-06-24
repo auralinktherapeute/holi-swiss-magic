@@ -1,14 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Bot, MessageSquare, ShieldCheck, FileSearch, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Bot, MessageSquare, ShieldCheck, FileSearch, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionState } from "@/hooks/use-session-state";
+import {
+  getArticleAgentEnabled,
+  setArticleAgentEnabled,
+  generateArticleViaAgent,
+} from "@/lib/article-agent.functions";
 
 export const Route = createFileRoute("/admin/agents")({ component: Page });
 
@@ -26,6 +34,37 @@ function Page() {
     "Vous êtes un agent au service de Holiswiss, annuaire suisse de thérapeutes en approches complémentaires. Vous devez impérativement éviter tout vocabulaire médical réservé (soin, guérison, traitement, diagnostic, prescription) conformément à la LPMéd.",
   );
   const toggle = (id: string) => setAgents((a) => a.map((x) => (x.id === id ? { ...x, enabled: !x.enabled } : x)));
+
+  const qc = useQueryClient();
+  const getEnabledFn = useServerFn(getArticleAgentEnabled);
+  const setEnabledFn = useServerFn(setArticleAgentEnabled);
+  const generateFn = useServerFn(generateArticleViaAgent);
+
+  const { data: agentState } = useQuery({
+    queryKey: ["article-agent-enabled"],
+    queryFn: () => getEnabledFn(),
+  });
+  const enabled = agentState?.enabled ?? false;
+
+  const toggleAgent = useMutation({
+    mutationFn: (next: boolean) => setEnabledFn({ data: { enabled: next } }),
+    onSuccess: (res) => {
+      qc.setQueryData(["article-agent-enabled"], { enabled: res.enabled });
+      toast.success(res.enabled ? "Agent activé" : "Agent désactivé");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Échec"),
+  });
+
+  const [topic, setTopic] = useState("");
+  const [category, setCategory] = useState("bien-etre");
+  const generate = useMutation({
+    mutationFn: () => generateFn({ data: { topic, category } }),
+    onSuccess: (res) => {
+      toast.success(`Article créé : ${res.article.title_fr}`);
+      setTopic("");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Échec génération"),
+  });
 
   return (
     <div className="p-6 md:p-10 space-y-6">
@@ -60,6 +99,66 @@ function Page() {
           );
         })}
       </div>
+
+      {/* Agent SEO/GEO Articles — réel, branché à Lovable AI */}
+      <Card className="border-primary/40">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0">
+          <div className="flex gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/15 flex items-center justify-center">
+              <Wand2 className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Agent SEO/GEO Articles (Lovable AI)</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Génère un article complet et l'insère en « En attente » dans le tableau de bord.
+                Désactivez l'agent pour empêcher toute génération (anti-doublons).
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={enabled}
+            disabled={toggleAgent.isPending}
+            onCheckedChange={(v) => toggleAgent.mutate(v)}
+          />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Badge variant={enabled ? "default" : "secondary"}>
+              {enabled ? "✓ Actif — génération autorisée" : "⏸ Désactivé — génération bloquée"}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t">
+            <div className="md:col-span-2">
+              <Label htmlFor="topic" className="text-xs text-muted-foreground">Sujet / mot-clé principal</Label>
+              <Input
+                id="topic"
+                placeholder="ex: Hypnose ericksonienne à Lausanne"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                disabled={!enabled || generate.isPending}
+              />
+            </div>
+            <div>
+              <Label htmlFor="cat" className="text-xs text-muted-foreground">Catégorie</Label>
+              <Input
+                id="cat"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                disabled={!enabled || generate.isPending}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => generate.mutate()}
+              disabled={!enabled || generate.isPending || topic.trim().length < 3}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {generate.isPending ? "Génération en cours..." : "Générer un article"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>Prompt système global</CardTitle></CardHeader>
