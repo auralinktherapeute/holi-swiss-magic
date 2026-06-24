@@ -97,6 +97,7 @@ const ArticleInputSchema = z.object({
   status: z.enum(["draft", "validated", "pending_validation", "rejected"]).default("draft"),
   meta_title_fr: z.string().optional().default(""),
   meta_description_fr: z.string().optional().default(""),
+  secondary_tags: z.array(z.string()).optional().default([]),
 });
 
 export const createArticle = createServerFn({ method: "POST" })
