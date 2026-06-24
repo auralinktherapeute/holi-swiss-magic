@@ -804,7 +804,7 @@ function InvoicesTab({ contacts, branding }: { contacts: ClientContact[]; brandi
         {invoices.length === 0 && <p className="text-center text-muted-foreground py-10">Aucune facture. Créez-en une !</p>}
       </div>
 
-      <InvoiceDialog open={dialogOpen} onClose={() => setDialogOpen(false)} initial={editing} contacts={contacts} branding={branding} />
+      <InvoiceDialog key={editing?.id ?? "new-invoice"} open={dialogOpen} onClose={() => setDialogOpen(false)} initial={editing} contacts={contacts} branding={branding} />
     </div>
   );
 }
