@@ -218,17 +218,41 @@ export const getContactDetail = createServerFn({ method: "GET" })
 
 // ── Notes ─────────────────────────────────────────────────────────────────────
 
-export const addContactNote = createServerFn({ method: "POST" })
+const SessionNoteSchema = z.object({
+  id: z.string().uuid().optional(),
+  contact_id: z.string().uuid(),
+  session_date: z.string().min(1),
+  title: z.string().optional().nullable(),
+  template: z.enum(["free", "soap"]).default("free"),
+  content: z.string().optional().nullable(),
+  soap_subjective: z.string().optional().nullable(),
+  soap_objective: z.string().optional().nullable(),
+  soap_assessment: z.string().optional().nullable(),
+  soap_plan: z.string().optional().nullable(),
+});
+
+export const upsertSessionNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ contact_id: z.string().uuid(), content: z.string().min(1) }).parse(input))
+  .inputValidator((input: unknown) => SessionNoteSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: note, error } = await (context.supabase as any)
-      .from("crm_contact_notes")
-      .insert({ contact_id: data.contact_id, content: data.content })
-      .select()
-      .maybeSingle();
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    const { id, ...rest } = data;
+    const payload = { ...rest, therapist_id: therapistId };
+    const { data: row, error } = id
+      ? await sb.from("crm_session_notes").update(payload).eq("id", id).select().maybeSingle()
+      : await sb.from("crm_session_notes").insert(payload).select().maybeSingle();
     if (error) throw new Error(error.message);
-    return note as ContactNote;
+    return row as ContactNote;
+  });
+
+export const deleteSessionNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any).from("crm_session_notes").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const listContactNotes = createServerFn({ method: "GET" })
@@ -236,12 +260,27 @@ export const listContactNotes = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ contact_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: notes, error } = await (context.supabase as any)
-      .from("crm_contact_notes")
+      .from("crm_session_notes")
       .select("*")
       .eq("contact_id", data.contact_id)
+      .order("session_date", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return (notes ?? []) as ContactNote[];
+  });
+
+// Backward-compat: simple add (free template)
+export const addContactNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ contact_id: z.string().uuid(), content: z.string().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data: note, error } = await (context.supabase as any)
+      .from("crm_session_notes")
+      .insert({ contact_id: data.contact_id, therapist_id: therapistId, template: "free", content: data.content })
+      .select().maybeSingle();
+    if (error) throw new Error(error.message);
+    return note as ContactNote;
   });
 
 // ── Tasks ─────────────────────────────────────────────────────────────────────
