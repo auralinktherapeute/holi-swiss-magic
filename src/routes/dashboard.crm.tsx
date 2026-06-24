@@ -505,7 +505,15 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
   const total = form.items.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unit_price) || 0), 0);
 
   const mut = useMutation({
-    mutationFn: () => upsertInvoice({ data: { ...form, contact_id: form.contact_id || null, due_at: form.due_at || null, items: form.items as any } as any }),
+    mutationFn: () => {
+      const cleaned = form.items
+        .map(i => ({ ...i, description: (i.description ?? "").trim() }))
+        .filter(i => i.description || Number(i.quantity) > 0 || Number(i.unit_price) > 0);
+      if (cleaned.length === 0) throw new Error("Ajoutez au moins une ligne de facture");
+      const missing = cleaned.find(i => !i.description);
+      if (missing) throw new Error("Chaque ligne doit avoir une description");
+      return upsertInvoice({ data: { ...form, contact_id: form.contact_id || null, due_at: form.due_at || null, items: cleaned as any } as any });
+    },
     onSuccess: () => { toast.success("Facture sauvegardée"); qc.invalidateQueries({ queryKey: ["invoices"] }); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
