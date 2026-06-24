@@ -28,6 +28,10 @@ import {
   listMyInvoices, upsertInvoice, deleteInvoice, updateInvoiceStatus,
   getTherapistBranding, updateTherapistBranding, type Invoice, type InvoiceItem,
 } from "@/lib/invoice.functions";
+import {
+  listMyPaymentMethods, type PaymentMethod, type PaymentMethodType,
+} from "@/lib/payment-methods.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/dashboard/crm")({ component: CrmPage });
 
