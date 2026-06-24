@@ -486,6 +486,25 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const translateMutation = useMutation({
+    mutationFn: (id: string) => translateArticle({ data: { id } }),
+    onSuccess: (r) => {
+      const langs = (r as any)?.updated ?? [];
+      toast.success(langs.length ? `Traduit en ${langs.join(", ").toUpperCase()}.` : "Aucune langue à traduire.");
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const translateAllMutation = useMutation({
+    mutationFn: () => translateAllMissingArticles(),
+    onSuccess: (r: any) => {
+      toast.success(`Traductions : ${r.success}/${r.total} OK${r.failed ? `, ${r.failed} échouées` : ""}.`);
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const rawArticles = (data?.articles ?? []) as unknown as ArticleRow[];
 
   const scored: ScoredArticle[] = useMemo(() => rawArticles.map(a => ({
@@ -655,6 +674,8 @@ function Page() {
             onDelete={() => { if (confirm(`Supprimer « ${a._title || a.slug} » ?`)) deleteMutation.mutate(a.id); }}
             onTogglePublish={() => statusMutation.mutate({ id: a.id, status: a.status === "validated" ? "draft" : "validated" })}
             onImprove={() => setImproving(a)}
+            onTranslate={() => translateMutation.mutate(a.id)}
+            translating={translateMutation.isPending && translateMutation.variables === a.id}
           />
         ))}
       </div>
