@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/confidentialite/")({
   component: ConfidentialitePage,
+  head: ({ params }) => ({
+    meta: [
+      { title: "Politique de confidentialité — Holiswiss" },
+      { name: "description", content: "Politique de confidentialité de Holiswiss conforme à la nLPD (Suisse) et au RGPD (UE) : données collectées, finalités et droits." },
+      { name: "robots", content: "noindex, follow" },
+    ],
+    links: seoLinks(params.lang, "/confidentialite"),
+  }),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

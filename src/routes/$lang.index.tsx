@@ -9,6 +9,8 @@ import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
+import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/")({
@@ -143,6 +145,18 @@ function HomePage() {
 
       {/* Nearby therapists list + Swiss map */}
       <NearbyTherapistsSwiss />
+
+      {/* SEO/AI FAQ section */}
+      {(() => {
+        const fl = asFaqLang(lang);
+        return (
+          <FaqSection
+            items={GLOBAL_FAQ[fl]}
+            title={FAQ_TITLES[fl].title}
+            subtitle={FAQ_TITLES[fl].subtitle}
+          />
+        );
+      })()}
     </>
   );
 }

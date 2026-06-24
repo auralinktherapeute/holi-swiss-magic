@@ -4,6 +4,8 @@ import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang } from "@/l
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { hreflangLinks } from "@/lib/seo";
+import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 
 const SITE = "https://holiswiss.ch";
 
@@ -277,6 +279,19 @@ function Page() {
             <ArrowLeft className="h-4 w-4" /> Tous les articles
           </Link>
         </div>
+
+        {(() => {
+          const fl = asFaqLang(l);
+          const items = blogFaqForCategory(article.category as string | null, fl);
+          return (
+            <FaqSection
+              items={items}
+              title={FAQ_TITLES[fl].title}
+              subtitle={FAQ_TITLES[fl].subtitle}
+              className="mx-auto mt-16 w-full max-w-[800px]"
+            />
+          );
+        })()}
       </div>
     </div>
   );

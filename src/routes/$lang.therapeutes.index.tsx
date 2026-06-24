@@ -10,6 +10,8 @@ import { useSessionState } from "@/hooks/use-session-state";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { useServerFn } from "@tanstack/react-start";
 import { geocodeCity } from "@/lib/geocode.functions";
+import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -322,6 +324,16 @@ function Page() {
           </Suspense>
         </div>
       </div>
+      {(() => {
+        const fl = asFaqLang(lang);
+        return (
+          <FaqSection
+            items={GLOBAL_FAQ[fl]}
+            title={FAQ_TITLES[fl].title}
+            subtitle={FAQ_TITLES[fl].subtitle}
+          />
+        );
+      })()}
     </div>
   );
 }

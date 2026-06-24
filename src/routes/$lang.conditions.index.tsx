@@ -1,7 +1,16 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { seoLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/conditions/")({
   component: ConditionsPage,
+  head: ({ params }) => ({
+    meta: [
+      { title: "Conditions générales d'utilisation — Holiswiss" },
+      { name: "description", content: "Conditions générales d'utilisation (CGU/CGV) de la plateforme Holiswiss, annuaire suisse de thérapeutes en approches complémentaires." },
+      { name: "robots", content: "noindex, follow" },
+    ],
+    links: seoLinks(params.lang, "/conditions"),
+  }),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
