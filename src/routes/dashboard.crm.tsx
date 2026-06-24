@@ -479,12 +479,14 @@ type InvoiceForm = {
   id?: string; contact_id: string; client_name: string; client_address: string;
   status: "draft" | "sent" | "paid" | "cancelled";
   issued_at: string; due_at: string; notes: string; payment_link: string; currency: string;
+  payment_method_ids: string[];
   items: { description: string; quantity: number; unit_price: number }[];
 };
 
 const EMPTY_INV: InvoiceForm = {
   client_name: "", client_address: "", contact_id: "", status: "draft",
   issued_at: new Date().toISOString().slice(0, 10), due_at: "", notes: "", payment_link: "", currency: "CHF",
+  payment_method_ids: [],
   items: [{ description: "", quantity: 1, unit_price: 0 }],
 };
 
