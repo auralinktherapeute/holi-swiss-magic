@@ -1,5 +1,14 @@
 import type { FaqItem, FaqLang } from "@/components/holiswiss/FaqSection";
 
+export type { FaqLang, FaqItem };
+
+const FAQ_LANGS: readonly FaqLang[] = ["fr", "de", "it", "en"];
+export function asFaqLang(lang: string | undefined | null): FaqLang {
+  return (FAQ_LANGS as readonly string[]).includes(lang ?? "")
+    ? (lang as FaqLang)
+    : "fr";
+}
+
 /** Global Holiswiss FAQ — homepage + therapists list. */
 export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   fr: [
