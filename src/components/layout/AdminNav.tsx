@@ -131,6 +131,22 @@ export function AdminNav() {
         </span>
       </div>
 
+      {/* Role indicator */}
+      <div style={{
+        margin: "12px 16px 0",
+        padding: "8px 12px",
+        borderRadius: 10,
+        background: "linear-gradient(135deg, rgba(184,110,249,0.18), rgba(92,200,250,0.12))",
+        border: "1px solid rgba(184,110,249,0.35)",
+        color: "#e9d8ff",
+        fontSize: 12,
+        fontWeight: 600,
+        textAlign: "center",
+        letterSpacing: "0.02em",
+      }}>
+        Connecté en tant qu'Admin
+      </div>
+
       {/* Nav */}
       <nav style={{ flex: 1, overflowY: "auto", padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
         <Link
