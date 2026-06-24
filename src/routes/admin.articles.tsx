@@ -559,9 +559,20 @@ function Page() {
             {filtered.length !== counts.all && <> · {filtered.length} affiché{filtered.length !== 1 ? "s" : ""}</>}
           </p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />Nouvel article
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline"
+            className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+            onClick={() => translateAllMutation.mutate()}
+            disabled={translateAllMutation.isPending}>
+            {translateAllMutation.isPending
+              ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              : <Languages className="h-4 w-4 mr-2" />}
+            Traduire les articles manquants
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+            <Plus className="h-4 w-4 mr-2" />Nouvel article
+          </Button>
+        </div>
       </div>
 
       {/* Status summary badges */}
