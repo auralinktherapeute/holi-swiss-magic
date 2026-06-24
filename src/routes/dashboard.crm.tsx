@@ -738,11 +738,8 @@ function InvoicesTab({ contacts, branding }: { contacts: ClientContact[]; brandi
           <CardHeader className="pb-2"><p className="text-sm font-semibold">Paramètres facturation</p></CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1">
-              <Label>URL Logo (lien image)</Label>
-              <div className="flex gap-2">
-                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://…/logo.png" className="bg-background border-border/60" />
-                {logoUrl && <img src={logoUrl} alt="logo" className="h-9 w-auto rounded border border-border/40 object-contain" />}
-              </div>
+              <Label>Logo du cabinet</Label>
+              <LogoUploader userId={branding?.id ?? ""} value={logoUrl} onChange={setLogoUrl} />
             </div>
             <div className="space-y-1">
               <Label>Lien de paiement par défaut</Label>
