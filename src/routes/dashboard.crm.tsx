@@ -549,7 +549,7 @@ function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
         </DialogHeader>
 
         {preview ? (
-          <InvoicePreview form={form} total={total} branding={branding} />
+          <InvoicePreview form={form} total={total} branding={branding} methods={selectedMethods} />
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
