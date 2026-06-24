@@ -101,6 +101,45 @@ export type Database = {
           },
         ]
       }
+      article_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name_de: string
+          name_en: string
+          name_fr: string
+          name_it: string
+          parent_category: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_de?: string
+          name_en?: string
+          name_fr: string
+          name_it?: string
+          parent_category?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_de?: string
+          name_en?: string
+          name_fr?: string
+          name_it?: string
+          parent_category?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author_id: string | null
@@ -120,6 +159,7 @@ export type Database = {
           meta_description_fr: string | null
           meta_title_fr: string | null
           published_at: string | null
+          secondary_tags: string[]
           slug: string
           status: string
           title_de: string | null
@@ -146,6 +186,7 @@ export type Database = {
           meta_description_fr?: string | null
           meta_title_fr?: string | null
           published_at?: string | null
+          secondary_tags?: string[]
           slug: string
           status?: string
           title_de?: string | null
@@ -172,6 +213,7 @@ export type Database = {
           meta_description_fr?: string | null
           meta_title_fr?: string | null
           published_at?: string | null
+          secondary_tags?: string[]
           slug?: string
           status?: string
           title_de?: string | null
