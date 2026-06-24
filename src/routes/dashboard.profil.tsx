@@ -35,6 +35,7 @@ import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
+import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
