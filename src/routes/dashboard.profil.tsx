@@ -403,6 +403,7 @@ function ProfilePage() {
       const { id } = await saveProfile({
         data: {
           rowId,
+          public_slug: publicSlug ? publicSlug.trim() : null,
           photo_url: payload.photo_url,
           first_name: payload.first_name,
           last_name: payload.last_name,
