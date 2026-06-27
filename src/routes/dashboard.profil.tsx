@@ -268,6 +268,7 @@ function ProfilePage() {
         }
         setFirstName(data.first_name ?? "");
         setLastName(data.last_name ?? "");
+        setPublicSlug((data as any).slug ?? "");
         setCity(data.city ?? "");
         setPostalCode(data.postal_code ?? "");
         setAddress(data.address ?? "");
