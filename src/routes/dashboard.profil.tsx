@@ -65,7 +65,7 @@ type DocRow = {
 const CURRENCIES = ["CHF", "EUR", "USD"];
 const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#ef4444"];
 const THERAPIST_PROFILE_SELECT = [
-  "id", "photo_url", "first_name", "last_name", "city", "postal_code", "address", "phone",
+  "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address", "phone",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations",
@@ -103,6 +103,7 @@ function ProfilePage() {
   const [photoPublicUrl, setPhotoPublicUrl] = useSessionState<string>(`${profileStatePrefix}.photoPublicUrl`, "");
   const [firstName, setFirstName] = useSessionState(`${profileStatePrefix}.firstName`, "");
   const [lastName, setLastName] = useSessionState(`${profileStatePrefix}.lastName`, "");
+  const [publicSlug, setPublicSlug] = useSessionState(`${profileStatePrefix}.publicSlug`, "");
   const [city, setCity] = useSessionState(`${profileStatePrefix}.city`, "");
   const [postalCode, setPostalCode] = useSessionState(`${profileStatePrefix}.postalCode`, "");
   const [address, setAddress] = useSessionState(`${profileStatePrefix}.address`, "");
@@ -267,6 +268,7 @@ function ProfilePage() {
         }
         setFirstName(data.first_name ?? "");
         setLastName(data.last_name ?? "");
+        setPublicSlug((data as any).slug ?? "");
         setCity(data.city ?? "");
         setPostalCode(data.postal_code ?? "");
         setAddress(data.address ?? "");
@@ -401,6 +403,7 @@ function ProfilePage() {
       const { id } = await saveProfile({
         data: {
           rowId,
+          public_slug: publicSlug ? publicSlug.trim() : null,
           photo_url: payload.photo_url,
           first_name: payload.first_name,
           last_name: payload.last_name,
@@ -503,6 +506,38 @@ function ProfilePage() {
             </Field>
             <Field label={t("profile_edit.last_name") + " *"}>
               <Input value={lastName} onChange={(e) => { setLastName(e.target.value); markDirty(); }} className={inputClass} />
+            </Field>
+          </div>
+
+          <div className="mt-5">
+            <Field
+              label={
+                <span className="inline-flex items-center gap-2">
+                  Slug public
+                  <span className="text-xs font-normal text-[#a89bc4]">(URL de votre profil & formulaire d'admission)</span>
+                </span>
+              }
+            >
+              <div className="relative">
+                <Link2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
+                <Input
+                  value={publicSlug}
+                  onChange={(e) => {
+                    const v = e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]+/g, "-")
+                      .replace(/^-+/, "")
+                      .slice(0, 80);
+                    setPublicSlug(v);
+                    markDirty();
+                  }}
+                  placeholder="mon-cabinet-geneve"
+                  className={`${inputClass} pl-9`}
+                />
+              </div>
+              <p className="mt-2 text-xs text-[#a89bc4]">
+                holiswiss.ch/therapeute/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span> · holiswiss.ch/intake/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span>
+              </p>
             </Field>
           </div>
 

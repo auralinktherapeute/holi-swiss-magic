@@ -11,6 +11,7 @@ const slotSchema = z.object({
 
 const profileSchema = z.object({
   rowId: z.string().uuid().nullable(),
+  public_slug: z.string().max(80).nullable().optional(),
   photo_url: z.string().url().max(2000).nullable(),
   first_name: z.string().min(1).max(120),
   last_name: z.string().max(120),
@@ -33,6 +34,16 @@ const profileSchema = z.object({
   accreditations: z.array(z.unknown()).max(30),
   ide: z.string().max(40).nullable(),
 });
+
+function sanitizeSlug(raw: string): string {
+  return raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
 
 async function getOwnedTherapist(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -210,7 +221,8 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
   .inputValidator(profileSchema)
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const slugBase = `${data.first_name}-${data.last_name}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "therapeute";
+    const fallbackSlug = sanitizeSlug(`${data.first_name}-${data.last_name}`) || "therapeute";
+    const requestedSlug = data.public_slug ? sanitizeSlug(data.public_slug) : "";
     const geo = await geocodeSwissAddress({
       address: data.address, postal_code: data.postal_code, city: data.city, canton: data.canton,
     });
@@ -242,9 +254,29 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       payload.longitude = geo.longitude;
     }
 
+    // Resolve slug: requested > existing > auto-generated
+    let finalSlug: string;
+    if (data.rowId) {
+      const { data: existing } = await supabaseAdmin
+        .from("therapists").select("slug").eq("id", data.rowId).maybeSingle();
+      const existingSlug = (existing as any)?.slug as string | null;
+      finalSlug = requestedSlug || existingSlug || `${fallbackSlug}-${context.userId.slice(0, 6)}`;
+    } else {
+      finalSlug = requestedSlug || `${fallbackSlug}-${context.userId.slice(0, 6)}`;
+    }
+
+    // Ensure uniqueness against other users.
+    const { data: clash } = await supabaseAdmin
+      .from("therapists").select("id,user_id").eq("slug", finalSlug).maybeSingle();
+    if (clash && (clash as any).user_id !== context.userId) {
+      finalSlug = `${finalSlug}-${context.userId.slice(0, 6)}`;
+    }
+
+    payload.slug = finalSlug;
+
     const result = data.rowId
       ? await supabaseAdmin.from("therapists").update(payload).eq("id", data.rowId).eq("user_id", context.userId).select("id").maybeSingle()
-      : await supabaseAdmin.from("therapists").insert({ ...payload, slug: `${slugBase}-${context.userId.slice(0, 6)}` }).select("id").maybeSingle();
+      : await supabaseAdmin.from("therapists").insert(payload).select("id").maybeSingle();
     if (result.error || !result.data) throw new Error("Impossible d'enregistrer le profil.");
 
     const { error: privateError } = await supabaseAdmin
