@@ -509,6 +509,38 @@ function ProfilePage() {
             </Field>
           </div>
 
+          <div className="mt-5">
+            <Field
+              label={
+                <span className="inline-flex items-center gap-2">
+                  Slug public
+                  <span className="text-xs font-normal text-[#a89bc4]">(URL de votre profil & formulaire d'admission)</span>
+                </span>
+              }
+            >
+              <div className="relative">
+                <Link2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
+                <Input
+                  value={publicSlug}
+                  onChange={(e) => {
+                    const v = e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]+/g, "-")
+                      .replace(/^-+/, "")
+                      .slice(0, 80);
+                    setPublicSlug(v);
+                    markDirty();
+                  }}
+                  placeholder="mon-cabinet-geneve"
+                  className={`${inputClass} pl-9`}
+                />
+              </div>
+              <p className="mt-2 text-xs text-[#a89bc4]">
+                holiswiss.ch/therapeute/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span> · holiswiss.ch/intake/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span>
+              </p>
+            </Field>
+          </div>
+
           <div className="mt-5 grid gap-5 sm:grid-cols-3">
             <Field label={t("profile_edit.city") + " *"}>
               <div className="relative">
