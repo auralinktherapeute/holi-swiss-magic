@@ -103,6 +103,7 @@ function ProfilePage() {
   const [photoPublicUrl, setPhotoPublicUrl] = useSessionState<string>(`${profileStatePrefix}.photoPublicUrl`, "");
   const [firstName, setFirstName] = useSessionState(`${profileStatePrefix}.firstName`, "");
   const [lastName, setLastName] = useSessionState(`${profileStatePrefix}.lastName`, "");
+  const [publicSlug, setPublicSlug] = useSessionState(`${profileStatePrefix}.publicSlug`, "");
   const [city, setCity] = useSessionState(`${profileStatePrefix}.city`, "");
   const [postalCode, setPostalCode] = useSessionState(`${profileStatePrefix}.postalCode`, "");
   const [address, setAddress] = useSessionState(`${profileStatePrefix}.address`, "");
