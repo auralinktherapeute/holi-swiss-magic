@@ -8,23 +8,25 @@ import {
   Menu, X, Home, Gauge, Workflow,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { getAdminBadgeCounts } from "@/lib/admin.functions";
+import { signOutCompletely } from "@/lib/auth-utils";
 
 export function AdminNav() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const fetchBadgeCounts = useServerFn(getAdminBadgeCounts);
   const email = user?.email ?? "admin@holiswiss.ch";
   const initial = email.charAt(0).toUpperCase();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/$lang", params: { lang: "fr" } });
+    await signOutCompletely(queryClient);
+    navigate({ to: "/$lang/connexion", params: { lang: "fr" }, replace: true });
   };
 
   const returnToSite = () => {

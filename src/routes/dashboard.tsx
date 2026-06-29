@@ -10,8 +10,8 @@ import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
 import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyTherapistShell } from "@/lib/dashboard.functions";
-import { checkIsAdmin } from "@/lib/admin.functions";
-import { useNavigate } from "@tanstack/react-router";
+import { RequireRole } from "@/components/auth/RequireRole";
+import { requireCurrentRole } from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/dashboard")({
     // intempestive lors de la navigation. Les server functions appelées
     // ensuite valident le token côté serveur (requireSupabaseAuth).
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    if (!sessionData.session || !(await requireCurrentRole("therapist"))) {
       throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
     }
   },
@@ -31,16 +31,6 @@ function DashboardLayout() {
   const { loading } = useAuth();
   const { i18n } = useTranslation();
   const ensureShell = useServerFn(ensureMyTherapistShell);
-  const check = useServerFn(checkIsAdmin);
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (loading) return;
-    (check as any)()
-      .then((r: { isAdmin: boolean }) => {
-        if (r?.isAdmin) navigate({ to: "/admin", replace: true });
-      })
-      .catch(() => {});
-  }, [loading, check, navigate]);
   useEffect(() => {
     if (loading) return;
     (ensureShell as any)().catch(() => {});
@@ -58,16 +48,18 @@ function DashboardLayout() {
     return <LoadingScreen />;
   }
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <TherapistNav />
-      <div className="flex flex-1 flex-col overflow-x-hidden">
-        <MobileDashboardHeader />
-        <main className="flex-1 pb-20 md:pb-0">
-          <Outlet />
-        </main>
+    <RequireRole role="therapist" redirectTo="/fr/connexion">
+      <div className="flex min-h-screen w-full bg-background">
+        <TherapistNav />
+        <div className="flex flex-1 flex-col overflow-x-hidden">
+          <MobileDashboardHeader />
+          <main className="flex-1 pb-20 md:pb-0">
+            <Outlet />
+          </main>
+        </div>
+        <MobileDashboardBottomNav />
+        <InactivityLogout redirectTo="/fr/connexion" />
       </div>
-      <MobileDashboardBottomNav />
-      <InactivityLogout redirectTo="/fr/connexion" />
-    </div>
+    </RequireRole>
   );
 }

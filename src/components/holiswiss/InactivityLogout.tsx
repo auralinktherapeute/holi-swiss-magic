@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { signOutCompletely } from "@/lib/auth-utils";
 
 const INACTIVITY_MS = 3 * 60 * 60 * 1000; // 3h
 const STORAGE_KEY = "holiswiss-last-activity";
@@ -10,13 +11,14 @@ const STORAGE_KEY = "holiswiss-last-activity";
 export function InactivityLogout({ redirectTo = "/fr/connexion" }: { redirectTo?: string }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const logout = async () => {
-      try { await supabase.auth.signOut(); } catch {}
+      try { await signOutCompletely(queryClient); } catch {}
       setOpen(true);
     };
 
@@ -64,7 +66,7 @@ export function InactivityLogout({ redirectTo = "/fr/connexion" }: { redirectTo?
       events.forEach((e) => window.removeEventListener(e, handler));
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, []);
+  }, [queryClient]);
 
   const handleClose = () => {
     setOpen(false);

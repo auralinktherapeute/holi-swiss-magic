@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { checkIsAdmin } from "@/lib/admin.functions";
+import { LAST_AUTH_SPACE_KEY } from "@/lib/auth-utils";
 
 type Props = {
   lang: string;
@@ -13,8 +14,6 @@ type Props = {
   onMouseLeave?: React.MouseEventHandler<HTMLAnchorElement>;
   onClick?: () => void;
 };
-
-const LAST_AUTH_SPACE_KEY = "holiswiss-last-auth-space";
 
 function readLastAuthSpace(): "admin" | "dashboard" {
   if (typeof window === "undefined") return "dashboard";

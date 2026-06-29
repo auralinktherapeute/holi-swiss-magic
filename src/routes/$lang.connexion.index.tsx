@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useSessionState } from "@/hooks/use-session-state";
+import {
+  clearHoliswissSessionState,
+  getCurrentUserRole,
+  persistSessionInRoleSpace,
+  prepareLoginAuthSpace,
+  roleToSpace,
+  switchAuthSpace,
+} from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/$lang/connexion/")({
   component: LoginPage,
@@ -24,31 +32,38 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const redirectAfterLogin = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (userData.user) {
-      const { data: adminRole } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (adminRole) {
-        navigate({ to: "/admin" });
-        return;
-      }
+  const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
+    const role = await getCurrentUserRole();
+    if (role === "admin") {
+      if (session) await persistSessionInRoleSpace(session, role);
+      else switchAuthSpace(roleToSpace(role));
+      navigate({ to: "/admin", replace: true });
+      return;
     }
-    navigate({ to: "/dashboard" });
+    if (role === "therapist") {
+      if (session) await persistSessionInRoleSpace(session, role);
+      else switchAuthSpace(roleToSpace(role));
+      navigate({ to: "/dashboard", replace: true });
+      return;
+    }
+    navigate({ to: "/dashboard", replace: true });
   };
+
+  useEffect(() => {
+    prepareLoginAuthSpace();
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    clearHoliswissSessionState();
+    prepareLoginAuthSpace();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error(error.message);
+    setPassword("");
     toast.success(t("auth.connected"));
-    await redirectAfterLogin();
+    await redirectAfterLogin(data.session);
   };
 
   const onGoogle = async () => {

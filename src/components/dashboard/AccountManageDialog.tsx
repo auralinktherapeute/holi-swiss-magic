@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Pause, Trash2, AlertTriangle, Lightbulb } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { pauseMyAccount, deleteMyAccount } from "@/lib/account.functions";
+import { signOutCompletely } from "@/lib/auth-utils";
 
 type View = "choice" | "pause-confirm" | "delete-warn" | "delete-confirm";
 
@@ -17,6 +18,7 @@ export function AccountManageDialog() {
   const [confirmText, setConfirmText] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const doPause = useServerFn(pauseMyAccount);
   const doDelete = useServerFn(deleteMyAccount);
 
@@ -30,7 +32,7 @@ export function AccountManageDialog() {
     setBusy(true);
     try {
       await doPause();
-      await supabase.auth.signOut();
+      await signOutCompletely(queryClient);
       toast.success("Votre profil est en pause. À bientôt sur Holiswiss 🌿");
       setOpen(false);
       navigate({ to: "/" });
@@ -44,7 +46,7 @@ export function AccountManageDialog() {
     setBusy(true);
     try {
       await doDelete({ data: { confirm: "SUPPRIMER" } });
-      await supabase.auth.signOut();
+      await signOutCompletely(queryClient);
       toast.success("Votre compte a été supprimé. Merci pour votre confiance. 🌿");
       setOpen(false);
       navigate({ to: "/" });
