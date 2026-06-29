@@ -23,7 +23,7 @@ import { groupedCategories } from "@/lib/article-categories";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
 
-const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY ?? "";
+import { searchUnsplashPhotos, trackUnsplashDownload } from "@/lib/unsplash.functions";
 
 type Lang = "fr" | "de" | "it" | "en";
 type Status = "draft" | "validated" | "pending_validation" | "rejected";
@@ -43,22 +43,19 @@ function UnsplashPicker({ onSelect }: { onSelect: (url: string) => void }) {
 
   const search = useCallback(async () => {
     if (!query.trim()) return;
-    if (!UNSPLASH_KEY) { toast.error("VITE_UNSPLASH_ACCESS_KEY manquant dans .env"); return; }
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=12&orientation=landscape`,
-        { headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` } }
-      );
-      const d = await res.json();
-      setPhotos(d.results ?? []);
+      const d = await searchUnsplashPhotos({ data: { query } });
+      setPhotos((d.results ?? []) as unknown as UPhoto[]);
     } catch { toast.error("Erreur Unsplash"); }
     finally { setLoading(false); }
   }, [query]);
 
   const pick = (p: UPhoto) => {
     setPicked(p.id);
-    if (UNSPLASH_KEY) fetch(p.links.download_location, { headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` } }).catch(() => {});
+    if (p.links?.download_location) {
+      trackUnsplashDownload({ data: { downloadLocation: p.links.download_location } }).catch(() => {});
+    }
     onSelect(p.urls.regular);
   };
 
