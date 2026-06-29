@@ -34,10 +34,11 @@ export const getAdminBadgeCounts = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [therapists, waitlist, events] = await Promise.all([
+    const [therapists, waitlist, events, articles] = await Promise.all([
       supabaseAdmin.from("therapists").select("id", { count: "exact", head: true }).eq("status", "pending"),
       supabaseAdmin.from("waiting_list").select("id", { count: "exact", head: true }).eq("status", "pending"),
       supabaseAdmin.from("events").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+      supabaseAdmin.from("articles").select("id", { count: "exact", head: true }).eq("status", "pending_validation"),
     ]);
     return {
       therapists: therapists.count ?? 0,
@@ -45,7 +46,7 @@ export const getAdminBadgeCounts = createServerFn({ method: "GET" })
       events: events.count ?? 0,
       moderation: 0,
       reviews: 0,
-      articles: 0,
+      articles: articles.count ?? 0,
       subscriptions: 0,
     };
   });
