@@ -699,5 +699,37 @@
     "weekly_save": "Enregistrer mes horaires",
     "weekly_saved": "Horaires de travail enregistrés",
     "weekly_err_range": "{{day}} : l'heure de fin doit être après l'heure de début"
+  },
+  "events_page": {
+    "title": "Événements bien-être",
+    "subtitle": "Ateliers, retraites, cercles et méditations proposés par les thérapeutes de la communauté HoliSwiss.",
+    "empty": "Aucun événement publié pour le moment. Revenez bientôt.",
+    "with": "avec",
+    "seats": "places",
+    "free": "Gratuit",
+    "price_tbd": "Tarif à définir",
+    "online": "En ligne",
+    "back": "Tous les événements",
+    "program": "Programme",
+    "book": "Réserver une place",
+    "flyer": "Flyer à partager",
+    "not_found_title": "Événement introuvable",
+    "not_found_desc": "Il a peut-être été retiré ou n'est plus disponible.",
+    "load_error": "Erreur de chargement",
+    "categories": {
+      "atelier": "Atelier",
+      "conference": "Conférence",
+      "retraite": "Retraite",
+      "cercle": "Cercle",
+      "meditation": "Méditation",
+      "autre": "Événement"
+    },
+    "formats": {
+      "in_person": "Présentiel",
+      "online": "En ligne",
+      "hybrid": "Hybride"
+    },
+    "head_title": "Événements bien-être en Suisse | HoliSwiss",
+    "head_desc": "Ateliers, retraites, cercles et méditations proposés par les thérapeutes holistiques de Suisse. Réservez votre place."
   }
 }

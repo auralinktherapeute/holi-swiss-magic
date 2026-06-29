@@ -699,5 +699,37 @@
     "weekly_save": "Salva i miei orari",
     "weekly_saved": "Orari di lavoro salvati",
     "weekly_err_range": "{{day}}: l'ora di fine deve essere dopo l'ora di inizio"
+  },
+  "events_page": {
+    "title": "Eventi benessere",
+    "subtitle": "Laboratori, ritiri, cerchi e meditazioni proposti dai terapisti della comunità HoliSwiss.",
+    "empty": "Nessun evento pubblicato al momento. Torna presto.",
+    "with": "con",
+    "seats": "posti",
+    "free": "Gratuito",
+    "price_tbd": "Prezzo da definire",
+    "online": "Online",
+    "back": "Tutti gli eventi",
+    "program": "Programma",
+    "book": "Prenota un posto",
+    "flyer": "Volantino da condividere",
+    "not_found_title": "Evento non trovato",
+    "not_found_desc": "Potrebbe essere stato rimosso o non è più disponibile.",
+    "load_error": "Errore di caricamento",
+    "categories": {
+      "atelier": "Laboratorio",
+      "conference": "Conferenza",
+      "retraite": "Ritiro",
+      "cercle": "Cerchio",
+      "meditation": "Meditazione",
+      "autre": "Evento"
+    },
+    "formats": {
+      "in_person": "In presenza",
+      "online": "Online",
+      "hybrid": "Ibrido"
+    },
+    "head_title": "Eventi benessere in Svizzera | HoliSwiss",
+    "head_desc": "Laboratori, ritiri, cerchi e meditazioni dei terapisti olistici in Svizzera. Prenota il tuo posto."
   }
 }
