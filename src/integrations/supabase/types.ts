@@ -924,6 +924,50 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          recipient_email: string
+          sent_at: string
+          sent_by: string | null
+          status: string
+          subject: string | null
+          template_id: string
+          waitlist_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          subject?: string | null
+          template_id: string
+          waitlist_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string
+          waitlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_waitlist_id_fkey"
+            columns: ["waitlist_id"]
+            isOneToOne: false
+            referencedRelation: "waiting_list"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           category: Database["public"]["Enums"]["event_category"]

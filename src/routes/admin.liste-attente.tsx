@@ -13,6 +13,7 @@ import {
 import { deleteWaitingListEntryAdmin, listWaitingListAdmin, updateWaitingListStatusAdmin } from "@/lib/admin.functions";
 import { sendWaitlistInvitation } from "@/lib/invitations.functions";
 import { useSessionState } from "@/hooks/use-session-state";
+import { SendEmailDialog } from "@/components/admin/SendEmailDialog";
 
 export const Route = createFileRoute("/admin/liste-attente")({
   component: WaitingListAdminPage,
@@ -85,6 +86,7 @@ function WaitingListAdminPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
+  const [emailFor, setEmailFor] = useState<Entry | null>(null);
   const knownIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -442,7 +444,7 @@ function WaitingListAdminPage() {
                             ? <Loader2 className="h-4 w-4 animate-spin" />
                             : <Send className="h-4 w-4" />}
                         </IconBtn>
-                        <IconBtn title="Envoyer un email" onClick={() => window.open(`mailto:${r.email}`)}>
+                        <IconBtn title="Envoyer un email" onClick={() => setEmailFor(r)}>
                           <Mail className="h-4 w-4" />
                         </IconBtn>
                         <IconBtn title="Marquer Contacté" onClick={() => updateStatus(r.id, "contacted")}>
@@ -520,6 +522,17 @@ function WaitingListAdminPage() {
           100% { background: transparent; }
         }
       `}</style>
+
+      <SendEmailDialog
+        open={!!emailFor}
+        onOpenChange={(o) => !o && setEmailFor(null)}
+        entry={emailFor ? {
+          id: emailFor.id,
+          email: emailFor.email,
+          first_name: emailFor.first_name,
+          last_name: emailFor.last_name,
+        } : null}
+      />
     </div>
   );
 }
