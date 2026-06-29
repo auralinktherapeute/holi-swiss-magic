@@ -1,6 +1,7 @@
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   User,
@@ -21,7 +22,7 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { Logo } from "@/components/holiswiss/Logo";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutCompletely } from "@/lib/auth-utils";
 
 function usePageTitle(): string {
   const { t } = useTranslation();
@@ -95,6 +96,7 @@ export function MobileDashboardBottomNav() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const tabs: Array<{ to: string; icon: typeof LayoutDashboard; label: string; exact?: boolean }> = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
@@ -113,8 +115,8 @@ export function MobileDashboardBottomNav() {
   ];
 
   const onLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/fr/connexion";
+    await signOutCompletely(queryClient);
+    window.location.replace("/fr/connexion");
   };
 
   return (

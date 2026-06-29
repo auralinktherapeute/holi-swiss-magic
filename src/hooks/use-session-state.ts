@@ -26,6 +26,10 @@ export function removeSessionState(key: string) {
   sessionState.delete(key);
 }
 
+export function clearAllSessionState() {
+  sessionState.clear();
+}
+
 export function useSessionState<T>(key: string, initial: T | (() => T)) {
   const initialRef = useRef(initial);
   initialRef.current = initial;
