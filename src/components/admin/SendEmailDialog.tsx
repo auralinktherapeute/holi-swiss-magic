@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   previewCustomEmail, sendCustomEmail, listEmailLogs,
 } from "@/lib/custom-email.functions";
-import { TEMPLATE_OPTIONS, type TemplateId } from "@/lib/custom-email-templates.server";
+import { TEMPLATE_OPTIONS, type TemplateId } from "@/lib/custom-email-templates.shared";
 
 type Entry = {
   id: string;
