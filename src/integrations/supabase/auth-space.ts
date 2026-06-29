@@ -3,6 +3,8 @@ export type HoliswissAuthSpace = "login" | "admin" | "dashboard";
 export const ACTIVE_AUTH_SPACE_KEY = "holiswiss-active-auth-space";
 export const LAST_AUTH_SPACE_KEY = "holiswiss-last-auth-space";
 
+export const HOLISWISS_AUTH_SPACES: HoliswissAuthSpace[] = ["login", "admin", "dashboard"];
+
 const validSpaces = new Set<HoliswissAuthSpace>(["login", "admin", "dashboard"]);
 
 export function isHoliswissAuthSpace(value: unknown): value is HoliswissAuthSpace {
@@ -54,5 +56,23 @@ export function clearStoredSupabaseSession(space: HoliswissAuthSpace) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(getHoliswissAuthStorageKey(space));
+  } catch {}
+}
+
+export function clearStoredSupabaseSessions(spaces: HoliswissAuthSpace[] = HOLISWISS_AUTH_SPACES) {
+  if (typeof window === "undefined") return;
+  for (const space of spaces) clearStoredSupabaseSession(space);
+}
+
+export function clearLegacySupabaseSessions() {
+  if (typeof window === "undefined") return;
+  try {
+    for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
+      const key = window.localStorage.key(i);
+      if (!key) continue;
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        window.localStorage.removeItem(key);
+      }
+    }
   } catch {}
 }
