@@ -38,7 +38,7 @@ export function setAuthSpaceForRole(role: AppRole) {
 
 export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
   const space = setAuthSpaceForRole(role);
-  clearStoredSupabaseSessions([space === "admin" ? "dashboard" : "admin", "login"]);
+  clearStoredSupabaseSessions(["login"]);
   clearLegacySupabaseSessions();
   const { error } = await supabase.auth.setSession({
     access_token: session.access_token,
