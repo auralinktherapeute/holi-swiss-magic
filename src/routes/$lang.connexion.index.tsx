@@ -34,14 +34,15 @@ function LoginPage() {
 
   const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
     const role = await getCurrentUserRole();
+    const roleSession = session ?? (await supabase.auth.getSession()).data.session;
     if (role === "admin") {
-      if (session) await persistSessionInRoleSpace(session, role);
+      if (roleSession) await persistSessionInRoleSpace(roleSession, role);
       else switchAuthSpace(roleToSpace(role));
       navigate({ to: "/admin", replace: true });
       return;
     }
     if (role === "therapist") {
-      if (session) await persistSessionInRoleSpace(session, role);
+      if (roleSession) await persistSessionInRoleSpace(roleSession, role);
       else switchAuthSpace(roleToSpace(role));
       navigate({ to: "/dashboard", replace: true });
       return;
@@ -56,14 +57,19 @@ function LoginPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    clearHoliswissSessionState();
-    prepareLoginAuthSpace();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    setPassword("");
-    toast.success(t("auth.connected"));
-    await redirectAfterLogin(data.session);
+    try {
+      clearHoliswissSessionState();
+      prepareLoginAuthSpace();
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      setPassword("");
+      await redirectAfterLogin(data.session);
+      toast.success(t("auth.connected"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("auth.google_login_error"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onGoogle = async () => {

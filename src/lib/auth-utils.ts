@@ -3,7 +3,10 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import {
   clearHoliswissAuthSpace,
+  clearLegacySupabaseSessions,
   clearStoredSupabaseSession,
+  clearStoredSupabaseSessions,
+  getHoliswissAuthSpace,
   LAST_AUTH_SPACE_KEY,
   setHoliswissAuthSpace,
   type HoliswissAuthSpace,
@@ -35,6 +38,8 @@ export function setAuthSpaceForRole(role: AppRole) {
 
 export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
   const space = setAuthSpaceForRole(role);
+  clearStoredSupabaseSessions(["login"]);
+  clearLegacySupabaseSessions();
   const { error } = await supabase.auth.setSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
@@ -58,16 +63,19 @@ export function clearHoliswissSessionState() {
 }
 
 export async function signOutCompletely(queryClient?: QueryClient) {
+  const currentSpace = getHoliswissAuthSpace();
   try {
     await queryClient?.cancelQueries();
     queryClient?.clear();
   } catch {
     // Cache cleanup must never block sign-out.
   }
-  clearHoliswissSessionState();
   try {
+    setHoliswissAuthSpace(currentSpace);
     await supabase.auth.signOut();
   } finally {
+    clearStoredSupabaseSessions();
+    clearLegacySupabaseSessions();
     clearHoliswissSessionState();
     clearHoliswissAuthSpace();
   }
@@ -76,6 +84,7 @@ export async function signOutCompletely(queryClient?: QueryClient) {
 export function prepareLoginAuthSpace() {
   setHoliswissAuthSpace("login");
   clearStoredSupabaseSession("login");
+  clearLegacySupabaseSessions();
 }
 
 export function switchAuthSpace(space: HoliswissAuthSpace) {
