@@ -1,3 +1,7 @@
+import type { TemplateId } from "./custom-email-templates.shared";
+export type { TemplateId } from "./custom-email-templates.shared";
+export { TEMPLATE_OPTIONS } from "./custom-email-templates.shared";
+
 const LOGO_URL =
   "https://holiswiss.ch/__l5e/assets-v1/b34e4e20-5d40-4759-bd7c-aefb0fa59668/lotus-logo.png";
 const SITE_URL = "https://holiswiss.ch";
@@ -9,23 +13,6 @@ export type WaitlistVars = {
   email: string;
   created_at?: string | null;
 };
-
-export type TemplateId =
-  | "invitation"
-  | "welcome"
-  | "profile_live"
-  | "reminder_complete"
-  | "official_launch"
-  | "custom";
-
-export const TEMPLATE_OPTIONS: { id: TemplateId; label: string; needsCustom?: boolean }[] = [
-  { id: "invitation", label: "Invitation à créer votre profil" },
-  { id: "welcome", label: "Bienvenue sur HoliSwiss" },
-  { id: "profile_live", label: "Votre profil est en ligne" },
-  { id: "reminder_complete", label: "Rappel — Complétez votre profil" },
-  { id: "official_launch", label: "Lancement officiel HoliSwiss" },
-  { id: "custom", label: "Message personnalisé", needsCustom: true },
-];
 
 function escapeHtml(s: string): string {
   return s
