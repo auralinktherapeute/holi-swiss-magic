@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
-import { checkIsAdmin } from "@/lib/admin.functions";
+import { useRole } from "@/hooks/use-role";
 import { LAST_AUTH_SPACE_KEY } from "@/lib/auth-utils";
 
 type Props = {
@@ -34,9 +33,8 @@ export function AccountCta({
   onMouseLeave,
   onClick,
 }: Props) {
-  const { user, loading } = useAuth();
-  const check = useServerFn(checkIsAdmin);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const { role, loading: roleLoading } = useRole();
   // Valeur initiale SSR-safe ; localStorage lu après montage côté client
   const [lastAuthSpace, setLastAuthSpace] = useState<"admin" | "dashboard">("dashboard");
 
@@ -46,29 +44,19 @@ export function AccountCta({
 
   useEffect(() => {
     if (!user) {
-      setIsAdmin(null);
       return;
     }
-    let alive = true;
-    check()
-      .then((r) => {
-        if (!alive) return;
-        const nextSpace = r.isAdmin ? "admin" : "dashboard";
-        setIsAdmin(!!r.isAdmin);
-        setLastAuthSpace(nextSpace);
-        try {
-          window.localStorage.setItem(LAST_AUTH_SPACE_KEY, nextSpace);
-        } catch {
-          // Le CTA reste fonctionnel même si le stockage local est indisponible.
-        }
-      })
-      .catch(() => alive && setIsAdmin(null));
-    return () => {
-      alive = false;
-    };
-  }, [user, check]);
+    if (!role) return;
+    const nextSpace = role === "admin" ? "admin" : "dashboard";
+    setLastAuthSpace(nextSpace);
+    try {
+      window.localStorage.setItem(LAST_AUTH_SPACE_KEY, nextSpace);
+    } catch {
+      // Le CTA reste fonctionnel même si le stockage local est indisponible.
+    }
+  }, [user, role]);
 
-  if (loading) {
+  if (authLoading || (user && roleLoading)) {
     const to = lastAuthSpace === "admin" ? "/admin" : "/dashboard";
     const label = lastAuthSpace === "admin" ? "Admin" : "Mon espace";
     return (
@@ -101,7 +89,7 @@ export function AccountCta({
     );
   }
 
-  const activeSpace = isAdmin === true ? "admin" : isAdmin === false ? "dashboard" : lastAuthSpace;
+  const activeSpace = role === "admin" ? "admin" : role ? "dashboard" : lastAuthSpace;
   const to = activeSpace === "admin" ? "/admin" : "/dashboard";
   const label = activeSpace === "admin" ? "Admin" : "Mon espace";
   return (
