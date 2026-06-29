@@ -15,10 +15,11 @@ export function getHoliswissAuthSpace(): HoliswissAuthSpace {
     const path = window.location.pathname;
     if (path.startsWith("/admin")) return "admin";
     if (path.startsWith("/dashboard")) return "dashboard";
-    if (path.includes("/connexion")) return "login";
 
     const active = window.sessionStorage.getItem(ACTIVE_AUTH_SPACE_KEY);
     if (isHoliswissAuthSpace(active)) return active;
+
+    if (path.includes("/connexion")) return "login";
 
     const last = window.localStorage.getItem(LAST_AUTH_SPACE_KEY);
     if (last === "admin") return "admin";
