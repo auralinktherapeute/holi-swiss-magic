@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as CreerProfilIndexRouteImport } from './routes/creer-profil.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
@@ -89,6 +90,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const CreerProfilIndexRoute = CreerProfilIndexRouteImport.update({
+  id: '/creer-profil/',
+  path: '/creer-profil/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -347,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/intake/$slug': typeof IntakeSlugRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/creer-profil/': typeof CreerProfilIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
@@ -396,6 +403,7 @@ export interface FileRoutesByTo {
   '/intake/$slug': typeof IntakeSlugRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/creer-profil': typeof CreerProfilIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
@@ -449,6 +457,7 @@ export interface FileRoutesById {
   '/intake/$slug': typeof IntakeSlugRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/creer-profil/': typeof CreerProfilIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
@@ -503,6 +512,7 @@ export interface FileRouteTypes {
     | '/intake/$slug'
     | '/$lang/'
     | '/admin/'
+    | '/creer-profil/'
     | '/dashboard/'
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
@@ -552,6 +562,7 @@ export interface FileRouteTypes {
     | '/intake/$slug'
     | '/$lang'
     | '/admin'
+    | '/creer-profil'
     | '/dashboard'
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
@@ -604,6 +615,7 @@ export interface FileRouteTypes {
     | '/intake/$slug'
     | '/$lang/'
     | '/admin/'
+    | '/creer-profil/'
     | '/dashboard/'
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
@@ -633,6 +645,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
+  CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
 }
@@ -680,6 +693,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/creer-profil/': {
+      id: '/creer-profil/'
+      path: '/creer-profil'
+      fullPath: '/creer-profil/'
+      preLoaderRoute: typeof CreerProfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
@@ -1109,6 +1129,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
+  CreerProfilIndexRoute: CreerProfilIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
 }

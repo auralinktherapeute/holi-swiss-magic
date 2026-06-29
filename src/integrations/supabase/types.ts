@@ -1622,12 +1622,16 @@ export type Database = {
           email: string
           first_name: string | null
           id: string
+          invitation_status: string
+          invitation_token: string | null
+          invited_at: string | null
           last_name: string | null
           message: string | null
           phone: string | null
           source: string
           specialty: string | null
           status: string
+          token_expires_at: string | null
           updated_at: string
         }
         Insert: {
@@ -1637,12 +1641,16 @@ export type Database = {
           email: string
           first_name?: string | null
           id?: string
+          invitation_status?: string
+          invitation_token?: string | null
+          invited_at?: string | null
           last_name?: string | null
           message?: string | null
           phone?: string | null
           source?: string
           specialty?: string | null
           status?: string
+          token_expires_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -1652,12 +1660,16 @@ export type Database = {
           email?: string
           first_name?: string | null
           id?: string
+          invitation_status?: string
+          invitation_token?: string | null
+          invited_at?: string | null
           last_name?: string | null
           message?: string | null
           phone?: string | null
           source?: string
           specialty?: string | null
           status?: string
+          token_expires_at?: string | null
           updated_at?: string
         }
         Relationships: []

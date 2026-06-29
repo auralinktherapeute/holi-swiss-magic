@@ -269,7 +269,7 @@ export const listWaitingListAdmin = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("waiting_list")
-      .select("id,email,created_at,source,status,first_name,last_name,phone,specialty,canton,message")
+      .select("id,email,created_at,source,status,first_name,last_name,phone,specialty,canton,message,invitation_status,invited_at,token_expires_at")
       .order("created_at", { ascending: false });
     if (error) throwAdminOperationError(error, "list waiting list failed");
     return { rows: data ?? [] };
