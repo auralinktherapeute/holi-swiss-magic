@@ -69,6 +69,7 @@ export const ARTICLE_CATEGORIES: ArticleCategory[] = [
   // Énergétiques
   { slug: "reiki", name_fr: "Reiki", name_de: "Reiki", name_it: "Reiki", name_en: "Reiki", parent: "energetiques" },
   { slug: "magnetisme", name_fr: "Magnétisme", name_de: "Magnetismus", name_it: "Magnetismo", name_en: "Magnetism", parent: "energetiques" },
+  { slug: "chromotherapie", name_fr: "Chromothérapie", name_de: "Chromotherapie", name_it: "Cromoterapia", name_en: "Chromotherapy", parent: "energetiques" },
   { slug: "acupuncture", name_fr: "Acupuncture", name_de: "Akupunktur", name_it: "Agopuntura", name_en: "Acupuncture", parent: "energetiques" },
   { slug: "lithotherapie", name_fr: "Lithothérapie", name_de: "Lithotherapie", name_it: "Litoterapia", name_en: "Lithotherapy", parent: "energetiques" },
   { slug: "cristallotherapie", name_fr: "Cristallothérapie", name_de: "Kristalltherapie", name_it: "Cristalloterapia", name_en: "Crystal therapy", parent: "energetiques" },

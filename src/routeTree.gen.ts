@@ -59,6 +59,7 @@ import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
+import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -316,6 +317,12 @@ const ApiPublicHooksSeoAuditAgentRoute =
     path: '/api/public/hooks/seo-audit-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksArticleAgentRoute =
+  ApiPublicHooksArticleAgentRouteImport.update({
+    id: '/api/public/hooks/article-agent',
+    path: '/api/public/hooks/article-agent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   id: '/blog/categorie/$slug',
   path: '/blog/categorie/$slug',
@@ -373,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
+  '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesByTo {
@@ -423,6 +431,7 @@ export interface FileRoutesByTo {
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
+  '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesById {
@@ -477,6 +486,7 @@ export interface FileRoutesById {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
+  '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRouteTypes {
@@ -532,6 +542,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/$lang/blog/categorie/$slug'
+    | '/api/public/hooks/article-agent'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
     | '/$lang/blog/categorie/$slug'
+    | '/api/public/hooks/article-agent'
     | '/api/public/hooks/seo-audit-agent'
   id:
     | '__root__'
@@ -635,6 +647,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/$lang/blog/categorie/$slug'
+    | '/api/public/hooks/article-agent'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesById: FileRoutesById
 }
@@ -647,6 +660,7 @@ export interface RootRouteChildren {
   IntakeSlugRoute: typeof IntakeSlugRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
+  ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
 }
 
@@ -1002,6 +1016,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSeoAuditAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/article-agent': {
+      id: '/api/public/hooks/article-agent'
+      path: '/api/public/hooks/article-agent'
+      fullPath: '/api/public/hooks/article-agent'
+      preLoaderRoute: typeof ApiPublicHooksArticleAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$lang/blog/categorie/$slug': {
       id: '/$lang/blog/categorie/$slug'
       path: '/blog/categorie/$slug'
@@ -1131,6 +1152,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntakeSlugRoute: IntakeSlugRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
+  ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
 }
 export const routeTree = rootRouteImport
