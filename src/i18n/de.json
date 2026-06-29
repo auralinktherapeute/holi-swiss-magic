@@ -699,5 +699,37 @@
     "weekly_save": "Zeiten speichern",
     "weekly_saved": "Arbeitszeiten gespeichert",
     "weekly_err_range": "{{day}}: Die Endzeit muss nach der Startzeit liegen"
+  },
+  "events_page": {
+    "title": "Wellness-Veranstaltungen",
+    "subtitle": "Workshops, Retreats, Kreise und Meditationen, angeboten von Therapeut:innen der HoliSwiss-Community.",
+    "empty": "Derzeit sind keine Veranstaltungen veröffentlicht. Schauen Sie bald wieder vorbei.",
+    "with": "mit",
+    "seats": "Plätze",
+    "free": "Kostenlos",
+    "price_tbd": "Preis auf Anfrage",
+    "online": "Online",
+    "back": "Alle Veranstaltungen",
+    "program": "Programm",
+    "book": "Platz reservieren",
+    "flyer": "Flyer zum Teilen",
+    "not_found_title": "Veranstaltung nicht gefunden",
+    "not_found_desc": "Sie wurde möglicherweise entfernt oder ist nicht mehr verfügbar.",
+    "load_error": "Ladefehler",
+    "categories": {
+      "atelier": "Workshop",
+      "conference": "Konferenz",
+      "retraite": "Retreat",
+      "cercle": "Kreis",
+      "meditation": "Meditation",
+      "autre": "Veranstaltung"
+    },
+    "formats": {
+      "in_person": "Vor Ort",
+      "online": "Online",
+      "hybrid": "Hybrid"
+    },
+    "head_title": "Wellness-Veranstaltungen in der Schweiz | HoliSwiss",
+    "head_desc": "Workshops, Retreats, Kreise und Meditationen von holistischen Therapeut:innen in der Schweiz. Reservieren Sie Ihren Platz."
   }
 }

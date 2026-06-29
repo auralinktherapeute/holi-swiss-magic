@@ -699,5 +699,37 @@
     "weekly_save": "Save my hours",
     "weekly_saved": "Working hours saved",
     "weekly_err_range": "{{day}}: end time must be after start time"
+  },
+  "events_page": {
+    "title": "Wellness events",
+    "subtitle": "Workshops, retreats, circles and meditations offered by therapists of the HoliSwiss community.",
+    "empty": "No events published yet. Check back soon.",
+    "with": "with",
+    "seats": "seats",
+    "free": "Free",
+    "price_tbd": "Price TBD",
+    "online": "Online",
+    "back": "All events",
+    "program": "Programme",
+    "book": "Book a seat",
+    "flyer": "Shareable flyer",
+    "not_found_title": "Event not found",
+    "not_found_desc": "It may have been removed or is no longer available.",
+    "load_error": "Loading error",
+    "categories": {
+      "atelier": "Workshop",
+      "conference": "Conference",
+      "retraite": "Retreat",
+      "cercle": "Circle",
+      "meditation": "Meditation",
+      "autre": "Event"
+    },
+    "formats": {
+      "in_person": "In person",
+      "online": "Online",
+      "hybrid": "Hybrid"
+    },
+    "head_title": "Wellness events in Switzerland | HoliSwiss",
+    "head_desc": "Workshops, retreats, circles and meditations from holistic therapists in Switzerland. Book your seat."
   }
 }
