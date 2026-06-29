@@ -522,6 +522,17 @@ function WaitingListAdminPage() {
           100% { background: transparent; }
         }
       `}</style>
+
+      <SendEmailDialog
+        open={!!emailFor}
+        onOpenChange={(o) => !o && setEmailFor(null)}
+        entry={emailFor ? {
+          id: emailFor.id,
+          email: emailFor.email,
+          first_name: emailFor.first_name,
+          last_name: emailFor.last_name,
+        } : null}
+      />
     </div>
   );
 }
