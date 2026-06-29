@@ -461,6 +461,12 @@ function Page() {
   const [seoMin, setSeoMin] = useSessionState<number>("admin.articles.f.seoMin", 0);
   const [geoMin, setGeoMin] = useSessionState<number>("admin.articles.f.geoMin", 0);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const status = new URLSearchParams(window.location.search).get("status") as StatusFilter | null;
+    if (status && status in STATUS_META) setStatusFilter(status);
+  }, [setStatusFilter]);
+
   // Side panel
   const [improving, setImproving] = useState<ScoredArticle | null>(null);
 
