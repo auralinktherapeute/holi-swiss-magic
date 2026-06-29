@@ -26,7 +26,7 @@ export const searchUnsplashPhotos = createServerFn({ method: "POST" })
         urls: { small: p.urls?.small as string, regular: p.urls?.regular as string },
         alt_description: (p.alt_description ?? "") as string,
         user: { name: (p.user?.name ?? "") as string, links: { html: (p.user?.links?.html ?? "") as string } },
-        download_location: (p.links?.download_location ?? "") as string,
+        links: { download_location: (p.links?.download_location ?? "") as string },
       })),
     };
   });
