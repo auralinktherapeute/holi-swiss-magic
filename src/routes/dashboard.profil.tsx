@@ -36,6 +36,7 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
+import QrCodePanel from "@/components/dashboard/QrCodePanel";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -539,6 +540,9 @@ function ProfilePage() {
                 holiswiss.ch/therapeute/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span> · holiswiss.ch/intake/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span>
               </p>
             </Field>
+            <div className="mt-5">
+              <QrCodePanel slug={publicSlug} />
+            </div>
           </div>
 
           <div className="mt-5 grid gap-5 sm:grid-cols-3">
