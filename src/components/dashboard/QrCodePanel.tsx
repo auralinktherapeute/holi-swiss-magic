@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Copy, Download, QrCode as QrIcon } from "lucide-react";
-import lotusLogo from "@/assets/lotus-transparent.png";
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
+const lotusLogo = lotusAsset.url;
 
 const BRAND = "#7C3AED";
 const SITE = "https://holiswiss.ch";
