@@ -540,6 +540,9 @@ function ProfilePage() {
                 holiswiss.ch/therapeute/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span> · holiswiss.ch/intake/<span className="text-[#b86ef9]">{publicSlug || "votre-slug"}</span>
               </p>
             </Field>
+            <div className="mt-5">
+              <QrCodePanel slug={publicSlug} />
+            </div>
           </div>
 
           <div className="mt-5 grid gap-5 sm:grid-cols-3">
