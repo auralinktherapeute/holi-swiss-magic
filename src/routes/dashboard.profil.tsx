@@ -36,6 +36,7 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
+import QrCodePanel from "@/components/dashboard/QrCodePanel";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
