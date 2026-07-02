@@ -1361,6 +1361,146 @@ export type Database = {
         }
         Relationships: []
       }
+      specialties: {
+        Row: {
+          aliases: string[]
+          created_at: string
+          description_fr: string | null
+          family_id: string
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          name_de: string | null
+          name_en: string | null
+          name_fr: string
+          name_it: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          created_at?: string
+          description_fr?: string | null
+          family_id: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name_de?: string | null
+          name_en?: string | null
+          name_fr: string
+          name_it?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          created_at?: string
+          description_fr?: string | null
+          family_id?: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          name_de?: string | null
+          name_en?: string | null
+          name_fr?: string
+          name_it?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialties_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "specialty_families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      specialty_families: {
+        Row: {
+          created_at: string
+          description_fr: string | null
+          icon: string | null
+          id: string
+          is_featured: boolean
+          name_de: string | null
+          name_en: string | null
+          name_fr: string
+          name_it: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_fr?: string | null
+          icon?: string | null
+          id?: string
+          is_featured?: boolean
+          name_de?: string | null
+          name_en?: string | null
+          name_fr: string
+          name_it?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_fr?: string | null
+          icon?: string | null
+          id?: string
+          is_featured?: boolean
+          name_de?: string | null
+          name_en?: string | null
+          name_fr?: string
+          name_it?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      specialty_import_pending: {
+        Row: {
+          created_at: string
+          id: string
+          raw_label: string
+          therapist_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          raw_label: string
+          therapist_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          raw_label?: string
+          therapist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialty_import_pending_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialty_import_pending_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_documents: {
         Row: {
           created_at: string
@@ -1485,6 +1625,46 @@ export type Database = {
             foreignKeyName: "therapist_private_identifiers_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: true
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_specialties: {
+        Row: {
+          created_at: string
+          specialty_id: string
+          therapist_id: string
+        }
+        Insert: {
+          created_at?: string
+          specialty_id: string
+          therapist_id: string
+        }
+        Update: {
+          created_at?: string
+          specialty_id?: string
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_specialties_specialty_id_fkey"
+            columns: ["specialty_id"]
+            isOneToOne: false
+            referencedRelation: "specialties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_specialties_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_specialties_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
             referencedRelation: "therapists_public"
             referencedColumns: ["id"]
           },
@@ -1916,6 +2096,7 @@ export type Database = {
       }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
       normalize_city_text: { Args: { _input: string }; Returns: string }
+      normalize_search: { Args: { _input: string }; Returns: string }
       notify_admin_event: {
         Args: {
           _kind: string
@@ -1932,6 +2113,17 @@ export type Database = {
           display_name: string
           lat: number
           lng: number
+        }[]
+      }
+      search_specialties: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          family_name_fr: string
+          family_slug: string
+          id: string
+          name_fr: string
+          rank: number
+          slug: string
         }[]
       }
       therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }

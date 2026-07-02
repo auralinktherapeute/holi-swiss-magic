@@ -1,53 +1,73 @@
 
-## Audit de l'existant (vérifié)
+# Restructuration des spécialités thérapeutes — Plan
 
-**Déjà en place et fonctionnel — ne rien refaire :**
+## Vue d'ensemble
 
-| Élément | État |
-|---|---|
-| Tables `crm_leads`, `crm_client_contacts`, `crm_tasks`, `crm_activities`, `crm_tags`, `crm_contact_tags`, `crm_pipelines`, `crm_stages` | ✅ créées avec colonnes complètes (notes, tags, private_notes, relation_status, last/next_booking_at, etc.) |
-| RLS isolation thérapeute ↔ thérapeute | ✅ policies scoppées via `therapists.user_id = auth.uid()` ; admin lecture seule sur leads, **pas** sur `private_notes` des contacts (à vérifier) |
-| Trigger `therapist_to_crm_lead` (inscription → lead auto) | ✅ activé |
-| Trigger `appointment_to_crm_contact` (RDV → contact CRM auto) | ✅ activé, Elite Pro only |
-| Trigger `appointment_cancel_crm` (annulation → tag "a_relancer") | ✅ activé |
-| Trigger `waitlist_to_crm_lead` | ✅ activé |
-| Trigger `trg_crm_plan_change` (changement de plan logué) | ✅ existe |
-| Routes `/admin/crm` (Pipeline/Liste/Tâches/Relances) | ✅ 579 lignes, UI conservée |
-| Route `/dashboard/crm` (CRM thérapeute) | ✅ 607 lignes, style violet sombre |
-| Fonction `crm_daily_maintenance` (auto inactif 60j) | ✅ existe |
+Passer d'un `text[]` non structuré (`therapists.specialties`) à une vraie taxonomie **famille → spécialité** en base, avec 4 familles principales, recherche floue (synonymes, accents, singulier/pluriel), et pages SEO indexables pour familles et spécialités.
 
-## Vrais manques détectés
+## 1. Base de données (migration)
 
-1. **Backfill manquant** : 5 thérapeutes existent en base, **0 lead** dans le CRM admin. Les triggers ont été créés après leur inscription → ils n'ont jamais été remontés. Aucun n'apparaît dans `/admin/crm`.
-2. **Pipeline stages demandés** : `NOUVEAU → EN ATTENTE → CONTACTÉ → ACTIF → FIDÉLISÉ → INACTIF`. L'UI actuelle utilise `new/pending/contacted/...` mais il faut vérifier que `ACTIF` et `FIDÉLISÉ` existent (sinon ajouter `active` + `loyal` aux statuts acceptés).
-3. **Sécurité notes privées** : la policy admin sur `crm_client_contacts` autorise actuellement la lecture de `private_notes` (RLS `OR has_role(admin)`). Le brief demande : *"Admin can read all therapist records but cannot access individual therapist-patient notes"* → restreindre via vue publique sans `private_notes` pour l'admin, ou retirer l'accès admin sur cette table.
-4. **Plan d'abonnement dans la fiche lead admin** : affichage du `subscription_plan` du thérapeute lié (déjà présent en base, juste à afficher dans la carte du pipeline).
+Créer 3 tables + backfill :
 
-## Plan d'action (3 étapes minimales)
+- **`specialty_families`** : `id`, `slug` (unique), `name_fr/de/it/en`, `description_fr`, `sort_order`, `is_featured` (les 4 principales)
+- **`specialties`** : `id`, `family_id` (FK), `slug` (unique), `name_fr/de/it/en`, `description_fr`, `aliases text[]` (synonymes normalisés pour la recherche), `is_active`, `is_featured`
+- **`therapist_specialties`** : pivot `therapist_id` + `specialty_id` (PK composite)
 
-### Étape 1 — Migration SQL (un seul appel)
-- Backfill : insérer dans `crm_leads` une ligne pour chaque thérapeute existant sans lead (`source='inscription'`, `status` dérivé de `therapists.status`).
-- Ajouter `'active'` et `'loyal'` (FIDÉLISÉ) aux statuts autorisés côté UI (pas de contrainte SQL stricte, juste docs).
-- Créer une vue `crm_client_contacts_admin` exposant tout **sauf** `private_notes`, et restreindre la policy admin SELECT sur la table de base pour interdire la lecture directe des notes privées.
-- Trigger auto‑promotion : passer le lead à `active` quand `therapists.status='active'` et à `loyal` après N (>=10) RDV honorés.
+Fonction Postgres `normalize_search(text)` (unaccent + lowercase + trim) + fonction `search_specialties(q text)` qui match sur `name` et `aliases` avec ranking par pertinence.
 
-### Étape 2 — UI Admin CRM (`admin.crm.tsx` + `AdminCrmViews.tsx`)
-- Ajouter colonnes pipeline `ACTIF` et `FIDÉLISÉ` (les autres existent déjà).
-- Afficher dans chaque carte lead : badge plan (Basic / Essentiel / Elite Pro), canton, dernière activité.
-- Filtre additionnel "Plan" (déjà : canton, source, recherche).
-- Aucun changement de layout.
+**Seed initial** :
+- Famille 1 *Thérapies psychocorporelles* — sophrologie, hypnose, EMDR, psychothérapie, accompagnement-psy, relaxation
+- Famille 2 *Médecines naturelles* — naturopathie, phytothérapie, aromathérapie, fleurs-de-bach, nutrition, micronutrition, ayurveda, medecine-chinoise
+- Famille 3 *Corps et énergie* — réflexologie, shiatsu, acupuncture, ostéopathie, massage-bien-etre, reiki, magnétisme, massothérapie, lithothérapie, radiesthésie
+- Famille 4 *Développement personnel & expression* — coaching-de-vie, méditation, yoga, art-thérapie, breathwork, sonothérapie
 
-### Étape 3 — Vérifications (sans nouveau code)
-- Confirmer que `/dashboard/crm` (déjà mobile/desktop, déjà violet sombre) liste bien les contacts du thérapeute connecté uniquement → test rapide en base + Playwright si besoin.
-- Confirmer que l'admin connecté à `/admin/crm` voit les 5 nouveaux leads après backfill.
+Chaque spécialité reçoit ses `aliases` (ex. `sophrologie` → `["sophro","sophrologue"]`, `psychothérapie` → `["psy","psychotherapeute","psychotherapie"]`, `massothérapie` → `["masso","masseur"]`).
 
-## Hors scope (déjà fait — ne rien toucher)
-- Création des tables, RLS isolation thérapeute, triggers RDV→contact, daily maintenance, UI dashboard thérapeute, design violet sombre.
+**Backfill** : mapping fuzzy des `therapists.specialties` existants vers les spécialités seedées via aliases + fallback "à mapper manuellement" (log dans une table `specialty_import_pending`). Colonne `therapists.specialties` conservée en lecture (compat) mais nouveaux ajouts via la pivot.
 
-## Risques / points d'attention
-- La migration backfill est idempotente (`ON CONFLICT DO NOTHING` sur `converted_therapist_id`) → safe à rejouer.
-- La vue admin nécessite que tout le code admin existant lise désormais `crm_client_contacts_admin` au lieu de la table directe pour les fiches contact (à grep avant migration).
+GRANTs : `SELECT` anon sur les 3 tables (lecture publique), `INSERT/UPDATE/DELETE` réservé aux admins via RLS.
 
----
+## 2. UI annuaire — `/[lang]/therapeutes`
 
-**Confirme ce plan et je lance l'étape 1 (migration SQL).** Si tu veux que j'ignore la restriction sur les notes privées admin (point 3 — vue séparée), dis‑le, ça simplifie la migration.
+Refonte de la barre du haut :
+- **4 cartes familles** (icône + nom + count thérapeutes) — grid 2x2 mobile, 4 cols desktop
+- **Barre recherche spécialité** avec autocomplete (Command component shadcn, appel `search_specialties` debounced 200ms)
+- Lien discret **"Voir toutes les spécialités"** → drawer/modal listant tout, groupé par famille + tri A→Z
+- Chips actifs (famille ou spécialité sélectionnée) avec bouton clear
+
+Filtre appliqué à la liste existante : `therapists.specialties` OU pivot `therapist_specialties` (union pendant la période de backfill).
+
+## 3. Pages SEO
+
+Nouvelles routes TanStack :
+- `/$lang/therapeutes/famille/$familySlug` — hero + description + liste spécialités de la famille + thérapeutes
+- `/$lang/specialites/$specialtySlug` — hero + description + thérapeutes pratiquant cette spécialité + spécialités proches (même famille)
+- Route GEO préparée : `/$lang/specialites/$specialtySlug/$citySlug` — indexable seulement si ≥ 1 thérapeute (sinon `noindex`)
+
+Chaque page :
+- `head()` : title unique, description, canonical self, hreflang, JSON-LD `BreadcrumbList` + `CollectionPage`
+- Breadcrumbs UI
+- Contenu introductif (depuis `description_fr` en base, éditable)
+
+**Sitemap** : ajout des URLs familles + spécialités actives.
+
+**`noindex`** sur les résultats de recherche libre (`?q=…`) via `<meta robots="noindex, follow">`.
+
+## 4. Admin (léger)
+
+Section `/admin/parametres` → onglet "Taxonomie spécialités" :
+- CRUD familles + spécialités (nom, slug, description, aliases, is_active)
+- Liste des mappings en attente (specialty_import_pending) pour reclassement manuel
+
+## Détails techniques
+
+**Recherche floue** : `normalize_search()` s'appuie sur l'extension `unaccent` (déjà activable). Query : `SELECT s.* FROM specialties s WHERE normalize_search(s.name_fr) LIKE '%'||normalize_search($1)||'%' OR EXISTS (SELECT 1 FROM unnest(s.aliases) a WHERE normalize_search(a) LIKE '%'||normalize_search($1)||'%') ORDER BY (normalize_search(s.name_fr) = normalize_search($1)) DESC, length(s.name_fr) ASC LIMIT 10`.
+
+**Server fn** : `searchSpecialties({ q })`, `getFamilyPage({ slug })`, `getSpecialtyPage({ slug, city? })` dans `src/lib/specialties.functions.ts` (publiques, publishable client, RLS anon).
+
+**i18n** : seed FR d'abord, colonnes DE/IT/EN nullable, fallback FR côté UI.
+
+**Non-fait volontairement** (à confirmer si tu veux les inclure) :
+- Traductions DE/IT/EN complètes des noms/descriptions
+- Génération auto des pages GEO pour toutes les villes suisses
+- Refonte du profil thérapeute pour éditer ses spécialités via la nouvelle pivot (les thérapeutes continueront à voir l'ancien champ jusqu'au sprint suivant)
