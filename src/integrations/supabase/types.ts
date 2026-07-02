@@ -1365,7 +1365,10 @@ export type Database = {
         Row: {
           aliases: string[]
           created_at: string
+          description_de: string | null
+          description_en: string | null
           description_fr: string | null
+          description_it: string | null
           family_id: string
           id: string
           is_active: boolean
@@ -1381,7 +1384,10 @@ export type Database = {
         Insert: {
           aliases?: string[]
           created_at?: string
+          description_de?: string | null
+          description_en?: string | null
           description_fr?: string | null
+          description_it?: string | null
           family_id: string
           id?: string
           is_active?: boolean
@@ -1397,7 +1403,10 @@ export type Database = {
         Update: {
           aliases?: string[]
           created_at?: string
+          description_de?: string | null
+          description_en?: string | null
           description_fr?: string | null
+          description_it?: string | null
           family_id?: string
           id?: string
           is_active?: boolean
