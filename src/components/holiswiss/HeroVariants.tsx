@@ -46,61 +46,306 @@ function Wordmark() {
   );
 }
 
-/* ───────── Variant 1: Cinematic Dark ───────── */
-function VariantCinematic() {
+/* ───────── Shared search bar ───────── */
+function HeroSearchBar() {
   const { t } = useTranslation();
-  const [text, setText] = useState("");
-  const full = `${t("hero.title_part1")} ${t("hero.title_highlight")},\n${t("hero.title_part2").replace(/^,\s*/, "")}`;
-  useEffect(() => {
-    let i = 0;
-    const id = setInterval(() => {
-      i++;
-      setText(full.slice(0, i));
-      if (i >= full.length) clearInterval(id);
-    }, 55);
-    return () => clearInterval(id);
-  }, [full]);
-  const particles = Array.from({ length: 12 });
+  const { lang } = useParams({ from: "/$lang/" });
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#1a0a2e] text-white">
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <img src={lotusAsset.url} alt="" aria-hidden className="hv-lotus-glow" style={{ width: 400, height: 400, opacity: 0.08 }} />
+    <div className="relative max-w-xl rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.65)] p-2 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl">
+      <div className="flex items-center">
+        <Search className="ml-4 h-5 w-5 shrink-0 text-[#b9a4d4]" />
+        <input
+          type="search"
+          aria-label={t("hero.search_placeholder")}
+          className="h-12 min-w-0 flex-1 bg-transparent px-3 text-white placeholder:text-[#c4b5dd] focus:outline-none"
+          placeholder={t("hero.search_placeholder")}
+        />
+        <Link to="/$lang/therapeutes" params={{ lang }}>
+          <Button className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">
+            {t("hero.search_btn")}
+          </Button>
+        </Link>
       </div>
-      <div className="pointer-events-none absolute inset-0">
-        {particles.map((_, i) => (
-          <span
-            key={i}
-            className="hv-particle"
-            style={{
-              left: `${(i * 83) % 100}%`,
-              top: `${(i * 47) % 100}%`,
-              animationDelay: `${(i % 6) * 0.7}s`,
-              animationDuration: `${8 + (i % 5)}s`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 text-center">
-        <LotusGlow size={80} />
-        <div className="mt-5"><Wordmark /></div>
-        <h1 className="mt-10 whitespace-pre-line text-4xl font-bold leading-tight sm:text-6xl">
-          {text}
-          <span className="hv-caret">|</span>
-        </h1>
-        <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.4)] bg-white/[0.05] px-4 py-1.5 text-sm backdrop-blur-md">
-          <ShieldCheck className="h-4 w-4 text-[#d4a5f9]" />
-          Suisse · 26 cantons
+    </div>
+  );
+}
+
+function TrustBadges() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-wrap gap-5 text-sm text-[#c8b8df]">
+      <span className="inline-flex items-center gap-1.5">
+        <ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />
+        {t("hero.trust_verified")}
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Sparkles className="h-4 w-4 text-[#d4a5f9]" />
+        {t("hero.trust_cantons")}
+      </span>
+    </div>
+  );
+}
+
+/* ───────── Variant 1: Split-screen with real photo ───────── */
+function VariantPhotoSplit() {
+  const { t } = useTranslation();
+  return (
+    <section
+      className="relative overflow-hidden text-white"
+      style={{ background: "radial-gradient(ellipse at 20% 40%, #3d1a5c 0%, #26103a 55%, #1a0828 100%)" }}
+    >
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl grid-cols-1 items-center gap-10 px-6 py-16 lg:grid-cols-12 lg:gap-12 lg:py-24">
+        <div className="space-y-6 lg:col-span-7">
+          <div className="hv-slide-up flex items-center gap-3">
+            <LotusNeon size={64} className="hv-lotus-glow" />
+            <Wordmark />
+          </div>
+          <h1 className="hv-slide-up text-4xl font-bold leading-[1.05] sm:text-5xl lg:text-6xl" style={{ animationDelay: "150ms" }}>
+            {t("hero.title_part1")}{" "}
+            <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">
+              {t("hero.title_highlight")}
+            </span>
+            {t("hero.title_part2")}
+          </h1>
+          <p className="hv-slide-up max-w-xl text-base text-[#d4c4e0] sm:text-lg" style={{ animationDelay: "300ms" }}>
+            {t("hero.subtitle")}
+          </p>
+          <div className="hv-slide-up" style={{ animationDelay: "450ms" }}>
+            <HeroSearchBar />
+          </div>
+          <div className="hv-slide-up" style={{ animationDelay: "600ms" }}>
+            <TrustBadges />
+          </div>
         </div>
-        <button className="hv-shimmer relative mt-10 overflow-hidden rounded-xl bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-8 py-4 text-base font-semibold text-white shadow-[0_10px_40px_-10px_rgba(184,110,249,0.8)]">
-          <span className="relative z-10 inline-flex items-center gap-2"><Search className="h-5 w-5" /> {t("hero.find_btn")}</span>
-        </button>
+        <div className="hv-slide-up relative lg:col-span-5" style={{ animationDelay: "300ms" }}>
+          <div className="absolute -inset-6 rounded-[32px] bg-[radial-gradient(ellipse_at_center,rgba(184,110,249,0.45),transparent_70%)] blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-[rgba(184,110,249,0.35)] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
+            <img
+              src={heroTherapyAsset.url}
+              alt={t("hero.trust_verified")}
+              width={1280}
+              height={1600}
+              className="h-[420px] w-full object-cover sm:h-[520px] lg:h-[600px]"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-[#1a0828]/70 via-transparent to-[#5cc8fa]/10" />
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-3 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-sm">
+                <Star className="h-4 w-4 fill-[#f9a8d4] text-[#f9a8d4]" />
+                <span className="font-semibold">4,9 / 5</span>
+                <span className="text-white/60">· 280+ {t("hero.stats_practitioners")}</span>
+              </div>
+              <span className="hidden items-center gap-1 text-xs text-white/70 sm:inline-flex">
+                <MapPin className="h-3.5 w-3.5" /> 26 CH
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ───────── Variant 2: Split Premium ───────── */
-function VariantSplit() {
+/* ───────── Variant 2: Blurred therapist-grid backdrop ───────── */
+function VariantMosaicBackdrop() {
+  const { t } = useTranslation();
+  return (
+    <section className="relative overflow-hidden text-white">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `url(${therapistsGridAsset.url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(8px) saturate(0.85)",
+          transform: "scale(1.08)",
+        }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(26,8,40,0.85) 0%, rgba(26,8,40,0.72) 40%, rgba(26,8,40,0.92) 100%)",
+        }}
+        aria-hidden
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-16 mx-auto h-px max-w-7xl bg-gradient-to-r from-transparent via-[#b86ef9] to-[#5cc8fa] opacity-60" />
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col items-center justify-center px-6 py-24 text-center">
+        <div className="hv-slide-up flex items-center gap-3">
+          <LotusNeon size={72} className="hv-lotus-glow" />
+          <Wordmark />
+        </div>
+        <h1 className="hv-slide-up mt-8 text-4xl font-bold leading-tight sm:text-6xl" style={{ animationDelay: "150ms" }}>
+          {t("hero.title_part1")}{" "}
+          <span className="bg-gradient-to-r from-[#b86ef9] via-[#d4a5f9] to-[#5cc8fa] bg-clip-text text-transparent">
+            {t("hero.title_highlight")}
+          </span>
+          {t("hero.title_part2")}
+        </h1>
+        <p className="hv-slide-up mt-5 max-w-2xl text-base text-[#e0d0ee] sm:text-lg" style={{ animationDelay: "300ms" }}>
+          {t("hero.subtitle")}
+        </p>
+        <div className="hv-slide-up mt-8 w-full max-w-xl" style={{ animationDelay: "450ms" }}>
+          <HeroSearchBar />
+        </div>
+        <div className="hv-slide-up mt-6" style={{ animationDelay: "600ms" }}>
+          <TrustBadges />
+        </div>
+        <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs text-white/75 backdrop-blur">
+          <Users className="h-3.5 w-3.5 text-[#d4a5f9]" />
+          {t("hero.stats_practitioners")}
+          <span aria-hidden>·</span>
+          <Star className="h-3.5 w-3.5 fill-[#f9a8d4] text-[#f9a8d4]" /> 4,9/5
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Variant 3: Minimalist + social-proof marquee ───────── */
+function VariantMarquee() {
+  const { t } = useTranslation();
+  const items = [
+    { icon: Users, label: "280+ " + t("hero.stats_practitioners") },
+    { icon: MapPin, label: "26 " + t("hero.stats_cantons") },
+    { icon: Star, label: "4,9 / 5 · 1 200 avis" },
+    { icon: ShieldCheck, label: t("hero.trust_verified") },
+    { icon: Sparkles, label: t("hero.stats_languages") + " · FR · DE · IT · EN" },
+    { icon: HandHeart, label: "Réservation en ligne" },
+  ];
+  return (
+    <section
+      className="relative overflow-hidden text-white"
+      style={{ background: "radial-gradient(ellipse at 50% 30%, #3d1a5c 0%, #26103a 55%, #1a0828 100%)" }}
+    >
+      <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-4xl flex-col items-center justify-center px-6 py-24 text-center">
+        <div className="hv-slide-up flex items-center gap-3">
+          <LotusNeon size={72} className="hv-lotus-glow" />
+          <Wordmark />
+        </div>
+        <h1 className="hv-slide-up mt-8 text-4xl font-bold leading-tight sm:text-6xl" style={{ animationDelay: "150ms" }}>
+          {t("hero.title_part1")}{" "}
+          <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">
+            {t("hero.title_highlight")}
+          </span>
+          {t("hero.title_part2")}
+        </h1>
+        <p className="hv-slide-up mt-5 max-w-xl text-base text-[#d4c4e0] sm:text-lg" style={{ animationDelay: "300ms" }}>
+          {t("hero.glass_subtitle")}
+        </p>
+        <div className="hv-slide-up mt-8 w-full max-w-xl" style={{ animationDelay: "450ms" }}>
+          <HeroSearchBar />
+        </div>
+      </div>
+      <div
+        className="relative border-y border-[rgba(184,110,249,0.2)]"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(26,8,40,0.92), rgba(61,26,92,0.75), rgba(26,8,40,0.92)), url(${wellnessAmbientAsset.url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="hv-marquee-mask overflow-hidden py-5">
+          <div className="hv-marquee flex w-max gap-10 whitespace-nowrap">
+            {[...items, ...items].map((it, i) => {
+              const Icon = it.icon;
+              return (
+                <span key={i} className="inline-flex items-center gap-2 text-sm text-white/85">
+                  <Icon className="h-4 w-4 text-[#d4a5f9]" />
+                  {it.label}
+                  <span className="ml-6 text-[#b86ef9]/50">◆</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Variant 4: Hero + visual specialties carousel ───────── */
+function VariantSpecialtiesCarousel() {
+  const { t } = useTranslation();
+  const { lang } = useParams({ from: "/$lang/" });
+  const specs = [
+    { slug: "sophrologie", icon: Brain, gradient: "from-[#7c3aed] to-[#5cc8fa]", label: "Sophrologie", count: 48 },
+    { slug: "hypnose", icon: Moon, gradient: "from-[#a855f7] to-[#ec4899]", label: "Hypnose", count: 32 },
+    { slug: "naturopathie", icon: Leaf, gradient: "from-[#10b981] to-[#5cc8fa]", label: "Naturopathie", count: 61 },
+    { slug: "meditation", icon: Flower2, gradient: "from-[#d4a5f9] to-[#7dd3fc]", label: "Méditation", count: 27 },
+    { slug: "reflexologie", icon: HandHeart, gradient: "from-[#f9a8d4] to-[#b86ef9]", label: "Réflexologie", count: 39 },
+    { slug: "kinesiologie", icon: HeartPulse, gradient: "from-[#5cc8fa] to-[#b86ef9]", label: "Kinésiologie", count: 22 },
+  ];
+  return (
+    <section
+      className="relative overflow-hidden text-white"
+      style={{ background: "radial-gradient(ellipse at 70% 20%, #3d1a5c 0%, #26103a 55%, #1a0828 100%)" }}
+    >
+      <div className="mx-auto max-w-7xl px-6 pt-16 pb-8 lg:pt-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="hv-slide-up mx-auto inline-flex items-center gap-3">
+            <LotusNeon size={64} className="hv-lotus-glow" />
+            <Wordmark />
+          </div>
+          <h1 className="hv-slide-up mt-6 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl" style={{ animationDelay: "150ms" }}>
+            {t("hero.title_part1")}{" "}
+            <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">
+              {t("hero.title_highlight")}
+            </span>
+            {t("hero.title_part2")}
+          </h1>
+          <p className="hv-slide-up mx-auto mt-4 max-w-xl text-base text-[#d4c4e0] sm:text-lg" style={{ animationDelay: "300ms" }}>
+            {t("hero.subtitle")}
+          </p>
+          <div className="hv-slide-up mx-auto mt-8 flex justify-center" style={{ animationDelay: "450ms" }}>
+            <HeroSearchBar />
+          </div>
+          <div className="hv-slide-up mt-6 flex justify-center" style={{ animationDelay: "600ms" }}>
+            <TrustBadges />
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-6 pb-16 lg:pb-24">
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#d4a5f9]">
+            {t("home.specialties")}
+          </h2>
+          <Link
+            to="/$lang/therapeutes"
+            params={{ lang }}
+            className="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white"
+          >
+            {t("hero.find_btn")} <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="hv-scroll-x -mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-4">
+          {specs.map((s) => {
+            const Icon = s.icon;
+            return (
+              <Link
+                key={s.slug}
+                to="/$lang/therapeutes"
+                params={{ lang }}
+                className="group relative flex h-44 w-64 shrink-0 snap-start flex-col justify-end overflow-hidden rounded-2xl border border-white/10 p-4 transition hover:-translate-y-0.5 hover:border-[#b86ef9]/60"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient} opacity-90`} aria-hidden />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.25),transparent_60%)]" aria-hidden />
+                <Icon className="absolute right-4 top-4 h-10 w-10 text-white/85 transition group-hover:scale-110" />
+                <div className="relative">
+                  <div className="text-lg font-semibold leading-tight">{s.label}</div>
+                  <div className="mt-1 text-xs text-white/80">{s.count} thérapeutes</div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Legacy Variant kept for reference (unused) ───────── */
+function _VariantSplitLegacy() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
   return (
@@ -154,129 +399,35 @@ function VariantSplit() {
     </section>
   );
 }
-
-/* ───────── Variant 3: Glassmorphism Luxury ───────── */
-function VariantGlass() {
-  const { t } = useTranslation();
-  return (
-    <section className="relative min-h-screen overflow-hidden bg-[#1a0a2e] text-white">
-      <div className="hv-blob hv-blob-1" />
-      <div className="hv-blob hv-blob-2" />
-      <div className="hv-blob hv-blob-3" />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl items-center justify-center px-6">
-        <div className="relative w-full">
-          <div className="absolute -inset-8 rounded-[32px] bg-[radial-gradient(ellipse_at_center,rgba(184,110,249,0.35),transparent_70%)] blur-2xl" />
-          <div
-            className="relative rounded-[24px] border p-10 text-center sm:p-16"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              borderColor: "rgba(184,110,249,0.15)",
-              backdropFilter: "blur(20px)",
-            }}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <LotusGlow size={80} />
-              <Wordmark />
-            </div>
-            <h1 className="hv-gradient-text mt-8 text-4xl font-bold leading-tight sm:text-6xl">
-              {t("hero.title_part1")} {t("hero.title_highlight")}{t("hero.title_part2")}
-            </h1>
-            <p className="mt-5 text-base text-[#d4c4e0] sm:text-lg">
-              {t("hero.glass_subtitle")}
-            </p>
-            <div className="mx-auto mt-8 flex max-w-xl items-center rounded-xl border border-[rgba(184,110,249,0.25)] bg-white/[0.04] p-1.5">
-              <Search className="ml-3 h-5 w-5 text-[#b9a4d4]" />
-              <input
-                type="search"
-                aria-label={t("hero.glass_placeholder")}
-                className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#c4b5dd] focus:outline-none"
-                placeholder={t("hero.glass_placeholder")}
-              />
-              <Button className="h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">{t("hero.search_btn")}</Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ───────── Variant 4: Minimal Swiss ───────── */
-function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
-  const [n, setN] = useState(0);
-  const ref = useRef(false);
-  useEffect(() => {
-    if (ref.current) return;
-    ref.current = true;
-    const start = performance.now();
-    const dur = 1400;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      setN(Math.round(to * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [to]);
-  return <span>{n}{suffix}</span>;
-}
-function VariantMinimal() {
-  const { t } = useTranslation();
-  const { lang } = useParams({ from: "/$lang/" });
-  const title = `${t("hero.title_part1")} __LOTUS__ ${t("hero.title_highlight")}${t("hero.title_part2")}`;
-  const words = title.split(/\s+/);
-  return (
-    <section className="relative flex min-h-screen items-center bg-[#2d1248] text-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-24">
-        <h1 className="flex flex-wrap items-center gap-x-4 gap-y-2 text-4xl font-bold leading-tight sm:text-6xl lg:text-7xl">
-          {words.map((w, i) =>
-            w === "__LOTUS__" ? (
-              <span key={i} className="hv-word inline-flex" style={{ animationDelay: `${i * 50}ms` }}>
-                <LotusGlow size={96} />
-              </span>
-            ) : (
-              <span key={i} className="hv-word inline-block" style={{ animationDelay: `${i * 50}ms` }}>{w}</span>
-            ),
-          )}
-        </h1>
-        <div className="hv-accent-line mt-8 h-[2px] bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa]" />
-        <div className="mt-10 grid max-w-2xl grid-cols-3 gap-6 text-center">
-          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={280} suffix="+" /></div><div className="mt-1 text-sm text-[#d4c4e0]">{t("hero.stats_practitioners")}</div></div>
-          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={26} /></div><div className="mt-1 text-sm text-[#d4c4e0]">{t("hero.stats_cantons")}</div></div>
-          <div><div className="text-3xl font-bold text-[#b86ef9]"><CountUp to={4} /></div><div className="mt-1 text-sm text-[#d4c4e0]">{t("hero.stats_languages")}</div></div>
-        </div>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link to="/$lang/therapeutes" params={{ lang }}>
-            <Button size="lg" className="bg-[#b86ef9] text-white hover:bg-[#a855f7]">{t("hero.find_btn")}</Button>
-          </Link>
-          <Link to="/$lang/inscription" params={{ lang }}>
-            <Button size="lg" variant="outline" className="border-[#b86ef9] bg-transparent text-white hover:bg-white/10">{t("hero.signup_free")}</Button>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* ───────── Wrapper with dev selector ───────── */
 export function HeroVariants() {
-  const [variant, setVariant] = useState<Variant>(2);
+  const [variant, setVariant] = useState<Variant>(1);
   useTranslation(); // ensure i18n ready
   const isDev = import.meta.env.DEV;
+  const captions: Record<Variant, string> = {
+    1: "V1 — Split photo (authentique, rassurant)",
+    2: "V2 — Mosaïque thérapeutes en fond (profondeur)",
+    3: "V3 — Minimal + preuve sociale défilante",
+    4: "V4 — Carrousel visuel de spécialités",
+  };
   return (
     <>
       <style>{HERO_CSS}</style>
-      {variant === 1 && <VariantCinematic />}
-      {variant === 2 && <VariantSplit />}
-      {variant === 3 && <VariantGlass />}
-      {variant === 4 && <VariantMinimal />}
+      {variant === 1 && <VariantPhotoSplit />}
+      {variant === 2 && <VariantMosaicBackdrop />}
+      {variant === 3 && <VariantMarquee />}
+      {variant === 4 && <VariantSpecialtiesCarousel />}
       {isDev && (
         <div className="fixed bottom-4 right-4 z-[1000] flex flex-col items-end gap-1.5">
-          <span className="rounded bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/80 backdrop-blur">Hero variant (dev)</span>
+          <span className="max-w-[260px] rounded bg-black/70 px-2 py-1 text-right text-[10px] uppercase tracking-wide text-white/80 backdrop-blur">
+            {captions[variant]}
+          </span>
           <div className="flex gap-1.5 rounded-xl bg-black/40 p-1.5 backdrop-blur-md">
             {[1, 2, 3, 4].map((n) => (
               <button
                 key={n}
                 onClick={() => setVariant(n as Variant)}
+                title={captions[n as Variant]}
                 className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${variant === n ? "bg-[#b86ef9] text-white" : "bg-white/10 text-white/80 hover:bg-white/20"}`}
               >
                 {n}
@@ -317,4 +468,10 @@ const HERO_CSS = `
 .hv-word{opacity:0;animation:hv-word 500ms ease-out forwards;}
 @keyframes hv-line { from{transform:scaleX(0);}to{transform:scaleX(1);} }
 .hv-accent-line{transform-origin:left;animation:hv-line 800ms ease-out 600ms forwards;transform:scaleX(0);}
+@keyframes hv-marquee { from{transform:translateX(0);}to{transform:translateX(-50%);} }
+.hv-marquee{animation:hv-marquee 40s linear infinite;}
+.hv-marquee-mask{-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+.hv-scroll-x{scrollbar-width:thin;scrollbar-color:rgba(184,110,249,0.5) transparent;}
+.hv-scroll-x::-webkit-scrollbar{height:6px;}
+.hv-scroll-x::-webkit-scrollbar-thumb{background:rgba(184,110,249,0.5);border-radius:9999px;}
 `;
