@@ -51,7 +51,7 @@ async function recordDelivery(
 
 async function sendEmail(subject: string, summary: string, link: string) {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  const RESEND_API_KEY = process.env.RESEND_API_KEY_1 ?? process.env.RESEND_API_KEY;
   if (!LOVABLE_API_KEY || !RESEND_API_KEY) return { ok: false, error: "missing_credentials" };
   const html = `
 <!doctype html><html><body style="font-family:Inter,Arial,sans-serif;background:#f5f5f7;padding:24px;">
