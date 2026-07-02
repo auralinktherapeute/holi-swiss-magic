@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const ADMIN_EMAIL = "contact@holiswiss.ch";
-const FROM = "HoliSwiss <onboarding@resend.dev>";
+const FROM = "HoliSwiss Alerts <alerts@holiswiss.ch>";
 const EXPECTED_APIKEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd3VkbW5mYXZ2YXVrdWxkdWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg2MjUsImV4cCI6MjA5NjU3NDYyNX0.P-8PAwboYoul28Iqx_UMGH0c9_NPwBTsJPCkRMXKEpY";
 
