@@ -122,6 +122,7 @@ function ProfilePage() {
 
   // Specialties
   const [specialties, setSpecialties] = useSessionState<string[]>(`${profileStatePrefix}.specialties`, []);
+  const [specialtyIds, setSpecialtyIds] = useSessionState<string[]>(`${profileStatePrefix}.specialtyIds`, []);
   const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
   const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
 
