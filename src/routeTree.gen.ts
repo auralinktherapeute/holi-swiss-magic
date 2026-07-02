@@ -53,7 +53,6 @@ import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion
 import { Route as LangConfidentialiteIndexRouteImport } from './routes/$lang.confidentialite.index'
 import { Route as LangConditionsIndexRouteImport } from './routes/$lang.conditions.index'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
-import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang.specialites.$specialtySlug'
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
@@ -288,11 +287,6 @@ const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => LangRoute,
 } as any)
-const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
-  id: '/api/public/admin-notify',
-  path: '/api/public/admin-notify',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LangTherapeuteSlugRoute = LangTherapeuteSlugRouteImport.update({
   id: '/therapeute/$slug',
   path: '/therapeute/$slug',
@@ -388,7 +382,6 @@ export interface FileRoutesByFullPath {
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
-  '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -442,7 +435,6 @@ export interface FileRoutesByTo {
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
-  '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
   '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
@@ -500,7 +492,6 @@ export interface FileRoutesById {
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
-  '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -559,7 +550,6 @@ export interface FileRouteTypes {
     | '/$lang/evenements/$id'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
-    | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -613,7 +603,6 @@ export interface FileRouteTypes {
     | '/$lang/evenements/$id'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
-    | '/api/public/admin-notify'
     | '/$lang/blog'
     | '/$lang/conditions'
     | '/$lang/confidentialite'
@@ -670,7 +659,6 @@ export interface FileRouteTypes {
     | '/$lang/evenements/$id'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
-    | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -698,7 +686,6 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
-  ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
 }
@@ -1013,13 +1000,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangBlogIndexRouteImport
       parentRoute: typeof LangRoute
     }
-    '/api/public/admin-notify': {
-      id: '/api/public/admin-notify'
-      path: '/api/public/admin-notify'
-      fullPath: '/api/public/admin-notify'
-      preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/$lang/therapeute/$slug': {
       id: '/$lang/therapeute/$slug'
       path: '/therapeute/$slug'
@@ -1231,7 +1211,6 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
-  ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
 }
