@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Save, RotateCcw, Globe, CreditCard, Shield, Bell } from "lucide-react";
+import { Save, RotateCcw, Globe, CreditCard, Shield, Bell, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionState } from "@/hooks/use-session-state";
+import { AdminSpecialtiesPanel } from "@/components/admin/AdminSpecialtiesPanel";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/parametres")({ component: Page });
@@ -69,6 +70,7 @@ function Section({ icon: Icon, title, children }: { icon: any; title: string; ch
 function Page() {
   const [s, setS] = useSessionState<Settings>("admin.settings.form", DEFAULTS);
   const [dirty, setDirty] = useState(false);
+  const [tab, setTab] = useSessionState<"general" | "taxonomy">("admin.settings.tab", "general");
 
   const update = (patch: Partial<Settings>) => { setS((prev) => ({ ...prev, ...patch })); setDirty(true); };
 
@@ -99,6 +101,30 @@ function Page() {
           </div>
         </motion.div>
 
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, borderBottom: "1px solid rgba(184,110,249,0.15)" }}>
+          {[{ k: "general", label: "Général" }, { k: "taxonomy", label: "Taxonomie spécialités" }].map((t) => (
+            <button key={t.k} onClick={() => setTab(t.k as any)}
+              style={{
+                padding: "10px 16px", background: "none", border: "none", cursor: "pointer",
+                color: tab === t.k ? "#b86ef9" : "rgba(255,255,255,0.5)",
+                borderBottom: tab === t.k ? "2px solid #b86ef9" : "2px solid transparent",
+                fontSize: 14, fontWeight: 500,
+              }}>{t.label}</button>
+          ))}
+        </div>
+
+        {tab === "taxonomy" && (
+          <div className="adm-card" style={{ padding: 20, marginBottom: 40 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <Tag size={16} style={{ color: "#b86ef9" }} />
+              <span style={{ fontSize: 15, fontWeight: 600 }}>Familles, spécialités & imports en attente</span>
+            </div>
+            <AdminSpecialtiesPanel />
+          </div>
+        )}
+
+        {tab === "general" && (<>
         {/* Site */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Section icon={Globe} title="Site">
@@ -207,6 +233,7 @@ function Page() {
             <Save size={14} /> Enregistrer
           </button>
         </motion.div>
+        </>)}
 
       </div>
     </div>
