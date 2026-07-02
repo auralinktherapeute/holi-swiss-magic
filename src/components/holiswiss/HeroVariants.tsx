@@ -7,7 +7,6 @@ import lotusNeonAsset from "@/assets/lotus-transparent.png.asset.json";
 import heroTherapyAsset from "@/assets/hero-therapy-session.jpg.asset.json";
 import therapistsGridAsset from "@/assets/therapists-grid.jpg.asset.json";
 import wellnessAmbientAsset from "@/assets/wellness-ambient.jpg.asset.json";
-const lotusAsset = lotusNeonAsset;
 
 type Variant = 1 | 2 | 3 | 4;
 
