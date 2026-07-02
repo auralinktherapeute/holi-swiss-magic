@@ -284,6 +284,51 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       .upsert({ therapist_id: result.data.id, user_id: context.userId, ide: data.ide }, { onConflict: "therapist_id" });
     if (privateError) throw new Error("Impossible d'enregistrer l'IDE.");
 
+    // ── Sync taxonomy pivot (therapist_specialties) from the free-text labels
+    //    stored in therapists.specialties. Match by normalized name_fr + aliases.
+    try {
+      const therapistId = result.data.id as string;
+      const norm = (s: string) =>
+        s
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/\p{Diacritic}/gu, "")
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+      const { data: allSpecs } = await supabaseAdmin
+        .from("specialties")
+        .select("id,name_fr,aliases")
+        .eq("is_active", true);
+      const matched = new Set<string>();
+      const pending: string[] = [];
+      for (const raw of data.specialties ?? []) {
+        const n = norm(raw);
+        if (!n) continue;
+        const hit = (allSpecs ?? []).find((s: any) => {
+          if (norm(s.name_fr) === n) return true;
+          const aliases: string[] = Array.isArray(s.aliases) ? s.aliases : [];
+          return aliases.some((a) => norm(a) === n);
+        });
+        if (hit) matched.add((hit as any).id);
+        else pending.push(raw);
+      }
+      await supabaseAdmin.from("therapist_specialties").delete().eq("therapist_id", therapistId);
+      if (matched.size > 0) {
+        await supabaseAdmin
+          .from("therapist_specialties")
+          .insert(Array.from(matched).map((specialty_id) => ({ therapist_id: therapistId, specialty_id })));
+      }
+      await supabaseAdmin.from("specialty_import_pending").delete().eq("therapist_id", therapistId);
+      if (pending.length > 0) {
+        await supabaseAdmin
+          .from("specialty_import_pending")
+          .insert(pending.map((raw_label) => ({ therapist_id: therapistId, raw_label })));
+      }
+    } catch (e) {
+      // Non-blocking: pivot sync failure must not break profile save.
+      console.error("[saveMyTherapistProfile] pivot sync failed", e);
+    }
+
     return { id: result.data.id as string };
   });
 

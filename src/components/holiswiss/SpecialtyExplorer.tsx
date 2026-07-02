@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Search, Brain, Leaf, Hand, Sparkles, ChevronRight, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +12,17 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   sparkles: Sparkles,
 };
 
-export function SpecialtyExplorer({ lang }: { lang: string }) {
+type Selection = { specialite?: string; famille?: string };
+
+export function SpecialtyExplorer({
+  lang: _lang,
+  active,
+  onSelect,
+}: {
+  lang: string;
+  active: Selection;
+  onSelect: (sel: Selection) => void;
+}) {
   const fetchFamilies = useServerFn(listFamiliesWithCounts);
   const fetchSearch = useServerFn(searchSpecialties);
   const fetchAll = useServerFn(listAllSpecialties);
@@ -92,19 +101,21 @@ export function SpecialtyExplorer({ lang }: { lang: string }) {
               </div>
             )}
             {(search.data ?? []).map((r) => (
-              <Link
+              <button
                 key={r.id}
-                to="/$lang/specialites/$specialtySlug"
-                params={{ lang, specialtySlug: r.slug }}
-                onClick={() => setQ("")}
-                className="flex items-center justify-between border-b border-white/5 px-4 py-3 last:border-0 hover:bg-[rgba(184,110,249,0.12)]"
+                type="button"
+                onClick={() => {
+                  onSelect({ specialite: r.slug });
+                  setQ("");
+                }}
+                className="flex w-full items-center justify-between border-b border-white/5 px-4 py-3 text-left last:border-0 hover:bg-[rgba(184,110,249,0.12)]"
               >
                 <div>
                   <div className="text-sm font-medium text-white">{r.name_fr}</div>
                   <div className="text-xs text-[#b86ef9]">{r.family_name_fr}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-white/40" />
-              </Link>
+              </button>
             ))}
           </div>
         )}
@@ -121,14 +132,22 @@ export function SpecialtyExplorer({ lang }: { lang: string }) {
           ))}
         {(families.data ?? []).map((f) => {
           const Icon = ICONS[f.icon ?? ""] ?? Sparkles;
+          const isActive = active.famille === f.slug;
           return (
-            <Link
+            <button
               key={f.id}
-              to="/$lang/therapeutes/famille/$familySlug"
-              params={{ lang, familySlug: f.slug }}
-              className="group flex flex-col justify-between rounded-2xl border border-[rgba(184,110,249,0.25)] bg-gradient-to-br from-[#1a0a2e] to-[#2a1246] p-4 transition-all hover:-translate-y-0.5 hover:border-[#b86ef9] hover:shadow-[0_8px_30px_rgba(184,110,249,0.25)]"
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onSelect(isActive ? {} : { famille: f.slug })}
+              className={`group flex flex-col justify-between rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(184,110,249,0.25)] ${
+                isActive
+                  ? "border-[#b86ef9] bg-[rgba(184,110,249,0.18)] shadow-[0_8px_30px_rgba(184,110,249,0.3)]"
+                  : "border-[rgba(184,110,249,0.25)] bg-gradient-to-br from-[#1a0a2e] to-[#2a1246] hover:border-[#b86ef9]"
+              }`}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#b86ef9]/20 text-[#b86ef9] group-hover:bg-[#b86ef9] group-hover:text-white transition">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+                isActive ? "bg-[#b86ef9] text-white" : "bg-[#b86ef9]/20 text-[#b86ef9] group-hover:bg-[#b86ef9] group-hover:text-white"
+              }`}>
                 <Icon className="h-5 w-5" />
               </div>
               <div className="mt-3">
@@ -140,7 +159,7 @@ export function SpecialtyExplorer({ lang }: { lang: string }) {
                   )}
                 </div>
               </div>
-            </Link>
+            </button>
           );
         })}
       </div>
@@ -166,15 +185,21 @@ export function SpecialtyExplorer({ lang }: { lang: string }) {
                 <h3 className="mb-2 text-sm font-semibold text-[#b86ef9]">{f.name_fr}</h3>
                 <div className="flex flex-wrap gap-2">
                   {f.items.map((s) => (
-                    <Link
+                    <button
                       key={s.id}
-                      to="/$lang/specialites/$specialtySlug"
-                      params={{ lang, specialtySlug: s.slug }}
-                      onClick={() => setShowAll(false)}
-                      className="rounded-full border border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.08)] px-3 py-1.5 text-xs text-white hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
+                      type="button"
+                      onClick={() => {
+                        onSelect({ specialite: s.slug });
+                        setShowAll(false);
+                      }}
+                      className={`rounded-full border px-3 py-1.5 text-xs text-white transition ${
+                        active.specialite === s.slug
+                          ? "border-[#b86ef9] bg-[rgba(184,110,249,0.35)]"
+                          : "border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.08)] hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
+                      }`}
                     >
                       {s.name_fr}
-                    </Link>
+                    </button>
                   ))}
                 </div>
               </div>
