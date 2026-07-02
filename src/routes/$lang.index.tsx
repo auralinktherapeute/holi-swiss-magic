@@ -69,9 +69,9 @@ function HomePage() {
             active={{}}
             onSelect={(sel) => {
               if (sel.famille) {
-                navigate({ to: "/$lang/therapeutes/famille/$familySlug", params: { lang, familySlug: sel.famille } });
+                navigate({ to: `/${lang}/therapeutes/famille/${sel.famille}` });
               } else if (sel.specialite) {
-                navigate({ to: "/$lang/specialites/$specialtySlug", params: { lang, specialtySlug: sel.specialite } });
+                navigate({ to: `/${lang}/specialites/${sel.specialite}` });
               }
             }}
           />
