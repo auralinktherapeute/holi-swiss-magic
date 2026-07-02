@@ -10,6 +10,57 @@ function pick(row: any, lang: string, field: "name" | "description" = "name"): s
   return row?.[`${field}_${lang}`] || row?.[`${field}_fr`] || "";
 }
 
+const T: Record<string, Record<string, string>> = {
+  fr: {
+    searchPlaceholder: "Rechercher une spécialité (ex : EMDR, Ayurveda, Sonothérapie…)",
+    searchAria: "Rechercher une spécialité",
+    clear: "Effacer",
+    searching: "Recherche…",
+    noResults: "Aucune spécialité trouvée pour",
+    specialtyOne: "spécialité", specialtyMany: "spécialités",
+    therapistOne: "thérapeute", therapistMany: "thérapeutes",
+    seeAll: "Voir toutes les spécialités →",
+    allTitle: "Toutes les spécialités",
+    loading: "Chargement…",
+  },
+  de: {
+    searchPlaceholder: "Fachrichtung suchen (z. B. EMDR, Ayurveda, Klangtherapie…)",
+    searchAria: "Fachrichtung suchen",
+    clear: "Löschen",
+    searching: "Suche läuft…",
+    noResults: "Keine Fachrichtung gefunden für",
+    specialtyOne: "Fachrichtung", specialtyMany: "Fachrichtungen",
+    therapistOne: "Therapeut", therapistMany: "Therapeuten",
+    seeAll: "Alle Fachrichtungen anzeigen →",
+    allTitle: "Alle Fachrichtungen",
+    loading: "Wird geladen…",
+  },
+  it: {
+    searchPlaceholder: "Cerca una specialità (es. EMDR, Ayurveda, Sonoterapia…)",
+    searchAria: "Cerca una specialità",
+    clear: "Cancella",
+    searching: "Ricerca…",
+    noResults: "Nessuna specialità trovata per",
+    specialtyOne: "specialità", specialtyMany: "specialità",
+    therapistOne: "terapeuta", therapistMany: "terapeuti",
+    seeAll: "Vedi tutte le specialità →",
+    allTitle: "Tutte le specialità",
+    loading: "Caricamento…",
+  },
+  en: {
+    searchPlaceholder: "Search a specialty (e.g. EMDR, Ayurveda, Sound therapy…)",
+    searchAria: "Search a specialty",
+    clear: "Clear",
+    searching: "Searching…",
+    noResults: "No specialty found for",
+    specialtyOne: "specialty", specialtyMany: "specialties",
+    therapistOne: "therapist", therapistMany: "therapists",
+    seeAll: "See all specialties →",
+    allTitle: "All specialties",
+    loading: "Loading…",
+  },
+};
+
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   brain: Brain,
   leaf: Leaf,
@@ -30,6 +81,7 @@ export function SpecialtyExplorer({
 }) {
   const { i18n } = useTranslation();
   const uiLang = (lang || i18n.language || "fr").slice(0, 2);
+  const t = T[uiLang] ?? T.fr;
   const fetchFamilies = useServerFn(listFamiliesWithCounts);
   const fetchSearch = useServerFn(searchSpecialties);
   const fetchAll = useServerFn(listAllSpecialties);
@@ -82,14 +134,14 @@ export function SpecialtyExplorer({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           type="search"
-          placeholder="Rechercher une spécialité (ex : EMDR, Ayurveda, Sonothérapie...)"
-          aria-label="Rechercher une spécialité"
+          placeholder={t.searchPlaceholder}
+          aria-label={t.searchAria}
           className="w-full rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(184,110,249,0.08)] py-3 pl-12 pr-4 text-sm text-white placeholder-[rgba(255,255,255,0.55)] outline-none focus:border-[#b86ef9] transition"
         />
         {q && (
           <button
             onClick={() => setQ("")}
-            aria-label="Effacer"
+            aria-label={t.clear}
             className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 hover:text-white hover:bg-white/10"
           >
             <X className="h-4 w-4" />
@@ -100,11 +152,11 @@ export function SpecialtyExplorer({
         {debounced.length >= 2 && (
           <div className="absolute z-40 mt-2 w-full overflow-hidden rounded-xl border border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] shadow-2xl">
             {search.isLoading && (
-              <div className="px-4 py-3 text-sm text-white/50">Recherche…</div>
+              <div className="px-4 py-3 text-sm text-white/50">{t.searching}</div>
             )}
             {!search.isLoading && (search.data ?? []).length === 0 && (
               <div className="px-4 py-3 text-sm text-white/50">
-                Aucune spécialité trouvée pour « {debounced} ».
+                {t.noResults} « {debounced} ».
               </div>
             )}
             {(search.data ?? []).map((r) => (
@@ -160,9 +212,9 @@ export function SpecialtyExplorer({
               <div className="mt-3">
                 <div className="text-sm font-semibold leading-snug text-white">{pick(f, uiLang)}</div>
                 <div className="mt-1 text-xs text-white/50">
-                  {f.specialties.length} spécialité{f.specialties.length > 1 ? "s" : ""}
+                  {f.specialties.length} {f.specialties.length > 1 ? t.specialtyMany : t.specialtyOne}
                   {f.therapist_count > 0 && (
-                    <> · {f.therapist_count} thérapeute{f.therapist_count > 1 ? "s" : ""}</>
+                    <> · {f.therapist_count} {f.therapist_count > 1 ? t.therapistMany : t.therapistOne}</>
                   )}
                 </div>
               </div>
@@ -176,17 +228,17 @@ export function SpecialtyExplorer({
           onClick={() => setShowAll(true)}
           className="text-xs font-medium text-[#5cc8fa] underline-offset-4 hover:underline"
         >
-          Voir toutes les spécialités →
+          {t.seeAll}
         </button>
       </div>
 
       <Dialog open={showAll} onOpenChange={setShowAll}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-[#0f0a1e] border-[rgba(184,110,249,0.3)]">
           <DialogHeader>
-            <DialogTitle className="text-white">Toutes les spécialités</DialogTitle>
+            <DialogTitle className="text-white">{t.allTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            {all.isLoading && <div className="text-sm text-white/50">Chargement…</div>}
+            {all.isLoading && <div className="text-sm text-white/50">{t.loading}</div>}
             {groupedAll.map((f) => (
               <div key={f.id}>
                 <h3 className="mb-2 text-sm font-semibold text-[#b86ef9]">{pick(f, uiLang)}</h3>
