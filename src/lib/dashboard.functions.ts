@@ -26,6 +26,7 @@ const profileSchema = z.object({
   currency: z.string().max(10),
   years_experience: z.number().int().min(0).max(100).nullable(),
   specialties: z.array(z.string().max(100)).max(80),
+  specialty_ids: z.array(z.string().uuid()).max(80).optional(),
   services: z.array(z.unknown()).max(80),
   short_bio: z.string().max(500).nullable(),
   bio: z.string().max(5000).nullable(),
