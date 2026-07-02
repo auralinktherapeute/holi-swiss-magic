@@ -342,6 +342,18 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     return { id: result.data.id as string };
   });
 
+export const getMyTherapistSpecialtyIds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: t } = await supabaseAdmin
+      .from("therapists").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!t) return { specialty_ids: [] as string[] };
+    const { data: rows } = await supabaseAdmin
+      .from("therapist_specialties").select("specialty_id").eq("therapist_id", (t as any).id);
+    return { specialty_ids: ((rows ?? []) as any[]).map((r) => r.specialty_id) };
+  });
+
 export const addMyTherapistDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ file_url: z.string().url().max(2000), file_name: z.string().min(1).max(255), label: z.string().max(255).nullable(), is_public: z.boolean() }))
