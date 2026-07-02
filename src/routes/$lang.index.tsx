@@ -1,11 +1,12 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { CANTONS, THERAPY_CATEGORIES, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
+import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
+import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
@@ -50,6 +51,7 @@ export const Route = createFileRoute("/$lang/")({
 function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
+  const navigate = useNavigate();
 
   const popularSearches = t("home.popular_searches", { returnObjects: true }) as string[];
 
@@ -58,19 +60,21 @@ function HomePage() {
       {/* Hero (4 variants — dev selector bottom-right) */}
       <HeroVariants />
 
-      {/* Specialty grid */}
+      {/* Specialty explorer — taxonomie familles / recherche libre */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold tracking-tight text-white">{t("home.specialties")}</h2>
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {THERAPY_CATEGORIES.map((c) => (
-            <button
-              key={c.slug}
-              className="group flex flex-col items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c] p-4 text-center transition-all hover:border-[#b86ef9] hover:bg-[#522870] hover:shadow-[0_0_20px_rgba(184,110,249,0.3)]"
-            >
-              <span className="text-2xl">{c.emoji}</span>
-              <span className="text-xs font-medium text-white/85 group-hover:text-[#d4a5f9]">{t(`categories.${c.slug}`, c.label)}</span>
-            </button>
-          ))}
+        <div className="mt-8">
+          <SpecialtyExplorer
+            lang={lang}
+            active={{}}
+            onSelect={(sel) => {
+              if (sel.famille) {
+                navigate({ to: `/${lang}/therapeutes/famille/${sel.famille}` });
+              } else if (sel.specialite) {
+                navigate({ to: `/${lang}/specialites/${sel.specialite}` });
+              }
+            }}
+          />
         </div>
       </section>
 
