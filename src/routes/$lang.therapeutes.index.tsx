@@ -107,15 +107,21 @@ function Page() {
   });
 
   const defaultList = useQuery({
-    queryKey: ["therapists-map"],
-    enabled: debounced.length < 2,
+    queryKey: ["therapists-map", specFilter ?? null, famFilter ?? null, specFilterQuery.data ?? null],
+    enabled: debounced.length < 2 && (!hasSpecFilter || !!specFilterQuery.data),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("therapists")
         .select("id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,latitude,longitude,price_min,price_max,currency,verified,specialties")
         .eq("status", "active")
         .order("verified", { ascending: false })
         .limit(100);
+      if (hasSpecFilter) {
+        const ids = specFilterQuery.data ?? [];
+        if (ids.length === 0) return [] as Therapist[];
+        q = q.in("id", ids);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Therapist[];
     },
@@ -179,9 +185,8 @@ function Page() {
     ? (geo.data?.ok ? (nearby.data ?? []) : [])
     : (defaultList.data ?? []);
 
-  const hasSpecFilter = !!(specFilter || famFilter);
   const specIds = specFilterQuery.data ?? [];
-  const filtered: Therapist[] = hasSpecFilter
+  const filtered: Therapist[] = hasSpecFilter && isSearching
     ? baseList.filter((t) => specIds.includes(t.id))
     : baseList;
 
