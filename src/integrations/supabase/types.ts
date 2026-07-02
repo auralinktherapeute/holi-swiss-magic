@@ -356,6 +356,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_activities: {
         Row: {
           body: string | null
@@ -1223,6 +1256,98 @@ export type Database = {
           },
         ]
       }
+      notification_deliveries: {
+        Row: {
+          attempts: number
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          notification_id: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          target: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_id: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          target: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_id?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          target?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          is_read: boolean
+          kind: string
+          link: string | null
+          read_at: string | null
+          subject: string
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          kind: string
+          link?: string | null
+          read_at?: string | null
+          subject: string
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          kind?: string
+          link?: string | null
+          read_at?: string | null
+          subject?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           author_avatar_url: string | null
@@ -2084,6 +2209,19 @@ export type Database = {
           total_contacts: number
         }[]
       }
+      admin_unread_count: { Args: never; Returns: number }
+      create_admin_notification: {
+        Args: {
+          _data?: Json
+          _entity_id?: string
+          _entity_type?: string
+          _kind: string
+          _link?: string
+          _subject: string
+          _summary: string
+        }
+        Returns: string
+      }
       crm_daily_maintenance: { Args: never; Returns: Json }
       get_therapist_intake_header: {
         Args: { _slug: string }
@@ -2104,6 +2242,8 @@ export type Database = {
         Returns: boolean
       }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
+      mark_all_notifications_read: { Args: never; Returns: undefined }
+      mark_notification_read: { Args: { _id: string }; Returns: undefined }
       normalize_city_text: { Args: { _input: string }; Returns: string }
       normalize_search: { Args: { _input: string }; Returns: string }
       notify_admin_event: {
