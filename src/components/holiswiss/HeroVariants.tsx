@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
@@ -7,8 +6,6 @@ import lotusNeonAsset from "@/assets/lotus-transparent.png.asset.json";
 import heroTherapyAsset from "@/assets/hero-therapy-session.jpg.asset.json";
 import therapistsGridAsset from "@/assets/therapists-grid.jpg.asset.json";
 import wellnessAmbientAsset from "@/assets/wellness-ambient.jpg.asset.json";
-
-type Variant = 1 | 2 | 3 | 4;
 
 function LotusNeon({ size = 80, className = "", style }: { size?: number; className?: string; style?: React.CSSProperties }) {
   return (
