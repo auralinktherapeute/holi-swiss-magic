@@ -421,6 +421,7 @@ function ProfilePage() {
           currency,
           years_experience: payload.years_experience,
           specialties,
+          specialty_ids: specialtyIds,
           services,
           short_bio: payload.short_bio,
           bio: payload.bio,
