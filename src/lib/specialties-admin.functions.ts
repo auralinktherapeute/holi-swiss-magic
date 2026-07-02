@@ -67,9 +67,7 @@ export const saveFamily = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await ensureAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const payload = { ...data };
-    const id = payload.id;
-    delete (payload as any).id;
+    const { id, ...payload } = data as any;
     if (id) {
       const { error } = await supabaseAdmin.from("specialty_families").update(payload).eq("id", id);
       if (error) throw new Error(error.message);
@@ -103,9 +101,7 @@ export const saveSpecialty = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await ensureAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const payload = { ...data };
-    const id = payload.id;
-    delete (payload as any).id;
+    const { id, ...payload } = data as any;
     if (id) {
       const { error } = await supabaseAdmin.from("specialties").update(payload).eq("id", id);
       if (error) throw new Error(error.message);
