@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getFamilyPage } from "@/lib/specialties.functions";
+import { getFamilyPage, pickI18n } from "@/lib/specialties.functions";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
@@ -48,6 +48,8 @@ function Page() {
   }
 
   const { family, specialties, therapists } = query.data as any;
+  const famName = pickI18n(family, lang, "name");
+  const famDesc = pickI18n(family, lang, "description");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
@@ -56,14 +58,14 @@ function Page() {
         <ChevronRight className="h-3 w-3" />
         <Link to="/$lang/therapeutes" params={{ lang }} className="hover:text-white">Thérapeutes</Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-white">{family.name_fr}</span>
+        <span className="text-white">{famName}</span>
       </nav>
 
       <header className="mb-8">
-        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{family.name_fr}</h1>
-        {family.description_fr && (
+        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{famName}</h1>
+        {famDesc && (
           <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base leading-relaxed">
-            {family.description_fr}
+            {famDesc}
           </p>
         )}
       </header>
@@ -80,7 +82,7 @@ function Page() {
               params={{ lang, specialtySlug: s.slug }}
               className="rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] px-4 py-2 text-sm text-white hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
             >
-              {s.name_fr}
+              {pickI18n(s, lang, "name")}
             </Link>
           ))}
         </div>
