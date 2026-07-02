@@ -133,7 +133,7 @@ export const sendCustomEmail = createServerFn({ method: "POST" })
     });
 
     const lovableKey = process.env.LOVABLE_API_KEY;
-    const resendKey = process.env.RESEND_API_KEY;
+    const resendKey = process.env.RESEND_API_KEY_1 ?? process.env.RESEND_API_KEY;
     if (!lovableKey || !resendKey) {
       await supabaseAdmin.from("email_logs").insert({
         waitlist_id: entry.id,
