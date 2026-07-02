@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
-import { HeroVariants } from "@/components/holiswiss/HeroVariants";
+import { HeroVariants, SpecialtiesCarousel } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
@@ -75,6 +75,9 @@ function HomePage() {
               }
             }}
           />
+        </div>
+        <div className="mt-10">
+          <SpecialtiesCarousel />
         </div>
       </section>
 

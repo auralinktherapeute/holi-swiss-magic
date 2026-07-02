@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
@@ -7,8 +6,6 @@ import lotusNeonAsset from "@/assets/lotus-transparent.png.asset.json";
 import heroTherapyAsset from "@/assets/hero-therapy-session.jpg.asset.json";
 import therapistsGridAsset from "@/assets/therapists-grid.jpg.asset.json";
 import wellnessAmbientAsset from "@/assets/wellness-ambient.jpg.asset.json";
-
-type Variant = 1 | 2 | 3 | 4;
 
 function LotusNeon({ size = 80, className = "", style }: { size?: number; className?: string; style?: React.CSSProperties }) {
   return (
@@ -251,7 +248,7 @@ function VariantMarquee() {
 }
 
 /* ───────── Variant 4: Hero + visual specialties carousel ───────── */
-function VariantSpecialtiesCarousel() {
+export function SpecialtiesCarousel() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
   const specs = [
@@ -263,49 +260,22 @@ function VariantSpecialtiesCarousel() {
     { slug: "kinesiologie", icon: HeartPulse, gradient: "from-[#5cc8fa] to-[#b86ef9]", label: "Kinésiologie", count: 22 },
   ];
   return (
-    <section
-      className="relative overflow-hidden text-white"
-      style={{ background: "radial-gradient(ellipse at 70% 20%, #3d1a5c 0%, #26103a 55%, #1a0828 100%)" }}
-    >
-      <div className="mx-auto max-w-7xl px-6 pt-16 pb-8 lg:pt-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="hv-slide-up mx-auto inline-flex items-center gap-3">
-            <LotusNeon size={64} className="hv-lotus-glow" />
-            <Wordmark />
-          </div>
-          <h1 className="hv-slide-up mt-6 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl" style={{ animationDelay: "150ms" }}>
-            {t("hero.title_part1")}{" "}
-            <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">
-              {t("hero.title_highlight")}
-            </span>
-            {t("hero.title_part2")}
-          </h1>
-          <p className="hv-slide-up mx-auto mt-4 max-w-xl text-base text-[#d4c4e0] sm:text-lg" style={{ animationDelay: "300ms" }}>
-            {t("hero.subtitle")}
-          </p>
-          <div className="hv-slide-up mx-auto mt-8 flex justify-center" style={{ animationDelay: "450ms" }}>
-            <HeroSearchBar />
-          </div>
-          <div className="hv-slide-up mt-6 flex justify-center" style={{ animationDelay: "600ms" }}>
-            <TrustBadges />
-          </div>
-        </div>
+    <div className="relative">
+      <style>{HERO_CSS}</style>
+      <div className="mb-4 flex items-end justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-[#d4a5f9]">
+          {t("home.specialties")}
+        </h3>
+        <Link
+          to="/$lang/therapeutes"
+          params={{ lang }}
+          className="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white"
+        >
+          {t("hero.find_btn")} <ChevronRight className="h-4 w-4" />
+        </Link>
       </div>
-      <div className="mx-auto max-w-7xl px-6 pb-16 lg:pb-24">
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#d4a5f9]">
-            {t("home.specialties")}
-          </h2>
-          <Link
-            to="/$lang/therapeutes"
-            params={{ lang }}
-            className="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white"
-          >
-            {t("hero.find_btn")} <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <div className="hv-scroll-x -mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-4">
-          {specs.map((s) => {
+      <div className="hv-scroll-x flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
+        {specs.map((s) => {
             const Icon = s.icon;
             return (
               <Link
@@ -324,50 +294,19 @@ function VariantSpecialtiesCarousel() {
               </Link>
             );
           })}
-        </div>
       </div>
-    </section>
+    </div>
   );
 }
 
 /* ───────── Legacy Variant kept for reference (unused) ───────── */
 /* ───────── Wrapper with dev selector ───────── */
 export function HeroVariants() {
-  const [variant, setVariant] = useState<Variant>(1);
   useTranslation(); // ensure i18n ready
-  const isDev = import.meta.env.DEV;
-  const captions: Record<Variant, string> = {
-    1: "V1 — Split photo (authentique, rassurant)",
-    2: "V2 — Mosaïque thérapeutes en fond (profondeur)",
-    3: "V3 — Minimal + preuve sociale défilante",
-    4: "V4 — Carrousel visuel de spécialités",
-  };
   return (
     <>
       <style>{HERO_CSS}</style>
-      {variant === 1 && <VariantPhotoSplit />}
-      {variant === 2 && <VariantMosaicBackdrop />}
-      {variant === 3 && <VariantMarquee />}
-      {variant === 4 && <VariantSpecialtiesCarousel />}
-      {isDev && (
-        <div className="fixed bottom-4 right-4 z-[1000] flex flex-col items-end gap-1.5">
-          <span className="max-w-[260px] rounded bg-black/70 px-2 py-1 text-right text-[10px] uppercase tracking-wide text-white/80 backdrop-blur">
-            {captions[variant]}
-          </span>
-          <div className="flex gap-1.5 rounded-xl bg-black/40 p-1.5 backdrop-blur-md">
-            {[1, 2, 3, 4].map((n) => (
-              <button
-                key={n}
-                onClick={() => setVariant(n as Variant)}
-                title={captions[n as Variant]}
-                className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${variant === n ? "bg-[#b86ef9] text-white" : "bg-white/10 text-white/80 hover:bg-white/20"}`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <VariantPhotoSplit />
     </>
   );
 }
