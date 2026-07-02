@@ -289,6 +289,15 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     //    stored in therapists.specialties. Match by normalized name_fr + aliases.
     try {
       const therapistId = result.data.id as string;
+      // If the client provided explicit specialty_ids (new UI), use them directly.
+      if (Array.isArray(data.specialty_ids) && data.specialty_ids.length > 0) {
+        await supabaseAdmin.from("therapist_specialties").delete().eq("therapist_id", therapistId);
+        await supabaseAdmin
+          .from("therapist_specialties")
+          .insert(data.specialty_ids.map((sid) => ({ therapist_id: therapistId, specialty_id: sid })));
+        await supabaseAdmin.from("specialty_import_pending").delete().eq("therapist_id", therapistId);
+        return { id: therapistId };
+      }
       const norm = (s: string) =>
         s
           .toLowerCase()
