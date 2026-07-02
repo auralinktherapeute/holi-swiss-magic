@@ -37,6 +37,7 @@ import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
+import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
