@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import lotusNeonAsset from "@/assets/lotus-transparent.png.asset.json";
-import heroTherapyAsset from "@/assets/hero-therapy-session.jpg.asset.json";
 import therapistsGridAsset from "@/assets/therapists-grid.jpg.asset.json";
 import wellnessAmbientAsset from "@/assets/wellness-ambient.jpg.asset.json";
 
@@ -100,24 +99,18 @@ function VariantPhotoSplit() {
             <TrustBadges />
           </div>
         </div>
-        <div className="hv-slide-up relative lg:col-span-5" style={{ animationDelay: "300ms" }}>
-          <div className="absolute -inset-6 rounded-[32px] bg-[radial-gradient(ellipse_at_center,rgba(184,110,249,0.45),transparent_70%)] blur-2xl" />
-          <div className="relative overflow-hidden rounded-3xl border border-[rgba(184,110,249,0.35)] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
-            <img
-              src={heroTherapyAsset.url}
-              alt={t("hero.trust_verified")}
-              width={1280}
-              height={1600}
-              className="h-[420px] w-full object-cover sm:h-[520px] lg:h-[600px]"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-[#1a0828]/70 via-transparent to-[#5cc8fa]/10" />
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-3 backdrop-blur-md">
-              <div className="flex items-center gap-2 text-sm">
-                <Star className="h-4 w-4 fill-[#f9a8d4] text-[#f9a8d4]" />
-                <span className="font-semibold">4,9 / 5</span>
-                <span className="text-white/60">· 280+ {t("hero.stats_practitioners")}</span>
-              </div>
-              <span className="hidden items-center gap-1 text-xs text-white/70 sm:inline-flex">
+        <div className="hv-slide-up relative flex items-center justify-center lg:col-span-5" style={{ animationDelay: "300ms" }}>
+          <div className="relative flex h-[420px] w-full items-center justify-center sm:h-[520px] lg:h-[600px]">
+            <span className="hv-aura" aria-hidden />
+            <span className="hv-aura hv-aura-2" aria-hidden />
+            <span className="hv-aura hv-aura-3" aria-hidden />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(184,110,249,0.45),transparent_70%)] blur-2xl" aria-hidden />
+            <LotusNeon size={420} className="hv-lotus-spin hv-lotus-glow relative z-10" />
+            <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-sm backdrop-blur-md">
+              <Star className="h-4 w-4 fill-[#f9a8d4] text-[#f9a8d4]" />
+              <span className="font-semibold">4,9 / 5</span>
+              <span className="text-white/60">· 280+ {t("hero.stats_practitioners")}</span>
+              <span className="ml-2 hidden items-center gap-1 text-xs text-white/70 sm:inline-flex">
                 <MapPin className="h-3.5 w-3.5" /> 26 CH
               </span>
             </div>
