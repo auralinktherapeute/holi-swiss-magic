@@ -1,10 +1,10 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search } from "lucide-react";
+import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search, X } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
@@ -18,6 +18,10 @@ const TherapistMap = lazy(() =>
 
 export const Route = createFileRoute("/$lang/therapeutes/")({
   component: Page,
+  validateSearch: (s: Record<string, unknown>) => ({
+    specialite: typeof s.specialite === "string" ? s.specialite : undefined,
+    famille: typeof s.famille === "string" ? s.famille : undefined,
+  }),
   head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
@@ -80,6 +84,9 @@ function CardSkeleton() {
 
 function Page() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
+  const navigate = useNavigate({ from: "/$lang/therapeutes/" });
+  const searchParams = useSearch({ from: "/$lang/therapeutes/" });
+  const { specialite: specFilter, famille: famFilter } = searchParams;
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useSessionState<string | null>("therapists.selectedId", null);
   const [mobileTab, setMobileTab] = useSessionState<"list" | "map">("therapists.mobileTab", "list");
@@ -129,14 +136,62 @@ function Page() {
     },
   });
 
+  // ── Specialty / family filter → resolve to therapist_ids via pivot
+  const specFilterQuery = useQuery({
+    queryKey: ["therapists-by-specialty", specFilter ?? null, famFilter ?? null],
+    enabled: !!(specFilter || famFilter),
+    queryFn: async () => {
+      let q = supabase
+        .from("therapist_specialties")
+        .select("therapist_id, specialties!inner(slug, specialty_families!inner(slug))");
+      if (specFilter) q = q.eq("specialties.slug", specFilter);
+      if (famFilter) q = q.eq("specialties.specialty_families.slug", famFilter);
+      const { data, error } = await q;
+      if (error) throw error;
+      return Array.from(new Set((data ?? []).map((r: any) => r.therapist_id as string)));
+    },
+  });
+
+  // Label lookup for the active chip
+  const activeLabelQuery = useQuery({
+    queryKey: ["specialty-label", specFilter ?? null, famFilter ?? null],
+    enabled: !!(specFilter || famFilter),
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      if (specFilter) {
+        const { data } = await supabase.from("specialties").select("name_fr").eq("slug", specFilter).maybeSingle();
+        return (data as any)?.name_fr ?? specFilter;
+      }
+      if (famFilter) {
+        const { data } = await supabase.from("specialty_families").select("name_fr").eq("slug", famFilter).maybeSingle();
+        return (data as any)?.name_fr ?? famFilter;
+      }
+      return null;
+    },
+  });
+
   const isSearching = debounced.length >= 2;
   const isLoading =
     (!isSearching && defaultList.isLoading) ||
     (isSearching && (geo.isLoading || (!!geo.data?.ok && nearby.isLoading)));
   const cityNotFound = isSearching && !!geo.data && !geo.data.ok;
-  const filtered: Therapist[] = isSearching
+  const baseList: Therapist[] = isSearching
     ? (geo.data?.ok ? (nearby.data ?? []) : [])
     : (defaultList.data ?? []);
+
+  const hasSpecFilter = !!(specFilter || famFilter);
+  const specIds = specFilterQuery.data ?? [];
+  const filtered: Therapist[] = hasSpecFilter
+    ? baseList.filter((t) => specIds.includes(t.id))
+    : baseList;
+
+  const setSelection = (sel: { specialite?: string; famille?: string }) => {
+    navigate({
+      search: (prev: any) => ({ ...prev, specialite: sel.specialite, famille: sel.famille }),
+      replace: true,
+    });
+  };
+  const clearFilter = () => setSelection({});
 
   const handleCardClick = (t: Therapist) => {
     setSelectedId(t.id);
@@ -149,7 +204,29 @@ function Page() {
       {/* ── Specialty Explorer (4 families + search + all) ── */}
       <div className="border-b border-[rgba(184,110,249,0.15)] bg-[#0f0a1e] px-4 py-6 sm:py-8">
         <div className="mx-auto max-w-5xl">
-          <SpecialtyExplorer lang={lang} />
+          <SpecialtyExplorer
+            lang={lang}
+            active={{ specialite: specFilter, famille: famFilter }}
+            onSelect={setSelection}
+          />
+          {hasSpecFilter && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
+              <span className="text-white/50">Filtre actif :</span>
+              <button
+                onClick={clearFilter}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9] bg-[rgba(184,110,249,0.25)] px-3 py-1 font-medium text-white hover:bg-[rgba(184,110,249,0.4)]"
+              >
+                {activeLabelQuery.data ?? "…"}
+                <X className="h-3 w-3" />
+              </button>
+              <button
+                onClick={clearFilter}
+                className="rounded-full border border-white/15 px-3 py-1 text-white/70 hover:border-white/40 hover:text-white"
+              >
+                Tous les thérapeutes
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
