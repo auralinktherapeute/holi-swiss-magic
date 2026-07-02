@@ -10,6 +10,7 @@ import { useSessionState } from "@/hooks/use-session-state";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { useServerFn } from "@tanstack/react-start";
 import { geocodeCity } from "@/lib/geocode.functions";
+import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -143,7 +144,14 @@ function Page() {
   };
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 64px)" }}>
+    <div className="flex flex-col min-h-[calc(100vh-64px)]">
+
+      {/* ── Specialty Explorer (4 families + search + all) ── */}
+      <div className="border-b border-[rgba(184,110,249,0.15)] bg-[#0f0a1e] px-4 py-6 sm:py-8">
+        <div className="mx-auto max-w-5xl">
+          <SpecialtyExplorer lang={lang} />
+        </div>
+      </div>
 
       {/* ── Header barre ── */}
       <div className="flex items-center gap-3 border-b border-[rgba(184,110,249,0.15)] bg-[#0f0a1e] px-4 py-3">
@@ -178,7 +186,7 @@ function Page() {
       </div>
 
       {/* ── Split layout ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
 
         {/* ── Liste (40%) ── */}
         <div className={`flex flex-col overflow-y-auto bg-[#0f0a1e] ${mobileTab === "map" ? "hidden sm:flex" : "flex"} sm:w-[42%] w-full`}>

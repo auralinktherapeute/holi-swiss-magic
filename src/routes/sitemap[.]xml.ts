@@ -50,6 +50,29 @@ export const Route = createFileRoute("/sitemap.xml")({
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+          // Specialty families (indexable)
+          const { data: families } = await supabaseAdmin
+            .from("specialty_families")
+            .select("slug, updated_at");
+          for (const f of (families ?? []) as Array<{ slug: string; updated_at: string | null }>) {
+            const lastmod = f.updated_at ? f.updated_at.slice(0, 10) : undefined;
+            for (const lang of LANGS) {
+              urls.push(urlBlock(`${BASE_URL}/${lang}/therapeutes/famille/${f.slug}`, lastmod, "weekly", "0.8"));
+            }
+          }
+
+          // Active specialties (indexable)
+          const { data: specs } = await supabaseAdmin
+            .from("specialties")
+            .select("slug, updated_at")
+            .eq("is_active", true);
+          for (const s of (specs ?? []) as Array<{ slug: string; updated_at: string | null }>) {
+            const lastmod = s.updated_at ? s.updated_at.slice(0, 10) : undefined;
+            for (const lang of LANGS) {
+              urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${s.slug}`, lastmod, "weekly", "0.7"));
+            }
+          }
+
           const { data: therapists } = await supabaseAdmin
             .from("therapists")
             .select("slug, updated_at")
