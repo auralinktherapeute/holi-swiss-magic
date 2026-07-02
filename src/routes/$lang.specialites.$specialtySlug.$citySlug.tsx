@@ -5,6 +5,7 @@ import { getSpecialtyCityPage, pickI18n } from "@/lib/specialties.functions";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { useEffect } from "react";
 
 function humanCity(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -59,13 +60,19 @@ function Page() {
   const cityDisplay = city?.display_name || humanCity(citySlug);
   const shouldIndex = therapists.length > 0;
 
+  // Client-side noindex when the combination has no therapist yet.
+  // (Google honors late-injected robots meta on rerender.)
+  useEffect(() => {
+    if (shouldIndex) return;
+    const el = document.createElement("meta");
+    el.name = "robots";
+    el.content = "noindex,follow";
+    document.head.appendChild(el);
+    return () => { document.head.removeChild(el); };
+  }, [shouldIndex]);
+
   return (
     <>
-      {!shouldIndex && (
-        <head>
-          <meta name="robots" content="noindex,follow" />
-        </head>
-      )}
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
         <nav aria-label="Fil d'Ariane" className="mb-6 flex items-center gap-1 text-xs text-white/50">
           <Link to="/$lang" params={{ lang }} className="hover:text-white">Accueil</Link>
