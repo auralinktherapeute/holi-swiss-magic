@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
-  Menu, X, Home, Gauge, Workflow,
+  Menu, X, Home, Gauge, Workflow, Bell,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getAdminBadgeCounts } from "@/lib/admin.functions";
+import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { signOutCompletely } from "@/lib/auth-utils";
 
 export function AdminNav() {
@@ -20,6 +21,7 @@ export function AdminNav() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchBadgeCounts = useServerFn(getAdminBadgeCounts);
+  const fetchUnread = useServerFn(getUnreadNotificationCount);
   const email = user?.email ?? "admin@holiswiss.ch";
   const initial = email.charAt(0).toUpperCase();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,6 +45,7 @@ export function AdminNav() {
     therapists: number; waitlist: number; events: number;
     moderation: number; reviews: number; articles: number; subscriptions: number;
   }>({ therapists: 0, waitlist: 0, events: 0, moderation: 0, reviews: 0, articles: 0, subscriptions: 0 });
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +55,12 @@ export function AdminNav() {
         if (!cancelled) setCounts(c);
       } catch {
         // user may not be admin yet; ignore
+      }
+      try {
+        const u = await fetchUnread();
+        if (!cancelled) setUnread(u.count);
+      } catch {
+        /* ignore */
       }
     };
     load();
@@ -65,7 +74,7 @@ export function AdminNav() {
       window.clearInterval(interval);
       window.removeEventListener("focus", onFocus);
     };
-  }, [fetchBadgeCounts]);
+  }, [fetchBadgeCounts, fetchUnread]);
 
   // Hide the badge for the section the admin is currently viewing.
   const visibleCount = (path: string, value: number) =>
@@ -73,6 +82,7 @@ export function AdminNav() {
 
   const items = [
     { to: "/admin",                  icon: LayoutDashboard, label: t("admin.overview"),       exact: true },
+    { to: "/admin/notifications",    icon: Bell,            label: "Notifications",           badge: visibleCount("/admin/notifications", unread) },
     { to: "/admin/therapeutes",      icon: Users,           label: t("admin.therapists"),     badge: visibleCount("/admin/therapeutes", counts.therapists) },
     { to: "/admin/liste-attente",    icon: Hourglass,       label: t("admin.waitlist"),       badge: visibleCount("/admin/liste-attente", counts.waitlist) },
     { to: "/admin/moderation",       icon: ShieldAlert,     label: t("admin.moderation"),     badge: visibleCount("/admin/moderation", counts.moderation) },
