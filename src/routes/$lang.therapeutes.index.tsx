@@ -106,6 +106,24 @@ function Page() {
     queryFn: async () => geocode({ data: { query: debounced } }),
   });
 
+  const hasSpecFilter = !!(specFilter || famFilter);
+
+  // ── Specialty / family filter → resolve to therapist_ids via pivot
+  const specFilterQuery = useQuery({
+    queryKey: ["therapists-by-specialty", specFilter ?? null, famFilter ?? null],
+    enabled: hasSpecFilter,
+    queryFn: async () => {
+      let q = supabase
+        .from("therapist_specialties")
+        .select("therapist_id, specialties!inner(slug, specialty_families!inner(slug))");
+      if (specFilter) q = q.eq("specialties.slug", specFilter);
+      if (famFilter) q = q.eq("specialties.specialty_families.slug", famFilter);
+      const { data, error } = await q;
+      if (error) throw error;
+      return Array.from(new Set((data ?? []).map((r: any) => r.therapist_id as string)));
+    },
+  });
+
   const defaultList = useQuery({
     queryKey: ["therapists-map", specFilter ?? null, famFilter ?? null, specFilterQuery.data ?? null],
     enabled: debounced.length < 2 && (!hasSpecFilter || !!specFilterQuery.data),
@@ -139,22 +157,6 @@ function Page() {
       });
       if (error) throw error;
       return (data ?? []) as Therapist[];
-    },
-  });
-
-  // ── Specialty / family filter → resolve to therapist_ids via pivot
-  const specFilterQuery = useQuery({
-    queryKey: ["therapists-by-specialty", specFilter ?? null, famFilter ?? null],
-    enabled: !!(specFilter || famFilter),
-    queryFn: async () => {
-      let q = supabase
-        .from("therapist_specialties")
-        .select("therapist_id, specialties!inner(slug, specialty_families!inner(slug))");
-      if (specFilter) q = q.eq("specialties.slug", specFilter);
-      if (famFilter) q = q.eq("specialties.specialty_families.slug", famFilter);
-      const { data, error } = await q;
-      if (error) throw error;
-      return Array.from(new Set((data ?? []).map((r: any) => r.therapist_id as string)));
     },
   });
 
