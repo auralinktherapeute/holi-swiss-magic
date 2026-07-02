@@ -2115,17 +2115,35 @@ export type Database = {
           lng: number
         }[]
       }
-      search_specialties: {
-        Args: { _limit?: number; _q: string }
-        Returns: {
-          family_name_fr: string
-          family_slug: string
-          id: string
-          name_fr: string
-          rank: number
-          slug: string
-        }[]
-      }
+      search_specialties:
+        | {
+            Args: { _limit?: number; _q: string }
+            Returns: {
+              family_name_fr: string
+              family_slug: string
+              id: string
+              name_fr: string
+              rank: number
+              slug: string
+            }[]
+          }
+        | {
+            Args: { _lang?: string; _limit?: number; _q: string }
+            Returns: {
+              family_name_de: string
+              family_name_en: string
+              family_name_fr: string
+              family_name_it: string
+              family_slug: string
+              id: string
+              name_de: string
+              name_en: string
+              name_fr: string
+              name_it: string
+              rank: number
+              slug: string
+            }[]
+          }
       therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }
       therapists_within_radius: {
         Args: { _lat: number; _lng: number; _radius_m?: number }

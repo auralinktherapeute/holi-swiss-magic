@@ -26,6 +26,7 @@ const profileSchema = z.object({
   currency: z.string().max(10),
   years_experience: z.number().int().min(0).max(100).nullable(),
   specialties: z.array(z.string().max(100)).max(80),
+  specialty_ids: z.array(z.string().uuid()).max(80).optional(),
   services: z.array(z.unknown()).max(80),
   short_bio: z.string().max(500).nullable(),
   bio: z.string().max(5000).nullable(),
@@ -288,6 +289,15 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     //    stored in therapists.specialties. Match by normalized name_fr + aliases.
     try {
       const therapistId = result.data.id as string;
+      // If the client provided explicit specialty_ids (new UI), use them directly.
+      if (Array.isArray(data.specialty_ids) && data.specialty_ids.length > 0) {
+        await supabaseAdmin.from("therapist_specialties").delete().eq("therapist_id", therapistId);
+        await supabaseAdmin
+          .from("therapist_specialties")
+          .insert(data.specialty_ids.map((sid) => ({ therapist_id: therapistId, specialty_id: sid })));
+        await supabaseAdmin.from("specialty_import_pending").delete().eq("therapist_id", therapistId);
+        return { id: therapistId };
+      }
       const norm = (s: string) =>
         s
           .toLowerCase()
@@ -330,6 +340,18 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     }
 
     return { id: result.data.id as string };
+  });
+
+export const getMyTherapistSpecialtyIds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: t } = await supabaseAdmin
+      .from("therapists").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!t) return { specialty_ids: [] as string[] };
+    const { data: rows } = await supabaseAdmin
+      .from("therapist_specialties").select("specialty_id").eq("therapist_id", (t as any).id);
+    return { specialty_ids: ((rows ?? []) as any[]).map((r) => r.specialty_id) };
   });
 
 export const addMyTherapistDocument = createServerFn({ method: "POST" })

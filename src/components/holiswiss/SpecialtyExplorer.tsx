@@ -4,6 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { Search, Brain, Leaf, Hand, Sparkles, ChevronRight, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { listFamiliesWithCounts, searchSpecialties, listAllSpecialties } from "@/lib/specialties.functions";
+import { useTranslation } from "react-i18next";
+
+function pick(row: any, lang: string, field: "name" | "description" = "name"): string {
+  return row?.[`${field}_${lang}`] || row?.[`${field}_fr`] || "";
+}
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   brain: Brain,
@@ -15,7 +20,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 type Selection = { specialite?: string; famille?: string };
 
 export function SpecialtyExplorer({
-  lang: _lang,
+  lang,
   active,
   onSelect,
 }: {
@@ -23,6 +28,8 @@ export function SpecialtyExplorer({
   active: Selection;
   onSelect: (sel: Selection) => void;
 }) {
+  const { i18n } = useTranslation();
+  const uiLang = (lang || i18n.language || "fr").slice(0, 2);
   const fetchFamilies = useServerFn(listFamiliesWithCounts);
   const fetchSearch = useServerFn(searchSpecialties);
   const fetchAll = useServerFn(listAllSpecialties);
@@ -43,9 +50,9 @@ export function SpecialtyExplorer({
   });
 
   const search = useQuery({
-    queryKey: ["specialty-search", debounced],
+    queryKey: ["specialty-search", debounced, uiLang],
     enabled: debounced.length >= 2,
-    queryFn: () => fetchSearch({ data: { q: debounced } }),
+    queryFn: () => fetchSearch({ data: { q: debounced, lang: uiLang } }),
   });
 
   const all = useQuery({
@@ -57,14 +64,14 @@ export function SpecialtyExplorer({
   const groupedAll = useMemo(() => {
     if (!all.data) return [];
     return all.data.families
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map((f) => ({
+      .sort((a: any, b: any) => a.sort_order - b.sort_order)
+      .map((f: any) => ({
         ...f,
-        items: all.data.specialties
-          .filter((s) => s.family_id === f.id)
-          .sort((a, b) => a.name_fr.localeCompare(b.name_fr)),
+        items: all.data!.specialties
+          .filter((s: any) => s.family_id === f.id)
+          .sort((a: any, b: any) => pick(a, uiLang).localeCompare(pick(b, uiLang))),
       }));
-  }, [all.data]);
+  }, [all.data, uiLang]);
 
   return (
     <section className="w-full">
@@ -111,8 +118,8 @@ export function SpecialtyExplorer({
                 className="flex w-full items-center justify-between border-b border-white/5 px-4 py-3 text-left last:border-0 hover:bg-[rgba(184,110,249,0.12)]"
               >
                 <div>
-                  <div className="text-sm font-medium text-white">{r.name_fr}</div>
-                  <div className="text-xs text-[#b86ef9]">{r.family_name_fr}</div>
+                  <div className="text-sm font-medium text-white">{pick(r, uiLang)}</div>
+                  <div className="text-xs text-[#b86ef9]">{pick({ name_fr: (r as any).family_name_fr, name_de: (r as any).family_name_de, name_it: (r as any).family_name_it, name_en: (r as any).family_name_en }, uiLang)}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-white/40" />
               </button>
@@ -151,7 +158,7 @@ export function SpecialtyExplorer({
                 <Icon className="h-5 w-5" />
               </div>
               <div className="mt-3">
-                <div className="text-sm font-semibold leading-snug text-white">{f.name_fr}</div>
+                <div className="text-sm font-semibold leading-snug text-white">{pick(f, uiLang)}</div>
                 <div className="mt-1 text-xs text-white/50">
                   {f.specialties.length} spécialité{f.specialties.length > 1 ? "s" : ""}
                   {f.therapist_count > 0 && (
@@ -182,9 +189,9 @@ export function SpecialtyExplorer({
             {all.isLoading && <div className="text-sm text-white/50">Chargement…</div>}
             {groupedAll.map((f) => (
               <div key={f.id}>
-                <h3 className="mb-2 text-sm font-semibold text-[#b86ef9]">{f.name_fr}</h3>
+                <h3 className="mb-2 text-sm font-semibold text-[#b86ef9]">{pick(f, uiLang)}</h3>
                 <div className="flex flex-wrap gap-2">
-                  {f.items.map((s) => (
+                  {f.items.map((s: any) => (
                     <button
                       key={s.id}
                       type="button"
@@ -198,7 +205,7 @@ export function SpecialtyExplorer({
                           : "border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.08)] hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
                       }`}
                     >
-                      {s.name_fr}
+                      {pick(s, uiLang)}
                     </button>
                   ))}
                 </div>

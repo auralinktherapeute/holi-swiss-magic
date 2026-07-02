@@ -73,6 +73,38 @@ export const Route = createFileRoute("/sitemap.xml")({
             }
           }
 
+          // GEO combos: specialty × city, only when at least one active therapist exists
+          try {
+            const { data: geoPairs } = await supabaseAdmin
+              .from("therapist_specialties")
+              .select("specialties!inner(slug,is_active), therapists!inner(city,status)");
+            const seen = new Set<string>();
+            const cityToSlug = (c: string) =>
+              c
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/\p{Diacritic}/gu, "")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "");
+            for (const row of (geoPairs ?? []) as any[]) {
+              const specSlug = row.specialties?.slug;
+              const isActive = row.specialties?.is_active;
+              const city = row.therapists?.city;
+              const status = row.therapists?.status;
+              if (!specSlug || !isActive || !city || status !== "active") continue;
+              const cSlug = cityToSlug(city);
+              if (!cSlug) continue;
+              const key = `${specSlug}::${cSlug}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              for (const lang of LANGS) {
+                urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${specSlug}/${cSlug}`, undefined, "weekly", "0.6"));
+              }
+            }
+          } catch (err) {
+            console.error("sitemap: geo combos failed", err);
+          }
+
           const { data: therapists } = await supabaseAdmin
             .from("therapists")
             .select("slug, updated_at")

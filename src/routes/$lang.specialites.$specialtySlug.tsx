@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getSpecialtyPage } from "@/lib/specialties.functions";
+import { getSpecialtyPage, pickI18n } from "@/lib/specialties.functions";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
@@ -49,6 +49,8 @@ function Page() {
   }
 
   const { specialty, family, siblings, therapists } = query.data as any;
+  const specName = pickI18n(specialty, lang, "name");
+  const specDesc = pickI18n(specialty, lang, "description");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
@@ -64,30 +66,30 @@ function Page() {
               params={{ lang, familySlug: family.slug }}
               className="hover:text-white"
             >
-              {family.name_fr}
+              {pickI18n(family, lang, "name")}
             </Link>
           </>
         )}
         <ChevronRight className="h-3 w-3" />
-        <span className="text-white">{specialty.name_fr}</span>
+        <span className="text-white">{specName}</span>
       </nav>
 
       <header className="mb-8">
-        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{specialty.name_fr} en Suisse</h1>
-        {specialty.description_fr && (
+        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{specName} en Suisse</h1>
+        {specDesc && (
           <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base leading-relaxed">
-            {specialty.description_fr}
+            {specDesc}
           </p>
         )}
       </header>
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">
-          {therapists.length} thérapeute{therapists.length > 1 ? "s" : ""} en {specialty.name_fr}
+          {therapists.length} thérapeute{therapists.length > 1 ? "s" : ""} en {specName}
         </h2>
         {therapists.length === 0 ? (
           <p className="text-sm text-white/60">
-            Aucun thérapeute référencé en {specialty.name_fr} pour le moment.
+            Aucun thérapeute référencé en {specName} pour le moment.
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -131,7 +133,7 @@ function Page() {
                 params={{ lang, specialtySlug: s.slug }}
                 className="rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] px-4 py-2 text-sm text-white hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
               >
-                {s.name_fr}
+                {pickI18n(s, lang, "name")}
               </Link>
             ))}
           </div>

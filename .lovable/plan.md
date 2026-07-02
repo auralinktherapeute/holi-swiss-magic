@@ -1,73 +1,62 @@
+# Finalisation taxonomie spécialités — 4 chantiers
 
-# Restructuration des spécialités thérapeutes — Plan
+## 1. Traductions DE / IT / EN
 
-## Vue d'ensemble
+**Data** : une migration qui `UPDATE` les 4 familles + 31 spécialités pour remplir `name_de/it/en` et `description_fr/de/it/en` (traductions fournies via mapping en SQL, écrites à la main — pas d'appel LLM à l'exécution). Alias enrichis avec équivalents allemands courants (`hypnose`→`hypnotherapie`, `naturopathie`→`naturheilkunde`, etc.) pour que la recherche fonctionne dans les 4 langues.
 
-Passer d'un `text[]` non structuré (`therapists.specialties`) à une vraie taxonomie **famille → spécialité** en base, avec 4 familles principales, recherche floue (synonymes, accents, singulier/pluriel), et pages SEO indexables pour familles et spécialités.
+**Code** :
+- Helper `pickI18n(row, lang, field)` dans `src/lib/i18n.ts` (fallback FR si vide).
+- `SpecialtyExplorer`, `getFamilyPage`, `getSpecialtyPage`, `search_specialties` (RPC) : passer `lang` et retourner le bon champ.
+- Pages `/$lang/therapeutes/famille/$slug` et `/$lang/specialites/$slug` : titres + descriptions traduits, `hreflang` déjà présent.
 
-## 1. Base de données (migration)
+## 2. Route GEO `/$lang/specialites/$slug/$city`
 
-Créer 3 tables + backfill :
+**Route** : `src/routes/$lang.specialites.$specialtySlug.$citySlug.tsx`.
+- Loader : `getSpecialtyCityPage({ slug, city, lang })` — normalise la ville via `resolve_city`, retourne les thérapeutes actifs de cette spécialité dans un rayon de 30 km (RPC composant `therapists_within_radius` + filtre pivot).
+- Indexation conditionnelle : si `therapists.length === 0` → `robots: noindex, follow` + composant "aucun thérapeute pour l'instant, découvrez la spécialité". Sinon indexable normal.
+- `head()` : title `"{Spécialité} à {Ville} — Holiswiss"`, JSON-LD `BreadcrumbList` + `CollectionPage` avec `geo`, canonical self, hreflang.
+- Sitemap : générer les combinaisons ayant ≥ 1 thérapeute (jointure pivot × villes distinctes tirées de `therapists.city` normalisées). Pas de combinaisons vides dans le sitemap.
 
-- **`specialty_families`** : `id`, `slug` (unique), `name_fr/de/it/en`, `description_fr`, `sort_order`, `is_featured` (les 4 principales)
-- **`specialties`** : `id`, `family_id` (FK), `slug` (unique), `name_fr/de/it/en`, `description_fr`, `aliases text[]` (synonymes normalisés pour la recherche), `is_active`, `is_featured`
-- **`therapist_specialties`** : pivot `therapist_id` + `specialty_id` (PK composite)
+## 3. Admin taxonomie
 
-Fonction Postgres `normalize_search(text)` (unaccent + lowercase + trim) + fonction `search_specialties(q text)` qui match sur `name` et `aliases` avec ranking par pertinence.
+**Route** : ajouter un onglet "Taxonomie" dans `/admin/parametres` (nouveau composant `AdminSpecialtiesPanel`).
 
-**Seed initial** :
-- Famille 1 *Thérapies psychocorporelles* — sophrologie, hypnose, EMDR, psychothérapie, accompagnement-psy, relaxation
-- Famille 2 *Médecines naturelles* — naturopathie, phytothérapie, aromathérapie, fleurs-de-bach, nutrition, micronutrition, ayurveda, medecine-chinoise
-- Famille 3 *Corps et énergie* — réflexologie, shiatsu, acupuncture, ostéopathie, massage-bien-etre, reiki, magnétisme, massothérapie, lithothérapie, radiesthésie
-- Famille 4 *Développement personnel & expression* — coaching-de-vie, méditation, yoga, art-thérapie, breathwork, sonothérapie
+**Sections** :
+- **Familles** : liste (drag pour `sort_order`), édition inline (nom FR/DE/IT/EN, slug, icon, description, is_featured).
+- **Spécialités** : filtrées par famille, édition inline (nom multilingue, slug, aliases[], is_active, is_featured, changement de famille via select).
+- **Reclassement pending** : liste des `specialty_import_pending` (raw_label, thérapeute), avec bouton "Rattacher à…" qui insère dans `therapist_specialties` et supprime le pending. Bouton "Ignorer" (supprime juste).
 
-Chaque spécialité reçoit ses `aliases` (ex. `sophrologie` → `["sophro","sophrologue"]`, `psychothérapie` → `["psy","psychotherapeute","psychotherapie"]`, `massothérapie` → `["masso","masseur"]`).
+**Server fns** (admin only via `has_role admin`) dans `src/lib/specialties-admin.functions.ts` : `listAdminTaxonomy`, `saveFamily`, `saveSpecialty`, `deleteSpecialty`, `listPendingImports`, `resolvePendingImport`, `dismissPendingImport`.
 
-**Backfill** : mapping fuzzy des `therapists.specialties` existants vers les spécialités seedées via aliases + fallback "à mapper manuellement" (log dans une table `specialty_import_pending`). Colonne `therapists.specialties` conservée en lecture (compat) mais nouveaux ajouts via la pivot.
+## 4. Refonte profil thérapeute → pivot
 
-GRANTs : `SELECT` anon sur les 3 tables (lecture publique), `INSERT/UPDATE/DELETE` réservé aux admins via RLS.
+**UI** : dans `/dashboard/profil` (section "Spécialités"), remplacer la recherche + tags libres par un **sélecteur groupé par famille** :
+- Accordion par famille (4 sections), avec badge du nombre de spécialités cochées.
+- Chip toggle par spécialité (checkbox visuelle, multi-select, min 1 requis).
+- Champ recherche au-dessus qui met en surbrillance les correspondances (aliases inclus).
+- Panneau récap "Vos spécialités (N)" en haut avec chips retirables.
+- Aide contextuelle : "Choisissez toutes les spécialités que vous pratiquez — vous apparaîtrez dans chacune."
 
-## 2. UI annuaire — `/[lang]/therapeutes`
+**Data** :
+- Le formulaire manipule un `Set<specialtyId>` au lieu d'un `string[]` libre.
+- `saveMyTherapistProfile` accepte désormais `specialty_ids: string[]` (optionnel, en complément de `specialties` legacy pour compat).
+- Sync pivot : si `specialty_ids` fourni, remplace le pivot directement (plus besoin du matching par aliases côté serveur). Le champ `therapists.specialties` (text[]) reste rempli en miroir pour la carte publique existante (liste des labels).
+- Migration légère : trigger optionnel qui maintient `therapists.specialties` à partir de la pivot pour les futurs enregistrements — **non**, on garde la sync explicite côté server fn pour rester lisible.
 
-Refonte de la barre du haut :
-- **4 cartes familles** (icône + nom + count thérapeutes) — grid 2x2 mobile, 4 cols desktop
-- **Barre recherche spécialité** avec autocomplete (Command component shadcn, appel `search_specialties` debounced 200ms)
-- Lien discret **"Voir toutes les spécialités"** → drawer/modal listant tout, groupé par famille + tri A→Z
-- Chips actifs (famille ou spécialité sélectionnée) avec bouton clear
+## Ordre d'exécution
 
-Filtre appliqué à la liste existante : `therapists.specialties` OU pivot `therapist_specialties` (union pendant la période de backfill).
+1. Migration i18n (données) → 2. Helper `pickI18n` + intégration UI existante (annuaire + pages spécialité) → 3. Route GEO + sitemap → 4. Admin panel → 5. Refonte champ profil.
 
-## 3. Pages SEO
+## Points techniques
 
-Nouvelles routes TanStack :
-- `/$lang/therapeutes/famille/$familySlug` — hero + description + liste spécialités de la famille + thérapeutes
-- `/$lang/specialites/$specialtySlug` — hero + description + thérapeutes pratiquant cette spécialité + spécialités proches (même famille)
-- Route GEO préparée : `/$lang/specialites/$specialtySlug/$citySlug` — indexable seulement si ≥ 1 thérapeute (sinon `noindex`)
+- Un seul appel `supabase--migration` pour l'i18n (gros UPDATE data — passer par `supabase--insert` si migration refuse les `UPDATE` sans schéma).
+- RPC `search_specialties` étendu : accepter `_lang` et matcher aliases + `name_{lang}`.
+- Sitemap actuel (`src/routes/sitemap[.]xml.ts`) sera mis à jour avec les combinaisons GEO peuplées.
+- Aucun changement de schéma DB (colonnes déjà nullable, aliases déjà `text[]`).
+- Tests manuels : commuter langue sur `/de/therapeutes` → familles affichées en allemand ; ouvrir `/fr/specialites/sophrologie/geneve` → si thérapeute présent, indexable ; admin peut reclasser "Perte de poids" → apparaît dans les résultats correspondants ; profil thérapeute → sélection multi propre, sync annuaire immédiate.
 
-Chaque page :
-- `head()` : title unique, description, canonical self, hreflang, JSON-LD `BreadcrumbList` + `CollectionPage`
-- Breadcrumbs UI
-- Contenu introductif (depuis `description_fr` en base, éditable)
+## Non inclus
 
-**Sitemap** : ajout des URLs familles + spécialités actives.
-
-**`noindex`** sur les résultats de recherche libre (`?q=…`) via `<meta robots="noindex, follow">`.
-
-## 4. Admin (léger)
-
-Section `/admin/parametres` → onglet "Taxonomie spécialités" :
-- CRUD familles + spécialités (nom, slug, description, aliases, is_active)
-- Liste des mappings en attente (specialty_import_pending) pour reclassement manuel
-
-## Détails techniques
-
-**Recherche floue** : `normalize_search()` s'appuie sur l'extension `unaccent` (déjà activable). Query : `SELECT s.* FROM specialties s WHERE normalize_search(s.name_fr) LIKE '%'||normalize_search($1)||'%' OR EXISTS (SELECT 1 FROM unnest(s.aliases) a WHERE normalize_search(a) LIKE '%'||normalize_search($1)||'%') ORDER BY (normalize_search(s.name_fr) = normalize_search($1)) DESC, length(s.name_fr) ASC LIMIT 10`.
-
-**Server fn** : `searchSpecialties({ q })`, `getFamilyPage({ slug })`, `getSpecialtyPage({ slug, city? })` dans `src/lib/specialties.functions.ts` (publiques, publishable client, RLS anon).
-
-**i18n** : seed FR d'abord, colonnes DE/IT/EN nullable, fallback FR côté UI.
-
-**Non-fait volontairement** (à confirmer si tu veux les inclure) :
-- Traductions DE/IT/EN complètes des noms/descriptions
-- Génération auto des pages GEO pour toutes les villes suisses
-- Refonte du profil thérapeute pour éditer ses spécialités via la nouvelle pivot (les thérapeutes continueront à voir l'ancien champ jusqu'au sprint suivant)
+- Traduction automatique via LLM (les libellés sont écrits à la main pour rester exacts).
+- Pages GEO pour toutes les villes suisses en pré-génération (seules les combinaisons peuplées sont indexées).
+- Refonte des accréditations / autres champs profil (hors scope).

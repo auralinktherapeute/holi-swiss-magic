@@ -37,6 +37,7 @@ import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
+import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -121,6 +122,7 @@ function ProfilePage() {
 
   // Specialties
   const [specialties, setSpecialties] = useSessionState<string[]>(`${profileStatePrefix}.specialties`, []);
+  const [specialtyIds, setSpecialtyIds] = useSessionState<string[]>(`${profileStatePrefix}.specialtyIds`, []);
   const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
   const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
 
@@ -419,6 +421,7 @@ function ProfilePage() {
           currency,
           years_experience: payload.years_experience,
           specialties,
+          specialty_ids: specialtyIds,
           services,
           short_bio: payload.short_bio,
           bio: payload.bio,
@@ -639,67 +642,11 @@ function ProfilePage() {
 
         {/* Specialties */}
         <Section title={t("profile_edit.section_specialties") + " *"}>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
-            <Input value={specSearch} onChange={(e) => setSpecSearch(e.target.value)} placeholder={t("profile_edit.search_specialty")} className={`${inputClass} pl-9`} />
-          </div>
-
-          {specialties.length > 0 && (
-            <div className="mt-5">
-              <p className="mb-2 text-sm text-[#a89bc4]">{t("profile_edit.selected_count", { count: specialties.length })}</p>
-              <div className="flex flex-wrap gap-2">
-                {specialties.map((s) => {
-                  const isCustom = !THERAPY_SPECIALTIES.includes(s);
-                  return (
-                    <div key={s} className={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
-                      isCustom
-                        ? "border-[#5cc8fa]/50 bg-[#5cc8fa]/10 text-[#9be0ff]"
-                        : "border-[#b86ef9]/40 bg-[#b86ef9]/10 text-white"
-                    }`}>
-                      <span>{s}</span>
-                      {isCustom && (
-                        <span className="rounded bg-[#5cc8fa]/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-[#9be0ff]">
-                          {t("profile_edit.custom_badge")}
-                        </span>
-                      )}
-                      <button type="button" onClick={() => removeSpec(s)} className="opacity-60 transition group-hover:opacity-100">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {filteredSpecs.map((s) => {
-              const active = specialties.includes(s);
-              return (
-                <button key={s} type="button" onClick={() => toggleSpec(s)}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                    active
-                      ? "border-[#b86ef9] bg-gradient-to-br from-[#b86ef9] to-[#a855f7] text-white shadow-md shadow-[#b86ef9]/30"
-                      : "border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.5)] text-[#d4c4e0] hover:border-[#b86ef9]/60 hover:bg-[rgba(60,20,90,0.5)]"
-                  }`}>
-                  {active && <Check className="h-4 w-4" />}
-                  {s}
-                </button>
-              );
-            })}
-          </div>
-
-          <Divider />
-
-          <Label className="text-sm font-medium text-white/90">{t("profile_edit.add_custom_specialty")}</Label>
-          <div className="mt-2 flex gap-2">
-            <Input value={customSpec} onChange={(e) => setCustomSpec(e.target.value)} placeholder={t("profile_edit.custom_placeholder")} className={inputClass}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSpec(); } }} />
-            <Button type="button" onClick={addCustomSpec} variant="outline"
-              className="border-[#b86ef9]/40 bg-transparent text-[#d4a5f9] hover:bg-[#b86ef9]/10">
-              <Plus className="mr-1.5 h-4 w-4" />{t("profile_edit.add_btn")}
-            </Button>
-          </div>
+          <TaxonomySpecialtyPicker
+            selectedIds={specialtyIds}
+            onChange={(ids) => { setSpecialtyIds(ids); markDirty(); }}
+            onLabelsChange={(labels) => setSpecialties(labels)}
+          />
         </Section>
 
         {/* Services */}
