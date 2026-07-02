@@ -60,6 +60,7 @@ import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$l
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
 import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
+import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -323,6 +324,12 @@ const ApiPublicHooksArticleAgentRoute =
     path: '/api/public/hooks/article-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LangTherapeutesFamilleFamilySlugRoute =
+  LangTherapeutesFamilleFamilySlugRouteImport.update({
+    id: '/therapeutes/famille/$familySlug',
+    path: '/therapeutes/famille/$familySlug',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   id: '/blog/categorie/$slug',
   path: '/blog/categorie/$slug',
@@ -380,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
+  '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
@@ -431,6 +439,7 @@ export interface FileRoutesByTo {
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
+  '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
@@ -486,6 +495,7 @@ export interface FileRoutesById {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
+  '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/$lang/blog/categorie/$slug'
+    | '/$lang/therapeutes/famille/$familySlug'
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesByTo: FileRoutesByTo
@@ -593,6 +604,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
     | '/$lang/blog/categorie/$slug'
+    | '/$lang/therapeutes/famille/$familySlug'
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/seo-audit-agent'
   id:
@@ -647,6 +659,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/$lang/blog/categorie/$slug'
+    | '/$lang/therapeutes/famille/$familySlug'
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesById: FileRoutesById
@@ -1023,6 +1036,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksArticleAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/therapeutes/famille/$familySlug': {
+      id: '/$lang/therapeutes/famille/$familySlug'
+      path: '/therapeutes/famille/$familySlug'
+      fullPath: '/$lang/therapeutes/famille/$familySlug'
+      preLoaderRoute: typeof LangTherapeutesFamilleFamilySlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/blog/categorie/$slug': {
       id: '/$lang/blog/categorie/$slug'
       path: '/blog/categorie/$slug'
@@ -1052,6 +1072,7 @@ interface LangRouteChildren {
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
   LangBlogCategorieSlugRoute: typeof LangBlogCategorieSlugRoute
+  LangTherapeutesFamilleFamilySlugRoute: typeof LangTherapeutesFamilleFamilySlugRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
@@ -1073,6 +1094,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
   LangBlogCategorieSlugRoute: LangBlogCategorieSlugRoute,
+  LangTherapeutesFamilleFamilySlugRoute: LangTherapeutesFamilleFamilySlugRoute,
 }
 
 const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
