@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Search, ShieldCheck, Sparkles } from "lucide-react";
+import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import lotusNeonAsset from "@/assets/lotus-transparent.png.asset.json";
+import heroTherapyAsset from "@/assets/hero-therapy-session.jpg.asset.json";
+import therapistsGridAsset from "@/assets/therapists-grid.jpg.asset.json";
+import wellnessAmbientAsset from "@/assets/wellness-ambient.jpg.asset.json";
 const lotusAsset = lotusNeonAsset;
 
 type Variant = 1 | 2 | 3 | 4;
