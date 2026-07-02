@@ -872,8 +872,10 @@ export type Database = {
       }
       crm_tasks: {
         Row: {
+          contact_id: string | null
           created_at: string
           description: string | null
+          done: boolean
           done_at: string | null
           due_at: string | null
           entity_id: string | null
@@ -886,8 +888,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          contact_id?: string | null
           created_at?: string
           description?: string | null
+          done?: boolean
           done_at?: string | null
           due_at?: string | null
           entity_id?: string | null
@@ -900,8 +904,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          contact_id?: string | null
           created_at?: string
           description?: string | null
+          done?: boolean
           done_at?: string | null
           due_at?: string | null
           entity_id?: string | null
@@ -914,6 +920,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "crm_tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "crm_tasks_therapist_id_fkey"
             columns: ["therapist_id"]
