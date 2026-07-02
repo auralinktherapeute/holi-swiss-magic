@@ -6,13 +6,22 @@ import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
+const T = {
+  fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", therapist: "thérapeute", therapistPlural: "thérapeutes", inSpec: "en", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Spécialités proches", titleSuffix: "en Suisse — Thérapeutes certifiés | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils vérifiés, tarifs, avis. Prenez rendez-vous en quelques clics.` },
+  de: { home: "Startseite", therapists: "Therapeuten", inSwitzerland: "in der Schweiz", loading: "Wird geladen…", notFound: "Spezialität nicht gefunden.", back: "Zurück zum Verzeichnis", therapist: "Therapeut", therapistPlural: "Therapeuten", inSpec: "in", none: "Noch keine Therapeuten für", forNow: "eingetragen.", nearby: "Ähnliche Spezialitäten", titleSuffix: "in der Schweiz — Zertifizierte Therapeuten | Holiswiss", desc: (l: string) => `Finden Sie eine Fachperson für ${l} in der Schweiz: geprüfte Profile, Preise, Bewertungen. In wenigen Klicks buchen.` },
+  it: { home: "Home", therapists: "Terapeuti", inSwitzerland: "in Svizzera", loading: "Caricamento…", notFound: "Specialità non trovata.", back: "Torna alla directory", therapist: "terapeuta", therapistPlural: "terapeuti", inSpec: "in", none: "Nessun terapeuta registrato in", forNow: "per il momento.", nearby: "Specialità simili", titleSuffix: "in Svizzera — Terapeuti certificati | Holiswiss", desc: (l: string) => `Trova un professionista di ${l} in Svizzera: profili verificati, tariffe, recensioni. Prenota in pochi clic.` },
+  en: { home: "Home", therapists: "Therapists", inSwitzerland: "in Switzerland", loading: "Loading…", notFound: "Specialty not found.", back: "Back to directory", therapist: "therapist", therapistPlural: "therapists", inSpec: "in", none: "No therapists listed in", forNow: "yet.", nearby: "Related specialties", titleSuffix: "in Switzerland — Certified therapists | Holiswiss", desc: (l: string) => `Find a ${l} practitioner in Switzerland: verified profiles, prices, reviews. Book in a few clicks.` },
+} as const;
+function tr(lang: string) { return (T as any)[lang] ?? T.fr; }
+
 export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
   component: Page,
   head: ({ params }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`;
     const label = params.specialtySlug.replace(/-/g, " ");
-    const title = `${label} en Suisse — Thérapeutes certifiés | Holiswiss`;
-    const description = `Trouvez un praticien de ${label} en Suisse : profils vérifiés, tarifs, avis. Prenez rendez-vous en quelques clics.`;
+    const t = tr(params.lang);
+    const title = `${label} ${t.titleSuffix}`;
+    const description = t.desc(label);
     return {
       meta: [
         { title },
@@ -30,6 +39,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
 
 function Page() {
   const { lang, specialtySlug } = useParams({ from: "/$lang/specialites/$specialtySlug" });
+  const t = tr(lang);
   const fetchSpec = useServerFn(getSpecialtyPage);
   const query = useQuery({
     queryKey: ["specialty-page", specialtySlug],
@@ -37,13 +47,13 @@ function Page() {
   });
 
   if (query.isLoading) {
-    return <div className="min-h-[60vh] flex items-center justify-center text-white/60">Chargement…</div>;
+    return <div className="min-h-[60vh] flex items-center justify-center text-white/60">{t.loading}</div>;
   }
   if (!query.data) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 text-white">
-        <p>Spécialité introuvable.</p>
-        <Link to="/$lang/therapeutes" params={{ lang }} className="text-[#5cc8fa] underline">Retour à l'annuaire</Link>
+        <p>{t.notFound}</p>
+        <Link to="/$lang/therapeutes" params={{ lang }} className="text-[#5cc8fa] underline">{t.back}</Link>
       </div>
     );
   }
@@ -54,10 +64,10 @@ function Page() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <nav aria-label="Fil d'Ariane" className="mb-6 flex items-center gap-1 text-xs text-white/50">
-        <Link to="/$lang" params={{ lang }} className="hover:text-white">Accueil</Link>
+      <nav aria-label="breadcrumb" className="mb-6 flex items-center gap-1 text-xs text-white/50">
+        <Link to="/$lang" params={{ lang }} className="hover:text-white">{t.home}</Link>
         <ChevronRight className="h-3 w-3" />
-        <Link to="/$lang/therapeutes" params={{ lang }} className="hover:text-white">Thérapeutes</Link>
+        <Link to="/$lang/therapeutes" params={{ lang }} className="hover:text-white">{t.therapists}</Link>
         {family && (
           <>
             <ChevronRight className="h-3 w-3" />
@@ -75,7 +85,7 @@ function Page() {
       </nav>
 
       <header className="mb-8">
-        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{specName} en Suisse</h1>
+        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{specName} {t.inSwitzerland}</h1>
         {specDesc && (
           <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base leading-relaxed">
             {specDesc}
@@ -85,11 +95,11 @@ function Page() {
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">
-          {therapists.length} thérapeute{therapists.length > 1 ? "s" : ""} en {specName}
+          {therapists.length} {therapists.length > 1 ? t.therapistPlural : t.therapist} {t.inSpec} {specName}
         </h2>
         {therapists.length === 0 ? (
           <p className="text-sm text-white/60">
-            Aucun thérapeute référencé en {specName} pour le moment.
+            {t.none} {specName} {t.forNow}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -123,7 +133,7 @@ function Page() {
       {siblings.length > 0 && (
         <section className="mt-12 border-t border-white/10 pt-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#b86ef9]">
-            Spécialités proches
+            {t.nearby}
           </h2>
           <div className="flex flex-wrap gap-2">
             {siblings.map((s: any) => (
