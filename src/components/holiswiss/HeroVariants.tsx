@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
@@ -10,19 +10,6 @@ import wellnessAmbientAsset from "@/assets/wellness-ambient.jpg.asset.json";
 const lotusAsset = lotusNeonAsset;
 
 type Variant = 1 | 2 | 3 | 4;
-
-function LotusGlow({ size = 80, className = "" }: { size?: number; className?: string }) {
-  return (
-    <img
-      src={lotusAsset.url}
-      alt="Holiswiss lotus"
-      width={size}
-      height={size}
-      className={`hv-lotus-glow ${className}`}
-      style={{ width: size, height: size, objectFit: "contain" }}
-    />
-  );
-}
 
 function LotusNeon({ size = 80, className = "", style }: { size?: number; className?: string; style?: React.CSSProperties }) {
   return (
@@ -345,60 +332,6 @@ function VariantSpecialtiesCarousel() {
 }
 
 /* ───────── Legacy Variant kept for reference (unused) ───────── */
-function _VariantSplitLegacy() {
-  const { t } = useTranslation();
-  const { lang } = useParams({ from: "/$lang/" });
-  return (
-    <section
-      className="relative min-h-screen overflow-hidden text-white"
-      style={{ background: "radial-gradient(ellipse at 80% 50%, #3d1a5c 0%, #2d1248 60%, #1a0a2e 100%)" }}
-    >
-      <div className="absolute inset-x-0 top-16 mx-auto h-px max-w-7xl bg-gradient-to-r from-transparent via-[#b86ef9] to-[#5cc8fa] opacity-60" />
-      <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 items-center gap-10 px-6 py-24 md:grid-cols-5">
-        <div className="md:col-span-3 space-y-6">
-          <div className="hv-slide-up flex items-center gap-3" style={{ animationDelay: "0ms" }}>
-            <LotusNeon size={80} className="hv-lotus-glow" />
-            <Wordmark />
-          </div>
-          <h1 className="hv-slide-up text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl" style={{ animationDelay: "150ms" }}>
-            {t("hero.title_part1")} <span className="bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] bg-clip-text text-transparent">{t("hero.title_highlight")}</span>{t("hero.title_part2")}
-          </h1>
-          <p className="hv-slide-up max-w-xl text-lg text-[#d4c4e0]" style={{ animationDelay: "300ms" }}>
-            {t("hero.subtitle")}
-          </p>
-          <div className="hv-slide-up relative max-w-xl rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.6)] p-2 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl" style={{ animationDelay: "450ms" }}>
-            <div className="flex items-center">
-              <Search className="ml-4 h-5 w-5 text-[#b9a4d4]" />
-              <input
-                type="search"
-                aria-label={t("hero.search_placeholder")}
-                className="h-12 flex-1 bg-transparent px-3 text-white placeholder:text-[#c4b5dd] focus:outline-none"
-                placeholder={t("hero.search_placeholder")}
-              />
-              <Link to="/$lang/therapeutes" params={{ lang }}>
-                <Button className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">{t("hero.search_btn")}</Button>
-              </Link>
-            </div>
-          </div>
-          <div className="hv-slide-up flex flex-wrap gap-5 text-sm text-[#c8b8df]" style={{ animationDelay: "600ms" }}>
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#5cc8fa]" />{t("hero.trust_verified")}</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-4 w-4 text-[#d4a5f9]" />{t("hero.trust_cantons")}</span>
-          </div>
-        </div>
-        <div className="md:col-span-2 relative flex items-center justify-center">
-          <div className="hv-aura" />
-          <div className="hv-aura hv-aura-2" />
-          <div className="hv-aura hv-aura-3" />
-          <LotusNeon
-            size={320}
-            className="hv-lotus-spin relative z-10"
-            style={{ filter: "drop-shadow(0 0 50px rgba(184,110,249,0.85)) drop-shadow(0 0 90px rgba(92,200,250,0.45))" }}
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
 /* ───────── Wrapper with dev selector ───────── */
 export function HeroVariants() {
   const [variant, setVariant] = useState<Variant>(1);
