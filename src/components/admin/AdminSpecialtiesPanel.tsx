@@ -146,7 +146,7 @@ export function AdminSpecialtiesPanel() {
               <div style={{ display: "grid", gap: 8 }}>
                 {pending.map((p) => (
                   <PendingRow key={p.id} pending={p} specialties={specialties} families={families}
-                    onResolve={async (specialty_id) => {
+                    onResolve={async (specialty_id: string) => {
                       try { await fetchResolve({ data: { pending_id: p.id, specialty_id } }); toast.success("Rattaché"); invalidate(); }
                       catch (e: any) { toast.error(e.message || "Erreur"); }
                     }}
