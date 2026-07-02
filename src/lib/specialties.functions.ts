@@ -9,11 +9,26 @@ function serverClient() {
   });
 }
 
+export type Lang = "fr" | "de" | "it" | "en";
+function pickLang(lang: string): Lang {
+  return (["fr", "de", "it", "en"].includes(lang) ? lang : "fr") as Lang;
+}
+export function pickI18n<T extends Record<string, any>>(row: T, lang: string, field: "name" | "description" = "name"): string {
+  const l = pickLang(lang);
+  return (row[`${field}_${l}`] as string) || (row[`${field}_fr`] as string) || "";
+}
+
 export type FamilyRow = {
   id: string;
   slug: string;
   name_fr: string;
+  name_de: string | null;
+  name_it: string | null;
+  name_en: string | null;
   description_fr: string | null;
+  description_de: string | null;
+  description_it: string | null;
+  description_en: string | null;
   icon: string | null;
   sort_order: number;
 };
@@ -22,7 +37,13 @@ export type SpecialtyRow = {
   id: string;
   slug: string;
   name_fr: string;
+  name_de: string | null;
+  name_it: string | null;
+  name_en: string | null;
   description_fr: string | null;
+  description_de: string | null;
+  description_it: string | null;
+  description_en: string | null;
   family_id: string;
   aliases: string[];
   is_featured: boolean;
@@ -34,11 +55,11 @@ export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
     const [{ data: families }, { data: specs }, { data: pivot }] = await Promise.all([
       sb
         .from("specialty_families")
-        .select("id,slug,name_fr,description_fr,icon,sort_order")
+        .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,icon,sort_order")
         .order("sort_order", { ascending: true }),
       sb
         .from("specialties")
-        .select("id,slug,name_fr,family_id,is_featured")
+        .select("id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured")
         .eq("is_active", true),
       sb.from("therapist_specialties").select("specialty_id"),
     ]);
@@ -48,13 +69,16 @@ export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
       countsBySpec.set(row.specialty_id, (countsBySpec.get(row.specialty_id) ?? 0) + 1);
     }
 
-    const specsByFamily = new Map<string, Array<{ id: string; slug: string; name_fr: string; count: number; is_featured: boolean }>>();
-    for (const s of (specs ?? []) as Array<SpecialtyRow>) {
+    const specsByFamily = new Map<string, Array<any>>();
+    for (const s of (specs ?? []) as Array<any>) {
       const arr = specsByFamily.get(s.family_id) ?? [];
       arr.push({
         id: s.id,
         slug: s.slug,
         name_fr: s.name_fr,
+        name_de: s.name_de,
+        name_it: s.name_it,
+        name_en: s.name_en,
         count: countsBySpec.get(s.id) ?? 0,
         is_featured: s.is_featured,
       });
@@ -74,9 +98,9 @@ export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
 );
 
 export const searchSpecialties = createServerFn({ method: "POST" })
-  .inputValidator((data: { q: string }) => {
+  .inputValidator((data: { q: string; lang?: string }) => {
     const q = String(data?.q ?? "").trim();
-    return { q: q.slice(0, 80) };
+    return { q: q.slice(0, 80), lang: String(data?.lang ?? "fr").slice(0, 5) };
   })
   .handler(async ({ data }) => {
     if (data.q.length < 2) return [];
@@ -84,16 +108,10 @@ export const searchSpecialties = createServerFn({ method: "POST" })
     const { data: rows, error } = await sb.rpc("search_specialties", {
       _q: data.q,
       _limit: 10,
+      _lang: data.lang,
     });
     if (error) return [];
-    return (rows ?? []) as Array<{
-      id: string;
-      slug: string;
-      name_fr: string;
-      family_slug: string;
-      family_name_fr: string;
-      rank: number;
-    }>;
+    return (rows ?? []) as Array<any>;
   });
 
 export const getFamilyPage = createServerFn({ method: "GET" })
@@ -102,14 +120,14 @@ export const getFamilyPage = createServerFn({ method: "GET" })
     const sb = serverClient();
     const { data: family } = await sb
       .from("specialty_families")
-      .select("id,slug,name_fr,description_fr,icon")
+      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,icon")
       .eq("slug", data.slug)
       .maybeSingle();
     if (!family) return null;
 
     const { data: specs } = await sb
       .from("specialties")
-      .select("id,slug,name_fr,description_fr,is_featured")
+      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,is_featured")
       .eq("family_id", (family as { id: string }).id)
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
@@ -145,23 +163,23 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
     const sb = serverClient();
     const { data: specialty } = await sb
       .from("specialties")
-      .select("id,slug,name_fr,description_fr,family_id,aliases")
+      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,family_id,aliases")
       .eq("slug", data.slug)
       .eq("is_active", true)
       .maybeSingle();
     if (!specialty) return null;
 
-    const s = specialty as { id: string; slug: string; name_fr: string; description_fr: string | null; family_id: string; aliases: string[] };
+    const s = specialty as any;
 
     const { data: family } = await sb
       .from("specialty_families")
-      .select("id,slug,name_fr")
+      .select("id,slug,name_fr,name_de,name_it,name_en")
       .eq("id", s.family_id)
       .maybeSingle();
 
     const { data: siblings } = await sb
       .from("specialties")
-      .select("id,slug,name_fr")
+      .select("id,slug,name_fr,name_de,name_it,name_en")
       .eq("family_id", s.family_id)
       .eq("is_active", true)
       .neq("id", s.id)
@@ -192,11 +210,57 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
 export const listAllSpecialties = createServerFn({ method: "GET" }).handler(async () => {
   const sb = serverClient();
   const [{ data: families }, { data: specs }] = await Promise.all([
-    sb.from("specialty_families").select("id,slug,name_fr,sort_order").order("sort_order"),
-    sb.from("specialties").select("id,slug,name_fr,family_id,is_featured").eq("is_active", true),
+    sb.from("specialty_families").select("id,slug,name_fr,name_de,name_it,name_en,sort_order").order("sort_order"),
+    sb.from("specialties").select("id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured").eq("is_active", true),
   ]);
   return {
-    families: (families ?? []) as Array<{ id: string; slug: string; name_fr: string; sort_order: number }>,
-    specialties: (specs ?? []) as Array<{ id: string; slug: string; name_fr: string; family_id: string; is_featured: boolean }>,
+    families: (families ?? []) as Array<any>,
+    specialties: (specs ?? []) as Array<any>,
   };
 });
+
+// ─── GEO page: therapists in a given city for a given specialty ───
+export const getSpecialtyCityPage = createServerFn({ method: "GET" })
+  .inputValidator((data: { slug: string; city: string }) => ({
+    slug: String(data?.slug ?? "").slice(0, 80),
+    city: String(data?.city ?? "").slice(0, 80),
+  }))
+  .handler(async ({ data }) => {
+    const sb = serverClient();
+    const { data: specialty } = await sb
+      .from("specialties")
+      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,family_id,aliases")
+      .eq("slug", data.slug)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!specialty) return null;
+
+    const { data: cityRow } = await sb.rpc("resolve_city", { _input: data.city });
+    const city = Array.isArray(cityRow) ? cityRow[0] : cityRow;
+    if (!city) return { specialty, family: null, city: null, therapists: [] };
+
+    const { data: family } = await sb
+      .from("specialty_families")
+      .select("id,slug,name_fr,name_de,name_it,name_en")
+      .eq("id", (specialty as any).family_id)
+      .maybeSingle();
+
+    // Therapists with this specialty in a 30km radius around resolved city
+    const { data: pivot } = await sb
+      .from("therapist_specialties")
+      .select("therapist_id")
+      .eq("specialty_id", (specialty as any).id);
+    const specIds = ((pivot ?? []) as any[]).map((p) => p.therapist_id);
+    if (specIds.length === 0) {
+      return { specialty, family, city, therapists: [] };
+    }
+
+    const { data: near } = await sb.rpc("therapists_within_radius", {
+      _lat: (city as any).lat,
+      _lng: (city as any).lng,
+      _radius_m: 30000,
+    });
+    const set = new Set(specIds);
+    const therapists = ((near ?? []) as any[]).filter((t) => set.has(t.id));
+    return { specialty, family, city, therapists };
+  });
