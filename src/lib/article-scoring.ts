@@ -98,7 +98,6 @@ export function computeSeo(a: ArticleLike): SeoResult {
     { key: "meta", label: "Meta description (150–160 caractères)", ok: metaLen >= 150 && metaLen <= 160, hint: `Actuel : ${metaLen} car.` },
     { key: "slug", label: "Slug URL propre", ok: slugClean && slug.length > 0, hint: slug || "manquant" },
     { key: "image", label: "Image principale + alt text", ok: !!a.cover_image_url && coverAltPresent, hint: !a.cover_image_url ? "Pas de cover" : coverAltPresent ? "OK" : "Alt text de l'image manquant" },
-    { key: "body_alt", label: "Images du contenu avec alt", ok: !altPresent ? true : altPresent, hint: altPresent ? "OK" : "—" },
     { key: "internal", label: "Au moins 1 lien interne", ok: internalLinks >= 1, hint: `${internalLinks} lien(s)` },
     { key: "words", label: "Au moins 300 mots", ok: wc >= 300, hint: `${wc} mots` },
     { key: "kw_title", label: "Mot-clé principal dans le titre", ok: titleHasKw, hint: kw ? `« ${kw} »` : "—" },
