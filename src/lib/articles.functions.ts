@@ -135,6 +135,7 @@ export const createArticle = createServerFn({ method: "POST" })
         published_at,
         author_id: context.userId,
         cover_image_url: data.cover_image_url || null,
+        image_alt_text: data.image_alt_text?.trim() || null,
       })
       .select("id,slug")
       .single();
@@ -158,7 +159,7 @@ export const updateArticle = createServerFn({ method: "POST" })
 
     const { error } = await (supabaseAdmin as any)
       .from("articles")
-      .update({ ...fields, published_at, cover_image_url: fields.cover_image_url || null })
+      .update({ ...fields, published_at, cover_image_url: fields.cover_image_url || null, image_alt_text: fields.image_alt_text?.trim() || null })
       .eq("id", id);
 
     if (error) throw new Error("Impossible de mettre à jour l'article.");
