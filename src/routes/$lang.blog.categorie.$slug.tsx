@@ -165,7 +165,7 @@ function Page() {
                 >
                   <div className="aspect-video overflow-hidden bg-[#522870]">
                     {article.cover_image_url ? (
-                      <img src={article.cover_image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <img src={article.cover_image_url} alt={(article as any).image_alt_text || title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-4xl">🌿</div>
                     )}
