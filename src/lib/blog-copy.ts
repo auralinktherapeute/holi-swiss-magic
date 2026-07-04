@@ -30,8 +30,8 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
   fr: {
     navBlog: "Blog",
     badge: "Blog bien-être",
-    heroTitlePart1: "Inspirations &",
-    heroTitleHighlight: "conseils",
+    heroTitlePart1: "Blog bien-être :",
+    heroTitleHighlight: "thérapies holistiques en Suisse",
     heroSubtitle: "Pratiques, guides et témoignages pour prendre soin de vous — corps, âme et esprit.",
     emptyTitle: "Aucun article pour l'instant",
     emptySubtitle: "Revenez bientôt !",
@@ -55,8 +55,8 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
   de: {
     navBlog: "Blog",
     badge: "Wellness-Blog",
-    heroTitlePart1: "Inspirationen &",
-    heroTitleHighlight: "Ratgeber",
+    heroTitlePart1: "Wellness-Blog:",
+    heroTitleHighlight: "ganzheitliche Therapien in der Schweiz",
     heroSubtitle: "Praktiken, Leitfäden und Erfahrungsberichte für Ihr Wohlbefinden — Körper, Seele und Geist.",
     emptyTitle: "Noch keine Artikel",
     emptySubtitle: "Schauen Sie bald wieder vorbei!",
@@ -80,8 +80,8 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
   it: {
     navBlog: "Blog",
     badge: "Blog benessere",
-    heroTitlePart1: "Ispirazioni &",
-    heroTitleHighlight: "consigli",
+    heroTitlePart1: "Blog benessere:",
+    heroTitleHighlight: "terapie olistiche in Svizzera",
     heroSubtitle: "Pratiche, guide e testimonianze per prenderti cura di te — corpo, anima e mente.",
     emptyTitle: "Ancora nessun articolo",
     emptySubtitle: "Torna presto a trovarci!",
@@ -105,8 +105,8 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
   en: {
     navBlog: "Blog",
     badge: "Wellness blog",
-    heroTitlePart1: "Insights &",
-    heroTitleHighlight: "guides",
+    heroTitlePart1: "Wellness blog:",
+    heroTitleHighlight: "holistic therapies in Switzerland",
     heroSubtitle: "Practices, guides and first-hand stories to care for yourself — body, soul and mind.",
     emptyTitle: "No articles yet",
     emptySubtitle: "Please check back soon!",

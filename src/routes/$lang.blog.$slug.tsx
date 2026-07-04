@@ -135,10 +135,14 @@ function Page() {
   const { lang, slug } = useParams({ from: "/$lang/blog/$slug" });
   const l = (lang as Lang) ?? "fr";
   const copy = blogCopy(l);
+  // Le loader serveur a déjà chargé l'article : on le rend dès le HTML initial (SEO/GEO),
+  // useQuery ne sert plus qu'à revalider côté client.
+  const loaderData = Route.useLoaderData();
 
   const { data, isLoading } = useQuery({
     queryKey: ["article", slug],
     queryFn: () => getArticleBySlug({ data: { slug } }),
+    initialData: loaderData?.article ? { article: loaderData.article } : undefined,
   });
 
   if (isLoading) return <SkeletonPage />;

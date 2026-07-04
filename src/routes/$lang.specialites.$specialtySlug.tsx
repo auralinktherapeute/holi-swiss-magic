@@ -16,6 +16,14 @@ function tr(lang: string) { return (T as any)[lang] ?? T.fr; }
 
 export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
   component: Page,
+  // Chargement serveur : la page (H1, description, thérapeutes) est rendue dès le HTML initial (SEO/GEO)
+  loader: async ({ params }) => {
+    try {
+      return { page: await getSpecialtyPage({ data: { slug: params.specialtySlug } }) };
+    } catch {
+      return { page: null };
+    }
+  },
   head: ({ params }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`;
     const label = params.specialtySlug.replace(/-/g, " ");
@@ -42,9 +50,11 @@ function Page() {
   const { lang, specialtySlug } = useParams({ from: "/$lang/specialites/$specialtySlug" });
   const t = tr(lang);
   const fetchSpec = useServerFn(getSpecialtyPage);
+  const loaderData = Route.useLoaderData();
   const query = useQuery({
     queryKey: ["specialty-page", specialtySlug],
     queryFn: () => fetchSpec({ data: { slug: specialtySlug } }),
+    initialData: loaderData?.page ?? undefined,
   });
 
   if (query.isLoading) {

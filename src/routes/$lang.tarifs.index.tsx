@@ -4,6 +4,34 @@ import { Check, Sparkles, Crown, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hreflangLinks } from "@/lib/seo";
 
+// FAQ tarifs — réponses directes et citables (SEO/GEO), rendues côté serveur
+const PRICING_FAQ: Record<string, { q: string; a: string }[]> = {
+  fr: [
+    { q: "Combien coûte une inscription sur Holiswiss ?", a: "L'inscription Basic est gratuite. Les formules Essentiel (49 CHF/mois) et Élite (99 CHF/mois) ajoutent une visibilité renforcée, la réservation en ligne et des statistiques. Pendant la phase de lancement, l'accès aux formules payantes est offert." },
+    { q: "Y a-t-il un engagement de durée ?", a: "Non. Toutes les formules Holiswiss sont sans engagement : vous pouvez changer de formule ou arrêter à tout moment." },
+    { q: "Puis-je changer de formule plus tard ?", a: "Oui, le changement de formule se fait à tout moment depuis votre tableau de bord thérapeute, sans frais de changement." },
+    { q: "À qui s'adresse Holiswiss ?", a: "Aux thérapeutes et praticiens du bien-être exerçant en Suisse : l'annuaire couvre les 26 cantons et fonctionne en 4 langues (français, allemand, italien, anglais)." },
+  ],
+  de: [
+    { q: "Was kostet eine Registrierung bei Holiswiss?", a: "Die Basic-Registrierung ist kostenlos. Die Pakete Essentiel (49 CHF/Monat) und Élite (99 CHF/Monat) bieten mehr Sichtbarkeit, Online-Buchung und Statistiken. Während der Startphase ist der Zugang zu den Bezahl-Paketen geschenkt." },
+    { q: "Gibt es eine Mindestlaufzeit?", a: "Nein. Alle Holiswiss-Pakete sind ohne Bindung: Sie können jederzeit wechseln oder kündigen." },
+    { q: "Kann ich das Paket später wechseln?", a: "Ja, der Paketwechsel ist jederzeit über Ihr Therapeuten-Dashboard möglich, ohne Wechselgebühren." },
+    { q: "An wen richtet sich Holiswiss?", a: "An Therapeutinnen, Therapeuten und Wellness-Praktiker in der Schweiz: Das Verzeichnis deckt alle 26 Kantone ab und ist in 4 Sprachen verfügbar." },
+  ],
+  it: [
+    { q: "Quanto costa iscriversi a Holiswiss?", a: "L'iscrizione Basic è gratuita. I piani Essentiel (49 CHF/mese) ed Élite (99 CHF/mese) aggiungono maggiore visibilità, prenotazione online e statistiche. Durante la fase di lancio, l'accesso ai piani a pagamento è offerto." },
+    { q: "C'è un vincolo di durata?", a: "No. Tutti i piani Holiswiss sono senza vincoli: puoi cambiare piano o interrompere in qualsiasi momento." },
+    { q: "Posso cambiare piano in seguito?", a: "Sì, il cambio di piano è possibile in qualsiasi momento dal tuo pannello terapeuta, senza costi di cambio." },
+    { q: "A chi si rivolge Holiswiss?", a: "A terapeuti e professionisti del benessere in Svizzera: la directory copre i 26 cantoni e funziona in 4 lingue." },
+  ],
+  en: [
+    { q: "How much does it cost to join Holiswiss?", a: "The Basic listing is free. The Essentiel (CHF 49/month) and Élite (CHF 99/month) plans add stronger visibility, online booking and analytics. During the launch phase, access to paid plans is free." },
+    { q: "Is there a minimum commitment?", a: "No. All Holiswiss plans are commitment-free: you can switch or stop at any time." },
+    { q: "Can I change plans later?", a: "Yes, you can switch plans at any time from your therapist dashboard, with no switching fees." },
+    { q: "Who is Holiswiss for?", a: "Therapists and wellness practitioners working in Switzerland: the directory covers all 26 cantons and works in 4 languages." },
+  ],
+};
+
 export const Route = createFileRoute("/$lang/tarifs/")({
   component: PricingPage,
   head: ({ params }) => {
@@ -23,6 +51,7 @@ export const Route = createFileRoute("/$lang/tarifs/")({
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;
     const url = `https://holiswiss.ch/${lang}/tarifs`;
+    const faq = PRICING_FAQ[lang] ?? PRICING_FAQ.fr;
     return {
       meta: [
         { title },
@@ -33,6 +62,20 @@ export const Route = createFileRoute("/$lang/tarifs/")({
         { property: "og:type", content: "website" },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/tarifs")],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faq.map((item) => ({
+              "@type": "Question",
+              name: item.q,
+              acceptedAnswer: { "@type": "Answer", text: item.a },
+            })),
+          }),
+        },
+      ],
     };
   },
 });
@@ -136,7 +179,7 @@ function PricingPage() {
                   <Icon className={`h-5 w-5 ${p.key === "elite" ? "text-[#f0b429]" : "text-[#d4a5f9]"}`} />
                 </div>
 
-                <h3 className="font-serif text-xl font-semibold text-white">{p.name}</h3>
+                <h2 className="font-serif text-xl font-semibold text-white">{p.name}</h2>
                 <p className="mt-0.5 text-xs text-[#d4c4e0]">{p.tagline}</p>
 
                 <div className="mt-4 flex items-baseline gap-1">
@@ -198,6 +241,23 @@ function PricingPage() {
               <div className="mt-0.5 text-xs text-[#d4c4e0]">{item.desc}</div>
             </div>
           ))}
+        </div>
+
+        {/* FAQ tarifs — citable par les moteurs IA */}
+        <div className="mx-auto mt-12 max-w-3xl">
+          <h2 className="mb-5 text-center font-serif text-2xl font-semibold text-white">
+            {({ fr: "Questions fréquentes sur les tarifs", de: "Häufige Fragen zu den Tarifen", it: "Domande frequenti sulle tariffe", en: "Pricing FAQ" } as Record<string, string>)[lang] ?? "Questions fréquentes sur les tarifs"}
+          </h2>
+          <div className="space-y-3">
+            {(PRICING_FAQ[lang] ?? PRICING_FAQ.fr).map((item) => (
+              <details key={item.q} className="group rounded-xl border border-[#b86ef9]/20 bg-[#2a1142]/50 p-4 backdrop-blur transition-colors hover:border-[#b86ef9]/40">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-white marker:hidden">
+                  {item.q}
+                </summary>
+                <p className="mt-2 text-sm leading-relaxed text-[#d4c4e0]">{item.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
 
         {/* FAQ teaser */}

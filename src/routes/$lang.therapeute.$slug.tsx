@@ -197,6 +197,10 @@ function Page() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  // Le loader serveur a déjà chargé le profil : rendu dès le HTML initial (SEO/GEO),
+  // useQuery ne sert plus qu'à revalider côté client.
+  const loaderData = Route.useLoaderData();
+
   const { data: th, isLoading } = useQuery({
     queryKey: ["therapist", slug],
     queryFn: async () => {
@@ -209,6 +213,7 @@ function Page() {
       if (error) throw error;
       return data;
     },
+    initialData: (loaderData?.therapist ?? undefined) as never,
   });
 
   const { data: reviews } = useQuery({
