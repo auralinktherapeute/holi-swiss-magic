@@ -51,6 +51,7 @@ type ArticleLike = {
   meta_description_fr?: string | null;
   slug?: string | null;
   cover_image_url?: string | null;
+  image_alt_text?: string | null;
   category?: string | null;
 };
 
@@ -70,6 +71,7 @@ export function computeSeo(a: ArticleLike): SeoResult {
   const wc = wordCount(body);
   const slugClean = /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug);
   const altPresent = /!\[[^\]]+\]\(/.test(body); // markdown image with alt
+  const coverAltPresent = !!(a.image_alt_text && a.image_alt_text.trim().length > 0);
   const internalLinks = countMatches(body, /\[[^\]]+\]\(\/[^)]+\)/g);
   const h2 = countMatches(body, /^##\s+/gm);
   const h3 = countMatches(body, /^###\s+/gm);
@@ -95,7 +97,7 @@ export function computeSeo(a: ArticleLike): SeoResult {
     { key: "title", label: "Titre optimisé (50–60 caractères)", ok: titleLen >= 50 && titleLen <= 60, hint: `Actuel : ${titleLen} car.` },
     { key: "meta", label: "Meta description (150–160 caractères)", ok: metaLen >= 150 && metaLen <= 160, hint: `Actuel : ${metaLen} car.` },
     { key: "slug", label: "Slug URL propre", ok: slugClean && slug.length > 0, hint: slug || "manquant" },
-    { key: "image", label: "Image principale + alt text", ok: !!a.cover_image_url && altPresent, hint: !a.cover_image_url ? "Pas de cover" : altPresent ? "OK" : "Aucune image alt dans le corps" },
+    { key: "image", label: "Image principale + alt text", ok: !!a.cover_image_url && coverAltPresent, hint: !a.cover_image_url ? "Pas de cover" : coverAltPresent ? "OK" : "Alt text de l'image manquant" },
     { key: "internal", label: "Au moins 1 lien interne", ok: internalLinks >= 1, hint: `${internalLinks} lien(s)` },
     { key: "words", label: "Au moins 300 mots", ok: wc >= 300, hint: `${wc} mots` },
     { key: "kw_title", label: "Mot-clé principal dans le titre", ok: titleHasKw, hint: kw ? `« ${kw} »` : "—" },

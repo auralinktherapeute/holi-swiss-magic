@@ -40,6 +40,7 @@ import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
+import { Route as AdminAmeliorationsSeoRouteImport } from './routes/admin.ameliorations-seo'
 import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
 import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
@@ -221,6 +222,11 @@ const AdminArticlesRoute = AdminArticlesRouteImport.update({
   path: '/articles',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAmeliorationsSeoRoute = AdminAmeliorationsSeoRouteImport.update({
+  id: '/ameliorations-seo',
+  path: '/ameliorations-seo',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAgentsRoute = AdminAgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
+  '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/crm': typeof AdminCrmRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
+  '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/crm': typeof AdminCrmRoute
@@ -478,6 +486,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
+  '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/crm': typeof AdminCrmRoute
@@ -538,6 +547,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
+    | '/admin/ameliorations-seo'
     | '/admin/articles'
     | '/admin/avis'
     | '/admin/crm'
@@ -593,6 +603,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
+    | '/admin/ameliorations-seo'
     | '/admin/articles'
     | '/admin/avis'
     | '/admin/crm'
@@ -651,6 +662,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
+    | '/admin/ameliorations-seo'
     | '/admin/articles'
     | '/admin/avis'
     | '/admin/crm'
@@ -934,6 +946,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminArticlesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ameliorations-seo': {
+      id: '/admin/ameliorations-seo'
+      path: '/ameliorations-seo'
+      fullPath: '/admin/ameliorations-seo'
+      preLoaderRoute: typeof AdminAmeliorationsSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/agents': {
       id: '/admin/agents'
       path: '/agents'
@@ -1179,6 +1198,7 @@ const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
 interface AdminRouteChildren {
   AdminAbonnementsRoute: typeof AdminAbonnementsRoute
   AdminAgentsRoute: typeof AdminAgentsRoute
+  AdminAmeliorationsSeoRoute: typeof AdminAmeliorationsSeoRoute
   AdminArticlesRoute: typeof AdminArticlesRoute
   AdminAvisRoute: typeof AdminAvisRoute
   AdminCrmRoute: typeof AdminCrmRoute
@@ -1197,6 +1217,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAbonnementsRoute: AdminAbonnementsRoute,
   AdminAgentsRoute: AdminAgentsRoute,
+  AdminAmeliorationsSeoRoute: AdminAmeliorationsSeoRoute,
   AdminArticlesRoute: AdminArticlesRoute,
   AdminAvisRoute: AdminAvisRoute,
   AdminCrmRoute: AdminCrmRoute,

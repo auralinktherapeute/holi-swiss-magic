@@ -174,7 +174,7 @@ function Page() {
       {/* ── Hero image ── */}
       {article.cover_image_url && (
         <div className="relative w-full h-72 md:h-96 overflow-hidden">
-          <img src={article.cover_image_url} alt={title} className="w-full h-full object-cover" />
+          <img src={article.cover_image_url} alt={(article.image_alt_text as string | undefined) || title} className="w-full h-full object-cover" />
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#2d1248] via-[#2d1248]/40 to-transparent" />
         </div>
