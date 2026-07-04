@@ -12,10 +12,8 @@ function escapeHtml(s: string) {
 
 export type ChannelResult = { ok: boolean; id?: string; error?: string; skipped?: boolean };
 
-/** Numéro WhatsApp admin : env prioritaire, sinon app_settings (clé admin_whatsapp_to). */
+/** Numéro WhatsApp admin : app_settings (réglé dans le dashboard) prioritaire, sinon env. */
 export async function resolveWhatsappTarget(): Promise<string | null> {
-  const fromEnv = process.env.ADMIN_WHATSAPP_TO;
-  if (fromEnv) return fromEnv;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin as any)
@@ -23,10 +21,11 @@ export async function resolveWhatsappTarget(): Promise<string | null> {
       .select("value")
       .eq("key", "admin_whatsapp_to")
       .maybeSingle();
-    return typeof data?.value === "string" ? data.value : null;
+    if (typeof data?.value === "string" && data.value) return data.value;
   } catch {
-    return null;
+    // fallback env ci-dessous
   }
+  return process.env.ADMIN_WHATSAPP_TO ?? null;
 }
 
 export async function sendAdminEmail(subject: string, summary: string, link: string): Promise<ChannelResult> {

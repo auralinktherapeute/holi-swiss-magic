@@ -29,11 +29,11 @@ export const getWhatsappTarget = createServerFn({ method: "GET" })
       .eq("key", WHATSAPP_KEY)
       .maybeSingle();
     const envValue = process.env.ADMIN_WHATSAPP_TO;
-    const stored = typeof data?.value === "string" ? data.value : null;
-    const effective = envValue ?? stored;
+    const stored = typeof data?.value === "string" && data.value ? data.value : null;
+    const effective = stored ?? envValue ?? null;
     return {
       configured: Boolean(effective),
-      source: envValue ? "env" : stored ? "app_settings" : null,
+      source: stored ? "app_settings" : envValue ? "env" : null,
       masked: effective ? maskNumber(effective) : null,
     };
   });
