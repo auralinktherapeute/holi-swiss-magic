@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
@@ -188,6 +189,40 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
               </Button>
             </div>
             {showUnsplash && <UnsplashPicker onSelect={url => { set("cover_image_url", url); setShowUnsplash(false); }} />}
+          </div>
+
+          {/* Alt text (accessibilité + SEO) */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="image-alt-text">
+                Texte alternatif de l'image <span className="text-destructive">*</span>
+              </Label>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" aria-label="Aide texte alternatif" className="text-muted-foreground hover:text-foreground">
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    Décrivez l'image pour les moteurs de recherche et l'accessibilité. Incluez le mot-clé principal de l'article si pertinent.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Input
+              id="image-alt-text"
+              value={form.image_alt_text}
+              onChange={e => set("image_alt_text", e.target.value.slice(0, 125))}
+              maxLength={125}
+              required={form.status === "validated"}
+              placeholder="Ex: Coach holistique donnant une séance de bien-être en Suisse romande"
+              className="bg-background border-border/60"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Obligatoire avant publication.</span>
+              <span className={form.image_alt_text.length > 125 ? "text-destructive" : ""}>{form.image_alt_text.length}/125</span>
+            </div>
           </div>
 
           {/* Contenu multilingue */}
@@ -374,7 +409,7 @@ function ArticleCard({
       <CardContent className="p-4 md:p-5">
         <div className="flex items-start gap-4">
           {a.cover_image_url
-            ? <img src={a.cover_image_url} alt="" className="w-24 h-20 object-cover rounded-lg shrink-0" loading="lazy" />
+            ? <img src={a.cover_image_url} alt={a.image_alt_text || a._title || ""} className="w-24 h-20 object-cover rounded-lg shrink-0" loading="lazy" />
             : <div className="w-24 h-20 bg-background rounded-lg shrink-0 flex items-center justify-center text-muted-foreground border border-border/60"><Image className="h-6 w-6" /></div>
           }
           <div className="flex-1 min-w-0 space-y-2">
