@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
-  Sparkles, Check, X, Clock, Rocket, ExternalLink, TrendingUp, ShieldCheck,
+  Sparkles, Check, X, Clock, Rocket, ExternalLink, TrendingUp, ShieldCheck, MessageCircle, Send,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getWhatsappTarget, setWhatsappTarget, sendTestNotification } from "@/lib/seo-notifications.functions";
 
 export const Route = createFileRoute("/admin/ameliorations-seo")({ component: Page });
 
@@ -260,9 +262,103 @@ function Page() {
         </div>
       )}
 
+      <NotificationsCard />
+
       <p className="text-[11px] text-muted-foreground border-t pt-3">
         Validation protégée par PIN. Les éléments « Approuvés » sont appliqués par Claude (audit hebdo du lundi 9h ou en session),
         puis passent en « Appliqué &amp; vérifié » après contrôle du rendu réel en production.
+      </p>
+    </div>
+  );
+}
+
+function NotificationsCard() {
+  const getTarget = useServerFn(getWhatsappTarget);
+  const saveTarget = useServerFn(setWhatsappTarget);
+  const sendTest = useServerFn(sendTestNotification);
+  const [status, setStatus] = useState<{ configured: boolean; source: string | null; masked: string | null } | null>(null);
+  const [number, setNumber] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    try {
+      setStatus(await getTarget());
+    } catch {
+      setStatus(null);
+    }
+  }, [getTarget]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const save = async () => {
+    if (!number.trim()) return;
+    setBusy(true);
+    try {
+      const r = await saveTarget({ data: { number: number.trim() } });
+      toast.success(`Numéro WhatsApp enregistré (${r.masked})`);
+      setNumber("");
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Enregistrement impossible");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const test = async () => {
+    setBusy(true);
+    try {
+      const r = await sendTest({});
+      const parts = [
+        r.email.ok ? "Email ✓" : `Email ✗ (${r.email.error ?? "?"})`,
+        r.whatsapp.ok ? "WhatsApp ✓" : `WhatsApp ✗ (${r.whatsapp.error ?? "?"})`,
+      ];
+      (r.email.ok && r.whatsapp.ok ? toast.success : toast.warning)(parts.join(" · "), { duration: 10000 });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Test impossible");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border bg-card p-5">
+      <h2 className="font-semibold text-base flex items-center gap-2 mb-1">
+        <MessageCircle className="h-4 w-4 text-cyan-300" /> Notifications WhatsApp
+      </h2>
+      <p className="text-xs text-muted-foreground mb-3">
+        {status?.configured
+          ? `Numéro configuré : ${status.masked} (source : ${status.source === "env" ? "variable d'environnement" : "réglages"})`
+          : "Aucun numéro configuré — les notifications ne partent que par email."}
+      </p>
+      <div className="flex gap-2 flex-wrap items-center">
+        <input
+          type="tel"
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          placeholder="+41 79 000 00 00"
+          className="rounded-md border bg-background px-3 py-1.5 text-sm w-48"
+        />
+        <button
+          onClick={save}
+          disabled={busy || !number.trim()}
+          className="inline-flex items-center gap-1 rounded-md bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+        >
+          <Check className="h-3.5 w-3.5" /> Enregistrer
+        </button>
+        <button
+          onClick={test}
+          disabled={busy}
+          className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-semibold hover:bg-muted/40 transition disabled:opacity-50"
+        >
+          <Send className="h-3.5 w-3.5" /> Envoyer un test (email + WhatsApp)
+        </button>
+      </div>
+      <p className="text-[11px] text-muted-foreground mt-2">
+        Sandbox Twilio : pour recevoir les messages, ton numéro doit avoir rejoint la sandbox
+        (envoyer le code « join … » au +1 415 523 8886 sur WhatsApp — l'accès expire après 72 h d'inactivité).
       </p>
     </div>
   );
