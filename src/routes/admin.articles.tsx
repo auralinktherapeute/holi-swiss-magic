@@ -88,6 +88,7 @@ type ArticleRow = {
   id: string; slug: string | null; status: string; lang: string;
   category: string | null; secondary_tags?: string[] | null; published_at: string | null; created_at: string | null;
   updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
+  image_alt_text?: string | null;
   title_fr: string | null; title_de: string | null; title_it: string | null; title_en: string | null;
   excerpt_fr?: string | null; body_fr?: string | null;
   body_de?: string | null; body_it?: string | null; body_en?: string | null;
@@ -100,6 +101,7 @@ type FormData = {
   body_fr: string; body_de: string; body_it: string; body_en: string;
   excerpt_fr: string; excerpt_de: string; excerpt_it: string; excerpt_en: string;
   slug: string; cover_image_url: string; category: string; secondary_tags: string[];
+  image_alt_text: string;
   lang: Lang; status: Status;
   meta_title_fr: string; meta_description_fr: string;
 };
@@ -109,6 +111,7 @@ const EMPTY: FormData = {
   body_fr: "", body_de: "", body_it: "", body_en: "",
   excerpt_fr: "", excerpt_de: "", excerpt_it: "", excerpt_en: "",
   slug: "", cover_image_url: "", category: "", secondary_tags: [], lang: "fr", status: "draft",
+  image_alt_text: "",
   meta_title_fr: "", meta_description_fr: "",
 };
 
@@ -123,7 +126,7 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
   useEffect(() => {
     if (!open || hasSessionState(formKey)) return;
     setForm(initial
-      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", cover_image_url: initial.cover_image_url ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
+      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", cover_image_url: initial.cover_image_url ?? "", image_alt_text: initial.image_alt_text ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
       : EMPTY
     );
   }, [formKey, initial, open, setForm]);
