@@ -70,8 +70,8 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     if (!t) {
       return {
         meta: [
-          { title: "Thérapeute — HoliSwiss" },
-          { name: "description", content: "Découvrez ce thérapeute holistique sur HoliSwiss, l'annuaire des praticiens en Suisse." },
+          { title: "Thérapeute — Holiswiss" },
+          { name: "description", content: "Découvrez ce thérapeute holistique sur Holiswiss, l'annuaire des praticiens en Suisse." },
           { property: "og:url", content: url },
         ],
         links: [{ rel: "canonical", href: url }, ...altLinks],
@@ -80,10 +80,14 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const fullName = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
     const place = [t.city, t.canton].filter(Boolean).join(", ");
     const role = t.title ? `${t.title}${place ? ` à ${place}` : ""}` : place;
-    const title = `${fullName}${role ? ` — ${role}` : ""} | HoliSwiss`.slice(0, 60);
+    const title = `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, 60);
     const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
-    const fallback = `Profil de ${fullName}${role ? `, ${role}` : ""}. Prenez rendez-vous sur HoliSwiss.`;
-    const description = (bio.length >= 50 ? bio : fallback).slice(0, 160);
+    const fallback = `Profil de ${fullName}${role ? `, ${role}` : ""}. Prenez rendez-vous sur Holiswiss.`;
+    const rawDescription = bio.length >= 50 ? bio : fallback;
+    const description =
+      rawDescription.length > 157
+        ? `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}…`
+        : rawDescription;
     const image = t.photo_url;
     const meta: Array<Record<string, string>> = [
       { title },

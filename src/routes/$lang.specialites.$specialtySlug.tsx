@@ -20,7 +20,8 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`;
     const label = params.specialtySlug.replace(/-/g, " ");
     const t = tr(params.lang);
-    const title = `${label} ${t.titleSuffix}`;
+    const labelCapitalized = label.charAt(0).toUpperCase() + label.slice(1);
+    const title = `${labelCapitalized} ${t.titleSuffix}`;
     const description = t.desc(label);
     return {
       meta: [
