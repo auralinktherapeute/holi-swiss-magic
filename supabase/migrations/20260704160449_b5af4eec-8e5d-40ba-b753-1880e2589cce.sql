@@ -1,0 +1,2 @@
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS image_alt_text text;
+COMMENT ON COLUMN public.articles.image_alt_text IS 'Texte alternatif de l''image de couverture (SEO + accessibilité). Max 125 caractères recommandé.';
