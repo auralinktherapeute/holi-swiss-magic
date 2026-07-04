@@ -33,7 +33,7 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
     let q = (supabase as any)
       .from("articles")
-      .select("id,slug,cover_image_url,category,secondary_tags,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
+      .select("id,slug,cover_image_url,image_alt_text,category,secondary_tags,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
       .eq("status", "validated")
       .order("published_at", { ascending: false });
 
@@ -51,7 +51,7 @@ export const getArticlesByCategory = createServerFn({ method: "GET" })
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
     let q = (supabase as any)
       .from("articles")
-      .select("id,slug,cover_image_url,category,secondary_tags,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
+      .select("id,slug,cover_image_url,image_alt_text,category,secondary_tags,published_at,lang,title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en")
       .eq("status", "validated")
       .or(`category.eq.${data.slug},secondary_tags.cs.{${data.slug}}`)
       .order("published_at", { ascending: false });
@@ -86,7 +86,7 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("articles")
-      .select("id,slug,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr")
+      .select("id,slug,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,image_alt_text,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr")
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(`Impossible de charger les articles: ${error.message}`);
@@ -108,6 +108,7 @@ const ArticleInputSchema = z.object({
   excerpt_en: z.string().optional().default(""),
   slug: z.string().optional(),
   cover_image_url: z.string().url().optional().or(z.literal("")),
+  image_alt_text: z.string().max(125).optional().default(""),
   category: z.string().optional(),
   lang: z.enum(["fr", "de", "it", "en"]).default("fr"),
   status: z.enum(["draft", "validated", "pending_validation", "rejected"]).default("draft"),
