@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
-  Menu, X, Home, Gauge, Workflow, Bell,
+  Menu, X, Home, Gauge, Workflow, Bell, Sparkles,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -94,6 +94,7 @@ export function AdminNav() {
     { to: "/admin/agents",           icon: Bot,             label: t("admin.agents") },
     { to: "/admin/emails",           icon: Mail,            label: t("admin.emails") },
     { to: "/admin/seo",              icon: Gauge,           label: "Score SEO & GEO" },
+    { to: "/admin/ameliorations-seo", icon: Sparkles,       label: "Amélioration SEO/GEO via Claude" },
     { to: "/admin/crm",              icon: Workflow,        label: "CRM" },
     { to: "/admin/parametres",       icon: Settings,        label: t("admin.settings") },
   ] as Array<{ to: string; icon: typeof LayoutDashboard; label: string; exact?: boolean; badge?: number }>;
