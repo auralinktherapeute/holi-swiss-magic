@@ -14,6 +14,97 @@ export type WaitlistVars = {
   created_at?: string | null;
 };
 
+/** Contenu éditable d'un template : objet, corps markdown, libellé du bouton. */
+export type TemplateContent = {
+  subject: string;
+  body: string;
+  cta_label: string;
+};
+
+export type TemplateOverrides = Partial<Record<TemplateId, Partial<TemplateContent>>>;
+
+/**
+ * Défauts des templates — source unique de vérité.
+ * Corps en markdown (gras **…**, listes "- ", liens [l](url)) avec variables
+ * {{PRENOM}} {{NOM}} {{SPECIALITE}} {{EMAIL}} {{DATE_INSCRIPTION}}.
+ * Le rendu passe toujours par le shell premium (logo, gradient, CTA, footer).
+ */
+export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateContent> = {
+  invitation: {
+    subject: "Votre place sur HoliSwiss est prête",
+    body: `Bonjour {{PRENOM}},
+
+Vous vous êtes inscrit(e) sur notre liste d'attente en tant que thérapeute **{{SPECIALITE}}**.
+
+Bonne nouvelle : votre place est maintenant prête.
+
+**Accès Fondateur — 100 % gratuit jusqu'au lancement**
+- Visibilité immédiate auprès des patients suisses
+- Gestion des réservations en ligne
+- Page profil personnalisée
+- Badge exclusif « Thérapeute Fondateur »
+
+Cette invitation est personnelle et valable 30 jours.`,
+    cta_label: "Créer mon profil gratuitement",
+  },
+  welcome: {
+    subject: "Bienvenue dans la communauté HoliSwiss",
+    body: `Bonjour {{PRENOM}},
+
+Nous sommes ravis de vous compter parmi les thérapeutes HoliSwiss.
+
+Voici les prochaines étapes pour créer votre profil :
+- Ajoutez votre photo professionnelle
+- Décrivez votre approche et vos spécialités
+- Définissez vos tarifs et disponibilités
+- Publiez votre profil pour être visible`,
+    cta_label: "Accéder à mon espace thérapeute",
+  },
+  profile_live: {
+    subject: "Votre profil HoliSwiss est maintenant visible",
+    body: `Bonjour {{PRENOM}},
+
+Félicitations ! Votre profil est désormais en ligne et visible par tous les patients en Suisse.
+
+Quelques conseils pour optimiser votre visibilité :
+- Une photo claire augmente les contacts de 70 %
+- Décrivez votre approche en quelques phrases
+- Mettez à jour vos disponibilités chaque semaine`,
+    cta_label: "Voir mon profil",
+  },
+  reminder_complete: {
+    subject: "Quelques minutes pour compléter votre profil",
+    body: `Bonjour {{PRENOM}},
+
+Votre profil HoliSwiss est presque prêt — il ne manque que quelques éléments pour qu'il soit publié.
+
+Ce qui reste à compléter :
+- Photo de profil
+- Description de votre pratique
+- Vos disponibilités
+
+Cela prend moins de 5 minutes et vous permet d'être trouvé(e) par les patients.`,
+    cta_label: "Compléter mon profil",
+  },
+  official_launch: {
+    subject: "HoliSwiss est officiellement lancé",
+    body: `Bonjour {{PRENOM}},
+
+Ça y est — **HoliSwiss est officiellement lancé en Suisse** !
+
+En tant que membre des premiers inscrits, vous bénéficiez à vie du badge exclusif **Thérapeute Fondateur** sur votre profil.
+
+Aidez-nous à faire connaître HoliSwiss en partageant votre profil à vos patients et confrères.`,
+    cta_label: "Voir mon profil en ligne",
+  },
+  custom: {
+    subject: "Un message de HoliSwiss",
+    body: `Bonjour {{PRENOM}},
+`,
+    cta_label: "",
+  },
+};
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -39,10 +130,10 @@ function injectVars(text: string, vars: WaitlistVars): string {
   const prenom = vars.first_name?.trim() || "";
   const nom = vars.last_name?.trim() || "";
   return text
-    .replace(/\{\{PRENOM\}\}/g, escapeHtml(prenom || "Cher(e) thérapeute"))
-    .replace(/\{\{NOM\}\}/g, escapeHtml(nom))
-    .replace(/\{\{SPECIALITE\}\}/g, escapeHtml(vars.specialty || "holistique"))
-    .replace(/\{\{EMAIL\}\}/g, escapeHtml(vars.email))
+    .replace(/\{\{PRENOM\}\}/g, prenom || "Cher(e) thérapeute")
+    .replace(/\{\{NOM\}\}/g, nom)
+    .replace(/\{\{SPECIALITE\}\}/g, vars.specialty || "holistique")
+    .replace(/\{\{EMAIL\}\}/g, vars.email)
     .replace(/\{\{DATE_INSCRIPTION\}\}/g, fmtDate(vars.created_at));
 }
 
@@ -85,15 +176,12 @@ function shell(subject: string, inner: string): string {
 </body></html>`;
 }
 
-/** Simple markdown → safe HTML (bold, lists, links, paragraphs) */
+/** Markdown minimal → HTML sûr (gras, listes, liens, paragraphes, ## titres). */
 function mdToHtml(src: string): string {
   const escaped = escapeHtml(src);
-  // links [label](url)
   let out = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, l, u) =>
     `<a href="${u}" style="color:#7C3AED;text-decoration:underline;">${l}</a>`);
-  // bold **text**
   out = out.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-  // simple list lines starting with "- "
   const lines = out.split(/\n/);
   const blocks: string[] = [];
   let buf: string[] = [];
@@ -104,7 +192,11 @@ function mdToHtml(src: string): string {
     buf = [];
   };
   for (const ln of lines) {
-    if (/^\s*-\s+/.test(ln)) {
+    if (/^##\s+/.test(ln)) {
+      if (inList) { blocks.push("</ul>"); inList = false; }
+      flushPara();
+      blocks.push(`<h2 style="margin:22px 0 12px;color:#111827;font-size:18px;font-weight:600;">${ln.replace(/^##\s+/, "")}</h2>`);
+    } else if (/^\s*-\s+/.test(ln)) {
       if (!inList) { flushPara(); blocks.push("<ul style=\"margin:0 0 14px;padding-left:20px;\">"); inList = true; }
       blocks.push(`<li style="margin:4px 0;">${ln.replace(/^\s*-\s+/, "")}</li>`);
     } else if (ln.trim() === "") {
@@ -120,6 +212,37 @@ function mdToHtml(src: string): string {
   return blocks.join("\n");
 }
 
+/** URL du bouton selon le template (logique métier non éditable). */
+function ctaHref(templateId: TemplateId, args: { therapistSlug?: string | null; invitationLink?: string }): string | null {
+  switch (templateId) {
+    case "invitation":
+      return args.invitationLink || `${SITE_URL}/creer-profil`;
+    case "welcome":
+    case "official_launch":
+      return `${SITE_URL}/dashboard`;
+    case "profile_live":
+      return args.therapistSlug ? `${SITE_URL}/fr/therapeute/${args.therapistSlug}` : `${SITE_URL}/fr/therapeutes`;
+    case "reminder_complete":
+      return `${SITE_URL}/dashboard/profil`;
+    case "custom":
+      return null;
+  }
+}
+
+/** Fusionne défaut + override éventuel. */
+export function resolveTemplateContent(
+  templateId: TemplateId,
+  overrides?: TemplateOverrides,
+): TemplateContent {
+  const base = TEMPLATE_DEFAULTS[templateId];
+  const o = overrides?.[templateId];
+  return {
+    subject: (o?.subject ?? base.subject).trim() || base.subject,
+    body: o?.body ?? base.body,
+    cta_label: o?.cta_label ?? base.cta_label,
+  };
+}
+
 export function buildEmail(args: {
   templateId: TemplateId;
   vars: WaitlistVars;
@@ -127,90 +250,25 @@ export function buildEmail(args: {
   customMessage?: string;
   therapistSlug?: string | null;
   invitationLink?: string;
+  overrides?: TemplateOverrides;
 }): { subject: string; html: string } {
-  const v = args.vars;
-  const prenom = v.first_name?.trim() || "Cher(e) thérapeute";
-  const greeting = `<h2 style="margin:0 0 14px;color:#111827;font-size:20px;font-weight:600;">Bonjour ${escapeHtml(prenom)} 👋</h2>`;
+  const content = resolveTemplateContent(args.templateId, args.overrides);
 
-  switch (args.templateId) {
-    case "invitation": {
-      const link = args.invitationLink || `${SITE_URL}/creer-profil`;
-      const subject = "✨ Votre place sur HoliSwiss est prête";
-      const body = `${greeting}
-        <p style="margin:0 0 14px;">Vous vous êtes inscrit(e) sur notre liste d'attente en tant que thérapeute <strong>${escapeHtml(v.specialty || "holistique")}</strong>.</p>
-        <p style="margin:0 0 22px;">Bonne nouvelle : votre place est maintenant prête. 🎉</p>
-        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:18px 20px;margin:0 0 22px;color:#4c1d95;font-size:14px;line-height:1.85;">
-          <p style="margin:0 0 10px;color:#7C3AED;font-weight:700;">✨ Accès Fondateur — 100% gratuit jusqu'au lancement</p>
-          🌐 Visibilité immédiate auprès des patients suisses<br>
-          📅 Gestion des réservations en ligne<br>
-          🎨 Page profil personnalisée<br>
-          🏅 Badge exclusif "Thérapeute Fondateur"
-        </div>
-        ${cta(link, "👉 Créer mon profil gratuitement")}
-        <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Cette invitation est personnelle et valable 30 jours.</p>`;
-      return { subject, html: shell(subject, body) };
-    }
-    case "welcome": {
-      const subject = "Bienvenue dans la communauté HoliSwiss 🌿";
-      const body = `${greeting}
-        <p style="margin:0 0 14px;">Nous sommes ravis de vous compter parmi les thérapeutes HoliSwiss.</p>
-        <p style="margin:0 0 14px;">Voici les prochaines étapes pour créer votre profil :</p>
-        <ul style="margin:0 0 20px;padding-left:20px;color:#374151;">
-          <li style="margin:6px 0;">Ajoutez votre photo professionnelle</li>
-          <li style="margin:6px 0;">Décrivez votre approche et vos spécialités</li>
-          <li style="margin:6px 0;">Définissez vos tarifs et disponibilités</li>
-          <li style="margin:6px 0;">Publiez votre profil pour être visible</li>
-        </ul>
-        ${cta(`${SITE_URL}/dashboard`, "Accéder à mon espace thérapeute")}`;
-      return { subject, html: shell(subject, body) };
-    }
-    case "profile_live": {
-      const subject = "Votre profil HoliSwiss est maintenant visible 🎉";
-      const profileUrl = args.therapistSlug
-        ? `${SITE_URL}/fr/therapeute/${args.therapistSlug}`
-        : `${SITE_URL}/fr/therapeutes`;
-      const body = `${greeting}
-        <p style="margin:0 0 14px;">Félicitations ! Votre profil est désormais en ligne et visible par tous les patients en Suisse.</p>
-        <p style="margin:0 0 14px;">Quelques conseils pour optimiser votre visibilité :</p>
-        <ul style="margin:0 0 20px;padding-left:20px;color:#374151;">
-          <li style="margin:6px 0;">Une photo claire augmente les contacts de 70%</li>
-          <li style="margin:6px 0;">Décrivez votre approche en quelques phrases</li>
-          <li style="margin:6px 0;">Mettez à jour vos disponibilités chaque semaine</li>
-        </ul>
-        ${cta(profileUrl, "Voir mon profil")}`;
-      return { subject, html: shell(subject, body) };
-    }
-    case "reminder_complete": {
-      const subject = "Quelques minutes pour compléter votre profil 🌟";
-      const body = `${greeting}
-        <p style="margin:0 0 14px;">Votre profil HoliSwiss est presque prêt — il ne manque que quelques éléments pour qu'il soit publié.</p>
-        <p style="margin:0 0 14px;">Ce qui reste à compléter :</p>
-        <ul style="margin:0 0 20px;padding-left:20px;color:#374151;">
-          <li style="margin:6px 0;">📷 Photo de profil</li>
-          <li style="margin:6px 0;">📝 Description de votre pratique</li>
-          <li style="margin:6px 0;">📅 Vos disponibilités</li>
-        </ul>
-        <p style="margin:0 0 22px;">Cela prend moins de 5 minutes et vous permet d'être trouvé(e) par les patients.</p>
-        ${cta(`${SITE_URL}/dashboard/profil`, "Compléter mon profil")}`;
-      return { subject, html: shell(subject, body) };
-    }
-    case "official_launch": {
-      const subject = "🚀 HoliSwiss est officiellement lancé !";
-      const body = `${greeting}
-        <p style="margin:0 0 14px;">Ça y est — <strong>HoliSwiss est officiellement lancé en Suisse</strong> ! 🎉</p>
-        <p style="margin:0 0 14px;">En tant que membre des premiers inscrits, vous bénéficiez à vie du badge exclusif <strong style="color:#7C3AED;">Thérapeute Fondateur</strong> sur votre profil.</p>
-        <p style="margin:0 0 22px;">Aidez-nous à faire connaître HoliSwiss en partageant votre profil à vos patients et confrères.</p>
-        ${cta(`${SITE_URL}/dashboard`, "Voir mon profil en ligne")}`;
-      return { subject, html: shell(subject, body) };
-    }
-    case "custom": {
-      const subject = args.customSubject?.trim() || "Un message de HoliSwiss";
-      const message = args.customMessage?.trim() || "";
-      const body = `${greeting}
-        ${mdToHtml(message)}`;
-      return { subject, html: shell(subject, body) };
-    }
-  }
+  // Le template « custom » garde son comportement historique : objet/message saisis à l'envoi.
+  const rawSubject =
+    args.templateId === "custom" && args.customSubject?.trim()
+      ? args.customSubject.trim()
+      : content.subject;
+  const rawBody =
+    args.templateId === "custom" && args.customMessage?.trim()
+      ? `Bonjour {{PRENOM}},\n\n${args.customMessage.trim()}`
+      : content.body;
+
+  const subject = injectVars(rawSubject, args.vars);
+  const bodyHtml = mdToHtml(injectVars(rawBody, args.vars));
+  const href = ctaHref(args.templateId, args);
+  const inner = href && content.cta_label ? `${bodyHtml}\n${cta(href, content.cta_label)}` : bodyHtml;
+  return { subject, html: shell(subject, inner) };
 }
 
 export function applyVars(html: string, vars: WaitlistVars): string {

@@ -77,7 +77,7 @@ async function renderFramedCanvas(url: string, caption: string): Promise<HTMLCan
   ctx.font = "600 28px Inter, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("🌿 HoliSwiss", W / 2, 40);
+  ctx.fillText("HoliSwiss", W / 2, 40);
   // qr
   const qr = await renderQrCanvas(url, 400, true);
   ctx.drawImage(qr, (W - 400) / 2, 110);

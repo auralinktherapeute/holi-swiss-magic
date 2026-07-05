@@ -1,3 +1,4 @@
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang } from "@/lib/articles.functions";
@@ -154,7 +155,7 @@ function Page() {
     return (
       <div className="min-h-screen bg-[#2d1248] flex items-center justify-center">
         <div className="text-center px-4">
-          <div className="text-6xl mb-4">🌿</div>
+          <img src={lotusAsset.url} alt="" className="w-20 h-20 mx-auto mb-4" />
           <p className="text-2xl font-bold text-white mb-2">{copy.notFoundTitle}</p>
           <p className="text-[#d4c4e0] mb-8">{copy.notFoundSubtitle}</p>
           <Link to="/$lang/blog" params={{ lang: l }}
@@ -248,7 +249,7 @@ function Page() {
         {/* ── CTA ── */}
         <div className="mt-16 rounded-2xl border border-[rgba(184,110,249,0.25)] bg-gradient-to-br from-[#522870] to-[#3d1a5c] p-8 text-center">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#b86ef9]/30 to-[#5cc8fa]/20 ring-1 ring-[#b86ef9]/30 mb-4">
-            <span className="text-xl">🌿</span>
+            <img src={lotusAsset.url} alt="" className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">
             {copy.ctaTitle}

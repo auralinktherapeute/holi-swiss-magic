@@ -80,7 +80,7 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
               from: "HoliSwiss <onboarding@resend.dev>",
               to: [email],
               subject: "Votre compte HoliSwiss a été supprimé",
-              html: `<p>Bonjour,</p><p>Votre compte HoliSwiss a été supprimé définitivement, conformément à votre demande et au RGPD (droit à l'oubli).</p><p>Toutes vos données personnelles ont été effacées de nos serveurs.</p><p>Merci pour la confiance que vous nous avez accordée. 🌿</p><p>— L'équipe HoliSwiss</p>`,
+              html: `<p>Bonjour,</p><p>Votre compte HoliSwiss a été supprimé définitivement, conformément à votre demande et au RGPD (droit à l'oubli).</p><p>Toutes vos données personnelles ont été effacées de nos serveurs.</p><p>Merci pour la confiance que vous nous avez accordée.</p><p>— L'équipe HoliSwiss</p>`,
             }),
           });
         }

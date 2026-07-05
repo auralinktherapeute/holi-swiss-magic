@@ -33,7 +33,7 @@ export function AccountManageDialog() {
     try {
       await doPause();
       await signOutCompletely(queryClient);
-      toast.success("Votre profil est en pause. À bientôt sur Holiswiss 🌿");
+      toast.success("Votre profil est en pause. À bientôt sur Holiswiss");
       setOpen(false);
       navigate({ to: "/" });
     } catch (e: any) {
@@ -47,7 +47,7 @@ export function AccountManageDialog() {
     try {
       await doDelete({ data: { confirm: "SUPPRIMER" } });
       await signOutCompletely(queryClient);
-      toast.success("Votre compte a été supprimé. Merci pour votre confiance. 🌿");
+      toast.success("Votre compte a été supprimé. Merci pour votre confiance.");
       setOpen(false);
       navigate({ to: "/" });
     } catch (e: any) {

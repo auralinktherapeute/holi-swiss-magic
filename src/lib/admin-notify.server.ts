@@ -72,7 +72,7 @@ export async function sendAdminWhatsApp(subject: string, summary: string, link: 
   if (!TWILIO_API_KEY) return { ok: false, skipped: true, error: "twilio_key_missing" };
   if (!to) return { ok: false, skipped: true, error: "whatsapp_target_missing" };
   const toFormatted = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
-  const body = `🌿 HoliSwiss\n${subject}\n${summary}\n${link}`.slice(0, 1500);
+  const body = `HoliSwiss\n${subject}\n${summary}\n${link}`.slice(0, 1500);
   try {
     const r = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
       method: "POST",

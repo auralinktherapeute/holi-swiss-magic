@@ -1,3 +1,4 @@
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedArticles, titleForLang, excerptForLang } from "@/lib/articles.functions";
@@ -149,7 +150,7 @@ function Page() {
               <div className="md:w-1/2 aspect-video md:aspect-auto overflow-hidden bg-[#522870]">
                 {featured.cover_image_url
                   ? <img src={featured.cover_image_url} alt={(a["image_alt_text"] as string | undefined) || title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="eager" />
-                  : <div className="w-full h-full flex items-center justify-center text-5xl">🌿</div>
+                  : <div className="w-full h-full flex items-center justify-center"><img src={lotusAsset.url} alt="" className="w-16 h-16 opacity-80" /></div>
                 }
               </div>
               <div className="md:w-1/2 flex flex-col justify-center p-8">
@@ -197,7 +198,7 @@ function Page() {
                   <div className="aspect-video overflow-hidden bg-[#522870]">
                     {article.cover_image_url
                       ? <img src={article.cover_image_url} alt={(a["image_alt_text"] as string | undefined) || title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                      : <div className="w-full h-full flex items-center justify-center text-4xl">🌿</div>
+                      : <div className="w-full h-full flex items-center justify-center"><img src={lotusAsset.url} alt="" className="w-12 h-12 opacity-80" /></div>
                     }
                   </div>
                   <div className="flex flex-col flex-1 p-5">

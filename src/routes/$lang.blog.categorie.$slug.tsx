@@ -1,3 +1,4 @@
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getArticlesByCategory, titleForLang, excerptForLang } from "@/lib/articles.functions";
@@ -167,7 +168,7 @@ function Page() {
                     {article.cover_image_url ? (
                       <img src={article.cover_image_url} alt={(article as any).image_alt_text || title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">🌿</div>
+                      <div className="w-full h-full flex items-center justify-center"><img src={lotusAsset.url} alt="" className="w-12 h-12 opacity-80" /></div>
                     )}
                   </div>
                   <div className="flex flex-col flex-1 p-5">

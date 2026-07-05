@@ -1,3 +1,4 @@
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -121,7 +122,7 @@ export function AdminNav() {
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         gap: 8,
       }}>
-        <span style={{ fontSize: 22 }}>🌿</span>
+        <img src={lotusAsset.url} alt="" width={26} height={26} style={{ width: 26, height: 26 }} />
         <span style={{
           fontSize: 16,
           fontWeight: 700,

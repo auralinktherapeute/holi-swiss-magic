@@ -24,6 +24,17 @@ const baseSchema = z.object({
   custom_message: z.string().trim().max(8000).optional(),
 });
 
+
+async function loadTemplateOverrides() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await (supabaseAdmin as any)
+    .from("app_settings")
+    .select("value")
+    .eq("key", "email_template_overrides")
+    .maybeSingle();
+  return (data?.value ?? {}) as import("./custom-email-templates.server").TemplateOverrides;
+}
+
 async function loadEntry(id: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -77,6 +88,7 @@ export const previewCustomEmail = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const entry = await loadEntry(data.waitlist_id);
     const { buildEmail } = await import("./custom-email-templates.server");
+    const overrides = await loadTemplateOverrides();
     const slug = await findTherapistSlug(entry.email);
     let invitationLink: string | undefined;
     if (data.template_id === "invitation") {
@@ -96,6 +108,7 @@ export const previewCustomEmail = createServerFn({ method: "POST" })
       customMessage: data.custom_message,
       therapistSlug: slug,
       invitationLink,
+      overrides,
     });
     return { subject, html, recipient: entry.email as string };
   });
@@ -108,6 +121,7 @@ export const sendCustomEmail = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const entry = await loadEntry(data.waitlist_id);
     const { buildEmail } = await import("./custom-email-templates.server");
+    const overrides = await loadTemplateOverrides();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let invitationLink: string | undefined;
@@ -130,6 +144,7 @@ export const sendCustomEmail = createServerFn({ method: "POST" })
       customMessage: data.custom_message,
       therapistSlug: slug,
       invitationLink,
+      overrides,
     });
 
     const lovableKey = process.env.LOVABLE_API_KEY;
