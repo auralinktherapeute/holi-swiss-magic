@@ -1855,6 +1855,7 @@ export type Database = {
           postal_code: string | null
           price_max: number | null
           price_min: number | null
+          search_tokens: unknown
           services: Json
           short_bio: string | null
           siret_verified: boolean
@@ -1903,6 +1904,7 @@ export type Database = {
           postal_code?: string | null
           price_max?: number | null
           price_min?: number | null
+          search_tokens?: unknown
           services?: Json
           short_bio?: string | null
           siret_verified?: boolean
@@ -1951,6 +1953,7 @@ export type Database = {
           postal_code?: string | null
           price_max?: number | null
           price_min?: number | null
+          search_tokens?: unknown
           services?: Json
           short_bio?: string | null
           siret_verified?: boolean
@@ -2257,6 +2260,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      immutable_unaccent: { Args: { "": string }; Returns: string }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notification_read: { Args: { _id: string }; Returns: undefined }
@@ -2309,6 +2313,37 @@ export type Database = {
               slug: string
             }[]
           }
+      search_therapists: {
+        Args: {
+          _family_slug?: string
+          _limit?: number
+          _q?: string
+          _spec_slug?: string
+        }
+        Returns: {
+          canton: string
+          city: string
+          currency: string
+          distance_m: number
+          first_name: string
+          id: string
+          last_name: string
+          latitude: number
+          longitude: number
+          matched_city: string
+          matched_specialty: string
+          photo_url: string
+          price_max: number
+          price_min: number
+          score: number
+          short_bio: string
+          slug: string
+          specialties: string[]
+          subscription_plan: string
+          title: string
+          verified: boolean
+        }[]
+      }
       therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }
       therapists_within_radius: {
         Args: { _lat: number; _lng: number; _radius_m?: number }

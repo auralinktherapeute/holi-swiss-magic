@@ -1,62 +1,111 @@
-# Finalisation taxonomie spécialités — 4 chantiers
+## Diagnostic
 
-## 1. Traductions DE / IT / EN
+Le champ de recherche de `/therapeutes` n'est **pas** un vrai moteur de recherche : c'est uniquement un géocodeur de ville.
 
-**Data** : une migration qui `UPDATE` les 4 familles + 31 spécialités pour remplir `name_de/it/en` et `description_fr/de/it/en` (traductions fournies via mapping en SQL, écrites à la main — pas d'appel LLM à l'exécution). Alias enrichis avec équivalents allemands courants (`hypnose`→`hypnotherapie`, `naturopathie`→`naturheilkunde`, etc.) pour que la recherche fonctionne dans les 4 langues.
+```
+search "shiatsu" → geocodeCity("shiatsu") → { ok: false } → "Ville introuvable" → 0 résultat
+```
 
-**Code** :
-- Helper `pickI18n(row, lang, field)` dans `src/lib/i18n.ts` (fallback FR si vide).
-- `SpecialtyExplorer`, `getFamilyPage`, `getSpecialtyPage`, `search_specialties` (RPC) : passer `lang` et retourner le bon champ.
-- Pages `/$lang/therapeutes/famille/$slug` et `/$lang/specialites/$slug` : titres + descriptions traduits, `hreflang` déjà présent.
+Conséquences observées (capture jointe) :
+- Taper `shiatsu` → 0 thérapeute alors que le filtre `?specialite=shiatsu` en trouverait.
+- Taper un **nom**, un **tag**, une **spécialité secondaire**, une **description** → jamais retourné.
+- Taper `shiatsu lausanne` → géocodage échoue sur la chaîne entière, rien ne matche.
+- Aucune tolérance accent/casse côté SQL, aucun ranking, aucun fallback.
 
-## 2. Route GEO `/$lang/specialites/$slug/$city`
+La base est pourtant riche : `first_name`, `last_name`, `title`, `short_bio`, `bio`, `city`, `canton`, `specialties[]`, `approaches[]`, `services jsonb`, plus la table `therapist_specialties` liée à `specialties(name_fr/de/it/en, aliases[])` et `specialty_families`.
 
-**Route** : `src/routes/$lang.specialites.$specialtySlug.$citySlug.tsx`.
-- Loader : `getSpecialtyCityPage({ slug, city, lang })` — normalise la ville via `resolve_city`, retourne les thérapeutes actifs de cette spécialité dans un rayon de 30 km (RPC composant `therapists_within_radius` + filtre pivot).
-- Indexation conditionnelle : si `therapists.length === 0` → `robots: noindex, follow` + composant "aucun thérapeute pour l'instant, découvrez la spécialité". Sinon indexable normal.
-- `head()` : title `"{Spécialité} à {Ville} — Holiswiss"`, JSON-LD `BreadcrumbList` + `CollectionPage` avec `geo`, canonical self, hreflang.
-- Sitemap : générer les combinaisons ayant ≥ 1 thérapeute (jointure pivot × villes distinctes tirées de `therapists.city` normalisées). Pas de combinaisons vides dans le sitemap.
+## Architecture cible
 
-## 3. Admin taxonomie
+Un seul RPC `search_therapists(_q, _lat, _lng, _radius_m, _spec_slug, _family_slug, _limit)` qui :
 
-**Route** : ajouter un onglet "Taxonomie" dans `/admin/parametres` (nouveau composant `AdminSpecialtiesPanel`).
+1. **Tokenise** la requête (split espaces, `unaccent` + `lower`).
+2. Pour chaque token, tente en parallèle :
+   - correspondance **ville** (via `public.cities` alias + `normalize_city_text`) → si trouvée, applique un filtre géographique 80 km avec `ST_DWithin`.
+   - correspondance **spécialité** (nom multilangue + `aliases[]` via `specialties`) → filtre `therapist_specialties`.
+   - correspondance **texte** sur les champs thérapeute (voir scoring).
+3. Les tokens non résolus en ville/spécialité restent en tokens texte : chaque thérapeute doit matcher **tous** les tokens texte restants sur au moins un champ (AND entre tokens, OR entre champs) → gère naturellement `"shiatsu lausanne"`, `"lausanne shiatsu"`, `"marie geneve massage"`.
+4. **Fallback** : si 0 résultat en AND strict, relance en OR (mode tolérant) et marque les résultats "approchant".
 
-**Sections** :
-- **Familles** : liste (drag pour `sort_order`), édition inline (nom FR/DE/IT/EN, slug, icon, description, is_featured).
-- **Spécialités** : filtrées par famille, édition inline (nom multilingue, slug, aliases[], is_active, is_featured, changement de famille via select).
-- **Reclassement pending** : liste des `specialty_import_pending` (raw_label, thérapeute), avec bouton "Rattacher à…" qui insère dans `therapist_specialties` et supprime le pending. Bouton "Ignorer" (supprime juste).
+### Scoring (points cumulés, tri desc)
 
-**Server fns** (admin only via `has_role admin`) dans `src/lib/specialties-admin.functions.ts` : `listAdminTaxonomy`, `saveFamily`, `saveSpecialty`, `deleteSpecialty`, `listPendingImports`, `resolvePendingImport`, `dismissPendingImport`.
+| Match | Points |
+|---|---|
+| Nom/prénom exact (token = nom) | 100 |
+| Nom/prénom prefix | 70 |
+| Slug exact | 90 |
+| Ville exacte | 60 |
+| Canton exact | 40 |
+| Spécialité principale (via pivot, name/alias) | 55 |
+| Spécialité secondaire / `approaches[]` / `specialties[]` texte | 35 |
+| `title` contient token | 25 |
+| `short_bio` contient token | 15 |
+| `bio` / `services` contient token | 8 |
+| Bonus `verified` | +5 |
+| Bonus `subscription_plan = 'elite_pro'` | +10 |
+| Bonus proximité géo (si ville détectée) | jusqu'à +20 selon distance |
 
-## 4. Refonte profil thérapeute → pivot
+Ranking final = somme sur tous les tokens matchés + bonus profil.
 
-**UI** : dans `/dashboard/profil` (section "Spécialités"), remplacer la recherche + tags libres par un **sélecteur groupé par famille** :
-- Accordion par famille (4 sections), avec badge du nombre de spécialités cochées.
-- Chip toggle par spécialité (checkbox visuelle, multi-select, min 1 requis).
-- Champ recherche au-dessus qui met en surbrillance les correspondances (aliases inclus).
-- Panneau récap "Vos spécialités (N)" en haut avec chips retirables.
-- Aide contextuelle : "Choisissez toutes les spécialités que vous pratiquez — vous apparaîtrez dans chacune."
+## Modifications base de données (une migration)
 
-**Data** :
-- Le formulaire manipule un `Set<specialtyId>` au lieu d'un `string[]` libre.
-- `saveMyTherapistProfile` accepte désormais `specialty_ids: string[]` (optionnel, en complément de `specialties` legacy pour compat).
-- Sync pivot : si `specialty_ids` fourni, remplace le pivot directement (plus besoin du matching par aliases côté serveur). Le champ `therapists.specialties` (text[]) reste rempli en miroir pour la carte publique existante (liste des labels).
-- Migration légère : trigger optionnel qui maintient `therapists.specialties` à partir de la pivot pour les futurs enregistrements — **non**, on garde la sync explicite côté server fn pour rester lisible.
+1. **Extension** : `unaccent` (déjà présent d'après `normalize_search`).
+2. **Colonne générée** `search_tokens tsvector` sur `therapists` :
+   ```
+   to_tsvector('simple', unaccent(coalesce(first_name,'')||' '||coalesce(last_name,'')||' '
+                       ||coalesce(title,'')||' '||coalesce(city,'')||' '||coalesce(canton,'')||' '
+                       ||coalesce(short_bio,'')||' '||coalesce(bio,'')||' '
+                       ||array_to_string(coalesce(specialties,'{}'),' ')||' '
+                       ||array_to_string(coalesce(approaches,'{}'),' ')))
+   ```
+   + index GIN.
+3. **Fonction `search_therapists(...)`** (SECURITY DEFINER, STABLE) qui implémente la logique ci-dessus, réutilise `normalize_city_text`, `resolve_city`, la table `specialties` (nom + `aliases`) et `therapist_specialties`. Retourne les mêmes colonnes que `therapists_within_radius` + `score float` + `matched_city text` + `matched_specialty text`.
+4. Grants: `EXECUTE` à `anon`, `authenticated`.
 
-## Ordre d'exécution
+Aucune modification de policy — le RPC lit uniquement des thérapeutes `status='active'`, déjà autorisés en lecture publique.
 
-1. Migration i18n (données) → 2. Helper `pickI18n` + intégration UI existante (annuaire + pages spécialité) → 3. Route GEO + sitemap → 4. Admin panel → 5. Refonte champ profil.
+## Modifications UI (`src/routes/$lang.therapeutes.index.tsx`)
 
-## Points techniques
+- Remplacer les 3 queries (`geo`, `nearby`, `defaultList` filtré) par **une seule** `useQuery(["therapists-search", debounced, spec, famille])` qui :
+  - si `debounced.length < 2` et pas de filtre → `search_therapists(_q=null, ...)` (liste par défaut triée verified/premium).
+  - sinon → `search_therapists(_q=debounced, _spec_slug, _family_slug)`.
+- Debounce déjà à 400 ms — le passer à **250 ms** pour ressenti "instantané".
+- Bandeau contextuel :
+  - si `matched_city` → "X thérapeutes autour de **Lausanne** correspondant à **shiatsu**".
+  - sinon → "X thérapeutes correspondant à **shiatsu**".
+  - si 0 résultat strict et fallback OR → "Aucun résultat exact. Voici des profils approchants."
+- Etat vide utile : liens vers les familles + spécialités populaires (déjà via `SpecialtyExplorer`).
+- Aucun changement au `SpecialtyExplorer`, à la carte, aux filtres URL, aux breakpoints mobile.
+- Le mode "hors ligne" du géocodeur Google est supprimé de ce flux (plus de faux "Ville introuvable"). `geocodeCity` reste utilisé ailleurs.
 
-- Un seul appel `supabase--migration` pour l'i18n (gros UPDATE data — passer par `supabase--insert` si migration refuse les `UPDATE` sans schéma).
-- RPC `search_specialties` étendu : accepter `_lang` et matcher aliases + `name_{lang}`.
-- Sitemap actuel (`src/routes/sitemap[.]xml.ts`) sera mis à jour avec les combinaisons GEO peuplées.
-- Aucun changement de schéma DB (colonnes déjà nullable, aliases déjà `text[]`).
-- Tests manuels : commuter langue sur `/de/therapeutes` → familles affichées en allemand ; ouvrir `/fr/specialites/sophrologie/geneve` → si thérapeute présent, indexable ; admin peut reclasser "Perte de poids" → apparaît dans les résultats correspondants ; profil thérapeute → sélection multi propre, sync annuaire immédiate.
+## Cas de test à valider
 
-## Non inclus
+| Entrée | Attendu |
+|---|---|
+| `shiatsu` | Tous les thérapeutes shiatsu (spécialité + alias + texte) |
+| `Shiatsu` | Idem (insensible casse) |
+| `shiatsu lausanne` | Shiatsu ∩ (Lausanne exact OU ≤80 km) |
+| `lausanne shiatsu` | Idem |
+| `marie` | Tous les prénoms/nom "Marie…" |
+| `geneve` (sans accent) | Ville Genève |
+| `emdr fribourg` | EMDR autour de Fribourg |
+| `ayurveda` | Match via `aliases` de la table specialties |
+| Nom exact d'un thérapeute | Ce thérapeute en tête (score 100) |
+| Requête vide | Liste par défaut, verified/premium en tête |
+| `xyzabc` | 0 résultat + suggestions familles |
+| Filtre URL `?specialite=shiatsu` + recherche `lausanne` | Shiatsu ∩ Lausanne |
 
-- Traduction automatique via LLM (les libellés sont écrits à la main pour rester exacts).
-- Pages GEO pour toutes les villes suisses en pré-génération (seules les combinaisons peuplées sont indexées).
-- Refonte des accréditations / autres champs profil (hors scope).
+## Exemple Shiatsu
+
+Thérapeute `Henry Gerald`, Lausanne, `specialties=['Shiatsu','Reiki']`, spécialité pivot = `shiatsu`.
+
+- `q="shiatsu"` : match pivot (+55) + tableau (+35) + tsvector (+8) → score ~98, en tête.
+- `q="shiatsu lausanne"` : token `lausanne` résolu en ville → filtre 80 km + bonus distance (+20). Token `shiatsu` match pivot (+55). Score ~130.
+- `q="henry"` : match `first_name` (+100). En tête.
+
+## Livraison
+
+1. Migration SQL (colonne `search_tokens` + fonction `search_therapists` + grants).
+2. Refonte du fichier `src/routes/$lang.therapeutes.index.tsx` : hooks de recherche unifiés, bandeau contextuel, fallback.
+3. Vérification Playwright rapide sur `shiatsu`, `shiatsu lausanne`, nom, ville.
+
+Aucun changement de schéma destructif, aucun impact sur les autres pages ou sur les policies existantes.
