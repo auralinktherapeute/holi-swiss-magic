@@ -83,6 +83,12 @@ export type TherapistService = {
   kind?: "session" | "package";
   short_description?: string;
   visible?: boolean;
+  /** Nombre de séances incluses (uniquement pour les forfaits). */
+  sessions_count?: number;
+  /** Durée d'une séance individuelle du forfait, en minutes. */
+  session_duration_min?: number;
+  /** Ordre d'affichage (croissant). */
+  order?: number;
 };
 
 // Swiss recognized organizations that approve complementary therapists for
