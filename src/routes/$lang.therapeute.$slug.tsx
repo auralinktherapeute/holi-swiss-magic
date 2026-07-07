@@ -357,6 +357,12 @@ function Page() {
                   {th.title}{th.city ? ` · ${th.city}${th.canton ? ` (${th.canton})` : ""}` : ""}
                 </p>
 
+                {th.short_bio && (
+                  <p className="mb-3 max-w-2xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
+                    {th.short_bio}
+                  </p>
+                )}
+
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
                   {avg && (
                     <span className="flex items-center gap-1.5">
