@@ -16,7 +16,7 @@ import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Info } from "lucide-react";
+import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
@@ -275,6 +275,14 @@ function Page() {
   const services: ServiceEntry[] = (Array.isArray(th.services) ? th.services : []).filter(
     (s: any) => s?.visible !== false,
   );
+  // Ordre stable : `order` croissant, sinon ordre d'insertion.
+  services.sort((a: any, b: any) => {
+    const oa = typeof a.order === "number" ? a.order : 9999;
+    const ob = typeof b.order === "number" ? b.order : 9999;
+    return oa - ob;
+  });
+  const sessions = services.filter((s) => (s as any).kind !== "package");
+  const packages = services.filter((s) => (s as any).kind === "package");
   const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations) ? th.accreditations : [];
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
