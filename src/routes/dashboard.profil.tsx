@@ -662,8 +662,22 @@ function ProfilePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-white">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color || "#3b82f6" }} />
+                    {s.kind === "package" && (
+                      <span className="rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                        {t("profile_edit.service_kind_package", { defaultValue: "Forfait" })}
+                      </span>
+                    )}
                     <span className="font-semibold">{s.name}</span>
+                    {s.visible === false && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(255,255,255,0.15)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#a89bc4]">
+                        <EyeOff className="h-3 w-3" />
+                        {t("profile_edit.service_hidden", { defaultValue: "Masqué" })}
+                      </span>
+                    )}
                   </div>
+                  {s.short_description && (
+                    <p className="mt-1 text-xs text-[#c9b8e0] line-clamp-1">{s.short_description}</p>
+                  )}
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{s.duration_min} {t("profile_edit.min_short")}</span>
