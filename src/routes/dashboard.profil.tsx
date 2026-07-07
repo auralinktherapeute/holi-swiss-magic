@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
   FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check, BadgeCheck,
+  ArrowUp, ArrowDown, Package as PackageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
