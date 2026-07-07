@@ -166,7 +166,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   },
 });
 
-type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string };
+type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string; short_description?: string; kind?: "session" | "package"; visible?: boolean };
 type AccreditationEntry = { org: string; number?: string };
 
 const FADE_UP = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
