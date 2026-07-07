@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
   FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check, BadgeCheck,
+  ArrowUp, ArrowDown, Package as PackageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -680,7 +681,11 @@ function ProfilePage() {
                   )}
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>{s.duration_min} {t("profile_edit.min_short")}</span>
+                    <span>
+                      {s.kind === "package" && s.sessions_count
+                        ? `${s.sessions_count} × ${s.session_duration_min ?? s.duration_min} ${t("profile_edit.min_short")}`
+                        : `${s.duration_min} ${t("profile_edit.min_short")}`}
+                    </span>
                     {s.price_chf != null && (
                       <span className="text-[#5cc8fa] font-medium">· {s.price_chf} CHF</span>
                     )}
@@ -691,6 +696,40 @@ function ProfilePage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    onClick={() => {
+                      setServices((prev) => {
+                        if (i === 0) return prev;
+                        const next = [...prev];
+                        [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                        return next.map((x, idx) => ({ ...x, order: idx }));
+                      });
+                      markDirty();
+                    }}
+                    className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Monter"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === services.length - 1}
+                    onClick={() => {
+                      setServices((prev) => {
+                        if (i === prev.length - 1) return prev;
+                        const next = [...prev];
+                        [next[i], next[i + 1]] = [next[i + 1], next[i]];
+                        return next.map((x, idx) => ({ ...x, order: idx }));
+                      });
+                      markDirty();
+                    }}
+                    className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Descendre"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </button>
                   <ServiceDialog
                     initial={s}
                     trigger={<button type="button" className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white"><Pencil className="h-4 w-4" /></button>}
@@ -968,6 +1007,8 @@ function ServiceDialog({
   const [kind, setKind] = useSessionState<"session" | "package">(`${serviceStateKey}.kind`, initial?.kind ?? "session");
   const [shortDesc, setShortDesc] = useSessionState(`${serviceStateKey}.short_description`, initial?.short_description ?? "");
   const [visible, setVisible] = useSessionState<boolean>(`${serviceStateKey}.visible`, initial?.visible !== false);
+  const [sessionsCount, setSessionsCount] = useSessionState<number | "">(`${serviceStateKey}.sessions_count`, initial?.sessions_count ?? "");
+  const [sessionDurationMin, setSessionDurationMin] = useSessionState<number | "">(`${serviceStateKey}.session_duration_min`, initial?.session_duration_min ?? "");
 
   const submit = () => {
     if (!name.trim() || !dur) return;
@@ -982,9 +1023,16 @@ function ServiceDialog({
       kind,
       short_description: shortDesc.trim() || undefined,
       visible,
+      sessions_count: kind === "package" && sessionsCount !== "" ? Number(sessionsCount) : undefined,
+      session_duration_min: kind === "package" && sessionDurationMin !== "" ? Number(sessionDurationMin) : undefined,
+      order: initial?.order,
     });
     setOpen(false);
-    if (!initial) { setName(""); setDur(60); setPrice(""); setFormat("in_person"); setDesc(""); setShortDesc(""); setKind("session"); setVisible(true); }
+    if (!initial) {
+      setName(""); setDur(60); setPrice(""); setFormat("in_person"); setDesc("");
+      setShortDesc(""); setKind("session"); setVisible(true);
+      setSessionsCount(""); setSessionDurationMin("");
+    }
   };
 
   return (
@@ -1039,6 +1087,33 @@ function ServiceDialog({
           <Field label={t("profile_edit.service_duration")}>
             <Input type="number" value={dur} onChange={(e) => setDur(e.target.value === "" ? "" : Number(e.target.value))} className={inputClass} />
           </Field>
+          {kind === "package" && (
+            <div className="grid gap-4 sm:grid-cols-2 rounded-xl border border-amber-400/25 bg-amber-400/5 p-4">
+              <Field label={t("profile_edit.package_sessions_count", { defaultValue: "Nombre de séances incluses" })}>
+                <Input
+                  type="number"
+                  min={1}
+                  value={sessionsCount}
+                  onChange={(e) => setSessionsCount(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="Ex: 5"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label={t("profile_edit.package_session_duration", { defaultValue: "Durée par séance (min)" })}>
+                <Input
+                  type="number"
+                  min={5}
+                  value={sessionDurationMin}
+                  onChange={(e) => setSessionDurationMin(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="Ex: 60"
+                  className={inputClass}
+                />
+              </Field>
+              <p className="sm:col-span-2 text-xs text-amber-200/80">
+                {t("profile_edit.package_helper", { defaultValue: "Le tarif au-dessus est le prix global du forfait. La durée renseignée dans « Durée » est la durée totale d'accompagnement (facultative)." })}
+              </p>
+            </div>
+          )}
           <Field label={t("profile_edit.service_price", { defaultValue: "Tarif (CHF)" })}>
             <Input
               type="number"

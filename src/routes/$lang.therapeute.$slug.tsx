@@ -16,7 +16,7 @@ import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Info } from "lucide-react";
+import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
@@ -275,6 +275,14 @@ function Page() {
   const services: ServiceEntry[] = (Array.isArray(th.services) ? th.services : []).filter(
     (s: any) => s?.visible !== false,
   );
+  // Ordre stable : `order` croissant, sinon ordre d'insertion.
+  services.sort((a: any, b: any) => {
+    const oa = typeof a.order === "number" ? a.order : 9999;
+    const ob = typeof b.order === "number" ? b.order : 9999;
+    return oa - ob;
+  });
+  const sessions = services.filter((s) => (s as any).kind !== "package");
+  const packages = services.filter((s) => (s as any).kind === "package");
   const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations) ? th.accreditations : [];
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
@@ -517,85 +525,38 @@ function Page() {
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
-                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[rgba(184,110,249,0.15)]">
-                        {[
-                          t("therapist_profile.service_col_name"),
-                          t("therapist_profile.service_col_duration"),
-                          t("therapist_profile.service_col_price"),
-                          t("therapist_profile.service_col_format"),
-                        ].map((h) => (
-                          <th key={h} className="pb-3 text-left text-xs font-medium text-[rgba(255,255,255,0.4)] uppercase tracking-wide pr-4">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {services.map((s, i) => (
-                        <tr key={i} className="border-b border-[rgba(184,110,249,0.08)] hover:bg-[rgba(184,110,249,0.04)] transition">
-                          {(() => {
-                            const duration = (s as any).duration_min ?? s.duration;
-                            const price = (s as any).price_chf ?? s.price;
-                            const formatKey = (s as any).format as string | undefined;
-                            const formatLabel = formatKey
-                              ? (t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey)
-                              : t("therapist_profile.service_format_default");
-                            const missing = (
-                              <span className="text-[rgba(255,255,255,0.35)] italic">
-                                {t("therapist_profile.value_missing", { defaultValue: "À renseigner" })}
-                              </span>
-                            );
-                            const isPackage = (s as any).kind === "package";
-                            const detail = s.description || s.short_description;
-                            return (
-                              <>
-                                <td className="py-3 pr-4 font-medium text-white">
-                                  <div className="flex items-start gap-2">
-                                    {isPackage && (
-                                      <span className="mt-0.5 shrink-0 rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                                        {t("therapist_profile.service_kind_package", { defaultValue: "Forfait" })}
-                                      </span>
-                                    )}
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-1.5">
-                                        <span>{s.name}</span>
-                                        {detail && (
-                                          <Popover>
-                                            <PopoverTrigger asChild>
-                                              <button
-                                                type="button"
-                                                aria-label={t("therapist_profile.service_more", { defaultValue: "En savoir plus" })}
-                                                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
-                                              >
-                                                <Info className="h-3.5 w-3.5" />
-                                              </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-72 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
-                                              <p className="text-sm font-semibold text-white">{s.name}</p>
-                                              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.75)]">{detail}</p>
-                                            </PopoverContent>
-                                          </Popover>
-                                        )}
-                                      </div>
-                                      {s.short_description && (
-                                        <p className="mt-1 text-xs text-[rgba(255,255,255,0.5)] line-clamp-1">{s.short_description}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)]">{duration ? `${duration} min` : missing}</td>
-                                <td className="py-3 pr-4 text-[#5cc8fa] font-semibold">{price != null && price !== "" ? `${price} CHF` : missing}</td>
-                                <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{formatLabel}</td>
-                              </>
-                            );
-                          })()}
-                        </tr>
+                <h2 className="mb-1 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
+                <p className="mb-5 text-xs text-[rgba(255,255,255,0.45)]">
+                  {t("therapist_profile.services_subtitle", { defaultValue: "Séances individuelles et forfaits d'accompagnement." })}
+                </p>
+
+                {sessions.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[rgba(255,255,255,0.55)]">
+                      <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
+                      {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {sessions.map((s, i) => (
+                        <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                    </div>
+                  </div>
+                )}
+
+                {packages.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300/90">
+                      <PackageIcon className="h-3.5 w-3.5" />
+                      {t("therapist_profile.packages_group", { defaultValue: "Forfaits d'accompagnement" })}
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {packages.map((s, i) => (
+                        <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.section>
             )}
 
@@ -804,5 +765,144 @@ function Page() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Card premium pour séance ou forfait.
+   Utilisée dans la section « Services / tarifs » du profil public.
+   ───────────────────────────────────────────────────────────── */
+function ServiceCard({
+  service,
+  variant,
+  tLang,
+}: {
+  service: ServiceEntry;
+  variant: "session" | "package";
+  tLang: string;
+}) {
+  const { t } = useTranslation();
+  const s: any = service;
+  const duration = s.duration_min ?? s.duration;
+  const price = s.price_chf ?? s.price;
+  const currency = "CHF";
+  const formatKey = s.format as string | undefined;
+  const formatLabel = formatKey
+    ? (t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey)
+    : t("therapist_profile.service_format_default");
+  const FormatIcon = formatKey === "online" ? Video : formatKey === "hybrid" ? Users : MapPin;
+  const detail = s.description || s.short_description;
+  const isPackage = variant === "package";
+  const sessionsCount = s.sessions_count as number | undefined;
+  const sessionDur = s.session_duration_min as number | undefined;
+
+  return (
+    <article
+      className={`group relative flex flex-col gap-3 rounded-2xl border p-4 transition ${
+        isPackage
+          ? "border-amber-400/30 bg-gradient-to-br from-[#1f1330] to-[#1a0a2e] shadow-[0_0_0_1px_rgba(251,191,36,0.05)_inset]"
+          : "border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] hover:border-[rgba(184,110,249,0.35)]"
+      }`}
+    >
+      {/* header */}
+      <header className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          {isPackage && (
+            <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+              <PackageIcon className="h-3 w-3" />
+              {t("therapist_profile.service_kind_package", { defaultValue: "Programme d'accompagnement" })}
+            </span>
+          )}
+          <h4 className="text-[15px] font-semibold text-white leading-snug">{s.name}</h4>
+        </div>
+        {detail && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={t("therapist_profile.service_more", { defaultValue: "En savoir plus" })}
+                className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(184,110,249,0.25)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
+              >
+                <Info className="h-3.5 w-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
+              <p className="text-sm font-semibold text-white">{s.name}</p>
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">{detail}</p>
+            </PopoverContent>
+          </Popover>
+        )}
+      </header>
+
+      {/* short description */}
+      {s.short_description && (
+        <p className="text-xs leading-relaxed text-[rgba(255,255,255,0.65)] line-clamp-2">
+          {s.short_description}
+        </p>
+      )}
+
+      {/* meta line */}
+      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[rgba(255,255,255,0.6)]">
+        {isPackage && sessionsCount ? (
+          <span className="inline-flex items-center gap-1">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span className="text-white font-medium">{sessionsCount}</span>
+            {t("therapist_profile.package_sessions_short", { defaultValue: "séances" })}
+            {sessionDur ? <span className="text-[rgba(255,255,255,0.45)]">· {sessionDur} min</span> : null}
+          </span>
+        ) : (
+          duration && (
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {duration} min
+            </span>
+          )
+        )}
+        {formatKey && (
+          <span className="inline-flex items-center gap-1 capitalize">
+            <FormatIcon className="h-3.5 w-3.5" />
+            {formatLabel}
+          </span>
+        )}
+      </div>
+
+      {/* price */}
+      <footer className="flex items-end justify-between border-t border-[rgba(184,110,249,0.12)] pt-3">
+        <div>
+          {price != null && price !== "" ? (
+            <>
+              <div className="text-lg font-bold text-white leading-none">
+                {price} <span className="text-xs font-medium text-[rgba(255,255,255,0.5)]">{currency}</span>
+              </div>
+              {isPackage && (
+                <div className="mt-1 text-[10px] uppercase tracking-wider text-amber-300/80">
+                  {t("therapist_profile.package_total_price", { defaultValue: "Tarif global" })}
+                </div>
+              )}
+            </>
+          ) : (
+            <span className="text-xs italic text-[rgba(255,255,255,0.35)]">
+              {t("therapist_profile.value_missing", { defaultValue: "À renseigner" })}
+            </span>
+          )}
+        </div>
+        {detail && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="text-xs font-medium text-[#b86ef9] hover:text-white transition"
+              >
+                {t("therapist_profile.service_more", { defaultValue: "En savoir plus" })} →
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
+              <p className="text-sm font-semibold text-white">{s.name}</p>
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">{detail}</p>
+            </PopoverContent>
+          </Popover>
+        )}
+      </footer>
+    </article>
   );
 }
