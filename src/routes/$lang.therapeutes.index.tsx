@@ -8,8 +8,6 @@ import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search, X 
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
-import { useServerFn } from "@tanstack/react-start";
-import { geocodeCity } from "@/lib/geocode.functions";
 import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 
 const TherapistMap = lazy(() =>
@@ -61,6 +59,9 @@ type Therapist = {
   price_min?: number; price_max?: number; currency?: string;
   is_premium?: boolean; verified?: boolean; specialties?: string[];
   distance_m?: number;
+  score?: number;
+  matched_city?: string | null;
+  matched_specialty?: string | null;
 };
 
 const CANTON_LABELS: Record<string, string> = {
@@ -92,68 +93,24 @@ function Page() {
   const [mobileTab, setMobileTab] = useSessionState<"list" | "map">("therapists.mobileTab", "list");
   const [search, setSearch] = useSessionState("therapists.search", "");
   const [debounced, setDebounced] = useState(search);
-  const geocode = useServerFn(geocodeCity);
 
   useEffect(() => {
-    const id = setTimeout(() => setDebounced(search.trim()), 400);
+    const id = setTimeout(() => setDebounced(search.trim()), 250);
     return () => clearTimeout(id);
   }, [search]);
 
-  const geo = useQuery({
-    queryKey: ["geocode-city", debounced],
-    enabled: debounced.length >= 2,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => geocode({ data: { query: debounced } }),
-  });
-
   const hasSpecFilter = !!(specFilter || famFilter);
 
-  // ── Specialty / family filter → resolve to therapist_ids via pivot
-  const specFilterQuery = useQuery({
-    queryKey: ["therapists-by-specialty", specFilter ?? null, famFilter ?? null],
-    enabled: hasSpecFilter,
+  // ── Unified search RPC: name, city, specialty, tags, bio, aliases
+  const searchQuery = useQuery({
+    queryKey: ["therapists-search", debounced, specFilter ?? null, famFilter ?? null],
+    staleTime: 30 * 1000,
     queryFn: async () => {
-      let q = supabase
-        .from("therapist_specialties")
-        .select("therapist_id, specialties!inner(slug, specialty_families!inner(slug))");
-      if (specFilter) q = q.eq("specialties.slug", specFilter);
-      if (famFilter) q = q.eq("specialties.specialty_families.slug", famFilter);
-      const { data, error } = await q;
-      if (error) throw error;
-      return Array.from(new Set((data ?? []).map((r: any) => r.therapist_id as string)));
-    },
-  });
-
-  const defaultList = useQuery({
-    queryKey: ["therapists-map", specFilter ?? null, famFilter ?? null, specFilterQuery.data ?? null],
-    enabled: debounced.length < 2 && (!hasSpecFilter || !!specFilterQuery.data),
-    queryFn: async () => {
-      let q = supabase
-        .from("therapists")
-        .select("id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,latitude,longitude,price_min,price_max,currency,verified,specialties")
-        .eq("status", "active")
-        .order("verified", { ascending: false })
-        .limit(100);
-      if (hasSpecFilter) {
-        const ids = specFilterQuery.data ?? [];
-        if (ids.length === 0) return [] as Therapist[];
-        q = q.in("id", ids);
-      }
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as Therapist[];
-    },
-  });
-
-  const nearby = useQuery({
-    queryKey: ["therapists-nearby", geo.data?.ok ? [geo.data.lat, geo.data.lng] : null],
-    enabled: !!(geo.data && geo.data.ok),
-    queryFn: async () => {
-      if (!geo.data || !geo.data.ok) return [];
-      const { data, error } = await (supabase.rpc as any)("therapists_within_radius", {
-        _lat: geo.data.lat,
-        _lng: geo.data.lng,
-        _radius_m: 80000,
+      const { data, error } = await (supabase.rpc as any)("search_therapists", {
+        _q: debounced.length >= 2 ? debounced : null,
+        _spec_slug: specFilter ?? null,
+        _family_slug: famFilter ?? null,
+        _limit: 100,
       });
       if (error) throw error;
       return (data ?? []) as Therapist[];
@@ -179,18 +136,11 @@ function Page() {
   });
 
   const isSearching = debounced.length >= 2;
-  const isLoading =
-    (!isSearching && defaultList.isLoading) ||
-    (isSearching && (geo.isLoading || (!!geo.data?.ok && nearby.isLoading)));
-  const cityNotFound = isSearching && !!geo.data && !geo.data.ok;
-  const baseList: Therapist[] = isSearching
-    ? (geo.data?.ok ? (nearby.data ?? []) : [])
-    : (defaultList.data ?? []);
-
-  const specIds = specFilterQuery.data ?? [];
-  const filtered: Therapist[] = hasSpecFilter && isSearching
-    ? baseList.filter((t) => specIds.includes(t.id))
-    : baseList;
+  const isLoading = searchQuery.isLoading;
+  const filtered: Therapist[] = searchQuery.data ?? [];
+  const matchedCity = filtered[0]?.matched_city ?? null;
+  const matchedSpecialty = filtered[0]?.matched_specialty ?? null;
+  const cityNotFound = false;
 
   const setSelection = (sel: { specialite?: string; famille?: string }) => {
     navigate({
