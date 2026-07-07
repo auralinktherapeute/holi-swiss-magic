@@ -225,14 +225,11 @@ function Page() {
         {/* ── Liste (40%) ── */}
         <div className={`flex flex-col overflow-y-auto bg-[#0f0a1e] ${mobileTab === "map" ? "hidden sm:flex" : "flex"} sm:w-[42%] w-full`}>
           <div className="space-y-2 p-3">
-            {cityNotFound && (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                Ville introuvable, veuillez vérifier l'orthographe.
-              </div>
-            )}
-            {isSearching && geo.data?.ok && !isLoading && (
+            {isSearching && !isLoading && (
               <div className="px-1 pb-1 text-xs text-[rgba(255,255,255,0.55)]">
-                {filtered.length} thérapeute{filtered.length !== 1 ? "s" : ""} dans un rayon de 80 km autour de <span className="text-white">{geo.data.formatted}</span>
+                {filtered.length} thérapeute{filtered.length !== 1 ? "s" : ""}
+                {matchedSpecialty && <> pour <span className="text-white">{matchedSpecialty}</span></>}
+                {matchedCity && <> autour de <span className="text-white">{matchedCity}</span></>}
               </div>
             )}
             {isLoading && Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
