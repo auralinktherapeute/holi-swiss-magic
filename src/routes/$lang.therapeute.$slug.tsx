@@ -525,85 +525,38 @@ function Page() {
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
-                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[rgba(184,110,249,0.15)]">
-                        {[
-                          t("therapist_profile.service_col_name"),
-                          t("therapist_profile.service_col_duration"),
-                          t("therapist_profile.service_col_price"),
-                          t("therapist_profile.service_col_format"),
-                        ].map((h) => (
-                          <th key={h} className="pb-3 text-left text-xs font-medium text-[rgba(255,255,255,0.4)] uppercase tracking-wide pr-4">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {services.map((s, i) => (
-                        <tr key={i} className="border-b border-[rgba(184,110,249,0.08)] hover:bg-[rgba(184,110,249,0.04)] transition">
-                          {(() => {
-                            const duration = (s as any).duration_min ?? s.duration;
-                            const price = (s as any).price_chf ?? s.price;
-                            const formatKey = (s as any).format as string | undefined;
-                            const formatLabel = formatKey
-                              ? (t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey)
-                              : t("therapist_profile.service_format_default");
-                            const missing = (
-                              <span className="text-[rgba(255,255,255,0.35)] italic">
-                                {t("therapist_profile.value_missing", { defaultValue: "À renseigner" })}
-                              </span>
-                            );
-                            const isPackage = (s as any).kind === "package";
-                            const detail = s.description || s.short_description;
-                            return (
-                              <>
-                                <td className="py-3 pr-4 font-medium text-white">
-                                  <div className="flex items-start gap-2">
-                                    {isPackage && (
-                                      <span className="mt-0.5 shrink-0 rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                                        {t("therapist_profile.service_kind_package", { defaultValue: "Forfait" })}
-                                      </span>
-                                    )}
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-1.5">
-                                        <span>{s.name}</span>
-                                        {detail && (
-                                          <Popover>
-                                            <PopoverTrigger asChild>
-                                              <button
-                                                type="button"
-                                                aria-label={t("therapist_profile.service_more", { defaultValue: "En savoir plus" })}
-                                                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
-                                              >
-                                                <Info className="h-3.5 w-3.5" />
-                                              </button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-72 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
-                                              <p className="text-sm font-semibold text-white">{s.name}</p>
-                                              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.75)]">{detail}</p>
-                                            </PopoverContent>
-                                          </Popover>
-                                        )}
-                                      </div>
-                                      {s.short_description && (
-                                        <p className="mt-1 text-xs text-[rgba(255,255,255,0.5)] line-clamp-1">{s.short_description}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)]">{duration ? `${duration} min` : missing}</td>
-                                <td className="py-3 pr-4 text-[#5cc8fa] font-semibold">{price != null && price !== "" ? `${price} CHF` : missing}</td>
-                                <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{formatLabel}</td>
-                              </>
-                            );
-                          })()}
-                        </tr>
+                <h2 className="mb-1 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
+                <p className="mb-5 text-xs text-[rgba(255,255,255,0.45)]">
+                  {t("therapist_profile.services_subtitle", { defaultValue: "Séances individuelles et forfaits d'accompagnement." })}
+                </p>
+
+                {sessions.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[rgba(255,255,255,0.55)]">
+                      <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
+                      {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {sessions.map((s, i) => (
+                        <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                    </div>
+                  </div>
+                )}
+
+                {packages.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300/90">
+                      <PackageIcon className="h-3.5 w-3.5" />
+                      {t("therapist_profile.packages_group", { defaultValue: "Forfaits d'accompagnement" })}
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {packages.map((s, i) => (
+                        <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.section>
             )}
 
