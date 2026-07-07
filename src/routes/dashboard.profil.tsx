@@ -681,7 +681,11 @@ function ProfilePage() {
                   )}
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>{s.duration_min} {t("profile_edit.min_short")}</span>
+                    <span>
+                      {s.kind === "package" && s.sessions_count
+                        ? `${s.sessions_count} × ${s.session_duration_min ?? s.duration_min} ${t("profile_edit.min_short")}`
+                        : `${s.duration_min} ${t("profile_edit.min_short")}`}
+                    </span>
                     {s.price_chf != null && (
                       <span className="text-[#5cc8fa] font-medium">· {s.price_chf} CHF</span>
                     )}
@@ -692,6 +696,40 @@ function ProfilePage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    onClick={() => {
+                      setServices((prev) => {
+                        if (i === 0) return prev;
+                        const next = [...prev];
+                        [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                        return next.map((x, idx) => ({ ...x, order: idx }));
+                      });
+                      markDirty();
+                    }}
+                    className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Monter"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === services.length - 1}
+                    onClick={() => {
+                      setServices((prev) => {
+                        if (i === prev.length - 1) return prev;
+                        const next = [...prev];
+                        [next[i], next[i + 1]] = [next[i + 1], next[i]];
+                        return next.map((x, idx) => ({ ...x, order: idx }));
+                      });
+                      markDirty();
+                    }}
+                    className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Descendre"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </button>
                   <ServiceDialog
                     initial={s}
                     trigger={<button type="button" className="rounded-md p-2 text-[#a89bc4] hover:bg-white/5 hover:text-white"><Pencil className="h-4 w-4" /></button>}
