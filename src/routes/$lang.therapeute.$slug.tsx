@@ -15,6 +15,8 @@ import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Info } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
@@ -164,7 +166,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   },
 });
 
-type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string };
+type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string; short_description?: string; kind?: "session" | "package"; visible?: boolean };
 type AccreditationEntry = { org: string; number?: string };
 
 const FADE_UP = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -270,7 +272,9 @@ function Page() {
   }
 
   const fullName = `${th.first_name} ${th.last_name}`.trim();
-  const services: ServiceEntry[] = Array.isArray(th.services) ? th.services : [];
+  const services: ServiceEntry[] = (Array.isArray(th.services) ? th.services : []).filter(
+    (s: any) => s?.visible !== false,
+  );
   const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations) ? th.accreditations : [];
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
@@ -354,6 +358,12 @@ function Page() {
                 <p className="text-[#b86ef9] font-medium mb-2">
                   {th.title}{th.city ? ` · ${th.city}${th.canton ? ` (${th.canton})` : ""}` : ""}
                 </p>
+
+                {th.short_bio && (
+                  <p className="mb-3 max-w-2xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
+                    {th.short_bio}
+                  </p>
+                )}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
                   {avg && (
@@ -537,9 +547,44 @@ function Page() {
                                 {t("therapist_profile.value_missing", { defaultValue: "À renseigner" })}
                               </span>
                             );
+                            const isPackage = (s as any).kind === "package";
+                            const detail = s.description || s.short_description;
                             return (
                               <>
-                                <td className="py-3 pr-4 font-medium text-white">{s.name}</td>
+                                <td className="py-3 pr-4 font-medium text-white">
+                                  <div className="flex items-start gap-2">
+                                    {isPackage && (
+                                      <span className="mt-0.5 shrink-0 rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                                        {t("therapist_profile.service_kind_package", { defaultValue: "Forfait" })}
+                                      </span>
+                                    )}
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <span>{s.name}</span>
+                                        {detail && (
+                                          <Popover>
+                                            <PopoverTrigger asChild>
+                                              <button
+                                                type="button"
+                                                aria-label={t("therapist_profile.service_more", { defaultValue: "En savoir plus" })}
+                                                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
+                                              >
+                                                <Info className="h-3.5 w-3.5" />
+                                              </button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-72 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
+                                              <p className="text-sm font-semibold text-white">{s.name}</p>
+                                              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.75)]">{detail}</p>
+                                            </PopoverContent>
+                                          </Popover>
+                                        )}
+                                      </div>
+                                      {s.short_description && (
+                                        <p className="mt-1 text-xs text-[rgba(255,255,255,0.5)] line-clamp-1">{s.short_description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
                                 <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)]">{duration ? `${duration} min` : missing}</td>
                                 <td className="py-3 pr-4 text-[#5cc8fa] font-semibold">{price != null && price !== "" ? `${price} CHF` : missing}</td>
                                 <td className="py-3 pr-4 text-[rgba(255,255,255,0.55)] capitalize">{formatLabel}</td>

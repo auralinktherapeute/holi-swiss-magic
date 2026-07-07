@@ -662,8 +662,22 @@ function ProfilePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-white">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color || "#3b82f6" }} />
+                    {s.kind === "package" && (
+                      <span className="rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                        {t("profile_edit.service_kind_package", { defaultValue: "Forfait" })}
+                      </span>
+                    )}
                     <span className="font-semibold">{s.name}</span>
+                    {s.visible === false && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(255,255,255,0.15)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#a89bc4]">
+                        <EyeOff className="h-3 w-3" />
+                        {t("profile_edit.service_hidden", { defaultValue: "Masqué" })}
+                      </span>
+                    )}
                   </div>
+                  {s.short_description && (
+                    <p className="mt-1 text-xs text-[#c9b8e0] line-clamp-1">{s.short_description}</p>
+                  )}
                   <div className="mt-1 flex items-center gap-2 text-xs text-[#a89bc4]">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{s.duration_min} {t("profile_edit.min_short")}</span>
@@ -951,6 +965,9 @@ function ServiceDialog({
   const [format, setFormat] = useSessionState<"in_person" | "online" | "hybrid">(`${serviceStateKey}.format`, initial?.format ?? "in_person");
   const [desc, setDesc] = useSessionState(`${serviceStateKey}.description`, initial?.description ?? "");
   const [color, setColor] = useSessionState(`${serviceStateKey}.color`, initial?.color ?? SERVICE_COLORS[1]);
+  const [kind, setKind] = useSessionState<"session" | "package">(`${serviceStateKey}.kind`, initial?.kind ?? "session");
+  const [shortDesc, setShortDesc] = useSessionState(`${serviceStateKey}.short_description`, initial?.short_description ?? "");
+  const [visible, setVisible] = useSessionState<boolean>(`${serviceStateKey}.visible`, initial?.visible !== false);
 
   const submit = () => {
     if (!name.trim() || !dur) return;
@@ -962,9 +979,12 @@ function ServiceDialog({
       format,
       description: desc.trim() || undefined,
       color,
+      kind,
+      short_description: shortDesc.trim() || undefined,
+      visible,
     });
     setOpen(false);
-    if (!initial) { setName(""); setDur(60); setPrice(""); setFormat("in_person"); setDesc(""); }
+    if (!initial) { setName(""); setDur(60); setPrice(""); setFormat("in_person"); setDesc(""); setShortDesc(""); setKind("session"); setVisible(true); }
   };
 
   return (
@@ -983,8 +1003,38 @@ function ServiceDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <Field label={t("profile_edit.service_kind", { defaultValue: "Type" })}>
+            <div className="flex gap-2">
+              {(["session", "package"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setKind(k)}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                    kind === k
+                      ? "border-[#b86ef9] bg-[rgba(184,110,249,0.15)] text-white"
+                      : "border-[rgba(184,110,249,0.2)] bg-transparent text-[#a89bc4] hover:text-white"
+                  }`}
+                >
+                  {k === "session"
+                    ? t("profile_edit.service_kind_session", { defaultValue: "Séance" })
+                    : t("profile_edit.service_kind_package", { defaultValue: "Forfait" })}
+                </button>
+              ))}
+            </div>
+          </Field>
           <Field label={t("profile_edit.service_name")}>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("profile_edit.service_min_placeholder")} className={inputClass} />
+          </Field>
+          <Field label={t("profile_edit.service_short_description", { defaultValue: "Description courte (SEO)" })}>
+            <Input
+              value={shortDesc}
+              maxLength={160}
+              onChange={(e) => setShortDesc(e.target.value)}
+              placeholder={t("profile_edit.service_short_desc_placeholder", { defaultValue: "Résumé en une phrase, visible dans la liste" })}
+              className={inputClass}
+            />
+            <p className="mt-1.5 text-xs text-[#a89bc4]">{shortDesc.length}/160</p>
           </Field>
           <Field label={t("profile_edit.service_duration")}>
             <Input type="number" value={dur} onChange={(e) => setDur(e.target.value === "" ? "" : Number(e.target.value))} className={inputClass} />
@@ -1021,6 +1071,13 @@ function ServiceDialog({
               ))}
             </div>
           </Field>
+          <div className="flex items-center justify-between rounded-lg border border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.5)] px-3 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-white">
+              {visible ? <Eye className="h-4 w-4 text-[#5cc8fa]" /> : <EyeOff className="h-4 w-4 text-[#a89bc4]" />}
+              <span>{t("profile_edit.service_visible", { defaultValue: "Visible sur le profil public" })}</span>
+            </div>
+            <Switch checked={visible} onCheckedChange={setVisible} />
+          </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="text-[#d4c4e0]">
