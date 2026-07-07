@@ -767,3 +767,142 @@ function Page() {
     </div>
   );
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Card premium pour séance ou forfait.
+   Utilisée dans la section « Services / tarifs » du profil public.
+   ───────────────────────────────────────────────────────────── */
+function ServiceCard({
+  service,
+  variant,
+  tLang,
+}: {
+  service: ServiceEntry;
+  variant: "session" | "package";
+  tLang: string;
+}) {
+  const { t } = useTranslation();
+  const s: any = service;
+  const duration = s.duration_min ?? s.duration;
+  const price = s.price_chf ?? s.price;
+  const currency = "CHF";
+  const formatKey = s.format as string | undefined;
+  const formatLabel = formatKey
+    ? (t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey)
+    : t("therapist_profile.service_format_default");
+  const FormatIcon = formatKey === "online" ? Video : formatKey === "hybrid" ? Users : MapPin;
+  const detail = s.description || s.short_description;
+  const isPackage = variant === "package";
+  const sessionsCount = s.sessions_count as number | undefined;
+  const sessionDur = s.session_duration_min as number | undefined;
+
+  return (
+    <article
+      className={`group relative flex flex-col gap-3 rounded-2xl border p-4 transition ${
+        isPackage
+          ? "border-amber-400/30 bg-gradient-to-br from-[#1f1330] to-[#1a0a2e] shadow-[0_0_0_1px_rgba(251,191,36,0.05)_inset]"
+          : "border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] hover:border-[rgba(184,110,249,0.35)]"
+      }`}
+    >
+      {/* header */}
+      <header className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          {isPackage && (
+            <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+              <PackageIcon className="h-3 w-3" />
+              {t("therapist_profile.service_kind_package", { defaultValue: "Programme d'accompagnement" })}
+            </span>
+          )}
+          <h4 className="text-[15px] font-semibold text-white leading-snug">{s.name}</h4>
+        </div>
+        {detail && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={t("therapist_profile.service_more", { defaultValue: "En savoir plus" })}
+                className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(184,110,249,0.25)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
+              >
+                <Info className="h-3.5 w-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
+              <p className="text-sm font-semibold text-white">{s.name}</p>
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">{detail}</p>
+            </PopoverContent>
+          </Popover>
+        )}
+      </header>
+
+      {/* short description */}
+      {s.short_description && (
+        <p className="text-xs leading-relaxed text-[rgba(255,255,255,0.65)] line-clamp-2">
+          {s.short_description}
+        </p>
+      )}
+
+      {/* meta line */}
+      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[rgba(255,255,255,0.6)]">
+        {isPackage && sessionsCount ? (
+          <span className="inline-flex items-center gap-1">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span className="text-white font-medium">{sessionsCount}</span>
+            {t("therapist_profile.package_sessions_short", { defaultValue: "séances" })}
+            {sessionDur ? <span className="text-[rgba(255,255,255,0.45)]">· {sessionDur} min</span> : null}
+          </span>
+        ) : (
+          duration && (
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {duration} min
+            </span>
+          )
+        )}
+        {formatKey && (
+          <span className="inline-flex items-center gap-1 capitalize">
+            <FormatIcon className="h-3.5 w-3.5" />
+            {formatLabel}
+          </span>
+        )}
+      </div>
+
+      {/* price */}
+      <footer className="flex items-end justify-between border-t border-[rgba(184,110,249,0.12)] pt-3">
+        <div>
+          {price != null && price !== "" ? (
+            <>
+              <div className="text-lg font-bold text-white leading-none">
+                {price} <span className="text-xs font-medium text-[rgba(255,255,255,0.5)]">{currency}</span>
+              </div>
+              {isPackage && (
+                <div className="mt-1 text-[10px] uppercase tracking-wider text-amber-300/80">
+                  {t("therapist_profile.package_total_price", { defaultValue: "Tarif global" })}
+                </div>
+              )}
+            </>
+          ) : (
+            <span className="text-xs italic text-[rgba(255,255,255,0.35)]">
+              {t("therapist_profile.value_missing", { defaultValue: "À renseigner" })}
+            </span>
+          )}
+        </div>
+        {detail && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="text-xs font-medium text-[#b86ef9] hover:text-white transition"
+              >
+                {t("therapist_profile.service_more", { defaultValue: "En savoir plus" })} →
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
+              <p className="text-sm font-semibold text-white">{s.name}</p>
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">{detail}</p>
+            </PopoverContent>
+          </Popover>
+        )}
+      </footer>
+    </article>
+  );
+}
