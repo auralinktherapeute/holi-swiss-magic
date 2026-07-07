@@ -272,7 +272,9 @@ function Page() {
   }
 
   const fullName = `${th.first_name} ${th.last_name}`.trim();
-  const services: ServiceEntry[] = Array.isArray(th.services) ? th.services : [];
+  const services: ServiceEntry[] = (Array.isArray(th.services) ? th.services : []).filter(
+    (s: any) => s?.visible !== false,
+  );
   const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations) ? th.accreditations : [];
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
