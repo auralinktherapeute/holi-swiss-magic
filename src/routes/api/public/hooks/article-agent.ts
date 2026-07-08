@@ -31,6 +31,7 @@ function resolveCategory(input: Record<string, unknown>, title: string): string 
 
   const haystack = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const pairs: Array<[string, string[]]> = [
+    ["geobiologie", ["geobiologie", "geobiologue", "habitat sain", "harmonisation lieu"]],
     ["chromotherapie", ["chromotherapie", "luminotherapie", "couleur", "couleurs"]],
     ["magnetisme", ["magnetiseur", "magnetisme", "soins energetiques"]],
     ["lithotherapie", ["lithotherapie", "cristaux", "cristal", "pierres"]],
