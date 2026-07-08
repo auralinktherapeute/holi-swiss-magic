@@ -638,7 +638,7 @@ function Page() {
         tags: tagsAttr ? tagsAttr.split(",").map((s) => s.trim()) : undefined,
       });
     }
-    if (!rows.length) rows.push(...parseTextReport(text));
+    if (!rows.length) rows.push(...parseTextReport(doc.body?.textContent || text));
     if (!rows.length) throw new Error("Aucun article détecté. Colle du JSON, un rapport HTML ou le texte du rapport Agent Articles GEO/SEO.");
     return rows;
   };
@@ -860,19 +860,19 @@ function Page() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Colle le JSON produit par l'Agent Articles GEO/SEO HoliSwiss, ou dépose le fichier <code>.json</code> / <code>.html</code>
+              Colle le JSON ou le texte produit par l'Agent Articles GEO/SEO HoliSwiss, ou dépose le fichier <code>.json</code> / <code>.html</code> / <code>.txt</code>
               du rapport. Les articles seront ajoutés en <strong>« En attente de validation »</strong>.
             </p>
             <div>
-              <Label className="text-xs text-muted-foreground">Fichier (.json ou .html)</Label>
-              <Input type="file" accept=".json,.html,application/json,text/html"
+              <Label className="text-xs text-muted-foreground">Fichier (.json, .html ou .txt)</Label>
+              <Input type="file" accept=".json,.html,.txt,application/json,text/html,text/plain"
                 className="bg-background border-border/60"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }} />
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">…ou contenu collé</Label>
               <Textarea rows={10} value={importText} onChange={(e) => setImportText(e.target.value)}
-                placeholder={'{ "articles": [ { "title_fr": "…", "slug": "…", "category": "…", "body_fr": "…" } ] }'}
+                placeholder={'{ "articles": [ { "title_fr": "…", "slug": "…", "category": "…", "body_fr": "…" } ] }\n\nou colle directement le rapport texte : #1 — Titre… 📂catégorie 🔗 /slug 🎯 mot-clé'}
                 className="bg-background border-border/60 font-mono text-xs" />
             </div>
           </div>
