@@ -565,6 +565,47 @@ function Page() {
   const parseAgentPayload = (raw: string): Array<Record<string, unknown>> => {
     const text = raw.trim();
     if (!text) throw new Error("Contenu vide.");
+    const parseTextReport = (source: string): Array<Record<string, unknown>> => {
+      const normalized = source.replace(/\r/g, "");
+      const chunks = normalized
+        .split(/\n(?=#\d+\s+[—-]\s+)/g)
+        .filter((chunk) => /^#\d+\s+[—-]\s+/m.test(chunk));
+      return chunks.map((chunk) => {
+        const title = chunk.match(/^#\d+\s+[—-]\s+(.+)$/m)?.[1]?.trim() ?? "";
+        const slug =
+          chunk.match(/🔗\s*\/?([a-z0-9][a-z0-9-]{4,})/i)?.[1]?.trim() ??
+          chunk.match(/\s\/([a-z0-9][a-z0-9-]{8,})/i)?.[1]?.trim() ??
+          "";
+        const category =
+          chunk.match(/📂\s*([a-z0-9-]+)/i)?.[1]?.trim() ??
+          chunk.match(/[\(\[]\s*([a-z0-9-]{3,})\s*[\)\]]/)?.[1]?.trim() ??
+          "";
+        const keyword = chunk.match(/🎯\s*([^\n]+)/)?.[1]?.trim() ?? "";
+        const metaTitle = chunk.match(/Titre SEO\s*([^\n]+)/i)?.[1]?.trim() ?? title;
+        const metaDescription = chunk.match(/Meta description\s*([^\n]+)/i)?.[1]?.trim() ?? "";
+        const bodyStart = chunk.search(/\n(?:Introduction|Qu['’]est-ce|##|[A-ZÉÈÀÂÊÎÔÛ][^\n]{20,})/);
+        const body = bodyStart > -1 ? chunk.slice(bodyStart).trim() : "";
+        const excerpt = chunk
+          .split("\n")
+          .map((line) => line.trim())
+          .find((line) =>
+            line.length > 80 &&
+            !line.startsWith("#") &&
+            !/[📂🔗🎯📊⏳]/.test(line) &&
+            !/^Titre SEO|^Meta description|^Mots-clés/i.test(line),
+          );
+        return {
+          title_fr: title,
+          slug,
+          category,
+          excerpt_fr: excerpt,
+          body_fr: body,
+          meta_title_fr: metaTitle,
+          meta_description_fr: metaDescription,
+          tags: keyword ? keyword.split(/[,;]|\s{2,}/).map((s) => s.trim()).filter(Boolean) : undefined,
+        };
+      }).filter((row) => row.title_fr && row.slug);
+    };
     // 1) JSON direct
     if (text.startsWith("{") || text.startsWith("[")) {
       const parsed = JSON.parse(text);
@@ -597,7 +638,8 @@ function Page() {
         tags: tagsAttr ? tagsAttr.split(",").map((s) => s.trim()) : undefined,
       });
     }
-    if (!rows.length) throw new Error("Aucun article détecté. Colle du JSON ou un rapport HTML de l'agent.");
+    if (!rows.length) rows.push(...parseTextReport(text));
+    if (!rows.length) throw new Error("Aucun article détecté. Colle du JSON, un rapport HTML ou le texte du rapport Agent Articles GEO/SEO.");
     return rows;
   };
 
