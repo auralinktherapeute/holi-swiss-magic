@@ -546,6 +546,75 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Import agent report (JSON ou HTML avec <script id="agent-articles" type="application/json">)
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const importMutation = useMutation({
+    mutationFn: (articles: Array<Record<string, unknown>>) =>
+      importAgentArticlesAdmin({ data: { articles } }),
+    onSuccess: (r: any) => {
+      toast.success(`${r.inserted_count} article(s) importé(s) en attente de validation.`);
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+      setStatusFilter("pending_validation");
+      setImportOpen(false);
+      setImportText("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const parseAgentPayload = (raw: string): Array<Record<string, unknown>> => {
+    const text = raw.trim();
+    if (!text) throw new Error("Contenu vide.");
+    // 1) JSON direct
+    if (text.startsWith("{") || text.startsWith("[")) {
+      const parsed = JSON.parse(text);
+      const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.articles) ? parsed.articles : [parsed];
+      return arr as Array<Record<string, unknown>>;
+    }
+    // 2) HTML : chercher <script id="agent-articles" type="application/json">…</script>
+    const scriptMatch = text.match(/<script[^>]*id=["']agent-articles["'][^>]*>([\s\S]*?)<\/script>/i);
+    if (scriptMatch) {
+      const parsed = JSON.parse(scriptMatch[1]);
+      const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.articles) ? parsed.articles : [parsed];
+      return arr as Array<Record<string, unknown>>;
+    }
+    // 3) HTML : extraction best-effort (titres H1/H2 + slug + tags)
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    const cards = Array.from(doc.querySelectorAll("[data-article], article, section"));
+    const rows: Array<Record<string, unknown>> = [];
+    for (const el of cards) {
+      const title = el.querySelector("h1,h2,h3")?.textContent?.trim();
+      if (!title || title.length < 5) continue;
+      const slug = (el.getAttribute("data-slug") || el.querySelector("a[href^='/']")?.getAttribute("href") || "").replace(/^\//, "").trim();
+      const category = el.getAttribute("data-category") || el.querySelector("[data-category]")?.getAttribute("data-category") || "";
+      const img = el.querySelector("img")?.getAttribute("src") || "";
+      const tagsAttr = el.getAttribute("data-tags") || "";
+      rows.push({
+        title_fr: title,
+        slug,
+        category,
+        cover_image_url: img || undefined,
+        tags: tagsAttr ? tagsAttr.split(",").map((s) => s.trim()) : undefined,
+      });
+    }
+    if (!rows.length) throw new Error("Aucun article détecté. Colle du JSON ou un rapport HTML de l'agent.");
+    return rows;
+  };
+
+  const handleImportFile = async (file: File) => {
+    const text = await file.text();
+    setImportText(text);
+  };
+
+  const runImport = () => {
+    try {
+      const articles = parseAgentPayload(importText);
+      importMutation.mutate(articles);
+    } catch (e: any) {
+      toast.error(`Import impossible : ${e?.message ?? e}`);
+    }
+  };
+
   const rawArticles = (data?.articles ?? []) as unknown as ArticleRow[];
 
   const scored: ScoredArticle[] = useMemo(() => rawArticles.map(a => ({
@@ -601,6 +670,10 @@ function Page() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}
+            className="border-primary/40 text-primary hover:bg-primary/10">
+            <Upload className="h-4 w-4 mr-2" />Importer un rapport d'agent
+          </Button>
           <Button variant="outline"
             className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
             onClick={() => translateAllMutation.mutate()}
@@ -733,6 +806,44 @@ function Page() {
       </div>
 
       <ArticleDialog open={dialogOpen} onClose={() => setDialogOpen(false)} initial={editing} />
+
+      {/* Import agent report */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="bg-surface border-border/60 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" />
+              Importer un rapport d'agent
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Colle le JSON produit par l'Agent Articles GEO/SEO HoliSwiss, ou dépose le fichier <code>.json</code> / <code>.html</code>
+              du rapport. Les articles seront ajoutés en <strong>« En attente de validation »</strong>.
+            </p>
+            <div>
+              <Label className="text-xs text-muted-foreground">Fichier (.json ou .html)</Label>
+              <Input type="file" accept=".json,.html,application/json,text/html"
+                className="bg-background border-border/60"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">…ou contenu collé</Label>
+              <Textarea rows={10} value={importText} onChange={(e) => setImportText(e.target.value)}
+                placeholder={'{ "articles": [ { "title_fr": "…", "slug": "…", "category": "…", "body_fr": "…" } ] }'}
+                className="bg-background border-border/60 font-mono text-xs" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setImportOpen(false)}>Annuler</Button>
+            <Button onClick={runImport} disabled={importMutation.isPending || !importText.trim()}
+              className="bg-primary hover:bg-primary/90">
+              {importMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+              Importer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Side panel — SEO recommendations */}
       <Sheet open={!!improving} onOpenChange={v => !v && setImproving(null)}>
