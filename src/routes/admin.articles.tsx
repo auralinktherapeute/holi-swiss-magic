@@ -12,12 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2, Info } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2, Info, Upload } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
-import { translateArticle, translateAllMissingArticles } from "@/lib/article-agent.functions";
+import { translateArticle, translateAllMissingArticles, importAgentArticlesAdmin } from "@/lib/article-agent.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
