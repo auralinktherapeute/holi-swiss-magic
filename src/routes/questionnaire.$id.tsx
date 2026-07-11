@@ -53,6 +53,8 @@ function Page() {
 
   async function submit() {
     if (!name.trim()) { toast.error("Nom requis"); return; }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(email.trim())) { toast.error("Email valide requis"); return; }
     const questions = (q?.questionnaire_questions ?? []) as Q[];
     for (const qq of questions) {
       if (qq.obligatoire) {
@@ -67,7 +69,7 @@ function Page() {
         questionnaire_id: q.id,
         therapist_id: q.therapist_id,
         patient_name: name.trim(),
-        patient_email: email.trim() || null,
+        patient_email: email.trim().toLowerCase(),
         reponses: answers,
       } });
       setDone(true);
@@ -109,8 +111,14 @@ function Page() {
       <section className="grid gap-3 sm:grid-cols-2 border rounded-lg p-4 bg-surface">
         <div><Label>Nom complet *</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div><Label>Email (optionnel)</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        <div><Label>Email *</Label>
+          <Input type="email" required value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="vous@exemple.ch" />
+          <p className="text-xs text-muted-foreground mt-1">
+            Requis pour que votre thérapeute puisse vous recontacter et retrouver vos réponses.
+          </p>
+        </div>
       </section>
 
       <section className="space-y-5">
