@@ -2871,6 +2871,15 @@ export type Database = {
     }
     Functions: {
       admin_badge_counts: { Args: never; Returns: Json }
+      admin_specialty_coherence_report: {
+        Args: never
+        Returns: {
+          normalized: string
+          raw_label: string
+          therapist_id: string
+          therapist_name: string
+        }[]
+      }
       admin_therapist_client_stats: {
         Args: never
         Returns: {
