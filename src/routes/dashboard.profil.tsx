@@ -39,6 +39,8 @@ import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
+import { listAllSpecialties } from "@/lib/specialties.functions";
+import { useQuery } from "@tanstack/react-query";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -129,6 +131,25 @@ function ProfilePage() {
   const [specialtyIds, setSpecialtyIds] = useSessionState<string[]>(`${profileStatePrefix}.specialtyIds`, []);
   const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
   const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
+  const [customSpecs, setCustomSpecs] = useSessionState<string[]>(`${profileStatePrefix}.customSpecs`, []);
+
+  // Load taxonomy in parent (reuses same cache key as the picker) so we can
+  // distinguish predefined vs custom (free-text) specialties in the DB.
+  const fetchAllSpecs = useServerFn(listAllSpecialties);
+  const taxQuery = useQuery({ queryKey: ["taxonomy-public"], queryFn: () => fetchAllSpecs(), staleTime: 5 * 60 * 1000 });
+  const taxLabelSet = useMemo(() => {
+    const list = ((taxQuery.data as any)?.specialties ?? []) as Array<{ name_fr: string }>;
+    return new Set(list.map((s) => (s.name_fr || "").toLowerCase()));
+  }, [taxQuery.data]);
+  const customSpecsInitRef = useRef(false);
+  useEffect(() => {
+    if (customSpecsInitRef.current) return;
+    if (taxLabelSet.size === 0) return;
+    customSpecsInitRef.current = true;
+    const detected = specialties.filter((s) => !taxLabelSet.has((s || "").toLowerCase()));
+    if (detected.length > 0) setCustomSpecs((prev) => (prev.length > 0 ? prev : detected));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxLabelSet]);
 
   // Services
   const [services, setServices] = useSessionState<TherapistService[]>(`${profileStatePrefix}.services`, []);
@@ -333,12 +354,14 @@ function ProfilePage() {
   const addCustomSpec = () => {
     const v = customSpec.trim();
     if (!v || specialties.includes(v)) return;
-    setSpecialties((prev) => [...prev, v]);
+    setSpecialties((prev) => (prev.includes(v) ? prev : [...prev, v]));
+    setCustomSpecs((prev) => (prev.includes(v) ? prev : [...prev, v]));
     setCustomSpec("");
     markDirty();
   };
   const removeSpec = (s: string) => {
     setSpecialties((prev) => prev.filter((x) => x !== s));
+    setCustomSpecs((prev) => prev.filter((x) => x !== s));
     markDirty();
   };
 
@@ -653,8 +676,54 @@ function ProfilePage() {
           <TaxonomySpecialtyPicker
             selectedIds={specialtyIds}
             onChange={(ids) => { setSpecialtyIds(ids); markDirty(); }}
-            onLabelsChange={(labels) => setSpecialties(labels)}
+            onLabelsChange={(labels) => {
+              // Merge taxonomy labels with user-added custom specialties (dedup, case-insensitive).
+              const seen = new Set<string>();
+              const merged: string[] = [];
+              for (const l of [...labels, ...customSpecs]) {
+                const k = (l || "").toLowerCase();
+                if (!l || seen.has(k)) continue;
+                seen.add(k);
+                merged.push(l);
+              }
+              setSpecialties(merged);
+            }}
           />
+
+          {/* Custom (free-text) specialty */}
+          <div className="mt-5 rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.35)] p-4">
+            <p className="mb-2 text-sm font-medium text-white">
+              {t("profile_edit.custom_specialty_title", { defaultValue: "Ajouter une spécialité personnalisée" })}
+            </p>
+            <p className="mb-3 text-xs text-[#a89bc4]">
+              {t("profile_edit.custom_specialty_help", { defaultValue: "Si votre spécialité n'apparaît pas dans la liste ci-dessus, ajoutez-la ici." })}
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={customSpec}
+                onChange={(e) => setCustomSpec(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSpec(); } }}
+                placeholder={t("profile_edit.custom_specialty_placeholder", { defaultValue: "Ex : Soins égyptiens" })}
+                className={inputClass}
+              />
+              <Button type="button" onClick={addCustomSpec} className="shrink-0 bg-[#b86ef9] hover:bg-[#a855f7] text-white">
+                <Plus className="h-4 w-4 mr-1" />
+                {t("profile_edit.add", { defaultValue: "Ajouter" })}
+              </Button>
+            </div>
+            {customSpecs.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {customSpecs.map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs text-white">
+                    {s}
+                    <button type="button" onClick={() => removeSpec(s)} className="opacity-60 hover:opacity-100" aria-label={`Retirer ${s}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </Section>
 
         {/* Services */}
