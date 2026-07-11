@@ -230,16 +230,58 @@ export const submitPublicQuestionnaire = createServerFn({ method: "POST" })
     questionnaire_id: z.string().uuid(),
     therapist_id: z.string().uuid(),
     patient_name: z.string().trim().min(1, "Nom requis").max(200),
-    patient_email: z.string().email().max(200).optional().nullable(),
+    patient_email: z.string().trim().toLowerCase().email("Email invalide").max(200),
     reponses: z.record(z.string(), z.any()),
   }).parse(input))
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const email = data.patient_email.trim().toLowerCase();
+
+    // 1) Recherche client existant pour ce thérapeute
+    let clientId: string | null = null;
+    const { data: existing } = await sb
+      .from("crm_client_contacts")
+      .select("id")
+      .eq("therapist_id", data.therapist_id)
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing?.id) {
+      clientId = existing.id as string;
+    } else {
+      // 2) Créer une nouvelle fiche prospect
+      const parts = data.patient_name.trim().split(/\s+/);
+      const first_name = parts[0] ?? data.patient_name.trim();
+      const last_name = parts.slice(1).join(" ") || "—";
+      const { data: created, error: cErr } = await sb
+        .from("crm_client_contacts")
+        .insert({
+          therapist_id: data.therapist_id,
+          first_name, last_name, email,
+          relation_status: "prospect",
+        })
+        .select("id").maybeSingle();
+      if (cErr) {
+        // Course : un client vient d'être créé en parallèle → refaire un lookup
+        const { data: retry } = await sb
+          .from("crm_client_contacts")
+          .select("id")
+          .eq("therapist_id", data.therapist_id)
+          .eq("email", email)
+          .maybeSingle();
+        clientId = retry?.id ?? null;
+        if (!clientId) throw new Error(cErr.message);
+      } else {
+        clientId = created?.id ?? null;
+      }
+    }
+
     const { error } = await sb.from("client_questionnaire_responses").insert({
       questionnaire_id: data.questionnaire_id,
       therapist_id: data.therapist_id,
+      client_id: clientId,
       patient_name: data.patient_name,
-      patient_email: data.patient_email ?? null,
+      patient_email: email,
       reponses: data.reponses,
       statut: "soumis",
     });
