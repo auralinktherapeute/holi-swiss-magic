@@ -79,7 +79,7 @@ export function MobileDashboardHeader() {
       <h1 className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-foreground">
         {title}
       </h1>
-      <div className="flex w-10 items-center justify-end">
+      <div className="flex items-center justify-end gap-1">
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent("holiswiss:start-tour"))}
