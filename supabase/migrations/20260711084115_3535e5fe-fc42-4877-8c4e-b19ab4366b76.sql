@@ -1,0 +1,2 @@
+ALTER TABLE public.client_questionnaire_responses DROP CONSTRAINT IF EXISTS client_questionnaire_responses_statut_check;
+ALTER TABLE public.client_questionnaire_responses ADD CONSTRAINT client_questionnaire_responses_statut_check CHECK (statut = ANY (ARRAY['soumis'::text,'repondu'::text,'ignore'::text,'traite'::text]));
