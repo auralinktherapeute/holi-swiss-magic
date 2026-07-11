@@ -2433,6 +2433,8 @@ export type Database = {
           longitude: number | null
           meta_description: string | null
           meta_title: string | null
+          onboarding_complete: boolean
+          onboarding_completed_at: string | null
           payment_link: string | null
           phone: string | null
           photo_url: string | null
@@ -2482,6 +2484,8 @@ export type Database = {
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          onboarding_complete?: boolean
+          onboarding_completed_at?: string | null
           payment_link?: string | null
           phone?: string | null
           photo_url?: string | null
@@ -2531,6 +2535,8 @@ export type Database = {
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          onboarding_complete?: boolean
+          onboarding_completed_at?: string | null
           payment_link?: string | null
           phone?: string | null
           photo_url?: string | null
