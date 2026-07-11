@@ -175,7 +175,10 @@ export const updateInvoiceStatus = createServerFn({ method: "POST" })
 export const getTherapistBranding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await (context.supabase as any)
+    // `email` / `phone` are column-level restricted for anon + authenticated.
+    // Read via service role — the RLS-owner check is enforced by user_id filter.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as any)
       .from("therapists")
       .select("id, first_name, last_name, email, phone, logo_url, payment_link, currency, slug")
       .eq("user_id", context.userId)

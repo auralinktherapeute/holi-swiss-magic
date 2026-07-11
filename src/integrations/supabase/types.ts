@@ -2826,6 +2826,14 @@ export type Database = {
         Returns: string
       }
       crm_daily_maintenance: { Args: never; Returns: Json }
+      get_my_therapist_contact: {
+        Args: never
+        Returns: {
+          email: string
+          id: string
+          phone: string
+        }[]
+      }
       get_therapist_intake_header: {
         Args: { _slug: string }
         Returns: {

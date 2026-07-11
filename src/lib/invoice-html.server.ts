@@ -32,7 +32,10 @@ export async function buildInvoiceHtml(
     .eq("therapist_id", therapistId).maybeSingle();
   if (!settings) throw new Error("Configurez d'abord vos réglages de facturation.");
 
-  const { data: therapist } = await supabase
+  // Load therapist identity + contact via service role: `email` / `phone` are no
+  // longer readable by anon or authenticated roles at the column level.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: therapist } = await supabaseAdmin
     .from("therapists").select("first_name, last_name, email, phone")
     .eq("id", therapistId).maybeSingle();
 

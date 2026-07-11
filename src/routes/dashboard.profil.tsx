@@ -67,8 +67,11 @@ type DocRow = {
 
 const CURRENCIES = ["CHF", "EUR", "USD"];
 const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#ef4444"];
+// NOTE: `phone` and `email` are column-restricted at the database level and
+// cannot be read directly by the authenticated role. The owner's phone is
+// fetched via the security-definer RPC `get_my_therapist_contact()` below.
 const THERAPIST_PROFILE_SELECT = [
-  "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address", "phone",
+  "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations",
@@ -234,7 +237,11 @@ function ProfilePage() {
         .select(THERAPIST_PROFILE_SELECT)
         .eq("user_id", user.id)
         .maybeSingle() as any;
+      // Fetch the owner's phone via a controlled security-definer RPC.
+      const { data: contact } = await (supabase as any).rpc("get_my_therapist_contact");
+      const ownerPhone: string = (Array.isArray(contact) ? contact[0]?.phone : contact?.phone) ?? "";
       if (data) {
+        (data as any).phone = ownerPhone;
         const hasProfileSession = hasSessionState(`${profileStatePrefix}.rowId`) || hasSessionState(`${profileStatePrefix}.firstName`);
         profileBaselineScoreRef.current = profileDraftScore({
           firstName: data.first_name ?? "",
