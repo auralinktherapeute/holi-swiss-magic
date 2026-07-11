@@ -22,7 +22,7 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     );
     const { data: therapist, error } = await supabase
       .from("therapists")
-      .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,services,years_experience,google_reviews_url,accreditations,phone,status")
+      .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,services,years_experience,google_reviews_url,accreditations,status")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
