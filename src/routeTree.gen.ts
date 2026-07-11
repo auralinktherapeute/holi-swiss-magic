@@ -51,6 +51,7 @@ import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangReinitialiserMotDePasseIndexRouteImport } from './routes/$lang.reinitialiser-mot-de-passe.index'
+import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
 import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
@@ -283,6 +284,11 @@ const LangReinitialiserMotDePasseIndexRoute =
     path: '/reinitialiser-mot-de-passe/',
     getParentRoute: () => LangRoute,
   } as any)
+const LangParolesIndexRoute = LangParolesIndexRouteImport.update({
+  id: '/paroles/',
+  path: '/paroles/',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangMotDePasseOublieIndexRoute =
   LangMotDePasseOublieIndexRouteImport.update({
     id: '/mot-de-passe-oublie/',
@@ -447,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
+  '/$lang/paroles/': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
@@ -508,6 +515,7 @@ export interface FileRoutesByTo {
   '/$lang/impressum': typeof LangImpressumIndexRoute
   '/$lang/inscription': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie': typeof LangMotDePasseOublieIndexRoute
+  '/$lang/paroles': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
@@ -573,6 +581,7 @@ export interface FileRoutesById {
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
+  '/$lang/paroles/': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
@@ -639,6 +648,7 @@ export interface FileRouteTypes {
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
+    | '/$lang/paroles/'
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
@@ -700,6 +710,7 @@ export interface FileRouteTypes {
     | '/$lang/impressum'
     | '/$lang/inscription'
     | '/$lang/mot-de-passe-oublie'
+    | '/$lang/paroles'
     | '/$lang/reinitialiser-mot-de-passe'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
@@ -764,6 +775,7 @@ export interface FileRouteTypes {
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
+    | '/$lang/paroles/'
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
@@ -1084,6 +1096,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangReinitialiserMotDePasseIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/paroles/': {
+      id: '/$lang/paroles/'
+      path: '/paroles'
+      fullPath: '/$lang/paroles/'
+      preLoaderRoute: typeof LangParolesIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/mot-de-passe-oublie/': {
       id: '/$lang/mot-de-passe-oublie/'
       path: '/mot-de-passe-oublie'
@@ -1258,6 +1277,7 @@ interface LangRouteChildren {
   LangImpressumIndexRoute: typeof LangImpressumIndexRoute
   LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
   LangMotDePasseOublieIndexRoute: typeof LangMotDePasseOublieIndexRoute
+  LangParolesIndexRoute: typeof LangParolesIndexRoute
   LangReinitialiserMotDePasseIndexRoute: typeof LangReinitialiserMotDePasseIndexRoute
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
@@ -1282,6 +1302,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangImpressumIndexRoute: LangImpressumIndexRoute,
   LangInscriptionIndexRoute: LangInscriptionIndexRoute,
   LangMotDePasseOublieIndexRoute: LangMotDePasseOublieIndexRoute,
+  LangParolesIndexRoute: LangParolesIndexRoute,
   LangReinitialiserMotDePasseIndexRoute: LangReinitialiserMotDePasseIndexRoute,
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
