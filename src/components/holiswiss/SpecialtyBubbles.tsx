@@ -15,7 +15,8 @@ function pick(row: any, lang: string): string {
   return row?.[`name_${lang}`] || row?.name_fr || "";
 }
 
-const ICON_BY_SLUG: Record<string, React.ComponentType<{ className?: string }>> = {
+type IconCmp = React.ComponentType<{ className?: string; strokeWidth?: number }>;
+const ICON_BY_SLUG: Record<string, IconCmp> = {
   sophrologie: Brain,
   hypnose: Moon,
   naturopathie: Leaf,
