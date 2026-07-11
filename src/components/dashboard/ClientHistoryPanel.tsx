@@ -9,6 +9,7 @@ import {
 } from "@/lib/therapist-invoices.functions";
 import {
   listMyQuestionnaires, emailQuestionnaireToClient,
+  listResponsesForContact,
   type Questionnaire,
 } from "@/lib/questionnaires.functions";
 import { Button } from "@/components/ui/button";
@@ -34,10 +35,12 @@ export default function ClientHistoryPanel({ contactId, contactEmail, contactNam
   const emailInvFn = useServerFn(emailInvoiceToClient);
   const listQFn = useServerFn(listMyQuestionnaires);
   const emailQFn = useServerFn(emailQuestionnaireToClient);
+  const listRespFn = useServerFn(listResponsesForContact);
 
   const [pkgs, setPkgs] = useState<ClientPackage[]>([]);
   const [invs, setInvs] = useState<TherapistInvoice[]>([]);
   const [qs, setQs] = useState<Questionnaire[]>([]);
+  const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Dialog envoi facture
@@ -56,14 +59,16 @@ export default function ClientHistoryPanel({ contactId, contactEmail, contactNam
   async function refresh() {
     setLoading(true);
     try {
-      const [p, i, q] = await Promise.all([
+      const [p, i, q, r] = await Promise.all([
         listPkgs({ data: { client_id: contactId } }),
         listInvs({ data: { client_id: contactId } }),
         listQFn({}),
+        listRespFn({ data: { contact_id: contactId } }).catch(() => []),
       ]);
       setPkgs(p ?? []);
       setInvs(i ?? []);
       setQs((q ?? []).filter((x: any) => x.actif));
+      setResponses(r ?? []);
     } finally { setLoading(false); }
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line */ }, [contactId]);
@@ -131,6 +136,34 @@ export default function ClientHistoryPanel({ contactId, contactEmail, contactNam
         {qs.length === 0 && (
           <p className="text-xs text-muted-foreground">Aucun questionnaire actif. Créez-en un depuis la page Questionnaires.</p>
         )}
+        <div className="mt-3">
+          <div className="text-xs font-medium text-muted-foreground mb-1.5">
+            Réponses reçues ({responses.length})
+          </div>
+          {responses.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Aucune réponse pour ce client.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {responses.map((r) => (
+                <li key={r.id} className="text-sm border border-border/40 rounded-md px-3 py-2 flex justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{r.questionnaires?.titre ?? "Questionnaire"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(r.date_soumission).toLocaleString("fr-CH")}
+                      {r.patient_email && ` · ${r.patient_email}`}
+                    </div>
+                  </div>
+                  <a
+                    href={`/dashboard/questionnaires?response=${r.id}`}
+                    className="text-xs text-primary hover:underline self-center"
+                  >
+                    Voir
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
 
       <section>
