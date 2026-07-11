@@ -359,6 +359,220 @@ export type Database = {
         }
         Relationships: []
       }
+      client_package_sessions: {
+        Row: {
+          appointment_id: string | null
+          client_package_id: string
+          commentaire: string | null
+          created_at: string
+          date_decompte: string
+          id: string
+          therapist_id: string
+          type_seance_reelle: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_package_id: string
+          commentaire?: string | null
+          created_at?: string
+          date_decompte?: string
+          id?: string
+          therapist_id: string
+          type_seance_reelle?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          client_package_id?: string
+          commentaire?: string | null
+          created_at?: string
+          date_decompte?: string
+          id?: string
+          therapist_id?: string
+          type_seance_reelle?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_package_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_package_sessions_client_package_id_fkey"
+            columns: ["client_package_id"]
+            isOneToOne: false
+            referencedRelation: "client_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_package_sessions_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_package_sessions_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_packages: {
+        Row: {
+          client_id: string
+          created_at: string
+          date_achat: string
+          date_expiration: string | null
+          id: string
+          nombre_seances_utilisees: number
+          notes: string | null
+          package_id: string
+          statut: string
+          statut_paiement: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          date_achat?: string
+          date_expiration?: string | null
+          id?: string
+          nombre_seances_utilisees?: number
+          notes?: string | null
+          package_id: string
+          statut?: string
+          statut_paiement?: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          date_achat?: string
+          date_expiration?: string | null
+          id?: string
+          nombre_seances_utilisees?: number
+          notes?: string | null
+          package_id?: string
+          statut?: string
+          statut_paiement?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_packages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_packages_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_packages_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_packages_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_questionnaire_responses: {
+        Row: {
+          appointment_id: string | null
+          client_id: string | null
+          created_at: string
+          date_soumission: string
+          id: string
+          patient_email: string | null
+          patient_name: string | null
+          questionnaire_id: string
+          reponses: Json
+          statut: string
+          therapist_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          date_soumission?: string
+          id?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          questionnaire_id: string
+          reponses?: Json
+          statut?: string
+          therapist_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          date_soumission?: string
+          id?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          questionnaire_id?: string
+          reponses?: Json
+          statut?: string
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_questionnaire_responses_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_questionnaire_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_questionnaire_responses_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_questionnaire_responses_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_questionnaire_responses_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -1364,6 +1578,148 @@ export type Database = {
         }
         Relationships: []
       }
+      questionnaire_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          package_id: string | null
+          questionnaire_id: string
+          service_type_id: string | null
+          therapist_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          package_id?: string | null
+          questionnaire_id: string
+          service_type_id?: string | null
+          therapist_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          package_id?: string | null
+          questionnaire_id?: string
+          service_type_id?: string | null
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_assignments_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_assignments_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_assignments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_assignments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_questions: {
+        Row: {
+          created_at: string
+          id: string
+          obligatoire: boolean
+          options: Json | null
+          ordre: number
+          question: string
+          questionnaire_id: string
+          type_reponse: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          obligatoire?: boolean
+          options?: Json | null
+          ordre?: number
+          question: string
+          questionnaire_id: string
+          type_reponse: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          obligatoire?: boolean
+          options?: Json | null
+          ordre?: number
+          question?: string
+          questionnaire_id?: string
+          type_reponse?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_questions_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaires: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string | null
+          id: string
+          therapist_id: string
+          titre: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          therapist_id: string
+          titre: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          therapist_id?: string
+          titre?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaires_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaires_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           author_avatar_url: string | null
@@ -1501,6 +1857,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      service_packages: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string | null
+          id: string
+          nom: string
+          nombre_seances_incluses: number
+          prix_total: number
+          therapist_id: string
+          updated_at: string
+          validite_jours: number | null
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom: string
+          nombre_seances_incluses: number
+          prix_total: number
+          therapist_id: string
+          updated_at?: string
+          validite_jours?: number | null
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom?: string
+          nombre_seances_incluses?: number
+          prix_total?: number
+          therapist_id?: string
+          updated_at?: string
+          validite_jours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_packages_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_packages_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       specialties: {
         Row: {
@@ -1692,6 +2102,180 @@ export type Database = {
           },
           {
             foreignKeyName: "therapist_documents_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_invoice_settings: {
+        Row: {
+          adresse_npa: string
+          adresse_pays: string
+          adresse_rue: string
+          adresse_ville: string
+          assujetti_tva: boolean
+          created_at: string
+          iban_ou_qr_iban: string
+          id: string
+          invoice_number_year: number | null
+          next_invoice_number: number
+          numero_tva: string | null
+          remise_a_zero_annuelle: boolean
+          taux_tva: number | null
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          adresse_npa: string
+          adresse_pays?: string
+          adresse_rue: string
+          adresse_ville: string
+          assujetti_tva?: boolean
+          created_at?: string
+          iban_ou_qr_iban: string
+          id?: string
+          invoice_number_year?: number | null
+          next_invoice_number?: number
+          numero_tva?: string | null
+          remise_a_zero_annuelle?: boolean
+          taux_tva?: number | null
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          adresse_npa?: string
+          adresse_pays?: string
+          adresse_rue?: string
+          adresse_ville?: string
+          assujetti_tva?: boolean
+          created_at?: string
+          iban_ou_qr_iban?: string
+          id?: string
+          invoice_number_year?: number | null
+          next_invoice_number?: number
+          numero_tva?: string | null
+          remise_a_zero_annuelle?: boolean
+          taux_tva?: number | null
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_invoice_settings_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_settings_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_invoices: {
+        Row: {
+          annee_facturation: number
+          appointment_id: string | null
+          client_id: string | null
+          client_package_id: string | null
+          created_at: string
+          currency: string
+          date_emission: string
+          date_paiement: string | null
+          id: string
+          metadata: Json
+          montant_ht: number
+          montant_total: number
+          numero_facture: string
+          pdf_url: string | null
+          qr_reference: string | null
+          statut_paiement: string
+          therapist_id: string
+          tva_montant: number | null
+          tva_taux: number | null
+          updated_at: string
+        }
+        Insert: {
+          annee_facturation: number
+          appointment_id?: string | null
+          client_id?: string | null
+          client_package_id?: string | null
+          created_at?: string
+          currency?: string
+          date_emission?: string
+          date_paiement?: string | null
+          id?: string
+          metadata?: Json
+          montant_ht: number
+          montant_total: number
+          numero_facture: string
+          pdf_url?: string | null
+          qr_reference?: string | null
+          statut_paiement?: string
+          therapist_id: string
+          tva_montant?: number | null
+          tva_taux?: number | null
+          updated_at?: string
+        }
+        Update: {
+          annee_facturation?: number
+          appointment_id?: string | null
+          client_id?: string | null
+          client_package_id?: string | null
+          created_at?: string
+          currency?: string
+          date_emission?: string
+          date_paiement?: string | null
+          id?: string
+          metadata?: Json
+          montant_ht?: number
+          montant_total?: number
+          numero_facture?: string
+          pdf_url?: string | null
+          qr_reference?: string | null
+          statut_paiement?: string
+          therapist_id?: string
+          tva_montant?: number | null
+          tva_taux?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_invoices_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoices_client_package_id_fkey"
+            columns: ["client_package_id"]
+            isOneToOne: false
+            referencedRelation: "client_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoices_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoices_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
@@ -2262,6 +2846,7 @@ export type Database = {
       }
       immutable_unaccent: { Args: { "": string }; Returns: string }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
+      is_therapist_owner: { Args: { _therapist_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notification_read: { Args: { _id: string }; Returns: undefined }
       normalize_city_text: { Args: { _input: string }; Returns: string }
@@ -2274,6 +2859,14 @@ export type Database = {
           _summary: string
         }
         Returns: undefined
+      }
+      reserve_next_invoice_number: {
+        Args: { _therapist_id: string }
+        Returns: {
+          annee: number
+          numero_facture: string
+          seq: number
+        }[]
       }
       resolve_city: {
         Args: { _input: string }
