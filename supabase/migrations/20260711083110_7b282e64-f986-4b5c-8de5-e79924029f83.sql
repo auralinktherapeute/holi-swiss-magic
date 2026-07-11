@@ -1,0 +1,2 @@
+ALTER TABLE public.questionnaire_questions DROP CONSTRAINT IF EXISTS questionnaire_questions_type_reponse_check;
+ALTER TABLE public.questionnaire_questions ADD CONSTRAINT questionnaire_questions_type_reponse_check CHECK (type_reponse = ANY (ARRAY['texte'::text, 'textarea'::text, 'texte_libre'::text, 'choix_unique'::text, 'choix_multiple'::text, 'echelle'::text, 'oui_non'::text, 'date'::text]));
