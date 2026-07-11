@@ -152,6 +152,32 @@ export const listMyQuestionnaireResponses = createServerFn({ method: "GET" })
     return (rows ?? []) as ClientQuestionnaireResponse[];
   });
 
+// Réponses liées à un contact CRM (par client_id OU par email match)
+export const listResponsesForContact = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    contact_id: z.string().uuid(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data: contact } = await (context.supabase as any)
+      .from("crm_client_contacts").select("id, email")
+      .eq("id", data.contact_id).eq("therapist_id", therapistId).maybeSingle();
+    if (!contact) throw new Error("Contact introuvable.");
+    const email = (contact.email ?? "").toLowerCase().trim();
+    let q = (context.supabase as any)
+      .from("client_questionnaire_responses")
+      .select("id,date_soumission,statut,patient_name,patient_email,questionnaires(titre)")
+      .eq("therapist_id", therapistId)
+      .order("date_soumission", { ascending: false });
+    q = email
+      ? q.or(`client_id.eq.${contact.id},patient_email.eq.${email}`)
+      : q.eq("client_id", contact.id);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as any[];
+  });
+
 export const getQuestionnaireResponse = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
