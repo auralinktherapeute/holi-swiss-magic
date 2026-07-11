@@ -354,12 +354,14 @@ function ProfilePage() {
   const addCustomSpec = () => {
     const v = customSpec.trim();
     if (!v || specialties.includes(v)) return;
-    setSpecialties((prev) => [...prev, v]);
+    setSpecialties((prev) => (prev.includes(v) ? prev : [...prev, v]));
+    setCustomSpecs((prev) => (prev.includes(v) ? prev : [...prev, v]));
     setCustomSpec("");
     markDirty();
   };
   const removeSpec = (s: string) => {
     setSpecialties((prev) => prev.filter((x) => x !== s));
+    setCustomSpecs((prev) => prev.filter((x) => x !== s));
     markDirty();
   };
 
