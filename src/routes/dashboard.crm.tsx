@@ -178,7 +178,11 @@ function ContactDialog({ open, onClose, initial, contacts }: {
             <SessionNotesPanel contactId={initial.id} contactName={`${initial.first_name} ${initial.last_name ?? ""}`.trim()} />
           )}
           {initial && (
-            <ClientHistoryPanel contactId={initial.id} />
+            <ClientHistoryPanel
+              contactId={initial.id}
+              contactEmail={initial.email ?? null}
+              contactName={`${initial.first_name} ${initial.last_name ?? ""}`.trim()}
+            />
           )}
         </div>
         <DialogFooter>

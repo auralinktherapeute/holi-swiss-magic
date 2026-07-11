@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { buildInvoiceHtml } from "@/lib/invoice-html.server";
+import { sendInvoiceEmail } from "@/lib/holiswiss-email.server";
 
 export type TherapistInvoiceSettings = {
   id: string;
@@ -205,121 +207,70 @@ export const renderInvoiceHtml = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const therapistId = await getTherapistId(context.supabase, context.userId);
-
-    const { data: inv, error } = await (context.supabase as any)
-      .from("therapist_invoices")
-      .select("*")
-      .eq("id", data.id).eq("therapist_id", therapistId).maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!inv) throw new Error("Facture introuvable.");
-
-    const { data: settings } = await (context.supabase as any)
-      .from("therapist_invoice_settings")
-      .select("*").eq("therapist_id", therapistId).maybeSingle();
-    if (!settings) throw new Error("Configurez d'abord vos réglages de facturation.");
-
-    const { data: therapist } = await (context.supabase as any)
-      .from("therapists")
-      .select("first_name, last_name, email, phone")
-      .eq("id", therapistId).maybeSingle();
-
-    const meta = inv.metadata ?? {};
-    const clientName = meta.client_name ?? "Client";
-    const clientAddress = meta.client_address ?? "";
-
-    // QR-facture (SVG)
-    let qrSvg = "";
-    try {
-      const mod: any = await import("swissqrbill/svg");
-      const SwissQRBill = mod.SwissQRBill ?? mod.default;
-      const bill = new SwissQRBill({
-        currency: inv.currency,
-        amount: Number(inv.montant_total),
-        reference: inv.qr_reference ?? undefined,
-        creditor: {
-          name: `${therapist?.first_name ?? ""} ${therapist?.last_name ?? ""}`.trim() || "Thérapeute",
-          address: settings.adresse_rue,
-          zip: settings.adresse_npa,
-          city: settings.adresse_ville,
-          account: settings.iban_ou_qr_iban.replace(/\s+/g, ""),
-          country: settings.adresse_pays || "CH",
-        },
-        debtor: clientName ? {
-          name: clientName,
-          address: clientAddress || "-",
-          zip: "",
-          city: "",
-          country: "CH",
-        } : undefined,
-      });
-      qrSvg = bill.toString();
-    } catch (e: any) {
-      qrSvg = `<div style="padding:20px;border:1px solid #ddd;color:#a00">QR-facture indisponible: ${e?.message ?? "erreur"}</div>`;
-    }
-
-    const rows = (meta.items ?? []).map((it: any) => `
-      <tr>
-        <td>${escapeHtml(it.description ?? "")}</td>
-        <td style="text-align:right">${it.quantite}</td>
-        <td style="text-align:right">${Number(it.prix_unitaire).toFixed(2)}</td>
-        <td style="text-align:right">${(Number(it.quantite) * Number(it.prix_unitaire)).toFixed(2)}</td>
-      </tr>`).join("");
-
-    const html = `<!doctype html>
-<html lang="fr"><head><meta charset="utf-8"/>
-<title>Facture ${inv.numero_facture}</title>
-<style>
-  body{font-family:system-ui,sans-serif;color:#111;margin:40px;max-width:800px}
-  h1{font-size:22px;margin:0 0 8px}
-  .row{display:flex;justify-content:space-between;gap:20px;margin-bottom:24px}
-  .card{border:1px solid #eee;padding:12px;border-radius:6px;flex:1}
-  table{width:100%;border-collapse:collapse;margin:20px 0}
-  th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
-  .tot{font-weight:600}
-  .qr{margin-top:32px;border-top:2px dashed #999;padding-top:16px}
-  @media print { .noprint{display:none} }
-</style></head>
-<body>
-  <div class="noprint" style="margin-bottom:16px">
-    <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-  </div>
-  <h1>Facture ${inv.numero_facture}</h1>
-  <div style="color:#666;margin-bottom:20px">Émise le ${new Date(inv.date_emission).toLocaleDateString("fr-CH")}</div>
-  <div class="row">
-    <div class="card">
-      <strong>Émetteur</strong><br/>
-      ${escapeHtml(`${therapist?.first_name ?? ""} ${therapist?.last_name ?? ""}`)}<br/>
-      ${escapeHtml(settings.adresse_rue)}<br/>
-      ${escapeHtml(settings.adresse_npa)} ${escapeHtml(settings.adresse_ville)}<br/>
-      ${settings.numero_tva ? `TVA: ${escapeHtml(settings.numero_tva)}<br/>` : ""}
-      ${therapist?.email ? `${escapeHtml(therapist.email)}<br/>` : ""}
-    </div>
-    <div class="card">
-      <strong>Destinataire</strong><br/>
-      ${escapeHtml(clientName)}<br/>
-      ${escapeHtml(clientAddress).replace(/\n/g, "<br/>")}
-    </div>
-  </div>
-  ${meta.description ? `<p>${escapeHtml(meta.description)}</p>` : ""}
-  <table>
-    <thead><tr><th>Description</th><th style="text-align:right">Qté</th><th style="text-align:right">P.U.</th><th style="text-align:right">Total</th></tr></thead>
-    <tbody>${rows || `<tr><td colspan="4" style="color:#888">Aucune ligne détaillée</td></tr>`}</tbody>
-    <tfoot>
-      <tr><td colspan="3" style="text-align:right">Sous-total HT</td><td style="text-align:right">${Number(inv.montant_ht).toFixed(2)} ${inv.currency}</td></tr>
-      ${inv.tva_taux ? `<tr><td colspan="3" style="text-align:right">TVA (${inv.tva_taux}%)</td><td style="text-align:right">${Number(inv.tva_montant).toFixed(2)} ${inv.currency}</td></tr>` : ""}
-      <tr class="tot"><td colspan="3" style="text-align:right">Total à payer</td><td style="text-align:right">${Number(inv.montant_total).toFixed(2)} ${inv.currency}</td></tr>
-    </tfoot>
-  </table>
-  <div class="qr">
-    <h2 style="font-size:16px">Bulletin QR-facture</h2>
-    ${qrSvg}
-  </div>
-</body></html>`;
+    const { html } = await buildInvoiceHtml(context.supabase, therapistId, data.id);
     return { html };
   });
 
-function escapeHtml(s: string): string {
-  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c] as string));
-}
+// ── Archivage dans le bucket "invoices" ─────────────────────────────
+
+export const archiveInvoicePdf = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { html, invoice } = await buildInvoiceHtml(context.supabase, therapistId, data.id);
+    const path = `${therapistId}/${invoice.id}.html`;
+    const { error: upErr } = await (context.supabase as any).storage
+      .from("invoices")
+      .upload(path, new Blob([html], { type: "text/html" }), { upsert: true, contentType: "text/html" });
+    if (upErr) throw new Error(upErr.message);
+    await (context.supabase as any).from("therapist_invoices")
+      .update({ pdf_url: path }).eq("id", invoice.id).eq("therapist_id", therapistId);
+    const { data: signed } = await (context.supabase as any).storage
+      .from("invoices").createSignedUrl(path, 60 * 60 * 24 * 30);
+    return { path, signedUrl: signed?.signedUrl ?? null };
+  });
+
+// ── Envoi email (déclenché manuellement par le thérapeute) ──────────
+
+export const emailInvoiceToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    id: z.string().uuid(),
+    to: z.string().email().optional().nullable(),
+    message: z.string().trim().max(2000).optional().nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { html, invoice, therapist, clientEmail } =
+      await buildInvoiceHtml(context.supabase, therapistId, data.id);
+    const to = (data.to ?? clientEmail ?? "").trim();
+    if (!to) throw new Error("Adresse email du client requise.");
+
+    // Archive (upsert) puis signed URL 30 jours
+    const path = `${therapistId}/${invoice.id}.html`;
+    await (context.supabase as any).storage
+      .from("invoices")
+      .upload(path, new Blob([html], { type: "text/html" }), { upsert: true, contentType: "text/html" });
+    await (context.supabase as any).from("therapist_invoices")
+      .update({ pdf_url: path }).eq("id", invoice.id).eq("therapist_id", therapistId);
+    const { data: signed } = await (context.supabase as any).storage
+      .from("invoices").createSignedUrl(path, 60 * 60 * 24 * 30);
+
+    const attachmentB64 = typeof btoa === "function"
+      ? btoa(unescape(encodeURIComponent(html)))
+      : Buffer.from(html, "utf8").toString("base64");
+
+    const res = await sendInvoiceEmail({
+      to,
+      therapistName: `${therapist?.first_name ?? ""} ${therapist?.last_name ?? ""}`.trim() || "HoliSwiss",
+      invoiceNumber: invoice.numero_facture,
+      amount: Number(invoice.montant_total),
+      currency: invoice.currency,
+      viewUrl: signed?.signedUrl ?? "https://holiswiss.ch",
+      message: data.message ?? null,
+      attachmentHtmlBase64: attachmentB64,
+    });
+    if (!res.ok) throw new Error(`Envoi impossible (${res.status}) ${res.error ?? ""}`);
+    return { ok: true, sentTo: to, signedUrl: signed?.signedUrl ?? null };
+  });
