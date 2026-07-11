@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
-import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
-import { HeroVariants, SpecialtiesCarousel } from "@/components/holiswiss/HeroVariants";
+import { HeroVariants } from "@/components/holiswiss/HeroVariants";
+import { SpecialtyBubbles } from "@/components/holiswiss/SpecialtyBubbles";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
@@ -54,8 +54,6 @@ export const Route = createFileRoute("/$lang/")({
 function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
-  const navigate = useNavigate();
-
   const popularSearches = t("home.popular_searches", { returnObjects: true }) as string[];
 
   return (
@@ -73,20 +71,7 @@ function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold tracking-tight text-white">{t("home.specialties")}</h2>
         <div className="mt-8">
-          <SpecialtyExplorer
-            lang={lang}
-            active={{}}
-            onSelect={(sel) => {
-              if (sel.famille) {
-                navigate({ to: `/${lang}/therapeutes/famille/${sel.famille}` });
-              } else if (sel.specialite) {
-                navigate({ to: `/${lang}/specialites/${sel.specialite}` });
-              }
-            }}
-          />
-        </div>
-        <div className="mt-10">
-          <SpecialtiesCarousel />
+          <SpecialtyBubbles />
         </div>
       </section>
 
