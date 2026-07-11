@@ -2,8 +2,25 @@ import { createFileRoute } from "@tanstack/react-router";
 import { notifyAdmin, resolveWhatsappTarget } from "@/lib/admin-notify.server";
 
 const ADMIN_EMAIL = "contact@holiswiss.ch";
-const EXPECTED_APIKEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd3VkbW5mYXZ2YXVrdWxkdWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg2MjUsImV4cCI6MjA5NjU3NDYyNX0.P-8PAwboYoul28Iqx_UMGH0c9_NPwBTsJPCkRMXKEpY";
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function loadExpectedSecret(): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await (supabaseAdmin as any)
+    .from("app_settings")
+    .select("value")
+    .eq("key", "admin_notify_secret")
+    .maybeSingle();
+  const v = data?.value;
+  if (typeof v === "string" && v) return v;
+  return null;
+}
 
 type Payload = {
   notification_id?: string;
@@ -43,7 +60,9 @@ export const Route = createFileRoute("/api/public/admin-notify")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (request.headers.get("apikey") !== EXPECTED_APIKEY) {
+        const provided = request.headers.get("x-admin-notify-secret") ?? "";
+        const expected = await loadExpectedSecret();
+        if (!expected || !timingSafeEqualStr(provided, expected)) {
           return new Response("Unauthorized", { status: 401 });
         }
         let body: Payload;

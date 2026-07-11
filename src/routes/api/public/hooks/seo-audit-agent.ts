@@ -1,13 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const EXPECTED_APIKEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd3VkbW5mYXZ2YXVrdWxkdWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg2MjUsImV4cCI6MjA5NjU3NDYyNX0.P-8PAwboYoul28Iqx_UMGH0c9_NPwBTsJPCkRMXKEpY";
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 export const Route = createFileRoute("/api/public/hooks/seo-audit-agent")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (request.headers.get("apikey") !== EXPECTED_APIKEY) {
+        const expected = process.env.SEO_AUDIT_AGENT_SECRET ?? "";
+        const provided =
+          request.headers.get("x-agent-secret") ??
+          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+          "";
+        if (!expected || !timingSafeEqualStr(provided, expected)) {
           return new Response("Unauthorized", { status: 401 });
         }
         const { runSeoAudit, getPreviousCriticalCodes, notifyCriticalIssues } =
