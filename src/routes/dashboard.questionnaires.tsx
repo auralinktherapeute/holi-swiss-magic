@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { ClipboardList, Plus, Pencil, Trash2, Eye, Link2 } from "lucide-react";
 import {
   listMyQuestionnaires, upsertQuestionnaire, deleteQuestionnaire,
   listMyQuestionnaireResponses, deleteQuestionnaireResponse,
@@ -94,6 +94,18 @@ function Page() {
                     {q.description && <p className="text-sm mt-2">{q.description}</p>}
                   </div>
                   <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" title="Copier le lien public"
+                      onClick={async () => {
+                        const url = `${window.location.origin}/questionnaire/${q.id}`;
+                        try {
+                          await navigator.clipboard.writeText(url);
+                          toast.success("Lien copié dans le presse-papiers");
+                        } catch {
+                          window.prompt("Copiez le lien :", url);
+                        }
+                      }}>
+                      <Link2 className="h-4 w-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(q); setOpen(true); }}>
                       <Pencil className="h-4 w-4" />
                     </Button>

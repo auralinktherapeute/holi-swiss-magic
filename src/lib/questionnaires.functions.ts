@@ -1,6 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createClient } from "@supabase/supabase-js";
+
+function publicClient() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+  );
+}
 
 export type Questionnaire = {
   id: string;
@@ -194,6 +203,45 @@ export const deleteQuestionnaireResponse = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await (context.supabase as any)
       .from("client_questionnaire_responses").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ── Public (patient) : lecture + soumission d'un questionnaire actif ────
+
+export const getPublicQuestionnaire = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: q, error } = await sb
+      .from("questionnaires")
+      .select("id, therapist_id, titre, description, actif, questionnaire_questions(id,ordre,type_reponse,question,options,obligatoire)")
+      .eq("id", data.id).eq("actif", true).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!q) throw new Error("Questionnaire introuvable ou inactif.");
+    (q as any).questionnaire_questions = ((q as any).questionnaire_questions ?? [])
+      .sort((a: any, b: any) => a.ordre - b.ordre);
+    return q as any;
+  });
+
+export const submitPublicQuestionnaire = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({
+    questionnaire_id: z.string().uuid(),
+    therapist_id: z.string().uuid(),
+    patient_name: z.string().trim().min(1, "Nom requis").max(200),
+    patient_email: z.string().email().max(200).optional().nullable(),
+    reponses: z.record(z.string(), z.any()),
+  }).parse(input))
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { error } = await sb.from("client_questionnaire_responses").insert({
+      questionnaire_id: data.questionnaire_id,
+      therapist_id: data.therapist_id,
+      patient_name: data.patient_name,
+      patient_email: data.patient_email ?? null,
+      reponses: data.reponses,
+      statut: "soumis",
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -18,6 +18,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as CreerProfilIndexRouteImport } from './routes/creer-profil.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
 import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
@@ -115,6 +116,11 @@ const LangIndexRoute = LangIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LangRoute,
+} as any)
+const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
+  id: '/questionnaire/$id',
+  path: '/questionnaire/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const IntakeSlugRoute = IntakeSlugRouteImport.update({
   id: '/intake/$slug',
@@ -421,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/creer-profil/': typeof CreerProfilIndexRoute
@@ -481,6 +488,7 @@ export interface FileRoutesByTo {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
   '/creer-profil': typeof CreerProfilIndexRoute
@@ -545,6 +553,7 @@ export interface FileRoutesById {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/creer-profil/': typeof CreerProfilIndexRoute
@@ -610,6 +619,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
     | '/creer-profil/'
@@ -670,6 +680,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/questionnaire/$id'
     | '/$lang'
     | '/admin'
     | '/creer-profil'
@@ -733,6 +744,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
     | '/creer-profil/'
@@ -769,6 +781,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
+  QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
@@ -839,6 +852,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$lang/'
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
+    }
+    '/questionnaire/$id': {
+      id: '/questionnaire/$id'
+      path: '/questionnaire/$id'
+      fullPath: '/questionnaire/$id'
+      preLoaderRoute: typeof QuestionnaireIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/intake/$slug': {
       id: '/intake/$slug'
@@ -1356,6 +1376,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
+  QuestionnaireIdRoute: QuestionnaireIdRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
