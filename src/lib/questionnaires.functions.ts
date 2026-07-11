@@ -322,3 +322,39 @@ export const listQuestionnairesForPackage = createServerFn({ method: "GET" })
       .map((r: any) => r.questionnaires)
       .filter((q: any) => q && q.actif);
   });
+
+// ── Envoi manuel du lien questionnaire au client ────────────────────
+
+export const emailQuestionnaireToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    questionnaire_id: z.string().uuid(),
+    to: z.string().email(),
+    message: z.string().trim().max(2000).optional().nullable(),
+    origin: z.string().url().optional().nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+
+    const { data: q } = await (context.supabase as any)
+      .from("questionnaires").select("id, titre, actif, therapist_id")
+      .eq("id", data.questionnaire_id).maybeSingle();
+    if (!q || q.therapist_id !== therapistId) throw new Error("Questionnaire introuvable.");
+    if (!q.actif) throw new Error("Ce questionnaire est désactivé.");
+
+    const { data: t } = await (context.supabase as any)
+      .from("therapists").select("first_name, last_name").eq("id", therapistId).maybeSingle();
+
+    const base = (data.origin ?? "https://holiswiss.ch").replace(/\/$/, "");
+    const link = `${base}/questionnaire/${q.id}`;
+
+    const res = await sendQuestionnaireEmail({
+      to: data.to,
+      therapistName: `${t?.first_name ?? ""} ${t?.last_name ?? ""}`.trim() || "Votre thérapeute",
+      questionnaireTitle: q.titre,
+      link,
+      message: data.message ?? null,
+    });
+    if (!res.ok) throw new Error(`Envoi impossible (${res.status}) ${res.error ?? ""}`);
+    return { ok: true, sentTo: data.to, link };
+  });
