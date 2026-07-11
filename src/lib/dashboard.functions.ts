@@ -156,16 +156,45 @@ export const getMyPendingReservationCount = createServerFn({ method: "GET" })
 
 export const updateMyAppointmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(["confirmed", "cancelled"]) }))
+  .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(["confirmed", "cancelled", "completed"]) }))
   .handler(async ({ context, data }) => {
     const { supabaseAdmin, therapistId } = await getOwnedTherapist(context.userId);
-    const { error } = await supabaseAdmin
+    const { data: appt, error } = await supabaseAdmin
       .from("appointments")
       .update({ status: data.status })
       .eq("id", data.id)
-      .eq("therapist_id", therapistId);
+      .eq("therapist_id", therapistId)
+      .select("patient_name,patient_email,appointment_date")
+      .maybeSingle();
     if (error) throw new Error("Impossible de mettre à jour la réservation.");
-    return { ok: true };
+
+    // RDV terminé → demande d'avis automatique au patient (best-effort :
+    // un échec d'email ne doit jamais bloquer la clôture du rendez-vous).
+    let reviewRequestSent = false;
+    if (data.status === "completed" && appt?.patient_email) {
+      try {
+        const { data: th } = await supabaseAdmin
+          .from("therapists")
+          .select("first_name,last_name,slug")
+          .eq("id", therapistId)
+          .maybeSingle();
+        if (th?.slug) {
+          const { sendReviewRequestEmail } = await import("@/lib/review-request-email.server");
+          const result = await sendReviewRequestEmail({
+            patientName: appt.patient_name || "cher patient",
+            patientEmail: appt.patient_email,
+            therapistName: `${th.first_name ?? ""} ${th.last_name ?? ""}`.trim(),
+            therapistSlug: th.slug,
+            appointmentDate: appt.appointment_date ?? new Date().toISOString().slice(0, 10),
+            sentBy: context.userId,
+          });
+          reviewRequestSent = result.sent;
+        }
+      } catch {
+        // journalisé dans email_logs par sendReviewRequestEmail
+      }
+    }
+    return { ok: true, reviewRequestSent };
   });
 
 export const listMyAgenda = createServerFn({ method: "GET" })

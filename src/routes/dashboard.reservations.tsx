@@ -9,7 +9,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check, X, Mail } from "lucide-react";
+import { Check, X, Mail, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
@@ -38,7 +38,7 @@ function Page() {
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<Status | "all">("all");
-  const [pending, setPending] = useState<{ id: string; action: "confirmed" | "cancelled" } | null>(null);
+  const [pending, setPending] = useState<{ id: string; action: "confirmed" | "cancelled" | "completed" } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,10 +63,18 @@ function Page() {
   const apply = async () => {
     if (!pending) return;
     try {
-      await updateStatus({ data: { id: pending.id, status: pending.action } });
+      const result = await updateStatus({ data: { id: pending.id, status: pending.action } });
       const { rows: fresh } = await fetchReservations();
       setRows((fresh ?? []) as Row[]);
-      toast.success(pending.action === "confirmed" ? "Réservation confirmée" : "Réservation annulée");
+      if (pending.action === "completed") {
+        toast.success(
+          (result as any)?.reviewRequestSent
+            ? "Séance terminée — demande d'avis envoyée au patient"
+            : "Séance terminée",
+        );
+      } else {
+        toast.success(pending.action === "confirmed" ? "Réservation confirmée" : "Réservation annulée");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur de mise à jour");
     }
@@ -87,6 +95,7 @@ function Page() {
           <TabsTrigger value="all">Toutes ({rows.length})</TabsTrigger>
           <TabsTrigger value="pending">En attente ({rows.filter(r => r.status === "pending").length})</TabsTrigger>
           <TabsTrigger value="confirmed">Confirmées</TabsTrigger>
+          <TabsTrigger value="completed">Terminées</TabsTrigger>
           <TabsTrigger value="cancelled">Annulées</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -121,6 +130,11 @@ function Page() {
                         <Button aria-label="Annuler" size="sm" variant="ghost" onClick={() => setPending({ id: b.id, action: "cancelled" })}><X className="h-3.5 w-3.5" /></Button>
                       </>
                     )}
+                    {b.status === "confirmed" && (
+                      <Button aria-label="Marquer terminée" title="Marquer terminée (envoie une demande d'avis)" size="sm"
+                        onClick={() => setPending({ id: b.id, action: "completed" })}
+                        className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"><CheckCheck className="h-3.5 w-3.5" /></Button>
+                    )}
                     <Button aria-label="Contacter" asChild size="sm" variant="ghost">
                       <a href={`mailto:${b.patient_email}`}><Mail className="h-3.5 w-3.5" /></a>
                     </Button>
@@ -138,10 +152,16 @@ function Page() {
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{pending?.action === "confirmed" ? "Confirmer la réservation ?" : "Annuler la réservation ?"}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {pending?.action === "confirmed" ? "Confirmer la réservation ?"
+                : pending?.action === "completed" ? "Marquer la séance comme terminée ?"
+                : "Annuler la réservation ?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {pending?.action === "confirmed"
                 ? "Le patient sera notifié de la confirmation."
+                : pending?.action === "completed"
+                ? "Une demande d'avis sera automatiquement envoyée au patient par email."
                 : "Cette action notifiera le patient de l'annulation."}
             </AlertDialogDescription>
           </AlertDialogHeader>

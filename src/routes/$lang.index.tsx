@@ -9,6 +9,9 @@ import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 import { HeroVariants, SpecialtiesCarousel } from "@/components/holiswiss/HeroVariants";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
+import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
+import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
+import { CantonDirectory } from "@/components/holiswiss/CantonDirectory";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
@@ -59,6 +62,12 @@ function HomePage() {
     <>
       {/* Hero (4 variants — dev selector bottom-right) */}
       <HeroVariants />
+
+      {/* Promesse plateforme : agenda + CRM + visibilité + RDV + avis */}
+      <PlatformPromiseBand />
+
+      {/* Nouveaux thérapeutes — de vrais praticiens dès l'arrivée */}
+      <NewTherapistsShowcase />
 
       {/* Specialty explorer — taxonomie familles / recherche libre */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
@@ -152,6 +161,9 @@ function HomePage() {
 
       {/* Nearby therapists list + Swiss map */}
       <NearbyTherapistsSwiss />
+
+      {/* Les 26 cantons — liens crawlables vers l'annuaire filtré */}
+      <CantonDirectory />
 
       {/* SEO/AI FAQ section */}
       {(() => {

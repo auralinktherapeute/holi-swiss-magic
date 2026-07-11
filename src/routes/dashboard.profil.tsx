@@ -33,6 +33,7 @@ import {
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
+import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
@@ -519,6 +520,28 @@ function ProfilePage() {
             <DraftSavedIndicator status={draftStatus} savedAt={savedAt} />
           </div>
         </header>
+
+        {/* Score de complétion — mis à jour en direct pendant l'édition */}
+        <div className="mt-6">
+          <ProfileCompletionCard
+            profile={{
+              photo_url: photoPublicUrl || photoUrl,
+              first_name: firstName,
+              last_name: lastName,
+              short_bio: shortBio,
+              bio,
+              languages: langs,
+              specialties,
+              price_min: priceMin === "" ? null : Number(priceMin),
+              city,
+              canton,
+              phone,
+              accreditations,
+              website,
+              google_reviews_url: googleReviewsUrl,
+            }}
+          />
+        </div>
 
         {/* Identity */}
         <Section>

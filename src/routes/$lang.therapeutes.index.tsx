@@ -16,9 +16,10 @@ const TherapistMap = lazy(() =>
 
 export const Route = createFileRoute("/$lang/therapeutes/")({
   component: Page,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { specialite?: string; famille?: string; canton?: string } => ({
     specialite: typeof s.specialite === "string" ? s.specialite : undefined,
     famille: typeof s.famille === "string" ? s.famille : undefined,
+    canton: typeof s.canton === "string" ? s.canton.toUpperCase().slice(0, 2) : undefined,
   }),
   head: ({ params }) => {
     const lang = params.lang;
@@ -67,7 +68,10 @@ type Therapist = {
 const CANTON_LABELS: Record<string, string> = {
   GE: "Genève", VD: "Vaud", VS: "Valais", FR: "Fribourg", NE: "Neuchâtel",
   JU: "Jura", BE: "Berne", ZH: "Zurich", BS: "Bâle-Ville", AG: "Argovie",
-  TI: "Tessin", LU: "Lucerne", SG: "Saint-Gall",
+  TI: "Tessin", LU: "Lucerne", SG: "Saint-Gall", BL: "Bâle-Campagne",
+  SO: "Soleure", SH: "Schaffhouse", TG: "Thurgovie", GR: "Grisons",
+  GL: "Glaris", ZG: "Zoug", SZ: "Schwyz", UR: "Uri", OW: "Obwald",
+  NW: "Nidwald", AR: "Appenzell Rh.-Ext.", AI: "Appenzell Rh.-Int.",
 };
 
 function CardSkeleton() {
@@ -87,7 +91,7 @@ function Page() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
   const navigate = useNavigate({ from: "/$lang/therapeutes/" });
   const searchParams = useSearch({ from: "/$lang/therapeutes/" });
-  const { specialite: specFilter, famille: famFilter } = searchParams;
+  const { specialite: specFilter, famille: famFilter, canton: cantonFilter } = searchParams;
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useSessionState<string | null>("therapists.selectedId", null);
   const [mobileTab, setMobileTab] = useSessionState<"list" | "map">("therapists.mobileTab", "list");
@@ -137,7 +141,11 @@ function Page() {
 
   const isSearching = debounced.length >= 2;
   const isLoading = searchQuery.isLoading;
-  const filtered: Therapist[] = searchQuery.data ?? [];
+  const searchResults: Therapist[] = searchQuery.data ?? [];
+  // Filtre canton (liens homepage « Holiswiss dans toute la Suisse »)
+  const filtered: Therapist[] = cantonFilter
+    ? searchResults.filter((th) => (th.canton ?? "").toUpperCase() === cantonFilter)
+    : searchResults;
   const matchedCity = filtered[0]?.matched_city ?? null;
   const matchedSpecialty = filtered[0]?.matched_specialty ?? null;
   const cityNotFound = false;
@@ -149,6 +157,9 @@ function Page() {
     });
   };
   const clearFilter = () => setSelection({});
+  const clearCanton = () => {
+    navigate({ search: (prev: any) => ({ ...prev, canton: undefined }), replace: true });
+  };
 
   const handleCardClick = (t: Therapist) => {
     setSelectedId(t.id);
@@ -166,18 +177,29 @@ function Page() {
             active={{ specialite: specFilter, famille: famFilter }}
             onSelect={setSelection}
           />
-          {hasSpecFilter && (
+          {(hasSpecFilter || cantonFilter) && (
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
               <span className="text-white/50">Filtre actif :</span>
+              {hasSpecFilter && (
+                <button
+                  onClick={clearFilter}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9] bg-[rgba(184,110,249,0.25)] px-3 py-1 font-medium text-white hover:bg-[rgba(184,110,249,0.4)]"
+                >
+                  {activeLabelQuery.data ?? "…"}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+              {cantonFilter && (
+                <button
+                  onClick={clearCanton}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#5cc8fa] bg-[rgba(92,200,250,0.2)] px-3 py-1 font-medium text-white hover:bg-[rgba(92,200,250,0.35)]"
+                >
+                  {CANTON_LABELS[cantonFilter] ?? cantonFilter}
+                  <X className="h-3 w-3" />
+                </button>
+              )}
               <button
-                onClick={clearFilter}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9] bg-[rgba(184,110,249,0.25)] px-3 py-1 font-medium text-white hover:bg-[rgba(184,110,249,0.4)]"
-              >
-                {activeLabelQuery.data ?? "…"}
-                <X className="h-3 w-3" />
-              </button>
-              <button
-                onClick={clearFilter}
+                onClick={() => { clearFilter(); if (cantonFilter) clearCanton(); }}
                 className="rounded-full border border-white/15 px-3 py-1 text-white/70 hover:border-white/40 hover:text-white"
               >
                 Tous les thérapeutes

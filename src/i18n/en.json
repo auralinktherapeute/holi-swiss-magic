@@ -60,7 +60,27 @@
       "Reiki Lugano"
     ],
     "step": "STEP",
-    "recommended": "Recommended"
+    "recommended": "Recommended",
+    "promise": {
+      "kicker": "More than a directory",
+      "title": "The complete platform for Swiss therapists",
+      "agenda": "Online agenda",
+      "crm": "Patient CRM",
+      "visibility": "Google & AI visibility",
+      "booking": "Online booking",
+      "reviews": "Patient reviews"
+    },
+    "newest": {
+      "title": "New therapists",
+      "subtitle": "They just joined the Holiswiss network",
+      "verified": "Verified",
+      "book": "Book an appointment",
+      "profile": "View profile"
+    },
+    "cantons": {
+      "title": "Holiswiss across Switzerland",
+      "subtitle": "Pick your canton to find a therapist near you"
+    }
   },
   "directory": {
     "title": "Therapist directory",
