@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Package, Plus, Pencil, Trash2, MinusCircle, User, Calendar, CircleCheck,
+  Package, Plus, Pencil, Trash2, MinusCircle, User, Calendar, CircleCheck, ClipboardList, X,
 } from "lucide-react";
 import {
   listMyServicePackages, upsertServicePackage, deleteServicePackage,
@@ -11,6 +11,10 @@ import {
   consumeClientPackageSession, listMyCrmContactsMinimal,
   type ServicePackage, type ClientPackage,
 } from "@/lib/service-packages.functions";
+import {
+  listMyQuestionnaires, listMyAssignments, upsertAssignment, deleteAssignment,
+  type Questionnaire, type QuestionnaireAssignment,
+} from "@/lib/questionnaires.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +76,8 @@ function Page() {
 
       <CatalogSection packages={packages} loading={loading} onChange={refresh} />
 
+      <AssignmentsSection packages={packages} />
+
       <ClientPackagesSection
         clientPackages={clientPackages}
         packages={packages}
@@ -86,6 +92,138 @@ function Page() {
 // ────────────────────────────────────────────────────────────────
 // Catalogue
 // ────────────────────────────────────────────────────────────────
+function AssignmentsSection({ packages }: { packages: ServicePackage[] }) {
+  const fetchQs = useServerFn(listMyQuestionnaires);
+  const fetchAs = useServerFn(listMyAssignments);
+  const saveFn = useServerFn(upsertAssignment);
+  const removeFn = useServerFn(deleteAssignment);
+
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
+  const [assignments, setAssignments] = useState<QuestionnaireAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selPackage, setSelPackage] = useState<string>("");
+  const [selQuestionnaire, setSelQuestionnaire] = useState<string>("");
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const [q, a] = await Promise.all([(fetchQs as any)(), (fetchAs as any)()]);
+      setQuestionnaires(q ?? []);
+      setAssignments(a ?? []);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erreur de chargement");
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const activeQuestionnaires = useMemo(() => questionnaires.filter((q) => q.actif), [questionnaires]);
+
+  const add = async () => {
+    if (!selPackage || !selQuestionnaire) return;
+    try {
+      await (saveFn as any)({ data: { questionnaire_id: selQuestionnaire, package_id: selPackage } });
+      toast.success("Questionnaire lié au forfait");
+      setSelQuestionnaire("");
+      await refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Erreur"); }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await (removeFn as any)({ data: { id } });
+      toast.success("Lien supprimé");
+      await refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Erreur"); }
+  };
+
+  const byPackage = useMemo(() => {
+    const m = new Map<string, QuestionnaireAssignment[]>();
+    for (const a of assignments) {
+      if (!a.package_id) continue;
+      const arr = m.get(a.package_id) ?? [];
+      arr.push(a);
+      m.set(a.package_id, arr);
+    }
+    return m;
+  }, [assignments]);
+
+  if (packages.length === 0) return null;
+
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-primary" /> Questionnaires liés aux forfaits
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Recommandez automatiquement un questionnaire à remplir lors de l'achat d'un forfait.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
+        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <div className="space-y-1.5">
+            <Label htmlFor="asg-pkg">Forfait</Label>
+            <Select value={selPackage} onValueChange={setSelPackage}>
+              <SelectTrigger id="asg-pkg"><SelectValue placeholder="Choisir un forfait" /></SelectTrigger>
+              <SelectContent>
+                {packages.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.nom}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="asg-q">Questionnaire</Label>
+            <Select value={selQuestionnaire} onValueChange={setSelQuestionnaire}>
+              <SelectTrigger id="asg-q">
+                <SelectValue placeholder={activeQuestionnaires.length === 0 ? "Aucun questionnaire actif" : "Choisir un questionnaire"} />
+              </SelectTrigger>
+              <SelectContent>
+                {activeQuestionnaires.map((q) => (
+                  <SelectItem key={q.id} value={q.id}>{q.titre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={add} disabled={!selPackage || !selQuestionnaire} className="gap-2">
+            <Plus className="h-4 w-4" />Lier
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="text-sm text-muted-foreground">Chargement…</div>
+        ) : assignments.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune association pour le moment.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {packages.filter((p) => byPackage.has(p.id)).map((p) => (
+              <li key={p.id} className="py-3 flex flex-col gap-2">
+                <div className="text-sm font-medium">{p.nom}</div>
+                <div className="flex flex-wrap gap-2">
+                  {(byPackage.get(p.id) ?? []).map((a) => (
+                    <span key={a.id} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs">
+                      {a.questionnaires?.titre ?? "Questionnaire"}
+                      <button
+                        type="button"
+                        onClick={() => remove(a.id)}
+                        aria-label="Retirer"
+                        className="ml-1 rounded-full p-0.5 hover:bg-background"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function CatalogSection({
   packages, loading, onChange,
 }: { packages: ServicePackage[]; loading: boolean; onChange: () => void }) {
