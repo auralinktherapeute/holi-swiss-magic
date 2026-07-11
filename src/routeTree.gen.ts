@@ -64,6 +64,7 @@ import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang.specialites.$specialtySlug'
+import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -352,6 +353,11 @@ const LangSpecialitesSpecialtySlugRoute =
     path: '/specialites/$specialtySlug',
     getParentRoute: () => LangRoute,
   } as any)
+const LangParolesSlugRoute = LangParolesSlugRouteImport.update({
+  id: '/paroles/$slug',
+  path: '/paroles/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangEvenementsIdRoute = LangEvenementsIdRouteImport.update({
   id: '/evenements/$id',
   path: '/evenements/$id',
@@ -441,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -503,6 +510,7 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -569,6 +577,7 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -636,6 +645,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -698,6 +708,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -763,6 +774,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -1187,6 +1199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangSpecialitesSpecialtySlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/paroles/$slug': {
+      id: '/$lang/paroles/$slug'
+      path: '/paroles/$slug'
+      fullPath: '/$lang/paroles/$slug'
+      preLoaderRoute: typeof LangParolesSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/evenements/$id': {
       id: '/$lang/evenements/$id'
       path: '/evenements/$id'
@@ -1266,6 +1285,7 @@ interface LangRouteChildren {
   LangBlogSlugRoute: typeof LangBlogSlugRoute
   LangBlogQuEstCeQueLaSophrologieRoute: typeof LangBlogQuEstCeQueLaSophrologieRoute
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
+  LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangSpecialitesSpecialtySlugRoute: typeof LangSpecialitesSpecialtySlugRouteWithChildren
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
@@ -1290,6 +1310,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogSlugRoute: LangBlogSlugRoute,
   LangBlogQuEstCeQueLaSophrologieRoute: LangBlogQuEstCeQueLaSophrologieRoute,
   LangEvenementsIdRoute: LangEvenementsIdRoute,
+  LangParolesSlugRoute: LangParolesSlugRoute,
   LangSpecialitesSpecialtySlugRoute:
     LangSpecialitesSpecialtySlugRouteWithChildren,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
