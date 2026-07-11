@@ -245,3 +245,79 @@ export const submitPublicQuestionnaire = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ── Assignations questionnaire ↔ forfait ────────────────────────────
+
+export type QuestionnaireAssignment = {
+  id: string;
+  therapist_id: string;
+  questionnaire_id: string;
+  package_id: string | null;
+  service_type_id: string | null;
+  created_at: string;
+  questionnaires?: { titre: string };
+};
+
+export const listMyAssignments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data, error } = await (context.supabase as any)
+      .from("questionnaire_assignments")
+      .select("*, questionnaires(titre)")
+      .eq("therapist_id", therapistId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as QuestionnaireAssignment[];
+  });
+
+export const upsertAssignment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    questionnaire_id: z.string().uuid(),
+    package_id: z.string().uuid().optional().nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    // évite les doublons (même questionnaire + même forfait)
+    const { data: existing } = await (context.supabase as any)
+      .from("questionnaire_assignments")
+      .select("id")
+      .eq("therapist_id", therapistId)
+      .eq("questionnaire_id", data.questionnaire_id)
+      .eq("package_id", data.package_id ?? null)
+      .maybeSingle();
+    if (existing?.id) return { id: existing.id as string };
+    const { data: row, error } = await (context.supabase as any)
+      .from("questionnaire_assignments").insert({
+        therapist_id: therapistId,
+        questionnaire_id: data.questionnaire_id,
+        package_id: data.package_id ?? null,
+      }).select("id").maybeSingle();
+    if (error) throw new Error(error.message);
+    return { id: row.id as string };
+  });
+
+export const deleteAssignment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any)
+      .from("questionnaire_assignments").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const listQuestionnairesForPackage = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => z.object({ package_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: rows, error } = await sb
+      .from("questionnaire_assignments")
+      .select("questionnaire_id, questionnaires(id,titre,actif)")
+      .eq("package_id", data.package_id);
+    if (error) throw new Error(error.message);
+    return (rows ?? [])
+      .map((r: any) => r.questionnaires)
+      .filter((q: any) => q && q.actif);
+  });
