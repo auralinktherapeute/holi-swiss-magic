@@ -20,9 +20,11 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
+import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
 import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
 import { Route as DashboardForfaitsRouteImport } from './routes/dashboard.forfaits'
+import { Route as DashboardFacturationRouteImport } from './routes/dashboard.facturation'
 import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
 import { Route as DashboardCrmRouteImport } from './routes/dashboard.crm'
 import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
@@ -124,6 +126,11 @@ const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
   path: '/reservations',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardQuestionnairesRoute = DashboardQuestionnairesRouteImport.update({
+  id: '/questionnaires',
+  path: '/questionnaires',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardProfilRoute = DashboardProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
@@ -137,6 +144,11 @@ const DashboardParrainageRoute = DashboardParrainageRouteImport.update({
 const DashboardForfaitsRoute = DashboardForfaitsRouteImport.update({
   id: '/forfaits',
   path: '/forfaits',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardFacturationRoute = DashboardFacturationRouteImport.update({
+  id: '/facturation',
+  path: '/facturation',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardEvenementsRoute = DashboardEvenementsRouteImport.update({
@@ -402,9 +414,11 @@ export interface FileRoutesByFullPath {
   '/dashboard/avis': typeof DashboardAvisRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/facturation': typeof DashboardFacturationRoute
   '/dashboard/forfaits': typeof DashboardForfaitsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
+  '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/$lang/': typeof LangIndexRoute
@@ -460,9 +474,11 @@ export interface FileRoutesByTo {
   '/dashboard/avis': typeof DashboardAvisRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/facturation': typeof DashboardFacturationRoute
   '/dashboard/forfaits': typeof DashboardForfaitsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
+  '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/$lang': typeof LangIndexRoute
@@ -522,9 +538,11 @@ export interface FileRoutesById {
   '/dashboard/avis': typeof DashboardAvisRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/facturation': typeof DashboardFacturationRoute
   '/dashboard/forfaits': typeof DashboardForfaitsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
+  '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/$lang/': typeof LangIndexRoute
@@ -585,9 +603,11 @@ export interface FileRouteTypes {
     | '/dashboard/avis'
     | '/dashboard/crm'
     | '/dashboard/evenements'
+    | '/dashboard/facturation'
     | '/dashboard/forfaits'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
+    | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
     | '/$lang/'
@@ -643,9 +663,11 @@ export interface FileRouteTypes {
     | '/dashboard/avis'
     | '/dashboard/crm'
     | '/dashboard/evenements'
+    | '/dashboard/facturation'
     | '/dashboard/forfaits'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
+    | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
     | '/$lang'
@@ -704,9 +726,11 @@ export interface FileRouteTypes {
     | '/dashboard/avis'
     | '/dashboard/crm'
     | '/dashboard/evenements'
+    | '/dashboard/facturation'
     | '/dashboard/forfaits'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
+    | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
     | '/$lang/'
@@ -830,6 +854,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardReservationsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/questionnaires': {
+      id: '/dashboard/questionnaires'
+      path: '/questionnaires'
+      fullPath: '/dashboard/questionnaires'
+      preLoaderRoute: typeof DashboardQuestionnairesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/profil': {
       id: '/dashboard/profil'
       path: '/profil'
@@ -849,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/forfaits'
       fullPath: '/dashboard/forfaits'
       preLoaderRoute: typeof DashboardForfaitsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/facturation': {
+      id: '/dashboard/facturation'
+      path: '/facturation'
+      fullPath: '/dashboard/facturation'
+      preLoaderRoute: typeof DashboardFacturationRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/evenements': {
@@ -1282,9 +1320,11 @@ interface DashboardRouteChildren {
   DashboardAvisRoute: typeof DashboardAvisRoute
   DashboardCrmRoute: typeof DashboardCrmRoute
   DashboardEvenementsRoute: typeof DashboardEvenementsRoute
+  DashboardFacturationRoute: typeof DashboardFacturationRoute
   DashboardForfaitsRoute: typeof DashboardForfaitsRoute
   DashboardParrainageRoute: typeof DashboardParrainageRoute
   DashboardProfilRoute: typeof DashboardProfilRoute
+  DashboardQuestionnairesRoute: typeof DashboardQuestionnairesRoute
   DashboardReservationsRoute: typeof DashboardReservationsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -1296,9 +1336,11 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvisRoute: DashboardAvisRoute,
   DashboardCrmRoute: DashboardCrmRoute,
   DashboardEvenementsRoute: DashboardEvenementsRoute,
+  DashboardFacturationRoute: DashboardFacturationRoute,
   DashboardForfaitsRoute: DashboardForfaitsRoute,
   DashboardParrainageRoute: DashboardParrainageRoute,
   DashboardProfilRoute: DashboardProfilRoute,
+  DashboardQuestionnairesRoute: DashboardQuestionnairesRoute,
   DashboardReservationsRoute: DashboardReservationsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
