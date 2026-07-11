@@ -6,8 +6,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
-import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
-import { HeroVariants, SpecialtiesCarousel } from "@/components/holiswiss/HeroVariants";
+import { HeroVariants } from "@/components/holiswiss/HeroVariants";
+import { SpecialtyBubbles } from "@/components/holiswiss/SpecialtyBubbles";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
@@ -73,20 +73,7 @@ function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold tracking-tight text-white">{t("home.specialties")}</h2>
         <div className="mt-8">
-          <SpecialtyExplorer
-            lang={lang}
-            active={{}}
-            onSelect={(sel) => {
-              if (sel.famille) {
-                navigate({ to: `/${lang}/therapeutes/famille/${sel.famille}` });
-              } else if (sel.specialite) {
-                navigate({ to: `/${lang}/specialites/${sel.specialite}` });
-              }
-            }}
-          />
-        </div>
-        <div className="mt-10">
-          <SpecialtiesCarousel />
+          <SpecialtyBubbles />
         </div>
       </section>
 
