@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,8 +54,6 @@ export const Route = createFileRoute("/$lang/")({
 function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
-  const navigate = useNavigate();
-
   const popularSearches = t("home.popular_searches", { returnObjects: true }) as string[];
 
   return (
