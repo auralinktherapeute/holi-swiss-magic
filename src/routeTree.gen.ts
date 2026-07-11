@@ -35,6 +35,7 @@ import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abon
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
+import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
@@ -51,6 +52,7 @@ import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangReinitialiserMotDePasseIndexRouteImport } from './routes/$lang.reinitialiser-mot-de-passe.index'
+import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
 import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
@@ -63,6 +65,7 @@ import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang.specialites.$specialtySlug'
+import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -202,6 +205,11 @@ const AdminSeoRoute = AdminSeoRouteImport.update({
   path: '/seo',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminParolesRoute = AdminParolesRouteImport.update({
+  id: '/paroles',
+  path: '/paroles',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminParametresRoute = AdminParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
@@ -283,6 +291,11 @@ const LangReinitialiserMotDePasseIndexRoute =
     path: '/reinitialiser-mot-de-passe/',
     getParentRoute: () => LangRoute,
   } as any)
+const LangParolesIndexRoute = LangParolesIndexRouteImport.update({
+  id: '/paroles/',
+  path: '/paroles/',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangMotDePasseOublieIndexRoute =
   LangMotDePasseOublieIndexRouteImport.update({
     id: '/mot-de-passe-oublie/',
@@ -346,6 +359,11 @@ const LangSpecialitesSpecialtySlugRoute =
     path: '/specialites/$specialtySlug',
     getParentRoute: () => LangRoute,
   } as any)
+const LangParolesSlugRoute = LangParolesSlugRouteImport.update({
+  id: '/paroles/$slug',
+  path: '/paroles/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangEvenementsIdRoute = LangEvenementsIdRouteImport.update({
   id: '/evenements/$id',
   path: '/evenements/$id',
@@ -411,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
+  '/admin/paroles': typeof AdminParolesRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -435,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -447,6 +467,7 @@ export interface FileRoutesByFullPath {
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
+  '/$lang/paroles/': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
@@ -472,6 +493,7 @@ export interface FileRoutesByTo {
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
+  '/admin/paroles': typeof AdminParolesRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -496,6 +518,7 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -508,6 +531,7 @@ export interface FileRoutesByTo {
   '/$lang/impressum': typeof LangImpressumIndexRoute
   '/$lang/inscription': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie': typeof LangMotDePasseOublieIndexRoute
+  '/$lang/paroles': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
@@ -537,6 +561,7 @@ export interface FileRoutesById {
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
+  '/admin/paroles': typeof AdminParolesRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -561,6 +586,7 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -573,6 +599,7 @@ export interface FileRoutesById {
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
+  '/$lang/paroles/': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
@@ -603,6 +630,7 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/notifications'
     | '/admin/parametres'
+    | '/admin/paroles'
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
@@ -627,6 +655,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -639,6 +668,7 @@ export interface FileRouteTypes {
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
+    | '/$lang/paroles/'
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
@@ -664,6 +694,7 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/notifications'
     | '/admin/parametres'
+    | '/admin/paroles'
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
@@ -688,6 +719,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -700,6 +732,7 @@ export interface FileRouteTypes {
     | '/$lang/impressum'
     | '/$lang/inscription'
     | '/$lang/mot-de-passe-oublie'
+    | '/$lang/paroles'
     | '/$lang/reinitialiser-mot-de-passe'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
@@ -728,6 +761,7 @@ export interface FileRouteTypes {
     | '/admin/moderation'
     | '/admin/notifications'
     | '/admin/parametres'
+    | '/admin/paroles'
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
@@ -752,6 +786,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/api/public/admin-notify'
@@ -764,6 +799,7 @@ export interface FileRouteTypes {
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
+    | '/$lang/paroles/'
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
@@ -972,6 +1008,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeoRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/paroles': {
+      id: '/admin/paroles'
+      path: '/paroles'
+      fullPath: '/admin/paroles'
+      preLoaderRoute: typeof AdminParolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/parametres': {
       id: '/admin/parametres'
       path: '/parametres'
@@ -1084,6 +1127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangReinitialiserMotDePasseIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/paroles/': {
+      id: '/$lang/paroles/'
+      path: '/paroles'
+      fullPath: '/$lang/paroles/'
+      preLoaderRoute: typeof LangParolesIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/mot-de-passe-oublie/': {
       id: '/$lang/mot-de-passe-oublie/'
       path: '/mot-de-passe-oublie'
@@ -1168,6 +1218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangSpecialitesSpecialtySlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/paroles/$slug': {
+      id: '/$lang/paroles/$slug'
+      path: '/paroles/$slug'
+      fullPath: '/$lang/paroles/$slug'
+      preLoaderRoute: typeof LangParolesSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/evenements/$id': {
       id: '/$lang/evenements/$id'
       path: '/evenements/$id'
@@ -1247,6 +1304,7 @@ interface LangRouteChildren {
   LangBlogSlugRoute: typeof LangBlogSlugRoute
   LangBlogQuEstCeQueLaSophrologieRoute: typeof LangBlogQuEstCeQueLaSophrologieRoute
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
+  LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangSpecialitesSpecialtySlugRoute: typeof LangSpecialitesSpecialtySlugRouteWithChildren
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
@@ -1258,6 +1316,7 @@ interface LangRouteChildren {
   LangImpressumIndexRoute: typeof LangImpressumIndexRoute
   LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
   LangMotDePasseOublieIndexRoute: typeof LangMotDePasseOublieIndexRoute
+  LangParolesIndexRoute: typeof LangParolesIndexRoute
   LangReinitialiserMotDePasseIndexRoute: typeof LangReinitialiserMotDePasseIndexRoute
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
@@ -1270,6 +1329,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogSlugRoute: LangBlogSlugRoute,
   LangBlogQuEstCeQueLaSophrologieRoute: LangBlogQuEstCeQueLaSophrologieRoute,
   LangEvenementsIdRoute: LangEvenementsIdRoute,
+  LangParolesSlugRoute: LangParolesSlugRoute,
   LangSpecialitesSpecialtySlugRoute:
     LangSpecialitesSpecialtySlugRouteWithChildren,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
@@ -1282,6 +1342,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangImpressumIndexRoute: LangImpressumIndexRoute,
   LangInscriptionIndexRoute: LangInscriptionIndexRoute,
   LangMotDePasseOublieIndexRoute: LangMotDePasseOublieIndexRoute,
+  LangParolesIndexRoute: LangParolesIndexRoute,
   LangReinitialiserMotDePasseIndexRoute: LangReinitialiserMotDePasseIndexRoute,
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
@@ -1305,6 +1366,7 @@ interface AdminRouteChildren {
   AdminModerationRoute: typeof AdminModerationRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParametresRoute: typeof AdminParametresRoute
+  AdminParolesRoute: typeof AdminParolesRoute
   AdminSeoRoute: typeof AdminSeoRoute
   AdminTherapeutesRoute: typeof AdminTherapeutesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
@@ -1325,6 +1387,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModerationRoute: AdminModerationRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParametresRoute: AdminParametresRoute,
+  AdminParolesRoute: AdminParolesRoute,
   AdminSeoRoute: AdminSeoRoute,
   AdminTherapeutesRoute: AdminTherapeutesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,

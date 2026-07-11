@@ -29,6 +29,7 @@ function useNavLinks() {
     { to: "/$lang/therapeutes", label: t("nav.therapists") },
     { to: "/$lang/blog", label: t("nav.blog") },
     { to: "/$lang/evenements", label: t("nav.events") },
+    { to: "/$lang/paroles", label: t("nav.experts") },
     { to: "/$lang/tarifs", label: t("nav.pricing") },
   ] as const;
 }

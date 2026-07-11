@@ -2061,6 +2061,69 @@ export type Database = {
           },
         ]
       }
+      therapist_articles: {
+        Row: {
+          contenu: string
+          created_at: string
+          date_publication: string | null
+          date_soumission: string | null
+          extrait: string | null
+          id: string
+          image_couverture: string | null
+          motif_refus: string | null
+          slug: string
+          statut: string
+          therapist_id: string
+          titre: string
+          updated_at: string
+        }
+        Insert: {
+          contenu: string
+          created_at?: string
+          date_publication?: string | null
+          date_soumission?: string | null
+          extrait?: string | null
+          id?: string
+          image_couverture?: string | null
+          motif_refus?: string | null
+          slug: string
+          statut?: string
+          therapist_id: string
+          titre: string
+          updated_at?: string
+        }
+        Update: {
+          contenu?: string
+          created_at?: string
+          date_publication?: string | null
+          date_soumission?: string | null
+          extrait?: string | null
+          id?: string
+          image_couverture?: string | null
+          motif_refus?: string | null
+          slug?: string
+          statut?: string
+          therapist_id?: string
+          titre?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_articles_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_articles_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_documents: {
         Row: {
           created_at: string
