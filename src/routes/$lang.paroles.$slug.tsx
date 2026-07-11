@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedTherapistArticleBySlug } from "@/lib/therapist-articles.functions";
 import { PublicNav } from "@/components/layout/PublicNav";
