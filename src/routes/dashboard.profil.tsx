@@ -676,8 +676,54 @@ function ProfilePage() {
           <TaxonomySpecialtyPicker
             selectedIds={specialtyIds}
             onChange={(ids) => { setSpecialtyIds(ids); markDirty(); }}
-            onLabelsChange={(labels) => setSpecialties(labels)}
+            onLabelsChange={(labels) => {
+              // Merge taxonomy labels with user-added custom specialties (dedup, case-insensitive).
+              const seen = new Set<string>();
+              const merged: string[] = [];
+              for (const l of [...labels, ...customSpecs]) {
+                const k = (l || "").toLowerCase();
+                if (!l || seen.has(k)) continue;
+                seen.add(k);
+                merged.push(l);
+              }
+              setSpecialties(merged);
+            }}
           />
+
+          {/* Custom (free-text) specialty */}
+          <div className="mt-5 rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.35)] p-4">
+            <p className="mb-2 text-sm font-medium text-white">
+              {t("profile_edit.custom_specialty_title", { defaultValue: "Ajouter une spécialité personnalisée" })}
+            </p>
+            <p className="mb-3 text-xs text-[#a89bc4]">
+              {t("profile_edit.custom_specialty_help", { defaultValue: "Si votre spécialité n'apparaît pas dans la liste ci-dessus, ajoutez-la ici." })}
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={customSpec}
+                onChange={(e) => setCustomSpec(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSpec(); } }}
+                placeholder={t("profile_edit.custom_specialty_placeholder", { defaultValue: "Ex : Soins égyptiens" })}
+                className={inputClass}
+              />
+              <Button type="button" onClick={addCustomSpec} className="shrink-0 bg-[#b86ef9] hover:bg-[#a855f7] text-white">
+                <Plus className="h-4 w-4 mr-1" />
+                {t("profile_edit.add", { defaultValue: "Ajouter" })}
+              </Button>
+            </div>
+            {customSpecs.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {customSpecs.map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs text-white">
+                    {s}
+                    <button type="button" onClick={() => removeSpec(s)} className="opacity-60 hover:opacity-100" aria-label={`Retirer ${s}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </Section>
 
         {/* Services */}
