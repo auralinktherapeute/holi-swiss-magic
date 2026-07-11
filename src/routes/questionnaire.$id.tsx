@@ -115,8 +115,8 @@ function Page() {
 
       <section className="space-y-5">
         {questions.map((qq) => (
-          <div key={qq.id} className="border rounded-lg p-4 bg-white">
-            <Label className="font-medium">
+          <div key={qq.id} className="border rounded-lg p-4 bg-white text-slate-900">
+            <Label className="font-medium text-slate-900">
               {qq.question}{qq.obligatoire && <span className="text-red-500"> *</span>}
             </Label>
             <div className="mt-3">
