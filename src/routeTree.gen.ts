@@ -22,6 +22,7 @@ import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
 import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
+import { Route as DashboardForfaitsRouteImport } from './routes/dashboard.forfaits'
 import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
 import { Route as DashboardCrmRouteImport } from './routes/dashboard.crm'
 import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
@@ -131,6 +132,11 @@ const DashboardProfilRoute = DashboardProfilRouteImport.update({
 const DashboardParrainageRoute = DashboardParrainageRouteImport.update({
   id: '/parrainage',
   path: '/parrainage',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardForfaitsRoute = DashboardForfaitsRouteImport.update({
+  id: '/forfaits',
+  path: '/forfaits',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardEvenementsRoute = DashboardEvenementsRouteImport.update({
@@ -396,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/avis': typeof DashboardAvisRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/forfaits': typeof DashboardForfaitsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/dashboard/avis': typeof DashboardAvisRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/forfaits': typeof DashboardForfaitsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
@@ -514,6 +522,7 @@ export interface FileRoutesById {
   '/dashboard/avis': typeof DashboardAvisRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
+  '/dashboard/forfaits': typeof DashboardForfaitsRoute
   '/dashboard/parrainage': typeof DashboardParrainageRoute
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
@@ -576,6 +585,7 @@ export interface FileRouteTypes {
     | '/dashboard/avis'
     | '/dashboard/crm'
     | '/dashboard/evenements'
+    | '/dashboard/forfaits'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
     | '/dashboard/reservations'
@@ -633,6 +643,7 @@ export interface FileRouteTypes {
     | '/dashboard/avis'
     | '/dashboard/crm'
     | '/dashboard/evenements'
+    | '/dashboard/forfaits'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
     | '/dashboard/reservations'
@@ -693,6 +704,7 @@ export interface FileRouteTypes {
     | '/dashboard/avis'
     | '/dashboard/crm'
     | '/dashboard/evenements'
+    | '/dashboard/forfaits'
     | '/dashboard/parrainage'
     | '/dashboard/profil'
     | '/dashboard/reservations'
@@ -830,6 +842,13 @@ declare module '@tanstack/react-router' {
       path: '/parrainage'
       fullPath: '/dashboard/parrainage'
       preLoaderRoute: typeof DashboardParrainageRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/forfaits': {
+      id: '/dashboard/forfaits'
+      path: '/forfaits'
+      fullPath: '/dashboard/forfaits'
+      preLoaderRoute: typeof DashboardForfaitsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/evenements': {
@@ -1263,6 +1282,7 @@ interface DashboardRouteChildren {
   DashboardAvisRoute: typeof DashboardAvisRoute
   DashboardCrmRoute: typeof DashboardCrmRoute
   DashboardEvenementsRoute: typeof DashboardEvenementsRoute
+  DashboardForfaitsRoute: typeof DashboardForfaitsRoute
   DashboardParrainageRoute: typeof DashboardParrainageRoute
   DashboardProfilRoute: typeof DashboardProfilRoute
   DashboardReservationsRoute: typeof DashboardReservationsRoute
@@ -1276,6 +1296,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAvisRoute: DashboardAvisRoute,
   DashboardCrmRoute: DashboardCrmRoute,
   DashboardEvenementsRoute: DashboardEvenementsRoute,
+  DashboardForfaitsRoute: DashboardForfaitsRoute,
   DashboardParrainageRoute: DashboardParrainageRoute,
   DashboardProfilRoute: DashboardProfilRoute,
   DashboardReservationsRoute: DashboardReservationsRoute,
