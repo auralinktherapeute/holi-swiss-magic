@@ -8,8 +8,11 @@ import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
 import { AccountManageDialog } from "@/components/dashboard/AccountManageDialog";
 import {
   LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
-  Star, CalendarDays, CreditCard, Gift, Settings, Crown, Package, ClipboardList, Receipt,
+  Star, CalendarDays, CreditCard, Gift, Settings, Crown, Package, ClipboardList, Receipt, HelpCircle,
 } from "lucide-react";
+import { useServerFn as useServerFnHelp } from "@tanstack/react-start";
+import { resetOnboarding } from "@/lib/onboarding.functions";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function TherapistNav() {
   const { t } = useTranslation();
@@ -30,23 +33,43 @@ export function TherapistNav() {
   }, [fetchPendingCount, user]);
 
   const items = [
-    { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
-    { to: "/dashboard/profil", icon: User, label: t("dashboard.profile") },
-    { to: "/dashboard/agenda", icon: Calendar, label: t("dashboard.agenda") },
-    { to: "/dashboard/reservations", icon: BookmarkCheck, label: t("dashboard.reservations"), badge: pendingCount },
-    { to: "/dashboard/forfaits", icon: Package, label: "Forfaits" },
-    { to: "/dashboard/questionnaires", icon: ClipboardList, label: "Questionnaires" },
-    { to: "/dashboard/facturation", icon: Receipt, label: "Facturation" },
+    { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard.overview"), exact: true, tourId: "nav-overview" },
+    { to: "/dashboard/profil", icon: User, label: t("dashboard.profile"), tourId: "nav-profil" },
+    { to: "/dashboard/agenda", icon: Calendar, label: t("dashboard.agenda"), tourId: "nav-agenda" },
+    { to: "/dashboard/reservations", icon: BookmarkCheck, label: t("dashboard.reservations"), badge: pendingCount, tourId: "nav-reservations" },
+    { to: "/dashboard/forfaits", icon: Package, label: "Forfaits", tourId: "nav-forfaits" },
+    { to: "/dashboard/questionnaires", icon: ClipboardList, label: "Questionnaires", tourId: "nav-questionnaires" },
+    { to: "/dashboard/facturation", icon: Receipt, label: "Facturation", tourId: "nav-facturation" },
     { to: "/dashboard/articles", icon: FileText, label: t("dashboard.articles") },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
-    { to: "/dashboard/crm", icon: Crown, label: "CRM Elite" },
+    { to: "/dashboard/crm", icon: Crown, label: "CRM Elite", tourId: "nav-crm" },
     { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
   ];
+  const reset = useServerFnHelp(resetOnboarding);
+  const qc = useQueryClient();
+  const restartTour = async () => {
+    try {
+      await reset();
+      await qc.invalidateQueries({ queryKey: ["onboarding-state"] });
+      window.dispatchEvent(new CustomEvent("holiswiss:start-tour"));
+    } catch {}
+  };
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-border bg-surface">
-      <div className="h-16 flex items-center px-6 border-b border-border"><Logo /></div>
+      <div className="h-16 flex items-center justify-between px-6 border-b border-border">
+        <Logo />
+        <button
+          type="button"
+          onClick={restartTour}
+          aria-label="Revoir le tutoriel"
+          title="Revoir le tutoriel"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary-xlight transition-colors"
+        >
+          <HelpCircle className="h-4 w-4" />
+        </button>
+      </div>
       <div className="px-6 pt-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -61,6 +84,7 @@ export function TherapistNav() {
             <Link
               key={it.to}
               to={it.to}
+              data-tour-id={(it as { tourId?: string }).tourId}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 active ? "bg-primary-xlight text-primary" : "text-foreground/70 hover:bg-muted hover:text-foreground"
               }`}
