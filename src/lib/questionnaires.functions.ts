@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
+import { sendQuestionnaireEmail } from "@/lib/holiswiss-email.server";
 
 function publicClient() {
   return createClient(
