@@ -14,6 +14,7 @@ import {
   PenLine,
   ChevronRight,
 } from "lucide-react";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 
 const SHOW_STATS = false;
 
@@ -64,6 +65,8 @@ function Page() {
         </div>
         <Badge variant="secondary" className="bg-primary-xlight text-primary border-primary/20">{t("dashboard_home.plan_active")}</Badge>
       </div>
+
+      <OnboardingChecklist />
 
       {/* Statistics — hidden during launch phase; set SHOW_STATS = true to restore */}
       {SHOW_STATS && (

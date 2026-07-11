@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TherapistNav } from "@/components/layout/TherapistNav";
 import { MobileDashboardHeader, MobileDashboardBottomNav } from "@/components/layout/MobileDashboardNav";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,8 +10,11 @@ import { LoadingScreen } from "@/components/holiswiss/LoadingScreen";
 import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyTherapistShell } from "@/lib/dashboard.functions";
+import { getOnboardingState } from "@/lib/onboarding.functions";
+import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { requireCurrentRole } from "@/lib/auth-utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -31,10 +34,29 @@ function DashboardLayout() {
   const { loading } = useAuth();
   const { i18n } = useTranslation();
   const ensureShell = useServerFn(ensureMyTherapistShell);
+  const fetchState = useServerFn(getOnboardingState);
+  const qc = useQueryClient();
+  const [tourOpen, setTourOpen] = useState(false);
   useEffect(() => {
     if (loading) return;
     (ensureShell as any)().catch(() => {});
   }, [loading, ensureShell]);
+  const { data: onboarding } = useQuery({
+    queryKey: ["onboarding-state"],
+    queryFn: () => fetchState(),
+    enabled: !loading,
+    staleTime: 30_000,
+  });
+  useEffect(() => {
+    if (onboarding && !onboarding.onboarding_complete) {
+      setTourOpen(true);
+    }
+  }, [onboarding]);
+  useEffect(() => {
+    const handler = () => setTourOpen(true);
+    window.addEventListener("holiswiss:start-tour", handler);
+    return () => window.removeEventListener("holiswiss:start-tour", handler);
+  }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -59,6 +81,13 @@ function DashboardLayout() {
         </div>
         <MobileDashboardBottomNav />
         <InactivityLogout redirectTo="/fr/connexion" />
+        <OnboardingTour
+          open={tourOpen}
+          onClose={() => {
+            setTourOpen(false);
+            qc.invalidateQueries({ queryKey: ["onboarding-state"] });
+          }}
+        />
       </div>
     </RequireRole>
   );

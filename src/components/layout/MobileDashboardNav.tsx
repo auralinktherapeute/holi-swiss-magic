@@ -19,6 +19,7 @@ import {
   Gift,
   Crown,
   X,
+  HelpCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { Logo } from "@/components/holiswiss/Logo";
@@ -78,7 +79,15 @@ export function MobileDashboardHeader() {
       <h1 className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-foreground">
         {title}
       </h1>
-      <div className="flex w-10 items-center justify-end">
+      <div className="flex items-center justify-end gap-1">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("holiswiss:start-tour"))}
+          aria-label="Revoir le tutoriel"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-foreground/80 hover:text-foreground"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
         <Link
           to="/$lang"
           params={{ lang: "fr" }}
