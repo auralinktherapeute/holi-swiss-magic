@@ -1044,13 +1044,13 @@ function ServiceDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="border-[#b86ef9]/30 bg-[#1a0a2e] text-[#e6d7f5]">
-        <DialogHeader>
+      <DialogContent className="border-[#b86ef9]/30 bg-[#1a0a2e] text-[#e6d7f5] max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b border-[#b86ef9]/15 shrink-0">
           <DialogTitle className="text-white">
             {initial ? t("profile_edit.edit") : t("profile_edit.add_service")}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto px-6 py-4 flex-1 min-h-0">
           <Field label={t("profile_edit.service_kind", { defaultValue: "Type" })}>
             <div className="flex gap-2">
               {(["session", "package"] as const).map((k) => (
@@ -1154,7 +1154,7 @@ function ServiceDialog({
             <Switch checked={visible} onCheckedChange={setVisible} />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t border-[#b86ef9]/15 shrink-0 bg-[#1a0a2e]">
           <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="text-[#d4c4e0]">
             {t("profile_edit.cancel_btn")}
           </Button>
