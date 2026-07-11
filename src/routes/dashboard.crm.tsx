@@ -20,6 +20,7 @@ import LogoUploader from "@/components/dashboard/LogoUploader";
 import ImportContactsDialog from "@/components/dashboard/ImportContactsDialog";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import IntakePanel from "@/components/dashboard/IntakePanel";
+import ClientHistoryPanel from "@/components/dashboard/ClientHistoryPanel";
 import {
   listMyContacts, upsertContact, deleteContact,
   listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask,
@@ -175,6 +176,9 @@ function ContactDialog({ open, onClose, initial, contacts }: {
 
           {initial && (
             <SessionNotesPanel contactId={initial.id} contactName={`${initial.first_name} ${initial.last_name ?? ""}`.trim()} />
+          )}
+          {initial && (
+            <ClientHistoryPanel contactId={initial.id} />
           )}
         </div>
         <DialogFooter>
