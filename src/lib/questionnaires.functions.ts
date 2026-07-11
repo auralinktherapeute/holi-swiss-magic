@@ -234,7 +234,8 @@ export const submitPublicQuestionnaire = createServerFn({ method: "POST" })
     reponses: z.record(z.string(), z.any()),
   }).parse(input))
   .handler(async ({ data }) => {
-    const sb = publicClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb: any = supabaseAdmin;
     const email = data.patient_email.trim().toLowerCase();
 
     // 1) Recherche client existant pour ce thérapeute
