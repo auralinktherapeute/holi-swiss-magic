@@ -39,6 +39,8 @@ import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
+import { listAllSpecialties } from "@/lib/specialties.functions";
+import { useQuery } from "@tanstack/react-query";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -129,6 +131,25 @@ function ProfilePage() {
   const [specialtyIds, setSpecialtyIds] = useSessionState<string[]>(`${profileStatePrefix}.specialtyIds`, []);
   const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
   const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
+  const [customSpecs, setCustomSpecs] = useSessionState<string[]>(`${profileStatePrefix}.customSpecs`, []);
+
+  // Load taxonomy in parent (reuses same cache key as the picker) so we can
+  // distinguish predefined vs custom (free-text) specialties in the DB.
+  const fetchAllSpecs = useServerFn(listAllSpecialties);
+  const taxQuery = useQuery({ queryKey: ["taxonomy-public"], queryFn: () => fetchAllSpecs(), staleTime: 5 * 60 * 1000 });
+  const taxLabelSet = useMemo(() => {
+    const list = ((taxQuery.data as any)?.specialties ?? []) as Array<{ name_fr: string }>;
+    return new Set(list.map((s) => (s.name_fr || "").toLowerCase()));
+  }, [taxQuery.data]);
+  const customSpecsInitRef = useRef(false);
+  useEffect(() => {
+    if (customSpecsInitRef.current) return;
+    if (taxLabelSet.size === 0) return;
+    customSpecsInitRef.current = true;
+    const detected = specialties.filter((s) => !taxLabelSet.has((s || "").toLowerCase()));
+    if (detected.length > 0) setCustomSpecs((prev) => (prev.length > 0 ? prev : detected));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxLabelSet]);
 
   // Services
   const [services, setServices] = useSessionState<TherapistService[]>(`${profileStatePrefix}.services`, []);
