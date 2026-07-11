@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Package, Plus, Pencil, Trash2, MinusCircle, User, Calendar, CircleCheck,
+  Package, Plus, Pencil, Trash2, MinusCircle, User, Calendar, CircleCheck, ClipboardList, X,
 } from "lucide-react";
 import {
   listMyServicePackages, upsertServicePackage, deleteServicePackage,
@@ -11,6 +11,10 @@ import {
   consumeClientPackageSession, listMyCrmContactsMinimal,
   type ServicePackage, type ClientPackage,
 } from "@/lib/service-packages.functions";
+import {
+  listMyQuestionnaires, listMyAssignments, upsertAssignment, deleteAssignment,
+  type Questionnaire, type QuestionnaireAssignment,
+} from "@/lib/questionnaires.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +75,8 @@ function Page() {
       </header>
 
       <CatalogSection packages={packages} loading={loading} onChange={refresh} />
+
+      <AssignmentsSection packages={packages} />
 
       <ClientPackagesSection
         clientPackages={clientPackages}
