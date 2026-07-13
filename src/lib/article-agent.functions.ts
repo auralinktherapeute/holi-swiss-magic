@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 import { normalizeImportArticle } from "@/lib/article-import-normalizer";
+import { computeSeo, computeGeo } from "@/lib/article-scoring";
 
 function toSlug(str: string): string {
   return str
@@ -169,6 +170,159 @@ Slug : kebab-case sans accents, suffixé par "-suisse" si pertinent.`;
     }
 
     return { article: inserted };
+  });
+
+// ── Optimiseur SEO/GEO à la demande ──────────────────────────────────────────
+// Même logique que l'agent optimiseur quotidien (6h30) : hill-climbing
+// monotone contre la VRAIE formule (article-scoring.ts) — le score affiché
+// dans l'admin ne peut jamais baisser. Écrit directement en base (donc peut
+// aussi remplir image_alt_text, inaccessible via le webhook) → 100/100 possible.
+
+const OPTIMIZE_FIELDS = ["title_fr", "meta_title_fr", "meta_description_fr", "excerpt_fr", "body_fr"] as const;
+
+export const optimizeArticleSeoGeo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row, error } = await (supabaseAdmin as any)
+      .from("articles")
+      .select("id,slug,category,title_fr,meta_title_fr,meta_description_fr,excerpt_fr,body_fr,cover_image_url,image_alt_text,status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error || !row) throw new Error("Article introuvable.");
+
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
+
+    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const { generateText, Output } = await import("ai");
+    const provider = createOpenAICompatible({
+      name: "lovable",
+      baseURL: "https://ai.gateway.lovable.dev/v1",
+      headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    });
+
+    const schema = z.object({
+      title_fr: z.string(),
+      meta_title_fr: z.string(),
+      meta_description_fr: z.string(),
+      excerpt_fr: z.string(),
+      body_fr: z.string(),
+      image_alt_text: z.string().optional(),
+    });
+
+    const system = `Vous êtes l'optimiseur SEO/GEO de HoliSwiss (annuaire suisse de thérapeutes holistiques).
+Vous réécrivez des articles en FRANÇAIS pour satisfaire des critères MESURÉS PAR UN PROGRAMME, au caractère près.
+Règles strictes (LPMéd) : interdit d'utiliser "soin", "guérison", "traitement", "diagnostic", "prescription".
+Privilégier : "accompagnement", "approche", "pratique", "bien-être", "équilibre".
+Conserver le sujet, la structure Markdown et un texte naturel et agréable à lire.`;
+
+    let best = { ...row };
+    let bestSeo = computeSeo(best);
+    let bestGeo = computeGeo(best);
+    const seoBefore = bestSeo.score;
+    const geoBefore = bestGeo.score;
+    const MAX_ITER = 3;
+
+    for (let iter = 0; iter < MAX_ITER; iter++) {
+      if (bestSeo.score >= 100 && bestGeo.score >= 100) break;
+
+      const failing = bestSeo.checklist
+        .filter((c) => !c.ok)
+        .map((c) => `- ${c.label}${c.hint ? ` (${c.hint})` : ""}`)
+        .join("\n");
+      const geoNeeds = bestGeo.score < 100
+        ? `- Villes suisses distinctes : ${bestGeo.cities.length}/4 min (Lausanne, Genève, Zurich, Bâle, Berne, Sion, Fribourg, Neuchâtel, Montreux, Vevey…)
+- Cantons distincts : ${bestGeo.cantons.length}/3 min (Vaud, Valais, Genève, Fribourg, Berne, Jura, Neuchâtel, Tessin…)
+- Mots-clés suisses : ${bestGeo.keywords.length}/3 min (« suisse », « romande », « romandie », « helvétique »)`
+        : "- aucun";
+
+      const prompt = `Améliore cet article pour corriger UNIQUEMENT les critères en échec, sans casser ceux qui passent.
+
+ARTICLE ACTUEL (JSON) :
+${JSON.stringify({
+  title_fr: best.title_fr, meta_title_fr: best.meta_title_fr,
+  meta_description_fr: best.meta_description_fr, excerpt_fr: best.excerpt_fr,
+  body_fr: best.body_fr, category: best.category,
+  image_alt_text: best.image_alt_text ?? null,
+})}
+
+CRITÈRES SEO EN ÉCHEC (score actuel ${bestSeo.score}/100) :
+${failing || "- aucun"}
+
+BESOINS GEO (score actuel ${bestGeo.score}/100) :
+${geoNeeds}
+
+CONTRAINTES TECHNIQUES PRÉCISES (mesurées au caractère près) :
+1. title_fr : entre 50 et 60 caractères INCLUS (espaces compris). Compter avant de répondre.
+2. title_fr doit contenir la chaîne exacte « ${row.category ?? ""} » (sans accents, insensible à la casse). Si l'orthographe française a des accents, utiliser la graphie sans accent (ex. « Kinesiologie »), c'est accepté.
+3. meta_description_fr : entre 150 et 160 caractères INCLUS.
+4. body_fr : Markdown, min 320 mots, au moins 2 titres « ## » et 1 titre « ### », au moins 1 lien interne [texte](/fr/therapeutes), phrases de 10 à 25 mots en moyenne.
+5. body_fr doit mentionner au moins 4 villes suisses différentes, 3 cantons différents et les mots « suisse », « romande », « helvétique ».
+6. excerpt_fr : 1–2 phrases d'accroche (max 300 caractères), mentionnant la Suisse.
+7. image_alt_text : description factuelle de l'image de couverture en 8–15 mots (thème : ${row.category ?? "bien-être"}).
+8. NE PAS produire de HTML. NE PAS changer de sujet.`;
+
+      let candidate: z.infer<typeof schema>;
+      try {
+        const result = await generateText({
+          model: provider("google/gemini-3-flash-preview"),
+          system,
+          prompt,
+          experimental_output: Output.object({ schema }),
+        });
+        candidate = (result as any).experimental_output;
+      } catch (e: any) {
+        const msg = String(e?.message ?? e);
+        if (msg.includes("429")) throw new Error("Limite de requêtes IA atteinte. Réessayez dans une minute.");
+        if (msg.includes("402")) throw new Error("Crédits IA épuisés. Rechargez votre workspace Lovable.");
+        break; // autre erreur IA : on garde la meilleure version
+      }
+
+      const next = { ...best };
+      for (const f of OPTIMIZE_FIELDS) {
+        const v = candidate[f];
+        if (typeof v === "string" && v.trim()) next[f] = v.trim();
+      }
+      if (row.cover_image_url && candidate.image_alt_text?.trim()) {
+        next.image_alt_text = candidate.image_alt_text.trim();
+      }
+
+      const nextSeo = computeSeo(next);
+      const nextGeo = computeGeo(next);
+      // Monotonie stricte : jamais de baisse sur AUCUN des deux axes
+      if (
+        nextSeo.score >= bestSeo.score &&
+        nextGeo.score >= bestGeo.score &&
+        nextSeo.score + nextGeo.score > bestSeo.score + bestGeo.score
+      ) {
+        best = next;
+        bestSeo = nextSeo;
+        bestGeo = nextGeo;
+      }
+    }
+
+    const improved = bestSeo.score + bestGeo.score > seoBefore + geoBefore;
+    if (improved) {
+      const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      for (const f of OPTIMIZE_FIELDS) patch[f] = best[f];
+      if (best.image_alt_text) patch.image_alt_text = best.image_alt_text;
+      const { error: upError } = await (supabaseAdmin as any)
+        .from("articles")
+        .update(patch)
+        .eq("id", data.id);
+      if (upError) throw new Error(`Enregistrement échoué : ${upError.message}`);
+    }
+
+    return {
+      updated: improved,
+      seoBefore, seoAfter: bestSeo.score,
+      geoBefore, geoAfter: bestGeo.score,
+      remaining: bestSeo.checklist.filter((c) => !c.ok).map((c) => c.label),
+    };
   });
 
 // ── Translation ──────────────────────────────────────────────────────────────

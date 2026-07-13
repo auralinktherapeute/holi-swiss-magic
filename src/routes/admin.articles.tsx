@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
-import { translateArticle, translateAllMissingArticles, importAgentArticlesAdmin } from "@/lib/article-agent.functions";
+import { translateArticle, translateAllMissingArticles, importAgentArticlesAdmin, optimizeArticleSeoGeo } from "@/lib/article-agent.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
@@ -546,6 +546,22 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Optimiseur SEO/GEO à la demande (même logique que l'agent quotidien,
+  // garantie anti-régression : le score ne peut jamais baisser)
+  const optimizeMutation = useMutation({
+    mutationFn: (id: string) => optimizeArticleSeoGeo({ data: { id } }),
+    onSuccess: (r: any) => {
+      if (r.updated) {
+        toast.success(`Optimisé : SEO ${r.seoBefore} → ${r.seoAfter} · GEO ${r.geoBefore} → ${r.geoAfter}`);
+      } else {
+        toast.info(`Déjà au meilleur niveau atteignable (SEO ${r.seoAfter} · GEO ${r.geoAfter}) — rien n'a été modifié.`);
+      }
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+      setImproving(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   // Import agent report (JSON ou HTML avec <script id="agent-articles" type="application/json">)
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -945,6 +961,21 @@ function Page() {
                     </p>
                   </div>
                 )}
+
+                <Button
+                  className="w-full bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white hover:opacity-90"
+                  disabled={optimizeMutation.isPending}
+                  onClick={() => optimizeMutation.mutate(improving.id)}
+                >
+                  {optimizeMutation.isPending
+                    ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    : <Sparkles className="h-4 w-4 mr-2" />}
+                  {optimizeMutation.isPending ? "Optimisation en cours (≈ 1 min)…" : "Optimiser automatiquement (IA)"}
+                </Button>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Réécrit titre, meta, extrait, corps et alt text pour viser 100/100.
+                  Garantie : le score ne peut jamais baisser.
+                </p>
 
                 <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => { setEditing(improving); setDialogOpen(true); setImproving(null); }}>
                   <Pencil className="h-4 w-4 mr-2" />Éditer l'article
