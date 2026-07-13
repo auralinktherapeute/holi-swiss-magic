@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Globe, Check, Clock, AlertTriangle, RefreshCw, ExternalLink, FileText, Search,
+  Globe, Check, Clock, AlertTriangle, RefreshCw, ExternalLink, FileText, Search, Rocket, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { pingIndexNow } from "@/lib/indexing.functions";
 
 export const Route = createFileRoute("/admin/indexation")({ component: Page });
 
@@ -103,6 +105,47 @@ function Page() {
     load();
   }, [load]);
 
+  const indexNow = useServerFn(pingIndexNow);
+  const [launching, setLaunching] = useState<null | "therapists" | "all">(null);
+
+  /**
+   * Lancement manuel d'un cycle d'indexation :
+   * 1. RPC gpld : marque les URLs du scope « à recontrôler » + trace un job manuel
+   *    (traité par la tâche Claude quotidienne — rapport détaillé à la clé)
+   * 2. Ping IndexNow : notifie Bing & co IMMÉDIATEMENT (ChatGPT s'appuie sur Bing)
+   */
+  const launchRun = async (scope: "therapists" | "all") => {
+    const pin = askPin();
+    if (!pin) return;
+    setLaunching(scope);
+    try {
+      const r = await fetch(`${AGENTS_SUPABASE_URL}/rest/v1/rpc/request_indexing_run`, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ p_pin: pin, p_scope: scope === "all" ? "unindexed" : "therapists" }),
+      });
+      const flagged = (await r.json()) as number;
+      if (!r.ok || flagged < 0) {
+        sessionStorage.removeItem("seo_validation_pin");
+        toast.error("PIN invalide");
+        return;
+      }
+      let indexNowMsg = "";
+      try {
+        const res = await indexNow({ data: { scope: scope === "all" ? "unindexed" : "therapists" } });
+        indexNowMsg = ` · ${(res as any).submitted} URLs envoyées à IndexNow (Bing/IA)`;
+      } catch (e) {
+        indexNowMsg = " · IndexNow indisponible (réessayez plus tard)";
+      }
+      toast.success(`Indexation lancée : ${flagged} page(s) à recontrôler côté Google${indexNowMsg}`, { duration: 8000 });
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur réseau");
+    } finally {
+      setLaunching(null);
+    }
+  };
+
   const recheck = async (urlId: string) => {
     const pin = askPin();
     if (!pin) return;
@@ -177,6 +220,37 @@ function Page() {
         </div>
         <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
           <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all" style={{ width: `${Math.max(pct, 2)}%` }} />
+        </div>
+      </div>
+
+      {/* Lancement manuel d'un cycle d'indexation */}
+      <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold flex items-center gap-2">
+            <Rocket className="h-4 w-4 text-[#b86ef9]" /> Lancer une indexation maintenant
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Notifie immédiatement Bing/IndexNow (utilisé par ChatGPT et d'autres IA) et met les pages
+            en file de recontrôle Google — traitées par l'agent quotidien avec rapport détaillé.
+          </p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={() => launchRun("therapists")}
+            disabled={launching !== null}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {launching === "therapists" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            Thérapeutes
+          </button>
+          <button
+            onClick={() => launchRun("all")}
+            disabled={launching !== null}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/40 px-4 py-2 text-sm font-semibold text-[#d4a5f9] hover:bg-violet-500/10 disabled:opacity-50"
+          >
+            {launching === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+            Toutes les pages
+          </button>
         </div>
       </div>
 
