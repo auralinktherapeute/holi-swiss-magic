@@ -180,9 +180,38 @@ Slug : kebab-case sans accents, suffixé par "-suisse" si pertinent.`;
 
 const OPTIMIZE_FIELDS = ["title_fr", "meta_title_fr", "meta_description_fr", "excerpt_fr", "body_fr"] as const;
 
+// Correction ciblée : chaque critère de la checklist ne peut modifier QUE
+// ses propres champs — le reste de l'article (notamment un Markdown
+// personnalisé à la main) n'est jamais réécrit.
+const CRITERION_FIELDS: Record<string, readonly string[]> = {
+  title:       ["title_fr"],
+  kw_title:    ["title_fr"],
+  meta:        ["meta_description_fr"],
+  image:       ["image_alt_text"],
+  internal:    ["body_fr"],   // correction déterministe (ajout d'une phrase, sans IA)
+  words:       ["body_fr"],
+  structure:   ["body_fr"],
+  readability: ["body_fr"],
+  geo:         ["body_fr"],
+};
+
+const CRITERION_INSTRUCTIONS: Record<string, string> = {
+  title:       "Réécris UNIQUEMENT title_fr : entre 50 et 60 caractères INCLUS (espaces compris), en conservant le sujet et le mot-clé de la catégorie.",
+  kw_title:    "Réécris UNIQUEMENT title_fr (50–60 caractères) pour qu'il contienne la chaîne exacte de la catégorie SANS accents (ex. « Kinesiologie » pour la catégorie kinesiologie).",
+  meta:        "Réécris UNIQUEMENT meta_description_fr : entre 150 et 160 caractères INCLUS, accrocheuse, mentionnant la Suisse.",
+  image:       "Fournis UNIQUEMENT image_alt_text : description factuelle de l'image de couverture en 8–15 mots.",
+  words:       "Complète body_fr pour atteindre au moins 320 mots : AJOUTE une ou deux sections utiles à la fin, sans modifier ni réécrire le texte existant.",
+  structure:   "Ajuste body_fr au MINIMUM pour avoir au moins 2 titres « ## » et 1 titre « ### » : transforme des intertitres existants ou ajoute des titres, sans réécrire les paragraphes.",
+  readability: "Retouche body_fr au MINIMUM pour une longueur moyenne de phrase entre 10 et 25 mots : découpe ou fusionne quelques phrases, sans changer le fond ni la structure.",
+  geo:         "AJOUTE dans body_fr une courte phrase naturelle mentionnant des villes suisses (Lausanne, Genève, Zurich…) et un canton, sans toucher au reste du texte.",
+};
+
 export const optimizeArticleSeoGeo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid() }))
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    criterion: z.enum(["title", "kw_title", "meta", "image", "internal", "words", "structure", "readability", "geo"]).optional(),
+  }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -194,16 +223,11 @@ export const optimizeArticleSeoGeo = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error || !row) throw new Error("Article introuvable.");
 
-    const lovableKey = process.env.LOVABLE_API_KEY;
-    if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
-
-    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-    const { generateText, Output } = await import("ai");
-    const provider = createOpenAICompatible({
-      name: "lovable",
-      baseURL: "https://ai.gateway.lovable.dev/v1",
-      headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    });
+    // Champs que cette exécution a le DROIT de modifier (garantie serveur :
+    // quoi que réponde l'IA, rien d'autre n'est appliqué)
+    const allowedFields: readonly string[] = data.criterion
+      ? CRITERION_FIELDS[data.criterion]
+      : [...OPTIMIZE_FIELDS, "image_alt_text"];
 
     const schema = z.object({
       title_fr: z.string(),
@@ -220,35 +244,90 @@ Règles strictes (LPMéd) : interdit d'utiliser "soin", "guérison", "traitement
 Privilégier : "accompagnement", "approche", "pratique", "bien-être", "équilibre".
 Conserver le sujet, la structure Markdown et un texte naturel et agréable à lire.`;
 
-    let best = { ...row };
+    let best: Record<string, any> = { ...row };
     let bestSeo = computeSeo(best);
     let bestGeo = computeGeo(best);
     const seoBefore = bestSeo.score;
     const geoBefore = bestGeo.score;
-    const MAX_ITER = 3;
 
-    for (let iter = 0; iter < MAX_ITER; iter++) {
-      if (bestSeo.score >= 100 && bestGeo.score >= 100) break;
+    const applyCandidate = (candidate: Record<string, unknown>) => {
+      const next: Record<string, any> = { ...best };
+      for (const f of allowedFields) {
+        if (f === "image_alt_text" && !row.cover_image_url) continue;
+        const v = candidate[f];
+        if (typeof v === "string" && v.trim()) next[f] = v.trim();
+      }
+      const nextSeo = computeSeo(next);
+      const nextGeo = computeGeo(next);
+      // Monotonie stricte : jamais de baisse sur AUCUN des deux axes
+      if (
+        nextSeo.score >= bestSeo.score &&
+        nextGeo.score >= bestGeo.score &&
+        nextSeo.score + nextGeo.score > bestSeo.score + bestGeo.score
+      ) {
+        best = next;
+        bestSeo = nextSeo;
+        bestGeo = nextGeo;
+      }
+    };
 
-      const failing = bestSeo.checklist
-        .filter((c) => !c.ok)
-        .map((c) => `- ${c.label}${c.hint ? ` (${c.hint})` : ""}`)
-        .join("\n");
-      const geoNeeds = bestGeo.score < 100
-        ? `- Villes suisses distinctes : ${bestGeo.cities.length}/4 min (Lausanne, Genève, Zurich, Bâle, Berne, Sion, Fribourg, Neuchâtel, Montreux, Vevey…)
-- Cantons distincts : ${bestGeo.cantons.length}/3 min (Vaud, Valais, Genève, Fribourg, Berne, Jura, Neuchâtel, Tessin…)
-- Mots-clés suisses : ${bestGeo.keywords.length}/3 min (« suisse », « romande », « romandie », « helvétique »)`
-        : "- aucun";
+    if (data.criterion === "internal") {
+      // Correction déterministe, sans IA : une phrase avec lien interne,
+      // ajoutée à la fin — le texte existant n'est pas touché.
+      applyCandidate({
+        body_fr: `${best.body_fr ?? ""}\n\nTrouvez un thérapeute qualifié près de chez vous sur [l'annuaire Holiswiss](/fr/therapeutes).`,
+      });
+    } else {
+      const lovableKey = process.env.LOVABLE_API_KEY;
+      if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
+      const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+      const { generateText, Output } = await import("ai");
+      const provider = createOpenAICompatible({
+        name: "lovable",
+        baseURL: "https://ai.gateway.lovable.dev/v1",
+        headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+      });
 
-      const prompt = `Améliore cet article pour corriger UNIQUEMENT les critères en échec, sans casser ceux qui passent.
+      const MAX_ITER = data.criterion ? 2 : 3;
+      for (let iter = 0; iter < MAX_ITER; iter++) {
+        if (bestSeo.score >= 100 && bestGeo.score >= 100) break;
+        if (data.criterion && bestSeo.checklist.find((c) => c.key === data.criterion)?.ok) break;
+
+        const articleJson = JSON.stringify({
+          title_fr: best.title_fr, meta_title_fr: best.meta_title_fr,
+          meta_description_fr: best.meta_description_fr, excerpt_fr: best.excerpt_fr,
+          body_fr: best.body_fr, category: best.category,
+          image_alt_text: best.image_alt_text ?? null,
+        });
+
+        let prompt: string;
+        if (data.criterion) {
+          const item = bestSeo.checklist.find((c) => c.key === data.criterion);
+          prompt = `Corrige UN SEUL point de cet article, sans toucher à quoi que ce soit d'autre.
 
 ARTICLE ACTUEL (JSON) :
-${JSON.stringify({
-  title_fr: best.title_fr, meta_title_fr: best.meta_title_fr,
-  meta_description_fr: best.meta_description_fr, excerpt_fr: best.excerpt_fr,
-  body_fr: best.body_fr, category: best.category,
-  image_alt_text: best.image_alt_text ?? null,
-})}
+${articleJson}
+
+POINT À CORRIGER : ${item?.label ?? data.criterion}${item?.hint ? ` (état actuel : ${item.hint})` : ""}
+
+INSTRUCTION : ${CRITERION_INSTRUCTIONS[data.criterion]}
+
+Seuls ces champs seront pris en compte : ${allowedFields.join(", ")}. Retourne les autres champs STRICTEMENT à l'identique. NE PAS produire de HTML. NE PAS changer de sujet.`;
+        } else {
+          const failing = bestSeo.checklist
+            .filter((c) => !c.ok)
+            .map((c) => `- ${c.label}${c.hint ? ` (${c.hint})` : ""}`)
+            .join("\n");
+          const geoNeeds = bestGeo.score < 100
+            ? `- Villes suisses distinctes : ${bestGeo.cities.length}/4 min (Lausanne, Genève, Zurich, Bâle, Berne, Sion, Fribourg, Neuchâtel, Montreux, Vevey…)
+- Cantons distincts : ${bestGeo.cantons.length}/3 min (Vaud, Valais, Genève, Fribourg, Berne, Jura, Neuchâtel, Tessin…)
+- Mots-clés suisses : ${bestGeo.keywords.length}/3 min (« suisse », « romande », « romandie », « helvétique »)`
+            : "- aucun";
+
+          prompt = `Améliore cet article pour corriger UNIQUEMENT les critères en échec, sans casser ceux qui passent.
+
+ARTICLE ACTUEL (JSON) :
+${articleJson}
 
 CRITÈRES SEO EN ÉCHEC (score actuel ${bestSeo.score}/100) :
 ${failing || "- aucun"}
@@ -265,51 +344,31 @@ CONTRAINTES TECHNIQUES PRÉCISES (mesurées au caractère près) :
 6. excerpt_fr : 1–2 phrases d'accroche (max 300 caractères), mentionnant la Suisse.
 7. image_alt_text : description factuelle de l'image de couverture en 8–15 mots (thème : ${row.category ?? "bien-être"}).
 8. NE PAS produire de HTML. NE PAS changer de sujet.`;
+        }
 
-      let candidate: z.infer<typeof schema>;
-      try {
-        const result = await generateText({
-          model: provider("google/gemini-3-flash-preview"),
-          system,
-          prompt,
-          experimental_output: Output.object({ schema }),
-        });
-        candidate = (result as any).experimental_output;
-      } catch (e: any) {
-        const msg = String(e?.message ?? e);
-        if (msg.includes("429")) throw new Error("Limite de requêtes IA atteinte. Réessayez dans une minute.");
-        if (msg.includes("402")) throw new Error("Crédits IA épuisés. Rechargez votre workspace Lovable.");
-        break; // autre erreur IA : on garde la meilleure version
-      }
-
-      const next = { ...best };
-      for (const f of OPTIMIZE_FIELDS) {
-        const v = candidate[f];
-        if (typeof v === "string" && v.trim()) next[f] = v.trim();
-      }
-      if (row.cover_image_url && candidate.image_alt_text?.trim()) {
-        next.image_alt_text = candidate.image_alt_text.trim();
-      }
-
-      const nextSeo = computeSeo(next);
-      const nextGeo = computeGeo(next);
-      // Monotonie stricte : jamais de baisse sur AUCUN des deux axes
-      if (
-        nextSeo.score >= bestSeo.score &&
-        nextGeo.score >= bestGeo.score &&
-        nextSeo.score + nextGeo.score > bestSeo.score + bestGeo.score
-      ) {
-        best = next;
-        bestSeo = nextSeo;
-        bestGeo = nextGeo;
+        let candidate: z.infer<typeof schema>;
+        try {
+          const result = await generateText({
+            model: provider("google/gemini-3-flash-preview"),
+            system,
+            prompt,
+            experimental_output: Output.object({ schema }),
+          });
+          candidate = (result as any).experimental_output;
+        } catch (e: any) {
+          const msg = String(e?.message ?? e);
+          if (msg.includes("429")) throw new Error("Limite de requêtes IA atteinte. Réessayez dans une minute.");
+          if (msg.includes("402")) throw new Error("Crédits IA épuisés. Rechargez votre workspace Lovable.");
+          break; // autre erreur IA : on garde la meilleure version
+        }
+        applyCandidate(candidate as Record<string, unknown>);
       }
     }
 
     const improved = bestSeo.score + bestGeo.score > seoBefore + geoBefore;
     if (improved) {
       const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-      for (const f of OPTIMIZE_FIELDS) patch[f] = best[f];
-      if (best.image_alt_text) patch.image_alt_text = best.image_alt_text;
+      for (const f of allowedFields) patch[f] = best[f] ?? null;
       const { error: upError } = await (supabaseAdmin as any)
         .from("articles")
         .update(patch)

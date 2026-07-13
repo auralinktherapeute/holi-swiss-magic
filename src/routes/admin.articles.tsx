@@ -547,20 +547,29 @@ function Page() {
   });
 
   // Optimiseur SEO/GEO à la demande (même logique que l'agent quotidien,
-  // garantie anti-régression : le score ne peut jamais baisser)
+  // garantie anti-régression : le score ne peut jamais baisser).
+  // Sans criterion : optimisation globale. Avec criterion : correction du
+  // seul point choisi — les autres champs (dont un Markdown personnalisé)
+  // ne sont jamais réécrits.
   const optimizeMutation = useMutation({
-    mutationFn: (id: string) => optimizeArticleSeoGeo({ data: { id } }),
-    onSuccess: (r: any) => {
+    mutationFn: (p: { id: string; criterion?: string }) =>
+      optimizeArticleSeoGeo({ data: p as any }),
+    onSuccess: (r: any, p) => {
       if (r.updated) {
-        toast.success(`Optimisé : SEO ${r.seoBefore} → ${r.seoAfter} · GEO ${r.geoBefore} → ${r.geoAfter}`);
+        toast.success(
+          p.criterion
+            ? `Point corrigé : SEO ${r.seoBefore} → ${r.seoAfter} · GEO ${r.geoBefore} → ${r.geoAfter}`
+            : `Optimisé : SEO ${r.seoBefore} → ${r.seoAfter} · GEO ${r.geoBefore} → ${r.geoAfter}`,
+        );
       } else {
-        toast.info(`Déjà au meilleur niveau atteignable (SEO ${r.seoAfter} · GEO ${r.geoAfter}) — rien n'a été modifié.`);
+        toast.info(`Aucune amélioration possible sur ce point (SEO ${r.seoAfter} · GEO ${r.geoAfter}) — rien n'a été modifié.`);
       }
       qc.invalidateQueries({ queryKey: ["admin-articles"] });
       setImproving(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const FIXABLE_CRITERIA = new Set(["title", "kw_title", "meta", "image", "internal", "words", "structure", "readability", "geo"]);
 
   // Import agent report (JSON ou HTML avec <script id="agent-articles" type="application/json">)
   const [importOpen, setImportOpen] = useState(false);
@@ -942,14 +951,36 @@ function Page() {
                   {improving._seo.checklist.filter(c => !c.ok).length === 0 ? (
                     <p className="text-sm text-emerald-300">🎉 Tous les critères SEO sont validés.</p>
                   ) : (
-                    <ul className="space-y-2">
-                      {improving._seo.checklist.filter(c => !c.ok).map(c => (
-                        <li key={c.key} className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
-                          <div className="text-sm font-medium text-foreground">❌ {c.label}</div>
-                          {c.hint && <div className="text-xs text-muted-foreground mt-0.5">{c.hint}</div>}
-                        </li>
-                      ))}
+                    <><ul className="space-y-2">
+                      {improving._seo.checklist.filter(c => !c.ok).map(c => {
+                        const fixable = FIXABLE_CRITERIA.has(c.key) && !(c.key === "image" && !(improving as any).cover_image_url);
+                        return (
+                          <li key={c.key} className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-foreground">❌ {c.label}</div>
+                                {c.hint && <div className="text-xs text-muted-foreground mt-0.5">{c.hint}</div>}
+                              </div>
+                              {fixable && (
+                                <Button size="sm" variant="outline"
+                                  className="shrink-0 border-[#5cc8fa]/50 text-[#5cc8fa] hover:bg-[#5cc8fa]/10"
+                                  disabled={optimizeMutation.isPending}
+                                  onClick={() => optimizeMutation.mutate({ id: improving.id, criterion: c.key })}
+                                >
+                                  {optimizeMutation.isPending && optimizeMutation.variables?.criterion === c.key
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : <>Corriger</>}
+                                </Button>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ul>
+                    <p className="text-[11px] text-muted-foreground">
+                      « Corriger » ne modifie QUE le point concerné — votre contenu Markdown
+                      personnalisé n'est jamais réécrit par les corrections de titre, meta ou alt text.
+                    </p></>
                   )}
                 </div>
 
@@ -965,7 +996,7 @@ function Page() {
                 <Button
                   className="w-full bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white hover:opacity-90"
                   disabled={optimizeMutation.isPending}
-                  onClick={() => optimizeMutation.mutate(improving.id)}
+                  onClick={() => optimizeMutation.mutate({ id: improving.id })}
                 >
                   {optimizeMutation.isPending
                     ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
