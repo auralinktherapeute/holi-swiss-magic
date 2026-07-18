@@ -103,7 +103,7 @@ function CreerProfilPage() {
       });
       if (signErr) {
         toast.success("Compte créé. Connectez-vous pour continuer.");
-        navigate({ to: "/fr/connexion" });
+        navigate({ to: "/$lang/connexion", params: { lang: "fr" } });
         return;
       }
       toast.success("Bienvenue sur HoliSwiss ! 🎉");

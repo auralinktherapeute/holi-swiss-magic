@@ -14,6 +14,7 @@ import { getOnboardingState } from "@/lib/onboarding.functions";
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { requireCurrentRole } from "@/lib/auth-utils";
+import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/dashboard")({
@@ -23,9 +24,26 @@ export const Route = createFileRoute("/dashboard")({
     // intempestive lors de la navigation. Les server functions appelées
     // ensuite valident le token côté serveur (requireSupabaseAuth).
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session || !(await requireCurrentRole("therapist"))) {
-      throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
+    if (sessionData.session) {
+      let hasTherapistRole = false;
+      try {
+        hasTherapistRole = Boolean(await requireCurrentRole("therapist"));
+      } catch {
+        hasTherapistRole = false;
+      }
+      if (hasTherapistRole) return;
+      // Self-heal : comptes créés sans ligne user_roles (inscription directe
+      // ou Google hors invitation) — le serveur attribue le rôle manquant.
+      let healedRole: string | null = null;
+      try {
+        healedRole = (await ensureTherapistRole()).role;
+      } catch {
+        healedRole = null;
+      }
+      if (healedRole === "therapist") return;
+      if (healedRole === "admin") throw redirect({ to: "/admin" });
     }
+    throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
   },
   component: DashboardLayout,
 });

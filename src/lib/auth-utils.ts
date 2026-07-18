@@ -1,6 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  forgetAllAuthSpaceSessions,
+  forgetAuthSpaceSession,
+  supabase,
+} from "@/integrations/supabase/client";
 import {
   clearHoliswissAuthSpace,
   clearLegacySupabaseSessions,
@@ -45,6 +49,10 @@ export async function persistSessionInRoleSpace(session: { access_token: string;
     refresh_token: session.refresh_token,
   });
   if (error) throw error;
+  // Le client « login » doit oublier la session en mémoire, sinon son
+  // auto-refresh entre en concurrence avec celui de l'espace cible et fait
+  // révoquer le refresh token (déconnexions aléatoires).
+  await forgetAuthSpaceSession("login");
   clearStoredSupabaseSession("login");
   return space;
 }
@@ -72,8 +80,12 @@ export async function signOutCompletely(queryClient?: QueryClient) {
   }
   try {
     setHoliswissAuthSpace(currentSpace);
-    await supabase.auth.signOut();
+    // scope "local" : ne déconnecte que ce navigateur. La valeur par défaut
+    // ("global") révoquait toutes les sessions du compte, y compris sur les
+    // autres appareils du thérapeute.
+    await supabase.auth.signOut({ scope: "local" });
   } finally {
+    await forgetAllAuthSpaceSessions(currentSpace);
     clearStoredSupabaseSessions();
     clearLegacySupabaseSessions();
     clearHoliswissSessionState();

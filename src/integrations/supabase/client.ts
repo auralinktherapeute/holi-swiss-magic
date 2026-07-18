@@ -49,3 +49,25 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
   },
 });
 
+// Oublie localement la session d'un espace (mémoire + storage) sans révoquer
+// les tokens côté serveur. Indispensable après migration d'une session vers un
+// autre espace : sinon deux clients gardent le même refresh token et leurs
+// auto-refresh concurrents déclenchent la détection de réutilisation Supabase
+// (rotation), ce qui révoque la session et déconnecte l'utilisateur.
+export async function forgetAuthSpaceSession(space: HoliswissAuthSpace) {
+  const client = clients.get(space);
+  if (!client) return;
+  try {
+    await client.auth.signOut({ scope: "local" });
+  } catch {
+    // Le nettoyage du storage par l'appelant reste la garantie de dernier recours.
+  }
+}
+
+export async function forgetAllAuthSpaceSessions(except?: HoliswissAuthSpace) {
+  for (const space of clients.keys()) {
+    if (space === except) continue;
+    await forgetAuthSpaceSession(space);
+  }
+}
+

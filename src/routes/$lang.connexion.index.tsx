@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useSessionState } from "@/hooks/use-session-state";
+import { useServerFn } from "@tanstack/react-start";
+import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import {
   clearHoliswissSessionState,
   getCurrentUserRole,
@@ -16,6 +18,7 @@ import {
   prepareLoginAuthSpace,
   roleToSpace,
   switchAuthSpace,
+  type AppRole,
 } from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/$lang/connexion/")({
@@ -27,31 +30,47 @@ function LoginPage() {
   const { lang } = useParams({ from: "/$lang/connexion/" });
   const navigate = useNavigate();
   const [email, setEmail] = useSessionState("auth.login.email", "");
-  const [password, setPassword] = useSessionState("auth.login.password", "");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const ensureRole = useServerFn(ensureTherapistRole);
 
   const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
-    const role = await getCurrentUserRole();
+    let role: AppRole | null = await getCurrentUserRole();
+    if (role !== "admin" && role !== "therapist") {
+      // Compte sans ligne user_roles (inscription directe ou Google hors
+      // invitation) : le serveur attribue le rôle thérapeute manquant.
+      try {
+        role = (await ensureRole()).role;
+      } catch {
+        role = "therapist";
+      }
+    }
     const roleSession = session ?? (await supabase.auth.getSession()).data.session;
-    if (role === "admin") {
-      if (roleSession) await persistSessionInRoleSpace(roleSession, role);
-      else switchAuthSpace(roleToSpace(role));
-      navigate({ to: "/admin", replace: true });
-      return;
-    }
-    if (role === "therapist") {
-      if (roleSession) await persistSessionInRoleSpace(roleSession, role);
-      else switchAuthSpace(roleToSpace(role));
-      navigate({ to: "/dashboard", replace: true });
-      return;
-    }
-    navigate({ to: "/dashboard", replace: true });
+    if (roleSession) await persistSessionInRoleSpace(roleSession, role);
+    else switchAuthSpace(roleToSpace(role));
+    navigate({ to: role === "admin" ? "/admin" : "/dashboard", replace: true });
   };
 
   useEffect(() => {
-    prepareLoginAuthSpace();
+    let cancelled = false;
+    (async () => {
+      // Une session peut déjà exister ici : retour d'OAuth plein écran (la
+      // session atterrit dans l'espace « login ») ou utilisateur déjà
+      // connecté. La rediriger au lieu de l'effacer avec prepareLoginAuthSpace.
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (data.session) {
+        await redirectAfterLogin(data.session);
+        return;
+      }
+      prepareLoginAuthSpace();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {

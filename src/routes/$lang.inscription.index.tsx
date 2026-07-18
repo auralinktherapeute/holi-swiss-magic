@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useSessionState } from "@/hooks/use-session-state";
+import { ensureTherapistRole } from "@/lib/auth-role.functions";
+import {
+  persistSessionInRoleSpace,
+  prepareLoginAuthSpace,
+  type AppRole,
+} from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/$lang/inscription/")({
   component: SignupPage,
@@ -19,12 +26,31 @@ function SignupPage() {
   const { lang } = useParams({ from: "/$lang/inscription/" });
   const navigate = useNavigate();
   const [email, setEmail] = useSessionState("auth.signup.email", "");
-  const [password, setPassword] = useSessionState("auth.signup.password", "");
-  const [confirmPassword, setConfirmPassword] = useSessionState("auth.signup.confirmPassword", "");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const ensureRole = useServerFn(ensureTherapistRole);
+
+  useEffect(() => {
+    prepareLoginAuthSpace();
+  }, []);
+
+  // Attribue le rôle thérapeute côté serveur puis migre la session vers son
+  // espace définitif — sans cela, le garde du dashboard renvoie vers /connexion.
+  const finishSignup = async (session?: { access_token: string; refresh_token: string } | null) => {
+    let role: AppRole = "therapist";
+    try {
+      role = (await ensureRole()).role;
+    } catch {
+      role = "therapist";
+    }
+    const roleSession = session ?? (await supabase.auth.getSession()).data.session;
+    if (roleSession) await persistSessionInRoleSpace(roleSession, role);
+    navigate({ to: role === "admin" ? "/admin" : "/dashboard", replace: true });
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,15 +59,24 @@ function SignupPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin + "/dashboard" },
     });
-    setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
     toast.success(t("auth.account_created"));
-    navigate({ to: "/dashboard" });
+    if (data.session) {
+      await finishSignup(data.session);
+    } else {
+      // Confirmation email requise : pas de session tant que le lien n'est
+      // pas cliqué — rester ici plutôt que d'être rejeté du dashboard.
+      navigate({ to: "/$lang/connexion", params: { lang }, replace: true });
+    }
+    setLoading(false);
   };
 
   const onGoogle = async () => {
@@ -55,7 +90,7 @@ function SignupPage() {
         toast.error(result.error.message);
         return;
       }
-      navigate({ to: "/dashboard" });
+      await finishSignup();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.google_signup_error"));
     } finally {
