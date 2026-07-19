@@ -32,6 +32,31 @@ export const Route = createFileRoute("/$lang/contact/")({
         { property: "og:type", content: "website" },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/contact")],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            "@id": `${url}#contact`,
+            url,
+            name: title,
+            description,
+            inLanguage: lang,
+            isPartOf: { "@id": "https://holiswiss.ch/#website" },
+            about: { "@id": "https://holiswiss.ch/#organization" },
+            mainEntity: {
+              "@type": "Organization",
+              "@id": "https://holiswiss.ch/#organization",
+              name: "Holiswiss",
+              email: "contact@holiswiss.ch",
+              url: "https://holiswiss.ch",
+              areaServed: "CH",
+              availableLanguage: ["French", "German", "Italian", "English"],
+            },
+          }),
+        },
+      ],
     };
   },
 });
