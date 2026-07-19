@@ -9,6 +9,8 @@ import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
+import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { DIRECTORY_INTRO, DIRECTORY_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -424,7 +426,34 @@ function Page() {
           </Suspense>
         </div>
       </div>
+
+      {/* ── Bloc contenu SEO/GEO + FAQ (rendu serveur, sous la liste/carte) ── */}
+      <DirectorySeoContent lang={lang} />
     </div>
+  );
+}
+
+function DirectorySeoContent({ lang }: { lang: string }) {
+  const l = asFaqLang(lang);
+  const intro = DIRECTORY_INTRO[l];
+  const faqItems = DIRECTORY_FAQ[l];
+  const faqTitles = FAQ_TITLES[l];
+  return (
+    <section className="border-t border-[rgba(184,110,249,0.15)] bg-[#0f0a1e]">
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:py-20">
+        <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{intro.h2}</h2>
+        <p className="mt-4 text-sm leading-relaxed text-[#d4c4e0] sm:text-base">{intro.lead}</p>
+        <div className="mt-8 space-y-6">
+          {intro.blocks.map((b) => (
+            <div key={b.h3}>
+              <h3 className="text-lg font-semibold text-white">{b.h3}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[#d4c4e0] sm:text-[15px]">{b.p}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <FaqSection items={faqItems} title={faqTitles.title} subtitle={faqTitles.subtitle} />
+    </section>
   );
 }
 

@@ -242,3 +242,177 @@ export const FAQ_TITLES: Record<FaqLang, { title: string; subtitle: string }> = 
     subtitle: "Everything you need to know about Holiswiss and complementary therapies in Switzerland",
   },
 };
+
+/** SEO/GEO content block rendered (SSR) at the bottom of the /therapeutes directory. */
+export type DirectoryIntro = {
+  h2: string;
+  lead: string;
+  blocks: { h3: string; p: string }[];
+};
+
+export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
+  fr: {
+    h2: "Trouver un thérapeute holistique en Suisse",
+    lead: "Holiswiss réunit des thérapeutes et praticiens en médecines douces dans les 26 cantons suisses. Recherchez par spécialité — naturopathie, sophrologie, hypnose, acupuncture, ostéopathie, réflexologie, reiki, méditation — par ville ou par canton, en français, allemand, italien ou anglais, et réservez votre séance en ligne.",
+    blocks: [
+      {
+        h3: "Comment choisir votre praticien",
+        p: "Comparez les profils vérifiés : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis authentiques d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
+      },
+      {
+        h3: "Remboursement et certifications",
+        p: "Les thérapies complémentaires ne relèvent généralement pas de l'assurance de base (LAMal), mais de nombreuses assurances complémentaires remboursent tout ou partie des séances lorsque le praticien est certifié ASCA, RME ou EMR. Vérifiez les conditions auprès de votre caisse maladie.",
+      },
+    ],
+  },
+  de: {
+    h2: "Ganzheitliche Therapeuten in der Schweiz finden",
+    lead: "Holiswiss vereint Therapeuten und Fachpersonen der Komplementärmedizin in allen 26 Kantonen. Suchen Sie nach Fachgebiet — Naturheilkunde, Sophrologie, Hypnose, Akupunktur, Osteopathie, Reflexzonentherapie, Reiki, Meditation — nach Stadt oder Kanton, auf Deutsch, Französisch, Italienisch oder Englisch, und buchen Sie Ihre Sitzung online.",
+    blocks: [
+      {
+        h3: "So wählen Sie Ihre Fachperson",
+        p: "Vergleichen Sie geprüfte Profile: Fachgebiete, Ansatz, gesprochene Sprachen, Preise und Formate (in der Praxis oder online). Echte Bewertungen anderer Patientinnen und Patienten sowie die interaktive Karte helfen Ihnen, eine Fachperson in Ihrer Nähe zu finden – in Zürich, Bern, Basel, Genf, Lausanne, Luzern, St. Gallen oder Lugano.",
+      },
+      {
+        h3: "Rückerstattung und Zertifizierungen",
+        p: "Komplementärtherapien werden in der Regel nicht von der Grundversicherung (KVG) übernommen, viele Zusatzversicherungen erstatten die Sitzungen jedoch ganz oder teilweise, wenn die Fachperson ASCA-, EMR- oder RME-zertifiziert ist. Prüfen Sie die Bedingungen bei Ihrer Krankenkasse.",
+      },
+    ],
+  },
+  it: {
+    h2: "Trovare un terapeuta olistico in Svizzera",
+    lead: "Holiswiss riunisce terapeuti e professionisti delle medicine dolci in tutti i 26 cantoni svizzeri. Cerca per specialità — naturopatia, sofrologia, ipnosi, agopuntura, osteopatia, riflessologia, reiki, meditazione — per città o cantone, in italiano, francese, tedesco o inglese, e prenota la tua seduta online.",
+    blocks: [
+      {
+        h3: "Come scegliere il professionista",
+        p: "Confronta i profili verificati: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni autentiche di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
+      },
+      {
+        h3: "Rimborso e certificazioni",
+        p: "Le terapie complementari generalmente non rientrano nell'assicurazione di base (LAMal), ma molte assicurazioni complementari rimborsano in tutto o in parte le sedute se il professionista è certificato ASCA, RME o EMR. Verifica le condizioni con la tua cassa malati.",
+      },
+    ],
+  },
+  en: {
+    h2: "Find a holistic therapist in Switzerland",
+    lead: "Holiswiss brings together therapists and complementary-medicine practitioners across all 26 Swiss cantons. Search by specialty — naturopathy, sophrology, hypnosis, acupuncture, osteopathy, reflexology, reiki, meditation — by city or canton, in English, French, German or Italian, and book your session online.",
+    blocks: [
+      {
+        h3: "How to choose your practitioner",
+        p: "Compare verified profiles: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
+      },
+      {
+        h3: "Reimbursement and certifications",
+        p: "Complementary therapies are generally not covered by basic insurance (LAMal), but many supplementary insurers reimburse sessions fully or partially when the practitioner is ASCA-, RME- or EMR-certified. Check the conditions with your health insurer.",
+      },
+    ],
+  },
+};
+
+/** Directory-specific FAQ — distinct from GLOBAL_FAQ to avoid duplicate FAQPage. */
+export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
+  fr: [
+    {
+      q: "Comment trouver un thérapeute près de chez moi en Suisse ?",
+      a: "Utilisez la recherche par ville ou canton et la carte interactive sur cette page. Holiswiss couvre les 26 cantons — Genève, Vaud, Zurich, Berne, Tessin et plus — et affiche les praticiens proches de vous, y compris dans les petites villes et villages.",
+    },
+    {
+      q: "Puis-je consulter un thérapeute en ligne ou uniquement en cabinet ?",
+      a: "Les deux. Chaque profil indique les modalités proposées : séances en cabinet, à distance (visioconférence) ou les deux. Filtrez selon votre préférence.",
+    },
+    {
+      q: "Les thérapeutes de Holiswiss sont-ils vérifiés ?",
+      a: "Oui. Les profils sont vérifiés et présentent la spécialité, l'approche, les langues, les tarifs et, le cas échéant, les certifications (ASCA, RME, EMR) ainsi que des avis authentiques de patients.",
+    },
+    {
+      q: "Dans quelles langues puis-je chercher un thérapeute ?",
+      a: "Holiswiss est disponible en français, allemand, italien et anglais, et vous pouvez filtrer les praticiens par langue parlée pour toute la Suisse (romande, alémanique, Tessin).",
+    },
+    {
+      q: "Combien coûte une séance et est-elle remboursée ?",
+      a: "Les tarifs figurent sur chaque profil. Les séances ne sont généralement pas couvertes par la LAMal, mais de nombreuses assurances complémentaires remboursent tout ou partie si le praticien est certifié ASCA, RME ou EMR.",
+    },
+    {
+      q: "Quelles spécialités puis-je trouver sur Holiswiss ?",
+      a: "Naturopathie, sophrologie, hypnose, acupuncture, ostéopathie, réflexologie, massage bien-être, reiki, magnétisme, méditation, kinésiologie, ayurveda, aromathérapie, shiatsu et d'autres approches de médecine douce.",
+    },
+  ],
+  de: [
+    {
+      q: "Wie finde ich einen Therapeuten in meiner Nähe in der Schweiz?",
+      a: "Nutzen Sie die Suche nach Stadt oder Kanton und die interaktive Karte auf dieser Seite. Holiswiss deckt alle 26 Kantone ab – Zürich, Bern, Basel, Genf, Waadt, Tessin und mehr – und zeigt Fachpersonen in Ihrer Nähe, auch in kleineren Orten.",
+    },
+    {
+      q: "Kann ich online oder nur vor Ort konsultieren?",
+      a: "Beides. Jedes Profil gibt die angebotenen Formate an: Sitzungen in der Praxis, online (Videokonferenz) oder beides. Filtern Sie nach Ihrer Präferenz.",
+    },
+    {
+      q: "Sind die Therapeuten von Holiswiss geprüft?",
+      a: "Ja. Die Profile sind geprüft und zeigen Fachgebiet, Ansatz, Sprachen, Preise und gegebenenfalls Zertifizierungen (ASCA, EMR, RME) sowie echte Patientenbewertungen.",
+    },
+    {
+      q: "In welchen Sprachen kann ich suchen?",
+      a: "Holiswiss ist auf Deutsch, Französisch, Italienisch und Englisch verfügbar, und Sie können Fachpersonen nach gesprochener Sprache filtern – für die ganze Schweiz.",
+    },
+    {
+      q: "Was kostet eine Sitzung und wird sie erstattet?",
+      a: "Die Preise stehen in jedem Profil. Sitzungen werden in der Regel nicht von der Grundversicherung übernommen, viele Zusatzversicherungen erstatten sie jedoch ganz oder teilweise, wenn die Fachperson ASCA-, EMR- oder RME-zertifiziert ist.",
+    },
+    {
+      q: "Welche Fachgebiete finde ich auf Holiswiss?",
+      a: "Naturheilkunde, Sophrologie, Hypnose, Akupunktur, Osteopathie, Reflexzonentherapie, Wellness-Massage, Reiki, Magnetismus, Meditation, Kinesiologie, Ayurveda, Aromatherapie, Shiatsu und weitere Ansätze der Komplementärmedizin.",
+    },
+  ],
+  it: [
+    {
+      q: "Come trovo un terapeuta vicino a me in Svizzera?",
+      a: "Usa la ricerca per città o cantone e la mappa interattiva in questa pagina. Holiswiss copre tutti i 26 cantoni — Ticino, Ginevra, Vaud, Zurigo, Berna e altri — e mostra i professionisti vicini a te, anche nei piccoli centri.",
+    },
+    {
+      q: "Posso consultare un terapeuta online o solo in studio?",
+      a: "Entrambi. Ogni profilo indica le modalità offerte: sedute in studio, a distanza (videochiamata) o entrambe. Filtra secondo la tua preferenza.",
+    },
+    {
+      q: "I terapeuti di Holiswiss sono verificati?",
+      a: "Sì. I profili sono verificati e mostrano specialità, approccio, lingue, tariffe ed eventuali certificazioni (ASCA, RME, EMR), oltre a recensioni autentiche dei pazienti.",
+    },
+    {
+      q: "In quali lingue posso cercare?",
+      a: "Holiswiss è disponibile in italiano, francese, tedesco e inglese, e puoi filtrare i professionisti per lingua parlata, per tutta la Svizzera.",
+    },
+    {
+      q: "Quanto costa una seduta ed è rimborsata?",
+      a: "Le tariffe sono indicate in ogni profilo. Le sedute generalmente non sono coperte dall'assicurazione di base, ma molte assicurazioni complementari le rimborsano in tutto o in parte se il professionista è certificato ASCA, RME o EMR.",
+    },
+    {
+      q: "Quali specialità trovo su Holiswiss?",
+      a: "Naturopatia, sofrologia, ipnosi, agopuntura, osteopatia, riflessologia, massaggio benessere, reiki, magnetismo, meditazione, kinesiologia, ayurveda, aromaterapia, shiatsu e altri approcci di medicina dolce.",
+    },
+  ],
+  en: [
+    {
+      q: "How do I find a therapist near me in Switzerland?",
+      a: "Use the city or canton search and the interactive map on this page. Holiswiss covers all 26 cantons — Geneva, Vaud, Zurich, Bern, Ticino and more — and shows practitioners near you, including in smaller towns.",
+    },
+    {
+      q: "Can I consult a therapist online or only in person?",
+      a: "Both. Each profile states the formats offered: in-person sessions, remote (video call) or both. Filter by your preference.",
+    },
+    {
+      q: "Are Holiswiss therapists verified?",
+      a: "Yes. Profiles are verified and show specialty, approach, languages, prices and, where applicable, certifications (ASCA, RME, EMR) as well as authentic patient reviews.",
+    },
+    {
+      q: "In which languages can I search?",
+      a: "Holiswiss is available in English, French, German and Italian, and you can filter practitioners by language spoken, across all of Switzerland.",
+    },
+    {
+      q: "How much does a session cost and is it reimbursed?",
+      a: "Prices are shown on each profile. Sessions are generally not covered by basic insurance, but many supplementary insurers reimburse them fully or partially when the practitioner is ASCA-, RME- or EMR-certified.",
+    },
+    {
+      q: "What specialties can I find on Holiswiss?",
+      a: "Naturopathy, sophrology, hypnosis, acupuncture, osteopathy, reflexology, wellness massage, reiki, magnetism, meditation, kinesiology, ayurveda, aromatherapy, shiatsu and other complementary-medicine approaches.",
+    },
+  ],
+};
