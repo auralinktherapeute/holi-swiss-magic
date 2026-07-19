@@ -43,6 +43,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/$lang/faq" params={{ lang }} className="hover:text-[#b86ef9] transition-colors">
+                  FAQ
+                </Link>
+              </li>
+              <li>
                 <Link to="/$lang/contact" params={{ lang }} className="hover:text-[#b86ef9] transition-colors">
                   {t("nav.contact")}
                 </Link>

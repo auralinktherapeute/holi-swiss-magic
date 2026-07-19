@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport } from './routes/41c3cce6c762af43d78a7895dfc0afe3[.]txt'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
@@ -56,6 +57,7 @@ import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.ind
 import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
+import { Route as LangFaqIndexRouteImport } from './routes/$lang.faq.index'
 import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
 import { Route as LangContactIndexRouteImport } from './routes/$lang.contact.index'
 import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion.index'
@@ -90,6 +92,12 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute =
+  R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport.update({
+    id: '/41c3cce6c762af43d78a7895dfc0afe3.txt',
+    path: '/41c3cce6c762af43d78a7895dfc0afe3.txt',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LangRoute = LangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -312,6 +320,11 @@ const LangImpressumIndexRoute = LangImpressumIndexRouteImport.update({
   path: '/impressum/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangFaqIndexRoute = LangFaqIndexRouteImport.update({
+  id: '/faq/',
+  path: '/faq/',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangEvenementsIndexRoute = LangEvenementsIndexRouteImport.update({
   id: '/evenements/',
   path: '/evenements/',
@@ -413,6 +426,7 @@ const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -464,6 +478,7 @@ export interface FileRoutesByFullPath {
   '/$lang/connexion/': typeof LangConnexionIndexRoute
   '/$lang/contact/': typeof LangContactIndexRoute
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
+  '/$lang/faq/': typeof LangFaqIndexRoute
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
@@ -479,6 +494,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
@@ -528,6 +544,7 @@ export interface FileRoutesByTo {
   '/$lang/connexion': typeof LangConnexionIndexRoute
   '/$lang/contact': typeof LangContactIndexRoute
   '/$lang/evenements': typeof LangEvenementsIndexRoute
+  '/$lang/faq': typeof LangFaqIndexRoute
   '/$lang/impressum': typeof LangImpressumIndexRoute
   '/$lang/inscription': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie': typeof LangMotDePasseOublieIndexRoute
@@ -545,6 +562,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -596,6 +614,7 @@ export interface FileRoutesById {
   '/$lang/connexion/': typeof LangConnexionIndexRoute
   '/$lang/contact/': typeof LangContactIndexRoute
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
+  '/$lang/faq/': typeof LangFaqIndexRoute
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
@@ -614,6 +633,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$lang'
+    | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
     | '/admin'
     | '/dashboard'
     | '/sitemap.xml'
@@ -665,6 +685,7 @@ export interface FileRouteTypes {
     | '/$lang/connexion/'
     | '/$lang/contact/'
     | '/$lang/evenements/'
+    | '/$lang/faq/'
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
@@ -680,6 +701,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
@@ -729,6 +751,7 @@ export interface FileRouteTypes {
     | '/$lang/connexion'
     | '/$lang/contact'
     | '/$lang/evenements'
+    | '/$lang/faq'
     | '/$lang/impressum'
     | '/$lang/inscription'
     | '/$lang/mot-de-passe-oublie'
@@ -745,6 +768,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$lang'
+    | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
     | '/admin'
     | '/dashboard'
     | '/sitemap.xml'
@@ -796,6 +820,7 @@ export interface FileRouteTypes {
     | '/$lang/connexion/'
     | '/$lang/contact/'
     | '/$lang/evenements/'
+    | '/$lang/faq/'
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
@@ -813,6 +838,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangRoute: typeof LangRouteWithChildren
+  R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute: typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -845,6 +871,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/41c3cce6c762af43d78a7895dfc0afe3.txt': {
+      id: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+      path: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+      fullPath: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+      preLoaderRoute: typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lang': {
@@ -1155,6 +1188,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangImpressumIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/faq/': {
+      id: '/$lang/faq/'
+      path: '/faq'
+      fullPath: '/$lang/faq/'
+      preLoaderRoute: typeof LangFaqIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/evenements/': {
       id: '/$lang/evenements/'
       path: '/evenements'
@@ -1313,6 +1353,7 @@ interface LangRouteChildren {
   LangConnexionIndexRoute: typeof LangConnexionIndexRoute
   LangContactIndexRoute: typeof LangContactIndexRoute
   LangEvenementsIndexRoute: typeof LangEvenementsIndexRoute
+  LangFaqIndexRoute: typeof LangFaqIndexRoute
   LangImpressumIndexRoute: typeof LangImpressumIndexRoute
   LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
   LangMotDePasseOublieIndexRoute: typeof LangMotDePasseOublieIndexRoute
@@ -1339,6 +1380,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangConnexionIndexRoute: LangConnexionIndexRoute,
   LangContactIndexRoute: LangContactIndexRoute,
   LangEvenementsIndexRoute: LangEvenementsIndexRoute,
+  LangFaqIndexRoute: LangFaqIndexRoute,
   LangImpressumIndexRoute: LangImpressumIndexRoute,
   LangInscriptionIndexRoute: LangInscriptionIndexRoute,
   LangMotDePasseOublieIndexRoute: LangMotDePasseOublieIndexRoute,
@@ -1435,6 +1477,8 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangRoute: LangRouteWithChildren,
+  R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute:
+    R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute,
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -1448,3 +1492,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

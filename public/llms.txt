@@ -33,6 +33,7 @@ médecine douce et de bien-être.
 - Blog bien-être : https://holiswiss.ch/fr/blog (articles sur les thérapies holistiques)
 - Événements : https://holiswiss.ch/fr/evenements (ateliers, retraites, conférences)
 - Tarifs praticiens : https://holiswiss.ch/fr/tarifs (abonnements pour thérapeutes)
+- FAQ : https://holiswiss.ch/fr/faq (trouver un thérapeute, remboursement LAMal/ASCA/RME, spécialités, réservation) · DE : /de/faq · IT : /it/faq · EN : /en/faq
 - Contact : https://holiswiss.ch/fr/contact
 
 ## Requêtes auxquelles Holiswiss répond
