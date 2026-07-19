@@ -1,26 +1,62 @@
+# Holiswiss — https://holiswiss.ch
+# Annuaire suisse de thérapeutes holistiques (FR / DE / IT / EN)
+#
+# Un seul groupe « * » régit TOUS les robots, y compris les assistants IA
+# (GPTBot, ClaudeBot, PerplexityBot, Google-Extended…). Les pages publiques
+# sont ouvertes ; seules les zones privées/authentifiées sont exclues.
+# (Avant : les Disallow étaient placés après une ligne vide dans un groupe sans
+# user-agent valide, donc ignorés — les zones privées restaient crawlables.)
+
 User-agent: *
 Allow: /
-Sitemap: https://holiswiss.ch/sitemap.xml
-
-User-agent: GPTBot
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Googlebot
-Allow: /
-
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
 Disallow: /fr/connexion
 Disallow: /fr/inscription
+Disallow: /fr/mot-de-passe-oublie
+Disallow: /fr/reinitialiser-mot-de-passe
 Disallow: /de/anmeldung
 Disallow: /de/registrierung
 Disallow: /it/accesso
 Disallow: /it/registrazione
 Disallow: /en/login
 Disallow: /en/signup
+
+# Assistants IA explicitement bienvenus (recherche générative + entraînement).
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+Sitemap: https://holiswiss.ch/sitemap.xml

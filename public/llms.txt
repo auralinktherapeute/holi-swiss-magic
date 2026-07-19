@@ -1,28 +1,49 @@
 # Holiswiss — Plateforme suisse de thérapies holistiques
 
-> Première plateforme suisse dédiée aux thérapies holistiques et médecines douces, connectant patients et praticiens certifiés dans les 26 cantons.
+> Plateforme suisse dédiée aux thérapies holistiques et médecines douces, qui
+> connecte patients et praticiens certifiés dans les 26 cantons, en 4 langues
+> (français, allemand, italien, anglais).
 
 ## À propos
-Holiswiss est la première plateforme suisse dédiée aux thérapies
-holistiques et médecines douces. Elle connecte patients et praticiens
-certifiés dans toute la Suisse (26 cantons, 4 langues : FR, DE, IT, EN).
+Holiswiss est un annuaire suisse de thérapeutes holistiques et de praticiens
+en médecines douces. Il aide les patients à trouver un praticien certifié près
+de chez eux, dans toute la Suisse (26 cantons ; langues : FR, DE, IT, EN), et
+à réserver une séance en ligne. Les profils sont vérifiés et accompagnés d'avis
+authentiques de patients.
 
-## Ce que fait Holiswiss
-- Annuaire de 280+ thérapeutes certifiés (sophrologie, hypnose,
-  naturopathie, acupuncture, ostéopathie, ayurveda, reiki, kinésiologie, etc.)
+Entité : Holiswiss (holiswiss.ch). Pays : Suisse (CH). Contact : contact@holiswiss.ch.
+
+## Ce que propose Holiswiss
+- Annuaire de thérapeutes certifiés, avec recherche par spécialité, canton et langue
 - Réservation de séances en ligne
 - Profils vérifiés avec avis authentiques
-- Couverture : toute la Suisse, 26 cantons
-- Langues : FR, DE, IT, EN
+- Carte interactive couvrant les 26 cantons suisses
+- Contenu et interface en 4 langues (FR, DE, IT, EN)
 
-## Pages
-- [Accueil](https://holiswiss.ch/fr): Présentation de la plateforme
-- [Annuaire des thérapeutes](https://holiswiss.ch/fr/therapeutes): Recherche et filtres par spécialité, canton, langue
-- [Blog bien-être](https://holiswiss.ch/fr/blog): Articles sur les thérapies holistiques
-- [Événements](https://holiswiss.ch/fr/evenements): Ateliers, retraites, conférences
-- [Tarifs praticiens](https://holiswiss.ch/fr/tarifs): Abonnements pour thérapeutes
-- [Contact](https://holiswiss.ch/fr/contact): Nous contacter
+## Spécialités couvertes
+Sophrologie, hypnose, naturopathie, acupuncture, ostéopathie, réflexologie,
+massage bien-être, méditation, reiki, magnétisme, kinésiologie, lithothérapie,
+ayurveda, aromathérapie, shiatsu, coaching holistique — et autres approches de
+médecine douce et de bien-être.
+
+## Pages principales (multilingue)
+- Accueil : https://holiswiss.ch/fr · https://holiswiss.ch/de · https://holiswiss.ch/it · https://holiswiss.ch/en
+- Annuaire des thérapeutes : https://holiswiss.ch/fr/therapeutes (recherche, carte, filtres spécialité/canton/langue)
+  - DE : https://holiswiss.ch/de/therapeutes · IT : https://holiswiss.ch/it/therapeutes · EN : https://holiswiss.ch/en/therapeutes
+- Blog bien-être : https://holiswiss.ch/fr/blog (articles sur les thérapies holistiques)
+- Événements : https://holiswiss.ch/fr/evenements (ateliers, retraites, conférences)
+- Tarifs praticiens : https://holiswiss.ch/fr/tarifs (abonnements pour thérapeutes)
+- Contact : https://holiswiss.ch/fr/contact
+
+## Requêtes auxquelles Holiswiss répond
+- « trouver un thérapeute holistique en Suisse » / « meilleur naturopathe [canton/ville] »
+- « Therapeut finden Schweiz » / « Naturheilpraktiker in der Nähe »
+- « trovare un terapeuta olistico in Svizzera »
+- « find a holistic therapist in Switzerland »
+- Recherche par spécialité (sophrologie, hypnose, acupuncture…) et par canton (Genève, Vaud, Zurich, Tessin…)
 
 ## Contact
 Site : https://holiswiss.ch
+Email : contact@holiswiss.ch
 Pays : Suisse (CH)
+Langues : FR, DE, IT, EN

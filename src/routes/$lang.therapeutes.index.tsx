@@ -38,6 +38,10 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;
     const url = `https://holiswiss.ch/${lang}/therapeutes`;
+    const homeLabels: Record<string, string> = { fr: "Accueil", de: "Startseite", it: "Home", en: "Home" };
+    const dirLabels: Record<string, string> = {
+      fr: "Thérapeutes", de: "Therapeuten", it: "Terapeuti", en: "Therapists",
+    };
     return {
       meta: [
         { title },
@@ -49,6 +53,43 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
         { property: "og:locale", content: ogLocale(lang) },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/therapeutes")],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "CollectionPage",
+                "@id": `${url}#collection`,
+                url,
+                name: title,
+                description,
+                inLanguage: lang,
+                isPartOf: { "@id": "https://holiswiss.ch/#website" },
+                about: { "@id": "https://holiswiss.ch/#organization" },
+              },
+              {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: homeLabels[lang] ?? homeLabels.fr,
+                    item: `https://holiswiss.ch/${lang}`,
+                  },
+                  {
+                    "@type": "ListItem",
+                    position: 2,
+                    name: dirLabels[lang] ?? dirLabels.fr,
+                    item: url,
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+      ],
     };
   },
 });

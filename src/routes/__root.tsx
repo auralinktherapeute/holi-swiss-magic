@@ -159,27 +159,73 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Holiswiss",
-          url: "https://holiswiss.ch",
-          description:
-            "Plateforme suisse de mise en relation avec des thérapeutes holistiques certifiés",
-          potentialAction: {
-            "@type": "SearchAction",
-            target:
-              "https://holiswiss.ch/fr/therapeutes?q={search_term_string}",
-            "query-input": "required name=search_term_string",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "Holiswiss",
-            url: "https://holiswiss.ch",
-            logo: "https://holiswiss.ch/logo.png",
-            address: {
-              "@type": "PostalAddress",
-              addressCountry: "CH",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://holiswiss.ch/#organization",
+              name: "Holiswiss",
+              url: "https://holiswiss.ch",
+              logo: {
+                "@type": "ImageObject",
+                url: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png",
+              },
+              image:
+                "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png",
+              description:
+                "Plateforme suisse de mise en relation avec des thérapeutes holistiques et praticiens en médecines douces certifiés, dans les 26 cantons et en 4 langues.",
+              slogan: "Trouvez le bon thérapeute, partout en Suisse.",
+              areaServed: {
+                "@type": "Country",
+                name: "Switzerland",
+                alternateName: ["Suisse", "Schweiz", "Svizzera", "CH"],
+              },
+              knowsLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
+              knowsAbout: [
+                "Sophrologie",
+                "Hypnose",
+                "Naturopathie",
+                "Acupuncture",
+                "Ostéopathie",
+                "Réflexologie",
+                "Méditation",
+                "Reiki",
+                "Kinésiologie",
+                "Ayurveda",
+                "Médecine douce",
+                "Thérapie holistique",
+                "Bien-être",
+              ],
+              contactPoint: {
+                "@type": "ContactPoint",
+                email: "contact@holiswiss.ch",
+                contactType: "customer support",
+                availableLanguage: ["French", "German", "Italian", "English"],
+                areaServed: "CH",
+              },
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "CH",
+              },
             },
-          },
+            {
+              "@type": "WebSite",
+              "@id": "https://holiswiss.ch/#website",
+              name: "Holiswiss",
+              url: "https://holiswiss.ch",
+              description:
+                "Annuaire suisse des thérapeutes holistiques et praticiens bien-être — 26 cantons, 4 langues (FR/DE/IT/EN).",
+              inLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
+              publisher: { "@id": "https://holiswiss.ch/#organization" },
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: "https://holiswiss.ch/fr/therapeutes?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            },
+          ],
         }),
       },
     ],
