@@ -21,6 +21,19 @@ function tr(lang: string) { return (T as any)[lang] ?? T.fr; }
 
 export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlug")({
   component: Page,
+  // Chargement serveur : le contenu (H1, thérapeutes de la ville) est rendu dès
+  // le HTML initial — sinon les crawlers et les IA ne voyaient que « Chargement… ».
+  loader: async ({ params }) => {
+    try {
+      return {
+        page: await getSpecialtyCityPage({
+          data: { slug: params.specialtySlug, city: params.citySlug.replace(/-/g, " ") },
+        }),
+      };
+    } catch {
+      return { page: null };
+    }
+  },
   head: ({ params }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}/${params.citySlug}`;
     const label = params.specialtySlug.replace(/-/g, " ");
@@ -39,6 +52,26 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         { property: "og:locale", content: ogLocale(params.lang) },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/specialites/${params.specialtySlug}/${params.citySlug}`)],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t.home, item: `https://holiswiss.ch/${params.lang}` },
+              { "@type": "ListItem", position: 2, name: t.therapists, item: `https://holiswiss.ch/${params.lang}/therapeutes` },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: label.replace(/\b\w/g, (c) => c.toUpperCase()),
+                item: `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`,
+              },
+              { "@type": "ListItem", position: 4, name: city, item: url },
+            ],
+          }),
+        },
+      ],
     };
   },
 });
@@ -47,9 +80,11 @@ function Page() {
   const { lang, specialtySlug, citySlug } = useParams({ from: "/$lang/specialites/$specialtySlug/$citySlug" });
   const t = tr(lang);
   const fetchPage = useServerFn(getSpecialtyCityPage);
+  const loaderData = Route.useLoaderData();
   const query = useQuery({
     queryKey: ["specialty-city-page", specialtySlug, citySlug],
     queryFn: () => fetchPage({ data: { slug: specialtySlug, city: citySlug.replace(/-/g, " ") } }),
+    initialData: loaderData?.page ?? undefined,
   });
 
   if (query.isLoading) {
