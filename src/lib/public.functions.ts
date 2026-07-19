@@ -111,9 +111,15 @@ export const getPublishedEvent = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Colonnes publiques explicites (pas de select("*") : évite d'exposer
+    // d'éventuelles colonnes internes de la table events aux visiteurs).
+    // Union stricte des champs lus par la page $lang.evenements.$id et des
+    // champs utilisés par ce handler (image_url signé, therapist_id).
     const { data: e, error } = await supabaseAdmin
       .from("events")
-      .select("*")
+      .select(
+        "id,title,short_description,long_description,category,event_date,start_time,end_time,format,location,is_online,is_paid,price,price_description,seats,image_url,therapist_id,status",
+      )
       .eq("id", data.id)
       .eq("status", "published")
       .maybeSingle();

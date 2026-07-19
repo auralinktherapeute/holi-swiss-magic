@@ -89,10 +89,21 @@ function normalizeArticle(input: Record<string, unknown>, sourceRun?: string) {
   };
 }
 
+// Comparaison en temps constant (identique aux webhooks admin-notify et
+// seo-audit-agent) : évite le canal auxiliaire temporel d'un `===` qui sort au
+// premier octet différent et permettrait de deviner le secret octet par octet.
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 function isAuthorized(request: Request): boolean {
-  const providedSecret = request.headers.get("x-agent-secret") || request.headers.get("x-holiswiss-agent-secret");
+  const providedSecret =
+    request.headers.get("x-agent-secret") || request.headers.get("x-holiswiss-agent-secret") || "";
   const expectedSecret = process.env.SEO_ARTICLE_AGENT_SECRET;
-  return !!expectedSecret && providedSecret === expectedSecret;
+  return !!expectedSecret && timingSafeEqualStr(providedSecret, expectedSecret);
 }
 
 export const Route = createFileRoute("/api/public/hooks/article-agent")({
