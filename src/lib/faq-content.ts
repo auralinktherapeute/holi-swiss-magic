@@ -309,6 +309,62 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
   },
 };
 
+/** Blog-listing FAQ — distinct set so the /blog listing carries its own FAQPage. */
+export const BLOG_FAQ: Record<FaqLang, FaqItem[]> = {
+  fr: [
+    { q: "Que trouve-t-on sur le blog bien-être de Holiswiss ?", a: "Des articles pratiques sur les thérapies holistiques et les médecines douces en Suisse : définitions, bienfaits, déroulé d'une séance, remboursement (LAMal, ASCA, RME) et conseils pour choisir un praticien." },
+    { q: "Les articles sont-ils rédigés par des professionnels ?", a: "Les contenus sont documentés et relus, et s'appuient sur les pratiques reconnues en Suisse. Ils ont une visée informative et ne remplacent pas l'avis d'un thérapeute ou d'un médecin." },
+    { q: "Le blog est-il disponible en plusieurs langues ?", a: "Oui, les articles sont proposés en français, allemand, italien et anglais afin de couvrir toutes les régions linguistiques suisses." },
+    { q: "Comment trouver un thérapeute après avoir lu un article ?", a: "Chaque sujet renvoie vers l'annuaire Holiswiss, où vous pouvez chercher un praticien par spécialité, ville ou canton et réserver en ligne." },
+  ],
+  de: [
+    { q: "Was findet man im Wellness-Blog von Holiswiss?", a: "Praktische Artikel über Komplementärtherapien in der Schweiz: Definitionen, Nutzen, Ablauf einer Sitzung, Rückerstattung (KVG, ASCA, EMR) und Tipps zur Wahl einer Fachperson." },
+    { q: "Werden die Artikel von Fachleuten verfasst?", a: "Die Inhalte sind recherchiert und geprüft und stützen sich auf in der Schweiz anerkannte Praktiken. Sie dienen der Information und ersetzen nicht den Rat einer Fachperson oder eines Arztes." },
+    { q: "Ist der Blog in mehreren Sprachen verfügbar?", a: "Ja, die Artikel sind auf Deutsch, Französisch, Italienisch und Englisch verfügbar und decken alle Sprachregionen der Schweiz ab." },
+    { q: "Wie finde ich nach dem Lesen eine Fachperson?", a: "Jedes Thema verweist auf das Holiswiss-Verzeichnis, wo Sie nach Fachgebiet, Stadt oder Kanton suchen und online buchen können." },
+  ],
+  it: [
+    { q: "Cosa si trova nel blog benessere di Holiswiss?", a: "Articoli pratici sulle medicine dolci in Svizzera: definizioni, benefici, svolgimento di una seduta, rimborso (LAMal, ASCA, RME) e consigli per scegliere un professionista." },
+    { q: "Gli articoli sono scritti da professionisti?", a: "I contenuti sono documentati e revisionati e si basano su pratiche riconosciute in Svizzera. Hanno scopo informativo e non sostituiscono il parere di un terapeuta o di un medico." },
+    { q: "Il blog è disponibile in più lingue?", a: "Sì, gli articoli sono disponibili in italiano, francese, tedesco e inglese, per coprire tutte le regioni linguistiche svizzere." },
+    { q: "Come trovo un terapeuta dopo aver letto un articolo?", a: "Ogni argomento rimanda alla directory Holiswiss, dove puoi cercare un professionista per specialità, città o cantone e prenotare online." },
+  ],
+  en: [
+    { q: "What will I find on the Holiswiss wellness blog?", a: "Practical articles on complementary medicine in Switzerland: definitions, benefits, what a session involves, reimbursement (LAMal, ASCA, RME) and tips for choosing a practitioner." },
+    { q: "Are the articles written by professionals?", a: "Content is researched and reviewed and draws on practices recognised in Switzerland. It is informational and does not replace advice from a therapist or doctor." },
+    { q: "Is the blog available in several languages?", a: "Yes, articles are available in English, French, German and Italian, covering all Swiss language regions." },
+    { q: "How do I find a therapist after reading an article?", a: "Each topic links to the Holiswiss directory, where you can search a practitioner by specialty, city or canton and book online." },
+  ],
+};
+
+/** Events-listing FAQ — distinct set so the /evenements listing carries its own FAQPage. */
+export const EVENTS_FAQ: Record<FaqLang, FaqItem[]> = {
+  fr: [
+    { q: "Quels types d'événements sont proposés sur Holiswiss ?", a: "Des ateliers, retraites, conférences et stages autour du bien-être et des thérapies holistiques, organisés par des praticiens partout en Suisse." },
+    { q: "Comment s'inscrire à un événement ?", a: "Ouvrez la fiche de l'événement pour voir la date, le lieu, le prix et les places disponibles, puis suivez les instructions d'inscription de l'organisateur." },
+    { q: "Les événements sont-ils payants ou gratuits ?", a: "Les deux : chaque fiche indique clairement si l'événement est gratuit ou payant, ainsi que le tarif le cas échéant." },
+    { q: "Les événements ont-ils lieu dans toute la Suisse ?", a: "Oui, les événements couvrent les différentes régions et cantons suisses, en présentiel et parfois en ligne." },
+  ],
+  de: [
+    { q: "Welche Veranstaltungen gibt es auf Holiswiss?", a: "Workshops, Retreats, Vorträge und Kurse rund um Wohlbefinden und Komplementärtherapien, organisiert von Fachpersonen in der ganzen Schweiz." },
+    { q: "Wie melde ich mich für eine Veranstaltung an?", a: "Öffnen Sie die Veranstaltungsseite für Datum, Ort, Preis und freie Plätze und folgen Sie den Anmeldehinweisen des Veranstalters." },
+    { q: "Sind die Veranstaltungen kostenpflichtig oder gratis?", a: "Beides: Jede Seite zeigt klar an, ob die Veranstaltung kostenlos oder kostenpflichtig ist, gegebenenfalls mit Preis." },
+    { q: "Finden die Veranstaltungen in der ganzen Schweiz statt?", a: "Ja, die Veranstaltungen decken verschiedene Regionen und Kantone ab, vor Ort und teils online." },
+  ],
+  it: [
+    { q: "Quali eventi propone Holiswiss?", a: "Laboratori, ritiri, conferenze e stage su benessere e medicine dolci, organizzati da professionisti in tutta la Svizzera." },
+    { q: "Come mi iscrivo a un evento?", a: "Apri la scheda dell'evento per data, luogo, prezzo e posti disponibili, poi segui le istruzioni di iscrizione dell'organizzatore." },
+    { q: "Gli eventi sono a pagamento o gratuiti?", a: "Entrambi: ogni scheda indica chiaramente se l'evento è gratuito o a pagamento, con l'eventuale tariffa." },
+    { q: "Gli eventi si svolgono in tutta la Svizzera?", a: "Sì, gli eventi coprono diverse regioni e cantoni svizzeri, in presenza e talvolta online." },
+  ],
+  en: [
+    { q: "What kinds of events does Holiswiss list?", a: "Workshops, retreats, talks and courses on wellness and complementary therapies, run by practitioners across Switzerland." },
+    { q: "How do I register for an event?", a: "Open the event page for date, location, price and available seats, then follow the organiser's registration instructions." },
+    { q: "Are events paid or free?", a: "Both: each event page clearly states whether it is free or paid, with the price where applicable." },
+    { q: "Do events take place all over Switzerland?", a: "Yes, events cover various Swiss regions and cantons, in person and sometimes online." },
+  ],
+};
+
 /** Directory-specific FAQ — distinct from GLOBAL_FAQ to avoid duplicate FAQPage. */
 export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
   fr: [

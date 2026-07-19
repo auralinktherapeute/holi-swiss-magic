@@ -6,6 +6,8 @@ import { CalendarDays, ArrowRight, BookOpen } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { categoryLabel } from "@/lib/article-categories";
 import { blogCopy } from "@/lib/blog-copy";
+import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { BLOG_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 
 export const Route = createFileRoute("/$lang/blog/")({
   component: Page,
@@ -229,6 +231,13 @@ function Page() {
             })}
           </div>
         )}
+
+        <FaqSection
+          items={BLOG_FAQ[asFaqLang(l)]}
+          title={FAQ_TITLES[asFaqLang(l)].title}
+          subtitle={FAQ_TITLES[asFaqLang(l)].subtitle}
+          className="mx-auto w-full max-w-3xl px-0 py-16"
+        />
       </div>
     </div>
   );

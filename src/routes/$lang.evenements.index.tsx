@@ -4,6 +4,8 @@ import { Calendar, Clock, MapPin, Video, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { listPublishedEvents } from "@/lib/public.functions";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { EVENTS_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 
 const SITE = "https://holiswiss.ch";
 
@@ -156,6 +158,13 @@ function Page() {
           ))}
         </ul>
       )}
+
+      <FaqSection
+        items={EVENTS_FAQ[asFaqLang(lang)]}
+        title={FAQ_TITLES[asFaqLang(lang)].title}
+        subtitle={FAQ_TITLES[asFaqLang(lang)].subtitle}
+        className="mx-auto w-full max-w-3xl px-4 py-16"
+      />
     </main>
   );
 }
