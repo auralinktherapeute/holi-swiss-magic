@@ -12,13 +12,14 @@ const SITE = "https://holiswiss.ch";
 export const Route = createFileRoute("/$lang/evenements/$id")({
   component: Page,
   loader: async ({ params }) => {
-    try {
-      const res = await getPublishedEvent({ data: { id: params.id } });
-      if (!res.event) throw notFound();
-      return res;
-    } catch (e) {
-      throw notFound();
-    }
+    // Un id malformé (URL erronée) → 404 propre. Mais on ne masque PLUS les
+    // vraies erreurs (ex. requête invalide) en « introuvable » : elles remontent
+    // à l'errorComponent, sinon un bug serveur ressemble à un événement absent.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+    if (!isUuid) throw notFound();
+    const res = await getPublishedEvent({ data: { id: params.id } });
+    if (!res.event) throw notFound();
+    return res;
   },
   notFoundComponent: NotFound,
   errorComponent: ErrorView,
@@ -48,6 +49,9 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     const startDate = e.start_time
       ? `${e.event_date}T${e.start_time}`
       : e.event_date;
+    // La table events n'a pas de colonne is_online : l'état « en ligne » se
+    // dérive de format (in_person | online | hybrid).
+    const isOnline = e.format === "online" || e.format === "hybrid";
     const eventLd: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Event",
@@ -55,11 +59,11 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
       startDate,
       description: e.short_description || e.long_description || undefined,
       eventStatus: "https://schema.org/EventScheduled",
-      eventAttendanceMode: e.is_online
+      eventAttendanceMode: isOnline
         ? "https://schema.org/OnlineEventAttendanceMode"
         : "https://schema.org/OfflineEventAttendanceMode",
-      location: e.is_online
-        ? { "@type": "VirtualLocation", url }
+      location: isOnline
+        ? { "@type": "VirtualLocation", url: e.online_link || url }
         : { "@type": "Place", name: e.location || "Suisse", address: e.location || "Suisse" },
       image: e.image_signed_url ? [e.image_signed_url] : undefined,
       organizer: { "@type": "Organization", name: "HoliSwiss", url: SITE },

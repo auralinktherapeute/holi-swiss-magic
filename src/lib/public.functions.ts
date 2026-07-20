@@ -118,7 +118,7 @@ export const getPublishedEvent = createServerFn({ method: "GET" })
     const { data: e, error } = await supabaseAdmin
       .from("events")
       .select(
-        "id,title,short_description,long_description,category,event_date,start_time,end_time,format,location,is_online,is_paid,price,price_description,seats,image_url,therapist_id,status",
+        "id,title,short_description,long_description,category,event_date,start_time,end_time,format,location,online_link,is_paid,price,price_description,seats,image_url,therapist_id,status",
       )
       .eq("id", data.id)
       .eq("status", "published")
