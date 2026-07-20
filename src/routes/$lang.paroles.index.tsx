@@ -1,8 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { listPublishedTherapistArticles } from "@/lib/therapist-articles.functions";
-import { PublicNav } from "@/components/layout/PublicNav";
-import { Footer } from "@/components/layout/Footer";
+import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { CalendarDays, ArrowRight, Mic } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
@@ -57,7 +56,6 @@ function Page() {
 
   return (
     <div className="min-h-screen bg-[#14082d] text-white">
-      <PublicNav />
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.35)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#d4a8ff]">
@@ -118,13 +116,14 @@ function Page() {
                     <p className="mt-2 text-sm text-white/60 line-clamp-3">{a.extrait}</p>
                   )}
                   <div className="mt-4 flex items-center gap-3 pt-4 border-t border-white/10">
-                    {t?.photo_url ? (
-                      <img src={t.photo_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-[#3d1a5c] flex items-center justify-center text-xs font-semibold text-[#d4a8ff]">
-                        {(name[0] ?? "?").toUpperCase()}
-                      </div>
-                    )}
+                    <span className="inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
+                      <TherapistAvatar
+                        photoUrl={t?.photo_url}
+                        alt={name || "Thérapeute"}
+                        fallback={(name[0] ?? "?").toUpperCase()}
+                        fallbackClassName="flex h-full w-full items-center justify-center bg-[#3d1a5c] text-xs font-semibold text-[#d4a8ff]"
+                      />
+                    </span>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-white truncate">{name || "Thérapeute"}</div>
                       {t?.city && <div className="text-xs text-white/50 truncate">{t.city}</div>}
@@ -137,7 +136,6 @@ function Page() {
           })}
         </div>
       </section>
-      <Footer />
     </div>
   );
 }

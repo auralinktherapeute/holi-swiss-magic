@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedTherapistArticleBySlug } from "@/lib/therapist-articles.functions";
-import { PublicNav } from "@/components/layout/PublicNav";
-import { Footer } from "@/components/layout/Footer";
-import { ArrowLeft, CalendarDays, User } from "lucide-react";
+import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { ArrowLeft, CalendarDays } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/paroles/$slug")({
@@ -43,7 +42,6 @@ function Page() {
 
   return (
     <div className="min-h-screen bg-[#14082d] text-white">
-      <PublicNav />
       <article className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
         <Link to="/$lang/paroles" params={{ lang }} className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white">
           <ArrowLeft className="h-4 w-4" /> Retour aux articles
@@ -75,11 +73,14 @@ function Page() {
                     params={{ lang, slug: t.slug }}
                     className="inline-flex items-center gap-2 hover:text-white"
                   >
-                    {t.photo_url ? (
-                      <img src={t.photo_url} alt="" className="h-6 w-6 rounded-full object-cover" />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
+                    <span className="inline-flex h-6 w-6 shrink-0 overflow-hidden rounded-full">
+                      <TherapistAvatar
+                        photoUrl={t.photo_url}
+                        alt={name}
+                        fallback={(name[0] ?? "?").toUpperCase()}
+                        fallbackClassName="flex h-full w-full items-center justify-center bg-[#3d1a5c] text-[10px] font-semibold text-[#d4a8ff]"
+                      />
+                    </span>
                     <span>{name}{t.city ? ` · ${t.city}` : ""}</span>
                   </Link>
                 )}
@@ -98,13 +99,14 @@ function Page() {
 
             {t && (
               <aside className="mt-12 rounded-2xl border border-[rgba(184,110,249,0.3)] bg-[#1d0d3d] p-6 flex items-center gap-4">
-                {t.photo_url ? (
-                  <img src={t.photo_url} alt="" className="h-16 w-16 rounded-full object-cover" />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-[#3d1a5c] flex items-center justify-center text-lg font-semibold text-[#d4a8ff]">
-                    {(name[0] ?? "?").toUpperCase()}
-                  </div>
-                )}
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full">
+                  <TherapistAvatar
+                    photoUrl={t.photo_url}
+                    alt={name}
+                    fallback={(name[0] ?? "?").toUpperCase()}
+                    fallbackClassName="flex h-full w-full items-center justify-center bg-[#3d1a5c] text-lg font-semibold text-[#d4a8ff]"
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-white/60">Auteur</div>
                   <div className="text-lg font-semibold">{name}</div>
@@ -122,7 +124,6 @@ function Page() {
           </>
         )}
       </article>
-      <Footer />
     </div>
   );
 }
