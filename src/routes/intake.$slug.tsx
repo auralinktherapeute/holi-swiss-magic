@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { getIntakeHeader, submitIntake, type IntakeHeader } from "@/lib/intake.functions";
+import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
 export const Route = createFileRoute("/intake/$slug")({
   loader: async ({ params }) => {
@@ -95,9 +96,14 @@ function IntakePage() {
     <main className="min-h-dvh bg-gradient-to-br from-[#0F0F23] via-[#1a0a2e] to-[#0F0F23] text-white py-10 px-4">
       <div className="max-w-2xl mx-auto">
         <header className="flex items-center gap-4 mb-6">
-          {header.photo_url
-            ? <img src={header.photo_url} alt="" className="h-14 w-14 rounded-full object-cover border border-white/10" />
-            : <div className="h-14 w-14 rounded-full bg-purple-500/30 flex items-center justify-center text-lg font-semibold">{header.first_name?.[0]}{header.last_name?.[0]}</div>}
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/10">
+            <TherapistAvatar
+              photoUrl={header.photo_url}
+              alt={`${header.first_name ?? ""} ${header.last_name ?? ""}`.trim()}
+              fallback={`${header.first_name?.[0] ?? ""}${header.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
+              fallbackClassName="flex h-full w-full items-center justify-center bg-purple-500/30 text-lg font-semibold"
+            />
+          </div>
           <div className="min-w-0">
             <p className="text-white/60 text-xs uppercase tracking-wide flex items-center gap-1.5"><FileText className="h-3 w-3" /> Formulaire d'admission</p>
             <h1 className="text-xl font-semibold truncate">{header.first_name} {header.last_name}</h1>
