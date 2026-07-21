@@ -38,3 +38,26 @@ create policy "Admins manage marketing proposals"
 
 create index if not exists idx_marketing_proposals_status_date
   on public.marketing_proposals (status, proposal_date desc);
+
+-- Notifie l'admin (email + WhatsApp via /api/public/admin-notify) à chaque
+-- nouvelle proposition à valider. Réutilise notify_admin_event (même mécanisme
+-- que les autres événements admin). N'échoue jamais l'insertion (exception avalée).
+create or replace function public.trg_notify_marketing_proposal()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if NEW.status = 'en_attente_validation' then
+    perform public.notify_admin_event(
+      'marketing_proposal',
+      'Nouvelle proposition marketing à valider',
+      coalesce(NEW.network, '') || ' — ' || coalesce(NEW.angle, left(NEW.caption, 80)),
+      '/admin/marketing'
+    );
+  end if;
+  return NEW;
+end;
+$$;
+
+drop trigger if exists notify_marketing_proposal on public.marketing_proposals;
+create trigger notify_marketing_proposal
+  after insert on public.marketing_proposals
+  for each row execute function public.trg_notify_marketing_proposal();

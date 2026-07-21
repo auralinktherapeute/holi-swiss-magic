@@ -72,8 +72,15 @@ Répondez : « OK » · « change … » · « refuse »
 ## 🗺️ État de mise en place
 - [x] **Couche 1** — équipe d'agents Claude Code + charte + calendrier + doc (ce dossier).
 - [x] **Couche 2** — rubrique admin `/admin/marketing` : table `marketing_proposals`, route React, boutons Valider/Corriger/Refuser (admin only). ⚠️ Appliquer la migration `supabase/migrations/20260721120000_create_marketing_proposals.sql` sur la prod (qqwud) + Publish Lovable. Table déjà créée sur gpld (dev).
-- [ ] **Notif** — brancher `admin-notify` (email + WhatsApp) à la création d'une proposition (endpoint `/api/public/admin-notify` déjà en place).
-- [ ] **Publication** — MCP **Postiz** (auto-hébergé) branché **après** validation (`/marketing-publish`), + hook bloquant. ⚠️ **Aucune clé API activée sans accord explicite de Gérald.**
+- [x] **Notif** — `admin-notify` (email + WhatsApp) branché via **trigger** `notify_marketing_proposal` sur INSERT (dans la migration ; appelle `notify_admin_event` → `/api/public/admin-notify`). Actif dès que la migration est appliquée en prod.
+- [x] **Commande de publication** — `/marketing-publish` créée : refuse toute proposition non `valide` (garde-fou dur), publie via Postiz seulement après validation.
+- [ ] **Postiz** — installer le MCP + connecter les comptes. ⚠️ **Aucune clé API activée sans accord explicite de Gérald.** Tant que Postiz n'est pas configuré, `/marketing-publish` s'arrête proprement (« Postiz non configuré »).
+
+### Hook de sécurité (optionnel, à activer avec Postiz)
+Ajouter dans `.claude/settings.json` un `PreToolUse` qui journalise/confirme tout appel
+à un outil `mcp__postiz__*` de publication — filet supplémentaire pour qu'aucune
+publication ne soit silencieuse. Le vrai garde-fou reste la validation admin +
+le contrôle de statut `valide` dans `/marketing-publish`.
 
 ### Comment une proposition arrive dans l'admin
 `/marketing-daily` (agents) → INSERT dans `marketing_proposals` (statut `en_attente_validation`)
