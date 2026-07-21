@@ -1,5 +1,7 @@
 # Holiswiss — Équipe marketing autonome (réseaux sociaux)
 
+> Choix du MCP de publication : voir [mcp-comparison.md](./mcp-comparison.md) (Postiz retenu, rien installé sans accord).
+
 > Équipe d'agents Claude Code qui **propose** chaque jour une publication réseaux
 > sociaux pour recruter des thérapeutes suisses. **Rien n'est publié sans la
 > validation explicite de Gérald.**
