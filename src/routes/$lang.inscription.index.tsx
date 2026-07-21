@@ -41,9 +41,12 @@ function SignupPage() {
   // Attribue le rôle thérapeute côté serveur puis migre la session vers son
   // espace définitif — sans cela, le garde du dashboard renvoie vers /connexion.
   const finishSignup = async (session?: { access_token: string; refresh_token: string } | null) => {
+    // Inscription = parcours thérapeute EXPLICITE → on attribue bien le rôle
+    // (requireProfile omis) : ici l'utilisateur veut devenir thérapeute, ce
+    // n'est pas une connexion « avis ».
     let role: AppRole = "therapist";
     try {
-      role = (await ensureRole()).role;
+      role = (await ensureRole({ data: {} })).role;
     } catch {
       role = "therapist";
     }

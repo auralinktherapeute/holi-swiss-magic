@@ -32,11 +32,13 @@ export const Route = createFileRoute("/dashboard")({
         hasTherapistRole = false;
       }
       if (hasTherapistRole) return;
-      // Self-heal : comptes créés sans ligne user_roles (inscription directe
-      // ou Google hors invitation) — le serveur attribue le rôle manquant.
+      // Self-heal RÉSERVÉ aux vrais thérapeutes : on ne répare le rôle que si un
+      // profil thérapeute existe déjà (requireProfile). Un compte connecté juste
+      // pour laisser un avis (aucun profil) n'est PAS promu thérapeute et n'entre
+      // pas dans l'espace — l'auth « avis » est distincte de l'espace thérapeute.
       let healedRole: string | null = null;
       try {
-        healedRole = (await ensureTherapistRole()).role;
+        healedRole = (await ensureTherapistRole({ data: { requireProfile: true } })).role;
       } catch {
         healedRole = null;
       }

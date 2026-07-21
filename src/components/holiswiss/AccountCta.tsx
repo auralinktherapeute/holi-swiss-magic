@@ -73,7 +73,10 @@ export function AccountCta({
     );
   }
 
-  if (!user) {
+  // « Mon espace » / « Admin » n'apparaît QUE pour un admin ou un thérapeute.
+  // Un visiteur connecté uniquement pour laisser un avis (role "user") n'a pas
+  // d'espace thérapeute : l'auth « avis » est distincte de l'espace praticien.
+  if (!user || (role !== "admin" && role !== "therapist")) {
     return (
       <Link
         to="/$lang/connexion"
@@ -89,9 +92,8 @@ export function AccountCta({
     );
   }
 
-  const activeSpace = role === "admin" ? "admin" : role ? "dashboard" : lastAuthSpace;
-  const to = activeSpace === "admin" ? "/admin" : "/dashboard";
-  const label = activeSpace === "admin" ? "Admin" : "Mon espace";
+  const to = role === "admin" ? "/admin" : "/dashboard";
+  const label = role === "admin" ? "Admin" : "Mon espace";
   return (
     <Link
       to={to}

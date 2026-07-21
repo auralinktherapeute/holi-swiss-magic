@@ -39,18 +39,25 @@ function LoginPage() {
   const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
     let role: AppRole | null = await getCurrentUserRole();
     if (role !== "admin" && role !== "therapist") {
-      // Compte sans ligne user_roles (inscription directe ou Google hors
-      // invitation) : le serveur attribue le rôle thérapeute manquant.
+      // On ne « répare » le rôle thérapeute que pour un compte qui a déjà un
+      // profil (requireProfile). Une connexion Google faite uniquement pour
+      // laisser un avis reste un simple visiteur (role "user") : l'auth « avis »
+      // ne crée pas d'espace thérapeute.
       try {
-        role = (await ensureRole()).role;
+        role = (await ensureRole({ data: { requireProfile: true } })).role;
       } catch {
-        role = "therapist";
+        role = "user";
       }
     }
     const roleSession = session ?? (await supabase.auth.getSession()).data.session;
-    if (roleSession) await persistSessionInRoleSpace(roleSession, role);
-    else switchAuthSpace(roleToSpace(role));
-    navigate({ to: role === "admin" ? "/admin" : "/dashboard", replace: true });
+    if (role === "admin" || role === "therapist") {
+      if (roleSession) await persistSessionInRoleSpace(roleSession, role);
+      else switchAuthSpace(roleToSpace(role));
+      navigate({ to: role === "admin" ? "/admin" : "/dashboard", replace: true });
+    } else {
+      // Visiteur sans espace thérapeute → accueil.
+      navigate({ to: "/$lang", params: { lang }, replace: true });
+    }
   };
 
   useEffect(() => {
