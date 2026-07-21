@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Star, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { getCurrentUserRole } from "@/lib/auth-utils";
 import { toast } from "sonner";
 
 const sb = supabase as any;
@@ -107,10 +108,37 @@ export function ReviewForm({
       toast.error(res.error.message);
       return;
     }
-    toast.success("Avis envoyé — en attente de modération");
-    setEditing(false);
     onSubmitted?.();
-    // refresh local existing
+
+    // Modèle TripAdvisor : l'authentification Google sert UNIQUEMENT à signer
+    // l'avis, pas à créer une session persistante. Un visiteur est donc
+    // déconnecté immédiatement après avoir laissé son avis. On ne déconnecte
+    // PAS un praticien/admin (vraie session de membre).
+    let role: string | null = null;
+    try {
+      role = await getCurrentUserRole();
+    } catch {
+      role = null;
+    }
+    const isMember = role === "admin" || role === "therapist";
+
+    if (!isMember) {
+      toast.success("Merci ! Votre avis a bien été enregistré.");
+      setEditing(false);
+      setExisting(null);
+      setRating(0);
+      setComment("");
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        // La déconnexion est best-effort ; l'avis est déjà enregistré.
+      }
+      return;
+    }
+
+    // Praticien/admin : la session de membre est conservée.
+    toast.success("Avis enregistré.");
+    setEditing(false);
     if (user) {
       const { data } = await sb
         .from("reviews")
