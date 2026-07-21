@@ -120,9 +120,12 @@ export function ReviewForm({
     } catch {
       role = null;
     }
-    const isMember = role === "admin" || role === "therapist";
+    // On ne déconnecte QUE si le rôle est RÉSOLU comme non-membre (visiteur).
+    // Si la vérification échoue (null), on NE déconnecte PAS : mieux vaut garder
+    // la session que de déconnecter par erreur un praticien/admin.
+    const isVisitor = role !== null && role !== "admin" && role !== "therapist";
 
-    if (!isMember) {
+    if (isVisitor) {
       toast.success("Merci ! Votre avis a bien été enregistré.");
       setEditing(false);
       setExisting(null);

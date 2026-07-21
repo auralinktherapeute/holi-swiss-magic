@@ -73,10 +73,7 @@ export function AccountCta({
     );
   }
 
-  // « Mon espace » / « Admin » n'apparaît QUE pour un admin ou un thérapeute.
-  // Un visiteur connecté uniquement pour laisser un avis (role "user") n'a pas
-  // d'espace thérapeute : l'auth « avis » est distincte de l'espace praticien.
-  if (!user || (role !== "admin" && role !== "therapist")) {
+  if (!user) {
     return (
       <Link
         to="/$lang/connexion"
@@ -92,8 +89,14 @@ export function AccountCta({
     );
   }
 
-  const to = role === "admin" ? "/admin" : "/dashboard";
-  const label = role === "admin" ? "Admin" : "Mon espace";
+  // Un utilisateur connecté est renvoyé vers SON espace. Si le rôle n'est pas
+  // encore résolu, on retombe sur le dernier espace connu (lastAuthSpace) pour
+  // éviter l'illusion de déconnexion et ne jamais transformer le bouton d'un
+  // membre en bouton « se connecter ». (La protection « reviewer ≠ thérapeute »
+  // vit côté serveur : dashboard beforeLoad + ensureTherapistRole.)
+  const activeSpace = role === "admin" ? "admin" : role ? "dashboard" : lastAuthSpace;
+  const to = activeSpace === "admin" ? "/admin" : "/dashboard";
+  const label = activeSpace === "admin" ? "Admin" : "Mon espace";
   return (
     <Link
       to={to}
