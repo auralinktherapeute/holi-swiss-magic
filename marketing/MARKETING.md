@@ -70,9 +70,16 @@ Répondez : « OK » · « change … » · « refuse »
 - **Planifié** : une tâche quotidienne (ex. 8h) peut déclencher `/marketing-daily` — à activer seulement quand la Couche 2 (validation admin) est en place.
 
 ## 🗺️ État de mise en place
-- [x] Couche 1 — équipe d'agents Claude Code + charte + calendrier + doc (ce dossier).
-- [ ] Couche 2 — rubrique admin `/admin/marketing` : table `marketing_proposals`, route React, validation PIN, notif admin-notify.
-- [ ] Publication — MCP **Postiz** (auto-hébergé) branché après validation. ⚠️ Aucune clé activée sans accord de Gérald.
+- [x] **Couche 1** — équipe d'agents Claude Code + charte + calendrier + doc (ce dossier).
+- [x] **Couche 2** — rubrique admin `/admin/marketing` : table `marketing_proposals`, route React, boutons Valider/Corriger/Refuser (admin only). ⚠️ Appliquer la migration `supabase/migrations/20260721120000_create_marketing_proposals.sql` sur la prod (qqwud) + Publish Lovable. Table déjà créée sur gpld (dev).
+- [ ] **Notif** — brancher `admin-notify` (email + WhatsApp) à la création d'une proposition (endpoint `/api/public/admin-notify` déjà en place).
+- [ ] **Publication** — MCP **Postiz** (auto-hébergé) branché **après** validation (`/marketing-publish`), + hook bloquant. ⚠️ **Aucune clé API activée sans accord explicite de Gérald.**
+
+### Comment une proposition arrive dans l'admin
+`/marketing-daily` (agents) → INSERT dans `marketing_proposals` (statut `en_attente_validation`)
+via la **clé service Supabase** (REST), puis appel de `/api/public/admin-notify`.
+Tu ouvres `/admin/marketing`, tu valides. La publication réelle reste un pas séparé
+(`/marketing-publish`), déclenché seulement sur statut `valide`.
 
 ## ⚠️ Rappels
 - 1 publication de qualité par jour maximum (qualité > volume).
