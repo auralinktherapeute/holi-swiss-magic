@@ -27,14 +27,24 @@ ayurveda, aromathérapie, shiatsu, coaching holistique — et autres approches d
 médecine douce et de bien-être.
 
 ## Pages principales (multilingue)
-- Accueil : https://holiswiss.ch/fr · https://holiswiss.ch/de · https://holiswiss.ch/it · https://holiswiss.ch/en
-- Annuaire des thérapeutes : https://holiswiss.ch/fr/therapeutes (recherche, carte, filtres spécialité/canton/langue)
-  - DE : https://holiswiss.ch/de/therapeutes · IT : https://holiswiss.ch/it/therapeutes · EN : https://holiswiss.ch/en/therapeutes
-- Blog bien-être : https://holiswiss.ch/fr/blog (articles sur les thérapies holistiques)
-- Événements : https://holiswiss.ch/fr/evenements (ateliers, retraites, conférences)
-- Tarifs praticiens : https://holiswiss.ch/fr/tarifs (abonnements pour thérapeutes)
-- FAQ : https://holiswiss.ch/fr/faq (trouver un thérapeute, remboursement LAMal/ASCA/RME, spécialités, réservation) · DE : /de/faq · IT : /it/faq · EN : /en/faq
-- Contact : https://holiswiss.ch/fr/contact
+
+## Pages
+- [Accueil](/fr): Trouver un thérapeute holistique certifié en Suisse.
+- [Annuaire des thérapeutes](/fr/therapeutes): Recherche par spécialité, canton et langue, avec carte interactive.
+- [Blog bien-être](/fr/blog): Articles et dossiers sur les thérapies holistiques et médecines douces.
+- [Voix d'experts](/fr/paroles): Articles publiés par les thérapeutes de la plateforme.
+- [Événements](/fr/evenements): Ateliers, retraites et conférences bien-être en Suisse.
+- [Tarifs praticiens](/fr/tarifs): Abonnements pour les thérapeutes.
+- [FAQ](/fr/faq): Trouver un thérapeute, remboursement LAMal/ASCA/RME, spécialités, réservation.
+- [Contact](/fr/contact): Nous contacter par e-mail.
+
+## Optional
+- [Accueil (DE)](/de): Startseite Holiswiss.
+- [Accueil (IT)](/it): Home Holiswiss.
+- [Accueil (EN)](/en): Holiswiss home.
+- [Annuaire (DE)](/de/therapeutes): Therapeuten-Verzeichnis.
+- [Annuaire (IT)](/it/therapeutes): Elenco terapeuti.
+- [Annuaire (EN)](/en/therapeutes): Therapist directory.
 
 ## Requêtes auxquelles Holiswiss répond
 - « trouver un thérapeute holistique en Suisse » / « meilleur naturopathe [canton/ville] »

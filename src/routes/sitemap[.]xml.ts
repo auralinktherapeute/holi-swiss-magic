@@ -8,6 +8,7 @@ const STATIC_PATHS: { path: string; priority: string; changefreq: string }[] = [
   { path: "", priority: "1.0", changefreq: "weekly" },
   { path: "/therapeutes", priority: "0.9", changefreq: "daily" },
   { path: "/blog", priority: "0.8", changefreq: "weekly" },
+  { path: "/paroles", priority: "0.8", changefreq: "weekly" },
   { path: "/evenements", priority: "0.8", changefreq: "daily" },
   { path: "/tarifs", priority: "0.7", changefreq: "monthly" },
   { path: "/faq", priority: "0.6", changefreq: "monthly" },
@@ -154,6 +155,24 @@ export const Route = createFileRoute("/sitemap.xml")({
           }
         } catch (err) {
           console.error("sitemap: articles fetch failed", err);
+        }
+
+        // Dynamic: therapist articles ("Voix d'experts") — /paroles/$slug
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: parolesArticles } = await supabaseAdmin
+            .from("therapist_articles")
+            .select("slug, updated_at, date_publication")
+            .eq("statut", "publie");
+          for (const a of (parolesArticles ?? []) as Array<{ slug: string | null; updated_at: string | null; date_publication: string | null }>) {
+            if (!a.slug) continue;
+            const lastmod = (a.updated_at || a.date_publication)?.slice(0, 10);
+            for (const lang of LANGS) {
+              urls.push(urlBlock(`${BASE_URL}/${lang}/paroles/${a.slug}`, lastmod, "monthly", "0.7"));
+            }
+          }
+        } catch (err) {
+          console.error("sitemap: paroles fetch failed", err);
         }
 
         const xml = [
