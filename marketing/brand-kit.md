@@ -54,11 +54,18 @@ Signature émotionnelle : **« Concentrez-vous sur vos soins, on s'occupe du res
 - **LinkedIn** : angle pro/entrepreneurial du thérapeute (développer son activité, se professionnaliser), témoignages, chiffres.
 - **TikTok** : reel court, authentique, « coulisses » / astuce / avant-après visibilité. Moins léché, plus vivant.
 
-## Hashtags (banque de départ)
+## Langues (OBLIGATOIRE : 4 langues par publication)
+
+Chaque publication est produite en **🇫🇷 français, 🇬🇧 anglais, 🇩🇪 allemand (Suisse alémanique), 🇮🇹 italien (Tessin)**.
+Ce ne sont pas des traductions littérales : on **adapte** le ton à chaque marché, le message clé reste identique.
+
+## Hashtags (banque de départ, par langue)
 
 FR : #ThérapeuteSuisse #BienÊtreSuisse #Sophrologie #Naturopathie #Hypnothérapie #MédecineDouce #Magnétisme #Lithothérapie #CabinetBienÊtre #ThérapeuteIndépendant #Romandie
-DE-CH : #TherapeutSchweiz #Naturheilpraktiker #Komplementärmedizin #GanzheitlicheGesundheit #SelbstständigSchweiz
-Marque : #Holiswiss
+EN : #SwissTherapist #Wellbeing #Sophrology #Naturopathy #Hypnotherapy #ComplementaryMedicine #Switzerland #HolisticHealth
+DE-CH : #TherapeutSchweiz #Naturheilpraktiker #Komplementärmedizin #GanzheitlicheGesundheit #SelbstständigSchweiz #Wohlbefinden
+IT : #TerapeutaSvizzera #Benessere #Naturopatia #Ipnosi #MedicinaDolce #Svizzera #Ticino
+Marque (toutes langues) : #Holiswiss
 
 > Adapter les hashtags au réseau (LinkedIn : peu et pro ; TikTok/IG : plus larges). Ajouter le canton quand pertinent (#Genève #Zürich #Lausanne #Tessin).
 

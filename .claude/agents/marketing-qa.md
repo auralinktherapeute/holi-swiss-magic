@@ -18,7 +18,7 @@ Relire la proposition assemblée (Stratège + Copywriter + Designer) et rendre u
 3. **Marque** : charte visuelle respectée (dégradé violet/mauve/turquoise/corail, lotus), signature cohérente.
 4. **Lignes rouges** : aucune promesse médicale, aucun chiffre de revenu non vérifiable, aucun dénigrement, pas d'adresse au client final.
 5. **CTA** : présent, doux, orienté thérapeute.
-6. **Langue** : orthographe/grammaire FR (et DE-CH si présent) impeccables. Hashtags corrects et pertinents.
+6. **4 langues** : les captions FR + EN + DE + IT sont TOUTES présentes, adaptées (pas de traduction littérale bâclée), orthographe/grammaire impeccables dans chaque langue, hashtags localisés corrects. Si une langue manque ou est faible → ❌.
 7. **Réseau/format** : caption et ratio adaptés au réseau visé.
 8. **Objectif unique** : le post sert bien l'objectif fixé par le Stratège.
 

@@ -8,8 +8,15 @@ create table if not exists public.marketing_proposals (
   pillar text,                           -- preuve_sociale | educatif | demo_outil | marque
   angle text,
   format text,
-  caption text not null,
-  hashtags text,
+  -- Multilingue : caption/hashtags par langue (FR = caption/hashtags par défaut).
+  caption text not null,              -- FR
+  caption_en text,
+  caption_de text,
+  caption_it text,
+  hashtags text,                      -- FR
+  hashtags_en text,
+  hashtags_de text,
+  hashtags_it text,
   visual_brief text,
   visual_prompt text,
   suggested_time text,                   -- "18:30"

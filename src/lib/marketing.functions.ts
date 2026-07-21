@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 
 const PROPOSAL_COLUMNS =
-  "id,proposal_date,network,pillar,angle,format,caption,hashtags,visual_brief,visual_prompt,suggested_time,lang,status,correction_note,validated_at,published_at,external_ref,created_at";
+  "id,proposal_date,network,pillar,angle,format,caption,caption_en,caption_de,caption_it,hashtags,hashtags_en,hashtags_de,hashtags_it,visual_brief,visual_prompt,suggested_time,lang,status,correction_note,validated_at,published_at,external_ref,created_at";
 
 /** Liste des propositions marketing (admin only), plus récentes d'abord. */
 export const listMarketingProposals = createServerFn({ method: "GET" })
@@ -69,7 +69,13 @@ export const createMarketingProposal = createServerFn({ method: "POST" })
         angle: z.string().max(500).optional(),
         format: z.string().max(120).optional(),
         caption: z.string().min(1).max(5000),
+        caption_en: z.string().max(5000).optional(),
+        caption_de: z.string().max(5000).optional(),
+        caption_it: z.string().max(5000).optional(),
         hashtags: z.string().max(1000).optional(),
+        hashtags_en: z.string().max(1000).optional(),
+        hashtags_de: z.string().max(1000).optional(),
+        hashtags_it: z.string().max(1000).optional(),
         visual_brief: z.string().max(5000).optional(),
         visual_prompt: z.string().max(2000).optional(),
         suggested_time: z.string().max(20).optional(),

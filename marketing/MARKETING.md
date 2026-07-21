@@ -48,13 +48,13 @@ Références partagées : `marketing/brand-kit.md` (marque, ton, charte, cible) 
 🧭 Angle : <idée du jour en 1 phrase>
 ⏰ Heure suggérée : <hh:mm>
 
-📝 CAPTION
-<texte complet>
+📝 CAPTION (4 langues)
+🇫🇷 FR : <texte complet FR>  #hashtags …
+🇬🇧 EN : <texte complet EN>  #hashtags …
+🇩🇪 DE : <texte complet DE>  #hashtags …
+🇮🇹 IT : <texte complet IT>  #hashtags …
 
-#hashtags #pertinents …
-(variante DE-CH si présente)
-
-🎨 BRIEF VISUEL
+🎨 BRIEF VISUEL (charte Holiswiss : violet/mauve/turquoise/corail + lotus)
 <type + composition + palette + lotus + texte à l'écran + ratio>
 Prompt génératif : « <prompt EN> »
 
