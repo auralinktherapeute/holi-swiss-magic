@@ -157,6 +157,24 @@ export const Route = createFileRoute("/sitemap.xml")({
           console.error("sitemap: articles fetch failed", err);
         }
 
+        // Dynamic: therapist articles ("Voix d'experts") — /paroles/$slug
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: parolesArticles } = await supabaseAdmin
+            .from("therapist_articles")
+            .select("slug, updated_at, published_at")
+            .eq("status", "publie");
+          for (const a of (parolesArticles ?? []) as Array<{ slug: string | null; updated_at: string | null; published_at: string | null }>) {
+            if (!a.slug) continue;
+            const lastmod = (a.updated_at || a.published_at)?.slice(0, 10);
+            for (const lang of LANGS) {
+              urls.push(urlBlock(`${BASE_URL}/${lang}/paroles/${a.slug}`, lastmod, "monthly", "0.7"));
+            }
+          }
+        } catch (err) {
+          console.error("sitemap: paroles fetch failed", err);
+        }
+
         const xml = [
           `<?xml version="1.0" encoding="UTF-8"?>`,
           `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
