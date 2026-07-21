@@ -53,12 +53,18 @@ create or replace function public.trg_notify_marketing_proposal()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if NEW.status = 'en_attente_validation' then
-    perform public.notify_admin_event(
-      'marketing_proposal',
-      'Nouvelle proposition marketing à valider',
-      coalesce(NEW.network, '') || ' — ' || coalesce(NEW.angle, left(NEW.caption, 80)),
-      '/admin/marketing'
-    );
+    -- Notification best-effort : ne JAMAIS bloquer la création d'une proposition
+    -- si la notif (ou la fonction notify_admin_event) échoue ou n'existe pas.
+    begin
+      perform public.notify_admin_event(
+        'marketing_proposal',
+        'Nouvelle proposition marketing à valider',
+        coalesce(NEW.network, '') || ' — ' || coalesce(NEW.angle, left(NEW.caption, 80)),
+        '/admin/marketing'
+      );
+    exception when others then
+      null;
+    end;
   end if;
   return NEW;
 end;
