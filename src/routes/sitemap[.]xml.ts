@@ -162,11 +162,11 @@ export const Route = createFileRoute("/sitemap.xml")({
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: parolesArticles } = await supabaseAdmin
             .from("therapist_articles")
-            .select("slug, updated_at, published_at")
-            .eq("status", "publie");
-          for (const a of (parolesArticles ?? []) as Array<{ slug: string | null; updated_at: string | null; published_at: string | null }>) {
+            .select("slug, updated_at, date_publication")
+            .eq("statut", "publie");
+          for (const a of (parolesArticles ?? []) as Array<{ slug: string | null; updated_at: string | null; date_publication: string | null }>) {
             if (!a.slug) continue;
-            const lastmod = (a.updated_at || a.published_at)?.slice(0, 10);
+            const lastmod = (a.updated_at || a.date_publication)?.slice(0, 10);
             for (const lang of LANGS) {
               urls.push(urlBlock(`${BASE_URL}/${lang}/paroles/${a.slug}`, lastmod, "monthly", "0.7"));
             }
