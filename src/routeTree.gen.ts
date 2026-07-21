@@ -40,6 +40,7 @@ import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
 import { Route as AdminIndexationRouteImport } from './routes/admin.indexation'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
@@ -231,6 +232,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
 const AdminModerationRoute = AdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMarketingRoute = AdminMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminListeAttenteRoute = AdminListeAttenteRouteImport.update({
@@ -440,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/indexation': typeof AdminIndexationRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -506,6 +513,7 @@ export interface FileRoutesByTo {
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/indexation': typeof AdminIndexationRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -576,6 +584,7 @@ export interface FileRoutesById {
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/indexation': typeof AdminIndexationRoute
   '/admin/liste-attente': typeof AdminListeAttenteRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -647,6 +656,7 @@ export interface FileRouteTypes {
     | '/admin/evenements'
     | '/admin/indexation'
     | '/admin/liste-attente'
+    | '/admin/marketing'
     | '/admin/moderation'
     | '/admin/notifications'
     | '/admin/parametres'
@@ -713,6 +723,7 @@ export interface FileRouteTypes {
     | '/admin/evenements'
     | '/admin/indexation'
     | '/admin/liste-attente'
+    | '/admin/marketing'
     | '/admin/moderation'
     | '/admin/notifications'
     | '/admin/parametres'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/admin/evenements'
     | '/admin/indexation'
     | '/admin/liste-attente'
+    | '/admin/marketing'
     | '/admin/moderation'
     | '/admin/notifications'
     | '/admin/parametres'
@@ -1067,6 +1079,13 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/admin/moderation'
       preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/marketing': {
+      id: '/admin/marketing'
+      path: '/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AdminMarketingRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/liste-attente': {
@@ -1405,6 +1424,7 @@ interface AdminRouteChildren {
   AdminEvenementsRoute: typeof AdminEvenementsRoute
   AdminIndexationRoute: typeof AdminIndexationRoute
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
+  AdminMarketingRoute: typeof AdminMarketingRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParametresRoute: typeof AdminParametresRoute
@@ -1426,6 +1446,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEvenementsRoute: AdminEvenementsRoute,
   AdminIndexationRoute: AdminIndexationRoute,
   AdminListeAttenteRoute: AdminListeAttenteRoute,
+  AdminMarketingRoute: AdminMarketingRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParametresRoute: AdminParametresRoute,
@@ -1492,3 +1513,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
