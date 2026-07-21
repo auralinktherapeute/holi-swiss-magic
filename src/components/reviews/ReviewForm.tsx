@@ -67,12 +67,17 @@ export function ReviewForm({
   const submit = async () => {
     if (!user) return;
     if (rating < 1 || rating > 5) {
-      toast.error("Sélectionnez une note");
+      toast.error("Sélectionnez une note en cliquant sur les étoiles.");
       return;
     }
     const trimmed = comment.trim();
-    if (trimmed.length < 20 || trimmed.length > 500) {
-      toast.error("Le commentaire doit faire entre 20 et 500 caractères");
+    if (trimmed.length < 20) {
+      const missing = 20 - trimmed.length;
+      toast.error(`Votre avis est trop court : il manque ${missing} caractère${missing > 1 ? "s" : ""} (20 minimum).`);
+      return;
+    }
+    if (trimmed.length > 500) {
+      toast.error("Votre avis ne doit pas dépasser 500 caractères.");
       return;
     }
     setSubmitting(true);
@@ -189,15 +194,18 @@ export function ReviewForm({
           placeholder="Partagez votre expérience (20 à 500 caractères)…"
           className="w-full rounded-lg border border-[rgba(184,110,249,0.25)] bg-[#0f0a1e] px-3 py-2 text-sm text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#b86ef9] focus:outline-none"
         />
-        <p className={`mt-1 text-xs ${len < 20 || len > 500 ? "text-amber-400" : "text-[rgba(255,255,255,0.4)]"}`}>
-          {len}/500 — minimum 20 caractères
+        <p className={`mt-1 text-xs ${len > 0 && len < 20 ? "text-amber-400" : "text-[rgba(255,255,255,0.4)]"}`}>
+          {len < 20
+            ? `${len}/500 — encore ${20 - len} caractère${20 - len > 1 ? "s" : ""} pour publier`
+            : `${len}/500`}
         </p>
       </div>
       <div className="flex gap-2">
         <button
           onClick={submit}
-          disabled={submitting || rating === 0 || len < 20}
-          className="rounded-full bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-5 py-2 text-sm font-semibold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition"
+          disabled={submitting}
+          aria-disabled={rating === 0 || len < 20}
+          className="rounded-full bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-5 py-2 text-sm font-semibold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition aria-disabled:opacity-60"
         >
           {submitting ? "Envoi…" : existing ? "Mettre à jour" : "Publier mon avis"}
         </button>
