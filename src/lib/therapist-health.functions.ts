@@ -105,3 +105,129 @@ export const runHealthScan = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { processed: (data as number) ?? 0 };
   });
+
+// POINT 3a — suggestion d'article via la passerelle Lovable (in-app, réutilise
+// l'accès gateway existant — pas d'edge function ni de secret séparé à poser).
+export const regenerateArticleIdea = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: t } = await sb.from("therapists").select("specialties,canton").eq("id", data.therapistId).maybeSingle();
+    if (!t) throw new Error("Thérapeute introuvable.");
+
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
+    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const { generateText } = await import("ai");
+    const provider = createOpenAICompatible({
+      name: "lovable",
+      baseURL: "https://ai.gateway.lovable.dev/v1",
+      headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    });
+
+    const specs = (t.specialties ?? []).join(", ") || "bien-être holistique";
+    const system = `Tu es l'assistant éditorial de Holiswiss, annuaire suisse de thérapeutes holistiques.
+À partir des spécialités d'un praticien, propose UN seul sujet d'article pour la section « Voix d'experts ».
+Contraintes : titre concret et cliquable en français, orienté patient suisse, 8 à 14 mots, angle utile
+(bienfaits, idées reçues, remboursement, quand consulter). Respect LPMéd : éviter « soin/guérison/traitement/diagnostic ».
+Réponds UNIQUEMENT par le titre, sans guillemets.`;
+    const prompt = `Spécialités : ${specs}. Canton : ${t.canton ?? "Suisse"}. Propose UN titre d'article.`;
+
+    let title = "";
+    try {
+      const r = await generateText({ model: provider("google/gemini-3-flash-preview"), system, prompt });
+      title = (r.text ?? "").trim().replace(/^["'«»\s]+|["'«»\s]+$/g, "");
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      if (msg.includes("402")) throw new Error("Crédits IA épuisés.");
+      if (msg.includes("429")) throw new Error("Limite de requêtes atteinte, réessayez plus tard.");
+      throw new Error("Génération IA échouée.");
+    }
+    if (!title) throw new Error("L'IA n'a pas renvoyé de titre.");
+
+    await sb.from("therapist_health_scores").update({ article_idea: title, article_idea_source: "llm" }).eq("therapist_id", data.therapistId);
+    return { title };
+  });
+
+// POINT 3b — email d'invitation au thérapeute (score + top actions, cadrage positif).
+// N'inclut JAMAIS la citabilité IA (admin-only).
+export const sendProfileHealthInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: t } = await sb.from("therapists").select("first_name,email").eq("id", data.therapistId).maybeSingle();
+    if (!t?.email) throw new Error("Ce thérapeute n'a pas d'adresse email.");
+    const { data: score } = await sb.from("therapist_health_scores").select("score_total").eq("therapist_id", data.therapistId).maybeSingle();
+    const { data: recos } = await sb
+      .from("therapist_health_recommendations")
+      .select("label,impact_points,severity")
+      .eq("therapist_id", data.therapistId)
+      .eq("status", "todo");
+    const rank: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+    const actions = ((recos ?? []) as any[])
+      .sort((x, y) => (rank[x.severity] ?? 3) - (rank[y.severity] ?? 3) || y.impact_points - x.impact_points)
+      .slice(0, 3)
+      .map((r) => ({ label: r.label as string, impact_points: r.impact_points as number }));
+
+    const { sendProfileHealthEmail } = await import("@/lib/profile-health-email.server");
+    const res = await sendProfileHealthEmail({
+      firstName: t.first_name ?? "",
+      email: t.email,
+      score: score?.score_total ?? 0,
+      actions,
+      sentBy: context.userId,
+    });
+    if (!res.sent) throw new Error("L'email n'a pas pu être envoyé (voir email_logs).");
+    return { sent: true };
+  });
+
+// POINT 5 — envoie l'idée d'article à l'agent GEO (semer une suggestion). L'agent
+// rédige au prochain run et dépose un brouillon `pending_validation` (jamais auto-publié).
+export const queueSuggestedArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: t } = await sb.from("therapists").select("first_name,last_name,specialties").eq("id", data.therapistId).maybeSingle();
+    const { data: score } = await sb.from("therapist_health_scores").select("article_idea").eq("therapist_id", data.therapistId).maybeSingle();
+    const sujet = score?.article_idea as string | undefined;
+    if (!sujet) throw new Error("Aucune idée d'article à envoyer. Générez-la d'abord.");
+    const categorie = (t?.specialties?.[0] as string | undefined) ?? "bien-etre";
+    const { error } = await sb.from("article_suggestions").insert({
+      sujet,
+      categorie,
+      requete_geo: null,
+      priorite: 1,
+      source: "manual",
+      status: "pending",
+      notes: `Suggéré via agent Santé de Profil pour ${t?.first_name ?? ""} ${t?.last_name ?? ""}`.trim(),
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// POINT 4 — déclenche à la demande la mesure de citabilité IA (edge function).
+export const runCitabilityScan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Configuration Supabase manquante.");
+    const res = await fetch(`${url}/functions/v1/measure-ai-citability`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!res.ok) throw new Error(`Mesure de citabilité échouée (HTTP ${res.status}).`);
+    const j = (await res.json()) as { processed?: number; reachable?: number };
+    return { processed: j.processed ?? 0, reachable: j.reachable ?? 0 };
+  });

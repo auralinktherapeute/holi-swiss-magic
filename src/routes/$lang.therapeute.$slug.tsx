@@ -224,9 +224,9 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("reviews")
-        .select("id,rating,comment,author_name,author_avatar_url,created_at")
+        .select("id,rating,title,body,created_at,therapist_reply,therapist_reply_at")
         .eq("therapist_id", th!.id)
-        .eq("status", "approved")
+        .in("status", ["validated", "published"])
         .order("created_at", { ascending: false });
       if (error) return [];
       return data ?? [];
@@ -628,23 +628,26 @@ function Page() {
                     <div key={r.id} className="rounded-xl border border-[rgba(184,110,249,0.12)] bg-[rgba(184,110,249,0.04)] p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          {r.author_avatar_url ? (
-                            <img src={r.author_avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
-                              {String(r.author_name ?? "?")[0]?.toUpperCase() ?? "?"}
-                            </div>
-                          )}
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
+                            C
+                          </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-white">{r.author_name ?? "Anonyme"}</span>
-                          <StarRow rating={r.rating} size={3} />
+                            <span className="text-xs font-semibold text-white">Client vérifié</span>
+                            <StarRow rating={r.rating} size={3} />
                           </div>
                         </div>
                         <span className="text-xs text-[rgba(255,255,255,0.35)]">
                           {new Date(r.created_at).toLocaleDateString(reviewLocale, { day: "numeric", month: "short", year: "numeric" })}
                         </span>
                       </div>
-                      {r.comment && <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">{r.comment}</p>}
+                      {r.title && <p className="text-sm font-semibold text-white mb-1">{r.title}</p>}
+                      {r.body && <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">{r.body}</p>}
+                      {r.therapist_reply && (
+                        <div className="mt-3 rounded-lg border-l-2 border-[#5cc8fa] bg-[rgba(92,200,250,0.06)] p-3">
+                          <p className="text-xs font-semibold text-[#5cc8fa]">Réponse du praticien</p>
+                          <p className="mt-0.5 text-sm text-[rgba(255,255,255,0.75)]">{r.therapist_reply}</p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

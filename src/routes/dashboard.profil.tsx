@@ -33,6 +33,8 @@ import {
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
+import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
+import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
@@ -542,6 +544,13 @@ function ProfilePage() {
             }}
           />
         </div>
+
+        {/* Photos du cabinet & certifications (agent Santé de Profil) */}
+        <Section>
+          <CabinetPhotosUploader userId={user!.id} />
+          <Divider />
+          <CertificationsUploader userId={user!.id} />
+        </Section>
 
         {/* Identity */}
         <Section>
