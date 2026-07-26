@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
-  Menu, X, Home, Gauge, Workflow, Bell, Sparkles, Globe2, Mic, Megaphone,
+  Menu, X, Home, Gauge, Workflow, Bell, Sparkles, Globe2, Mic, Megaphone, HeartPulse,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -85,6 +85,7 @@ export function AdminNav() {
     { to: "/admin",                  icon: LayoutDashboard, label: t("admin.overview"),       exact: true },
     { to: "/admin/notifications",    icon: Bell,            label: "Notifications",           badge: visibleCount("/admin/notifications", unread) },
     { to: "/admin/therapeutes",      icon: Users,           label: t("admin.therapists"),     badge: visibleCount("/admin/therapeutes", counts.therapists) },
+    { to: "/admin/sante-profils",    icon: HeartPulse,      label: "Santé des profils" },
     { to: "/admin/liste-attente",    icon: Hourglass,       label: t("admin.waitlist"),       badge: visibleCount("/admin/liste-attente", counts.waitlist) },
     { to: "/admin/moderation",       icon: ShieldAlert,     label: t("admin.moderation"),     badge: visibleCount("/admin/moderation", counts.moderation) },
     { to: "/admin/avis",             icon: Star,            label: t("admin.reviews"),        badge: visibleCount("/admin/avis", counts.reviews) },
