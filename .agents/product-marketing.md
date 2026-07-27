@@ -33,15 +33,22 @@ Confondre les deux est l'erreur la plus fréquente — toujours nommer la face v
 | Abonnés payants | **0** (tous en `free`) | La monétisation n'a jamais été testée |
 | Cantons couverts | **4 / 26** — BS, GE, NE, VD | Suisse alémanique et Tessin quasi vierges |
 | Villes présentes | Basel, Genève, Lausanne, Payerne, Boudevilliers, Le Chenit | Romandie surreprésentée |
-| Articles publiés | **38, tous en français** | DE/IT/EN inexploités alors que **DE ≈ 62 % de la population** |
+| Articles publiés | **38**, intégralement traduits en **FR et DE** (IT/EN : titres seuls) | Le contenu allemand existe déjà |
+| **Indexation Google** | **0 page de blog indexée sur 152** — « URL unknown to Google » | **Le vrai verrou** |
+| Trafic Google, 90 jours | **2 clics, 45 impressions** | Site quasi invisible, dans TOUTES les langues |
+| Ancrage géographique des articles DE | **0 article ancré en Suisse alémanique** (7 purement romands, 31 mixtes) | Traduits, pas localisés |
 | Catégories d'articles | 26 (naturopathie, ostéopathie, sophrologie, acupuncture…) | Bonne base thématique |
 | Score santé des fiches | 15 à 66 / 100, **aucune ≥ 75** | Fiches pauvres = faible conversion patient |
 
-**Trois vérités inconfortables à garder en tête :**
+**Quatre vérités inconfortables à garder en tête :**
 1. Un annuaire à 10 fiches ne peut pas promettre « trouvez votre thérapeute partout en Suisse ».
    Ne jamais laisser entendre une couverture qu'on n'a pas.
 2. Personne ne paie encore. Toute réflexion prix/offre est une **hypothèse à tester**, pas un acquis.
-3. Le contenu est monolingue alors que le marché principal est germanophone.
+3. **Le blog n'est pas indexé du tout.** Écrire davantage ne sert à rien tant que Google n'a pas
+   découvert l'existant : le socle technique est sain, c'est l'autorité du domaine qui manque.
+   Voir `marketing/plan-visibilite.md`.
+4. Le contenu allemand est **traduit du français**, donc ancré en Romandie (« Suisse romande »,
+   Genève, Lausanne). Un lecteur zurichois ne s'y reconnaît pas. Voir `marketing/sujets-alemanique.md`.
 
 ---
 
@@ -114,7 +121,7 @@ Ce ne sont **pas des traductions littérales** : le message clé reste identique
 | Langue | Marché | Registre |
 |---|---|---|
 | **FR** | Romandie (GE, VD, NE, FR, VS, JU) | Chaleureux, proche |
-| **DE-CH** | Suisse alémanique — **le plus gros marché, le moins exploité** | Sobre, factuel, crédible. Éviter l'emphase française |
+| **DE-CH** | Suisse alémanique — **le plus gros marché ; contenu traduit mais non localisé** | Sobre, factuel, crédible. Éviter l'emphase française |
 | **IT** | Tessin | Chaleureux, plus expressif |
 | **EN** | Expatriés (Zurich, Genève, Zoug, Bâle) | Direct, international |
 
@@ -141,7 +148,9 @@ réelle du visuel, jamais se fier au seul mot-clé de recherche.
 
 | Canal | Face visée | Priorité | État |
 |---|---|---|---|
-| **SEO / blog** | Patient | ⭐⭐⭐ | 38 articles FR ; **DE/IT/EN à ouvrir** |
+| **Indexation Google** | — | ⭐⭐⭐ | **Priorité absolue** : 0/152 page de blog indexée |
+| **Liens entrants** | — | ⭐⭐⭐ | Le seul levier durable d'autorité (associations, annuaires suisses) |
+| **SEO / blog** | Patient | ⭐⭐ | 38 articles FR+DE écrits ; **à faire découvrir, puis à localiser** |
 | **GEO — citabilité IA** | Patient | ⭐⭐⭐ | Levier différenciant, agents en place |
 | **Pages canton × spécialité** | Patient | ⭐⭐⭐ | Inexploité, potentiel le plus fort |
 | **Instagram** | Thérapeute | ⭐⭐ | Carrousel éducatif, reel, preuve sociale |
