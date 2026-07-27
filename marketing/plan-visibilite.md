@@ -21,8 +21,9 @@
   « Naturheilkunde ». Impact SEO supérieur à celui des URL.
 - Codes cantonaux dans le champ ville corrigés (2 fiches) — appliqué
 
-**Reste en attente d'application par Lovable :** `20260727140000_marketing_agent_threads.sql`
-(conversations de l'agent marketing).
+**Migrations : les 6 du 27/07 sont appliquées en production**, y compris
+`20260727140000_marketing_agent_threads.sql` — l'agent marketing est opérationnel
+depuis l'onglet « Demander à l'agent ».
 
 ---
 
