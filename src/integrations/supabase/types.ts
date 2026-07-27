@@ -140,6 +140,42 @@ export type Database = {
         }
         Relationships: []
       }
+      article_suggestions: {
+        Row: {
+          categorie: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          priorite: number
+          requete_geo: string | null
+          source: string
+          status: string
+          sujet: string
+        }
+        Insert: {
+          categorie?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priorite?: number
+          requete_geo?: string | null
+          source?: string
+          status?: string
+          sujet: string
+        }
+        Update: {
+          categorie?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priorite?: number
+          requete_geo?: string | null
+          source?: string
+          status?: string
+          sujet?: string
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author_id: string | null
@@ -1748,6 +1784,8 @@ export type Database = {
           rating: number
           status: string
           therapist_id: string
+          therapist_reply: string | null
+          therapist_reply_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1760,6 +1798,8 @@ export type Database = {
           rating: number
           status?: string
           therapist_id: string
+          therapist_reply?: string | null
+          therapist_reply_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1772,6 +1812,8 @@ export type Database = {
           rating?: number
           status?: string
           therapist_id?: string
+          therapist_reply?: string | null
+          therapist_reply_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2142,6 +2184,51 @@ export type Database = {
           },
         ]
       }
+      therapist_certifications: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          issuer: string | null
+          name: string
+          therapist_id: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          issuer?: string | null
+          name: string
+          therapist_id: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          issuer?: string | null
+          name?: string
+          therapist_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_certifications_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_certifications_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_documents: {
         Row: {
           created_at: string
@@ -2185,6 +2272,165 @@ export type Database = {
             foreignKeyName: "therapist_documents_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_health_recommendations: {
+        Row: {
+          category: string | null
+          code: string
+          id: string
+          impact_points: number
+          label: string
+          severity: string
+          status: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          code: string
+          id?: string
+          impact_points?: number
+          label: string
+          severity?: string
+          status?: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          code?: string
+          id?: string
+          impact_points?: number
+          label?: string
+          severity?: string
+          status?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_health_recommendations_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_health_recommendations_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_health_score_history: {
+        Row: {
+          breakdown: Json | null
+          computed_at: string
+          id: string
+          score_total: number
+          therapist_id: string
+        }
+        Insert: {
+          breakdown?: Json | null
+          computed_at?: string
+          id?: string
+          score_total: number
+          therapist_id: string
+        }
+        Update: {
+          breakdown?: Json | null
+          computed_at?: string
+          id?: string
+          score_total?: number
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_health_score_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_health_score_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_health_scores: {
+        Row: {
+          ai_citability: number | null
+          ai_citability_at: string | null
+          ai_citability_detail: Json | null
+          article_idea: string | null
+          article_idea_source: string
+          computed_at: string
+          gaps: Json
+          grade: string
+          score_activite: number
+          score_completude: number
+          score_contenu: number
+          score_total: number
+          score_visibilite: number
+          strengths: Json
+          therapist_id: string
+        }
+        Insert: {
+          ai_citability?: number | null
+          ai_citability_at?: string | null
+          ai_citability_detail?: Json | null
+          article_idea?: string | null
+          article_idea_source?: string
+          computed_at?: string
+          gaps?: Json
+          grade?: string
+          score_activite?: number
+          score_completude?: number
+          score_contenu?: number
+          score_total?: number
+          score_visibilite?: number
+          strengths?: Json
+          therapist_id: string
+        }
+        Update: {
+          ai_citability?: number | null
+          ai_citability_at?: string | null
+          ai_citability_detail?: Json | null
+          article_idea?: string | null
+          article_idea_source?: string
+          computed_at?: string
+          gaps?: Json
+          grade?: string
+          score_activite?: number
+          score_completude?: number
+          score_contenu?: number
+          score_total?: number
+          score_visibilite?: number
+          strengths?: Json
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_health_scores_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_health_scores_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
             referencedRelation: "therapists_public"
             referencedColumns: ["id"]
           },
@@ -2357,6 +2603,45 @@ export type Database = {
           },
           {
             foreignKeyName: "therapist_invoices_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_media: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          therapist_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          therapist_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          therapist_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_media_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_media_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
@@ -2909,6 +3194,8 @@ export type Database = {
         }[]
       }
       admin_unread_count: { Args: never; Returns: number }
+      compute_therapist_health: { Args: never; Returns: number }
+      compute_therapist_health_one: { Args: { _id: string }; Returns: boolean }
       create_admin_notification: {
         Args: {
           _data?: Json
@@ -2949,6 +3236,7 @@ export type Database = {
         Returns: boolean
       }
       immutable_unaccent: { Args: { "": string }; Returns: string }
+      is_admin: { Args: { _uid: string }; Returns: boolean }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
       is_therapist_owner: { Args: { _therapist_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
@@ -3038,6 +3326,38 @@ export type Database = {
           specialties: string[]
           subscription_plan: string
           title: string
+          verified: boolean
+        }[]
+      }
+      suggest_article_idea: { Args: { _specs: string[] }; Returns: string }
+      therapist_health_signals: {
+        Args: { _id?: string }
+        Returns: {
+          appts_90d: number
+          avg_rating: number
+          bio_len: number
+          has_geo: boolean
+          has_meta: boolean
+          has_photo: boolean
+          has_price: boolean
+          has_web: boolean
+          is_premium: boolean
+          last_content_at: string
+          last_login: string
+          n_articles: number
+          n_avail: number
+          n_certifications: number
+          n_events: number
+          n_languages: number
+          n_media: number
+          n_modes: number
+          n_reply: number
+          n_reviews: number
+          n_specialties: number
+          profile_updated: string
+          slug: string
+          specialties: string[]
+          therapist_id: string
           verified: boolean
         }[]
       }
