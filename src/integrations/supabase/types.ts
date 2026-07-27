@@ -204,6 +204,7 @@ export type Database = {
           published_at: string | null
           secondary_tags: string[]
           slug: string
+          slug_de: string | null
           status: string
           title_de: string | null
           title_en: string | null
@@ -238,6 +239,7 @@ export type Database = {
           published_at?: string | null
           secondary_tags?: string[]
           slug: string
+          slug_de?: string | null
           status?: string
           title_de?: string | null
           title_en?: string | null
@@ -272,6 +274,7 @@ export type Database = {
           published_at?: string | null
           secondary_tags?: string[]
           slug?: string
+          slug_de?: string | null
           status?: string
           title_de?: string | null
           title_en?: string | null
