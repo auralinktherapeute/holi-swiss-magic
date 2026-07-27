@@ -208,7 +208,7 @@ function Page() {
             ) : detailLoading || !detail ? (
               <div className="flex items-center gap-2 text-white/60"><Loader2 className="animate-spin" size={16} /> Chargement de la fiche…</div>
             ) : (
-              <DetailCard detail={detail} onChangeStatus={changeStatus} onRefreshDetail={refreshDetail} />
+              <DetailCard therapistId={selected} detail={detail} onChangeStatus={changeStatus} onRefreshDetail={refreshDetail} />
             )}
           </div>
         </div>
@@ -217,8 +217,9 @@ function Page() {
   );
 }
 
-function DetailCard({ detail, onChangeStatus, onRefreshDetail }: { detail: any; onChangeStatus: (id: string, s: string) => void; onRefreshDetail: () => Promise<void> }) {
+function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { therapistId: string; detail: any; onChangeStatus: (id: string, s: string) => void; onRefreshDetail: () => Promise<void> }) {
   const t = detail.therapist ?? {};
+  const tid = t.id ?? therapistId;
   const s = detail.score ?? {};
   const grade = s.grade ?? "red";
   const cit: number | null = s.ai_citability ?? null;
@@ -230,17 +231,17 @@ function DetailCard({ detail, onChangeStatus, onRefreshDetail }: { detail: any; 
 
   const doRegen = async () => {
     setBusy("regen");
-    try { await regen({ data: { therapistId: t.id } }); toast.success("Nouvelle idée générée par l'IA."); await onRefreshDetail(); }
+    try { await regen({ data: { therapistId: tid } }); toast.success("Nouvelle idée générée par l'IA."); await onRefreshDetail(); }
     catch (e: any) { toast.error(e?.message ?? "Échec"); } finally { setBusy(null); }
   };
   const doQueue = async () => {
     setBusy("queue");
-    try { await queue({ data: { therapistId: t.id } }); toast.success("Idée envoyée à l'agent GEO — brouillon à valider dans /admin/articles."); }
+    try { await queue({ data: { therapistId: tid } }); toast.success("Idée envoyée à l'agent GEO — brouillon à valider dans /admin/articles."); }
     catch (e: any) { toast.error(e?.message ?? "Échec"); } finally { setBusy(null); }
   };
   const doInvite = async () => {
     setBusy("invite");
-    try { await invite({ data: { therapistId: t.id } }); toast.success("Email d'invitation envoyé au thérapeute."); }
+    try { await invite({ data: { therapistId: tid } }); toast.success("Email d'invitation envoyé au thérapeute."); }
     catch (e: any) { toast.error(e?.message ?? "Échec"); } finally { setBusy(null); }
   };
 
