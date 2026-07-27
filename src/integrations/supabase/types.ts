@@ -1992,6 +1992,7 @@ export type Database = {
           name_fr: string
           name_it: string | null
           slug: string
+          slug_de: string | null
           sort_order: number
           updated_at: string
         }
@@ -2011,6 +2012,7 @@ export type Database = {
           name_fr: string
           name_it?: string | null
           slug: string
+          slug_de?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -2030,6 +2032,7 @@ export type Database = {
           name_fr?: string
           name_it?: string | null
           slug?: string
+          slug_de?: string | null
           sort_order?: number
           updated_at?: string
         }
