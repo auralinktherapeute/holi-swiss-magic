@@ -36,6 +36,7 @@ import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abon
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
+import { Route as AdminSanteProfilsRouteImport } from './routes/admin.sante-profils'
 import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
@@ -212,6 +213,11 @@ const AdminTherapeutesRoute = AdminTherapeutesRouteImport.update({
 const AdminSeoRoute = AdminSeoRouteImport.update({
   id: '/seo',
   path: '/seo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSanteProfilsRoute = AdminSanteProfilsRouteImport.update({
+  id: '/sante-profils',
+  path: '/sante-profils',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminParolesRoute = AdminParolesRouteImport.update({
@@ -451,6 +457,7 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
+  '/admin/sante-profils': typeof AdminSanteProfilsRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -518,6 +525,7 @@ export interface FileRoutesByTo {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
+  '/admin/sante-profils': typeof AdminSanteProfilsRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -589,6 +597,7 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
+  '/admin/sante-profils': typeof AdminSanteProfilsRoute
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -661,6 +670,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
+    | '/admin/sante-profils'
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
@@ -728,6 +738,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
+    | '/admin/sante-profils'
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
@@ -798,6 +809,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
+    | '/admin/sante-profils'
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
@@ -1051,6 +1063,13 @@ declare module '@tanstack/react-router' {
       path: '/seo'
       fullPath: '/admin/seo'
       preLoaderRoute: typeof AdminSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sante-profils': {
+      id: '/admin/sante-profils'
+      path: '/sante-profils'
+      fullPath: '/admin/sante-profils'
+      preLoaderRoute: typeof AdminSanteProfilsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/paroles': {
@@ -1429,6 +1448,7 @@ interface AdminRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminParolesRoute: typeof AdminParolesRoute
+  AdminSanteProfilsRoute: typeof AdminSanteProfilsRoute
   AdminSeoRoute: typeof AdminSeoRoute
   AdminTherapeutesRoute: typeof AdminTherapeutesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
@@ -1451,6 +1471,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminParolesRoute: AdminParolesRoute,
+  AdminSanteProfilsRoute: AdminSanteProfilsRoute,
   AdminSeoRoute: AdminSeoRoute,
   AdminTherapeutesRoute: AdminTherapeutesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
