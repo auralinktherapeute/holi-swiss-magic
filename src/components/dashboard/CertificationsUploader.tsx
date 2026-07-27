@@ -27,10 +27,14 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
   const [year, setYear] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
+  // Masque la section tant que la table n'existe pas côté base.
+  const [supported, setSupported] = useState(true);
+
   const refresh = useCallback(async () => {
     try {
       const res = await fetchList();
       setRows(res.rows);
+      if ((res as any).supported === false) setSupported(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Chargement impossible");
     } finally {
@@ -91,6 +95,8 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       toast.error(e?.message ?? "Suppression impossible");
     }
   };
+
+  if (!supported) return null;
 
   return (
     <div>

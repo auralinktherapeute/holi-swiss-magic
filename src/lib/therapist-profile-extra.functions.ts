@@ -22,6 +22,21 @@ async function recompute(sb: any, therapistId: string) {
   }
 }
 
+// La base de production ne possède pas encore les tables/colonnes de ces
+// fonctionnalités. Tant qu'elles manquent, l'UI se masque au lieu d'afficher
+// une erreur au thérapeute — et s'allumera d'elle-même une fois la migration passée.
+function isMissingSchema(error: any): boolean {
+  const code = error?.code ?? "";
+  const msg = String(error?.message ?? "");
+  return (
+    code === "42P01" || // undefined_table
+    code === "42703" || // undefined_column
+    code === "PGRST205" || // table absente du cache PostgREST
+    code === "PGRST204" ||
+    /does not exist|could not find the (table|column)/i.test(msg)
+  );
+}
+
 function pathFrom(url: string, bucket: string): string | null {
   const m = url.match(new RegExp(`/storage/v1/object/(?:public|sign|authenticated)/${bucket}/([^?]+)`));
   return m ? decodeURIComponent(m[1]) : null;
@@ -33,12 +48,16 @@ export const listMyCabinetPhotos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { data } = await sb
+    const { data, error } = await sb
       .from("therapist_media")
       .select("id,url,created_at")
       .eq("therapist_id", therapistId)
       .eq("kind", "cabinet")
       .order("created_at", { ascending: true });
+    if (error) {
+      if (isMissingSchema(error)) return { rows: [], supported: false };
+      throw new Error(error.message);
+    }
     const rows = await Promise.all(
       (data ?? []).map(async (m: any) => {
         let signedUrl = m.url as string;
@@ -50,7 +69,7 @@ export const listMyCabinetPhotos = createServerFn({ method: "GET" })
         return { id: m.id as string, signedUrl };
       }),
     );
-    return { rows };
+    return { rows, supported: true };
   });
 
 export const addCabinetPhoto = createServerFn({ method: "POST" })
@@ -86,11 +105,15 @@ export const listMyCertifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { data } = await sb
+    const { data, error } = await sb
       .from("therapist_certifications")
       .select("id,name,issuer,year,file_url,created_at")
       .eq("therapist_id", therapistId)
       .order("created_at", { ascending: false });
+    if (error) {
+      if (isMissingSchema(error)) return { rows: [], supported: false };
+      throw new Error(error.message);
+    }
     const rows = await Promise.all(
       (data ?? []).map(async (ce: any) => {
         let fileUrl: string | null = null;
@@ -101,7 +124,7 @@ export const listMyCertifications = createServerFn({ method: "GET" })
         return { id: ce.id as string, name: ce.name as string, issuer: ce.issuer as string | null, year: ce.year as number | null, fileUrl };
       }),
     );
-    return { rows };
+    return { rows, supported: true };
   });
 
 export const addCertification = createServerFn({ method: "POST" })
@@ -147,14 +170,24 @@ export const listMyReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { data, error } = await sb
+    // Schéma de production : comment / author_name / status='approved'.
+    const base = await sb
       .from("reviews")
-      .select("id,rating,title,body,created_at,status,therapist_reply,therapist_reply_at")
+      .select("id,rating,comment,author_name,created_at,status")
       .eq("therapist_id", therapistId)
-      .in("status", ["validated", "published"])
+      .eq("status", "approved")
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return { rows: data ?? [] };
+    if (base.error) throw new Error(base.error.message);
+
+    // La réponse du praticien n'existe pas encore partout : on la tente à part.
+    const enriched = await sb
+      .from("reviews")
+      .select("id,rating,comment,author_name,created_at,status,therapist_reply,therapist_reply_at")
+      .eq("therapist_id", therapistId)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+    const canReply = !enriched.error;
+    return { rows: (canReply ? enriched.data : base.data) ?? [], canReply };
   });
 
 export const replyToReview = createServerFn({ method: "POST" })
@@ -173,7 +206,10 @@ export const replyToReview = createServerFn({ method: "POST" })
       .eq("therapist_id", therapistId) // garantit que l'avis appartient bien au thérapeute
       .select("id")
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (isMissingSchema(error)) throw new Error("La réponse aux avis n'est pas encore activée sur cette plateforme.");
+      throw new Error(error.message);
+    }
     if (!row) throw new Error("Avis introuvable.");
     await recompute(sb, therapistId);
     return { ok: true };

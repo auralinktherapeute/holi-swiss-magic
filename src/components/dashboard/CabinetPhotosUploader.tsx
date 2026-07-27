@@ -17,11 +17,14 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
   const [photos, setPhotos] = useState<{ id: string; signedUrl: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Masque la section tant que la table n'existe pas côté base.
+  const [supported, setSupported] = useState(true);
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetchList();
       setPhotos(res.rows);
+      if ((res as any).supported === false) setSupported(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Chargement impossible");
     } finally {
@@ -73,6 +76,8 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
       toast.error(e?.message ?? "Suppression impossible");
     }
   };
+
+  if (!supported) return null;
 
   return (
     <div>

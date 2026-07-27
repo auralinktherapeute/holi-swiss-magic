@@ -10,12 +10,12 @@ export const Route = createFileRoute("/dashboard/avis")({ component: Page });
 type Review = {
   id: string;
   rating: number;
-  title: string | null;
-  body: string | null;
+  comment: string | null;
+  author_name: string | null;
   created_at: string;
   status: string;
-  therapist_reply: string | null;
-  therapist_reply_at: string | null;
+  therapist_reply?: string | null;
+  therapist_reply_at?: string | null;
 };
 
 function Stars({ n }: { n: number }) {
@@ -35,11 +35,14 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  // La réponse aux avis n'est proposée que si la colonne existe en base.
+  const [canReply, setCanReply] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetchReviews();
       setRows(res.rows as Review[]);
+      setCanReply((res as any).canReply !== false);
     } catch (e: any) {
       toast.error(e?.message ?? "Chargement impossible");
     } finally {
@@ -93,9 +96,10 @@ function Page() {
                   <Stars n={r.rating} />
                   <span className="text-xs text-white/40">{new Date(r.created_at).toLocaleDateString("fr-CH")}</span>
                 </div>
-                {r.title && <p className="mt-2 font-semibold text-white">{r.title}</p>}
-                {r.body && <p className="mt-1 text-sm text-white/75">{r.body}</p>}
+                {r.author_name && <p className="mt-2 font-semibold text-white">{r.author_name}</p>}
+                {r.comment && <p className="mt-1 text-sm text-white/75">{r.comment}</p>}
 
+                {canReply && (
                 <div className="mt-3 rounded-xl bg-white/5 p-3">
                   <label className="text-xs font-semibold text-cyan-300">
                     {hasReply ? "Votre réponse (publiée)" : "Votre réponse"}
@@ -119,6 +123,7 @@ function Page() {
                     </button>
                   </div>
                 </div>
+                )}
               </li>
             );
           })}
