@@ -1,7 +1,7 @@
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getPublishedArticles, titleForLang, excerptForLang } from "@/lib/articles.functions";
+import { getPublishedArticles, titleForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
 import { CalendarDays, ArrowRight, BookOpen } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { categoryLabel } from "@/lib/article-categories";
@@ -146,7 +146,7 @@ function Page() {
           return (
             <Link
               to="/$lang/blog/$slug"
-              params={{ lang: l, slug: featured.slug ?? "" }}
+              params={{ lang: l, slug: slugForLang(a, l) || featured.slug || "" }}
               className="group mb-10 flex flex-col md:flex-row overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[#3d1a5c] hover:border-[#b86ef9] hover:shadow-[0_0_30px_rgba(184,110,249,0.2)] transition-all"
             >
               <div className="md:w-1/2 aspect-video md:aspect-auto overflow-hidden bg-[#522870]">
@@ -194,7 +194,7 @@ function Page() {
                 <Link
                   key={article.id}
                   to="/$lang/blog/$slug"
-                  params={{ lang: l, slug: article.slug ?? "" }}
+                  params={{ lang: l, slug: slugForLang(a, l) || article.slug || "" }}
                   className="group flex flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c] hover:border-[#b86ef9] hover:shadow-[0_0_20px_rgba(184,110,249,0.15)] transition-all"
                 >
                   <div className="aspect-video overflow-hidden bg-[#522870]">

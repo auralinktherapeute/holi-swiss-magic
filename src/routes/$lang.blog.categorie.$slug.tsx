@@ -1,7 +1,7 @@
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getArticlesByCategory, titleForLang, excerptForLang } from "@/lib/articles.functions";
+import { getArticlesByCategory, titleForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
 import { categoryLabel, getCategory, GROUP_LABELS, type GroupKey } from "@/lib/article-categories";
 import { CalendarDays, ArrowRight, BookOpen, ArrowLeft } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
@@ -161,7 +161,7 @@ function Page() {
                 <Link
                   key={article.id}
                   to="/$lang/blog/$slug"
-                  params={{ lang: l, slug: article.slug ?? "" }}
+                  params={{ lang: l, slug: slugForLang(a, l) || article.slug || "" }}
                   className="group flex flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c] hover:border-[#b86ef9] hover:shadow-[0_0_20px_rgba(184,110,249,0.15)] transition-all"
                 >
                   <div className="aspect-video overflow-hidden bg-[#522870]">

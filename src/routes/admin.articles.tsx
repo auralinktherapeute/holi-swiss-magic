@@ -86,7 +86,7 @@ function UnsplashPicker({ onSelect }: { onSelect: (url: string) => void }) {
 
 // ── Article form ──────────────────────────────────────────────────────────────
 type ArticleRow = {
-  id: string; slug: string | null; status: string; lang: string;
+  id: string; slug: string | null; slug_de: string | null; status: string; lang: string;
   category: string | null; secondary_tags?: string[] | null; published_at: string | null; created_at: string | null;
   updated_at?: string | null; cover_image_url: string | null; author_id?: string | null;
   image_alt_text?: string | null;
@@ -101,7 +101,7 @@ type FormData = {
   title_fr: string; title_de: string; title_it: string; title_en: string;
   body_fr: string; body_de: string; body_it: string; body_en: string;
   excerpt_fr: string; excerpt_de: string; excerpt_it: string; excerpt_en: string;
-  slug: string; cover_image_url: string; category: string; secondary_tags: string[];
+  slug: string; slug_de: string; cover_image_url: string; category: string; secondary_tags: string[];
   image_alt_text: string;
   lang: Lang; status: Status;
   meta_title_fr: string; meta_description_fr: string;
@@ -111,7 +111,7 @@ const EMPTY: FormData = {
   title_fr: "", title_de: "", title_it: "", title_en: "",
   body_fr: "", body_de: "", body_it: "", body_en: "",
   excerpt_fr: "", excerpt_de: "", excerpt_it: "", excerpt_en: "",
-  slug: "", cover_image_url: "", category: "", secondary_tags: [], lang: "fr", status: "draft",
+  slug: "", slug_de: "", cover_image_url: "", category: "", secondary_tags: [], lang: "fr", status: "draft",
   image_alt_text: "",
   meta_title_fr: "", meta_description_fr: "",
 };
@@ -127,7 +127,7 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
   useEffect(() => {
     if (!open || hasSessionState(formKey)) return;
     setForm(initial
-      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", cover_image_url: initial.cover_image_url ?? "", image_alt_text: initial.image_alt_text ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
+      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", slug_de: initial.slug_de ?? "", cover_image_url: initial.cover_image_url ?? "", image_alt_text: initial.image_alt_text ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
       : EMPTY
     );
   }, [formKey, initial, open, setForm]);
@@ -257,10 +257,29 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
           </Tabs>
 
           {/* Paramètres */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-5 gap-3">
             <div className="space-y-1">
               <Label>Slug</Label>
               <Input value={form.slug} onChange={e => set("slug", e.target.value)} className="bg-background border-border/60 font-mono text-sm" placeholder="auto" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <Label>Slug allemand</Label>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" aria-label="Aide slug allemand" className="text-muted-foreground hover:text-foreground">
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      URL utilisée sur /de/blog/… Laissez vide pour réutiliser le slug ci-contre —
+                      utile uniquement si vous voulez une adresse en allemand plutôt qu'en français.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input value={form.slug_de} onChange={e => set("slug_de", e.target.value)} className="bg-background border-border/60 font-mono text-sm" placeholder="= slug ci-contre" />
             </div>
             <div className="space-y-1">
               <Label>Catégorie</Label>

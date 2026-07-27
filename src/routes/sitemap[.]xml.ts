@@ -141,16 +141,27 @@ export const Route = createFileRoute("/sitemap.xml")({
         // Dynamic: blog articles — separate Holiswiss CMS project
         try {
           const { holiswissPublic } = await import("@/integrations/supabase/holiswiss-public");
-          const { data: articles } = await (holiswissPublic as any)
+          // slug_de peut ne pas encore exister côté base (migration pas encore
+          // appliquée) : on retombe sur le slug de base plutôt que de perdre
+          // silencieusement les 150+ URL du blog du sitemap.
+          let { data: articles, error } = await (holiswissPublic as any)
             .from("articles")
-            .select("slug, published_at, updated_at")
+            .select("slug, slug_de, published_at, updated_at")
             .eq("status", "validated");
+          if (error) {
+            ({ data: articles, error } = await (holiswissPublic as any)
+              .from("articles")
+              .select("slug, published_at, updated_at")
+              .eq("status", "validated"));
+            if (error) throw error;
+          }
 
-          for (const a of (articles ?? []) as Array<{ slug: string; published_at: string | null; updated_at: string | null }>) {
+          for (const a of (articles ?? []) as Array<{ slug: string; slug_de?: string | null; published_at: string | null; updated_at: string | null }>) {
             if (!a.slug) continue;
             const lastmod = (a.updated_at || a.published_at)?.slice(0, 10);
             for (const lang of LANGS) {
-              urls.push(urlBlock(`${BASE_URL}/${lang}/blog/${a.slug}`, lastmod, "monthly", "0.7"));
+              const slug = lang === "de" ? (a.slug_de || a.slug) : a.slug;
+              urls.push(urlBlock(`${BASE_URL}/${lang}/blog/${slug}`, lastmod, "monthly", "0.7"));
             }
           }
         } catch (err) {

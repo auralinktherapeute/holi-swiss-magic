@@ -19,6 +19,18 @@ n'apparaîtra jamais en production (erreur commise le 26/07/2026, une journée p
 `qqwud` **n'appartient pas au compte Supabase de Gérald** (il est détenu par Lovable) : il n'apparaît pas
 dans `list_projects` et **aucune permission ne peut être accordée**. Ce n'est pas contournable.
 
+**Piège n°2, identique dans l'esprit : `npm run dev` / `vite dev` en local lit `.env.local`, pas
+`.env`.** Vite priorise `.env.local` → **le serveur de dev local parle à `gpld`, jamais à `qqwud`**
+(vérifié le 27/07/2026 : une erreur de colonne manquante en local, invisible sur la colonne
+réellement absente, provenait de `gpld` — pas d'un bug de code). Conséquence : le navigateur de
+dev local (`preview_start` par nom) **n'est pas fiable** pour vérifier un comportement qui dépend
+du schéma ou des données de prod — les deux bases ont aussi des JEUX DE DONNÉES différents (10
+thérapeutes réels sur qqwud vs 8 fiches de démo sur gpld), pas seulement des colonnes différentes.
+Pour vérifier un changement de schéma/comportement contre la réalité : `curl` direct sur l'API REST
+de `qqwud` (clé anon de `.env`), ou naviguer vers **holiswiss.ch en production** dans le navigateur
+(jamais `localhost` pour ces vérifications-là). Le serveur de dev local reste utile pour le rendu
+visuel et les interactions UI qui ne dépendent pas des données/schéma spécifiques à qqwud.
+
 ### Avant toute fonctionnalité touchant la base — vérifier, jamais présumer
 
 ```bash

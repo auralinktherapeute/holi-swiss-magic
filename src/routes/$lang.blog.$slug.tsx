@@ -1,9 +1,9 @@
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
-import { createFileRoute, useParams, Link } from "@tanstack/react-router";
+import { createFileRoute, useParams, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang } from "@/lib/articles.functions";
+import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
-import { hreflangLinks } from "@/lib/seo";
+import { LANGS } from "@/lib/seo";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { categoryLabel } from "@/lib/article-categories";
@@ -14,12 +14,23 @@ const SITE = "https://holiswiss.ch";
 export const Route = createFileRoute("/$lang/blog/$slug")({
   component: Page,
   loader: async ({ params }) => {
+    let article: Record<string, unknown> | null = null;
     try {
-      const { article } = await getArticleBySlug({ data: { slug: params.slug } });
-      return { article };
+      const res = await getArticleBySlug({ data: { slug: params.slug, lang: params.lang } });
+      article = res.article as Record<string, unknown> | null;
     } catch {
       return { article: null };
     }
+    // L'article peut avoir été retrouvé via son slug de base alors qu'un slug
+    // localisé existe pour cette langue : rediriger vers l'URL canonique plutôt
+    // que de servir deux URLs pour le même contenu (duplication pour Google).
+    if (article) {
+      const canonicalSlug = slugForLang(article, (params.lang as Lang) ?? "fr");
+      if (canonicalSlug && canonicalSlug !== params.slug) {
+        throw redirect({ to: "/$lang/blog/$slug", params: { lang: params.lang, slug: canonicalSlug } });
+      }
+    }
+    return { article };
   },
   head: ({ params, loaderData }) => {
     const article = loaderData?.article as Record<string, unknown> | null | undefined;
@@ -75,11 +86,21 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     if (image) ldArticle.image = image;
     if (publishedAt) ldArticle.datePublished = publishedAt;
     if (updatedAt) ldArticle.dateModified = updatedAt;
+    // Chaque langue a potentiellement son propre slug (slug_de aujourd'hui) : on
+    // ne peut pas réutiliser le hreflangLinks générique qui suppose un chemin
+    // partagé par toutes les langues.
+    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.map((l) => ({
+      rel: "alternate",
+      hreflang: l,
+      href: `${SITE}/${l}/blog/${slugForLang(article, l)}`,
+    }));
+    hreflangs.push({ rel: "alternate", hreflang: "x-default", href: `${SITE}/fr/blog/${article.slug}` });
+
     return {
       meta,
       links: [
         { rel: "canonical", href: url },
-        ...hreflangLinks(`/blog/${params.slug}`),
+        ...hreflangs,
       ],
       scripts: [
         {
@@ -141,8 +162,8 @@ function Page() {
   const loaderData = Route.useLoaderData();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["article", slug],
-    queryFn: () => getArticleBySlug({ data: { slug } }),
+    queryKey: ["article", slug, l],
+    queryFn: () => getArticleBySlug({ data: { slug, lang: l } }),
     initialData: loaderData?.article ? { article: loaderData.article } : undefined,
   });
 
