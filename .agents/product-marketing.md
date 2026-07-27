@@ -37,6 +37,8 @@ Confondre les deux est l'erreur la plus fréquente — toujours nommer la face v
 | **Indexation Google** | **0 page de blog indexée sur 152** — « URL unknown to Google » | **Le vrai verrou** |
 | Trafic Google, 90 jours | **2 clics, 45 impressions** | Site quasi invisible, dans TOUTES les langues |
 | Ancrage géographique des articles DE | **0 article ancré en Suisse alémanique** (7 purement romands, 31 mixtes) | Traduits, pas localisés |
+| Praticiens en Suisse alémanique | **1** (Gerald Henry, Bâle) | Rien à indexer côté offre : c'est un enjeu de **recrutement** |
+| URL localisées en allemand | 9/38 articles · **17/31 spécialités** (`slug_de`) | Fait le 27/07/2026 |
 | Catégories d'articles | 26 (naturopathie, ostéopathie, sophrologie, acupuncture…) | Bonne base thématique |
 | Score santé des fiches | 15 à 66 / 100, **aucune ≥ 75** | Fiches pauvres = faible conversion patient |
 

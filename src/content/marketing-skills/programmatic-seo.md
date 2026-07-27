@@ -1,34 +1,44 @@
 # SEO programmatique — canton × spécialité (Holiswiss)
 
-**Lis d'abord `.agents/product-marketing.md`.** C'est le levier de croissance organique le plus
-puissant dont dispose Holiswiss — et il est aujourd'hui totalement inexploité.
+**Lis d'abord `.agents/product-marketing.md`.**
 
 ## Le principe
 
-Un annuaire a une structure naturelle : **26 cantons × N spécialités**. Chaque combinaison
-correspond à une recherche réelle (*« naturopathe Genève »*, *« Reiki Zürich »*) et mérite
+Un annuaire a une structure naturelle : **cantons/villes × spécialités**. Chaque combinaison
+correspond à une recherche réelle (*« naturopathe Genève »*, *« Akupunktur Zürich »*) et mérite
 une page dédiée. C'est le modèle qui a fait la croissance de tous les annuaires.
 
-## ⛔ Prérequis bloquant — à traiter AVANT toute génération
+## ✅ L'infrastructure existe déjà — ne pas la reconstruire
 
-La colonne `therapists.specialties` est du **texte libre non normalisé**. Relevé réel :
+*(Correction du 27/07/2026 : une version antérieure de cette compétence affirmait que la
+taxonomie était un prérequis bloquant. C'était faux — vérifié en base.)*
 
-```
-Naturopathe · naturopathie · Nutrition · nutrithérapie · Nutrition fonctionnelle ·
-Rééquilibrage alimentaire · Alimentation · Santé métabolique · Magnétiseur · Praticien Reiki
-```
+Le nécessaire est **déjà en place et peuplé** :
 
-Dix intitulés pour ce qui relève de trois ou quatre familles. Générer des pages sur cette base
-produirait des dizaines de doublons quasi identiques — exactement ce que Google sanctionne
-comme *thin content*.
+| Objet | État |
+|---|---|
+| `specialty_families` | familles de spécialités |
+| `specialties` | **31 actives**, `slug` + `slug_de`, noms et descriptions en 4 langues |
+| `therapist_specialties` | table de liaison **normalisée** (N-N) |
+| Routes | `/{lang}/specialites/{slug}` et `/{lang}/specialites/{slug}/{ville}` |
+| Sitemap | **~208 URL** générées, avec seuil : une page ville×spécialité n'existe que s'il y a au moins un praticien actif |
 
-**Étape 1, non négociable : établir une taxonomie de référence.**
-- Une liste fermée de spécialités canoniques (30–40), avec pour chacune un `slug`, un libellé
-  dans les 4 langues, et une famille de rattachement
-- Une table de correspondance des variantes vers le terme canonique
-- Un champ normalisé sur la fiche, la saisie libre restant possible en affichage
+⚠️ Ne pas confondre avec `therapists.specialties[]`, un champ **texte libre** servant à
+l'affichage sur la fiche. La source de vérité pour le SEO est la table `specialties` via la
+liaison — c'est elle qu'il faut interroger.
 
-Sans cette étape, ne pas générer une seule page.
+**Slugs localisés :** `slug_de` existe et couvre les 17 spécialités dont le terme allemand
+diffère (`naturheilkunde`, `akupunktur`, `bachblueten`…). Les 14 autres portent le même mot
+et retombent sur `slug`. Le titre et la description viennent de `pickI18n()`, jamais du slug.
+
+## Ce qui bloque réellement aujourd'hui
+
+Ce n'est plus la technique — c'est le **contenu et l'audience** :
+
+1. **Aucune de ces 208 URL n'est indexée** (« unknown to Google »). Voir `marketing/plan-visibilite.md`.
+2. **Un seul praticien en Suisse alémanique** (Bâle). Une page « Akupunktur in Zürich »
+   parfaitement optimisée mais vide déçoit le visiteur, et Google mesure cette déception.
+   **Le SEO est en avance sur le recrutement : le prochain gain est côté praticiens.**
 
 ## L'écueil du contenu creux
 

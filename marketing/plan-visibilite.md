@@ -3,6 +3,29 @@
 > Document de travail. Constat mesuré, pas supposé : Search Console, base de production
 > et sitemap en ligne vérifiés le 27/07/2026.
 
+## 📌 Avancement au 27/07/2026 (fin de journée)
+
+| Point | État |
+|---|---|
+| **1a** Soumissions manuelles d'indexation | 🔄 **en cours par Gérald** — quelques pages soumises |
+| **1b** Liens entrants | ⬜ non commencé — **le vrai levier de fond** |
+| **2** Sitemap fantôme de 2007 supprimé | ✅ fait |
+| **3** Ancrage alémanique du contenu | ⬜ 10 sujets rédigés dans `sujets-alemanique.md`, aucun produit |
+| **4** Titre pollué par un `#` markdown | ⬜ à corriger dans l'éditeur admin |
+
+**Livré en plus** (hors plan initial, découvert en chemin) :
+- Slugs allemands des articles : **9/38** (`articles.slug_de`) — appliqué
+- Slugs allemands des spécialités : **17/31** (`specialties.slug_de`) — appliqué
+- **Titres des pages spécialités corrigés** : ils étaient fabriqués depuis le slug, donc la
+  page allemande de « naturopathie » s'intitulait « Naturopathie » au lieu de
+  « Naturheilkunde ». Impact SEO supérieur à celui des URL.
+- Codes cantonaux dans le champ ville corrigés (2 fiches) — appliqué
+
+**Reste en attente d'application par Lovable :** `20260727140000_marketing_agent_threads.sql`
+(conversations de l'agent marketing).
+
+---
+
 ## Le constat
 
 | Mesure | Valeur |
