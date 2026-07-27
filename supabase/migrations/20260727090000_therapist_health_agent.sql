@@ -307,11 +307,26 @@ grant execute on function public.compute_therapist_health() to authenticated, se
 grant execute on function public.compute_therapist_health_one(uuid) to authenticated, service_role;
 grant execute on function public.is_admin(uuid) to authenticated, anon, service_role;
 
--- 11) Bucket privé pour les diplômes --------------------------------------
-insert into storage.buckets (id, name, public)
-values ('therapist-docs','therapist-docs', false)
-on conflict (id) do nothing;
+-- 11) Droits Data API sur les nouvelles tables ----------------------------
+-- RLS reste la véritable barrière : ces GRANT ne font qu'ouvrir la Data API,
+-- chaque accès restant filtré par les policies ci-dessus.
+grant select, insert, update, delete on
+  public.therapist_media,
+  public.therapist_certifications,
+  public.article_suggestions,
+  public.therapist_health_scores,
+  public.therapist_health_score_history,
+  public.therapist_health_recommendations
+  to authenticated, service_role;
 
+-- Lecture publique uniquement pour la galerie et les certifications
+-- (les policies limitent déjà le reste ; les scores restent admin-only).
+grant select on public.therapist_media, public.therapist_certifications to anon;
+
+-- 12) Bucket privé pour les diplômes --------------------------------------
+-- NB : la création du bucket `therapist-docs` (privé) se fait hors migration,
+-- via l'outil storage dédié — les écritures dans storage.buckets sont rejetées.
+-- Les policies ci-dessous sont posées sur storage.objects, ce qui est autorisé.
 drop policy if exists docs_owner_all on storage.objects;
 create policy docs_owner_all on storage.objects for all
   using (bucket_id = 'therapist-docs' and (storage.foldername(name))[1] = auth.uid()::text)
