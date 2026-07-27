@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getFamilyPage, pickI18n } from "@/lib/specialties.functions";
+import { getFamilyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
@@ -79,7 +79,7 @@ function Page() {
             <Link
               key={s.id}
               to="/$lang/specialites/$specialtySlug"
-              params={{ lang, specialtySlug: s.slug }}
+              params={{ lang, specialtySlug: specialtySlugForLang(s, lang) }}
               className="rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] px-4 py-2 text-sm text-white hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
             >
               {pickI18n(s, lang, "name")}

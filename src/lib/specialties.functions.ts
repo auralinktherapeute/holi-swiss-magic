@@ -18,6 +18,78 @@ export function pickI18n<T extends Record<string, any>>(row: T, lang: string, fi
   return (row[`${field}_${l}`] as string) || (row[`${field}_fr`] as string) || "";
 }
 
+/**
+ * Slug localisé d'une spécialité. Seul `slug_de` existe à ce jour, et seulement
+ * pour les 17 spécialités dont le terme allemand diffère réellement du français
+ * (Yoga, Reiki, Shiatsu… portent le même mot) : tout le reste retombe sur `slug`.
+ */
+export function specialtySlugForLang(row: Record<string, any>, lang: string): string {
+  const l = pickLang(lang);
+  return (row[`slug_${l}`] as string) || (row["slug"] as string) || "";
+}
+
+/** `slug_de` peut ne pas encore exister côté base (migration en attente). */
+function isMissingColumn(error: any): boolean {
+  const code = error?.code ?? "";
+  const msg = String(error?.message ?? "");
+  return code === "42703" || code === "PGRST204" || code === "PGRST205" || /does not exist|could not find the column/i.test(msg);
+}
+
+const SPECIALTY_COLUMNS_BASE =
+  "id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,family_id,aliases";
+const SPECIALTY_COLUMNS_FULL =
+  "id,slug,slug_de,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,family_id,aliases";
+
+/**
+ * Retrouve une spécialité active par son slug de base OU son slug localisé,
+ * pour ne jamais 404 une URL existante. Replie sur les colonnes de base tant
+ * que la migration `slug_de` n'est pas appliquée.
+ */
+/**
+ * Exécute une requête de liste de spécialités en tentant d'abord d'inclure
+ * `slug_de`, puis en repliant sur les colonnes de base si la colonne n'existe
+ * pas encore. `build` doit accepter la liste de colonnes et rendre la requête.
+ */
+async function selectSpecialties(
+  build: (columns: string) => any,
+  columnsBase: string,
+  columnsFull: string,
+): Promise<any[]> {
+  const enriched = await build(columnsFull);
+  if (!enriched.error) return enriched.data ?? [];
+  if (!isMissingColumn(enriched.error)) return [];
+  const base = await build(columnsBase);
+  return base.data ?? [];
+}
+
+const LIST_COLUMNS_BASE = "id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured";
+const LIST_COLUMNS_FULL = "id,slug,slug_de,name_fr,name_de,name_it,name_en,family_id,is_featured";
+const SIBLING_COLUMNS_BASE = "id,slug,name_fr,name_de,name_it,name_en";
+const SIBLING_COLUMNS_FULL = "id,slug,slug_de,name_fr,name_de,name_it,name_en";
+const FAMILY_SPEC_COLUMNS_BASE =
+  "id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,is_featured";
+const FAMILY_SPEC_COLUMNS_FULL =
+  "id,slug,slug_de,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,is_featured";
+
+async function findActiveSpecialty(sb: ReturnType<typeof serverClient>, slug: string) {
+  const enriched = await sb
+    .from("specialties")
+    .select(SPECIALTY_COLUMNS_FULL)
+    .or(`slug.eq.${slug},slug_de.eq.${slug}`)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!enriched.error) return enriched.data;
+  if (!isMissingColumn(enriched.error)) return null;
+
+  const base = await sb
+    .from("specialties")
+    .select(SPECIALTY_COLUMNS_BASE)
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+  return base.data;
+}
+
 export type FamilyRow = {
   id: string;
   slug: string;
@@ -52,15 +124,16 @@ export type SpecialtyRow = {
 export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
   async () => {
     const sb = serverClient();
-    const [{ data: families }, { data: specs }, { data: pivot }] = await Promise.all([
+    const [{ data: families }, specs, { data: pivot }] = await Promise.all([
       sb
         .from("specialty_families")
         .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,icon,sort_order")
         .order("sort_order", { ascending: true }),
-      sb
-        .from("specialties")
-        .select("id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured")
-        .eq("is_active", true),
+      selectSpecialties(
+        (cols) => sb.from("specialties").select(cols).eq("is_active", true),
+        LIST_COLUMNS_BASE,
+        LIST_COLUMNS_FULL,
+      ),
       sb.from("therapist_specialties").select("specialty_id"),
     ]);
 
@@ -75,6 +148,7 @@ export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
       arr.push({
         id: s.id,
         slug: s.slug,
+        slug_de: s.slug_de ?? null,
         name_fr: s.name_fr,
         name_de: s.name_de,
         name_it: s.name_it,
@@ -125,12 +199,17 @@ export const getFamilyPage = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!family) return null;
 
-    const { data: specs } = await sb
-      .from("specialties")
-      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,is_featured")
-      .eq("family_id", (family as { id: string }).id)
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
+    const specs = await selectSpecialties(
+      (cols) =>
+        sb
+          .from("specialties")
+          .select(cols)
+          .eq("family_id", (family as { id: string }).id)
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true }),
+      FAMILY_SPEC_COLUMNS_BASE,
+      FAMILY_SPEC_COLUMNS_FULL,
+    );
 
     const specIds = (specs ?? []).map((s: { id: string }) => s.id);
     let therapistIds: string[] = [];
@@ -161,12 +240,7 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => ({ slug: String(data?.slug ?? "").slice(0, 80) }))
   .handler(async ({ data }) => {
     const sb = serverClient();
-    const { data: specialty } = await sb
-      .from("specialties")
-      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,family_id,aliases")
-      .eq("slug", data.slug)
-      .eq("is_active", true)
-      .maybeSingle();
+    const specialty = await findActiveSpecialty(sb, data.slug);
     if (!specialty) return null;
 
     const s = specialty as any;
@@ -177,14 +251,19 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
       .eq("id", s.family_id)
       .maybeSingle();
 
-    const { data: siblings } = await sb
-      .from("specialties")
-      .select("id,slug,name_fr,name_de,name_it,name_en")
-      .eq("family_id", s.family_id)
-      .eq("is_active", true)
-      .neq("id", s.id)
-      .order("sort_order", { ascending: true })
-      .limit(8);
+    const siblings = await selectSpecialties(
+      (cols) =>
+        sb
+          .from("specialties")
+          .select(cols)
+          .eq("family_id", s.family_id)
+          .eq("is_active", true)
+          .neq("id", s.id)
+          .order("sort_order", { ascending: true })
+          .limit(8),
+      SIBLING_COLUMNS_BASE,
+      SIBLING_COLUMNS_FULL,
+    );
 
     const { data: pivot } = await sb
       .from("therapist_specialties")
@@ -209,9 +288,13 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
 
 export const listAllSpecialties = createServerFn({ method: "GET" }).handler(async () => {
   const sb = serverClient();
-  const [{ data: families }, { data: specs }] = await Promise.all([
+  const [{ data: families }, specs] = await Promise.all([
     sb.from("specialty_families").select("id,slug,name_fr,name_de,name_it,name_en,sort_order").order("sort_order"),
-    sb.from("specialties").select("id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured").eq("is_active", true),
+    selectSpecialties(
+      (cols) => sb.from("specialties").select(cols).eq("is_active", true),
+      LIST_COLUMNS_BASE,
+      LIST_COLUMNS_FULL,
+    ),
   ]);
   return {
     families: (families ?? []) as Array<any>,
@@ -227,12 +310,7 @@ export const getSpecialtyCityPage = createServerFn({ method: "GET" })
   }))
   .handler(async ({ data }) => {
     const sb = serverClient();
-    const { data: specialty } = await sb
-      .from("specialties")
-      .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,family_id,aliases")
-      .eq("slug", data.slug)
-      .eq("is_active", true)
-      .maybeSingle();
+    const specialty = await findActiveSpecialty(sb, data.slug);
     if (!specialty) return null;
 
     const { data: cityRow } = await sb.rpc("resolve_city", { _input: data.city });

@@ -63,23 +63,38 @@ export const Route = createFileRoute("/sitemap.xml")({
             }
           }
 
-          // Active specialties (indexable)
-          const { data: specs } = await supabaseAdmin
+          // Active specialties (indexable). slug_de peut ne pas encore exister
+          // côté base : on replie sur les colonnes de base plutôt que de perdre
+          // silencieusement les ~200 URL de spécialités du sitemap.
+          // `slug_de` n'est pas encore dans les types générés → cast local.
+          let { data: specs, error: specsErr } = await (supabaseAdmin as any)
             .from("specialties")
-            .select("slug, updated_at")
+            .select("slug, slug_de, updated_at")
             .eq("is_active", true);
-          for (const s of (specs ?? []) as Array<{ slug: string; updated_at: string | null }>) {
+          if (specsErr) {
+            ({ data: specs } = await (supabaseAdmin as any)
+              .from("specialties")
+              .select("slug, updated_at")
+              .eq("is_active", true));
+          }
+          for (const s of (specs ?? []) as Array<{ slug: string; slug_de?: string | null; updated_at: string | null }>) {
             const lastmod = s.updated_at ? s.updated_at.slice(0, 10) : undefined;
             for (const lang of LANGS) {
-              urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${s.slug}`, lastmod, "weekly", "0.7"));
+              const slug = lang === "de" ? (s.slug_de || s.slug) : s.slug;
+              urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${slug}`, lastmod, "weekly", "0.7"));
             }
           }
 
           // GEO combos: specialty × city, only when at least one active therapist exists
           try {
-            const { data: geoPairs } = await supabaseAdmin
+            let { data: geoPairs, error: geoErr } = await supabaseAdmin
               .from("therapist_specialties")
-              .select("specialties!inner(slug,is_active), therapists!inner(city,status)");
+              .select("specialties!inner(slug,slug_de,is_active), therapists!inner(city,status)");
+            if (geoErr) {
+              ({ data: geoPairs } = await supabaseAdmin
+                .from("therapist_specialties")
+                .select("specialties!inner(slug,is_active), therapists!inner(city,status)"));
+            }
             const seen = new Set<string>();
             const cityToSlug = (c: string) =>
               c
@@ -90,6 +105,7 @@ export const Route = createFileRoute("/sitemap.xml")({
                 .replace(/^-+|-+$/g, "");
             for (const row of (geoPairs ?? []) as any[]) {
               const specSlug = row.specialties?.slug;
+              const specSlugDe = row.specialties?.slug_de;
               const isActive = row.specialties?.is_active;
               const city = row.therapists?.city;
               const status = row.therapists?.status;
@@ -100,7 +116,8 @@ export const Route = createFileRoute("/sitemap.xml")({
               if (seen.has(key)) continue;
               seen.add(key);
               for (const lang of LANGS) {
-                urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${specSlug}/${cSlug}`, undefined, "weekly", "0.6"));
+                const slug = lang === "de" ? (specSlugDe || specSlug) : specSlug;
+                urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${slug}/${cSlug}`, undefined, "weekly", "0.6"));
               }
             }
           } catch (err) {

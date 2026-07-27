@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getSpecialtyCityPage, pickI18n } from "@/lib/specialties.functions";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { getSpecialtyCityPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
+import { LANGS, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { useEffect } from "react";
@@ -24,23 +24,51 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
   // Chargement serveur : le contenu (H1, thérapeutes de la ville) est rendu dès
   // le HTML initial — sinon les crawlers et les IA ne voyaient que « Chargement… ».
   loader: async ({ params }) => {
+    let page: any = null;
     try {
-      return {
-        page: await getSpecialtyCityPage({
-          data: { slug: params.specialtySlug, city: params.citySlug.replace(/-/g, " ") },
-        }),
-      };
+      page = await getSpecialtyCityPage({
+        data: { slug: params.specialtySlug, city: params.citySlug.replace(/-/g, " ") },
+      });
     } catch {
       return { page: null };
     }
+    // Même logique que la page spécialité : une seule URL canonique par langue.
+    if (page?.specialty) {
+      const canonical = specialtySlugForLang(page.specialty, params.lang);
+      if (canonical && canonical !== params.specialtySlug) {
+        throw redirect({
+          to: "/$lang/specialites/$specialtySlug/$citySlug",
+          params: { lang: params.lang, specialtySlug: canonical, citySlug: params.citySlug },
+        });
+      }
+    }
+    return { page };
   },
-  head: ({ params }) => {
+  head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}/${params.citySlug}`;
-    const label = params.specialtySlug.replace(/-/g, " ");
+    const specialty = (loaderData as any)?.page?.specialty;
+    // Libellé issu du nom traduit, pas du slug (cf. page spécialité).
+    const label = specialty
+      ? pickI18n(specialty, params.lang)
+      : params.specialtySlug.replace(/-/g, " ");
     const city = humanCity(params.citySlug);
     const t = tr(params.lang);
     const title = `${label.replace(/\b\w/g, (c) => c.toUpperCase())} ${t.titleAt} ${city} ${t.titleSuffix}`;
     const description = t.desc(label, city);
+    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.map((l) => ({
+      rel: "alternate",
+      hreflang: l,
+      href: `https://holiswiss.ch/${l}/specialites/${
+        specialty ? specialtySlugForLang(specialty, l) : params.specialtySlug
+      }/${params.citySlug}`,
+    }));
+    hreflangs.push({
+      rel: "alternate",
+      hreflang: "x-default",
+      href: `https://holiswiss.ch/fr/specialites/${
+        specialty ? specialty.slug : params.specialtySlug
+      }/${params.citySlug}`,
+    });
     return {
       meta: [
         { title },
@@ -51,7 +79,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         { property: "og:type", content: "website" },
         { property: "og:locale", content: ogLocale(params.lang) },
       ],
-      links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/specialites/${params.specialtySlug}/${params.citySlug}`)],
+      links: [{ rel: "canonical", href: url }, ...hreflangs],
       scripts: [
         {
           type: "application/ld+json",
@@ -138,7 +166,7 @@ function Page() {
           <ChevronRight className="h-3 w-3" />
           <Link
             to="/$lang/specialites/$specialtySlug"
-            params={{ lang, specialtySlug: specialty.slug }}
+            params={{ lang, specialtySlug: specialtySlugForLang(specialty, lang) }}
             className="hover:text-white"
           >
             {specName}
@@ -164,7 +192,7 @@ function Page() {
               <div className="mt-3">
                 <Link
                   to="/$lang/specialites/$specialtySlug"
-                  params={{ lang, specialtySlug: specialty.slug }}
+                  params={{ lang, specialtySlug: specialtySlugForLang(specialty, lang) }}
                   className="text-[#5cc8fa] underline"
                 >
                   {t.seeAll(specName)}

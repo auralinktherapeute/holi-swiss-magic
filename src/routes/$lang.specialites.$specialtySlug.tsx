@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getSpecialtyPage, pickI18n } from "@/lib/specialties.functions";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { getSpecialtyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
+import { LANGS, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
@@ -18,19 +18,51 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
   component: Page,
   // Chargement serveur : la page (H1, description, thérapeutes) est rendue dès le HTML initial (SEO/GEO)
   loader: async ({ params }) => {
+    let page: any = null;
     try {
-      return { page: await getSpecialtyPage({ data: { slug: params.specialtySlug } }) };
+      page = await getSpecialtyPage({ data: { slug: params.specialtySlug } });
     } catch {
       return { page: null };
     }
+    // La spécialité peut avoir été retrouvée via son slug de base alors qu'un
+    // slug localisé existe pour cette langue : rediriger vers l'URL canonique
+    // plutôt que de servir le même contenu sous deux adresses.
+    if (page?.specialty) {
+      const canonical = specialtySlugForLang(page.specialty, params.lang);
+      if (canonical && canonical !== params.specialtySlug) {
+        throw redirect({
+          to: "/$lang/specialites/$specialtySlug",
+          params: { lang: params.lang, specialtySlug: canonical },
+        });
+      }
+    }
+    return { page };
   },
-  head: ({ params }) => {
+  head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`;
-    const label = params.specialtySlug.replace(/-/g, " ");
     const t = tr(params.lang);
+    const specialty = (loaderData as any)?.page?.specialty;
+    // Le libellé vient du nom traduit, jamais du slug : sinon la page allemande
+    // de « naturopathie » s'intitulerait « Naturopathie » au lieu de
+    // « Naturheilkunde », et ne ressortirait sur aucune requête germanophone.
+    const label = specialty
+      ? pickI18n(specialty, params.lang)
+      : params.specialtySlug.replace(/-/g, " ");
     const labelCapitalized = label.charAt(0).toUpperCase() + label.slice(1);
     const title = `${labelCapitalized} ${t.titleSuffix}`;
     const description = t.desc(label);
+    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.map((l) => ({
+      rel: "alternate",
+      hreflang: l,
+      href: `https://holiswiss.ch/${l}/specialites/${
+        specialty ? specialtySlugForLang(specialty, l) : params.specialtySlug
+      }`,
+    }));
+    hreflangs.push({
+      rel: "alternate",
+      hreflang: "x-default",
+      href: `https://holiswiss.ch/fr/specialites/${specialty ? specialty.slug : params.specialtySlug}`,
+    });
     return {
       meta: [
         { title },
@@ -41,7 +73,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
         { property: "og:type", content: "website" },
         { property: "og:locale", content: ogLocale(params.lang) },
       ],
-      links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/specialites/${params.specialtySlug}`)],
+      links: [{ rel: "canonical", href: url }, ...hreflangs],
     };
   },
 });
@@ -151,7 +183,7 @@ function Page() {
               <Link
                 key={s.id}
                 to="/$lang/specialites/$specialtySlug"
-                params={{ lang, specialtySlug: s.slug }}
+                params={{ lang, specialtySlug: specialtySlugForLang(s, lang) }}
                 className="rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] px-4 py-2 text-sm text-white hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
               >
                 {pickI18n(s, lang, "name")}
