@@ -1543,6 +1543,65 @@ export type Database = {
           },
         ]
       }
+      marketing_agent_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          skills_used: string[] | null
+          thread_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          skills_used?: string[] | null
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          skills_used?: string[] | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_agent_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_agent_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_agent_threads: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_deliveries: {
         Row: {
           attempts: number
