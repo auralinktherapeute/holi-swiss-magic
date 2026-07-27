@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Instagram, Linkedin, Music2, Clock, CheckCircle2, Pencil, XCircle, Sparkles } from "lucide-react";
+import { Instagram, Linkedin, Music2, Clock, CheckCircle2, Pencil, XCircle, Sparkles, MessageSquare, ListChecks } from "lucide-react";
 import { listMarketingProposals, setMarketingProposalStatus } from "@/lib/marketing.functions";
+import { MarketingAgentChat } from "@/components/admin/MarketingAgentChat";
 
 export const Route = createFileRoute("/admin/marketing")({
   component: MarketingPage,
@@ -77,6 +78,7 @@ function MarketingPage() {
   const fetchProposals = useServerFn(listMarketingProposals);
   const setStatus = useServerFn(setMarketingProposalStatus);
   const qc = useQueryClient();
+  const [tab, setTab] = useState<"agent" | "proposals">("agent");
 
   const { data, isLoading } = useQuery({
     queryKey: ["marketing-proposals"],
@@ -94,30 +96,59 @@ function MarketingPage() {
     }
   };
 
+  const pending = rows.filter((p) => p.status === "en_attente_validation").length;
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <header className="mb-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <header className="mb-5">
         <h1 className="flex items-center gap-2 text-2xl font-bold text-white sm:text-3xl">
-          <Sparkles className="h-6 w-6 text-[#b86ef9]" /> Marketing — Réseaux sociaux
+          <Sparkles className="h-6 w-6 text-[#b86ef9]" /> Marketing
         </h1>
         <p className="mt-2 text-sm text-[#d4c4e0]">
-          Propositions de publications (4 langues : FR · EN · DE · IT) pour recruter des thérapeutes suisses.
+          Demandez ce que vous voulez à l'agent, validez ce qu'il propose (4 langues : FR · EN · DE · IT).
           <strong className="text-white"> Rien n'est publié sans votre validation.</strong>
         </p>
       </header>
 
-      {isLoading && <div className="py-16 text-center text-white/50">Chargement…</div>}
-      {!isLoading && rows.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center text-white/60">
-          Aucune proposition pour le moment. Lancez <code className="text-[#b86ef9]">/marketing-daily</code> pour en générer une.
-        </div>
-      )}
-
-      <div className="space-y-5">
-        {rows.map((p) => (
-          <ProposalCard key={p.id} p={p} onAct={act} />
-        ))}
+      <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+        <button
+          onClick={() => setTab("agent")}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            tab === "agent" ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" /> Demander à l'agent
+        </button>
+        <button
+          onClick={() => setTab("proposals")}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            tab === "proposals" ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <ListChecks className="h-4 w-4" /> Propositions
+          {pending > 0 && (
+            <span className="rounded-full bg-amber-500/20 px-1.5 text-[11px] text-amber-300">{pending}</span>
+          )}
+        </button>
       </div>
+
+      {tab === "agent" && <MarketingAgentChat />}
+
+      {tab === "proposals" && (
+        <>
+          {isLoading && <div className="py-16 text-center text-white/50">Chargement…</div>}
+          {!isLoading && rows.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center text-white/60">
+              Aucune proposition pour le moment. Demandez-en une à l'agent dans l'onglet précédent.
+            </div>
+          )}
+          <div className="space-y-5">
+            {rows.map((p) => (
+              <ProposalCard key={p.id} p={p} onAct={act} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
