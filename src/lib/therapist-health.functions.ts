@@ -227,6 +227,9 @@ export const runCitabilityScan = createServerFn({ method: "POST" })
       headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
       body: "{}",
     });
+    if (res.status === 404) {
+      throw new Error("La fonction de mesure « measure-ai-citability » n'est pas encore déployée sur cette base.");
+    }
     if (!res.ok) throw new Error(`Mesure de citabilité échouée (HTTP ${res.status}).`);
     const j = (await res.json()) as { processed?: number; reachable?: number };
     return { processed: j.processed ?? 0, reachable: j.reachable ?? 0 };
