@@ -235,7 +235,7 @@ function Page() {
 
       const enriched = await (supabase as any)
         .from("reviews")
-        .select("id,rating,comment,author_name,author_avatar_url,created_at,therapist_reply,therapist_reply_at")
+        .select("id,rating,comment,author_name,author_avatar_url,created_at,therapist_reply,therapist_reply_at,therapist_reply_status")
         .eq("therapist_id", th!.id)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
@@ -657,7 +657,7 @@ function Page() {
                       {(r.comment ?? r.body) && (
                         <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">{r.comment ?? r.body}</p>
                       )}
-                      {r.therapist_reply && (
+                      {r.therapist_reply && r.therapist_reply_status === "approved" && (
                         <div className="mt-3 rounded-lg border-l-2 border-[#5cc8fa] bg-[rgba(92,200,250,0.06)] p-3">
                           <p className="text-xs font-semibold text-[#5cc8fa]">Réponse du praticien</p>
                           <p className="mt-0.5 text-sm text-[rgba(255,255,255,0.75)]">{r.therapist_reply}</p>

@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Check, X, Clock } from "lucide-react";
+import { Star, Check, X, Clock, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { listPendingTherapistReplies, moderateTherapistReply } from "@/lib/therapist-profile-extra.functions";
 
 export const Route = createFileRoute("/admin/avis")({ component: Page });
 
@@ -21,12 +23,26 @@ type Row = {
 const sb = supabase as any;
 
 function Page() {
-  const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
+  const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "replies">("pending");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [replies, setReplies] = useState<any[]>([]);
+  const fetchReplies = useServerFn(listPendingTherapistReplies);
+  const moderateReply = useServerFn(moderateTherapistReply);
 
   const load = useCallback(async () => {
     setLoading(true);
+    if (tab === "replies") {
+      try {
+        const res = await fetchReplies();
+        setReplies(res.rows ?? []);
+      } catch (e: any) {
+        toast.error(e?.message ?? "Chargement impossible");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
     const { data, error } = await sb
       .from("reviews")
       .select("id,therapist_id,rating,comment,author_name,author_avatar_url,status,created_at,therapists(first_name,last_name,slug)")
@@ -38,7 +54,7 @@ function Page() {
       return;
     }
     setRows((data ?? []) as any);
-  }, [tab]);
+  }, [tab, fetchReplies]);
 
   useEffect(() => {
     load();
@@ -59,11 +75,21 @@ function Page() {
     load();
   };
 
+  const decideReply = async (id: string, action: "approve" | "reject") => {
+    try {
+      await moderateReply({ data: { reviewId: id, action } });
+      toast.success(action === "approve" ? "Réponse publiée" : "Réponse refusée");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Action impossible");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Modération des avis</h1>
-        <p className="text-sm text-muted-foreground">Valider, refuser ou supprimer les avis postés par les visiteurs.</p>
+        <p className="text-sm text-muted-foreground">Valider, refuser ou supprimer les avis postés par les visiteurs — et les réponses des thérapeutes.</p>
       </div>
 
       <div className="flex gap-2 border-b">
@@ -71,6 +97,7 @@ function Page() {
           { k: "pending", label: "En attente", icon: Clock },
           { k: "approved", label: "Approuvés", icon: Check },
           { k: "rejected", label: "Refusés", icon: X },
+          { k: "replies", label: "Réponses à valider", icon: MessageSquare },
         ] as const).map(({ k, label, icon: Icon }) => (
           <button
             key={k}
@@ -86,6 +113,50 @@ function Page() {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Chargement…</p>
+      ) : tab === "replies" ? (
+        replies.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune réponse en attente de validation.</p>
+        ) : (
+          <div className="space-y-3">
+            {replies.map((r) => (
+              <div key={r.id} className="rounded-lg border bg-card p-4">
+                <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+                  <div>
+                    <p className="font-semibold text-sm">
+                      Thérapeute : {r.therapists ? `${r.therapists.first_name} ${r.therapists.last_name}` : r.therapist_id.slice(0, 8)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Répond à {r.author_name ?? "Anonyme"}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star key={n} className={`h-4 w-4 ${n <= r.rating ? "fill-amber-400 text-amber-400" : "text-muted"}`} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {r.therapist_reply_submitted_at ? new Date(r.therapist_reply_submitted_at).toLocaleDateString("fr-CH") : ""}
+                    </span>
+                  </div>
+                </div>
+                {r.comment && (
+                  <div className="mb-2 rounded-md bg-muted/50 p-2 text-xs italic text-muted-foreground">Avis : {r.comment}</div>
+                )}
+                <div className="rounded-md border-l-2 border-cyan-500 bg-cyan-500/5 p-3 text-sm">
+                  <p className="text-xs font-semibold text-cyan-600 mb-1">Réponse proposée</p>
+                  {r.therapist_reply}
+                </div>
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  <button onClick={() => decideReply(r.id, "approve")} className="inline-flex items-center gap-1 rounded-md bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-emerald-700 transition">
+                    <Check className="h-3.5 w-3.5" /> Approuver
+                  </button>
+                  <button onClick={() => decideReply(r.id, "reject")} className="inline-flex items-center gap-1 rounded-md bg-amber-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-amber-700 transition">
+                    <X className="h-3.5 w-3.5" /> Refuser
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aucun avis dans cette catégorie.</p>
       ) : (

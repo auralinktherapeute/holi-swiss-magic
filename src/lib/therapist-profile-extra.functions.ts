@@ -182,7 +182,7 @@ export const listMyReviews = createServerFn({ method: "GET" })
     // La réponse du praticien n'existe pas encore partout : on la tente à part.
     const enriched = await sb
       .from("reviews")
-      .select("id,rating,comment,author_name,created_at,status,therapist_reply,therapist_reply_at")
+      .select("id,rating,comment,author_name,created_at,status,therapist_reply,therapist_reply_at,therapist_reply_status")
       .eq("therapist_id", therapistId)
       .eq("status", "approved")
       .order("created_at", { ascending: false });
@@ -212,5 +212,70 @@ export const replyToReview = createServerFn({ method: "POST" })
     }
     if (!row) throw new Error("Avis introuvable.");
     await recompute(sb, therapistId);
+    // Le trigger DB place la réponse en 'pending'. Notifier l'admin pour modération.
+    if (clean.length) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: th } = await supabaseAdmin
+          .from("therapists")
+          .select("first_name,last_name,slug")
+          .eq("id", therapistId)
+          .maybeSingle();
+        const fullName = th ? `${th.first_name ?? ""} ${th.last_name ?? ""}`.trim() : "Thérapeute";
+        await (supabaseAdmin as any).from("notifications").upsert(
+          {
+            kind: "review_reply_pending",
+            subject: `Réponse à un avis à valider — ${fullName}`,
+            summary: clean.slice(0, 240),
+            link: "/admin/avis",
+            entity_type: "reviews",
+            entity_id: data.reviewId,
+            is_read: false,
+            read_at: null,
+          },
+          { onConflict: "kind,entity_type,entity_id" },
+        );
+      } catch {
+        /* la notification est un plus, ne bloque pas la publication */
+      }
+    }
     return { ok: true };
+  });
+
+/** Admin : approuver ou refuser la réponse d'un thérapeute à un avis. */
+export const moderateTherapistReply = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ reviewId: z.string().uuid(), action: z.enum(["approve", "reject"]) }))
+  .handler(async ({ context, data }) => {
+    const { assertAdmin } = await import("@/lib/admin.functions");
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const status = data.action === "approve" ? "approved" : "rejected";
+    const { error } = await (supabaseAdmin as any)
+      .from("reviews")
+      .update({
+        therapist_reply_status: status,
+        therapist_reply_reviewed_at: new Date().toISOString(),
+        therapist_reply_reviewed_by: context.userId,
+      })
+      .eq("id", data.reviewId);
+    if (error) throw new Error(error.message);
+    return { ok: true, status };
+  });
+
+/** Admin : liste des réponses en attente de validation. */
+export const listPendingTherapistReplies = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin } = await import("@/lib/admin.functions");
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as any)
+      .from("reviews")
+      .select("id,rating,comment,author_name,created_at,therapist_id,therapist_reply,therapist_reply_submitted_at,therapists(first_name,last_name,slug)")
+      .eq("therapist_reply_status", "pending")
+      .not("therapist_reply", "is", null)
+      .order("therapist_reply_submitted_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { rows: (data ?? []) as any[] };
   });
