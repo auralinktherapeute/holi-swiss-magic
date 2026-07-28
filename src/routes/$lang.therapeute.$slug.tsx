@@ -35,15 +35,16 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist } = await getTherapistBySlug({ data: { slug: params.slug } });
-      return { therapist };
+      const { therapist, reviews } = await getTherapistBySlug({ data: { slug: params.slug } });
+      return { therapist, reviews: reviews ?? [] };
     } catch {
-      return { therapist: null };
+      return { therapist: null, reviews: [] };
     }
   },
   head: ({ params, loaderData }) => {
     const t = loaderData?.therapist as
       | {
+          id?: string;
           first_name?: string;
           last_name?: string;
           title?: string;
@@ -64,9 +65,28 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
           specialties?: string[] | null;
           years_experience?: number | null;
           phone?: string | null;
+          services?: Array<{
+            name?: string;
+            description?: string;
+            short_description?: string;
+            price?: number;
+            price_chf?: number;
+            duration_min?: number;
+            duration?: number;
+            format?: string;
+            kind?: "session" | "package";
+            visible?: boolean;
+          }> | null;
         }
       | null
       | undefined;
+    const reviews = ((loaderData as any)?.reviews ?? []) as Array<{
+      id: string;
+      rating: number;
+      comment: string | null;
+      author_name: string | null;
+      created_at: string;
+    }>;
     const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
     const altLinks = hreflangLinks(`/therapeute/${params.slug}`);
     if (!t) {
@@ -105,54 +125,122 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       meta.push({ property: "og:image", content: image });
       meta.push({ name: "twitter:image", content: image });
     }
-    const ld: Record<string, unknown> = {
-      "@context": "https://schema.org",
-      "@type": ["LocalBusiness", "HealthAndBeautyBusiness"],
-      "@id": url,
+    const personId = `${url}#person`;
+    const address =
+      t.address || t.city || t.canton || t.postal_code
+        ? {
+            "@type": "PostalAddress",
+            streetAddress: t.address ?? undefined,
+            postalCode: t.postal_code ?? undefined,
+            addressLocality: t.city ?? undefined,
+            addressRegion: t.canton ?? undefined,
+            addressCountry: t.country ?? "CH",
+          }
+        : undefined;
+    const cur = t.currency ?? "CHF";
+    const priceRange = t.price_min
+      ? t.price_max
+        ? `${t.price_min}–${t.price_max} ${cur}`
+        : `${t.price_min} ${cur}`
+      : undefined;
+
+    // Person — l'entité principale du profil
+    const person: Record<string, unknown> = {
+      "@type": "Person",
+      "@id": personId,
       name: fullName || "Thérapeute",
       url,
       description,
     };
-    if (image) ld.image = image;
-    if (t.address || t.city || t.canton || t.postal_code) {
-      ld.address = {
-        "@type": "PostalAddress",
-        streetAddress: t.address ?? undefined,
-        postalCode: t.postal_code ?? undefined,
-        addressLocality: t.city ?? undefined,
-        addressRegion: t.canton ?? undefined,
-        addressCountry: t.country ?? "CH",
-      };
-    }
+    if (image) person.image = image;
+    if (t.title) person.jobTitle = t.title;
+    if (address) person.address = address;
     if (typeof t.latitude === "number" && typeof t.longitude === "number") {
-      ld.geo = {
-        "@type": "GeoCoordinates",
-        latitude: t.latitude,
-        longitude: t.longitude,
+      (person as any).homeLocation = {
+        "@type": "Place",
+        geo: { "@type": "GeoCoordinates", latitude: t.latitude, longitude: t.longitude },
       };
     }
-    if (t.canton) {
-      ld.areaServed = { "@type": "AdministrativeArea", name: t.canton };
+    if (t.canton) person.workLocation = { "@type": "AdministrativeArea", name: t.canton };
+    if (Array.isArray(t.languages) && t.languages.length) person.knowsLanguage = t.languages;
+    if (Array.isArray(t.specialties) && t.specialties.length) person.knowsAbout = t.specialties;
+    if (t.phone) person.telephone = t.phone;
+    if (t.website) person.sameAs = [t.website];
+    person.worksFor = { "@id": "https://holiswiss.ch/#organization" };
+
+    // AggregateRating + Reviews — uniquement si des avis approuvés existent
+    const ratings = reviews.map((r) => r.rating).filter((n) => typeof n === "number");
+    if (ratings.length > 0) {
+      const avg = ratings.reduce((s, n) => s + n, 0) / ratings.length;
+      person.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: Math.round(avg * 10) / 10,
+        reviewCount: ratings.length,
+        bestRating: 5,
+        worstRating: 1,
+      };
+      person.review = reviews.slice(0, 10).map((r) => ({
+        "@type": "Review",
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: r.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        author: { "@type": "Person", name: r.author_name || "Client" },
+        datePublished: r.created_at,
+        reviewBody: (r.comment ?? "").slice(0, 800),
+      }));
     }
-    if (t.website) {
-      ld.sameAs = [t.website];
-    }
-    if (t.phone) {
-      ld.telephone = t.phone;
-    }
-    if (t.price_min) {
-      const cur = t.currency ?? "CHF";
-      ld.priceRange = t.price_max
-        ? `${t.price_min}–${t.price_max} ${cur}`
-        : `${t.price_min} ${cur}`;
-    }
-    if (Array.isArray(t.languages) && t.languages.length) {
-      ld.availableLanguage = t.languages;
-    }
-    if (Array.isArray(t.specialties) && t.specialties.length) {
-      ld.knowsAbout = t.specialties;
-    }
-    if (t.title) ld.jobTitle = t.title;
+
+    // Service[] — un noeud par prestation visible
+    const rawServices = Array.isArray(t.services) ? t.services : [];
+    const serviceNodes = rawServices
+      .filter((s) => s && s.visible !== false && (s.name ?? "").trim().length > 0)
+      .slice(0, 20)
+      .map((s, i) => {
+        const price = typeof s.price_chf === "number" ? s.price_chf : typeof s.price === "number" ? s.price : undefined;
+        const node: Record<string, unknown> = {
+          "@type": "Service",
+          "@id": `${url}#service-${i}`,
+          name: s.name,
+          serviceType: s.name,
+          provider: { "@id": personId },
+          areaServed: t.canton
+            ? { "@type": "AdministrativeArea", name: t.canton }
+            : { "@type": "Country", name: "Switzerland" },
+        };
+        const desc = (s.description ?? s.short_description ?? "").trim();
+        if (desc) node.description = desc.slice(0, 500);
+        if (price != null) {
+          node.offers = {
+            "@type": "Offer",
+            price: price,
+            priceCurrency: cur,
+            availability: "https://schema.org/InStock",
+            url,
+          };
+        }
+        return node;
+      });
+
+    // BreadcrumbList — reflète la navigation réelle
+    const breadcrumbs = {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Accueil", item: `${SITE}/${params.lang}` },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Thérapeutes",
+          item: `${SITE}/${params.lang}/therapeutes`,
+        },
+        { "@type": "ListItem", position: 3, name: fullName, item: url },
+      ],
+    };
+
+    const graph: Array<Record<string, unknown>> = [person, ...serviceNodes, breadcrumbs];
+    const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
       links: [{ rel: "canonical", href: url }, ...altLinks],
