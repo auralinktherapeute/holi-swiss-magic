@@ -17,7 +17,7 @@ export const listHealthScores = createServerFn({ method: "GET" })
     const { data, error } = await sb
       .from("therapist_health_scores")
       .select(
-        "therapist_id,score_total,grade,score_completude,score_contenu,score_activite,score_visibilite,computed_at,therapists(first_name,last_name,canton,slug)",
+        "therapist_id,score_total,score_previous,last_recap_sent_at,grade,score_completude,score_contenu,score_activite,score_visibilite,computed_at,therapists(first_name,last_name,canton,slug,created_at)",
       )
       .order("score_total", { ascending: true });
     if (error) throw new Error(error.message);
@@ -28,6 +28,9 @@ export const listHealthScores = createServerFn({ method: "GET" })
         canton: (r.therapists?.canton ?? "") as string,
         slug: (r.therapists?.slug ?? "") as string,
         score: r.score_total as number,
+        score_previous: (r.score_previous ?? null) as number | null,
+        last_recap_sent_at: (r.last_recap_sent_at ?? null) as string | null,
+        created_at: (r.therapists?.created_at ?? null) as string | null,
         grade: r.grade as "green" | "orange" | "red",
         breakdown: {
           completude: r.score_completude as number,
@@ -66,6 +69,27 @@ export const getHealthDetail = createServerFn({ method: "POST" })
       const { data: sub } = await sb.from("subscriptions").select("plan").eq("user_id", therRes.data.user_id).maybeSingle();
       if (sub?.plan) plan = sub.plan as string;
     }
+    // Moyenne par spécialité principale (thérapeutes partageant la 1re spécialité)
+    let specialtyAvg: { specialty: string | null; avg: number | null; sample: number } = { specialty: null, avg: null, sample: 0 };
+    const mainSpec = (therRes.data?.specialties ?? [])[0] as string | undefined;
+    if (mainSpec) {
+      const { data: peers } = await sb
+        .from("therapists")
+        .select("id, therapist_health_scores(score_total)")
+        .contains("specialties", [mainSpec]);
+      const scores = ((peers ?? []) as any[])
+        .map((p) => p.therapist_health_scores?.score_total)
+        .filter((n: any) => typeof n === "number") as number[];
+      if (scores.length) {
+        specialtyAvg = {
+          specialty: mainSpec,
+          avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+          sample: scores.length,
+        };
+      } else {
+        specialtyAvg = { specialty: mainSpec, avg: null, sample: 0 };
+      }
+    }
     const recommendations = ((recoRes.data ?? []) as any[]).sort(
       (a, b) => (SEV_RANK[a.severity] ?? 3) - (SEV_RANK[b.severity] ?? 3) || b.impact_points - a.impact_points,
     );
@@ -75,6 +99,7 @@ export const getHealthDetail = createServerFn({ method: "POST" })
       plan,
       recommendations,
       history: (histRes.data ?? []) as any[],
+      specialtyAvg,
     };
   });
 
@@ -184,6 +209,55 @@ export const sendProfileHealthInvite = createServerFn({ method: "POST" })
       sentBy: context.userId,
     });
     if (!res.sent) throw new Error("L'email n'a pas pu être envoyé (voir email_logs).");
+    return { sent: true };
+  });
+
+// Envoi du RÉCAPITULATIF COMPLET (score + détail par catégorie + points forts + toutes actions).
+// Marque last_recap_sent_at pour éviter les doublons visibles côté admin.
+export const sendProfileHealthRecap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: t } = await sb.from("therapists").select("first_name,email").eq("id", data.therapistId).maybeSingle();
+    if (!t?.email) throw new Error("Ce thérapeute n'a pas d'adresse email.");
+    const { data: score } = await sb
+      .from("therapist_health_scores")
+      .select("score_total,score_completude,score_contenu,score_activite,score_visibilite,strengths")
+      .eq("therapist_id", data.therapistId)
+      .maybeSingle();
+    const { data: recos } = await sb
+      .from("therapist_health_recommendations")
+      .select("label,impact_points,severity,category,status")
+      .eq("therapist_id", data.therapistId)
+      .eq("status", "todo");
+    const rank: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+    const actions = ((recos ?? []) as any[])
+      .sort((x, y) => (rank[x.severity] ?? 3) - (rank[y.severity] ?? 3) || y.impact_points - x.impact_points)
+      .map((r) => ({ label: r.label as string, impact_points: r.impact_points as number, category: r.category as string }));
+
+    const { sendProfileHealthRecap: sendRecap } = await import("@/lib/profile-health-recap-email.server");
+    const res = await sendRecap({
+      firstName: t.first_name ?? "",
+      email: t.email,
+      score: score?.score_total ?? 0,
+      breakdown: {
+        completude: score?.score_completude ?? 0,
+        contenu: score?.score_contenu ?? 0,
+        activite: score?.score_activite ?? 0,
+        visibilite: score?.score_visibilite ?? 0,
+      },
+      strengths: ((score?.strengths ?? []) as any[]).map((x) => ({ label: x.label as string })),
+      actions,
+      sentBy: context.userId,
+    });
+    if (!res.sent) throw new Error("L'email n'a pas pu être envoyé (voir email_logs).");
+    await sb
+      .from("therapist_health_scores")
+      .update({ last_recap_sent_at: new Date().toISOString() })
+      .eq("therapist_id", data.therapistId);
     return { sent: true };
   });
 

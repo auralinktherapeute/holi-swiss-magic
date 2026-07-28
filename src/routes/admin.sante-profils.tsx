@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { HeartPulse, RefreshCw, Loader2, ExternalLink, CheckCircle2, AlertTriangle, Sparkles, PenLine, Mail, Radar } from "lucide-react";
+import { HeartPulse, RefreshCw, Loader2, ExternalLink, CheckCircle2, AlertTriangle, Sparkles, PenLine, Mail, Radar, ArrowUp, ArrowDown, Minus, FileText } from "lucide-react";
 import {
   listHealthScores,
   getHealthDetail,
@@ -11,6 +11,7 @@ import {
   regenerateArticleIdea,
   queueSuggestedArticle,
   sendProfileHealthInvite,
+  sendProfileHealthRecap,
   runCitabilityScan,
 } from "@/lib/therapist-health.functions";
 
@@ -32,9 +33,23 @@ type Row = {
   canton: string;
   slug: string;
   score: number;
+  score_previous: number | null;
+  last_recap_sent_at: string | null;
+  created_at: string | null;
   grade: string;
   breakdown: Record<string, number>;
 };
+
+type SortMode = "score_asc" | "score_desc" | "trend_desc" | "recent" | "name";
+
+function TrendBadge({ current, previous }: { current: number; previous: number | null }) {
+  if (previous == null) return <span className="inline-flex items-center gap-0.5 text-white/30"><Minus size={11} /></span>;
+  const diff = current - previous;
+  if (diff === 0) return <span className="inline-flex items-center gap-0.5 text-white/40 text-[11px]"><Minus size={11} /></span>;
+  if (diff > 0)
+    return <span className="inline-flex items-center gap-0.5 text-green-400 text-[11px] font-semibold"><ArrowUp size={11} />+{diff}</span>;
+  return <span className="inline-flex items-center gap-0.5 text-red-400 text-[11px] font-semibold"><ArrowDown size={11} />{diff}</span>;
+}
 
 function Gauge({ value, grade }: { value: number; grade: string }) {
   const c = COLOR[grade] ?? "#ef4444";
@@ -66,6 +81,37 @@ function Page() {
   const [selected, setSelected] = useState<string | null>(null);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [cantonFilter, setCantonFilter] = useState<string>("");
+  const [sortMode, setSortMode] = useState<SortMode>("score_asc");
+
+  const cantons = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => r.canton && set.add(r.canton));
+    return Array.from(set).sort();
+  }, [rows]);
+
+  const displayedRows = useMemo(() => {
+    let list = cantonFilter ? rows.filter((r) => r.canton === cantonFilter) : rows.slice();
+    list.sort((a, b) => {
+      switch (sortMode) {
+        case "score_desc": return b.score - a.score;
+        case "trend_desc": {
+          const da = a.score_previous == null ? -Infinity : a.score - a.score_previous;
+          const db = b.score_previous == null ? -Infinity : b.score - b.score_previous;
+          return db - da;
+        }
+        case "recent": {
+          const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return tb - ta;
+        }
+        case "name": return a.name.localeCompare(b.name);
+        case "score_asc":
+        default: return a.score - b.score;
+      }
+    });
+    return list;
+  }, [rows, cantonFilter, sortMode]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -173,12 +219,36 @@ function Page() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
           <div className="rounded-2xl border border-[rgba(168,85,247,.25)] bg-[#2d1b4e]/60 p-2">
+            <div className="flex flex-wrap items-center gap-2 border-b border-white/5 p-2">
+              <select
+                value={cantonFilter}
+                onChange={(e) => setCantonFilter(e.target.value)}
+                className="rounded border border-white/15 bg-[#1a0a2e] px-2 py-1 text-xs text-white/80"
+              >
+                <option value="">Tous cantons ({rows.length})</option>
+                {cantons.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as SortMode)}
+                className="rounded border border-white/15 bg-[#1a0a2e] px-2 py-1 text-xs text-white/80"
+              >
+                <option value="score_asc">Score ↑ (les plus faibles)</option>
+                <option value="score_desc">Score ↓ (les plus forts)</option>
+                <option value="trend_desc">Meilleure progression</option>
+                <option value="recent">Plus récents</option>
+                <option value="name">Nom (A→Z)</option>
+              </select>
+              <span className="ml-auto text-[11px] text-white/40">{displayedRows.length} affiché(s)</span>
+            </div>
             <table className="w-full text-sm">
               <thead className="text-white/50">
-                <tr className="text-left"><th className="p-2">Thérapeute</th><th className="p-2">Score</th></tr>
+                <tr className="text-left"><th className="p-2">Thérapeute</th><th className="p-2">Score</th><th className="p-2">Tend.</th></tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {displayedRows.map((r) => (
                   <tr
                     key={r.therapist_id}
                     onClick={() => openDetail(r.therapist_id)}
@@ -191,10 +261,11 @@ function Page() {
                         {r.score}/100
                       </span>
                     </td>
+                    <td className="p-2"><TrendBadge current={r.score} previous={r.score_previous} /></td>
                   </tr>
                 ))}
-                {rows.length === 0 && (
-                  <tr><td colSpan={2} className="p-4 text-center text-white/50">Aucun score. Lancez un scan.</td></tr>
+                {displayedRows.length === 0 && (
+                  <tr><td colSpan={3} className="p-4 text-center text-white/50">{rows.length === 0 ? "Aucun score. Lancez un scan." : "Aucun résultat pour ce filtre."}</td></tr>
                 )}
               </tbody>
             </table>
@@ -227,7 +298,10 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
   const regen = useServerFn(regenerateArticleIdea);
   const queue = useServerFn(queueSuggestedArticle);
   const invite = useServerFn(sendProfileHealthInvite);
-  const [busy, setBusy] = useState<null | "regen" | "queue" | "invite">(null);
+  const recap = useServerFn(sendProfileHealthRecap);
+  const [busy, setBusy] = useState<null | "regen" | "queue" | "invite" | "recap">(null);
+  const specAvg = detail.specialtyAvg as { specialty: string | null; avg: number | null; sample: number } | undefined;
+  const lastRecap = s.last_recap_sent_at ? new Date(s.last_recap_sent_at).toLocaleDateString("fr-CH") : null;
 
   const doRegen = async () => {
     setBusy("regen");
@@ -242,6 +316,11 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
   const doInvite = async () => {
     setBusy("invite");
     try { await invite({ data: { therapistId: tid } }); toast.success("Email d'invitation envoyé au thérapeute."); }
+    catch (e: any) { toast.error(e?.message ?? "Échec"); } finally { setBusy(null); }
+  };
+  const doRecap = async () => {
+    setBusy("recap");
+    try { await recap({ data: { therapistId: tid } }); toast.success("Récapitulatif complet envoyé au thérapeute."); await onRefreshDetail(); }
     catch (e: any) { toast.error(e?.message ?? "Échec"); } finally { setBusy(null); }
   };
 
@@ -265,6 +344,18 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
         <Gauge value={s.score_total ?? 0} grade={grade} />
       </div>
 
+      {specAvg?.avg != null && (
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs">
+          <span className="text-white/60">Moyenne « {specAvg.specialty} » ({specAvg.sample} thérapeutes)</span>
+          <span className="font-semibold text-white">
+            {specAvg.avg}/100
+            <span className={`ml-2 ${((s.score_total ?? 0) - specAvg.avg) >= 0 ? "text-green-400" : "text-amber-300"}`}>
+              ({((s.score_total ?? 0) - specAvg.avg) >= 0 ? "+" : ""}{(s.score_total ?? 0) - specAvg.avg} vs moyenne)
+            </span>
+          </span>
+        </div>
+      )}
+
       {/* Citabilité IA — ADMIN UNIQUEMENT (jamais montrée au thérapeute) */}
       <div className="mt-4 flex items-center justify-between rounded-lg border border-amber-400/25 bg-amber-400/5 px-3 py-2">
         <span className="text-xs text-amber-200/90">
@@ -282,6 +373,9 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
             <div className="text-white/50">{CAT_LABEL[k]}</div>
           </div>
         ))}
+      </div>
+      <div className="mt-2 rounded-lg border border-dashed border-white/10 bg-white/[0.03] p-2 text-center text-[11px] text-white/45">
+        Réactivité aux messages · <span className="text-white/60">en cours de calibrage</span>
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -345,10 +439,14 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
         </div>
       </div>
 
-      <div className="mt-4 border-t border-white/10 pt-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-3">
         <button onClick={doInvite} disabled={busy === "invite"} className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm text-white/80 hover:bg-white/5 disabled:opacity-60">
-          {busy === "invite" ? <Loader2 className="animate-spin" size={14} /> : <Mail size={14} />} Inviter le thérapeute à améliorer son profil (email)
+          {busy === "invite" ? <Loader2 className="animate-spin" size={14} /> : <Mail size={14} />} Email court (top 3 actions)
         </button>
+        <button onClick={doRecap} disabled={busy === "recap"} className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#06b6d4] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">
+          {busy === "recap" ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />} Envoyer récapitulatif complet
+        </button>
+        {lastRecap && <span className="text-[11px] text-white/40">Dernier envoi : {lastRecap}</span>}
       </div>
     </div>
   );
