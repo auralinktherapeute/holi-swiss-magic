@@ -1848,6 +1848,10 @@ export type Database = {
           therapist_id: string
           therapist_reply: string | null
           therapist_reply_at: string | null
+          therapist_reply_reviewed_at: string | null
+          therapist_reply_reviewed_by: string | null
+          therapist_reply_status: string | null
+          therapist_reply_submitted_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1862,6 +1866,10 @@ export type Database = {
           therapist_id: string
           therapist_reply?: string | null
           therapist_reply_at?: string | null
+          therapist_reply_reviewed_at?: string | null
+          therapist_reply_reviewed_by?: string | null
+          therapist_reply_status?: string | null
+          therapist_reply_submitted_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1876,6 +1884,10 @@ export type Database = {
           therapist_id?: string
           therapist_reply?: string | null
           therapist_reply_at?: string | null
+          therapist_reply_reviewed_at?: string | null
+          therapist_reply_reviewed_by?: string | null
+          therapist_reply_status?: string | null
+          therapist_reply_submitted_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -3334,6 +3346,7 @@ export type Database = {
           seq: number
         }[]
       }
+      resolve_admin_notifications: { Args: never; Returns: number }
       resolve_city: {
         Args: { _input: string }
         Returns: {
