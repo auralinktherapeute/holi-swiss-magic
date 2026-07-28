@@ -8,6 +8,8 @@ export const getUnreadNotificationCount = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Nettoie automatiquement les notifications dont l'entité est déjà traitée.
+    try { await (supabaseAdmin as any).rpc("resolve_admin_notifications"); } catch { /* best-effort */ }
     const { count } = await supabaseAdmin
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -27,6 +29,7 @@ export const listNotifications = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try { await (supabaseAdmin as any).rpc("resolve_admin_notifications"); } catch { /* best-effort */ }
     let q = supabaseAdmin
       .from("notifications")
       .select("id,kind,subject,summary,link,entity_type,entity_id,is_read,read_at,created_at,data")
