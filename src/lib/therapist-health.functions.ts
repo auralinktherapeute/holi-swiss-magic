@@ -315,10 +315,10 @@ export const runCitabilityScan = createServerFn({ method: "POST" })
 
     const { data: ths, error: thErr } = await sb
       .from("therapists")
-      .select("id, slug, status")
+      .select("id, slug, status, services")
       .eq("status", "active");
     if (thErr) throw new Error(`Lecture thérapeutes impossible : ${thErr.message}`);
-    const list = (ths ?? []) as Array<{ id: string; slug: string | null }>;
+    const list = (ths ?? []) as Array<{ id: string; slug: string | null; services: any }>;
 
     let processed = 0;
     let reachable = 0;
@@ -345,6 +345,23 @@ export const runCitabilityScan = createServerFn({ method: "POST" })
       add("articles", (s.n_articles ?? 0) >= 3 ? 12 : (s.n_articles ?? 0) >= 1 ? 6 : 0);
       add("reviews", (s.n_reviews ?? 0) >= 5 ? 10 : (s.n_reviews ?? 0) >= 1 ? 4 : 0);
       add("has_slug", s.slug ? 5 : 0);
+
+      // Balisage structuré (JSON-LD) — Person + Service[] + BreadcrumbList
+      // + AggregateRating/Review sont émis automatiquement dès qu'un profil
+      // est actif. On récompense la richesse du @graph (services décrits,
+      // avis rattachés) qui augmente concrètement la citabilité IA.
+      const services = Array.isArray(t.services) ? t.services : [];
+      const nServices = services.filter(
+        (x: any) => x && x.visible !== false && (x.name ?? "").trim().length > 0,
+      ).length;
+      const hasAggregateRating = (s.n_reviews ?? 0) >= 1;
+      let sdScore = 0;
+      if (s.slug) sdScore += 4; // Person + BreadcrumbList émis
+      if (nServices >= 3) sdScore += 6;
+      else if (nServices >= 1) sdScore += 3;
+      if (hasAggregateRating) sdScore += 3;
+      if (s.has_meta) sdScore += 2;
+      add("structured_data", sdScore);
 
       score = Math.max(0, Math.min(100, score));
       if (score >= 40) reachable += 1;
