@@ -2442,9 +2442,12 @@ export type Database = {
           computed_at: string
           gaps: Json
           grade: string
+          last_recap_sent_at: string | null
           score_activite: number
           score_completude: number
           score_contenu: number
+          score_previous: number | null
+          score_reactivite: number | null
           score_total: number
           score_visibilite: number
           strengths: Json
@@ -2459,9 +2462,12 @@ export type Database = {
           computed_at?: string
           gaps?: Json
           grade?: string
+          last_recap_sent_at?: string | null
           score_activite?: number
           score_completude?: number
           score_contenu?: number
+          score_previous?: number | null
+          score_reactivite?: number | null
           score_total?: number
           score_visibilite?: number
           strengths?: Json
@@ -2476,9 +2482,12 @@ export type Database = {
           computed_at?: string
           gaps?: Json
           grade?: string
+          last_recap_sent_at?: string | null
           score_activite?: number
           score_completude?: number
           score_contenu?: number
+          score_previous?: number | null
+          score_reactivite?: number | null
           score_total?: number
           score_visibilite?: number
           strengths?: Json
