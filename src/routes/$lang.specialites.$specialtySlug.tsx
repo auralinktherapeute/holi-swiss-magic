@@ -74,6 +74,20 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
         { property: "og:locale", content: ogLocale(params.lang) },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangs],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t.home, item: `https://holiswiss.ch/${params.lang}` },
+              { "@type": "ListItem", position: 2, name: t.therapists, item: `https://holiswiss.ch/${params.lang}/therapeutes` },
+              { "@type": "ListItem", position: 3, name: labelCapitalized, item: url },
+            ],
+          }),
+        },
+      ],
     };
   },
 });
