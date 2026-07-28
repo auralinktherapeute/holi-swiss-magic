@@ -9,89 +9,84 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport } from './routes/41c3cce6c762af43d78a7895dfc0afe3[.]txt'
-import { Route as LangRouteImport } from './routes/$lang'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
-import { Route as CreerProfilIndexRouteImport } from './routes/creer-profil.index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as LangRouteImport } from './routes/$lang'
+import { Route as R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport } from './routes/41c3cce6c762af43d78a7895dfc0afe3[.]txt'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
-import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
-import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
-import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
-import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
-import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
-import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
-import { Route as DashboardForfaitsRouteImport } from './routes/dashboard.forfaits'
-import { Route as DashboardFacturationRouteImport } from './routes/dashboard.facturation'
-import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
-import { Route as DashboardCrmRouteImport } from './routes/dashboard.crm'
-import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
-import { Route as DashboardArticlesRouteImport } from './routes/dashboard.articles'
-import { Route as DashboardAgendaRouteImport } from './routes/dashboard.agenda'
-import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abonnement'
-import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
-import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
-import { Route as AdminSeoRouteImport } from './routes/admin.seo'
-import { Route as AdminSanteProfilsRouteImport } from './routes/admin.sante-profils'
-import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
-import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
-import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
-import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
-import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
-import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
-import { Route as AdminIndexationRouteImport } from './routes/admin.indexation'
-import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
-import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
-import { Route as AdminCrmRouteImport } from './routes/admin.crm'
-import { Route as AdminAvisRouteImport } from './routes/admin.avis'
-import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
-import { Route as AdminAmeliorationsSeoRouteImport } from './routes/admin.ameliorations-seo'
-import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements'
-import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
-import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
-import { Route as LangReinitialiserMotDePasseIndexRouteImport } from './routes/$lang.reinitialiser-mot-de-passe.index'
-import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
-import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
-import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
-import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
-import { Route as LangFaqIndexRouteImport } from './routes/$lang.faq.index'
-import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
-import { Route as LangContactIndexRouteImport } from './routes/$lang.contact.index'
-import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion.index'
-import { Route as LangConfidentialiteIndexRouteImport } from './routes/$lang.confidentialite.index'
-import { Route as LangConditionsIndexRouteImport } from './routes/$lang.conditions.index'
+import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
+import { Route as AdminAmeliorationsSeoRouteImport } from './routes/admin.ameliorations-seo'
+import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
+import { Route as AdminAvisRouteImport } from './routes/admin.avis'
+import { Route as AdminCrmRouteImport } from './routes/admin.crm'
+import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
+import { Route as AdminIndexationRouteImport } from './routes/admin.indexation'
+import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
+import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
+import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
+import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
+import { Route as AdminSanteProfilsRouteImport } from './routes/admin.sante-profils'
+import { Route as AdminSeoRouteImport } from './routes/admin.seo'
+import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
+import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as CreerProfilIndexRouteImport } from './routes/creer-profil.index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abonnement'
+import { Route as DashboardAgendaRouteImport } from './routes/dashboard.agenda'
+import { Route as DashboardArticlesRouteImport } from './routes/dashboard.articles'
+import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
+import { Route as DashboardCrmRouteImport } from './routes/dashboard.crm'
+import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
+import { Route as DashboardFacturationRouteImport } from './routes/dashboard.facturation'
+import { Route as DashboardForfaitsRouteImport } from './routes/dashboard.forfaits'
+import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parrainage'
+import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
+import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
+import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
+import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
+import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
-import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
-import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
-import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang.specialites.$specialtySlug'
-import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
-import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
-import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
-import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
-import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
-import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
-import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
+import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
+import { Route as LangConditionsIndexRouteImport } from './routes/$lang.conditions.index'
+import { Route as LangConfidentialiteIndexRouteImport } from './routes/$lang.confidentialite.index'
+import { Route as LangConnexionIndexRouteImport } from './routes/$lang.connexion.index'
+import { Route as LangContactIndexRouteImport } from './routes/$lang.contact.index'
+import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
+import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
+import { Route as LangFaqIndexRouteImport } from './routes/$lang.faq.index'
+import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
+import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
+import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
+import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
+import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
+import { Route as LangReinitialiserMotDePasseIndexRouteImport } from './routes/$lang.reinitialiser-mot-de-passe.index'
+import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang.specialites.$specialtySlug'
+import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
+import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
+import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
+import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
+import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
+import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
+import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
+import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const LangRoute = LangRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
   getParentRoute: () => rootRouteImport,
 } as any)
 const R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute =
@@ -100,194 +95,29 @@ const R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute =
     path: '/41c3cce6c762af43d78a7895dfc0afe3.txt',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LangRoute = LangRouteImport.update({
-  id: '/$lang',
-  path: '/$lang',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const CreerProfilIndexRoute = CreerProfilIndexRouteImport.update({
-  id: '/creer-profil/',
-  path: '/creer-profil/',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminRoute,
 } as any)
 const LangIndexRoute = LangIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LangRoute,
 } as any)
-const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
-  id: '/questionnaire/$id',
-  path: '/questionnaire/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntakeSlugRoute = IntakeSlugRouteImport.update({
-  id: '/intake/$slug',
-  path: '/intake/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
-  id: '/reservations',
-  path: '/reservations',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardQuestionnairesRoute = DashboardQuestionnairesRouteImport.update({
-  id: '/questionnaires',
-  path: '/questionnaires',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardProfilRoute = DashboardProfilRouteImport.update({
-  id: '/profil',
-  path: '/profil',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardParrainageRoute = DashboardParrainageRouteImport.update({
-  id: '/parrainage',
-  path: '/parrainage',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardForfaitsRoute = DashboardForfaitsRouteImport.update({
-  id: '/forfaits',
-  path: '/forfaits',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardFacturationRoute = DashboardFacturationRouteImport.update({
-  id: '/facturation',
-  path: '/facturation',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardEvenementsRoute = DashboardEvenementsRouteImport.update({
-  id: '/evenements',
-  path: '/evenements',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCrmRoute = DashboardCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAvisRoute = DashboardAvisRouteImport.update({
-  id: '/avis',
-  path: '/avis',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardArticlesRoute = DashboardArticlesRouteImport.update({
-  id: '/articles',
-  path: '/articles',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAbonnementRoute = DashboardAbonnementRouteImport.update({
-  id: '/abonnement',
-  path: '/abonnement',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
-  id: '/utilisateurs',
-  path: '/utilisateurs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminTherapeutesRoute = AdminTherapeutesRouteImport.update({
-  id: '/therapeutes',
-  path: '/therapeutes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSeoRoute = AdminSeoRouteImport.update({
-  id: '/seo',
-  path: '/seo',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSanteProfilsRoute = AdminSanteProfilsRouteImport.update({
-  id: '/sante-profils',
-  path: '/sante-profils',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminParolesRoute = AdminParolesRouteImport.update({
-  id: '/paroles',
-  path: '/paroles',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminParametresRoute = AdminParametresRouteImport.update({
-  id: '/parametres',
-  path: '/parametres',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminModerationRoute = AdminModerationRouteImport.update({
-  id: '/moderation',
-  path: '/moderation',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMarketingRoute = AdminMarketingRouteImport.update({
-  id: '/marketing',
-  path: '/marketing',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminListeAttenteRoute = AdminListeAttenteRouteImport.update({
-  id: '/liste-attente',
-  path: '/liste-attente',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminIndexationRoute = AdminIndexationRouteImport.update({
-  id: '/indexation',
-  path: '/indexation',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEvenementsRoute = AdminEvenementsRouteImport.update({
-  id: '/evenements',
-  path: '/evenements',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailsRoute = AdminEmailsRouteImport.update({
-  id: '/emails',
-  path: '/emails',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCrmRoute = AdminCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAvisRoute = AdminAvisRouteImport.update({
-  id: '/avis',
-  path: '/avis',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminArticlesRoute = AdminArticlesRouteImport.update({
-  id: '/articles',
-  path: '/articles',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAmeliorationsSeoRoute = AdminAmeliorationsSeoRouteImport.update({
-  id: '/ameliorations-seo',
-  path: '/ameliorations-seo',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAgentsRoute = AdminAgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAbonnementsRoute = AdminAbonnementsRouteImport.update({
@@ -295,103 +125,184 @@ const AdminAbonnementsRoute = AdminAbonnementsRouteImport.update({
   path: '/abonnements',
   getParentRoute: () => AdminRoute,
 } as any)
-const LangTherapeutesIndexRoute = LangTherapeutesIndexRouteImport.update({
-  id: '/therapeutes/',
-  path: '/therapeutes/',
-  getParentRoute: () => LangRoute,
+const AdminAgentsRoute = AdminAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangTarifsIndexRoute = LangTarifsIndexRouteImport.update({
-  id: '/tarifs/',
-  path: '/tarifs/',
-  getParentRoute: () => LangRoute,
+const AdminAmeliorationsSeoRoute = AdminAmeliorationsSeoRouteImport.update({
+  id: '/ameliorations-seo',
+  path: '/ameliorations-seo',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangReinitialiserMotDePasseIndexRoute =
-  LangReinitialiserMotDePasseIndexRouteImport.update({
-    id: '/reinitialiser-mot-de-passe/',
-    path: '/reinitialiser-mot-de-passe/',
-    getParentRoute: () => LangRoute,
-  } as any)
-const LangParolesIndexRoute = LangParolesIndexRouteImport.update({
-  id: '/paroles/',
-  path: '/paroles/',
-  getParentRoute: () => LangRoute,
+const AdminArticlesRoute = AdminArticlesRouteImport.update({
+  id: '/articles',
+  path: '/articles',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangMotDePasseOublieIndexRoute =
-  LangMotDePasseOublieIndexRouteImport.update({
-    id: '/mot-de-passe-oublie/',
-    path: '/mot-de-passe-oublie/',
-    getParentRoute: () => LangRoute,
-  } as any)
-const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
-  id: '/inscription/',
-  path: '/inscription/',
-  getParentRoute: () => LangRoute,
+const AdminAvisRoute = AdminAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangImpressumIndexRoute = LangImpressumIndexRouteImport.update({
-  id: '/impressum/',
-  path: '/impressum/',
-  getParentRoute: () => LangRoute,
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangFaqIndexRoute = LangFaqIndexRouteImport.update({
-  id: '/faq/',
-  path: '/faq/',
-  getParentRoute: () => LangRoute,
+const AdminEmailsRoute = AdminEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangEvenementsIndexRoute = LangEvenementsIndexRouteImport.update({
-  id: '/evenements/',
-  path: '/evenements/',
-  getParentRoute: () => LangRoute,
+const AdminEvenementsRoute = AdminEvenementsRouteImport.update({
+  id: '/evenements',
+  path: '/evenements',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangContactIndexRoute = LangContactIndexRouteImport.update({
-  id: '/contact/',
-  path: '/contact/',
-  getParentRoute: () => LangRoute,
+const AdminIndexationRoute = AdminIndexationRouteImport.update({
+  id: '/indexation',
+  path: '/indexation',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangConnexionIndexRoute = LangConnexionIndexRouteImport.update({
-  id: '/connexion/',
-  path: '/connexion/',
-  getParentRoute: () => LangRoute,
+const AdminListeAttenteRoute = AdminListeAttenteRouteImport.update({
+  id: '/liste-attente',
+  path: '/liste-attente',
+  getParentRoute: () => AdminRoute,
 } as any)
-const LangConfidentialiteIndexRoute =
-  LangConfidentialiteIndexRouteImport.update({
-    id: '/confidentialite/',
-    path: '/confidentialite/',
-    getParentRoute: () => LangRoute,
-  } as any)
-const LangConditionsIndexRoute = LangConditionsIndexRouteImport.update({
-  id: '/conditions/',
-  path: '/conditions/',
-  getParentRoute: () => LangRoute,
+const AdminMarketingRoute = AdminMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModerationRoute = AdminModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminParametresRoute = AdminParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminParolesRoute = AdminParolesRouteImport.update({
+  id: '/paroles',
+  path: '/paroles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSanteProfilsRoute = AdminSanteProfilsRouteImport.update({
+  id: '/sante-profils',
+  path: '/sante-profils',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSeoRoute = AdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTherapeutesRoute = AdminTherapeutesRouteImport.update({
+  id: '/therapeutes',
+  path: '/therapeutes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
+  id: '/utilisateurs',
+  path: '/utilisateurs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const CreerProfilIndexRoute = CreerProfilIndexRouteImport.update({
+  id: '/creer-profil/',
+  path: '/creer-profil/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAbonnementRoute = DashboardAbonnementRouteImport.update({
+  id: '/abonnement',
+  path: '/abonnement',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAgendaRoute = DashboardAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardArticlesRoute = DashboardArticlesRouteImport.update({
+  id: '/articles',
+  path: '/articles',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAvisRoute = DashboardAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCrmRoute = DashboardCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardEvenementsRoute = DashboardEvenementsRouteImport.update({
+  id: '/evenements',
+  path: '/evenements',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardFacturationRoute = DashboardFacturationRouteImport.update({
+  id: '/facturation',
+  path: '/facturation',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardForfaitsRoute = DashboardForfaitsRouteImport.update({
+  id: '/forfaits',
+  path: '/forfaits',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardParrainageRoute = DashboardParrainageRouteImport.update({
+  id: '/parrainage',
+  path: '/parrainage',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardProfilRoute = DashboardProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardQuestionnairesRoute = DashboardQuestionnairesRouteImport.update({
+  id: '/questionnaires',
+  path: '/questionnaires',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
+  id: '/reservations',
+  path: '/reservations',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const IntakeSlugRoute = IntakeSlugRouteImport.update({
+  id: '/intake/$slug',
+  path: '/intake/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
+  id: '/questionnaire/$id',
+  path: '/questionnaire/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
   getParentRoute: () => LangRoute,
 } as any)
-const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
-  id: '/api/public/admin-notify',
-  path: '/api/public/admin-notify',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LangTherapeuteSlugRoute = LangTherapeuteSlugRouteImport.update({
-  id: '/therapeute/$slug',
-  path: '/therapeute/$slug',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangSpecialitesSpecialtySlugRoute =
-  LangSpecialitesSpecialtySlugRouteImport.update({
-    id: '/specialites/$specialtySlug',
-    path: '/specialites/$specialtySlug',
-    getParentRoute: () => LangRoute,
-  } as any)
-const LangParolesSlugRoute = LangParolesSlugRouteImport.update({
-  id: '/paroles/$slug',
-  path: '/paroles/$slug',
-  getParentRoute: () => LangRoute,
-} as any)
-const LangEvenementsIdRoute = LangEvenementsIdRouteImport.update({
-  id: '/evenements/$id',
-  path: '/evenements/$id',
+const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => LangRoute,
 } as any)
 const LangBlogQuEstCeQueLaSophrologieRoute =
@@ -400,22 +311,110 @@ const LangBlogQuEstCeQueLaSophrologieRoute =
     path: '/blog/qu-est-ce-que-la-sophrologie',
     getParentRoute: () => LangRoute,
   } as any)
-const LangBlogSlugRoute = LangBlogSlugRouteImport.update({
-  id: '/blog/$slug',
-  path: '/blog/$slug',
+const LangConditionsIndexRoute = LangConditionsIndexRouteImport.update({
+  id: '/conditions/',
+  path: '/conditions/',
   getParentRoute: () => LangRoute,
 } as any)
-const ApiPublicHooksSeoAuditAgentRoute =
-  ApiPublicHooksSeoAuditAgentRouteImport.update({
-    id: '/api/public/hooks/seo-audit-agent',
-    path: '/api/public/hooks/seo-audit-agent',
-    getParentRoute: () => rootRouteImport,
+const LangConfidentialiteIndexRoute =
+  LangConfidentialiteIndexRouteImport.update({
+    id: '/confidentialite/',
+    path: '/confidentialite/',
+    getParentRoute: () => LangRoute,
   } as any)
-const ApiPublicHooksArticleAgentRoute =
-  ApiPublicHooksArticleAgentRouteImport.update({
-    id: '/api/public/hooks/article-agent',
-    path: '/api/public/hooks/article-agent',
-    getParentRoute: () => rootRouteImport,
+const LangConnexionIndexRoute = LangConnexionIndexRouteImport.update({
+  id: '/connexion/',
+  path: '/connexion/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangContactIndexRoute = LangContactIndexRouteImport.update({
+  id: '/contact/',
+  path: '/contact/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangEvenementsIndexRoute = LangEvenementsIndexRouteImport.update({
+  id: '/evenements/',
+  path: '/evenements/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangEvenementsIdRoute = LangEvenementsIdRouteImport.update({
+  id: '/evenements/$id',
+  path: '/evenements/$id',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangFaqIndexRoute = LangFaqIndexRouteImport.update({
+  id: '/faq/',
+  path: '/faq/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangImpressumIndexRoute = LangImpressumIndexRouteImport.update({
+  id: '/impressum/',
+  path: '/impressum/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
+  id: '/inscription/',
+  path: '/inscription/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangMotDePasseOublieIndexRoute =
+  LangMotDePasseOublieIndexRouteImport.update({
+    id: '/mot-de-passe-oublie/',
+    path: '/mot-de-passe-oublie/',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangParolesIndexRoute = LangParolesIndexRouteImport.update({
+  id: '/paroles/',
+  path: '/paroles/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangParolesSlugRoute = LangParolesSlugRouteImport.update({
+  id: '/paroles/$slug',
+  path: '/paroles/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangReinitialiserMotDePasseIndexRoute =
+  LangReinitialiserMotDePasseIndexRouteImport.update({
+    id: '/reinitialiser-mot-de-passe/',
+    path: '/reinitialiser-mot-de-passe/',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangSpecialitesSpecialtySlugRoute =
+  LangSpecialitesSpecialtySlugRouteImport.update({
+    id: '/specialites/$specialtySlug',
+    path: '/specialites/$specialtySlug',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangTarifsIndexRoute = LangTarifsIndexRouteImport.update({
+  id: '/tarifs/',
+  path: '/tarifs/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangTherapeuteSlugRoute = LangTherapeuteSlugRouteImport.update({
+  id: '/therapeute/$slug',
+  path: '/therapeute/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangTherapeutesIndexRoute = LangTherapeutesIndexRouteImport.update({
+  id: '/therapeutes/',
+  path: '/therapeutes/',
+  getParentRoute: () => LangRoute,
+} as any)
+const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
+  id: '/api/public/admin-notify',
+  path: '/api/public/admin-notify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
+  id: '/blog/categorie/$slug',
+  path: '/blog/categorie/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangSpecialitesSpecialtySlugCitySlugRoute =
+  LangSpecialitesSpecialtySlugCitySlugRouteImport.update({
+    id: '/$citySlug',
+    path: '/$citySlug',
+    getParentRoute: () => LangSpecialitesSpecialtySlugRoute,
   } as any)
 const LangTherapeutesFamilleFamilySlugRoute =
   LangTherapeutesFamilleFamilySlugRouteImport.update({
@@ -423,17 +422,18 @@ const LangTherapeutesFamilleFamilySlugRoute =
     path: '/therapeutes/famille/$familySlug',
     getParentRoute: () => LangRoute,
   } as any)
-const LangSpecialitesSpecialtySlugCitySlugRoute =
-  LangSpecialitesSpecialtySlugCitySlugRouteImport.update({
-    id: '/$citySlug',
-    path: '/$citySlug',
-    getParentRoute: () => LangSpecialitesSpecialtySlugRoute,
+const ApiPublicHooksArticleAgentRoute =
+  ApiPublicHooksArticleAgentRouteImport.update({
+    id: '/api/public/hooks/article-agent',
+    path: '/api/public/hooks/article-agent',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
-  id: '/blog/categorie/$slug',
-  path: '/blog/categorie/$slug',
-  getParentRoute: () => LangRoute,
-} as any)
+const ApiPublicHooksSeoAuditAgentRoute =
+  ApiPublicHooksSeoAuditAgentRouteImport.update({
+    id: '/api/public/hooks/seo-audit-agent',
+    path: '/api/public/hooks/seo-audit-agent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -876,32 +876,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/41c3cce6c762af43d78a7895dfc0afe3.txt': {
-      id: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
-      path: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
-      fullPath: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
-      preLoaderRoute: typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lang': {
@@ -911,33 +890,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/41c3cce6c762af43d78a7895dfc0afe3.txt': {
+      id: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+      path: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+      fullPath: '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+      preLoaderRoute: typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/creer-profil/': {
-      id: '/creer-profil/'
-      path: '/creer-profil'
-      fullPath: '/creer-profil/'
-      preLoaderRoute: typeof CreerProfilIndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/$lang/': {
       id: '/$lang/'
@@ -946,228 +925,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
     }
-    '/questionnaire/$id': {
-      id: '/questionnaire/$id'
-      path: '/questionnaire/$id'
-      fullPath: '/questionnaire/$id'
-      preLoaderRoute: typeof QuestionnaireIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/intake/$slug': {
-      id: '/intake/$slug'
-      path: '/intake/$slug'
-      fullPath: '/intake/$slug'
-      preLoaderRoute: typeof IntakeSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/reservations': {
-      id: '/dashboard/reservations'
-      path: '/reservations'
-      fullPath: '/dashboard/reservations'
-      preLoaderRoute: typeof DashboardReservationsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/questionnaires': {
-      id: '/dashboard/questionnaires'
-      path: '/questionnaires'
-      fullPath: '/dashboard/questionnaires'
-      preLoaderRoute: typeof DashboardQuestionnairesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/profil': {
-      id: '/dashboard/profil'
-      path: '/profil'
-      fullPath: '/dashboard/profil'
-      preLoaderRoute: typeof DashboardProfilRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/parrainage': {
-      id: '/dashboard/parrainage'
-      path: '/parrainage'
-      fullPath: '/dashboard/parrainage'
-      preLoaderRoute: typeof DashboardParrainageRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/forfaits': {
-      id: '/dashboard/forfaits'
-      path: '/forfaits'
-      fullPath: '/dashboard/forfaits'
-      preLoaderRoute: typeof DashboardForfaitsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/facturation': {
-      id: '/dashboard/facturation'
-      path: '/facturation'
-      fullPath: '/dashboard/facturation'
-      preLoaderRoute: typeof DashboardFacturationRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/evenements': {
-      id: '/dashboard/evenements'
-      path: '/evenements'
-      fullPath: '/dashboard/evenements'
-      preLoaderRoute: typeof DashboardEvenementsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/crm': {
-      id: '/dashboard/crm'
-      path: '/crm'
-      fullPath: '/dashboard/crm'
-      preLoaderRoute: typeof DashboardCrmRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/avis': {
-      id: '/dashboard/avis'
-      path: '/avis'
-      fullPath: '/dashboard/avis'
-      preLoaderRoute: typeof DashboardAvisRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/articles': {
-      id: '/dashboard/articles'
-      path: '/articles'
-      fullPath: '/dashboard/articles'
-      preLoaderRoute: typeof DashboardArticlesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/agenda': {
-      id: '/dashboard/agenda'
-      path: '/agenda'
-      fullPath: '/dashboard/agenda'
-      preLoaderRoute: typeof DashboardAgendaRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/abonnement': {
-      id: '/dashboard/abonnement'
-      path: '/abonnement'
-      fullPath: '/dashboard/abonnement'
-      preLoaderRoute: typeof DashboardAbonnementRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/admin/utilisateurs': {
-      id: '/admin/utilisateurs'
-      path: '/utilisateurs'
-      fullPath: '/admin/utilisateurs'
-      preLoaderRoute: typeof AdminUtilisateursRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/therapeutes': {
-      id: '/admin/therapeutes'
-      path: '/therapeutes'
-      fullPath: '/admin/therapeutes'
-      preLoaderRoute: typeof AdminTherapeutesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/seo': {
-      id: '/admin/seo'
-      path: '/seo'
-      fullPath: '/admin/seo'
-      preLoaderRoute: typeof AdminSeoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/sante-profils': {
-      id: '/admin/sante-profils'
-      path: '/sante-profils'
-      fullPath: '/admin/sante-profils'
-      preLoaderRoute: typeof AdminSanteProfilsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/paroles': {
-      id: '/admin/paroles'
-      path: '/paroles'
-      fullPath: '/admin/paroles'
-      preLoaderRoute: typeof AdminParolesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/parametres': {
-      id: '/admin/parametres'
-      path: '/parametres'
-      fullPath: '/admin/parametres'
-      preLoaderRoute: typeof AdminParametresRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/notifications': {
-      id: '/admin/notifications'
-      path: '/notifications'
-      fullPath: '/admin/notifications'
-      preLoaderRoute: typeof AdminNotificationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/moderation': {
-      id: '/admin/moderation'
-      path: '/moderation'
-      fullPath: '/admin/moderation'
-      preLoaderRoute: typeof AdminModerationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/marketing': {
-      id: '/admin/marketing'
-      path: '/marketing'
-      fullPath: '/admin/marketing'
-      preLoaderRoute: typeof AdminMarketingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/liste-attente': {
-      id: '/admin/liste-attente'
-      path: '/liste-attente'
-      fullPath: '/admin/liste-attente'
-      preLoaderRoute: typeof AdminListeAttenteRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/indexation': {
-      id: '/admin/indexation'
-      path: '/indexation'
-      fullPath: '/admin/indexation'
-      preLoaderRoute: typeof AdminIndexationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/evenements': {
-      id: '/admin/evenements'
-      path: '/evenements'
-      fullPath: '/admin/evenements'
-      preLoaderRoute: typeof AdminEvenementsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/emails': {
-      id: '/admin/emails'
-      path: '/emails'
-      fullPath: '/admin/emails'
-      preLoaderRoute: typeof AdminEmailsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/crm': {
-      id: '/admin/crm'
-      path: '/crm'
-      fullPath: '/admin/crm'
-      preLoaderRoute: typeof AdminCrmRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/avis': {
-      id: '/admin/avis'
-      path: '/avis'
-      fullPath: '/admin/avis'
-      preLoaderRoute: typeof AdminAvisRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/articles': {
-      id: '/admin/articles'
-      path: '/articles'
-      fullPath: '/admin/articles'
-      preLoaderRoute: typeof AdminArticlesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/ameliorations-seo': {
-      id: '/admin/ameliorations-seo'
-      path: '/ameliorations-seo'
-      fullPath: '/admin/ameliorations-seo'
-      preLoaderRoute: typeof AdminAmeliorationsSeoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/agents': {
-      id: '/admin/agents'
-      path: '/agents'
-      fullPath: '/admin/agents'
-      preLoaderRoute: typeof AdminAgentsRouteImport
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/abonnements': {
@@ -1177,144 +939,249 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAbonnementsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/$lang/therapeutes/': {
-      id: '/$lang/therapeutes/'
-      path: '/therapeutes'
-      fullPath: '/$lang/therapeutes/'
-      preLoaderRoute: typeof LangTherapeutesIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/agents': {
+      id: '/admin/agents'
+      path: '/agents'
+      fullPath: '/admin/agents'
+      preLoaderRoute: typeof AdminAgentsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/tarifs/': {
-      id: '/$lang/tarifs/'
-      path: '/tarifs'
-      fullPath: '/$lang/tarifs/'
-      preLoaderRoute: typeof LangTarifsIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/ameliorations-seo': {
+      id: '/admin/ameliorations-seo'
+      path: '/ameliorations-seo'
+      fullPath: '/admin/ameliorations-seo'
+      preLoaderRoute: typeof AdminAmeliorationsSeoRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/reinitialiser-mot-de-passe/': {
-      id: '/$lang/reinitialiser-mot-de-passe/'
-      path: '/reinitialiser-mot-de-passe'
-      fullPath: '/$lang/reinitialiser-mot-de-passe/'
-      preLoaderRoute: typeof LangReinitialiserMotDePasseIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/articles': {
+      id: '/admin/articles'
+      path: '/articles'
+      fullPath: '/admin/articles'
+      preLoaderRoute: typeof AdminArticlesRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/paroles/': {
-      id: '/$lang/paroles/'
-      path: '/paroles'
-      fullPath: '/$lang/paroles/'
-      preLoaderRoute: typeof LangParolesIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/avis': {
+      id: '/admin/avis'
+      path: '/avis'
+      fullPath: '/admin/avis'
+      preLoaderRoute: typeof AdminAvisRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/mot-de-passe-oublie/': {
-      id: '/$lang/mot-de-passe-oublie/'
-      path: '/mot-de-passe-oublie'
-      fullPath: '/$lang/mot-de-passe-oublie/'
-      preLoaderRoute: typeof LangMotDePasseOublieIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/crm': {
+      id: '/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/inscription/': {
-      id: '/$lang/inscription/'
-      path: '/inscription'
-      fullPath: '/$lang/inscription/'
-      preLoaderRoute: typeof LangInscriptionIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/emails': {
+      id: '/admin/emails'
+      path: '/emails'
+      fullPath: '/admin/emails'
+      preLoaderRoute: typeof AdminEmailsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/impressum/': {
-      id: '/$lang/impressum/'
-      path: '/impressum'
-      fullPath: '/$lang/impressum/'
-      preLoaderRoute: typeof LangImpressumIndexRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/faq/': {
-      id: '/$lang/faq/'
-      path: '/faq'
-      fullPath: '/$lang/faq/'
-      preLoaderRoute: typeof LangFaqIndexRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/evenements/': {
-      id: '/$lang/evenements/'
+    '/admin/evenements': {
+      id: '/admin/evenements'
       path: '/evenements'
-      fullPath: '/$lang/evenements/'
-      preLoaderRoute: typeof LangEvenementsIndexRouteImport
-      parentRoute: typeof LangRoute
+      fullPath: '/admin/evenements'
+      preLoaderRoute: typeof AdminEvenementsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/contact/': {
-      id: '/$lang/contact/'
-      path: '/contact'
-      fullPath: '/$lang/contact/'
-      preLoaderRoute: typeof LangContactIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/indexation': {
+      id: '/admin/indexation'
+      path: '/indexation'
+      fullPath: '/admin/indexation'
+      preLoaderRoute: typeof AdminIndexationRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/connexion/': {
-      id: '/$lang/connexion/'
-      path: '/connexion'
-      fullPath: '/$lang/connexion/'
-      preLoaderRoute: typeof LangConnexionIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/liste-attente': {
+      id: '/admin/liste-attente'
+      path: '/liste-attente'
+      fullPath: '/admin/liste-attente'
+      preLoaderRoute: typeof AdminListeAttenteRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/confidentialite/': {
-      id: '/$lang/confidentialite/'
-      path: '/confidentialite'
-      fullPath: '/$lang/confidentialite/'
-      preLoaderRoute: typeof LangConfidentialiteIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/marketing': {
+      id: '/admin/marketing'
+      path: '/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AdminMarketingRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/$lang/conditions/': {
-      id: '/$lang/conditions/'
-      path: '/conditions'
-      fullPath: '/$lang/conditions/'
-      preLoaderRoute: typeof LangConditionsIndexRouteImport
-      parentRoute: typeof LangRoute
+    '/admin/moderation': {
+      id: '/admin/moderation'
+      path: '/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/parametres': {
+      id: '/admin/parametres'
+      path: '/parametres'
+      fullPath: '/admin/parametres'
+      preLoaderRoute: typeof AdminParametresRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/paroles': {
+      id: '/admin/paroles'
+      path: '/paroles'
+      fullPath: '/admin/paroles'
+      preLoaderRoute: typeof AdminParolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sante-profils': {
+      id: '/admin/sante-profils'
+      path: '/sante-profils'
+      fullPath: '/admin/sante-profils'
+      preLoaderRoute: typeof AdminSanteProfilsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/seo': {
+      id: '/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AdminSeoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/therapeutes': {
+      id: '/admin/therapeutes'
+      path: '/therapeutes'
+      fullPath: '/admin/therapeutes'
+      preLoaderRoute: typeof AdminTherapeutesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/utilisateurs': {
+      id: '/admin/utilisateurs'
+      path: '/utilisateurs'
+      fullPath: '/admin/utilisateurs'
+      preLoaderRoute: typeof AdminUtilisateursRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/creer-profil/': {
+      id: '/creer-profil/'
+      path: '/creer-profil'
+      fullPath: '/creer-profil/'
+      preLoaderRoute: typeof CreerProfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/abonnement': {
+      id: '/dashboard/abonnement'
+      path: '/abonnement'
+      fullPath: '/dashboard/abonnement'
+      preLoaderRoute: typeof DashboardAbonnementRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/agenda': {
+      id: '/dashboard/agenda'
+      path: '/agenda'
+      fullPath: '/dashboard/agenda'
+      preLoaderRoute: typeof DashboardAgendaRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/articles': {
+      id: '/dashboard/articles'
+      path: '/articles'
+      fullPath: '/dashboard/articles'
+      preLoaderRoute: typeof DashboardArticlesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/avis': {
+      id: '/dashboard/avis'
+      path: '/avis'
+      fullPath: '/dashboard/avis'
+      preLoaderRoute: typeof DashboardAvisRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/crm': {
+      id: '/dashboard/crm'
+      path: '/crm'
+      fullPath: '/dashboard/crm'
+      preLoaderRoute: typeof DashboardCrmRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/evenements': {
+      id: '/dashboard/evenements'
+      path: '/evenements'
+      fullPath: '/dashboard/evenements'
+      preLoaderRoute: typeof DashboardEvenementsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/facturation': {
+      id: '/dashboard/facturation'
+      path: '/facturation'
+      fullPath: '/dashboard/facturation'
+      preLoaderRoute: typeof DashboardFacturationRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/forfaits': {
+      id: '/dashboard/forfaits'
+      path: '/forfaits'
+      fullPath: '/dashboard/forfaits'
+      preLoaderRoute: typeof DashboardForfaitsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/parrainage': {
+      id: '/dashboard/parrainage'
+      path: '/parrainage'
+      fullPath: '/dashboard/parrainage'
+      preLoaderRoute: typeof DashboardParrainageRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/profil': {
+      id: '/dashboard/profil'
+      path: '/profil'
+      fullPath: '/dashboard/profil'
+      preLoaderRoute: typeof DashboardProfilRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/questionnaires': {
+      id: '/dashboard/questionnaires'
+      path: '/questionnaires'
+      fullPath: '/dashboard/questionnaires'
+      preLoaderRoute: typeof DashboardQuestionnairesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/reservations': {
+      id: '/dashboard/reservations'
+      path: '/reservations'
+      fullPath: '/dashboard/reservations'
+      preLoaderRoute: typeof DashboardReservationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/intake/$slug': {
+      id: '/intake/$slug'
+      path: '/intake/$slug'
+      fullPath: '/intake/$slug'
+      preLoaderRoute: typeof IntakeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/questionnaire/$id': {
+      id: '/questionnaire/$id'
+      path: '/questionnaire/$id'
+      fullPath: '/questionnaire/$id'
+      preLoaderRoute: typeof QuestionnaireIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/$lang/blog/': {
       id: '/$lang/blog/'
       path: '/blog'
       fullPath: '/$lang/blog/'
       preLoaderRoute: typeof LangBlogIndexRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/api/public/admin-notify': {
-      id: '/api/public/admin-notify'
-      path: '/api/public/admin-notify'
-      fullPath: '/api/public/admin-notify'
-      preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$lang/therapeute/$slug': {
-      id: '/$lang/therapeute/$slug'
-      path: '/therapeute/$slug'
-      fullPath: '/$lang/therapeute/$slug'
-      preLoaderRoute: typeof LangTherapeuteSlugRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/specialites/$specialtySlug': {
-      id: '/$lang/specialites/$specialtySlug'
-      path: '/specialites/$specialtySlug'
-      fullPath: '/$lang/specialites/$specialtySlug'
-      preLoaderRoute: typeof LangSpecialitesSpecialtySlugRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/paroles/$slug': {
-      id: '/$lang/paroles/$slug'
-      path: '/paroles/$slug'
-      fullPath: '/$lang/paroles/$slug'
-      preLoaderRoute: typeof LangParolesSlugRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/evenements/$id': {
-      id: '/$lang/evenements/$id'
-      path: '/evenements/$id'
-      fullPath: '/$lang/evenements/$id'
-      preLoaderRoute: typeof LangEvenementsIdRouteImport
-      parentRoute: typeof LangRoute
-    }
-    '/$lang/blog/qu-est-ce-que-la-sophrologie': {
-      id: '/$lang/blog/qu-est-ce-que-la-sophrologie'
-      path: '/blog/qu-est-ce-que-la-sophrologie'
-      fullPath: '/$lang/blog/qu-est-ce-que-la-sophrologie'
-      preLoaderRoute: typeof LangBlogQuEstCeQueLaSophrologieRouteImport
       parentRoute: typeof LangRoute
     }
     '/$lang/blog/$slug': {
@@ -1324,25 +1191,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangBlogSlugRouteImport
       parentRoute: typeof LangRoute
     }
-    '/api/public/hooks/seo-audit-agent': {
-      id: '/api/public/hooks/seo-audit-agent'
-      path: '/api/public/hooks/seo-audit-agent'
-      fullPath: '/api/public/hooks/seo-audit-agent'
-      preLoaderRoute: typeof ApiPublicHooksSeoAuditAgentRouteImport
+    '/$lang/blog/qu-est-ce-que-la-sophrologie': {
+      id: '/$lang/blog/qu-est-ce-que-la-sophrologie'
+      path: '/blog/qu-est-ce-que-la-sophrologie'
+      fullPath: '/$lang/blog/qu-est-ce-que-la-sophrologie'
+      preLoaderRoute: typeof LangBlogQuEstCeQueLaSophrologieRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/conditions/': {
+      id: '/$lang/conditions/'
+      path: '/conditions'
+      fullPath: '/$lang/conditions/'
+      preLoaderRoute: typeof LangConditionsIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/confidentialite/': {
+      id: '/$lang/confidentialite/'
+      path: '/confidentialite'
+      fullPath: '/$lang/confidentialite/'
+      preLoaderRoute: typeof LangConfidentialiteIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/connexion/': {
+      id: '/$lang/connexion/'
+      path: '/connexion'
+      fullPath: '/$lang/connexion/'
+      preLoaderRoute: typeof LangConnexionIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/contact/': {
+      id: '/$lang/contact/'
+      path: '/contact'
+      fullPath: '/$lang/contact/'
+      preLoaderRoute: typeof LangContactIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/evenements/': {
+      id: '/$lang/evenements/'
+      path: '/evenements'
+      fullPath: '/$lang/evenements/'
+      preLoaderRoute: typeof LangEvenementsIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/evenements/$id': {
+      id: '/$lang/evenements/$id'
+      path: '/evenements/$id'
+      fullPath: '/$lang/evenements/$id'
+      preLoaderRoute: typeof LangEvenementsIdRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/faq/': {
+      id: '/$lang/faq/'
+      path: '/faq'
+      fullPath: '/$lang/faq/'
+      preLoaderRoute: typeof LangFaqIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/impressum/': {
+      id: '/$lang/impressum/'
+      path: '/impressum'
+      fullPath: '/$lang/impressum/'
+      preLoaderRoute: typeof LangImpressumIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/inscription/': {
+      id: '/$lang/inscription/'
+      path: '/inscription'
+      fullPath: '/$lang/inscription/'
+      preLoaderRoute: typeof LangInscriptionIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/mot-de-passe-oublie/': {
+      id: '/$lang/mot-de-passe-oublie/'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/$lang/mot-de-passe-oublie/'
+      preLoaderRoute: typeof LangMotDePasseOublieIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/paroles/': {
+      id: '/$lang/paroles/'
+      path: '/paroles'
+      fullPath: '/$lang/paroles/'
+      preLoaderRoute: typeof LangParolesIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/paroles/$slug': {
+      id: '/$lang/paroles/$slug'
+      path: '/paroles/$slug'
+      fullPath: '/$lang/paroles/$slug'
+      preLoaderRoute: typeof LangParolesSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/reinitialiser-mot-de-passe/': {
+      id: '/$lang/reinitialiser-mot-de-passe/'
+      path: '/reinitialiser-mot-de-passe'
+      fullPath: '/$lang/reinitialiser-mot-de-passe/'
+      preLoaderRoute: typeof LangReinitialiserMotDePasseIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/specialites/$specialtySlug': {
+      id: '/$lang/specialites/$specialtySlug'
+      path: '/specialites/$specialtySlug'
+      fullPath: '/$lang/specialites/$specialtySlug'
+      preLoaderRoute: typeof LangSpecialitesSpecialtySlugRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/tarifs/': {
+      id: '/$lang/tarifs/'
+      path: '/tarifs'
+      fullPath: '/$lang/tarifs/'
+      preLoaderRoute: typeof LangTarifsIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/therapeute/$slug': {
+      id: '/$lang/therapeute/$slug'
+      path: '/therapeute/$slug'
+      fullPath: '/$lang/therapeute/$slug'
+      preLoaderRoute: typeof LangTherapeuteSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/therapeutes/': {
+      id: '/$lang/therapeutes/'
+      path: '/therapeutes'
+      fullPath: '/$lang/therapeutes/'
+      preLoaderRoute: typeof LangTherapeutesIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/api/public/admin-notify': {
+      id: '/api/public/admin-notify'
+      path: '/api/public/admin-notify'
+      fullPath: '/api/public/admin-notify'
+      preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/article-agent': {
-      id: '/api/public/hooks/article-agent'
-      path: '/api/public/hooks/article-agent'
-      fullPath: '/api/public/hooks/article-agent'
-      preLoaderRoute: typeof ApiPublicHooksArticleAgentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$lang/therapeutes/famille/$familySlug': {
-      id: '/$lang/therapeutes/famille/$familySlug'
-      path: '/therapeutes/famille/$familySlug'
-      fullPath: '/$lang/therapeutes/famille/$familySlug'
-      preLoaderRoute: typeof LangTherapeutesFamilleFamilySlugRouteImport
+    '/$lang/blog/categorie/$slug': {
+      id: '/$lang/blog/categorie/$slug'
+      path: '/blog/categorie/$slug'
+      fullPath: '/$lang/blog/categorie/$slug'
+      preLoaderRoute: typeof LangBlogCategorieSlugRouteImport
       parentRoute: typeof LangRoute
     }
     '/$lang/specialites/$specialtySlug/$citySlug': {
@@ -1352,12 +1338,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangSpecialitesSpecialtySlugCitySlugRouteImport
       parentRoute: typeof LangSpecialitesSpecialtySlugRoute
     }
-    '/$lang/blog/categorie/$slug': {
-      id: '/$lang/blog/categorie/$slug'
-      path: '/blog/categorie/$slug'
-      fullPath: '/$lang/blog/categorie/$slug'
-      preLoaderRoute: typeof LangBlogCategorieSlugRouteImport
+    '/$lang/therapeutes/famille/$familySlug': {
+      id: '/$lang/therapeutes/famille/$familySlug'
+      path: '/therapeutes/famille/$familySlug'
+      fullPath: '/$lang/therapeutes/famille/$familySlug'
+      preLoaderRoute: typeof LangTherapeutesFamilleFamilySlugRouteImport
       parentRoute: typeof LangRoute
+    }
+    '/api/public/hooks/article-agent': {
+      id: '/api/public/hooks/article-agent'
+      path: '/api/public/hooks/article-agent'
+      fullPath: '/api/public/hooks/article-agent'
+      preLoaderRoute: typeof ApiPublicHooksArticleAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/seo-audit-agent': {
+      id: '/api/public/hooks/seo-audit-agent'
+      path: '/api/public/hooks/seo-audit-agent'
+      fullPath: '/api/public/hooks/seo-audit-agent'
+      preLoaderRoute: typeof ApiPublicHooksSeoAuditAgentRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
