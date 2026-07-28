@@ -1,111 +1,54 @@
-## Diagnostic
+# Feature — Récapitulatif santé de profil complet + améliorations agent
 
-Le champ de recherche de `/therapeutes` n'est **pas** un vrai moteur de recherche : c'est uniquement un géocodeur de ville.
+## Périmètre confirmé
+16 sous-items regroupés en 3 lots. Livraison en une seule passe cohérente (migration DB + serveur + email + UI admin).
 
-```
-search "shiatsu" → geocodeCity("shiatsu") → { ok: false } → "Ville introuvable" → 0 résultat
-```
+## Lot 1 — Migration base (une seule migration)
+1. `therapists.last_sign_in_at` (timestamptz) — remplie par trigger sur `auth.users.last_sign_in_at` OU lue directement via `auth.admin.getUserById` côté serveur (préférence : lecture à la volée, pas de trigger sur `auth.*` qui est interdit).
+2. `therapist_health_scores.last_recap_sent_at` (timestamptz) + `score_reactivite` (int, 0-10) + `score_previous` (int) capturé lors du recompute.
+3. Nouveau critère **Réactivité** dans `compute_therapist_health` : délai moyen entre `contact_messages.created_at` ciblés au thérapeute et sa 1ʳᵉ réponse (heuristique : `crm_activities` type=`reply` sur l'entité message). Poids : 10 pts pris sur Activité (25→15) OU ajout d'une 5ᵉ catégorie (35+15+15+15+20=100). **Choix : 5ᵉ catégorie** pour ne pas dérégler les scores existants.
+   - Recalibrage : Complétude 30, Contenu 20, Activité 15, Visibilité 20, Réactivité 15 = 100.
+4. Historisation `score_previous` : à chaque `compute_therapist_health`, copier l'ancien `score_total` dans `score_previous` avant update, pour calculer la tendance.
 
-Conséquences observées (capture jointe) :
-- Taper `shiatsu` → 0 thérapeute alors que le filtre `?specialite=shiatsu` en trouverait.
-- Taper un **nom**, un **tag**, une **spécialité secondaire**, une **description** → jamais retourné.
-- Taper `shiatsu lausanne` → géocodage échoue sur la chaîne entière, rien ne matche.
-- Aucune tolérance accent/casse côté SQL, aucun ranking, aucun fallback.
+## Lot 2 — Serveur & email
+5. `sendProfileHealthRecap` (nouvelle serverFn) : envoie le récapitulatif COMPLET (score, breakdown par catégorie, TOUS les points forts, TOUTES les actions triées par gain), pas seulement top 3. Met à jour `last_recap_sent_at`.
+6. Nouveau template `profile-health-recap.server.ts` (garde le style violet actuel) :
+   - Intro pédagogique (à quoi sert le score, comment le lire)
+   - Score global + 5 catégories
+   - Points forts complets, actions complètes (label + explication courte du "pourquoi" par action)
+   - Personnalisation par spécialité (« En tant que praticien en X… »)
+   - Reformulation : « visibilité sur Google **et sur les assistants IA (ChatGPT, Gemini…)** »
+   - Preuve sociale factuelle générique (« les profils complets sont plus souvent contactés »)
+   - Cadence annoncée : « point mensuel »
+   - Lien d'aide : `mailto:contact@holiswiss.ch`
+   - **JAMAIS** de mention de citabilité IA
+7. Bibliothèque locale de "pourquoi" par code de recommandation (`RECO_EXPLAIN`) — pas de LLM à l'envoi.
+8. Conserver l'ancien `sendProfileHealthInvite` (email court) OU le remplacer ? **Remplacement** : le bouton "Inviter" devient "Envoyer le récapitulatif complet". L'ancien template est retiré.
 
-La base est pourtant riche : `first_name`, `last_name`, `title`, `short_bio`, `bio`, `city`, `canton`, `specialties[]`, `approaches[]`, `services jsonb`, plus la table `therapist_specialties` liée à `specialties(name_fr/de/it/en, aliases[])` et `specialty_families`.
+## Lot 3 — UI admin (`admin.sante-profils.tsx`)
+9. Bouton "Envoyer le récapitulatif" (remplace "Inviter") + affichage de `last_recap_sent_at` sous le bouton.
+10. Affichage `Dernière connexion` à côté de « Inscrit le … ».
+11. Flèche de tendance ↑ ↓ → dans la liste, calculée `score - score_previous`.
+12. Barre de filtres au-dessus de la liste : recherche nom, sélecteur canton, tri (score asc/desc, ancienneté, tendance).
+13. Bloc comparaison : « Vous : X/100 · Moyenne pour {spécialité} : Y/100 » (calculée serveur via `getHealthDetail` étendu).
+14. 5ᵉ tuile "Réactivité" dans la grille de catégories.
 
-## Architecture cible
+## Détails techniques (non montrés à l'utilisateur non-tech dans le récap)
+- Migration idempotente ; GRANT posés ; RLS admin-only conservée.
+- `getHealthDetail` renvoie en plus `last_sign_in_at` (via `supabaseAdmin.auth.admin.getUserById`), `specialty_average`, `previous_score`.
+- `listHealthScores` renvoie `score_previous` pour la tendance.
+- Explications par recommandation : dictionnaire dans `profile-health-recap.server.ts` mappé sur `therapist_health_recommendations.code`.
 
-Un seul RPC `search_therapists(_q, _lat, _lng, _radius_m, _spec_slug, _family_slug, _limit)` qui :
+## Ordre d'exécution
+1. Migration DB (Réactivité, colonnes, recalibrage `compute_therapist_health`).
+2. Serveur : nouvelle serverFn + template email + extension `getHealthDetail` / `listHealthScores`.
+3. UI admin : filtres, tri, tendance, dernière connexion, comparaison, bouton récap.
+4. Vérification manuelle sur `holiswiss.ch` en prod après build Lovable.
 
-1. **Tokenise** la requête (split espaces, `unaccent` + `lower`).
-2. Pour chaque token, tente en parallèle :
-   - correspondance **ville** (via `public.cities` alias + `normalize_city_text`) → si trouvée, applique un filtre géographique 80 km avec `ST_DWithin`.
-   - correspondance **spécialité** (nom multilangue + `aliases[]` via `specialties`) → filtre `therapist_specialties`.
-   - correspondance **texte** sur les champs thérapeute (voir scoring).
-3. Les tokens non résolus en ville/spécialité restent en tokens texte : chaque thérapeute doit matcher **tous** les tokens texte restants sur au moins un champ (AND entre tokens, OR entre champs) → gère naturellement `"shiatsu lausanne"`, `"lausanne shiatsu"`, `"marie geneve massage"`.
-4. **Fallback** : si 0 résultat en AND strict, relance en OR (mode tolérant) et marque les résultats "approchant".
-
-### Scoring (points cumulés, tri desc)
-
-| Match | Points |
-|---|---|
-| Nom/prénom exact (token = nom) | 100 |
-| Nom/prénom prefix | 70 |
-| Slug exact | 90 |
-| Ville exacte | 60 |
-| Canton exact | 40 |
-| Spécialité principale (via pivot, name/alias) | 55 |
-| Spécialité secondaire / `approaches[]` / `specialties[]` texte | 35 |
-| `title` contient token | 25 |
-| `short_bio` contient token | 15 |
-| `bio` / `services` contient token | 8 |
-| Bonus `verified` | +5 |
-| Bonus `subscription_plan = 'elite_pro'` | +10 |
-| Bonus proximité géo (si ville détectée) | jusqu'à +20 selon distance |
-
-Ranking final = somme sur tous les tokens matchés + bonus profil.
-
-## Modifications base de données (une migration)
-
-1. **Extension** : `unaccent` (déjà présent d'après `normalize_search`).
-2. **Colonne générée** `search_tokens tsvector` sur `therapists` :
-   ```
-   to_tsvector('simple', unaccent(coalesce(first_name,'')||' '||coalesce(last_name,'')||' '
-                       ||coalesce(title,'')||' '||coalesce(city,'')||' '||coalesce(canton,'')||' '
-                       ||coalesce(short_bio,'')||' '||coalesce(bio,'')||' '
-                       ||array_to_string(coalesce(specialties,'{}'),' ')||' '
-                       ||array_to_string(coalesce(approaches,'{}'),' ')))
-   ```
-   + index GIN.
-3. **Fonction `search_therapists(...)`** (SECURITY DEFINER, STABLE) qui implémente la logique ci-dessus, réutilise `normalize_city_text`, `resolve_city`, la table `specialties` (nom + `aliases`) et `therapist_specialties`. Retourne les mêmes colonnes que `therapists_within_radius` + `score float` + `matched_city text` + `matched_specialty text`.
-4. Grants: `EXECUTE` à `anon`, `authenticated`.
-
-Aucune modification de policy — le RPC lit uniquement des thérapeutes `status='active'`, déjà autorisés en lecture publique.
-
-## Modifications UI (`src/routes/$lang.therapeutes.index.tsx`)
-
-- Remplacer les 3 queries (`geo`, `nearby`, `defaultList` filtré) par **une seule** `useQuery(["therapists-search", debounced, spec, famille])` qui :
-  - si `debounced.length < 2` et pas de filtre → `search_therapists(_q=null, ...)` (liste par défaut triée verified/premium).
-  - sinon → `search_therapists(_q=debounced, _spec_slug, _family_slug)`.
-- Debounce déjà à 400 ms — le passer à **250 ms** pour ressenti "instantané".
-- Bandeau contextuel :
-  - si `matched_city` → "X thérapeutes autour de **Lausanne** correspondant à **shiatsu**".
-  - sinon → "X thérapeutes correspondant à **shiatsu**".
-  - si 0 résultat strict et fallback OR → "Aucun résultat exact. Voici des profils approchants."
-- Etat vide utile : liens vers les familles + spécialités populaires (déjà via `SpecialtyExplorer`).
-- Aucun changement au `SpecialtyExplorer`, à la carte, aux filtres URL, aux breakpoints mobile.
-- Le mode "hors ligne" du géocodeur Google est supprimé de ce flux (plus de faux "Ville introuvable"). `geocodeCity` reste utilisé ailleurs.
-
-## Cas de test à valider
-
-| Entrée | Attendu |
-|---|---|
-| `shiatsu` | Tous les thérapeutes shiatsu (spécialité + alias + texte) |
-| `Shiatsu` | Idem (insensible casse) |
-| `shiatsu lausanne` | Shiatsu ∩ (Lausanne exact OU ≤80 km) |
-| `lausanne shiatsu` | Idem |
-| `marie` | Tous les prénoms/nom "Marie…" |
-| `geneve` (sans accent) | Ville Genève |
-| `emdr fribourg` | EMDR autour de Fribourg |
-| `ayurveda` | Match via `aliases` de la table specialties |
-| Nom exact d'un thérapeute | Ce thérapeute en tête (score 100) |
-| Requête vide | Liste par défaut, verified/premium en tête |
-| `xyzabc` | 0 résultat + suggestions familles |
-| Filtre URL `?specialite=shiatsu` + recherche `lausanne` | Shiatsu ∩ Lausanne |
-
-## Exemple Shiatsu
-
-Thérapeute `Henry Gerald`, Lausanne, `specialties=['Shiatsu','Reiki']`, spécialité pivot = `shiatsu`.
-
-- `q="shiatsu"` : match pivot (+55) + tableau (+35) + tsvector (+8) → score ~98, en tête.
-- `q="shiatsu lausanne"` : token `lausanne` résolu en ville → filtre 80 km + bonus distance (+20). Token `shiatsu` match pivot (+55). Score ~130.
-- `q="henry"` : match `first_name` (+100). En tête.
-
-## Livraison
-
-1. Migration SQL (colonne `search_tokens` + fonction `search_therapists` + grants).
-2. Refonte du fichier `src/routes/$lang.therapeutes.index.tsx` : hooks de recherche unifiés, bandeau contextuel, fallback.
-3. Vérification Playwright rapide sur `shiatsu`, `shiatsu lausanne`, nom, ville.
-
-Aucun changement de schéma destructif, aucun impact sur les autres pages ou sur les policies existantes.
+## Question à trancher avant exécution
+- **Réactivité** : la table `contact_messages` est globale (formulaire contact du site) ; il n'y a pas aujourd'hui de trace de « réponse thérapeute à un client » horodatée dans la DB (pas de messagerie interne). Trois options :
+  - A. Calculer sur `appointments` : délai entre `created_at` du RDV et confirmation → mesure indirecte.
+  - B. Créer une vraie table de messages plus tard, et pour l'instant mettre le critère à `null` (affiché « à venir ») pour ne pas fausser le score.
+  - C. Baser sur `client_questionnaire_responses.statut` (soumis→traite) : délai de traitement.
+  
+  **Recommandation : B** (afficher le critère, score neutre 10/15 par défaut, message « en cours de calibrage ») — évite d'inventer un signal, cohérent avec ta règle « pas de donnée inventée ».
