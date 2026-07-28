@@ -288,23 +288,81 @@ export const queueSuggestedArticle = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// POINT 4 — déclenche à la demande la mesure de citabilité IA (edge function).
+// POINT 4 — calcule la citabilité IA de chaque profil (admin-only).
+// Heuristique in-app basée sur les signaux existants (RPC therapist_health_signals) :
+// un profil est « citable » par une IA/LLM si sa page publique est riche, structurée,
+// signée et régulièrement mise à jour. Aucune edge function requise.
+//
+// Barème /100 :
+//   - has_photo .......... 10
+//   - has_meta (SEO) ..... 15
+//   - has_web (site) .....  5
+//   - verified ...........  8
+//   - bio_len ≥ 600 ...... 15  (≥300 = 8)
+//   - n_specialties ≥ 3 ..  6  (≥1 = 3)
+//   - n_languages  ≥ 2 ...  4  (≥1 = 2)
+//   - has_geo ............  6
+//   - has_price ..........  4
+//   - n_articles  ≥ 3 .... 12  (≥1 = 6)
+//   - n_reviews   ≥ 5 .... 10  (≥1 = 4)
+//   - slug défini ........  5
 export const runCitabilityScan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (!url || !key) throw new Error("Configuration Supabase manquante.");
-    const res = await fetch(`${url}/functions/v1/measure-ai-citability`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
-      body: "{}",
-    });
-    if (res.status === 404) {
-      throw new Error("La fonction de mesure « measure-ai-citability » n'est pas encore déployée sur cette base.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+
+    const { data: ths, error: thErr } = await sb
+      .from("therapists")
+      .select("id, slug, status")
+      .eq("status", "active");
+    if (thErr) throw new Error(`Lecture thérapeutes impossible : ${thErr.message}`);
+    const list = (ths ?? []) as Array<{ id: string; slug: string | null }>;
+
+    let processed = 0;
+    let reachable = 0;
+    const now = new Date().toISOString();
+
+    for (const t of list) {
+      const { data: sigRows, error: sigErr } = await sb.rpc("therapist_health_signals", { _id: t.id });
+      if (sigErr || !sigRows || sigRows.length === 0) continue;
+      const s = sigRows[0] as any;
+
+      let score = 0;
+      const detail: Record<string, number> = {};
+      const add = (k: string, v: number) => { detail[k] = v; score += v; };
+
+      add("has_photo", s.has_photo ? 10 : 0);
+      add("has_meta", s.has_meta ? 15 : 0);
+      add("has_web", s.has_web ? 5 : 0);
+      add("verified", s.verified ? 8 : 0);
+      add("bio_len", (s.bio_len ?? 0) >= 600 ? 15 : (s.bio_len ?? 0) >= 300 ? 8 : 0);
+      add("specialties", (s.n_specialties ?? 0) >= 3 ? 6 : (s.n_specialties ?? 0) >= 1 ? 3 : 0);
+      add("languages", (s.n_languages ?? 0) >= 2 ? 4 : (s.n_languages ?? 0) >= 1 ? 2 : 0);
+      add("has_geo", s.has_geo ? 6 : 0);
+      add("has_price", s.has_price ? 4 : 0);
+      add("articles", (s.n_articles ?? 0) >= 3 ? 12 : (s.n_articles ?? 0) >= 1 ? 6 : 0);
+      add("reviews", (s.n_reviews ?? 0) >= 5 ? 10 : (s.n_reviews ?? 0) >= 1 ? 4 : 0);
+      add("has_slug", s.slug ? 5 : 0);
+
+      score = Math.max(0, Math.min(100, score));
+      if (score >= 40) reachable += 1;
+
+      // Upsert : garantit une ligne même si le scan santé n'a pas encore tourné.
+      const { error: upErr } = await sb
+        .from("therapist_health_scores")
+        .upsert(
+          {
+            therapist_id: t.id,
+            ai_citability: score,
+            ai_citability_detail: detail,
+            ai_citability_at: now,
+          },
+          { onConflict: "therapist_id" },
+        );
+      if (!upErr) processed += 1;
     }
-    if (!res.ok) throw new Error(`Mesure de citabilité échouée (HTTP ${res.status}).`);
-    const j = (await res.json()) as { processed?: number; reachable?: number };
-    return { processed: j.processed ?? 0, reachable: j.reachable ?? 0 };
+
+    return { processed, reachable };
   });
