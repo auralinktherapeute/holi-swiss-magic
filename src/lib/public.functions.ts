@@ -27,7 +27,24 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
       .eq("status", "active")
       .maybeSingle();
     if (error) throw new Error("Impossible de charger le thérapeute.");
-    return { therapist };
+    let reviews: Array<{
+      id: string;
+      rating: number;
+      comment: string | null;
+      author_name: string | null;
+      created_at: string;
+    }> = [];
+    if (therapist?.id) {
+      const { data: rows } = await supabase
+        .from("reviews")
+        .select("id,rating,comment,author_name,created_at")
+        .eq("therapist_id", therapist.id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      reviews = (rows ?? []) as any;
+    }
+    return { therapist, reviews };
   });
 
 export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
