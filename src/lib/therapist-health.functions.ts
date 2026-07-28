@@ -349,19 +349,15 @@ export const runCitabilityScan = createServerFn({ method: "POST" })
       score = Math.max(0, Math.min(100, score));
       if (score >= 40) reachable += 1;
 
-      // Upsert : garantit une ligne même si le scan santé n'a pas encore tourné.
-      const { error: upErr } = await sb
+      // UPDATE seul : la ligne est créée par le scan « Santé » (compute_therapist_health).
+      const { error: upErr, count } = await sb
         .from("therapist_health_scores")
-        .upsert(
-          {
-            therapist_id: t.id,
-            ai_citability: score,
-            ai_citability_detail: detail,
-            ai_citability_at: now,
-          },
-          { onConflict: "therapist_id" },
-        );
-      if (!upErr) processed += 1;
+        .update(
+          { ai_citability: score, ai_citability_detail: detail, ai_citability_at: now },
+          { count: "exact" },
+        )
+        .eq("therapist_id", t.id);
+      if (!upErr && (count ?? 0) > 0) processed += 1;
     }
 
     return { processed, reachable };
