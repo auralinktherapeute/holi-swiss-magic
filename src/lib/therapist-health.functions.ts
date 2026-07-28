@@ -212,6 +212,55 @@ export const sendProfileHealthInvite = createServerFn({ method: "POST" })
     return { sent: true };
   });
 
+// Envoi du RÉCAPITULATIF COMPLET (score + détail par catégorie + points forts + toutes actions).
+// Marque last_recap_sent_at pour éviter les doublons visibles côté admin.
+export const sendProfileHealthRecap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: t } = await sb.from("therapists").select("first_name,email").eq("id", data.therapistId).maybeSingle();
+    if (!t?.email) throw new Error("Ce thérapeute n'a pas d'adresse email.");
+    const { data: score } = await sb
+      .from("therapist_health_scores")
+      .select("score_total,score_completude,score_contenu,score_activite,score_visibilite,strengths")
+      .eq("therapist_id", data.therapistId)
+      .maybeSingle();
+    const { data: recos } = await sb
+      .from("therapist_health_recommendations")
+      .select("label,impact_points,severity,category,status")
+      .eq("therapist_id", data.therapistId)
+      .eq("status", "todo");
+    const rank: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+    const actions = ((recos ?? []) as any[])
+      .sort((x, y) => (rank[x.severity] ?? 3) - (rank[y.severity] ?? 3) || y.impact_points - x.impact_points)
+      .map((r) => ({ label: r.label as string, impact_points: r.impact_points as number, category: r.category as string }));
+
+    const { sendProfileHealthRecap: sendRecap } = await import("@/lib/profile-health-recap-email.server");
+    const res = await sendRecap({
+      firstName: t.first_name ?? "",
+      email: t.email,
+      score: score?.score_total ?? 0,
+      breakdown: {
+        completude: score?.score_completude ?? 0,
+        contenu: score?.score_contenu ?? 0,
+        activite: score?.score_activite ?? 0,
+        visibilite: score?.score_visibilite ?? 0,
+      },
+      strengths: ((score?.strengths ?? []) as any[]).map((x) => ({ label: x.label as string })),
+      actions,
+      sentBy: context.userId,
+    });
+    if (!res.sent) throw new Error("L'email n'a pas pu être envoyé (voir email_logs).");
+    await sb
+      .from("therapist_health_scores")
+      .update({ last_recap_sent_at: new Date().toISOString() })
+      .eq("therapist_id", data.therapistId);
+    return { sent: true };
+  });
+
 // POINT 5 — envoie l'idée d'article à l'agent GEO (semer une suggestion). L'agent
 // rédige au prochain run et dépose un brouillon `pending_validation` (jamais auto-publié).
 export const queueSuggestedArticle = createServerFn({ method: "POST" })
