@@ -4,6 +4,7 @@
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 const FROM = "HoliSwiss <contact@holiswiss.ch>";
 const SITE_URL = "https://holiswiss.ch";
+const LOGO_URL = `${SITE_URL}/__l5e/assets-v1/b34e4e20-5d40-4759-bd7c-aefb0fa59668/lotus-logo.png`;
 
 const CAT_LABEL: Record<string, string> = {
   completude: "Complétude du profil",
@@ -73,7 +74,7 @@ export function buildProfileHealthRecap(args: ProfileHealthRecapArgs): { subject
 <body style="margin:0;padding:0;background:#1a0a2e;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:600px;margin:0 auto;padding:32px 20px;">
     <div style="text-align:center;padding-bottom:20px;">
-      <img src="${SITE_URL}/lotus-logo.png" alt="HoliSwiss" width="56" height="56" style="display:inline-block;" />
+     <img src="${LOGO_URL}" alt="HoliSwiss" width="56" height="56" style="display:inline-block;" />
       <div style="font-size:20px;font-weight:700;color:#ffffff;margin-top:8px;">Holi<span style="color:#b86ef9;">Swiss</span></div>
     </div>
 
