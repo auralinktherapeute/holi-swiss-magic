@@ -2198,6 +2198,102 @@ export type Database = {
           },
         ]
       }
+      subscription_invoices: {
+        Row: {
+          amount_subtotal: number | null
+          amount_tax: number | null
+          amount_total: number
+          billing_address: string | null
+          billing_reason: string | null
+          company_name: string | null
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          hosted_invoice_url: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          invoice_pdf_url: string | null
+          metadata: Json
+          payment_method: string | null
+          period_end: string | null
+          period_start: string | null
+          plan_name: string | null
+          status: string
+          stripe_invoice_id: string | null
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_subtotal?: number | null
+          amount_tax?: number | null
+          amount_total?: number
+          billing_address?: string | null
+          billing_reason?: string | null
+          company_name?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          invoice_pdf_url?: string | null
+          metadata?: Json
+          payment_method?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_name?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_subtotal?: number | null
+          amount_tax?: number | null
+          amount_total?: number
+          billing_address?: string | null
+          billing_reason?: string | null
+          company_name?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          invoice_pdf_url?: string | null
+          metadata?: Json
+          payment_method?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_name?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_invoices_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_articles: {
         Row: {
           contenu: string
