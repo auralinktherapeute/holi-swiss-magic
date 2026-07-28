@@ -16,6 +16,7 @@ type Review = {
   status: string;
   therapist_reply?: string | null;
   therapist_reply_at?: string | null;
+  therapist_reply_status?: "pending" | "approved" | "rejected" | null;
 };
 
 function Stars({ n }: { n: number }) {
@@ -90,6 +91,14 @@ function Page() {
           {rows.map((r) => {
             const hasReply = !!(r.therapist_reply && r.therapist_reply.length);
             const draft = drafts[r.id] ?? r.therapist_reply ?? "";
+            const st = r.therapist_reply_status ?? null;
+            const badge = hasReply
+              ? st === "approved"
+                ? { label: "Publiée", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" }
+                : st === "rejected"
+                  ? { label: "Refusée par la modération", cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" }
+                  : { label: "En attente de validation", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" }
+              : null;
             return (
               <li key={r.id} className="rounded-2xl border border-[rgba(168,85,247,.25)] bg-[#2d1b4e]/70 p-4">
                 <div className="flex items-center justify-between">
@@ -101,15 +110,23 @@ function Page() {
 
                 {canReply && (
                 <div className="mt-3 rounded-xl bg-white/5 p-3">
-                  <label className="text-xs font-semibold text-cyan-300">
-                    {hasReply ? "Votre réponse (publiée)" : "Votre réponse"}
-                  </label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-xs font-semibold text-cyan-300">Votre réponse</label>
+                    {badge && (
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badge.cls}`}>
+                        {badge.label}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/40">
+                    Toute réponse est relue par la modération avant d'apparaître sur votre fiche publique.
+                  </p>
                   <textarea
                     value={draft}
                     onChange={(e) => setDrafts((d) => ({ ...d, [r.id]: e.target.value }))}
                     rows={2}
                     placeholder="Remerciez, précisez, restez professionnel…"
-                    className="mt-1 w-full rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white placeholder:text-white/30"
+                    className="mt-2 w-full rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white placeholder:text-white/30"
                   />
                   <div className="mt-2 flex justify-end">
                     <button
@@ -119,7 +136,7 @@ function Page() {
                       className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       {saving === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      {hasReply ? "Mettre à jour" : "Publier ma réponse"}
+                      {hasReply ? "Mettre à jour" : "Soumettre ma réponse"}
                     </button>
                   </div>
                 </div>
