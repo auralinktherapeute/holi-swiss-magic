@@ -17,7 +17,7 @@ export const listHealthScores = createServerFn({ method: "GET" })
     const { data, error } = await sb
       .from("therapist_health_scores")
       .select(
-        "therapist_id,score_total,grade,score_completude,score_contenu,score_activite,score_visibilite,computed_at,therapists(first_name,last_name,canton,slug)",
+        "therapist_id,score_total,score_previous,last_recap_sent_at,grade,score_completude,score_contenu,score_activite,score_visibilite,computed_at,therapists(first_name,last_name,canton,slug,created_at)",
       )
       .order("score_total", { ascending: true });
     if (error) throw new Error(error.message);
@@ -28,6 +28,9 @@ export const listHealthScores = createServerFn({ method: "GET" })
         canton: (r.therapists?.canton ?? "") as string,
         slug: (r.therapists?.slug ?? "") as string,
         score: r.score_total as number,
+        score_previous: (r.score_previous ?? null) as number | null,
+        last_recap_sent_at: (r.last_recap_sent_at ?? null) as string | null,
+        created_at: (r.therapists?.created_at ?? null) as string | null,
         grade: r.grade as "green" | "orange" | "red",
         breakdown: {
           completude: r.score_completude as number,
@@ -66,6 +69,27 @@ export const getHealthDetail = createServerFn({ method: "POST" })
       const { data: sub } = await sb.from("subscriptions").select("plan").eq("user_id", therRes.data.user_id).maybeSingle();
       if (sub?.plan) plan = sub.plan as string;
     }
+    // Moyenne par spécialité principale (thérapeutes partageant la 1re spécialité)
+    let specialtyAvg: { specialty: string | null; avg: number | null; sample: number } = { specialty: null, avg: null, sample: 0 };
+    const mainSpec = (therRes.data?.specialties ?? [])[0] as string | undefined;
+    if (mainSpec) {
+      const { data: peers } = await sb
+        .from("therapists")
+        .select("id, therapist_health_scores(score_total)")
+        .contains("specialties", [mainSpec]);
+      const scores = ((peers ?? []) as any[])
+        .map((p) => p.therapist_health_scores?.score_total)
+        .filter((n: any) => typeof n === "number") as number[];
+      if (scores.length) {
+        specialtyAvg = {
+          specialty: mainSpec,
+          avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+          sample: scores.length,
+        };
+      } else {
+        specialtyAvg = { specialty: mainSpec, avg: null, sample: 0 };
+      }
+    }
     const recommendations = ((recoRes.data ?? []) as any[]).sort(
       (a, b) => (SEV_RANK[a.severity] ?? 3) - (SEV_RANK[b.severity] ?? 3) || b.impact_points - a.impact_points,
     );
@@ -75,6 +99,7 @@ export const getHealthDetail = createServerFn({ method: "POST" })
       plan,
       recommendations,
       history: (histRes.data ?? []) as any[],
+      specialtyAvg,
     };
   });
 
