@@ -36,50 +36,56 @@ export function OnboardingModal() {
   const [success, setSuccess] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  const tr = (fr: string, de: string) => (i18n.language?.startsWith("de") ? de : fr);
+  const tr = (fr: string, de: string, it?: string, en?: string) => {
+    const lng = (i18n.language || "fr").slice(0, 2);
+    if (lng === "de") return de;
+    if (lng === "it") return it ?? fr;
+    if (lng === "en") return en ?? fr;
+    return fr;
+  };
 
   const slides: SlideDef[] = useMemo(() => [
     {
       id: "welcome",
-      kicker: tr("Étape 01 — Bienvenue", "Schritt 01 — Willkommen"),
-      title: tr("L'excellence suisse au service de votre cabinet.", "Schweizer Exzellenz für Ihre Praxis."),
+      kicker: tr("Étape 01 — Bienvenue", "Schritt 01 — Willkommen", "Passo 01 — Benvenuto", "Step 01 — Welcome"),
+      title: tr("L'excellence suisse au service de votre cabinet.", "Schweizer Exzellenz für Ihre Praxis.", "L'eccellenza svizzera al servizio del vostro studio.", "Swiss excellence at the service of your practice."),
       bullets: [
-        tr("Accédez à une patientèle premium recherchant l'expertise suisse.", "Erreichen Sie eine anspruchsvolle Klientel, die Schweizer Expertise sucht."),
-        tr("Simplifiez votre gestion quotidienne avec nos outils intégrés.", "Vereinfachen Sie Ihren Alltag mit integrierten Werkzeugen."),
-        tr("Rejoignez un réseau de praticiens certifiés et reconnus.", "Werden Sie Teil eines Netzwerks zertifizierter Fachpersonen."),
+        tr("Accédez à une patientèle premium recherchant l'expertise suisse.", "Erreichen Sie eine anspruchsvolle Klientel, die Schweizer Expertise sucht.", "Accedete a una clientela premium che cerca l'expertise svizzera.", "Reach a premium clientele seeking Swiss expertise."),
+        tr("Simplifiez votre gestion quotidienne avec nos outils intégrés.", "Vereinfachen Sie Ihren Alltag mit integrierten Werkzeugen.", "Semplificate la vostra gestione quotidiana con i nostri strumenti integrati.", "Simplify your daily management with our integrated tools."),
+        tr("Rejoignez un réseau de praticiens certifiés et reconnus.", "Werden Sie Teil eines Netzwerks zertifizierter Fachpersonen.", "Unitevi a una rete di professionisti certificati e riconosciuti.", "Join a network of certified and recognised practitioners."),
       ],
     },
     {
       id: "profile",
-      kicker: tr("Étape 02 — Votre profil", "Schritt 02 — Ihr Profil"),
-      title: tr("Une vitrine premium, prête en quelques minutes.", "Ein Premium-Auftritt, in wenigen Minuten bereit."),
+      kicker: tr("Étape 02 — Votre profil", "Schritt 02 — Ihr Profil", "Passo 02 — Il vostro profilo", "Step 02 — Your profile"),
+      title: tr("Une vitrine premium, prête en quelques minutes.", "Ein Premium-Auftritt, in wenigen Minuten bereit.", "Una vetrina premium, pronta in pochi minuti.", "A premium showcase, ready in minutes."),
       highlight: [
-        { icon: User2, label: tr("Profil vérifié", "Verifiziertes Profil"), sub: tr("Photo, bio, spécialités, tarifs.", "Foto, Bio, Fachgebiete, Tarife.") },
-        { icon: ShieldCheck, label: tr("Badges assurances", "Versicherungs-Badges"), sub: tr("ASCA, RME et reconnaissance suisse.", "ASCA, EMR und Schweizer Anerkennung.") },
+        { icon: User2, label: tr("Profil vérifié", "Verifiziertes Profil", "Profilo verificato", "Verified profile"), sub: tr("Photo, bio, spécialités, tarifs.", "Foto, Bio, Fachgebiete, Tarife.", "Foto, bio, specialità, tariffe.", "Photo, bio, specialities, rates.") },
+        { icon: ShieldCheck, label: tr("Badges assurances", "Versicherungs-Badges", "Badge assicurazioni", "Insurance badges"), sub: tr("ASCA, RME et reconnaissance suisse.", "ASCA, EMR und Schweizer Anerkennung.", "ASCA, RME e riconoscimento svizzero.", "ASCA, RME and Swiss recognition.") },
       ],
     },
     {
       id: "agenda",
-      kicker: tr("Étape 03 — Votre agenda", "Schritt 03 — Ihr Kalender"),
-      title: tr("Prise de rendez-vous intégrée, 24 h / 24.", "Integrierte Terminbuchung, rund um die Uhr."),
+      kicker: tr("Étape 03 — Votre agenda", "Schritt 03 — Ihr Kalender", "Passo 03 — La vostra agenda", "Step 03 — Your calendar"),
+      title: tr("Prise de rendez-vous intégrée, 24 h / 24.", "Integrierte Terminbuchung, rund um die Uhr.", "Prenotazione integrata, 24 ore su 24.", "Integrated booking, 24/7."),
       highlight: [
-        { icon: CalendarDays, label: tr("Agenda synchronisé", "Synchronisierter Kalender"), sub: tr("Google, Outlook, iCal.", "Google, Outlook, iCal.") },
-        { icon: Check, label: tr("Rappels automatiques", "Automatische Erinnerungen"), sub: tr("Moins d'oublis, plus de séances.", "Weniger Absagen, mehr Sitzungen.") },
+        { icon: CalendarDays, label: tr("Agenda synchronisé", "Synchronisierter Kalender", "Agenda sincronizzata", "Synced calendar"), sub: tr("Google, Outlook, iCal.", "Google, Outlook, iCal.", "Google, Outlook, iCal.", "Google, Outlook, iCal.") },
+        { icon: Check, label: tr("Rappels automatiques", "Automatische Erinnerungen", "Promemoria automatici", "Automatic reminders"), sub: tr("Moins d'oublis, plus de séances.", "Weniger Absagen, mehr Sitzungen.", "Meno dimenticanze, più sedute.", "Fewer no-shows, more sessions.") },
       ],
     },
     {
       id: "voices",
-      kicker: tr("Étape 04 — Voix d'experts", "Schritt 04 — Experten­stimmen"),
-      title: tr("Publiez vos articles, gagnez en visibilité.", "Publizieren Sie Ihre Artikel, gewinnen Sie Sichtbarkeit."),
+      kicker: tr("Étape 04 — Voix d'experts", "Schritt 04 — Experten­stimmen", "Passo 04 — Voci di esperti", "Step 04 — Expert voices"),
+      title: tr("Publiez vos articles, gagnez en visibilité.", "Publizieren Sie Ihre Artikel, gewinnen Sie Sichtbarkeit.", "Pubblicate i vostri articoli, guadagnate visibilità.", "Publish your articles, gain visibility."),
       highlight: [
-        { icon: PenLine, label: tr("Articles d'auteur", "Autorenartikel"), sub: tr("Partagez votre approche.", "Teilen Sie Ihren Ansatz.") },
-        { icon: Star, label: tr("Avis vérifiés", "Verifizierte Bewertungen"), sub: tr("La confiance de vos patients, visible.", "Vertrauen sichtbar gemacht.") },
+        { icon: PenLine, label: tr("Articles d'auteur", "Autorenartikel", "Articoli d'autore", "Author articles"), sub: tr("Partagez votre approche.", "Teilen Sie Ihren Ansatz.", "Condividete il vostro approccio.", "Share your approach.") },
+        { icon: Star, label: tr("Avis vérifiés", "Verifizierte Bewertungen", "Recensioni verificate", "Verified reviews"), sub: tr("La confiance de vos patients, visible.", "Vertrauen sichtbar gemacht.", "La fiducia dei vostri pazienti, visibile.", "Your patients' trust, made visible.") },
       ],
     },
     {
       id: "signup",
-      kicker: tr("Étape 05 — Rejoignez-nous", "Schritt 05 — Machen Sie mit"),
-      title: tr("Réservez votre place fondatrice.", "Sichern Sie sich Ihren Gründerplatz."),
+      kicker: tr("Étape 05 — Rejoignez-nous", "Schritt 05 — Machen Sie mit", "Passo 05 — Unitevi a noi", "Step 05 — Join us"),
+      title: tr("Réservez votre place fondatrice.", "Sichern Sie sich Ihren Gründerplatz.", "Prenotate il vostro posto da fondatore.", "Reserve your founder spot."),
     },
   ], [i18n.language]);
 
@@ -146,11 +152,11 @@ export function OnboardingModal() {
     setError(null);
     const parsed = emailSchema.safeParse(email);
     if (!parsed.success) {
-      setError(tr("Email invalide.", "Ungültige E-Mail."));
+      setError(tr("Email invalide.", "Ungültige E-Mail.", "Email non valida.", "Invalid email."));
       return;
     }
     if (!accepted) {
-      setError(tr("Veuillez accepter la politique de confidentialité.", "Bitte akzeptieren Sie die Datenschutzerklärung."));
+      setError(tr("Veuillez accepter la politique de confidentialité.", "Bitte akzeptieren Sie die Datenschutzerklärung.", "Si prega di accettare l'informativa sulla privacy.", "Please accept the privacy policy."));
       return;
     }
     setLoading(true);
@@ -164,7 +170,7 @@ export function OnboardingModal() {
       } as never);
     setLoading(false);
     if (insertError && !(insertError.code === "23505" || /duplicate|unique/i.test(insertError.message))) {
-      setError(tr("Une erreur est survenue. Veuillez réessayer.", "Ein Fehler ist aufgetreten. Bitte erneut versuchen."));
+      setError(tr("Une erreur est survenue. Veuillez réessayer.", "Ein Fehler ist aufgetreten. Bitte erneut versuchen.", "Si è verificato un errore. Riprovare.", "An error occurred. Please try again."));
       return;
     }
     try { localStorage.setItem(PERSIST_KEY, String(Date.now())); } catch {}
@@ -207,7 +213,7 @@ export function OnboardingModal() {
           <button
             type="button"
             onClick={close}
-            aria-label={tr("Fermer", "Schliessen")}
+            aria-label={tr("Fermer", "Schliessen", "Chiudi", "Close")}
             className="text-white/40 hover:text-white transition-colors -mr-1"
           >
             <X className="w-5 h-5" />
@@ -308,7 +314,7 @@ export function OnboardingModal() {
               {isLast && !success && (
                 <form onSubmit={submitEmail} className="mb-auto space-y-3" noValidate>
                   <label className="block text-xs uppercase tracking-wider text-white/50 font-medium">
-                    {tr("Votre email professionnel", "Ihre berufliche E-Mail")}
+                    {tr("Votre email professionnel", "Ihre berufliche E-Mail", "La vostra email professionale", "Your professional email")}
                   </label>
                   <input
                     type="email"
@@ -329,7 +335,9 @@ export function OnboardingModal() {
                     <span>
                       {tr(
                         "J'accepte la politique de confidentialité et de recevoir des informations Holiswiss.",
-                        "Ich akzeptiere die Datenschutzerklärung und den Erhalt von Holiswiss-Informationen."
+                        "Ich akzeptiere die Datenschutzerklärung und den Erhalt von Holiswiss-Informationen.",
+                        "Accetto l'informativa sulla privacy e di ricevere informazioni da Holiswiss.",
+                        "I accept the privacy policy and to receive information from Holiswiss."
                       )}
                     </span>
                   </label>
@@ -345,12 +353,14 @@ export function OnboardingModal() {
                     <Check className="h-7 w-7 text-emerald-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-2">
-                    {tr("Bienvenue parmi les fondateurs.", "Willkommen bei den Gründern.")}
+                    {tr("Bienvenue parmi les fondateurs.", "Willkommen bei den Gründern.", "Benvenuti tra i fondatori.", "Welcome among the founders.")}
                   </h3>
                   <p className="text-sm text-white/70 leading-relaxed max-w-[280px]">
                     {tr(
                       "Un email de confirmation vient de vous être envoyé. À très vite.",
-                      "Eine Bestätigungs-E-Mail wurde soeben versendet. Bis bald."
+                      "Eine Bestätigungs-E-Mail wurde soeben versendet. Bis bald.",
+                      "Vi è stata appena inviata un'email di conferma. A presto.",
+                      "A confirmation email has just been sent to you. See you soon."
                     )}
                   </p>
                 </div>
@@ -365,7 +375,7 @@ export function OnboardingModal() {
                       onClick={next}
                       className="w-full py-3.5 bg-white text-[#0a0514] font-semibold rounded-xl text-sm transition-transform active:scale-[0.98] hover:scale-[1.01] shadow-[0_10px_30px_rgba(168,85,247,0.25)] inline-flex items-center justify-center gap-2"
                     >
-                      {tr("Suivant", "Weiter")} <ArrowRight className="w-4 h-4" />
+                      {tr("Suivant", "Weiter", "Avanti", "Next")} <ArrowRight className="w-4 h-4" />
                     </button>
                     <div className="flex items-center justify-between">
                       {index > 0 ? (
@@ -374,7 +384,7 @@ export function OnboardingModal() {
                           onClick={prev}
                           className="text-white/50 text-xs font-medium hover:text-white transition-colors inline-flex items-center gap-1"
                         >
-                          <ArrowLeft className="w-3.5 h-3.5" /> {tr("Précédent", "Zurück")}
+                          <ArrowLeft className="w-3.5 h-3.5" /> {tr("Précédent", "Zurück", "Indietro", "Back")}
                         </button>
                       ) : <span />}
                       <button
@@ -382,7 +392,7 @@ export function OnboardingModal() {
                         onClick={() => setIndex(total - 1)}
                         className="text-white/40 text-xs font-medium hover:text-white transition-colors"
                       >
-                        {tr("Passer l'introduction", "Einführung überspringen")}
+                        {tr("Passer l'introduction", "Einführung überspringen", "Salta l'introduzione", "Skip the introduction")}
                       </button>
                     </div>
                   </>
@@ -395,14 +405,14 @@ export function OnboardingModal() {
                       disabled={loading}
                       className="w-full py-3.5 bg-white text-[#0a0514] font-semibold rounded-xl text-sm transition-transform active:scale-[0.98] hover:scale-[1.01] shadow-[0_10px_30px_rgba(168,85,247,0.25)] disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                     >
-                      {loading ? tr("Envoi…", "Senden…") : tr("Rejoindre la liste", "Der Liste beitreten")}
+                      {loading ? tr("Envoi…", "Senden…", "Invio…", "Sending…") : tr("Rejoindre la liste", "Der Liste beitreten", "Unisciti alla lista", "Join the list")}
                     </button>
                     <button
                       type="button"
                       onClick={close}
                       className="w-full py-2 text-white/40 text-xs font-medium hover:text-white transition-colors"
                     >
-                      {tr("Découvrir sans compte", "Ohne Konto entdecken")}
+                      {tr("Découvrir sans compte", "Ohne Konto entdecken", "Scopri senza account", "Explore without an account")}
                     </button>
                   </>
                 )}
@@ -412,7 +422,7 @@ export function OnboardingModal() {
                     onClick={close}
                     className="w-full py-3.5 bg-white/10 text-white font-semibold rounded-xl text-sm hover:bg-white/15 transition-colors border border-white/10"
                   >
-                    {tr("Fermer", "Schliessen")}
+                    {tr("Fermer", "Schliessen", "Chiudi", "Close")}
                   </button>
                 )}
               </div>
