@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { Footer } from "@/components/layout/Footer";
-import { WaitingListPopup } from "@/components/WaitingListPopup";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import { AmbientPlayer } from "@/components/AmbientPlayer";
 import { WaitlistBanner } from "@/components/holiswiss/WaitlistBanner";
 import i18n, { isLang, DEFAULT_LANG } from "@/lib/i18n";
@@ -37,7 +37,7 @@ function LangLayout() {
         <Outlet />
       </main>
       <Footer />
-      <WaitingListPopup />
+      <OnboardingModal />
       <AmbientPlayer />
     </div>
   );
