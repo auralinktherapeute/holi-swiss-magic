@@ -6,7 +6,8 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { sendWaitlistEmails } from "@/lib/waitlist-emails.functions";
-import lotusUrl from "@/assets/lotus-transparent.png";
+import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
+const lotusUrl = lotusAsset.url;
 
 const SESSION_KEY = "holiswiss-onboarding-shown";
 const PERSIST_KEY = "holiswiss-onboarding-converted-at";
