@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 
 const TherapistMapInner = lazy(() =>
   import("./TherapistMapInner").then((m) => ({ default: m.TherapistMapInner })),
@@ -35,6 +35,23 @@ function MapFallback() {
   );
 }
 
+class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    console.error("Therapist map failed to render", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) return <MapFallback />;
+    return this.props.children;
+  }
+}
+
 export function TherapistMap(props: TherapistMapProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -45,8 +62,10 @@ export function TherapistMap(props: TherapistMapProps) {
   if (!mounted) return <MapFallback />;
 
   return (
-    <Suspense fallback={<MapFallback />}>
-      <TherapistMapInner {...props} />
-    </Suspense>
+    <MapErrorBoundary>
+      <Suspense fallback={<MapFallback />}>
+        <TherapistMapInner {...props} />
+      </Suspense>
+    </MapErrorBoundary>
   );
 }

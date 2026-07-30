@@ -61,15 +61,15 @@ function MobilePanel({
 }) {
   if (!open) return null;
   return (
-    <div className="md:hidden absolute left-0 right-0 top-16 z-40 border-t border-[rgba(184,110,249,0.2)] bg-[#1a0a3a]/95 backdrop-blur-xl animate-fade-in">
-      <div className="flex flex-col px-4 py-4 gap-1">
+    <div className="fixed inset-x-0 top-16 z-[1000] md:hidden border-t border-[rgba(184,110,249,0.2)] bg-[#1a0a3a]/95 shadow-2xl backdrop-blur-xl animate-fade-in">
+      <div className="flex max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto px-4 py-4">
         {links.map((l) => (
           <Link
             key={l.to}
             to={l.to}
             params={{ lang }}
             onClick={onClose}
-            className="rounded-md px-3 py-3 text-[15px] text-white/85 hover:bg-white/5 hover:text-white"
+            className="flex min-h-11 items-center rounded-md px-3 py-3 text-[15px] text-white/85 hover:bg-white/5 hover:text-white"
           >
             {l.label}
           </Link>

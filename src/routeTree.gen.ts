@@ -72,6 +72,7 @@ import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
+import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeutes.$slug'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
@@ -400,6 +401,11 @@ const LangTherapeutesIndexRoute = LangTherapeutesIndexRouteImport.update({
   path: '/therapeutes/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangTherapeutesSlugRoute = LangTherapeutesSlugRouteImport.update({
+  id: '/therapeutes/$slug',
+  path: '/therapeutes/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
   id: '/api/public/admin-notify',
   path: '/api/public/admin-notify',
@@ -485,6 +491,7 @@ export interface FileRoutesByFullPath {
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -553,6 +560,7 @@ export interface FileRoutesByTo {
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
@@ -625,6 +633,7 @@ export interface FileRoutesById {
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
+  '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -698,6 +707,7 @@ export interface FileRouteTypes {
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
+    | '/$lang/therapeutes/$slug'
     | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -766,6 +776,7 @@ export interface FileRouteTypes {
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
+    | '/$lang/therapeutes/$slug'
     | '/api/public/admin-notify'
     | '/$lang/blog'
     | '/$lang/conditions'
@@ -837,6 +848,7 @@ export interface FileRouteTypes {
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
+    | '/$lang/therapeutes/$slug'
     | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -1317,6 +1329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTherapeutesIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/therapeutes/$slug': {
+      id: '/$lang/therapeutes/$slug'
+      path: '/therapeutes/$slug'
+      fullPath: '/$lang/therapeutes/$slug'
+      preLoaderRoute: typeof LangTherapeutesSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/api/public/admin-notify': {
       id: '/api/public/admin-notify'
       path: '/api/public/admin-notify'
@@ -1385,6 +1404,7 @@ interface LangRouteChildren {
   LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangSpecialitesSpecialtySlugRoute: typeof LangSpecialitesSpecialtySlugRouteWithChildren
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
+  LangTherapeutesSlugRoute: typeof LangTherapeutesSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
   LangConditionsIndexRoute: typeof LangConditionsIndexRoute
   LangConfidentialiteIndexRoute: typeof LangConfidentialiteIndexRoute
@@ -1412,6 +1432,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangSpecialitesSpecialtySlugRoute:
     LangSpecialitesSpecialtySlugRouteWithChildren,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
+  LangTherapeutesSlugRoute: LangTherapeutesSlugRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
   LangConditionsIndexRoute: LangConditionsIndexRoute,
   LangConfidentialiteIndexRoute: LangConfidentialiteIndexRoute,
