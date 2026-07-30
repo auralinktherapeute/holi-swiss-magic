@@ -510,7 +510,7 @@ function ProfilePage() {
   const initial = (firstName || "T").charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#2a0f44] to-[#1a0a2e] pb-32 text-[#e6d7f5]">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0a2e] via-[#2a0f44] to-[#1a0a2e] pb-48 md:pb-32 text-[#e6d7f5]">
       <div className="mx-auto max-w-5xl px-4 pt-10 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md">
@@ -1037,13 +1037,16 @@ function ProfilePage() {
       </div>
 
       {/* Sticky save bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.85)] backdrop-blur-xl">
+      <div
+        className="fixed inset-x-0 z-30 border-t border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.85)] backdrop-blur-xl md:bottom-0 md:z-40"
+        style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom))", touchAction: "manipulation" }}
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-end gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Button type="button" variant="ghost" className="text-[#d4c4e0] hover:bg-white/5">
+          <Button type="button" variant="ghost" className="min-h-11 text-[#d4c4e0] hover:bg-white/5">
             {t("profile_edit.cancel_btn")}
           </Button>
           <Button type="button" onClick={onSave} disabled={saving}
-            className="gap-2 bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white shadow-lg shadow-[#b86ef9]/30 hover:opacity-95">
+            className="min-h-11 gap-2 bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white shadow-lg shadow-[#b86ef9]/30 transition-transform hover:opacity-95 active:scale-[0.98]">
             <Save className="h-4 w-4" />{saving ? "…" : t("profile_edit.save_btn")}
           </Button>
         </div>
