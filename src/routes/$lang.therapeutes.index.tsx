@@ -206,6 +206,10 @@ function Page() {
 
   const handleCardClick = (t: Therapist) => {
     setSelectedId(t.id);
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
+      navigate({ to: "/$lang/therapeute/$slug", params: { lang, slug: t.slug } });
+      return;
+    }
     setMobileTab("map");
   };
 
@@ -392,7 +396,7 @@ function Page() {
                       to="/$lang/therapeute/$slug"
                       params={{ lang, slug: th.slug }}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-3 hidden group-hover:flex items-center gap-1 text-xs font-semibold text-[#5cc8fa] hover:text-white transition"
+                      className="mt-3 flex min-h-11 items-center gap-1 text-xs font-semibold text-[#5cc8fa] transition hover:text-white sm:hidden sm:group-hover:flex"
                     >
                       {t("therapist_profile.see_full_profile")}
                     </Link>
