@@ -3,9 +3,18 @@ import { Star, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { getCurrentUserRole } from "@/lib/auth-utils";
+import {
+  clearHoliswissAuthSpace,
+  clearLegacySupabaseSessions,
+  clearStoredSupabaseSession,
+  getHoliswissAuthSpace,
+  setHoliswissAuthSpace,
+  type HoliswissAuthSpace,
+} from "@/integrations/supabase/auth-space";
 import { toast } from "sonner";
 
 const sb = supabase as any;
+const REVIEW_AUTH_PARAM = "reviewAuth";
 
 type Existing = { id: string; rating: number; comment: string; status: string } | null;
 
@@ -24,8 +33,57 @@ export function ReviewForm({
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [authenticating, setAuthenticating] = useState(false);
   const draftKey = `holiswiss-review-draft-${therapistId}`;
   const autoSubmittedRef = useRef(false);
+
+  const readPendingDraft = () => {
+    try {
+      const raw = sessionStorage.getItem(draftKey);
+      return raw ? JSON.parse(raw)?.pendingSubmit === true : false;
+    } catch {
+      return false;
+    }
+  };
+
+  const clearReviewReturnMarker = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has(REVIEW_AUTH_PARAM)) return;
+      url.searchParams.delete(REVIEW_AUTH_PARAM);
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    } catch {}
+  };
+
+  const activateReviewAuthSpaceIfNeeded = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      const isReviewReturn = url.searchParams.get(REVIEW_AUTH_PARAM) === "1";
+      if (isReviewReturn || readPendingDraft()) {
+        setHoliswissAuthSpace("login");
+      }
+    } catch {
+      if (readPendingDraft()) setHoliswissAuthSpace("login");
+    }
+  };
+
+  const signOutReviewVisitor = async (space: HoliswissAuthSpace) => {
+    try {
+      setHoliswissAuthSpace(space);
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      // La déconnexion locale ne doit jamais annuler l'avis déjà enregistré.
+    } finally {
+      clearStoredSupabaseSession(space);
+      clearStoredSupabaseSession("login");
+      clearLegacySupabaseSessions();
+      clearReviewReturnMarker();
+      clearHoliswissAuthSpace();
+      setUser(null);
+    }
+  };
 
   // Restaure un brouillon (note + texte) sauvegardé avant la redirection Google.
   useEffect(() => {
@@ -40,6 +98,7 @@ export function ReviewForm({
 
   useEffect(() => {
     let mounted = true;
+    activateReviewAuthSpaceIfNeeded();
     supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return;
       setUser(data.user as any);
@@ -52,7 +111,7 @@ export function ReviewForm({
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [draftKey]);
 
   useEffect(() => {
     if (!user) {
@@ -75,6 +134,8 @@ export function ReviewForm({
   }, [user, therapistId]);
 
   const handleGoogle = async () => {
+    if (authenticating) return;
+    setAuthenticating(true);
     // Sauvegarde le brouillon AVANT la redirection Google — sinon la cliente
     // revient sur la page avec le formulaire vide et pense que ça n'a pas marché.
     try {
@@ -83,8 +144,22 @@ export function ReviewForm({
         JSON.stringify({ rating, comment, pendingSubmit: true, ts: Date.now() }),
       );
     } catch {}
-    const cleanUrl = window.location.origin + window.location.pathname;
-    await lovable.auth.signInWithOAuth("google", { redirect_uri: cleanUrl });
+    setHoliswissAuthSpace("login");
+    clearStoredSupabaseSession("login");
+    clearLegacySupabaseSessions();
+
+    const returnUrl = new URL(window.location.href);
+    returnUrl.searchParams.set(REVIEW_AUTH_PARAM, "1");
+    returnUrl.hash = "";
+
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: returnUrl.toString(),
+      extraParams: { prompt: "select_account" },
+    });
+    if (result?.error) {
+      setAuthenticating(false);
+      toast.error("Connexion Google impossible. Réessayez depuis ce navigateur.");
+    }
   };
 
   // Auto-soumission après retour de Google : si la cliente avait un brouillon
@@ -92,10 +167,7 @@ export function ReviewForm({
   useEffect(() => {
     if (!authReady || !user || autoSubmittedRef.current) return;
     let pending = false;
-    try {
-      const raw = sessionStorage.getItem(draftKey);
-      if (raw) pending = JSON.parse(raw)?.pendingSubmit === true;
-    } catch {}
+    pending = readPendingDraft();
     if (!pending) return;
     if (rating < 1 || comment.trim().length < 20) return;
     autoSubmittedRef.current = true;
@@ -138,9 +210,22 @@ export function ReviewForm({
       status: "pending",
     };
 
-    const res = existing
+    const authSpaceAtSubmit = getHoliswissAuthSpace();
+
+    let res = existing
       ? await sb.from("reviews").update(payload).eq("id", existing.id)
       : await sb.from("reviews").insert(payload);
+
+    if (!existing && res.error) {
+      const duplicate = res.error.code === "23505" || String(res.error.message ?? "").includes("duplicate key");
+      if (duplicate) {
+        res = await sb
+          .from("reviews")
+          .update(payload)
+          .eq("therapist_id", therapistId)
+          .eq("user_id", user.id);
+      }
+    }
 
     setSubmitting(false);
     if (res.error) {
@@ -173,15 +258,12 @@ export function ReviewForm({
       setExisting(null);
       setRating(0);
       setComment("");
-      try {
-        await supabase.auth.signOut({ scope: "local" });
-      } catch {
-        // La déconnexion est best-effort ; l'avis est déjà enregistré.
-      }
+      await signOutReviewVisitor(authSpaceAtSubmit);
       return;
     }
 
     // Praticien/admin : la session de membre est conservée.
+    clearReviewReturnMarker();
     toast.success("Avis enregistré.");
     setEditing(false);
     if (user) {
@@ -212,9 +294,10 @@ export function ReviewForm({
         </div>
         <button
           onClick={handleGoogle}
-          className="inline-flex items-center gap-2 rounded-full bg-white text-[#1a1035] px-4 py-2 text-sm font-semibold hover:bg-white/90 transition"
+          disabled={authenticating}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white text-[#1a1035] px-4 py-2 text-sm font-semibold hover:bg-white/90 transition disabled:opacity-60 disabled:cursor-wait"
         >
-          <LogIn className="h-4 w-4" /> Continuer avec Google
+          <LogIn className="h-4 w-4" /> {authenticating ? "Connexion…" : "Continuer avec Google"}
         </button>
 
         {/* Formulaire visible AVANT connexion pour que la cliente puisse préparer son avis */}
@@ -230,7 +313,7 @@ export function ReviewForm({
                   onMouseEnter={() => setHover(n)}
                   onMouseLeave={() => setHover(0)}
                   onClick={() => setRating(n)}
-                  className="p-1 transition-transform hover:scale-110"
+                  className="min-h-11 min-w-11 p-1 transition-transform hover:scale-110"
                 >
                   <Star
                     className={`h-7 w-7 ${
@@ -291,7 +374,7 @@ export function ReviewForm({
               onMouseEnter={() => setHover(n)}
               onMouseLeave={() => setHover(0)}
               onClick={() => setRating(n)}
-              className="p-1 transition-transform hover:scale-110"
+              className="min-h-11 min-w-11 p-1 transition-transform hover:scale-110"
             >
               <Star
                 className={`h-7 w-7 ${
