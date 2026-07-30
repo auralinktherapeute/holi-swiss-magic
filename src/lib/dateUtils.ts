@@ -28,3 +28,28 @@ export function formatDateOnly(d: Date): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+/**
+ * CONVENTION UNIQUE des jours de semaine dans Holiswiss.
+ *
+ * Stockage (`availabilities.day_of_week`) = index JS `Date.getDay()` :
+ * 0 = dimanche, 1 = lundi … 6 = samedi.
+ *
+ * L'affichage calendrier est lundi-first (0 = lundi … 6 = dimanche) : c'est
+ * UNIQUEMENT une position de colonne, jamais une valeur de base de données.
+ * Utiliser `storageDow()` pour toute comparaison avec `day_of_week`, et
+ * `gridColumnIndex()` uniquement pour positionner les cases.
+ */
+export function storageDow(d: Date): number {
+  return d.getDay();
+}
+
+/** Index de colonne dans une grille lundi→dimanche (0 = lundi, 6 = dimanche). */
+export function gridColumnIndex(d: Date): number {
+  return (d.getDay() + 6) % 7;
+}
+
+/** Convertit un index de colonne lundi-first en `day_of_week` de stockage. */
+export function gridIndexToStorageDow(index: number): number {
+  return (index + 1) % 7;
+}
