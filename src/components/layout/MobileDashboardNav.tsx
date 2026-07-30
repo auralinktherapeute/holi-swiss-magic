@@ -132,7 +132,7 @@ export function MobileDashboardBottomNav() {
     <>
       <nav
         aria-label="Navigation principale"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80 pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80 pb-[env(safe-area-inset-bottom)]"
         style={{ touchAction: "manipulation" }}
       >
         <ul className="grid grid-cols-5">
@@ -144,7 +144,8 @@ export function MobileDashboardBottomNav() {
                 <Link
                   to={tab.to as any}
                   aria-current={active ? "page" : undefined}
-                  className={`flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors ${
+                  aria-label={tab.label}
+                  className={`flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors active:bg-primary/10 active:scale-95 ${
                     active ? "text-primary" : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
