@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,6 +53,7 @@ function Page() {
   const [confirmText, setConfirmText] = useSessionState("admin.therapists.confirmText", "");
   const [sortKey, setSortKey] = useSessionState<SortKey>("admin.therapists.sortKey", "created_at");
   const [sortDir, setSortDir] = useSessionState<SortDir>("admin.therapists.sortDir", "desc");
+  const [busy, setBusy] = useState(false);
 
   const fetchList = useServerFn(listTherapistsAdmin);
   const updateStatus = useServerFn(updateTherapistStatus);
@@ -79,15 +81,17 @@ function Page() {
   const confirmAction = async () => {
     if (!action) return;
     if (action.type === "rejected" && reason.trim().length === 0) return;
+    setBusy(true);
     try {
       await updateStatus({ data: { id: action.id, status: action.type, reason: reason || undefined } });
       toast.success(`${action.name} : statut mis à jour`);
-      qc.invalidateQueries({ queryKey: ["admin-therapists"] });
+      await qc.invalidateQueries({ queryKey: ["admin-therapists"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      setAction(null); setReason(""); setConfirmText("");
     } catch (e: any) {
       toast.error(e.message ?? "Erreur");
     } finally {
-      setAction(null); setReason(""); setConfirmText("");
+      setBusy(false);
     }
   };
 
@@ -379,15 +383,17 @@ function Page() {
                   className={`adm-btn ${action.type === "active" ? "adm-btn-approve" : "adm-btn-danger"}`}
                   onClick={confirmAction}
                   disabled={
+                    busy ||
                     (action.type === "rejected" && reason.trim().length === 0) ||
                     (action.type === "suspended" && confirmText !== "CONFIRMER")
                   }
                   style={{ opacity: (
+                    busy ||
                     (action.type === "rejected" && reason.trim().length === 0) ||
                     (action.type === "suspended" && confirmText !== "CONFIRMER")
                   ) ? 0.4 : 1 }}
                 >
-                  Confirmer
+                  {busy ? "Traitement…" : "Confirmer"}
                 </button>
               </div>
             </motion.div>
