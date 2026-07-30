@@ -4,7 +4,8 @@ import { gridColumnIndex, gridIndexToStorageDow, parseDateOnly, storageDow } fro
 // Non-régression : mapping des jours du calendrier de réservation.
 // Convention unique : availabilities.day_of_week === Date.getDay() (0 = dimanche).
 describe("weekday mapping", () => {
-  const week = [
+  type WeekDay = { iso: string; label: string; storage: number; column: number };
+  const week: WeekDay[] = [
     { iso: "2026-08-03", label: "lundi", storage: 1, column: 0 },
     { iso: "2026-08-04", label: "mardi", storage: 2, column: 1 },
     { iso: "2026-08-05", label: "mercredi", storage: 3, column: 2 },
