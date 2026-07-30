@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Star, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { getCurrentUserRole } from "@/lib/auth-utils";
 import {
   clearHoliswissAuthSpace,
@@ -152,6 +151,7 @@ export function ReviewForm({
     returnUrl.searchParams.set(REVIEW_AUTH_PARAM, "1");
     returnUrl.hash = "";
 
+    const { lovable } = await import("@/integrations/lovable");
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: returnUrl.toString(),
       extraParams: { prompt: "select_account" },
