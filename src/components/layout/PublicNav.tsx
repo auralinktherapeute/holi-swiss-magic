@@ -421,8 +421,11 @@ export function PublicNav() {
 }
 
 export function PublicNavDevPicker() {
-  const [variant, setVariant] = useState<Variant>(1);
-  useEffect(() => { setVariant(readVariant()); }, []);
+  const [variant, setVariant] = useState<Variant>(DEFAULT_VARIANT);
+  useEffect(() => {
+    const raw = Number(window.localStorage.getItem(STORAGE_KEY));
+    setVariant(isVariant(raw) ? raw : DEFAULT_VARIANT);
+  }, []);
   if (!import.meta.env.DEV) return null;
 
   const set = (v: Variant) => {
