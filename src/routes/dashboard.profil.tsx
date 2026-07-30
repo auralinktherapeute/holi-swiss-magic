@@ -1038,8 +1038,8 @@ function ProfilePage() {
 
       {/* Sticky save bar */}
       <div
-        className="fixed inset-x-0 z-30 border-t border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.85)] backdrop-blur-xl md:bottom-0 md:z-40"
-        style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom))", touchAction: "manipulation" }}
+        className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.85)] backdrop-blur-xl md:bottom-0 md:z-40"
+        style={{ touchAction: "manipulation" }}
       >
         <div className="mx-auto flex max-w-5xl items-center justify-end gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <Button type="button" variant="ghost" className="min-h-11 text-[#d4c4e0] hover:bg-white/5">
