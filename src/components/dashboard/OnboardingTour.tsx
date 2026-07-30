@@ -113,6 +113,11 @@ export function OnboardingTour({ open, onClose }: { open: boolean; onClose: () =
       return;
     }
     const r = el.getBoundingClientRect();
+    // Sur mobile, la sidebar desktop est masquée : rect à 0 → pas de halo fantôme.
+    if (r.width === 0 || r.height === 0) {
+      setRect(null);
+      return;
+    }
     setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     // Scroll target into view (mostly for mobile)
     el.scrollIntoView({ block: "nearest", behavior: "smooth" });
