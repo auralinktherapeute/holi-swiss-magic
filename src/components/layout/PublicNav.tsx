@@ -9,11 +9,10 @@ import { Menu, X } from "lucide-react";
 
 type Variant = 1 | 2 | 3 | 4;
 const STORAGE_KEY = "holiswiss-nav-variant";
+const DEFAULT_VARIANT: Variant = 4;
 
-function readVariant(): Variant {
-  if (typeof window === "undefined") return 4;
-  const raw = Number(localStorage.getItem(STORAGE_KEY));
-  return ([1, 2, 3, 4].includes(raw) ? raw : 4) as Variant;
+function isVariant(value: number): value is Variant {
+  return [1, 2, 3, 4].includes(value);
 }
 
 function useLang() {
@@ -396,11 +395,15 @@ function NavAurora() {
 }
 
 export function PublicNav() {
-  const [variant, setVariant] = useState<Variant>(1);
+  const [variant, setVariant] = useState<Variant>(DEFAULT_VARIANT);
   useEffect(() => {
-    setVariant(readVariant());
-    const onCustom = () => setVariant(readVariant());
-    const onStorage = (e: StorageEvent) => { if (e.key === STORAGE_KEY) setVariant(readVariant()); };
+    const readStoredVariant = () => {
+      const raw = Number(window.localStorage.getItem(STORAGE_KEY));
+      return isVariant(raw) ? raw : DEFAULT_VARIANT;
+    };
+    setVariant(readStoredVariant());
+    const onCustom = () => setVariant(readStoredVariant());
+    const onStorage = (e: StorageEvent) => { if (e.key === STORAGE_KEY) setVariant(readStoredVariant()); };
     window.addEventListener("nav-variant-change", onCustom);
     window.addEventListener("storage", onStorage);
     return () => {
