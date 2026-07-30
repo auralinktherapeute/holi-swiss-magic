@@ -130,6 +130,20 @@ function CardSkeleton() {
   );
 }
 
+function useSmallViewport() {
+  const [isSmall, setIsSmall] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsSmall(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return isSmall;
+}
+
 function Page() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
   const navigate = useNavigate({ from: "/$lang/therapeutes/" });
@@ -140,6 +154,7 @@ function Page() {
   const [mobileTab, setMobileTab] = useSessionState<"list" | "map">("therapists.mobileTab", "list");
   const [search, setSearch] = useSessionState("therapists.search", "");
   const [debounced, setDebounced] = useState(search);
+  const isSmallViewport = useSmallViewport();
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(search.trim()), 250);
@@ -206,12 +221,14 @@ function Page() {
 
   const handleCardClick = (t: Therapist) => {
     setSelectedId(t.id);
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
+    if (isSmallViewport) {
       navigate({ to: "/$lang/therapeute/$slug", params: { lang, slug: t.slug } });
       return;
     }
     setMobileTab("map");
   };
+
+  const shouldRenderMap = isSmallViewport === false || (isSmallViewport === true && mobileTab === "map");
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)]">
@@ -289,7 +306,7 @@ function Page() {
       </div>
 
       {/* ── Split layout ── */}
-      <div className="flex overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
+      <div className="flex min-h-[calc(100dvh-64px)] overflow-hidden sm:h-[calc(100dvh-64px)]">
 
         {/* ── Liste (40%) ── */}
         <div className={`flex flex-col overflow-y-auto bg-[#0f0a1e] ${mobileTab === "map" ? "hidden sm:flex" : "flex"} sm:w-[42%] w-full`}>
@@ -414,20 +431,22 @@ function Page() {
 
         {/* ── Carte (60%) — sticky ── */}
         <div className={`relative flex-1 ${mobileTab === "list" ? "hidden sm:block" : "block"}`}>
-          <Suspense
-            fallback={
-              <div className="flex h-full w-full items-center justify-center bg-[#0f0a1e]">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#b86ef9] border-t-transparent" />
-              </div>
-            }
-          >
-            <TherapistMap
-              therapists={filtered}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              lang={lang}
-            />
-          </Suspense>
+          {shouldRenderMap ? (
+            <Suspense
+              fallback={
+                <div className="flex h-full w-full items-center justify-center bg-[#0f0a1e]">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#b86ef9] border-t-transparent" />
+                </div>
+              }
+            >
+              <TherapistMap
+                therapists={filtered}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                lang={lang}
+              />
+            </Suspense>
+          ) : null}
         </div>
       </div>
 

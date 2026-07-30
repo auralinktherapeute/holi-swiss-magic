@@ -51,8 +51,7 @@ export const LANGS = [
   { code: "en", label: "EN", flag: "🇬🇧" },
 ] as const;
 
-export const formatCHF = (n: number) =>
-  new Intl.NumberFormat("fr-CH", { style: "currency", currency: "CHF", maximumFractionDigits: 0 }).format(n);
+export const formatCHF = (n: number) => `${Math.round(n).toLocaleString("fr-CH")} CHF`;
 
 // Extended therapy specialties (holistic + manual + energetic + psycho-emotional)
 export const THERAPY_SPECIALTIES: string[] = [

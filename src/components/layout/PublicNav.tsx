@@ -9,11 +9,10 @@ import { Menu, X } from "lucide-react";
 
 type Variant = 1 | 2 | 3 | 4;
 const STORAGE_KEY = "holiswiss-nav-variant";
+const DEFAULT_VARIANT: Variant = 4;
 
-function readVariant(): Variant {
-  if (typeof window === "undefined") return 4;
-  const raw = Number(localStorage.getItem(STORAGE_KEY));
-  return ([1, 2, 3, 4].includes(raw) ? raw : 4) as Variant;
+function isVariant(value: number): value is Variant {
+  return [1, 2, 3, 4].includes(value);
 }
 
 function useLang() {
@@ -61,15 +60,15 @@ function MobilePanel({
 }) {
   if (!open) return null;
   return (
-    <div className="md:hidden absolute left-0 right-0 top-16 z-40 border-t border-[rgba(184,110,249,0.2)] bg-[#1a0a3a]/95 backdrop-blur-xl animate-fade-in">
-      <div className="flex flex-col px-4 py-4 gap-1">
+    <div className="fixed inset-x-0 top-16 z-[1000] md:hidden border-t border-[rgba(184,110,249,0.2)] bg-[#1a0a3a]/95 shadow-2xl backdrop-blur-xl animate-fade-in">
+      <div className="flex max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto px-4 py-4">
         {links.map((l) => (
           <Link
             key={l.to}
             to={l.to}
             params={{ lang }}
             onClick={onClose}
-            className="rounded-md px-3 py-3 text-[15px] text-white/85 hover:bg-white/5 hover:text-white"
+            className="flex min-h-11 items-center rounded-md px-3 py-3 text-[15px] text-white/85 hover:bg-white/5 hover:text-white"
           >
             {l.label}
           </Link>
@@ -396,11 +395,15 @@ function NavAurora() {
 }
 
 export function PublicNav() {
-  const [variant, setVariant] = useState<Variant>(1);
+  const [variant, setVariant] = useState<Variant>(DEFAULT_VARIANT);
   useEffect(() => {
-    setVariant(readVariant());
-    const onCustom = () => setVariant(readVariant());
-    const onStorage = (e: StorageEvent) => { if (e.key === STORAGE_KEY) setVariant(readVariant()); };
+    const readStoredVariant = () => {
+      const raw = Number(window.localStorage.getItem(STORAGE_KEY));
+      return isVariant(raw) ? raw : DEFAULT_VARIANT;
+    };
+    setVariant(readStoredVariant());
+    const onCustom = () => setVariant(readStoredVariant());
+    const onStorage = (e: StorageEvent) => { if (e.key === STORAGE_KEY) setVariant(readStoredVariant()); };
     window.addEventListener("nav-variant-change", onCustom);
     window.addEventListener("storage", onStorage);
     return () => {
@@ -418,8 +421,11 @@ export function PublicNav() {
 }
 
 export function PublicNavDevPicker() {
-  const [variant, setVariant] = useState<Variant>(1);
-  useEffect(() => { setVariant(readVariant()); }, []);
+  const [variant, setVariant] = useState<Variant>(DEFAULT_VARIANT);
+  useEffect(() => {
+    const raw = Number(window.localStorage.getItem(STORAGE_KEY));
+    setVariant(isVariant(raw) ? raw : DEFAULT_VARIANT);
+  }, []);
   if (!import.meta.env.DEV) return null;
 
   const set = (v: Variant) => {
