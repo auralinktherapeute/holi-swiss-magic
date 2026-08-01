@@ -1602,6 +1602,152 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_proposals: {
+        Row: {
+          angle: string | null
+          caption: string
+          caption_de: string | null
+          caption_en: string | null
+          caption_it: string | null
+          correction_note: string | null
+          created_at: string
+          external_ref: string | null
+          format: string | null
+          hashtags: string | null
+          hashtags_de: string | null
+          hashtags_en: string | null
+          hashtags_it: string | null
+          id: string
+          lang: string
+          network: string
+          pillar: string | null
+          proposal_date: string
+          published_at: string | null
+          score: number | null
+          source: string
+          status: string
+          suggested_time: string | null
+          topic_id: string | null
+          updated_at: string
+          validated_at: string | null
+          visual_brief: string | null
+          visual_prompt: string | null
+        }
+        Insert: {
+          angle?: string | null
+          caption: string
+          caption_de?: string | null
+          caption_en?: string | null
+          caption_it?: string | null
+          correction_note?: string | null
+          created_at?: string
+          external_ref?: string | null
+          format?: string | null
+          hashtags?: string | null
+          hashtags_de?: string | null
+          hashtags_en?: string | null
+          hashtags_it?: string | null
+          id?: string
+          lang?: string
+          network: string
+          pillar?: string | null
+          proposal_date?: string
+          published_at?: string | null
+          score?: number | null
+          source?: string
+          status?: string
+          suggested_time?: string | null
+          topic_id?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          visual_brief?: string | null
+          visual_prompt?: string | null
+        }
+        Update: {
+          angle?: string | null
+          caption?: string
+          caption_de?: string | null
+          caption_en?: string | null
+          caption_it?: string | null
+          correction_note?: string | null
+          created_at?: string
+          external_ref?: string | null
+          format?: string | null
+          hashtags?: string | null
+          hashtags_de?: string | null
+          hashtags_en?: string | null
+          hashtags_it?: string | null
+          id?: string
+          lang?: string
+          network?: string
+          pillar?: string | null
+          proposal_date?: string
+          published_at?: string | null
+          score?: number | null
+          source?: string
+          status?: string
+          suggested_time?: string | null
+          topic_id?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          visual_brief?: string | null
+          visual_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_proposals_topic_fk"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_topics: {
+        Row: {
+          created_at: string
+          format: string | null
+          id: string
+          network: string | null
+          note: string | null
+          processed_at: string | null
+          reject_reason: string | null
+          status: string
+          subject: string
+          submitted_by: string
+          target_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string | null
+          id?: string
+          network?: string | null
+          note?: string | null
+          processed_at?: string | null
+          reject_reason?: string | null
+          status?: string
+          subject: string
+          submitted_by?: string
+          target_date?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          format?: string | null
+          id?: string
+          network?: string | null
+          note?: string | null
+          processed_at?: string | null
+          reject_reason?: string | null
+          status?: string
+          subject?: string
+          submitted_by?: string
+          target_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_deliveries: {
         Row: {
           attempts: number
