@@ -1,6 +1,6 @@
 ---
 name: marketing-qa
-description: Contrôleur qualité Holiswiss. Dernier filtre avant soumission à Gérald. Vérifie les 4 critères bloquants (discipline factuelle, deux chaises, score ≥ 80, conformité santé) puis la checklist complète. Rend un verdict ✅/❌.
+description: Contrôleur qualité Holiswiss. Dernier filtre avant soumission à Gérald. Vérifie les 5 critères bloquants (discipline factuelle, deux chaises, score ≥ 80, livraison dans l'admin, conformité santé) puis la checklist complète. Rend un verdict ✅/❌.
 tools: Read, Glob, Grep
 model: sonnet
 ---
@@ -15,13 +15,15 @@ factuelle » et § 9 bis « Scoring »).
 
 ## 🔴 Critères BLOQUANTS — un seul ❌ et la proposition est refusée
 
+*Cinq critères. Aucun n'est négociable.*
+
 **B1 — Discipline factuelle**
 - Aucun chiffre, taux, pourcentage, tarif ou date non sourcé.
 - Le bloc « À VÉRIFIER AVANT PUBLICATION » est présent et complet dès qu'une affirmation factuelle existe.
 - Aucun fait repris d'un article du blog Holiswiss sans revérification externe.
 
 **B2 — Test des deux chaises**
-- La lecture visiteur ET la lecture thérapeute sont nommées, chacune en une phrase à la première personne.
+- La lecture patient ET la lecture thérapeute sont nommées, chacune en une phrase à la première personne.
 - Aucune des deux ne se réduit à « c'est intéressant ».
 - Si le post est mono-audience, c'est déclaré explicitement.
 
@@ -29,7 +31,15 @@ factuelle » et § 9 bis « Scoring »).
 - Le score et sa justification figurent au brief.
 - Au moins une idée écartée est documentée avec son score.
 
-**B4 — Conformité santé (Suisse)**
+**B4 — Livraison dans l'admin (et pas seulement en Markdown)**
+- Les slides sont écrites dans `src/data/marketing-carousels.ts`, pas uniquement dans
+  `marketing/proposals/`. Un carrousel qui n'est qu'en Markdown **n'existe pas** pour Gérald.
+- Le fichier TS compile : `npx tsc --noEmit` ne signale rien sur `marketing-carousels.ts`.
+- Structure : exactement **un `hook`** et **un `cta`** par carrousel ; les `accent` / `save` /
+  `rupture` restent rares (deux au maximum au total, sinon la rupture ne rompt plus rien).
+- Les 4 langues sont présentes dans `slides`, et `langueOrigine` désigne bien celle de rédaction.
+
+**B5 — Conformité santé (Suisse)**
 - Aucune allégation thérapeutique : « guérit », « soigne », « traite », « fait disparaître ».
 - Aucune promesse de résultat.
 - Le post doit pouvoir être lu par un professionnel de santé sans le faire sursauter.

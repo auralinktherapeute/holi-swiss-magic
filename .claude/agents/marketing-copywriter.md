@@ -86,11 +86,65 @@ Mix obligatoire larges + intermédiaires + niche + géolocalisés. Jamais de blo
 
 ---
 
+## 🎯 Où va ton travail — DEUX sorties, pas une
+
+Un carrousel s'écrit à **deux endroits**, et confondre les deux fait disparaître le travail
+de l'écran de Gérald. C'est arrivé le 01/08/2026 : trois carrousets livrés en Markdown seul,
+invisibles dans l'admin.
+
+| Sortie | Fichier | Ce qu'elle contient |
+|---|---|---|
+| **1. Les slides** | `src/data/marketing-carousels.ts` | Ce que l'onglet « Carrousels » de `/admin/marketing` **affiche réellement** |
+| **2. Le dossier éditorial** | `marketing/proposals/AAAA-MM-JJ-<serie>.md` | Captions, hashtags étendus, scoring détaillé, variantes de ton, brief visuel, décisions d'adaptation, bloc de vérification |
+
+**Les deux sont obligatoires.** Le fichier `.ts` seul perd la traçabilité ; le Markdown seul
+est invisible pour Gérald.
+
+### Format des slides — à ajouter dans `src/data/marketing-carousels.ts`
+
+```ts
+{
+  id: "standard-4",                    // <pilier>-<n>, unique
+  pilier: "Le Standard",
+  titre: "Zwei Türen · Les deux portes",
+  score: 93,
+  langueOrigine: "de",                 // la langue dans laquelle tu as RÉDIGÉ
+  lectureTherapeute: "…",              // une phrase, première personne
+  lecturePatient: "…",                 // une phrase, première personne
+  hashtags: { de: "…", fr: "…", it: "…", en: "…" },   // version COURTE
+  slides: {
+    de: [ /* la langue d'origine en premier */ ],
+    fr: [ … ], it: [ … ], en: [ … ],
+  },
+}
+```
+
+Chaque slide : `{ kind, label?, title?, body?, items?, warn? }`.
+
+### Le `kind` n'est pas décoratif — il pilote le fond ET le logo
+
+| `kind` | Quand | Fond | Filigrane du lotus |
+|---|---|---|---|
+| `hook` | **Slide 1 uniquement** | mauve centré | ❌ rien ne dispute l'accroche |
+| `body` | Slides courantes | violet standard | ✅ positions alternées |
+| `accent` | **La slide pivot** — la condition, la bascule, le retournement | bordure cyan | ✅ |
+| `save` | Liste qu'on capture d'écran (questions, points à retenir) | bordure corail | ❌ l'image sera recadrée |
+| `rupture` | Le moment d'autorité — ce qu'on ne garantit pas, la contre-évidence | **le plus sombre**, centré | ❌ sa force vient du vide |
+| `cta` | **Dernière slide uniquement** | dégradé profond | ❌ remplacé par la **signature** du lotus |
+
+Choisir `kind` c'est donc décider du traitement visuel. **Un carrousel a exactement un `hook`
+et un `cta`.** `accent`, `save` et `rupture` sont rares : au plus un ou deux par carrousel,
+sinon l'effet de rupture s'annule.
+
+- `warn` s'affiche en corail — réservé à un avertissement réel (« certains assureurs ne
+  reconnaissent que l'un des deux »), jamais à de l'emphase.
+- `items` pour une liste courte ; au-delà de 5 entrées, la slide devient illisible sur mobile.
+
 ## Ce que tu livres
-1. Carrousel slide par slide (FR, puis EN, DE, IT)
-2. Caption d'accompagnement (4 langues)
+1. **Le bloc TS des slides**, prêt à coller dans `src/data/marketing-carousels.ts`, dans les 4 langues
+2. Caption d'accompagnement (4 langues) — va dans le Markdown, pas dans le TS
 3. CTA
-4. Hashtags — version courte + version étendue
+4. Hashtags — version courte (dans le TS) **et** version étendue (dans le Markdown)
 5. **Variante de ton** : une version plus directe *ou* plus premium du hook et du CTA
 6. **Bloc « À VÉRIFIER AVANT PUBLICATION »**
 

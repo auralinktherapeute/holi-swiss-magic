@@ -398,6 +398,20 @@ relie la proposition au sujet d'origine.
 Commandes : `/marketing-daily` (cycle du jour), `/marketing-serie` (série cadrée en 5 étapes
 verrouillées), `/marketing-sujet` (mise en file), `/marketing-publish` (après validation seulement).
 
+### Où atterrit un carrousel — deux écritures obligatoires
+
+| Sortie | Fichier | Rôle |
+|---|---|---|
+| **Slides** | `src/data/marketing-carousels.ts` | Ce que l'onglet « Carrousels » de `/admin/marketing` **affiche**. Sans cette écriture, le travail est invisible pour Gérald. |
+| **Dossier éditorial** | `marketing/proposals/*.md` | Captions, hashtags étendus, scoring détaillé, brief visuel, décisions d'adaptation, bloc de vérification. |
+
+⚠️ **Leçon du 01/08/2026** : six carrousels ont été produits en Markdown seul et sont restés
+invisibles dans l'admin toute une journée. Le contenu était juste, l'endroit ne l'était pas.
+Un livrable qui n'apparaît pas à l'écran n'est pas livré.
+
+Le `kind` de chaque slide (`hook` / `body` / `accent` / `save` / `rupture` / `cta`) pilote à la
+fois le fond ET le traitement du logo — voir l'agent `marketing-copywriter` pour la table complète.
+
 Le **chat web** de `/admin/marketing` mobilise les mêmes règles via ses 46 compétences, mais
 n'exécute pas ce pipeline en quatre temps : il répond à la demande. Les deux surfaces partagent
 ce socle — et lui seul.

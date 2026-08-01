@@ -70,10 +70,21 @@ Ces propositions portent `source = 'soumis'` et `topic_id` renseigné.
 
 ---
 
-## Sortie
+## Sortie — DEUX écritures, jamais une seule
 
-- Une proposition = un fichier `marketing/proposals/AAAA-MM-JJ-<reseau>[-soumis].md`,
-  en-tête `statut: en_attente_validation`.
+Un carrouset livré en Markdown seul **n'apparaît pas** dans l'admin. C'est l'erreur du
+01/08/2026 : six carrousels produits, invisibles pour Gérald pendant une journée.
+
+1. **Les slides → `src/data/marketing-carousels.ts`.** Ajoute l'objet `Carousel` à la fin du
+   tableau `CAROUSELS`, dans les 4 langues. C'est ce que l'onglet « Carrousels » de
+   `/admin/marketing` affiche. Format et choix du `kind` : voir l'agent `marketing-copywriter`.
+2. **Le dossier éditorial → `marketing/proposals/AAAA-MM-JJ-<serie>.md`**, en-tête
+   `statut: en_attente_validation` : captions, hashtags étendus, scoring détaillé, variantes
+   de ton, brief visuel, décisions d'adaptation, bloc de vérification.
+
+Après écriture, vérifie que le fichier TS compile (`npx tsc --noEmit`) — une virgule oubliée
+casse l'onglet entier, pas seulement le carrousel ajouté.
+
 - Affiche **toutes** les propositions du jour dans la conversation, en indiquant clairement pour
   chacune si elle est **programmée** ou **issue d'un sujet soumis**.
 - Marque les sujets traités : `status = 'traite'` + `processed_at` en base, ou `statut: traite`

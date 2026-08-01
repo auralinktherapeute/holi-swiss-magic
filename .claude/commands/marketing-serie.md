@@ -49,9 +49,20 @@ conformité santé) puis la checklist complète. Si ❌ → renvoi à l'agent co
 
 ---
 
-## Sortie
-- Écris la série validée dans `marketing/proposals/AAAA-MM-JJ-serie-<pilier>.md`,
-  en-tête `statut: en_attente_validation`.
+## Sortie — DEUX écritures, jamais une seule
+
+Un carrouset livré en Markdown seul **n'apparaît pas** dans l'admin. C'est l'erreur du
+01/08/2026 : six carrousels produits, invisibles pour Gérald pendant une journée.
+
+1. **Les slides → `src/data/marketing-carousels.ts`.** Ajoute l'objet `Carousel` à la fin du
+   tableau `CAROUSELS`, dans les 4 langues. C'est ce que l'onglet « Carrousels » de
+   `/admin/marketing` affiche. Format et choix du `kind` : voir l'agent `marketing-copywriter`.
+2. **Le dossier éditorial → `marketing/proposals/AAAA-MM-JJ-<serie>.md`**, en-tête
+   `statut: en_attente_validation` : captions, hashtags étendus, scoring détaillé, variantes
+   de ton, brief visuel, décisions d'adaptation, bloc de vérification.
+
+Après écriture, vérifie que le fichier TS compile (`npx tsc --noEmit`) — une virgule oubliée
+casse l'onglet entier, pas seulement le carrousel ajouté.
 - Affiche le contenu dans la conversation, lisible.
 - Si la table `marketing_proposals` est disponible : insertion en `en_attente_validation`
   puis notification admin. La validation finale se fait dans `/admin/marketing`.
