@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Instagram, Linkedin, Music2, Clock, CheckCircle2, Pencil, XCircle, Sparkles, MessageSquare, ListChecks, Lightbulb } from "lucide-react";
+import { Instagram, Linkedin, Music2, Clock, CheckCircle2, Pencil, XCircle, Sparkles, MessageSquare, ListChecks, Lightbulb, LayoutGrid } from "lucide-react";
 import {
   listMarketingProposals,
   setMarketingProposalStatus,
@@ -13,6 +13,8 @@ import {
 } from "@/lib/marketing.functions";
 import { MarketingAgentChat } from "@/components/admin/MarketingAgentChat";
 import { MarketingTopicsPanel, type MarketingTopic } from "@/components/admin/MarketingTopicsPanel";
+import { CarouselViewer } from "@/components/admin/CarouselViewer";
+import { CAROUSELS } from "@/data/marketing-carousels";
 
 export const Route = createFileRoute("/admin/marketing")({
   component: MarketingPage,
@@ -104,7 +106,7 @@ function MarketingPage() {
   const fetchProposals = useServerFn(listMarketingProposals);
   const setStatus = useServerFn(setMarketingProposalStatus);
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"agent" | "proposals" | "topics">("agent");
+  const [tab, setTab] = useState<"agent" | "proposals" | "topics" | "carrousels">("agent");
 
   const { data, isLoading } = useQuery({
     queryKey: ["marketing-proposals"],
@@ -175,6 +177,15 @@ function MarketingPage() {
             <span className="rounded-full bg-amber-500/20 px-1.5 text-[11px] text-amber-300">{queued}</span>
           )}
         </button>
+        <button
+          onClick={() => setTab("carrousels")}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            tab === "carrousels" ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <LayoutGrid className="h-4 w-4" /> Carrousels
+          <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-white/60">{CAROUSELS.length}</span>
+        </button>
       </div>
 
       {tab === "agent" && <MarketingAgentChat />}
@@ -196,6 +207,19 @@ function MarketingPage() {
       )}
 
       {tab === "topics" && <TopicsTab topics={topics} />}
+
+      {tab === "carrousels" && (
+        <div className="space-y-5">
+          <p className="text-sm text-[#d4c4e0]">
+            Carrousels produits et validés, au format réel 4:5. Faites défiler chaque rangée
+            horizontalement. Le bouton portant un point indique la langue de rédaction d'origine —
+            les autres en sont des adaptations, pas des traductions littérales.
+          </p>
+          {CAROUSELS.map((c) => (
+            <CarouselViewer key={c.id} carousel={c} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
