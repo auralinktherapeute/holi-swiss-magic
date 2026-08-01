@@ -372,12 +372,19 @@ promesses irréalistes.
 Gérald peut soumettre un sujet pour le lendemain. Il est produit **en supplément** de la publication
 programmée du jour, **jamais à sa place** : ce jour-là, le cycle produit deux propositions.
 
-| Surface | Comment | État |
+| Surface | Comment | Lu par le pipeline via |
 |---|---|---|
-| Claude Code | `/marketing-sujet "<le sujet>"` → fichier dans `marketing/queue/` | ✅ opérationnel |
-| `/admin/marketing` | Table `marketing_topics` (statut `en_attente`, `target_date`) | ⏳ après application de la migration `20260801104500` |
+| Claude Code | `/marketing-sujet "<le sujet>"` → fichier dans `marketing/queue/` | lecture directe des fichiers |
+| `/admin/marketing`, onglet Sujets | Table `marketing_topics` | **RPC `get_pending_marketing_topics`** |
 
-Le pipeline lit **d'abord la table** si elle est disponible, sinon le dossier `marketing/queue/`.
+⚠️ **Une lecture REST directe de `marketing_topics` renvoie toujours `[]`** : sa RLS est réservée aux
+admins, et le pipeline n'a que la clé anon. C'est le défaut constaté le 01/08 — l'onglet Sujets
+écrivait dans une table que l'agent ne pouvait pas lire, deux files déconnectées.
+Corrigé par deux RPC `SECURITY DEFINER` protégées par `marketing_agent_secret` (migration
+`20260801230000`) : `get_pending_marketing_topics` pour lire, `close_marketing_topic` pour clôturer.
+Le secret vit dans `app_settings` côté base et dans `.env` (`MARKETING_AGENT_SECRET`) côté agent.
+
+Le pipeline traite **les deux sources** — un sujet peut venir de l'admin comme de la ligne de commande.
 Un sujet soumis ne dispense d'**aucun** contrôle : même scoring, même seuil, même test des deux
 chaises. Ne jamais reformuler le sujet d'entrée — sa formulation porte l'intention.
 

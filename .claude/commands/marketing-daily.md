@@ -16,18 +16,29 @@ Lis **`.agents/product-marketing.md`** en entier avant de commencer.
 Un sujet soumis à la main est produit **en supplément** de la publication programmée, pas à sa place.
 Le jour où un sujet est en file, le cycle produit donc **deux propositions**.
 
-1. **Source prioritaire — Supabase.** Si la table `marketing_topics` existe en production :
-   ```sql
-   select * from marketing_topics
-   where status = 'en_attente' and target_date <= current_date
-   order by target_date, created_at;
-   ```
-2. **Source de repli — fichiers.** Si la table n'est pas disponible, lis `marketing/queue/` et retiens
-   les fichiers dont le frontmatter porte `statut: en_attente` et `pour_le:` ≤ aujourd'hui.
+**1. Source prioritaire — les sujets soumis depuis `/admin/marketing`.**
+
+⚠️ Une lecture REST directe de `marketing_topics` renvoie **toujours `[]`** : sa RLS est réservée aux
+admins et tu n'as que la clé anon. Passe par la RPC dédiée, protégée par un secret partagé :
+
+```bash
+KEY=$(grep -hE '^SUPABASE_PUBLISHABLE_KEY=' .env | sed -E 's/^[^=]+=//; s/"//g')
+SEC=$(grep -hE '^MARKETING_AGENT_SECRET=' .env | sed -E 's/^[^=]+=//; s/"//g')
+curl -s "https://qqwudmnfavvaukuldulr.supabase.co/rest/v1/rpc/get_pending_marketing_topics" \
+  -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d "{\"_secret\":\"$SEC\"}"
+```
+
+Renvoie les sujets `en_attente` dont l'échéance est atteinte, les plus urgents d'abord.
+Si `MARKETING_AGENT_SECRET` est absent de `.env`, dis-le et passe au repli — n'invente pas de secret.
+
+**2. Source de repli — fichiers.** Lis `marketing/queue/` et retiens les fichiers dont le frontmatter
+porte `statut: en_attente` et `pour_le:` ≤ aujourd'hui. C'est le chemin utilisé par `/marketing-sujet`.
+
+**Traite les deux sources** : un sujet peut venir de l'admin comme de la ligne de commande.
 
 > ⚠️ Rappel du CLAUDE.md : la production, c'est `qqwud`. Une lecture faite sur `gpld` ne reflète pas
-> ce que voit l'admin. En cas de doute sur la disponibilité de la table, utilise le repli fichiers
-> plutôt que d'interroger la mauvaise base.
+> ce que voit l'admin — le MCP Supabase pointe sur le bac à sable, ne l'utilise pas ici.
 
 S'il n'y a aucun sujet en file → tu ne produis que la publication programmée. C'est le cas normal.
 
@@ -87,8 +98,12 @@ casse l'onglet entier, pas seulement le carrousel ajouté.
 
 - Affiche **toutes** les propositions du jour dans la conversation, en indiquant clairement pour
   chacune si elle est **programmée** ou **issue d'un sujet soumis**.
-- Marque les sujets traités : `status = 'traite'` + `processed_at` en base, ou `statut: traite`
-  dans le frontmatter du fichier de file.
+- **Clôture les sujets traités.** Pour ceux venus de l'admin, via la RPC :
+  `close_marketing_topic(_secret, _id)` → passe en `traite` avec horodatage.
+  Si le sujet n'a pas atteint 80/100, appelle-la avec `_reject_reason` = ton angle de repli :
+  **le sujet reste alors `en_attente`** et la contre-proposition s'affiche en encart ambre dans
+  l'admin, pour que Gérald tranche. Tu proposes, tu ne tranches pas.
+  Pour ceux venus des fichiers : `statut: traite` dans le frontmatter.
 - Si `marketing_proposals` est disponible en production : insertion avec `source`, `topic_id`, `score`.
   Le trigger notifie automatiquement (email + WhatsApp). Validation ensuite dans `/admin/marketing`.
 
