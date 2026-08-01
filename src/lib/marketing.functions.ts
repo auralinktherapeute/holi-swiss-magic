@@ -55,6 +55,94 @@ export const setMarketingProposalStatus = createServerFn({ method: "POST" })
     return { ok: true, status: data.status };
   });
 
+/* ------------------------------------------------------- sujets soumis ---- */
+
+const TOPIC_COLUMNS =
+  "id,subject,target_date,network,format,note,status,reject_reason,submitted_by,processed_at,created_at";
+
+/**
+ * Sujets soumis à la main (admin only), les plus proches d'abord.
+ * Un sujet est produit EN SUPPLÉMENT de la publication programmée du jour,
+ * jamais à sa place — voir `.agents/product-marketing.md` § 12.
+ */
+export const listMarketingTopics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as any)
+      .from("marketing_topics")
+      .select(TOPIC_COLUMNS)
+      .order("status", { ascending: true })
+      .order("target_date", { ascending: true })
+      .limit(50);
+    if (error) throw new Error("Impossible de charger les sujets soumis.");
+    return { rows: data ?? [] };
+  });
+
+/**
+ * Soumet un sujet pour une date donnée (par défaut demain).
+ * Ne produit AUCUN contenu : c'est une mise en file. Le prochain cycle
+ * `/marketing-daily` le traitera, avec le même filtre qualité que les autres.
+ */
+export const createMarketingTopic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        subject: z.string().trim().min(10, "Décrivez le sujet en une phrase au moins.").max(500),
+        target_date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, "Date attendue au format AAAA-MM-JJ.")
+          .optional(),
+        network: z.enum(["instagram", "linkedin", "tiktok"]).optional(),
+        format: z.enum(["carrousel", "reel", "post", "story"]).optional(),
+        note: z.string().trim().max(1000).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Défaut : demain. Calculé côté serveur pour ne pas dépendre du fuseau du navigateur.
+    const target =
+      data.target_date ??
+      new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+
+    const { data: row, error } = await (supabaseAdmin as any)
+      .from("marketing_topics")
+      .insert({
+        subject: data.subject,
+        target_date: target,
+        network: data.network ?? null,
+        format: data.format ?? null,
+        note: data.note ?? null,
+        status: "en_attente",
+        submitted_by: "admin",
+      })
+      .select("id,target_date")
+      .single();
+    if (error || !row) throw new Error("Impossible d'enregistrer le sujet.");
+    return { id: row.id as string, target_date: row.target_date as string };
+  });
+
+/** Abandonne un sujet encore en file (admin only). */
+export const abandonMarketingTopic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("marketing_topics")
+      .update({ status: "abandonne", updated_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("status", "en_attente"); // on n'abandonne jamais un sujet déjà traité
+    if (error) throw new Error("Impossible d'abandonner ce sujet.");
+    return { ok: true };
+  });
+
 /**
  * Crée une proposition (admin only) — utile pour un test manuel depuis l'admin.
  * En production, l'équipe d'agents insère via la clé service (voir MARKETING.md).
