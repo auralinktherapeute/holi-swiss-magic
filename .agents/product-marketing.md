@@ -1,8 +1,20 @@
 # Holiswiss — Contexte produit & marketing
 
-> **Fichier socle.** Toute compétence marketing lit ce document AVANT d'agir et n'invente
-> jamais un fait qui n'y figure pas. Si une donnée manque, la demander — ne pas la supposer.
-> Dernière vérification des chiffres : **27 juillet 2026** (source : base de production).
+> **Fichier socle — source de vérité unique.** Toute compétence marketing lit ce document AVANT
+> d'agir et n'invente jamais un fait qui n'y figure pas. Si une donnée manque, la demander —
+> ne pas la supposer.
+>
+> Il est lu par **les deux agents** : le chat web de `/admin/marketing` (embarqué au build) et les
+> agents Claude Code (`marketing-stratege`, `-copywriter`, `-designer`, `-qa`). C'était l'intention
+> d'origine, elle n'était pas tenue jusqu'au 01/08/2026 : les agents Claude Code lisaient un second
+> fichier, `marketing/brand-kit.md`, qui a divergé. Les deux socles sont désormais fusionnés ici.
+> **Ne jamais recréer un socle parallèle.**
+>
+> Dernière vérification des chiffres : **27 juillet 2026** (base de production).
+> Dernière refonte éditoriale : **1ᵉʳ août 2026**.
+>
+> ⚠️ Ce fichier est embarqué dans le bundle au build (`import.meta.glob` en `eager`). Le modifier
+> en local ne change rien sur `/admin/marketing` tant que Lovable n'a pas reconstruit.
 
 ---
 
@@ -18,10 +30,45 @@ Modèle **à deux faces**, et c'est la clé de toute décision marketing :
 | **Offre** | Le **thérapeute** indépendant suisse | Visibilité, agenda rempli, outils de gestion | **C'est lui qui paie** — abonnement |
 | **Demande** | Le **patient** cherchant un praticien | Trouver un thérapeute vérifié près de chez lui | Gratuit — il alimente la valeur pour le thérapeute |
 
-**Conséquence non négociable :** la communication *réseaux sociaux et prospection* vise le
-**thérapeute**. Le contenu *SEO/blog* vise le **patient** (c'est lui qui tape les requêtes),
-car le trafic patient est précisément l'argument de vente auprès du thérapeute.
-Confondre les deux est l'erreur la plus fréquente — toujours nommer la face visée.
+**Règle de base :** la communication *prospection* vise le **thérapeute**. Le contenu *SEO/blog*
+vise le **patient** (c'est lui qui tape les requêtes), car le trafic patient est précisément
+l'argument de vente auprès du thérapeute. Confondre les deux par négligence reste l'erreur la
+plus fréquente — **toujours nommer la face visée**.
+
+### L'exception encadrée : le dispositif « même scène, deux chaises » (validé le 01/08/2026)
+
+Sur les **réseaux sociaux**, une publication peut viser les deux faces à la fois — mais à une
+condition stricte, sinon elle retombe dans la bouillie que la règle ci-dessus interdit.
+
+Le seul mécanisme qui convertit réellement deux audiences opposées, c'est de **rendre visible le
+niveau d'exigence de la place de marché** :
+
+| Ce que lit le patient | Ce que lit le thérapeute |
+|---|---|
+| « Ce que je trouve ici est filtré. Je peux y aller. » | « Être référencé ici veut dire quelque chose. Je veux en être. » |
+
+Les deux veulent la même chose : **un filtre crédible**. Le produit n'est pas l'annuaire, c'est le
+**standard**. Modèle : Michelin, Superhost, ordres professionnels.
+
+**Exécution** — on écrit une scène précise que les deux personas reconnaissent depuis des positions
+opposées du même moment. Exemple : le moment du choix. Le patient reconnaît la paralysie devant
+40 profils identiques ; la thérapeute reconnaît le fait d'*être* l'un de ces 40 profils invisibles.
+Même publication, deux lectures, aucune dilution — parce que **la tension entre les deux chaises
+est le sujet**.
+
+**Test des deux chaises (bloquant).** Tout brief doit nommer explicitement :
+1. **Lecture patient** — ce qu'il se dit, en une phrase à la première personne.
+2. **Lecture thérapeute** — ce qu'elle se dit, en une phrase à la première personne.
+
+Si l'une des deux est absente, vague, ou revient à « c'est intéressant » → **la publication est
+refusée**. Une publication mono-audience reste parfaitement légitime, mais elle doit alors
+l'assumer et le déclarer.
+
+> ⚠️ **Contrainte de sincérité imposée par l'état réel (section 2).** Avec 10 fiches sur 4 cantons,
+> un appel à l'action patient ne doit **jamais** promettre une couverture géographique. On peut lui
+> apprendre à choisir, lui expliquer le cadre, lui donner les bonnes questions — on ne peut pas lui
+> promettre qu'il trouvera quelqu'un près de chez lui. La valeur patient de ces contenus est
+> **éducative**, pas transactionnelle, tant que l'offre n'a pas grossi.
 
 ---
 
@@ -103,7 +150,7 @@ Le secteur est sensible et surveillé. Une formulation imprudente expose le thé
   « remède contre… ». Écrire **« accompagne »**, **« soutient »**, **« favorise le bien-être »**.
 - ❌ Promettre un remboursement. Formuler : *« de nombreuses complémentaires remboursent
   tout ou partie des séances lorsque le praticien est certifié ASCA, RME ou EMR — à vérifier
-  auprès de sa caisse »*. Les thérapies complémentaires ne relèvent **pas** de la LAMal de base.
+  auprès de sa caisse »*.
 - ❌ Revendiquer des gains chiffrés pour le thérapeute (« +40 % de clients ») sans donnée vérifiable.
   Nous n'en avons aucune.
 - ❌ Dénigrer un concurrent nommément.
@@ -112,6 +159,57 @@ Le secteur est sensible et surveillé. Une formulation imprudente expose le thé
 
 **Mentions utiles :** certifications **ASCA / RME / EMR** (elles rassurent et conditionnent le
 remboursement). Rappel de non-substitution à un avis médical sur les contenus santé.
+
+### Le remboursement — état vérifié le 01/08/2026 (source OFSP)
+
+Ce point était **formulé de façon inexacte** dans ce fichier jusqu'au 01/08 (« les thérapies
+complémentaires ne relèvent pas de la LAMal de base »). C'était prudent, mais faux.
+
+**Ce qui est exact :**
+
+- **Cinq domaines relèvent bien de l'assurance obligatoire des soins** : acupuncture, médecine
+  anthroposophique, pharmacothérapie de la MTC, homéopathie classique, phytothérapie.
+- **Mais à une condition cumulative stricte.** Libellé officiel : *« Seules les prestations fournies
+  par les **médecins** ayant obtenu un **titre de spécialiste** et disposant d'une **formation
+  postgrade** dans l'une de ces disciplines complémentaires peuvent être facturées. »*
+- **Les prestations d'un thérapeute non-médecin ne relèvent donc PAS de l'AOS**, mais des
+  assurances complémentaires — où tout dépend de l'assureur, de la police souscrite et du registre
+  du praticien.
+- Source : [OFSP — Médecines complémentaires pratiquées par des médecins](https://www.bag.admin.ch/fr/medecines-complementaires-pratiquees-par-des-medecins)
+
+❌ **Ne jamais écrire « pratiqué par un professionnel »** à la place de « par un médecin ».
+L'élargissement laisse croire au patient que ses séances chez une naturopathe sont couvertes par
+l'assurance de base. Elles ne le sont pas. C'est l'erreur la plus coûteuse possible sur ce sujet.
+
+---
+
+## 5 bis. Discipline factuelle — règle née d'un incident réel (01/08/2026)
+
+Deux articles du blog Holiswiss sur le remboursement se sont révélés **contradictoires entre eux et
+factuellement faux** : « la LAMal rembourse exclusivement trois thérapies depuis 2022 », « taux de
+80 % après franchise », « 60 % / 90 % / 95 % des assureurs remboursent ». Aucune source, chiffres
+inventés par l'agent de génération d'articles.
+
+**Conséquence : aucune source interne n'est présumée fiable.**
+
+**Interdits absolus**
+- ❌ Publier un **pourcentage, un tarif, un taux de remboursement ou une statistique** sans source
+  externe vérifiable. Pas d'exception, même si un article du blog l'affirme.
+- ❌ Reprendre un chiffre d'un contenu Holiswiss sans l'avoir revérifié à la source primaire
+  (OFSP, assureur, ASCA, RME).
+- ❌ Affirmer qu'une thérapie « est remboursée » sans préciser **par quel étage** (AOS /
+  complémentaire) et **sous quelle condition**.
+
+**Autorisé sans source** — les faits de structure stables : l'existence de deux étages d'assurance ;
+la dépendance à l'assureur, à la police, à la discipline et au registre ; le rôle d'ASCA et RME/EMR
+comme registres de référence ; le fait qu'**il n'existe pas de réponse universelle**.
+
+**Réflexe de production** : tout livrable contenant une affirmation factuelle porte un bloc
+**« À VÉRIFIER AVANT PUBLICATION »** listant chaque affirmation et sa source à confirmer.
+
+> Principe directeur : sur un sujet santé/assurance, **l'honnêteté structurelle bat la fausse
+> précision**. Les concurrents publient des chiffres inventés ; nous publions la structure réelle
+> et les bonnes questions. C'est ça, le premium.
 
 ---
 
@@ -136,9 +234,42 @@ Ne jamais employer *Heilpraktiker* seul — c'est le terme allemand, pas suisse.
 
 - Dégradé : violet profond `#1a0a2e` → mauve `#7c3aed` / `#a855f7` → turquoise `#22d3ee` / `#5cc8fa`
 - Fond **sombre premium**, texte blanc, accents violet/cyan. **Jamais de fond blanc plat.**
-- Logo lotus présent, jamais déformé
 - Typographie : titres sérif élégant (Playfair) + texte sans-serif (Inter)
 - Ambiance : apaisante, professionnelle, « bien-être haut de gamme suisse »
+
+### Système d'apposition du logo lotus (validé le 01/08/2026)
+
+**Homogène ne veut pas dire identique.** Trois rôles selon la position de la slide — c'est ce qui
+empêche le logo de concurrencer le message. Cotes pour un export **1080 × 1350**.
+
+| Rôle | Où | Taille | Opacité | Position |
+|---|---|---|---|---|
+| **Marque de pied** | Toutes les slides | 70 px (6,5 % de la largeur) | 85 % | Bas gauche, aligné sur la numérotation |
+| **Filigrane** | Slides de corps uniquement | 690 px (64 %) | **7 %** | Débordant du cadre, dans la zone vide |
+| **Signature** | Dernière slide (CTA) | 215 px (20 %) | 100 % | Au-dessus du CTA, aligné à gauche |
+
+- Le filigrane **alterne entre trois positions** (bas droite, bas gauche, haut droite) : sans cette
+  alternance, le défilement produit un effet de gabarit répété.
+- Il **déborde volontairement** du cadre : un lotus entier se lit comme un motif, un lotus coupé se
+  lit comme une texture. On veut la texture.
+- **7 % maximum.** À 10 % il commence à se lire et vole l'attention.
+
+**Trois slides n'en portent pas — ne pas les « harmoniser »** : la slide 1 (rien ne dispute
+l'attention au hook), la slide à sauvegarder (l'utilisateur la recadre), les slides de rupture
+(leur force vient du vide).
+
+❌ Jamais déformé, jamais recoloré, jamais sur fond clair.
+Fichier de référence : `src/assets/lotus-transparent.png.asset.json` (pointeur Lovable, PNG 500×500
+RGBA). Ne pas repartir d'une reconstitution.
+
+### Spécifications carrousel (format prioritaire sur Instagram)
+
+- **Ratio 4:5** (1080 × 1350). Jamais 1:1 pour un carrousel éducatif.
+- **6 à 8 slides.** Slide 1 = hook seul, texte très gros. Dernière = CTA seul.
+- **Un seul message par slide**, ~25 mots maximum. Deux idées = deux slides.
+- Zone de sécurité : 120 px en bas (UI Instagram). Numérotation discrète (2/7…) : elle augmente
+  le taux de complétion.
+- Texte blanc sur fond sombre uniquement. Vérifier la lisibilité en vignette.
 
 ⚠️ Vigilance images : une illustration hors-sujet ruine la crédibilité. *(Un article publié
 affichait une photo de compléments alimentaires pour chiens.)* Toujours vérifier la pertinence
@@ -161,10 +292,60 @@ réelle du visuel, jamais se fier au seul mot-clé de recherche.
 | **Prospection email** | Thérapeute | ⭐⭐⭐ | Le canal d'amorçage le plus direct |
 | **Presse / RP** | Les deux | ⭐ | Crédibilité du secteur |
 
-## 9. Piliers éditoriaux sociaux
+## 9. Piliers éditoriaux sociaux (révisés le 01/08/2026)
 
-Preuve sociale · Éducatif · Démo d'outil · Marque/inspiration.
-~2 / ~2 / ~2 / ~1 sur 7 jours. Jamais deux fois le même pilier ni le même réseau d'affilée.
+Les quatre piliers ci-dessous **remplacent** l'ancienne rotation (preuve sociale / éducatif /
+démo d'outil / marque), trop générique pour produire autre chose que du contenu bien-être banal.
+
+| # | Pilier | Promesse | Rôle business | Score |
+|---|---|---|---|---|
+| 1 | **LE STANDARD** | Ce qui distingue un accompagnement sérieux d'un autre, en Suisse | Rend le filtre visible → confiance patient + désir de badge thérapeute | 92 |
+| 2 | **LA CHAISE D'EN FACE** | La même scène, vécue des deux côtés | Prouve qu'on comprend les deux parties — obligation d'une place de marché | 89 |
+| 3 | **LE CONCRET SUISSE** | Ce que personne ne vous explique clairement sur les thérapies complémentaires en Suisse | Autorité dure, fort taux de sauvegarde, difficile à copier | 94 |
+| 4 | **LA PREUVE** | Des parcours réels, pas des promesses | Pilier de conversion — à n'activer qu'une fois le standard posé | 85 |
+
+Jamais deux fois le même pilier ni le même réseau d'affilée.
+
+## 9 bis. Scoring obligatoire — seuil 80/100
+
+Toute idée est notée **avant production** sur 8 critères (~12,5 pts chacun) : pertinence cible ·
+arrêt du scroll · autorité perçue · clarté · différenciation · cohérence de marque · potentiel
+Instagram · potentiel de conversion.
+
+**Rien en dessous de 80 n'est écrit.** Le score et sa justification figurent au brief, et au moins
+une idée écartée doit être documentée — c'est la preuve que le filtre a fonctionné.
+
+### Mémoire anti-banalité — ne jamais re-proposer
+
+| Idée | Score | Motif |
+|---|---|---|
+| « 5 signes que vous avez besoin d'un thérapeute » | 34 | Banal + dérive vers l'allégation médicale |
+| « Les bienfaits du Reiki » | 41 | Générique, zéro différenciation, aucune conversion |
+| « Rejoignez +100 thérapeutes ! » | 38 | Promo brute, détruit le positionnement premium (et faux : il y en a 10) |
+| « Les 5 thérapies remboursées en Suisse » | 46 | Listicle, et inécrivable honnêtement sans chiffres invérifiables |
+| « Combien coûte une séance en Suisse ? » | 44 | Exige des données tarifaires dont nous n'avons aucune source fiable |
+
+### Sujet imposé qui n'atteint pas 80 → angle de repli, jamais un refus sec
+
+Un sujet soumis à la main (voir section 12) se traite comme les autres. S'il plafonne, on ne refuse
+pas : on nomme le critère faible, puis on **propose un angle de repli sur le même sujet** qui, lui,
+atteint 80 — car c'est presque toujours l'angle qui pèche, pas le sujet. Gérald tranche la
+substitution, pas l'agent.
+
+> Exemple : « Les bienfaits du Reiki » plafonne à 41. Repli : « Ce qu'un praticien Reiki peut dire —
+> et ce qu'il n'a pas le droit de promettre » → 86, parce qu'il enseigne le cadre au lieu de vanter
+> la méthode.
+
+## 9 ter. Conversion — par qualification, jamais par pression
+
+Une marque premium convertit en **retirant** de la pression. Sur une catégorie de confiance liée à
+la santé, le CTA doit permettre au lecteur de **s'auto-sélectionner** : « Si vous êtes dans ce cas
+précis, voilà où regarder. »
+
+- **Un seul CTA** par publication, en dernière slide.
+- Jamais d'injonction, jamais d'urgence, jamais de compte à rebours.
+- KPI réels : **sauvegardes, partages, clics profil** — pas les likes.
+- Rappel : aucun CTA patient ne promet une couverture géographique (10 fiches, 4 cantons).
 
 ## 10. Ton
 
@@ -183,3 +364,43 @@ promesses irréalistes.
 - ⚠️ `specialties` est du **texte libre non normalisé** (`Naturopathe` vs `naturopathie`,
   `nutrithérapie` en minuscule…). Toute page générée par spécialité exige une **taxonomie
   de référence** au préalable — c'est un prérequis, pas un détail.
+
+---
+
+## 12. Sujets soumis à la main — production « en supplément »
+
+Gérald peut soumettre un sujet pour le lendemain. Il est produit **en supplément** de la publication
+programmée du jour, **jamais à sa place** : ce jour-là, le cycle produit deux propositions.
+
+| Surface | Comment | État |
+|---|---|---|
+| Claude Code | `/marketing-sujet "<le sujet>"` → fichier dans `marketing/queue/` | ✅ opérationnel |
+| `/admin/marketing` | Table `marketing_topics` (statut `en_attente`, `target_date`) | ⏳ après application de la migration `20260801104500` |
+
+Le pipeline lit **d'abord la table** si elle est disponible, sinon le dossier `marketing/queue/`.
+Un sujet soumis ne dispense d'**aucun** contrôle : même scoring, même seuil, même test des deux
+chaises. Ne jamais reformuler le sujet d'entrée — sa formulation porte l'intention.
+
+Traçabilité en base : `marketing_proposals.source` vaut `'programme'` ou `'soumis'`, et `topic_id`
+relie la proposition au sujet d'origine.
+
+---
+
+## 13. Chaîne de production et rôles
+
+| Étape | Agent Claude Code | Ce qu'il fait |
+|---|---|---|
+| 1 | `marketing-stratege` | QCM si le cadrage manque · scoring /100 · test des deux chaises · brief |
+| 2 | `marketing-copywriter` | Texte final, carrousel slide par slide, 4 langues · bloc de vérification |
+| 3 | `marketing-designer` | Brief visuel, système logo, prompt génératif, format d'export |
+| 4 | `marketing-qa` | 4 critères bloquants puis checklist · verdict ✅/❌ |
+
+Commandes : `/marketing-daily` (cycle du jour), `/marketing-serie` (série cadrée en 5 étapes
+verrouillées), `/marketing-sujet` (mise en file), `/marketing-publish` (après validation seulement).
+
+Le **chat web** de `/admin/marketing` mobilise les mêmes règles via ses 46 compétences, mais
+n'exécute pas ce pipeline en quatre temps : il répond à la demande. Les deux surfaces partagent
+ce socle — et lui seul.
+
+**Règle absolue commune :** aucune publication réelle sans validation explicite de Gérald.
+Un ✅ de QA signifie « prêt à être soumis », jamais « publiable ».

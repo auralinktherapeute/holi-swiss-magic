@@ -1,84 +1,31 @@
-# Holiswiss — Kit de marque marketing (réseaux sociaux)
+# ⚠️ Ce fichier n'est plus le socle marketing
 
-> Référence unique pour tous les agents marketing. Objectif de la campagne :
-> **recruter des thérapeutes indépendants suisses (B2B)** — PAS les clients finaux.
+**Le socle unique est `.agents/product-marketing.md`.**
 
-## Cible (persona)
+Ce fichier existait en parallèle et a divergé : le chat web de `/admin/marketing` lisait
+`.agents/product-marketing.md`, tandis que les agents Claude Code lisaient celui-ci. Deux
+stratégies coexistaient sans le savoir — persona, piliers, lignes rouges et cible différaient.
 
-**« Camille, thérapeute indépendante en Suisse »**
-- Sophrologue / hypnothérapeute / naturopathe / magnétiseuse / lithothérapeute…
-- Exerce seule, souvent en cabinet + à domicile ; 30–55 ans.
-- Douée pour accompagner, **moins à l'aise avec le marketing, l'admin, la visibilité en ligne**.
-- Peurs : « me vendre », la paperasse, être invisible face aux gros annuaires.
-- Envies : remplir son agenda **sans démarcher**, être trouvée par les bons clients, rester concentrée sur son métier de cœur.
-- Langues : français (Romandie), allemand (Suisse alémanique), parfois italien (Tessin).
+**Fusionné dans `.agents/product-marketing.md` le 01/08/2026.** Tout ce que ce fichier contenait
+s'y trouve, enrichi :
 
-> Chaque publication doit parler À Camille, jamais à ses clients. Test rapide :
-> « Est-ce qu'un·e thérapeute se reconnaît et se dit *ça me concerne* ? » Sinon → recommencer.
-
-## Proposition de valeur (ce qu'on met en avant)
-
-Holiswiss = la plateforme qui **remplit l'agenda du thérapeute pendant qu'il soigne**.
-Outils concrets à démontrer (angle « démo d'outil ») :
-- **Forfaits** (packs de séances vendables en ligne)
-- **Questionnaire d'admission** automatique (le client prépare sa séance)
-- **Facturation automatique** + rappels
-- **Profil vérifié + avis authentiques** (preuve sociale)
-- **Réservation en ligne** (agenda intégré)
-- **Visibilité SEO/IA** (être trouvé sur Google et ChatGPT)
-
-## Ton de marque
-
-| Faire | Ne pas faire |
+| Ce qui était ici | Où c'est maintenant |
 |---|---|
-| Chaleureux, humain, respectueux | Agressif, « vendeur », urgence artificielle |
-| Éducatif, utile même sans s'inscrire | Promo brute « INSCRIVEZ-VOUS !!! » |
-| Preuve sociale, témoignages | Promesses de gains irréalistes |
-| Vocabulaire bien-être authentique | Jargon corporate, anglicismes tech |
-| Valorise le métier du thérapeute | Rabaisse la concurrence |
-| Suisse, local, de confiance | Générique, hors-sol |
+| Personas thérapeute + visiteur | § 1 et § 3 |
+| Dispositif « même scène, deux chaises » | § 1 |
+| Discipline factuelle | § 5 bis |
+| Contrainte légale santé | § 5 |
+| Piliers éditoriaux | § 9 |
+| Scoring et seuil 80 | § 9 bis |
+| Conversion par qualification | § 9 ter |
+| Charte visuelle, système logo, specs carrousel | § 7 |
+| Langues et hashtags | § 6 |
+| Sujets soumis | § 12 |
 
-Signature émotionnelle : **« Concentrez-vous sur vos soins, on s'occupe du reste. »**
+## Ne pas rouvrir un socle parallèle
 
-## Charte visuelle (obligatoire sur tout visuel)
+C'est précisément la mécanique qui a produit la divergence. Toute règle marketing nouvelle va
+dans `.agents/product-marketing.md`, et nulle part ailleurs — il est lu par les deux agents.
 
-- **Dégradés** : violet foncé `#1a0a2e` → mauve `#7c3aed`/`#a855f7` → turquoise `#22d3ee`/`#5cc8fa` → touche corail (accent).
-- **Logo lotus** Holiswiss présent (filigrane ou coin), jamais déformé.
-- Fond sombre premium, texte blanc, accents violet/cyan. Jamais de fond blanc plat.
-- Typo : titres sérif élégant (type Playfair) + texte sans-serif lisible (Inter).
-- Ambiance : apaisante, professionnelle, « bien-être haut de gamme suisse ».
-
-## Réseaux & formats
-
-- **Instagram** : carrousel éducatif, reel court (démo/témoignage), post preuve sociale. Ton visuel fort.
-- **LinkedIn** : angle pro/entrepreneurial du thérapeute (développer son activité, se professionnaliser), témoignages, chiffres.
-- **TikTok** : reel court, authentique, « coulisses » / astuce / avant-après visibilité. Moins léché, plus vivant.
-
-## Langues (OBLIGATOIRE : 4 langues par publication)
-
-Chaque publication est produite en **🇫🇷 français, 🇬🇧 anglais, 🇩🇪 allemand (Suisse alémanique), 🇮🇹 italien (Tessin)**.
-Ce ne sont pas des traductions littérales : on **adapte** le ton à chaque marché, le message clé reste identique.
-
-## Hashtags (banque de départ, par langue)
-
-FR : #ThérapeuteSuisse #BienÊtreSuisse #Sophrologie #Naturopathie #Hypnothérapie #MédecineDouce #Magnétisme #Lithothérapie #CabinetBienÊtre #ThérapeuteIndépendant #Romandie
-EN : #SwissTherapist #Wellbeing #Sophrology #Naturopathy #Hypnotherapy #ComplementaryMedicine #Switzerland #HolisticHealth
-DE-CH : #TherapeutSchweiz #Naturheilpraktiker #Komplementärmedizin #GanzheitlicheGesundheit #SelbstständigSchweiz #Wohlbefinden
-IT : #TerapeutaSvizzera #Benessere #Naturopatia #Ipnosi #MedicinaDolce #Svizzera #Ticino
-Marque (toutes langues) : #Holiswiss
-
-> Adapter les hashtags au réseau (LinkedIn : peu et pro ; TikTok/IG : plus larges). Ajouter le canton quand pertinent (#Genève #Zürich #Lausanne #Tessin).
-
-## Appels à l'action (CTA) — orientés thérapeute
-
-- « Créez votre profil gratuit sur Holiswiss » / « Rejoignez les praticiens visibles sur Holiswiss »
-- « Découvrez comment remplir votre agenda » / « Testez vos outils praticien »
-- Doux, jamais injonctif. Lien en bio / holiswiss.ch/devenir-therapeute (à confirmer).
-
-## Lignes rouges (interdits)
-
-- ❌ S'adresser aux clients finaux (« Trouvez votre thérapeute ») — c'est l'inverse de la cible.
-- ❌ Promesses médicales / thérapeutiques (« guérit », « soigne la dépression »).
-- ❌ Revendications de revenus chiffrées non vérifiables.
-- ❌ Publier quoi que ce soit sans validation explicite de Gérald.
-- ❌ Comparaisons dénigrantes avec d'autres annuaires.
+> Fichier conservé uniquement comme panneau indicateur. Il peut être supprimé une fois qu'aucun
+> outil ni aucune note n'y renvoie plus.
