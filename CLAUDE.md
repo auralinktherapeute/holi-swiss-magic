@@ -3,6 +3,31 @@
 > ⚠️ Ne pas confondre avec **HoliSource** (annuaire Alsace, Supabase `dqmuj…`, tables en français
 > `therapeutes`). C'est un **autre projet**. Ici tout est en anglais : `therapists`, `reviews`, `articles`.
 
+> ## 🚨 PIÈGE — un faux dossier « Holiswiss » existe ailleurs
+>
+> `~/Documents/**holisource**-agents/` contient un `.claude/CLAUDE.md` intitulé
+> **« Holiswiss — ECC Integration »**, avec des agents `holiswiss-supabase`, `holiswiss-stripe`,
+> `holiswiss-geo`… et un `marketing-agent` décrit comme faisant des « posts Instagram ».
+>
+> **Ce n'est pas ce dépôt-ci, et ce n'est pas Holiswiss.** Le code qui l'entoure est l'app Tauri
+> **HoliSource** (58 références à `dqmujlqxpmcwscztrrdt`). La config Claude Code y a été déposée
+> le 26/06/2026 par-dessus un projet Alsace ; elle n'a aucun remote et n'a pas bougé depuis.
+>
+> **`~/Documents/holi-swiss-magic/` — ce dépôt — est le seul qui sert `holiswiss.ch`.** Preuve
+> reproductible : pousser un fichier ici le rend accessible sur le domaine après le build Lovable.
+>
+> Le marketing Holiswiss vit **uniquement ici** :
+> - **Socle unique** `.agents/product-marketing.md` — lu par le chat web de `/admin/marketing`
+>   (embarqué au build, `import.meta.glob` eager) **et** par les agents Claude Code.
+>   ⚠️ Ne jamais rouvrir un socle parallèle : `marketing/brand-kit.md` en a été un jusqu'au
+>   01/08/2026, les deux avaient divergé sans que personne le voie.
+> - Agents `.claude/agents/marketing-{stratege,copywriter,designer,qa}.md`
+> - Commandes `/marketing-daily`, `/marketing-serie`, `/marketing-sujet`, `/marketing-publish`
+>
+> *(Piège identifié le 01/08/2026 : une recherche par nom de fichier avait failli cibler
+> `holisource-agents`. Toujours ouvrir un `CLAUDE.md` avant de conclure sur un dossier — son nom
+> ment, et son contenu peut se contredire d'un fichier à l'autre.)*
+
 ---
 
 ## 🚨 RÈGLE N°1 — DEUX BASES SUPABASE, NE PAS SE TROMPER DE CIBLE
