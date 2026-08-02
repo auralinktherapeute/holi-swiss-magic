@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Download, Loader2 } from "lucide-react";
+import { exporterSlides, slug } from "@/lib/carousel-export";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 
 /**
@@ -77,6 +79,17 @@ const SERIF = 'Playfair Display, "Iowan Old Style", Palatino, Georgia, serif';
 export function CarouselViewer({ carousel }: { carousel: Carousel }) {
   const [lang, setLang] = useState<CarouselLang>(carousel.langueOrigine);
   const [vue, setVue] = useState<Vue>("carrousel");
+  const [exporte, setExporte] = useState(false);
+
+  const telecharger = async () => {
+    setExporte(true);
+    try {
+      const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
+      await exporterSlides(slides, lotusAsset.url, base, vue === "post");
+    } finally {
+      setExporte(false);
+    }
+  };
   const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
   const total = slides.length;
   let bodyIndex = -1;
@@ -93,6 +106,23 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
         <span className="ml-auto text-xs tabular-nums text-white/45">
           {carousel.score}/100 · {total} slides
         </span>
+        <button
+          onClick={telecharger}
+          disabled={exporte}
+          title={
+            vue === "post"
+              ? "Télécharger l'image du post en 1080 × 1350"
+              : `Télécharger les ${total} slides en 1080 × 1350`
+          }
+          className="flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1 text-xs font-semibold text-white/70 transition hover:border-[#b86ef9]/50 hover:text-white disabled:opacity-50"
+        >
+          {exporte ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Download className="h-3.5 w-3.5" />
+          )}
+          {exporte ? "Export…" : vue === "post" ? "PNG" : `PNG ×${total}`}
+        </button>
       </header>
 
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
