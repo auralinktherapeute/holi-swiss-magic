@@ -381,8 +381,10 @@ export const deleteAssignment = createServerFn({ method: "POST" })
 export const listQuestionnairesForPackage = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ package_id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
-    const sb = publicClient();
-    const { data: rows, error } = await sb
+    // Les liaisons questionnaire ↔ forfait ne sont plus lisibles publiquement :
+    // lecture serveur uniquement, et on ne renvoie que le strict nécessaire.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await (supabaseAdmin as any)
       .from("questionnaire_assignments")
       .select("questionnaire_id, questionnaires(id,titre,actif)")
       .eq("package_id", data.package_id);
