@@ -3522,6 +3522,10 @@ export type Database = {
         }[]
       }
       admin_unread_count: { Args: never; Returns: number }
+      close_marketing_topic: {
+        Args: { _id: string; _reject_reason?: string; _secret: string }
+        Returns: boolean
+      }
       compute_therapist_health: { Args: never; Returns: number }
       compute_therapist_health_one: { Args: { _id: string }; Returns: boolean }
       create_admin_notification: {
@@ -3543,6 +3547,18 @@ export type Database = {
           email: string
           id: string
           phone: string
+        }[]
+      }
+      get_pending_marketing_topics: {
+        Args: { _secret: string }
+        Returns: {
+          created_at: string
+          format: string
+          id: string
+          network: string
+          note: string
+          subject: string
+          target_date: string
         }[]
       }
       get_therapist_intake_header: {
@@ -3569,6 +3585,7 @@ export type Database = {
       is_therapist_owner: { Args: { _therapist_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notification_read: { Args: { _id: string }; Returns: undefined }
+      marketing_agent_secret_ok: { Args: { _secret: string }; Returns: boolean }
       normalize_city_text: { Args: { _input: string }; Returns: string }
       normalize_search: { Args: { _input: string }; Returns: string }
       notify_admin_event: {
