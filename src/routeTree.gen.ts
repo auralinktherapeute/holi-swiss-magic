@@ -51,6 +51,8 @@ import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
+import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrousels'
+import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.marketing-topics'
 import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -291,6 +293,16 @@ const IntakeSlugRoute = IntakeSlugRouteImport.update({
   path: '/intake/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewCarrouselsRoute = PreviewCarrouselsRouteImport.update({
+  id: '/preview/carrousels',
+  path: '/preview/carrousels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreviewMarketingTopicsRoute = PreviewMarketingTopicsRouteImport.update({
+  id: '/preview/marketing-topics',
+  path: '/preview/marketing-topics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
   id: '/questionnaire/$id',
   path: '/questionnaire/$id',
@@ -480,6 +492,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/carrousels': typeof PreviewCarrouselsRoute
+  '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -549,6 +563,8 @@ export interface FileRoutesByTo {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/carrousels': typeof PreviewCarrouselsRoute
+  '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -622,6 +638,8 @@ export interface FileRoutesById {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/carrousels': typeof PreviewCarrouselsRoute
+  '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -696,6 +714,8 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/preview/carrousels'
+    | '/preview/marketing-topics'
     | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
@@ -765,6 +785,8 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/preview/carrousels'
+    | '/preview/marketing-topics'
     | '/questionnaire/$id'
     | '/$lang'
     | '/admin'
@@ -837,6 +859,8 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/preview/carrousels'
+    | '/preview/marketing-topics'
     | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
@@ -879,6 +903,8 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
+  PreviewCarrouselsRoute: typeof PreviewCarrouselsRoute
+  PreviewMarketingTopicsRoute: typeof PreviewMarketingTopicsRoute
   QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
@@ -1180,6 +1206,20 @@ declare module '@tanstack/react-router' {
       path: '/intake/$slug'
       fullPath: '/intake/$slug'
       preLoaderRoute: typeof IntakeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/carrousels': {
+      id: '/preview/carrousels'
+      path: '/preview/carrousels'
+      fullPath: '/preview/carrousels'
+      preLoaderRoute: typeof PreviewCarrouselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/marketing-topics': {
+      id: '/preview/marketing-topics'
+      path: '/preview/marketing-topics'
+      fullPath: '/preview/marketing-topics'
+      preLoaderRoute: typeof PreviewMarketingTopicsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/questionnaire/$id': {
@@ -1546,6 +1586,8 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
+  PreviewCarrouselsRoute: PreviewCarrouselsRoute,
+  PreviewMarketingTopicsRoute: PreviewMarketingTopicsRoute,
   QuestionnaireIdRoute: QuestionnaireIdRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
