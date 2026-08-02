@@ -10,6 +10,7 @@ import {
   listMarketingTopics,
   createMarketingTopic,
   abandonMarketingTopic,
+  updateMarketingTopic,
 } from "@/lib/marketing.functions";
 import { MarketingAgentChat } from "@/components/admin/MarketingAgentChat";
 import { MarketingTopicsPanel, type MarketingTopic } from "@/components/admin/MarketingTopicsPanel";
@@ -230,6 +231,7 @@ function MarketingPage() {
 function TopicsTab({ topics }: { topics: Topic[] }) {
   const submit = useServerFn(createMarketingTopic);
   const abandon = useServerFn(abandonMarketingTopic);
+  const update = useServerFn(updateMarketingTopic);
   const qc = useQueryClient();
 
   return (
@@ -249,6 +251,18 @@ function TopicsTab({ topics }: { topics: Topic[] }) {
       }}
       onAbandon={async (id) => {
         await abandon({ data: { id } });
+        qc.invalidateQueries({ queryKey: ["marketing-topics"] });
+      }}
+      onUpdate={async (id, input) => {
+        await update({
+          data: {
+            id,
+            subject: input.subject,
+            target_date: input.target_date as string,
+            network: (input.network || null) as never,
+            format: (input.format || null) as never,
+          },
+        });
         qc.invalidateQueries({ queryKey: ["marketing-topics"] });
       }}
     />

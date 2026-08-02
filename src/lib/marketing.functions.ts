@@ -127,6 +127,46 @@ export const createMarketingTopic = createServerFn({ method: "POST" })
     return { id: row.id as string, target_date: row.target_date as string };
   });
 
+/**
+ * Modifie un sujet encore en file (admin only).
+ * Un sujet déjà traité n'est plus modifiable : la proposition qui en découle
+ * existe, la rééditer créerait une incohérence entre les deux.
+ */
+export const updateMarketingTopic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        subject: z.string().trim().min(10, "Décrivez le sujet en une phrase au moins.").max(500),
+        target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date attendue au format AAAA-MM-JJ."),
+        network: z.enum(["instagram", "linkedin", "tiktok"]).nullable().optional(),
+        format: z.enum(["carrousel", "reel", "post", "story"]).nullable().optional(),
+        note: z.string().trim().max(1000).nullable().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await (supabaseAdmin as any)
+      .from("marketing_topics")
+      .update({
+        subject: data.subject,
+        target_date: data.target_date,
+        network: data.network ?? null,
+        format: data.format ?? null,
+        note: data.note ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("status", "en_attente") // un sujet traité n'est plus modifiable
+      .select("id");
+    if (error) throw new Error("Impossible de modifier ce sujet.");
+    if (!rows?.length) throw new Error("Ce sujet a déjà été traité — il n'est plus modifiable.");
+    return { ok: true };
+  });
+
 /** Abandonne un sujet encore en file (admin only). */
 export const abandonMarketingTopic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -39,7 +39,12 @@ export type Carousel = {
   lecturePatient: string;
   slides: Record<CarouselLang, Slide[]>;
   hashtags: Partial<Record<CarouselLang, string>>;
+  /** Caption d'accompagnement — sert au rendu « Post », où elle porte tout le message. */
+  caption?: Partial<Record<CarouselLang, string>>;
 };
+
+/** Deux façons de publier le même contenu. */
+export type Vue = "carrousel" | "post";
 
 const LANGS: { code: CarouselLang; label: string }[] = [
   { code: "fr", label: "🇫🇷 FR" },
@@ -71,6 +76,7 @@ const SERIF = 'Playfair Display, "Iowan Old Style", Palatino, Georgia, serif';
 
 export function CarouselViewer({ carousel }: { carousel: Carousel }) {
   const [lang, setLang] = useState<CarouselLang>(carousel.langueOrigine);
+  const [vue, setVue] = useState<Vue>("carrousel");
   const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
   const total = slides.length;
   let bodyIndex = -1;
@@ -89,7 +95,21 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
         </span>
       </header>
 
-      <div className="mb-3 flex flex-wrap gap-1.5">
+      <div className="mb-3 flex flex-wrap items-center gap-1.5">
+        <div className="mr-2 flex rounded-lg border border-white/15 p-0.5" role="group" aria-label="Format d'affichage">
+          {(["carrousel", "post"] as Vue[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setVue(v)}
+              aria-pressed={vue === v}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold capitalize transition ${
+                vue === v ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white" : "text-white/55 hover:text-white"
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
         {LANGS.map((l) => {
           const dispo = !!carousel.slides[l.code]?.length;
           const actif = lang === l.code;
@@ -116,6 +136,9 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
         })}
       </div>
 
+      {vue === "post" && <PostView carousel={carousel} lang={lang} slides={slides} />}
+
+      {vue === "carrousel" && (
       <div
         className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3"
         role="group"
@@ -261,6 +284,8 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
         })}
       </div>
 
+      )}
+
       <dl className="mt-2 grid gap-1 text-xs sm:grid-cols-2">
         <div>
           <dt className="inline font-semibold text-[#22d3ee]">Lecture thérapeute — </dt>
@@ -272,11 +297,95 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
         </div>
       </dl>
 
-      {carousel.hashtags[lang] && (
+      {vue === "carrousel" && carousel.hashtags[lang] && (
         <p className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-white/45">
           {carousel.hashtags[lang]}
         </p>
       )}
     </article>
+  );
+}
+
+/**
+ * Rendu « Post » — une seule image 4:5 accompagnée de sa caption, tel que
+ * l'utilisateur le verra dans son fil. Le visuel reprend la slide d'accroche :
+ * c'est elle qui doit porter le message quand il n'y a pas de défilement.
+ */
+function PostView({
+  carousel,
+  lang,
+  slides,
+}: {
+  carousel: Carousel;
+  lang: CarouselLang;
+  slides: Slide[];
+}) {
+  const visuel = slides.find((s) => s.kind === "hook") ?? slides[0];
+  const caption = carousel.caption?.[lang];
+  const hashtags = carousel.hashtags[lang];
+
+  return (
+    <div className="flex flex-col gap-4 pb-3 sm:flex-row sm:items-start">
+      <div
+        className="relative flex shrink-0 flex-col justify-between overflow-hidden rounded-xl border p-5"
+        style={{
+          width: 244,
+          height: 305,
+          background: GROUNDS.hook,
+          borderColor: "rgba(168,85,247,.22)",
+        }}
+      >
+        <span
+          aria-hidden="true"
+          className="absolute left-0 right-0 top-0 h-0.5"
+          style={{ background: "linear-gradient(90deg,#a855f7,#22d3ee)" }}
+        />
+        <div className="relative z-10 flex flex-col gap-2">
+          {visuel.label && (
+            <p className="m-0 text-[9px] font-bold uppercase tracking-[0.14em] text-[#22d3ee]">
+              {visuel.label}
+            </p>
+          )}
+          {visuel.title && (
+            <p className="m-0 text-white" style={{ fontFamily: SERIF, fontSize: 21, lineHeight: 1.24 }}>
+              {visuel.title}
+            </p>
+          )}
+          {visuel.body && (
+            <p className="m-0 leading-relaxed" style={{ fontSize: 11.5, color: "rgba(255,255,255,.72)" }}>
+              {visuel.body}
+            </p>
+          )}
+        </div>
+        <div className="relative z-10 flex items-center justify-between pt-2">
+          <span
+            aria-hidden="true"
+            style={{
+              width: 16,
+              height: 16,
+              opacity: 0.85,
+              backgroundImage: `url(${lotusAsset.url})`,
+              backgroundSize: "contain",
+              backgroundRepeat: "no-repeat",
+            }}
+          />
+          <span className="text-[8px] tracking-[0.1em] text-white/45">holiswiss.ch</span>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        {caption ? (
+          <p className="whitespace-pre-line text-[13px] leading-relaxed text-white/80">{caption}</p>
+        ) : (
+          <p className="rounded-lg border border-dashed border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            Pas de caption rédigée pour cette langue. En vue « Post », c'est elle qui porte le
+            message — le visuel seul ne suffit pas.
+          </p>
+        )}
+        {hashtags && (
+          <p className="mt-3 text-[11px] leading-relaxed text-white/40">{hashtags}</p>
+        )}
+      </div>
+    </div>
   );
 }
