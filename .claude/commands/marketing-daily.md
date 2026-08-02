@@ -22,15 +22,17 @@ Le jour où un sujet est en file, le cycle produit donc **deux propositions**.
 admins et tu n'as que la clé anon. Passe par la RPC dédiée, protégée par un secret partagé :
 
 ```bash
-KEY=$(grep -hE '^SUPABASE_PUBLISHABLE_KEY=' .env | sed -E 's/^[^=]+=//; s/"//g')
-SEC=$(grep -hE '^MARKETING_AGENT_SECRET=' .env | sed -E 's/^[^=]+=//; s/"//g')
+# Clé anon depuis .env (publique par nature) ; secret depuis .env.local (ignoré par git).
+# ⚠️ Ne JAMAIS écrire le secret dans .env : ce fichier est SUIVI par git malgré .gitignore.
+KEY=$(grep -hE '^SUPABASE_PUBLISHABLE_KEY=' .env       | sed -E 's/^[^=]+=//; s/"//g')
+SEC=$(grep -hE '^MARKETING_AGENT_SECRET='   .env.local | sed -E 's/^[^=]+=//; s/"//g')
 curl -s "https://qqwudmnfavvaukuldulr.supabase.co/rest/v1/rpc/get_pending_marketing_topics" \
   -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
   -d "{\"_secret\":\"$SEC\"}"
 ```
 
 Renvoie les sujets `en_attente` dont l'échéance est atteinte, les plus urgents d'abord.
-Si `MARKETING_AGENT_SECRET` est absent de `.env`, dis-le et passe au repli — n'invente pas de secret.
+Si `MARKETING_AGENT_SECRET` est vide ou absent de `.env.local`, dis-le et passe au repli fichiers — n'invente jamais de secret.
 
 **2. Source de repli — fichiers.** Lis `marketing/queue/` et retiens les fichiers dont le frontmatter
 porte `statut: en_attente` et `pour_le:` ≤ aujourd'hui. C'est le chemin utilisé par `/marketing-sujet`.

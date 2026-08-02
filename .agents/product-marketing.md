@@ -382,7 +382,9 @@ admins, et le pipeline n'a que la clé anon. C'est le défaut constaté le 01/08
 écrivait dans une table que l'agent ne pouvait pas lire, deux files déconnectées.
 Corrigé par deux RPC `SECURITY DEFINER` protégées par `marketing_agent_secret` (migration
 `20260801230000`) : `get_pending_marketing_topics` pour lire, `close_marketing_topic` pour clôturer.
-Le secret vit dans `app_settings` côté base et dans `.env` (`MARKETING_AGENT_SECRET`) côté agent.
+Le secret vit dans `app_settings` côté base et dans **`.env.local`** (`MARKETING_AGENT_SECRET`) côté agent.
+⚠️ **Jamais dans `.env`** : ce fichier est suivi par git malgré sa présence dans `.gitignore` (il a été
+indexé avant l'ajout de la règle) et se trouve sur `origin/main`.
 
 Le pipeline traite **les deux sources** — un sujet peut venir de l'admin comme de la ligne de commande.
 Un sujet soumis ne dispense d'**aucun** contrôle : même scoring, même seuil, même test des deux
