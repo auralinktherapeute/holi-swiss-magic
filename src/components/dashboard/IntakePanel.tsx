@@ -111,7 +111,7 @@ export default function IntakePanel({ slug }: { slug: string | null }) {
                   <Detail label="Médicaments" value={s.medications} long />
                   <Detail label="Allergies" value={s.allergies} long />
                   <div className="text-xs text-muted-foreground border-t border-border/40 pt-2">
-                    Consentement RGPD signé par <span className="text-foreground font-medium">{s.consent_signature}</span>
+                    Consentement nLPD signé par <span className="text-foreground font-medium">{s.consent_signature}</span>
                     {s.consent_at && ` le ${new Date(s.consent_at).toLocaleString("fr-CH")}`}
                   </div>
                   <div className="flex flex-wrap gap-2 pt-2">

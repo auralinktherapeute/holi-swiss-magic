@@ -6,7 +6,7 @@ export const Route = createFileRoute("/$lang/confidentialite/")({
   head: ({ params }) => ({
     meta: [
       { title: "Politique de confidentialité — Holiswiss" },
-      { name: "description", content: "Politique de confidentialité de Holiswiss conforme à la nLPD (Suisse) et au RGPD (UE) : données collectées, finalités et droits." },
+      { name: "description", content: "Politique de confidentialité de Holiswiss conforme à la nLPD (Suisse) : données collectées, finalités et droits." },
       { name: "robots", content: "noindex, follow" },
     ],
     links: seoLinks(params.lang, "/confidentialite"),
@@ -36,7 +36,7 @@ function ConfidentialitePage() {
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-white">Politique de confidentialité</h1>
-        <p className="mt-2 text-sm text-[#b86ef9]">Conforme à la nLPD (Suisse, en vigueur depuis le 1er septembre 2023) et au RGPD (UE)</p>
+        <p className="mt-2 text-sm text-[#b86ef9]">Conforme à la nLPD (Suisse, en vigueur depuis le 1er septembre 2023)</p>
       </div>
 
       <Section title="1. Responsable du traitement">
@@ -137,8 +137,8 @@ function ConfidentialitePage() {
         <p>Vous pouvez à tout moment gérer vos préférences via les paramètres de votre navigateur. Le refus des cookies techniques peut altérer le fonctionnement du site.</p>
       </Section>
 
-      <Section title="7. Vos droits (nLPD / RGPD)">
-        <p>Conformément à la nLPD suisse et au RGPD, vous disposez des droits suivants :</p>
+      <Section title="7. Vos droits (nLPD)">
+        <p>Conformément à la nLPD suisse, vous disposez des droits suivants :</p>
         <ul className="mt-2 ml-4 list-disc space-y-1">
           <li><strong className="text-white">Accès</strong> — obtenir une copie de vos données</li>
           <li><strong className="text-white">Rectification</strong> — corriger des données inexactes</li>

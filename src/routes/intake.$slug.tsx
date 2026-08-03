@@ -142,7 +142,7 @@ function IntakePage() {
             <h2 className="text-sm font-semibold text-purple-300 flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> Consentement & signature</h2>
             <label className="flex items-start gap-2 text-sm text-white/80 cursor-pointer">
               <input type="checkbox" checked={form.consent_rgpd} onChange={e => set("consent_rgpd", e.target.checked)} className="mt-1 accent-purple-500" />
-              <span>J'accepte que mes données soient transmises et conservées par {header.first_name} {header.last_name} dans le cadre de ma prise en charge, conformément à la politique de confidentialité (RGPD).</span>
+              <span>J'accepte que mes données soient transmises et conservées par {header.first_name} {header.last_name} dans le cadre de ma prise en charge, conformément à la politique de confidentialité (nLPD).</span>
             </label>
             <Field label="Signature (votre nom complet) *">
               <Input required value={form.consent_signature} onChange={e => set("consent_signature", e.target.value)} className="bg-white/5 border-white/10 text-white" placeholder="Ex : Marie Dupont" />

@@ -114,7 +114,7 @@ export const convertIntake = createServerFn({ method: "POST" })
       sub.medications && `Médicaments : ${sub.medications}`,
       sub.allergies && `Allergies : ${sub.allergies}`,
       sub.birth_date && `Date de naissance : ${sub.birth_date}`,
-      `\nConsentement RGPD signé par ${sub.consent_signature} le ${sub.consent_at}`,
+      `\nConsentement nLPD signé par ${sub.consent_signature} le ${sub.consent_at}`,
     ].filter(Boolean).join("\n\n");
 
     const { data: contact, error: e2 } = await (context.supabase as any)
