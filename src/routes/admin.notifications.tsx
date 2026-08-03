@@ -7,6 +7,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from "@/lib/notifications.functions";
+import { notifyNotificationsChanged } from "@/lib/notification-bus";
 
 export const Route = createFileRoute("/admin/notifications")({
   ssr: false,
@@ -70,14 +71,37 @@ function NotificationsPage() {
     refresh();
   }, [refresh]);
 
-  const onMarkOne = async (id: string) => {
-    await markOne({ data: { id } });
-    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, is_read: true } : r)));
-  };
+  const onMarkOne = useCallback(
+    async (id: string) => {
+      // Optimiste : l'UI se met à jour tout de suite, le serveur persiste ensuite.
+      setRows((rs) =>
+        filter === "unread"
+          ? rs.filter((r) => r.id !== id)
+          : rs.map((r) => (r.id === id ? { ...r, is_read: true, read_at: new Date().toISOString() } : r)),
+      );
+      notifyNotificationsChanged();
+      try {
+        await markOne({ data: { id } });
+      } finally {
+        notifyNotificationsChanged();
+      }
+    },
+    [markOne, filter],
+  );
 
   const onMarkAll = async () => {
-    await markAll();
-    setRows((rs) => rs.map((r) => ({ ...r, is_read: true })));
+    setRows((rs) => (filter === "unread" ? [] : rs.map((r) => ({ ...r, is_read: true }))));
+    notifyNotificationsChanged();
+    try {
+      await markAll();
+    } finally {
+      notifyNotificationsChanged();
+    }
+  };
+
+  // Ouvrir une notification (clic sur la carte ou sur « Ouvrir ») = elle est lue.
+  const onOpen = (n: Notif) => {
+    if (!n.is_read) void onMarkOne(n.id);
   };
 
   const kinds = Array.from(new Set(rows.map((r) => r.kind)));
@@ -158,6 +182,15 @@ function NotificationsPage() {
         {rows.map((n) => (
           <div
             key={n.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpen(n)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpen(n);
+              }
+            }}
             style={{
               background: n.is_read ? "rgba(255,255,255,0.03)" : "rgba(184,110,249,0.08)",
               border: `1px solid ${n.is_read ? "rgba(255,255,255,0.06)" : "rgba(184,110,249,0.25)"}`,
@@ -166,6 +199,7 @@ function NotificationsPage() {
               display: "flex",
               gap: 14,
               alignItems: "flex-start",
+              cursor: "pointer",
             }}
           >
             <div
@@ -226,6 +260,7 @@ function NotificationsPage() {
               {n.link && (
                 <a
                   href={n.link}
+                  onClick={() => onOpen(n)}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -243,7 +278,10 @@ function NotificationsPage() {
               )}
               {!n.is_read && (
                 <button
-                  onClick={() => onMarkOne(n.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void onMarkOne(n.id);
+                  }}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
