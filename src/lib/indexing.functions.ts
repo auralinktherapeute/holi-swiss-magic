@@ -3,6 +3,54 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 
+// URL de l'Edge Function run-indexation déployée sur gpld
+const RUN_INDEXATION_FN =
+  "https://gpldaaqwvwopttachrma.supabase.co/functions/v1/run-indexation";
+
+export type IndexationResult = {
+  submitted: number;
+  indexNowStatus: number;
+  newUrlsAdded: number;
+  notIndexedCount: number;
+  reportId: string | null;
+  errors: string[];
+};
+
+/**
+ * Exécute le cycle d'indexation complet (IndexNow + sitemap + rapport + notification)
+ * directement depuis le dashboard admin, sans dépendance à la tâche Claude planifiée.
+ */
+export const runFullIndexation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      scope: z.enum(["therapists", "all"]).default("therapists"),
+      pin: z.string().min(1),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+
+    const resp = await fetch(RUN_INDEXATION_FN, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scope: data.scope, pin: data.pin }),
+    });
+
+    if (!resp.ok) {
+      let errMsg = `HTTP ${resp.status}`;
+      try {
+        const err = (await resp.json()) as { error?: string };
+        if (err.error) errMsg = err.error;
+      } catch {
+        // ignore
+      }
+      throw new Error(errMsg);
+    }
+
+    return (await resp.json()) as IndexationResult;
+  });
+
 // Clé IndexNow — servie en texte brut par la route /<clé>.txt (vérification
 // de propriété du domaine). IndexNow notifie Bing/Seznam/Yandex, et donc les
 // IA qui s'appuient sur l'index Bing (ChatGPT en premier lieu).

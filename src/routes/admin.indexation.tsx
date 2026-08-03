@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { pingIndexNow } from "@/lib/indexing.functions";
+import { runFullIndexation } from "@/lib/indexing.functions";
 
 export const Route = createFileRoute("/admin/indexation")({ component: Page });
 
@@ -105,42 +105,41 @@ function Page() {
     load();
   }, [load]);
 
-  const indexNow = useServerFn(pingIndexNow);
+  const runFull = useServerFn(runFullIndexation);
   const [launching, setLaunching] = useState<null | "therapists" | "all">(null);
 
   /**
-   * Lancement manuel d'un cycle d'indexation :
-   * 1. RPC gpld : marque les URLs du scope « à recontrôler » + trace un job manuel
-   *    (traité par la tâche Claude quotidienne — rapport détaillé à la clé)
-   * 2. Ping IndexNow : notifie Bing & co IMMÉDIATEMENT (ChatGPT s'appuie sur Bing)
+   * Cycle d'indexation complet depuis le dashboard :
+   * IndexNow + détection nouvelles URLs (sitemap) + rapport + notification admin.
+   * Exécuté directement via l'Edge Function run-indexation (gpld) — sans dépendance
+   * à la tâche Claude planifiée.
    */
   const launchRun = async (scope: "therapists" | "all") => {
     const pin = askPin();
     if (!pin) return;
     setLaunching(scope);
     try {
-      const r = await fetch(`${AGENTS_SUPABASE_URL}/rest/v1/rpc/request_indexing_run`, {
-        method: "POST",
-        headers: HEADERS,
-        body: JSON.stringify({ p_pin: pin, p_scope: scope === "all" ? "unindexed" : "therapists" }),
-      });
-      const flagged = (await r.json()) as number;
-      if (!r.ok || flagged < 0) {
-        sessionStorage.removeItem("seo_validation_pin");
-        toast.error("PIN invalide");
-        return;
+      const res = await runFull({ data: { scope, pin } });
+
+      const parts: string[] = [];
+      if (res.submitted > 0) {
+        parts.push(`${res.submitted} thérapeutes pingées (IndexNow HTTP ${res.indexNowStatus})`);
+      } else {
+        parts.push("0 thérapeute à pinger");
       }
-      let indexNowMsg = "";
-      try {
-        const res = await indexNow({ data: { scope: scope === "all" ? "unindexed" : "therapists" } });
-        indexNowMsg = ` · ${(res as any).submitted} URLs envoyées à IndexNow (Bing/IA)`;
-      } catch (e) {
-        indexNowMsg = " · IndexNow indisponible (réessayez plus tard)";
-      }
-      toast.success(`Indexation lancée : ${flagged} page(s) à recontrôler côté Google${indexNowMsg}`, { duration: 8000 });
+      if (res.newUrlsAdded > 0) parts.push(`+${res.newUrlsAdded} nouvelles URLs détectées`);
+      if (res.errors.length > 0) parts.push(`${res.errors.length} erreur(s)`);
+
+      toast.success(`Indexation complète — ${parts.join(" · ")}`, { duration: 10000 });
       await load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur réseau");
+      const msg = e instanceof Error ? e.message : "Erreur réseau";
+      if (msg === "PIN invalide") {
+        sessionStorage.removeItem("seo_validation_pin");
+        toast.error("PIN invalide");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLaunching(null);
     }
@@ -230,8 +229,8 @@ function Page() {
             <Rocket className="h-4 w-4 text-[#b86ef9]" /> Lancer une indexation maintenant
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Notifie immédiatement Bing/IndexNow (utilisé par ChatGPT et d'autres IA) et met les pages
-            en file de recontrôle Google — traitées par l'agent quotidien avec rapport détaillé.
+            Ping IndexNow immédiat (ChatGPT/Bing) + détection des nouvelles URLs dans le sitemap +
+            rapport dans l'onglet Comptes rendus + notification WhatsApp/email.
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
@@ -357,9 +356,10 @@ function Page() {
       )}
 
       <p className="text-[11px] text-muted-foreground border-t pt-3">
-        Contrôles via l'URL Inspection API (quota 2 000/jour — usage réel &lt; 150/run). Les nouveaux articles
-        et thérapeutes sont détectés et mis en file automatiquement par l'audit du lundi 9h. « Découverte » =
-        Google connaît la page et la crawlera ; l'indexation effective reste sa décision.
+        Le bouton « Lancer » exécute le cycle complet (IndexNow + sitemap + rapport) sans dépendance à la tâche planifiée.
+        L'inspection GSC (URL Inspection API, quota 2 000/j) n'est pas disponible depuis le dashboard — elle reste
+        effectuée par l'agent quotidien quand les MCPs sont disponibles. « Découverte » = Google connaît la page ;
+        l'indexation effective reste sa décision.
       </p>
     </div>
   );
