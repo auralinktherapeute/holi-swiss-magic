@@ -3,6 +3,7 @@ import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
+import { onNotificationsChanged } from "@/lib/notification-bus";
 
 export function NotificationBell() {
   const fetchCount = useServerFn(getUnreadNotificationCount);
@@ -22,10 +23,12 @@ export function NotificationBell() {
     const iv = window.setInterval(load, 20_000);
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
+    const offBus = onNotificationsChanged(load);
     return () => {
       alive = false;
       window.clearInterval(iv);
       window.removeEventListener("focus", onFocus);
+      offBus();
     };
   }, [fetchCount]);
 

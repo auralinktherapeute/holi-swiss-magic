@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getAdminBadgeCounts } from "@/lib/admin.functions";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { signOutCompletely } from "@/lib/auth-utils";
+import { onNotificationsChanged } from "@/lib/notification-bus";
 
 export function AdminNav() {
   const { t } = useTranslation();
@@ -70,10 +71,12 @@ export function AdminNav() {
     const interval = window.setInterval(load, 20_000);
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
+    const offBus = onNotificationsChanged(load);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
       window.removeEventListener("focus", onFocus);
+      offBus();
     };
   }, [fetchBadgeCounts, fetchUnread]);
 
