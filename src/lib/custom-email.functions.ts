@@ -14,6 +14,7 @@ const templateIdSchema = z.enum([
   "profile_live",
   "reminder_complete",
   "official_launch",
+  "la_pratique_en_lumiere",
   "custom",
 ]);
 

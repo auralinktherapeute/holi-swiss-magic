@@ -97,6 +97,54 @@ En tant que membre des premiers inscrits, vous bénéficiez à vie du badge excl
 Aidez-nous à faire connaître HoliSwiss en partageant votre profil à vos patients et confrères.`,
     cta_label: "Voir mon profil en ligne",
   },
+  la_pratique_en_lumiere: {
+    subject: "La pratique en lumière — Retrouver de l'espace pour accueillir",
+    body: `Bonjour {{PRENOM}},
+
+Parfois, il suffit d'alléger ce qui encombre pour que la présence, elle, puisse enfin se déployer.
+
+## Histoire d'une thérapeute Holiswiss
+
+Anaïs Rochat reçoit dans un petit cabinet au dernier étage d'une maison ancienne, à deux pas du lac de Neuchâtel. Naturopathe depuis huit ans, formée aussi au travail énergétique, elle a mis longtemps à comprendre ce qui, dans sa pratique, ne lui appartenait pas vraiment.
+
+Ce qui l'a menée vers ce métier tient en une phrase simple : accompagner les personnes à retrouver un équilibre qu'elles avaient perdu de vue. Une intention claire, presque évidente — et pourtant, année après année, de plus en plus difficile à honorer pleinement. Les séances elles-mêmes restaient justes, denses, pleinement habitées. Mais tout autour, une charge invisible grandissait : les messages à recaser un rendez-vous, les factures rédigées le soir, épuisée, un dimanche sur deux.
+
+« Je n'avais pas choisi ce métier pour devenir gestionnaire de mon propre emploi du temps », dit-elle, avec un sourire où pointe encore un peu de lassitude ancienne.
+
+Elle a découvert Holiswiss presque par hasard, recommandée par une consœur. Son agenda s'est mis à travailler pour elle plutôt que contre elle : des créneaux définis une fois, une réservation en ligne qui ne demande plus aucun échange de messages, des rappels qui partent seuls. Son profil, retravaillé avec plus de justesse, dit enfin qui elle est vraiment.
+
+Mais ce qui a le plus changé, dit-elle, c'est ailleurs. C'est dans le CRM qu'elle a fini par se souvenir de ce que chaque personne lui avait confié la fois précédente. « Ce que Holiswiss a changé, ce n'est pas mon métier. C'est l'espace que j'ai retrouvé autour de lui. »
+
+## Un outil Holiswiss pour soutenir la pratique — le CRM
+
+On parle peu du CRM aux thérapeutes indépendants, comme si c'était un mot réservé aux entreprises. Il s'agit pourtant, très concrètement, d'une seule chose : se souvenir, sans effort, de chaque personne qu'on accompagne.
+
+Le CRM Holiswiss garde, discrètement et pour vous seule, l'historique de chaque relation : les séances passées, les notes utiles, la progression d'un forfait entamé, la dernière fois qu'une personne est venue.
+
+La charge mentale que cela retire est réelle. Et la qualité de la relation, elle, y gagne directement : un client qui sent qu'on se souvient de lui se sent reconnu dans sa singularité, pas simplement traité comme un rendez-vous parmi d'autres.
+
+## Mettre sa pratique en lumière
+
+Un profil qui donne envie de prendre rendez-vous n'est pas un profil qui en dit le plus. C'est un profil qui laisse deviner, en quelques phrases, la manière dont vous accompagnez.
+
+- **Votre photo.** Récente, prise dans une bonne lumière naturelle — c'est souvent la première chose qui rassure.
+- **Votre présentation.** Elle gagne à dire pour qui vous travaillez et comment se déroule un premier échange.
+- **Vos langues parlées et vos spécialités.** Trop souvent oubliées.
+
+Une phrase à adapter, à copier directement dans votre profil : « J'accompagne les personnes qui traversent une période de transition — fatigue durable, perte de repères, besoin de se retrouver — avec une approche adaptée à leur rythme. »
+
+## Vos prochaines actions
+
+Deux gestes, si vous avez un moment cette semaine :
+
+- **Reprenez une phrase de votre profil.** Une seule suffit.
+- **Ouvrez vos disponibilités pour les prochaines semaines** dans votre agenda.
+
+Ce ne sont pas des obligations. Ce sont deux portes, entrouvertes — à vous de choisir celle par laquelle commencer.
+
+Belle continuation dans votre pratique.`,
+    cta_label: "Modifier mon profil",
+  },
   custom: {
     subject: "Un message de HoliSwiss",
     body: `Bonjour {{PRENOM}},
@@ -223,6 +271,7 @@ function ctaHref(templateId: TemplateId, args: { therapistSlug?: string | null; 
     case "profile_live":
       return args.therapistSlug ? `${SITE_URL}/fr/therapeute/${args.therapistSlug}` : `${SITE_URL}/fr/therapeutes`;
     case "reminder_complete":
+    case "la_pratique_en_lumiere":
       return `${SITE_URL}/dashboard/profil`;
     case "custom":
       return null;

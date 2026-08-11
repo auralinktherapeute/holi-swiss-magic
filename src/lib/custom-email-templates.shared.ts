@@ -4,6 +4,7 @@ export type TemplateId =
   | "profile_live"
   | "reminder_complete"
   | "official_launch"
+  | "la_pratique_en_lumiere"
   | "custom";
 
 export const TEMPLATE_OPTIONS: { id: TemplateId; label: string; needsCustom?: boolean }[] = [
@@ -12,5 +13,6 @@ export const TEMPLATE_OPTIONS: { id: TemplateId; label: string; needsCustom?: bo
   { id: "profile_live", label: "Votre profil est en ligne" },
   { id: "reminder_complete", label: "Rappel — Complétez votre profil" },
   { id: "official_launch", label: "Lancement officiel HoliSwiss" },
+  { id: "la_pratique_en_lumiere", label: "Newsletter — La pratique en lumière" },
   { id: "custom", label: "Message personnalisé", needsCustom: true },
 ];
