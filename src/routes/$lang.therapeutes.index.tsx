@@ -219,13 +219,17 @@ function Page() {
     navigate({ search: (prev: any) => ({ ...prev, canton: undefined }), replace: true });
   };
 
-  const handleCardClick = (t: Therapist) => {
+  // Le lien de la carte est un vrai <a> : le tap mobile fonctionne toujours,
+  // même si l'état JS n'est pas encore hydraté. Sur desktop (>= 640px) on
+  // conserve le comportement "sélection sur la carte" en annulant la nav.
+  const handleCardClick = (e: React.MouseEvent, t: Therapist) => {
     setSelectedId(t.id);
-    if (isSmallViewport) {
-      navigate({ to: "/$lang/therapeute/$slug", params: { lang, slug: t.slug } });
-      return;
+    const isDesktop =
+      typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+    if (isDesktop) {
+      e.preventDefault();
+      setMobileTab("map");
     }
-    setMobileTab("map");
   };
 
   const shouldRenderMap = isSmallViewport === false || (isSmallViewport === true && mobileTab === "map");
@@ -330,13 +334,17 @@ function Page() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03, duration: 0.2 }}
-                    onClick={() => handleCardClick(th)}
-                    className={`group cursor-pointer rounded-2xl border p-4 transition-all ${
-                      isSelected
-                        ? "border-[#5cc8fa] bg-[rgba(92,200,250,0.06)] shadow-[0_0_20px_rgba(92,200,250,0.15)]"
-                        : "border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] hover:border-[#b86ef9] hover:shadow-[0_4px_20px_rgba(184,110,249,0.15)] hover:-translate-y-0.5"
-                    }`}
                   >
+                    <Link
+                      to="/$lang/therapeute/$slug"
+                      params={{ lang, slug: th.slug }}
+                      onClick={(e) => handleCardClick(e, th)}
+                      className={`group block cursor-pointer rounded-2xl border p-4 transition-all [touch-action:manipulation] active:scale-[0.99] ${
+                        isSelected
+                          ? "border-[#5cc8fa] bg-[rgba(92,200,250,0.06)] shadow-[0_0_20px_rgba(92,200,250,0.15)]"
+                          : "border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] hover:border-[#b86ef9] hover:shadow-[0_4px_20px_rgba(184,110,249,0.15)] hover:-translate-y-0.5"
+                      }`}
+                    >
                     <div className="flex gap-3">
                       {/* Photo ronde */}
                       <div className="relative shrink-0">
@@ -409,13 +417,9 @@ function Page() {
                       </div>
                     </div>
                     {/* Lien profil */}
-                    <Link
-                      to="/$lang/therapeute/$slug"
-                      params={{ lang, slug: th.slug }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-3 flex min-h-11 items-center gap-1 text-xs font-semibold text-[#5cc8fa] transition hover:text-white sm:hidden sm:group-hover:flex"
-                    >
+                    <span className="mt-3 flex min-h-11 items-center gap-1 text-xs font-semibold text-[#5cc8fa] transition group-hover:text-white sm:hidden sm:group-hover:flex">
                       {t("therapist_profile.see_full_profile")}
+                    </span>
                     </Link>
                   </motion.div>
                 );
