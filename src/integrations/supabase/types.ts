@@ -1840,6 +1840,44 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          created_at: string
+          id: string
+          path: string
+          referrer: string | null
+          session_id: string | null
+          user_id: string | null
+          user_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          path: string
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          path?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          user_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_views_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questionnaire_assignments: {
         Row: {
           created_at: string
@@ -2503,6 +2541,55 @@ export type Database = {
           },
         ]
       }
+      therapist_booking_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string | null
+          therapist_id: string
+          viewer_type: string | null
+          viewer_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          therapist_id: string
+          viewer_type?: string | null
+          viewer_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          therapist_id?: string
+          viewer_type?: string | null
+          viewer_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_booking_clicks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_booking_clicks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_booking_clicks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_certifications: {
         Row: {
           created_at: string
@@ -3058,6 +3145,58 @@ export type Database = {
           },
         ]
       }
+      therapist_profile_views: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          session_id: string | null
+          therapist_id: string
+          viewer_type: string | null
+          viewer_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          session_id?: string | null
+          therapist_id: string
+          viewer_type?: string | null
+          viewer_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          session_id?: string | null
+          therapist_id?: string
+          viewer_type?: string | null
+          viewer_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_profile_views_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_profile_views_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_profile_views_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_specialties: {
         Row: {
           created_at: string
@@ -3272,6 +3411,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_type: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          ip_country: string | null
+          last_seen_at: string
+          started_at: string
+          user_agent: string | null
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          ip_country?: string | null
+          last_seen_at?: string
+          started_at?: string
+          user_agent?: string | null
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          ip_country?: string | null
+          last_seen_at?: string
+          started_at?: string
+          user_agent?: string | null
+          user_id?: string
+          user_type?: string
         }
         Relationships: []
       }
@@ -3522,10 +3703,12 @@ export type Database = {
         }[]
       }
       admin_unread_count: { Args: never; Returns: number }
+      anonymize_user_analytics: { Args: { _uid: string }; Returns: undefined }
       close_marketing_topic: {
         Args: { _id: string; _reject_reason?: string; _secret: string }
         Returns: boolean
       }
+      close_stale_sessions: { Args: never; Returns: undefined }
       compute_therapist_health: { Args: never; Returns: number }
       compute_therapist_health_one: { Args: { _id: string }; Returns: boolean }
       create_admin_notification: {
@@ -3597,6 +3780,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      purge_user_analytics: { Args: { _uid: string }; Returns: undefined }
       reserve_next_invoice_number: {
         Args: { _therapist_id: string }
         Returns: {
