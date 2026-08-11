@@ -224,6 +224,8 @@ function Page() {
   // conserve le comportement "sélection sur la carte" en annulant la nav.
   const handleCardClick = (e: React.MouseEvent, t: Therapist) => {
     setSelectedId(t.id);
+    // Le lien explicite « Voir le profil complet » navigue toujours.
+    if ((e.target as HTMLElement)?.closest?.("[data-profile-link]")) return;
     const isDesktop =
       typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
     if (isDesktop) {
@@ -417,7 +419,10 @@ function Page() {
                       </div>
                     </div>
                     {/* Lien profil */}
-                    <span className="mt-3 flex min-h-11 items-center gap-1 text-xs font-semibold text-[#5cc8fa] transition group-hover:text-white sm:hidden sm:group-hover:flex">
+                    <span
+                      data-profile-link
+                      className="mt-3 flex min-h-11 items-center gap-1 text-xs font-semibold text-[#5cc8fa] underline-offset-2 transition hover:underline group-hover:text-white sm:hidden sm:group-hover:flex"
+                    >
                       {t("therapist_profile.see_full_profile")}
                     </span>
                     </Link>
