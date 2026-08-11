@@ -16,6 +16,8 @@ import "../lib/i18n";
 import { Toaster } from "../components/ui/sonner";
 import { LanguageSwitcherDevPicker } from "../components/holiswiss/LanguageSwitcher";
 import { PublicNavDevPicker } from "../components/layout/PublicNav";
+import { useSessionTracking } from "../hooks/use-session-tracking";
+import { usePageViewTracking } from "../hooks/use-page-view-tracking";
 
 function NotFoundComponent() {
   return (
@@ -253,11 +255,22 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AnalyticsTracking() {
+  // Analytics maison (utilisateurs connectés) — voir src/lib/analytics.functions.ts.
+  // Composant séparé (plutôt que les hooks appelés directement dans
+  // RootComponent) pour qu'une erreur de rendu ici ne puisse jamais faire
+  // planter l'app : c'est un effet de bord, jamais un rendu visible.
+  useSessionTracking();
+  usePageViewTracking();
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AnalyticsTracking />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster />

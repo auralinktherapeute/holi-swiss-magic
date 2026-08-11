@@ -1,9 +1,12 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, lazy, Suspense, useEffect } from "react";
+import { useState, useRef, lazy, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { logTherapistProfileView } from "@/lib/analytics.functions";
+import { getCurrentAnalyticsSessionId } from "@/hooks/use-session-tracking";
 import {
   MapPin, Star, BadgeCheck, Globe, Share2,
   Shield, ChevronUp,
@@ -305,6 +308,21 @@ function Page() {
     },
     initialData: (loaderData?.therapist ?? undefined) as never,
   });
+
+  // Analytics maison — une vue de profil par montage du composant, jamais
+  // relancée si th.id ne change pas (StrictMode / re-renders). Le temps
+  // passé sur le profil n'est volontairement pas mesuré ici : la
+  // fiabilité d'un signal de fin (fermeture d'onglet, navigation) n'est
+  // pas meilleure que pour les sessions, voir use-session-tracking.ts.
+  const logProfileView = useServerFn(logTherapistProfileView);
+  const trackedTherapistIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!th?.id || trackedTherapistIdRef.current === th.id) return;
+    trackedTherapistIdRef.current = th.id;
+    logProfileView({
+      data: { therapistId: th.id, sessionId: getCurrentAnalyticsSessionId() ?? undefined },
+    }).catch((e) => console.error("[analytics] logTherapistProfileView failed:", e));
+  }, [th?.id]);
 
   const { data: reviews } = useQuery({
     queryKey: ["reviews", th?.id],

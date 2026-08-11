@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookedAppointmentSlots } from "@/lib/public.functions";
+import { logTherapistBookingClick } from "@/lib/analytics.functions";
+import { getCurrentAnalyticsSessionId } from "@/hooks/use-session-tracking";
 import { z } from "zod";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
@@ -61,6 +63,7 @@ function buildSlots(start: string, end: string, slotMin: number): string[] {
 export function BookingWidget({ therapistId, therapistName, services = [] }: { therapistId: string; therapistName?: string; services?: BookingService[] }) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
+  const logBookingClick = useServerFn(logTherapistBookingClick);
   const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
   const MONTHS = t("booking.months", { returnObjects: true }) as string[];
   const schema = z.object({
@@ -179,6 +182,12 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSubmitting(true);
+    // Analytics maison : clic de confirmation, indépendant du succès de
+    // l'insertion ci-dessous (mesure l'intention, pas la conversion —
+    // celle-ci reste lisible via la table appointments).
+    logBookingClick({
+      data: { therapistId, sessionId: getCurrentAnalyticsSessionId() ?? undefined },
+    }).catch((e) => console.error("[analytics] logTherapistBookingClick failed:", e));
     const { error } = await supabase.from("appointments").insert({
       therapist_id: therapistId,
       patient_name: parsed.data.name,
