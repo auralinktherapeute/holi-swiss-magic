@@ -7,7 +7,7 @@ import { Activity, Users, Clock, Gauge, ChevronRight, Eye, MousePointerClick } f
 import {
   getAnalyticsOverview,
   getTopTherapists,
-  getRecentlyActiveTherapists,
+  getActiveSessionsToday,
 } from "@/lib/analytics.functions";
 import "@/styles/admin-design-system.css";
 
@@ -20,6 +20,13 @@ const PERIOD_LABELS: Record<Period, string> = {
   day: "Aujourd'hui",
   week: "Cette semaine",
   month: "Ce mois-ci",
+};
+
+const USER_TYPE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  moderator: "Modérateur",
+  therapist: "Thérapeute",
+  user: "Client",
 };
 
 function formatDuration(totalSeconds: number): string {
@@ -90,7 +97,7 @@ function Page() {
 
   const fetchOverview = useServerFn(getAnalyticsOverview);
   const fetchTopTherapists = useServerFn(getTopTherapists);
-  const fetchRecentlyActive = useServerFn(getRecentlyActiveTherapists);
+  const fetchActiveToday = useServerFn(getActiveSessionsToday);
 
   const { data: overview, isLoading: loadingOverview } = useQuery({
     queryKey: ["analytics-overview", period, userType],
@@ -106,10 +113,13 @@ function Page() {
     queryFn: () => fetchTopTherapists({ data: { period: period === "day" ? "week" : period, limit: 10 } }),
   });
 
-  const { data: recentlyActive, isLoading: loadingRecent } = useQuery({
-    queryKey: ["analytics-recently-active"],
-    queryFn: () => fetchRecentlyActive({ data: { limit: 10 } }),
-    refetchInterval: 60_000,
+  const { data: activeToday, isLoading: loadingActive } = useQuery({
+    queryKey: ["analytics-active-today", userType],
+    queryFn: () =>
+      fetchActiveToday({
+        data: { userType: userType === "all" ? undefined : userType, limit: 15 },
+      }),
+    refetchInterval: 30_000,
   });
 
   return (
@@ -262,7 +272,7 @@ function Page() {
             </div>
           </motion.div>
 
-          {/* Connectés récemment */}
+          {/* Connectés aujourd'hui — répond directement au chiffre DAU ci-dessus */}
           <motion.div
             className="adm-card"
             initial={{ opacity: 0, y: 16 }}
@@ -272,7 +282,7 @@ function Page() {
             <div className="adm-card-header">
               <span className="adm-card-title">
                 <Gauge size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
-                Thérapeutes connectés récemment
+                Connectés aujourd'hui
               </span>
               <Link
                 to="/admin/therapeutes"
@@ -285,57 +295,79 @@ function Page() {
                   gap: 4,
                 }}
               >
-                Voir tout <ChevronRight size={14} />
+                Voir les thérapeutes <ChevronRight size={14} />
               </Link>
             </div>
             <div className="adm-table-wrap">
               <table className="adm-table">
                 <thead>
                   <tr>
-                    <th>Thérapeute</th>
-                    <th>Dernière connexion</th>
-                    <th>Sessions (7 j)</th>
+                    <th>Qui</th>
+                    <th>Type</th>
+                    <th>Dernière activité</th>
+                    <th>Appareil</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {loadingRecent
-                    ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={3} />)
-                    : (recentlyActive ?? []).map((row, i) => (
+                  {loadingActive
+                    ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={4} />)
+                    : (activeToday ?? []).map((row, i) => (
                         <motion.tr
-                          key={row.id}
+                          key={row.sessionId}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.04 * i }}
                         >
                           <td>
-                            {row.slug ? (
+                            {row.therapist?.slug ? (
                               <Link
                                 to="/$lang/therapeute/$slug"
-                                params={{ lang: "fr", slug: row.slug }}
+                                params={{ lang: "fr", slug: row.therapist.slug }}
                                 style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}
                               >
-                                {row.firstName} {row.lastName}
+                                {row.therapist.firstName} {row.therapist.lastName}
                               </Link>
                             ) : (
-                              <span style={{ color: "#fff", fontWeight: 600 }}>
-                                {row.firstName} {row.lastName}
+                              <span style={{ color: "rgba(255,255,255,0.6)" }}>
+                                {row.userType === "admin"
+                                  ? "Compte admin"
+                                  : row.userType === "moderator"
+                                    ? "Modérateur"
+                                    : "Visiteur connecté"}
                               </span>
                             )}
                           </td>
-                          <td style={{ whiteSpace: "nowrap" }}>{formatRelativeDate(row.lastSessionAt)}</td>
-                          <td>{row.sessions7d}</td>
+                          <td>{USER_TYPE_LABELS[row.userType]}</td>
+                          <td style={{ whiteSpace: "nowrap" }}>
+                            {formatRelativeDate(row.lastSeenAt)}
+                            {row.isActive && (
+                              <span
+                                style={{
+                                  marginLeft: 8,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#22d38a",
+                                  letterSpacing: "0.04em",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                ● en ligne
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ textTransform: "capitalize" }}>{row.deviceType ?? "—"}</td>
                         </motion.tr>
                       ))}
-                  {!loadingRecent && (recentlyActive ?? []).length === 0 && (
+                  {!loadingActive && (activeToday ?? []).length === 0 && (
                     <tr>
-                      <td colSpan={3}>
+                      <td colSpan={4}>
                         <div className="adm-empty">
                           <div className="adm-empty-icon">
                             <Users size={24} />
                           </div>
-                          <div className="adm-empty-title">Aucune connexion récente</div>
+                          <div className="adm-empty-title">Personne connecté pour l'instant</div>
                           <div className="adm-empty-sub">
-                            Les connexions de thérapeutes apparaîtront ici.
+                            Cette liste se remplit dès qu'une session s'ouvre aujourd'hui.
                           </div>
                         </div>
                       </td>

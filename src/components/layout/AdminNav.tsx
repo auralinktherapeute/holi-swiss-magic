@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
-  Menu, X, Home, Gauge, Workflow, Bell, Swords, Sparkles, Globe2, Mic, Megaphone, HeartPulse,
+  Menu, X, Home, Gauge, Workflow, Bell, Sparkles, Globe2, Mic, Megaphone, HeartPulse,
   Activity,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -100,7 +100,6 @@ export function AdminNav() {
     { to: "/admin/utilisateurs",     icon: UserCog,         label: t("admin.users") },
     { to: "/admin/abonnements",      icon: CreditCard,      label: t("admin.subscriptions"),  badge: visibleCount("/admin/abonnements", counts.subscriptions) },
     { to: "/admin/agents",           icon: Bot,             label: t("admin.agents") },
-    { to: "/admin/delegation",       icon: Swords,          label: "🏛️ La Délégation" },
     { to: "/admin/emails",           icon: Mail,            label: t("admin.emails") },
     { to: "/admin/seo",              icon: Gauge,           label: "Score SEO & GEO" },
     { to: "/admin/ameliorations-seo", icon: Sparkles,       label: "Amélioration SEO/GEO via Claude" },

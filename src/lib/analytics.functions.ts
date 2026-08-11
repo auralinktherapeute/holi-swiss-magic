@@ -402,6 +402,72 @@ export const getRecentlyActiveTherapists = createServerFn({ method: "POST" })
     }));
   });
 
+/**
+ * Qui est derrière le chiffre DAU affiché en haut de la page : une session
+ * par ligne, aujourd'hui, tous types confondus (filtrable). Répond
+ * directement à "je ne vois pas qui est connecté aujourd'hui" — les deux
+ * autres endpoints ci-dessus répondent à des questions différentes
+ * (historique 7j filtré thérapeutes, popularité des profils sur la période).
+ */
+export const getActiveSessionsToday = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      userType: z.enum(USER_TYPES).optional(),
+      limit: z.number().int().min(1).max(100).default(20),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const todayStart = periodStart("day").toISOString();
+
+    let query = (supabaseAdmin as any)
+      .from("user_sessions")
+      .select("id,user_id,user_type,device_type,started_at,last_seen_at,ended_at")
+      .gte("last_seen_at", todayStart)
+      .order("last_seen_at", { ascending: false })
+      .limit(data.limit);
+    if (data.userType) query = query.eq("user_type", data.userType);
+    const { data: sessions, error } = await query;
+    if (error) {
+      console.error("[analytics] getActiveSessionsToday failed:", error);
+      return [];
+    }
+
+    const rows = (sessions ?? []) as {
+      id: string;
+      user_id: string;
+      user_type: UserType;
+      device_type: string | null;
+      started_at: string;
+      last_seen_at: string;
+      ended_at: string | null;
+    }[];
+
+    const therapistUserIds = rows.filter((r) => r.user_type === "therapist").map((r) => r.user_id);
+    const nameByUserId = new Map<string, { firstName: string; lastName: string; slug: string | null }>();
+    if (therapistUserIds.length > 0) {
+      const { data: therapists } = await supabaseAdmin
+        .from("therapists")
+        .select("user_id,slug,first_name,last_name")
+        .in("user_id", therapistUserIds);
+      for (const t of (therapists ?? []) as any[]) {
+        nameByUserId.set(t.user_id, { firstName: t.first_name ?? "—", lastName: t.last_name ?? "", slug: t.slug ?? null });
+      }
+    }
+
+    return rows.map((r) => ({
+      sessionId: r.id,
+      userType: r.user_type,
+      deviceType: r.device_type,
+      startedAt: r.started_at,
+      lastSeenAt: r.last_seen_at,
+      isActive: r.ended_at === null,
+      therapist: nameByUserId.get(r.user_id) ?? null,
+    }));
+  });
+
 // =======================================================================
 // nLPD — droit à l'oubli sur les données analytics (indépendant de la
 // suppression de compte, pour une demande ciblée sur le tracking seul).
