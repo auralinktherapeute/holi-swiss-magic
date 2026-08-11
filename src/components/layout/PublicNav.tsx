@@ -60,7 +60,7 @@ function MobilePanel({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-x-0 top-16 z-[1000] md:hidden border-t border-[rgba(184,110,249,0.2)] bg-[#1a0a3a]/95 shadow-2xl backdrop-blur-xl animate-fade-in">
+    <div className="fixed inset-x-0 top-16 z-[1000] lg:hidden border-t border-[rgba(184,110,249,0.2)] bg-[#1a0a3a]/95 shadow-2xl backdrop-blur-xl animate-fade-in">
       <div className="flex max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto px-4 py-4">
         {links.map((l) => (
           <Link
@@ -116,7 +116,7 @@ function NavFrosted() {
       `}</style>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-7">
           {links.map((l) => (
             <Link
               key={l.to}
@@ -129,7 +129,7 @@ function NavFrosted() {
             </Link>
           ))}
         </nav>
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <LanguageSwitcher />
           <AccountCta
             lang={lang}
@@ -138,7 +138,7 @@ function NavFrosted() {
             style={{ boxShadow: "0 0 12px rgba(184,110,249,0.4)" }}
           />
         </div>
-        <div className="md:hidden flex items-center gap-1">
+        <div className="lg:hidden flex items-center gap-1">
           <LanguageSwitcher />
           <button
             type="button"
@@ -182,7 +182,7 @@ function NavGlowLine() {
       `}</style>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-7">
           {links.map((l) => (
             <Link
               key={l.to}
@@ -195,7 +195,7 @@ function NavGlowLine() {
             </Link>
           ))}
         </nav>
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <LanguageSwitcher />
           <AccountCta
             lang={lang}
@@ -207,7 +207,7 @@ function NavGlowLine() {
             }}
           />
         </div>
-        <div className="md:hidden flex items-center gap-1">
+        <div className="lg:hidden flex items-center gap-1">
           <LanguageSwitcher />
           <button
             type="button"
@@ -261,7 +261,7 @@ function NavSpotlight() {
       `}</style>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <span className="nv3-logo"><Logo /></span>
-        <nav className="hidden md:flex items-center gap-2">
+        <nav className="hidden lg:flex items-center gap-2">
           {links.map((l) => (
             <Link
               key={l.to}
@@ -274,7 +274,7 @@ function NavSpotlight() {
             </Link>
           ))}
         </nav>
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <LanguageSwitcher />
           <AccountCta
             lang={lang}
@@ -286,7 +286,7 @@ function NavSpotlight() {
             }}
           />
         </div>
-        <div className="md:hidden flex items-center gap-1">
+        <div className="lg:hidden flex items-center gap-1">
           <LanguageSwitcher />
           <button
             type="button"
@@ -343,7 +343,7 @@ function NavAurora() {
       `}</style>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <span className="nv4-logo relative z-10"><Logo /></span>
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-7">
           {links.map((l) => (
             <Link
               key={l.to}
@@ -356,7 +356,7 @@ function NavAurora() {
             </Link>
           ))}
         </nav>
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <LanguageSwitcher />
           <AccountCta
             lang={lang}
@@ -377,7 +377,7 @@ function NavAurora() {
             }}
           />
         </div>
-        <div className="md:hidden flex items-center gap-1">
+        <div className="lg:hidden flex items-center gap-1">
           <LanguageSwitcher />
           <button
             type="button"

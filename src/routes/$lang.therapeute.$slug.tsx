@@ -402,15 +402,13 @@ function Page() {
     <div className="min-h-screen bg-[#0f0a1e] pb-20">
 
       {/* ── HERO ── */}
-      <div className="relative overflow-hidden">
-        <div
-          className="h-64 w-full"
-          style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
-        />
-
-        <div className="absolute inset-x-0 bottom-0 px-4 pb-8 pt-4 sm:px-8">
-          <div className="mx-auto max-w-5xl">
-            <div className="flex flex-col sm:flex-row gap-5 items-end sm:items-center">
+      <div
+        className="relative overflow-hidden"
+        style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
+      >
+        <div className="px-4 pb-8 pt-8 sm:px-8 sm:pt-16 md:min-h-64 md:flex md:items-end">
+          <div className="mx-auto w-full max-w-5xl">
+            <div className="flex flex-col sm:flex-row gap-5 items-center">
               {/* Photo */}
               <motion.div
                 initial={{ scale: 0.85, opacity: 0 }}

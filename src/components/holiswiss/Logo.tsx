@@ -19,15 +19,15 @@ export function Logo({ size = 48 }: { size?: number }) {
         alt="Holiswiss"
         width={size}
         height={size}
-        className="transition-transform group-hover:scale-105"
+        className="shrink-0 transition-transform group-hover:scale-105"
         style={{
-          width: size,
-          height: size,
+          width: "clamp(32px, 9vw, " + size + "px)",
+          height: "clamp(32px, 9vw, " + size + "px)",
           objectFit: "contain",
           filter: "drop-shadow(0 0 12px rgba(184,110,249,0.7))",
         }}
       />
-      <span>
+      <span className="whitespace-nowrap text-lg sm:text-xl">
         <span className="font-bold text-[#b86ef9]">Holi</span>
         <span className="font-normal text-white">swiss</span>
       </span>
