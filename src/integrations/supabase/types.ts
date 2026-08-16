@@ -1802,6 +1802,7 @@ export type Database = {
         Row: {
           created_at: string
           data: Json
+          dispatch_request_id: number | null
           entity_id: string | null
           entity_type: string | null
           id: string
@@ -1815,6 +1816,7 @@ export type Database = {
         Insert: {
           created_at?: string
           data?: Json
+          dispatch_request_id?: number | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
@@ -1828,6 +1830,7 @@ export type Database = {
         Update: {
           created_at?: string
           data?: Json
+          dispatch_request_id?: number | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
