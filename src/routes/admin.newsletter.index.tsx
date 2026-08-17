@@ -285,12 +285,17 @@ function Page() {
                 <Button
                   variant="outline"
                   onClick={() => openEdit(row)}
+                  title="Modifier le brief éditorial (titre, objectif, angle). Aucun envoi."
                   className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                 >
                   <PencilLine className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Brief
+                  Modifier le brief
                 </Button>
-                <Button asChild className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
+                <Button
+                  asChild
+                  title="Ouvrir la rédaction de l'email, l'aperçu et l'onglet Envoi"
+                  className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+                >
                   <Link to="/admin/newsletter/$id" params={{ id: row.id }}>
                     Ouvrir l'éditeur
                   </Link>
@@ -299,8 +304,9 @@ function Page() {
                   <Button
                     variant="outline"
                     aria-label={`Archiver ${row.title}`}
+                    title="Archiver : sort la newsletter du flux de travail, réversible"
                     disabled={archive.isPending}
-                    onClick={() => archive.mutate(row.id)}
+                    onClick={() => setToArchive(row)}
                     className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
                   >
                     <Archive className="h-4 w-4" aria-hidden="true" />
