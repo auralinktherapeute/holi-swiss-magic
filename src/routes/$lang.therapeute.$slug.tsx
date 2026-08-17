@@ -22,6 +22,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { TrustBadges } from "@/components/holiswiss/TrustBadges";
+import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
 
 const LANG_FLAG: Record<string, string> = {
   fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
@@ -38,10 +40,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist, reviews } = await getTherapistBySlug({ data: { slug: params.slug } });
-      return { therapist, reviews: reviews ?? [] };
+      const { therapist, reviews, certifications } = await getTherapistBySlug({
+        data: { slug: params.slug },
+      });
+      return { therapist, reviews: reviews ?? [], certifications: certifications ?? [] };
     } catch {
-      return { therapist: null, reviews: [] };
+      return { therapist: null, reviews: [], certifications: [] };
     }
   },
   head: ({ params, loaderData }) => {
