@@ -709,12 +709,26 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
               >
                 Retirer
               </button>
+              <button
+                type="button"
+                disabled={accessBusy}
+                onClick={() => toggleSeat(access.seatStatus !== "active")}
+                className="min-h-[32px] rounded-md border border-[#b86ef9]/40 bg-[#b86ef9]/10 px-2 py-1 text-[#e7d3ff] hover:bg-[#b86ef9]/20 disabled:opacity-60"
+              >
+                {access.seatStatus === "active" ? "Retirer la place fondateur" : "Attribuer une place fondateur"}
+              </button>
             </div>
           </div>
           <p className="mt-1.5 text-white/50">
             Source : {access.sources?.length ? access.sources.join(", ") : "—"} · Rang d'inscription :{" "}
             {access.earlyRank ?? "—"} / {access.earlySlots} · Activation :{" "}
             {access.since ? new Date(access.since).toLocaleDateString("fr-CH") : "—"}
+          </p>
+          <p className="mt-1 text-white/50">
+            Place fondateur : {access.seatNumber ? `n°${access.seatNumber} / ${access.earlySlots}` : "aucune"} ·
+            Statut : {access.seatStatus === "active" ? "actif" : access.seatStatus === "revoked" ? "retiré" : "—"} ·
+            Attribuée le {access.seatGrantedAt ? new Date(access.seatGrantedAt).toLocaleDateString("fr-CH") : "—"} ·
+            Places restantes : {access.seatsRemaining ?? "—"}
           </p>
         </div>
       )}
