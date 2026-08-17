@@ -4,35 +4,59 @@
  * Le client Supabase est injecté (service-role côté admin, session du
  * thérapeute côté dashboard) — le calcul, lui, est strictement identique.
  */
-import { runShowcaseAudit, auditTotals, type AuditCheck } from "@/lib/showcase-audit";
+import { runShowcaseAudit, auditTotals, categoryTotals, type AuditCheck } from "@/lib/showcase-audit";
 
 export const SHOWCASE_COLUMNS =
-  "id,slug,bio,short_bio,photo_url,city,canton,latitude,longitude,specialties,languages,consultation_modes,price_min,meta_title,meta_description,website,booking_note,verified,gallery_urls";
+  "id,slug,first_name,last_name,title,bio,short_bio,photo_url,city,canton,address,postal_code,latitude,longitude,specialties,approaches,languages,consultation_modes,services,price_min,price_max,meta_title,meta_description,website,google_reviews_url,booking_note,phone,email,verified,ide_verified,years_experience,subscription_plan,status,updated_at,gallery_urls";
 
 export async function loadShowcaseAudit(
   sb: any,
   therapistId: string,
-): Promise<{ slug: string; checks: AuditCheck[]; totals: { visibilite: number; conversion: number } }> {
-  const [therRes, certRes, revRes, availRes] = await Promise.all([
+): Promise<{
+  slug: string;
+  checks: AuditCheck[];
+  totals: { visibilite: number; conversion: number };
+  categories: ReturnType<typeof categoryTotals>;
+}> {
+  const [therRes, certRes, revRes, availRes, artRes, packRes] = await Promise.all([
     sb.from("therapists").select(SHOWCASE_COLUMNS).eq("id", therapistId).maybeSingle(),
-    sb.from("therapist_certifications").select("verification_status").eq("therapist_id", therapistId),
+    sb.from("therapist_certifications").select("verification_status,expires_at").eq("therapist_id", therapistId),
     sb.from("reviews").select("id").eq("therapist_id", therapistId).eq("status", "approved"),
-    sb.from("availabilities").select("id").eq("therapist_id", therapistId).eq("is_active", true),
+    sb.from("availabilities").select("id,created_at").eq("therapist_id", therapistId).eq("is_active", true),
+    sb.from("therapist_articles").select("id").eq("therapist_id", therapistId).eq("statut", "publie"),
+    sb.from("service_packages").select("id").eq("therapist_id", therapistId).eq("actif", true),
   ]);
 
   const t = therRes.data;
   if (!t) throw new Error("Thérapeute introuvable");
 
-  const certs = (certRes.data ?? []) as Array<{ verification_status: string | null }>;
+  const certs = (certRes.data ?? []) as Array<{ verification_status: string | null; expires_at: string | null }>;
+  const avails = (availRes.data ?? []) as Array<{ created_at: string | null }>;
+  const now = Date.now();
   const checks = runShowcaseAudit({
     ...t,
     certificationsVerified: certs.filter((c) => c.verification_status === "verified").length,
     certificationsDeclared: certs.filter((c) => c.verification_status !== "verified").length,
+    certificationsExpired: certs.filter(
+      (c) => c.expires_at != null && new Date(c.expires_at).getTime() < now,
+    ).length,
     reviewsCount: (revRes.data ?? []).length,
-    availabilitiesCount: (availRes.data ?? []).length,
+    availabilitiesCount: avails.length,
+    availabilitiesUpdatedAt: avails
+      .map((a) => a.created_at)
+      .filter(Boolean)
+      .sort()
+      .pop() ?? null,
+    articlesCount: (artRes.data ?? []).length,
+    packagesCount: (packRes.data ?? []).length,
   });
 
-  return { slug: (t.slug ?? "") as string, checks, totals: auditTotals(checks) };
+  return {
+    slug: (t.slug ?? "") as string,
+    checks,
+    totals: auditTotals(checks),
+    categories: categoryTotals(checks),
+  };
 }
 
 /** Statut lisible du score global. */
@@ -109,6 +133,7 @@ export async function buildShowcaseReport(sb: any, therapistId: string, persist:
     previousAt: previous ? previous.created_at : null,
     delta: previous ? basic.score - previous.score : null,
     totals: access.advanced ? audit.totals : null,
+    categories: access.advanced ? audit.categories : null,
     checks,
   };
 }
