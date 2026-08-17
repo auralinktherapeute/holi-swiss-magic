@@ -3928,6 +3928,57 @@ export type Database = {
           },
         ]
       }
+      therapist_showcase_snapshots: {
+        Row: {
+          checks: Json | null
+          completed: number | null
+          created_at: string
+          id: string
+          score: number
+          score_conversion: number | null
+          score_visibilite: number | null
+          therapist_id: string
+          total: number | null
+        }
+        Insert: {
+          checks?: Json | null
+          completed?: number | null
+          created_at?: string
+          id?: string
+          score: number
+          score_conversion?: number | null
+          score_visibilite?: number | null
+          therapist_id: string
+          total?: number | null
+        }
+        Update: {
+          checks?: Json | null
+          completed?: number | null
+          created_at?: string
+          id?: string
+          score?: number
+          score_conversion?: number | null
+          score_visibilite?: number | null
+          therapist_id?: string
+          total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_showcase_snapshots_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_showcase_snapshots_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_specialties: {
         Row: {
           created_at: string
