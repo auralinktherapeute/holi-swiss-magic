@@ -11,6 +11,8 @@ import {
   ExternalLink,
   Archive,
   CheckCircle2,
+  Send,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +31,19 @@ import {
   listNewsletterRevisions,
 } from "@/lib/newsletter.functions";
 import { renderNewsletterEmail } from "@/lib/newsletter-email.shared";
+import {
+  getNewsletterSendPreview,
+  sendNewsletterTestEmail,
+  sendNewsletterIssue,
+  listNewsletterSends,
+} from "@/lib/newsletter-send.functions";
+import {
+  NEWSLETTER_SEGMENTS,
+  SEND_STATUS_LABELS,
+  type NewsletterSegmentKey,
+  type NewsletterSendRow,
+  type SendStatus,
+} from "@/lib/newsletter-send.shared";
 import {
   NEWSLETTER_STATUS_LABELS,
   NEWSLETTER_LANGS,
