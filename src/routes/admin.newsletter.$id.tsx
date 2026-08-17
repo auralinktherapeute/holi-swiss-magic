@@ -16,14 +16,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -54,7 +46,11 @@ import {
   setNewsletterResourcePublished,
   listNewsletterRevisions,
 } from "@/lib/newsletter.functions";
-import { renderNewsletterEmail } from "@/lib/newsletter-email.shared";
+import { renderNewsletterEmail, renderNewsletterText } from "@/lib/newsletter-email.shared";
+import {
+  NewsletterSendPreview,
+  type SendPreviewTab,
+} from "@/components/admin/NewsletterSendPreview";
 import { NEWSLETTER_TEMPLATES } from "@/lib/newsletter-templates.shared";
 import {
   getNewsletterSendPreview,
@@ -227,6 +223,7 @@ function Page() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [tab, setTab] = useState<string>("brief");
   const [checkedVersion, setCheckedVersion] = useState<string | null>(null);
   const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
 
@@ -404,6 +401,20 @@ function Page() {
     }).html;
   }, [form]);
 
+  const previewText = useMemo(() => {
+    if (!form) return "";
+    return renderNewsletterText({
+      subject: form.email_subject || form.title,
+      preheader: form.email_preheader,
+      intro: form.email_intro,
+      body: form.email_body,
+      buttonLabel: form.email_button_label,
+      buttonUrl: form.email_button_url,
+      footer: form.email_footer,
+      unsubscribeUrl: "https://holiswiss.ch/desinscription",
+    });
+  }, [form]);
+
   // Empreinte du contenu email : toute modification invalide l'aperçu déjà vérifié.
   const emailVersion = useMemo(() => previewHtml, [previewHtml]);
   const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
@@ -515,7 +526,7 @@ function Page() {
           </Card>
         )}
 
-        <Tabs defaultValue="brief" className="space-y-5">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-5">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-white/5 p-1 h-auto">
             <TabsTrigger value="brief" className={tabCls}>
               Brief
@@ -1248,7 +1259,7 @@ function Page() {
                       onClick={() => setPreviewOpen(true)}
                       className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
-                      Prévisualiser l'email
+                      Prévisualiser avant envoi
                     </Button>
                     <Badge
                       className={
@@ -1420,47 +1431,50 @@ function Page() {
         </Tabs>
       </div>
 
-      {/* Aperçu obligatoire avant tout envoi */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl bg-[#1d0d3d] border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>Aperçu de l'email</DialogTitle>
-            <DialogDescription className="text-white/60">
-              Vérifiez l'objet, le contenu, le bouton et le pied de page. Aucun email n'est envoyé
-              depuis cette fenêtre.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <p className="text-sm text-white/70">
-              Objet : <span className="text-white">{form.email_subject || form.title}</span>
-            </p>
-            <iframe
-              title="Aperçu avant envoi"
-              srcDoc={previewHtml}
-              className="h-[55vh] w-full rounded-lg border border-white/10 bg-white"
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPreviewOpen(false)}
-              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-            >
-              Fermer sans valider
-            </Button>
-            <Button
-              onClick={() => {
-                setCheckedVersion(emailVersion);
-                setPreviewOpen(false);
-                toast.success("Aperçu validé : l'envoi est débloqué pour cette version.");
-              }}
-              className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-            >
-              J'ai vérifié cet aperçu
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Prévisualisation obligatoire avant tout envoi */}
+      <NewsletterSendPreview
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        newsletterName={form.title}
+        subject={form.email_subject || form.title}
+        preheader={form.email_preheader}
+        senderAddress={sendPreview.data?.sender ?? null}
+        segmentLabel={NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label ?? segment}
+        recipientCount={sendPreview.data?.recipientCount ?? null}
+        versionLabel={sendPreview.data?.versionLabel ?? null}
+        resourceUrl={sendPreview.data?.resourceUrl ?? null}
+        resourcePublished={Boolean(issue.published_at)}
+        unsubscribeUrl="https://holiswiss.ch/desinscription"
+        langLabel={
+          NEWSLETTER_LANG_LABELS[(form.lang || "fr") as (typeof NEWSLETTER_LANGS)[number]] ??
+          form.lang
+        }
+        scheduledAt={
+          form.target_date ? new Date(form.target_date).toLocaleDateString("fr-CH") : null
+        }
+        featureHighlight={form.feature_highlight}
+        emailHtml={previewHtml}
+        emailText={previewText}
+        resource={{
+          title: form.resource_title,
+          intro: form.resource_intro,
+          body: form.resource_body,
+          sections: form.resource_sections,
+          takeaway: form.resource_takeaway,
+          cta: form.resource_cta,
+          seoTitle: form.seo_title,
+          metaDescription: form.meta_description,
+          slug: form.slug,
+          linkedResourceSlug: form.linked_resource_slug,
+        }}
+        privatePreviewUrl={
+          typeof window !== "undefined"
+            ? `${window.location.origin}/admin/newsletter/${id}`
+            : `/admin/newsletter/${id}`
+        }
+        onValidated={() => setCheckedVersion(emailVersion)}
+        onGoto={(t: SendPreviewTab) => setTab(t)}
+      />
 
       {/* Confirmation des changements de statut sensibles */}
       <AlertDialog open={confirmStatus !== null} onOpenChange={(o) => !o && setConfirmStatus(null)}>
