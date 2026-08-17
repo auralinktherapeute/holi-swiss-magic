@@ -48,6 +48,12 @@ import {
   evaluateSeoTitle,
   resolveSeoTitle,
 } from "@/lib/seo-title";
+import {
+  SEO_DESC_MAX,
+  SEO_DESC_MIN,
+  evaluateSeoDescription,
+  resolveSeoDescription,
+} from "@/lib/seo-description";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
