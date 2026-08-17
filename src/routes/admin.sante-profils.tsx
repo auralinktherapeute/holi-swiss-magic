@@ -14,6 +14,8 @@ import {
   sendProfileHealthRecap,
   runCitabilityScan,
   auditTherapistShowcase,
+  getTherapistScoringAccess,
+  setTherapistScoringAccess,
 } from "@/lib/therapist-health.functions";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
