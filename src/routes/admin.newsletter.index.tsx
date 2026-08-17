@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Mail, Plus } from "lucide-react";
+import { Mail, Plus, Archive, PencilLine } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import {
   listNewsletterIssues,
   createNewsletterIssue,
   updateNewsletterIssue,
+  setNewsletterIssueStatus,
 } from "@/lib/newsletter.functions";
 import {
   NEWSLETTER_STATUSES,
@@ -43,6 +44,7 @@ const STATUS_COLORS: Record<NewsletterStatus, string> = {
   approuvee: "bg-[#4ade80]/15 text-[#4ade80]",
   programmee: "bg-[#b86ef9]/15 text-[#b86ef9]",
   envoyee: "bg-white/15 text-white",
+  echec: "bg-[#f87171]/15 text-[#f87171]",
   archivee: "bg-white/5 text-white/40",
 };
 
@@ -87,6 +89,8 @@ function Page() {
   const list = useServerFn(listNewsletterIssues);
   const create = useServerFn(createNewsletterIssue);
   const update = useServerFn(updateNewsletterIssue);
+  const setStatus = useServerFn(setNewsletterIssueStatus);
+  const [statusFilter, setStatusFilter] = useState<"all" | NewsletterStatus>("all");
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY);
@@ -95,7 +99,19 @@ function Page() {
     queryKey: ["admin-newsletter-issues"],
     queryFn: () => list(),
   });
-  const rows: NewsletterIssue[] = (data?.rows ?? []) as NewsletterIssue[];
+  const allRows: NewsletterIssue[] = (data?.rows ?? []) as NewsletterIssue[];
+  const rows =
+    statusFilter === "all" ? allRows : allRows.filter((r) => r.status === statusFilter);
+
+  const archive = useMutation({
+    mutationFn: (id: string) => setStatus({ data: { id, status: "archivee" as NewsletterStatus } }),
+    onSuccess: () => {
+      toast.success("Newsletter archivée.");
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
+    },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Archivage impossible."),
+  });
 
   const save = useMutation({
     mutationFn: async (payload: FormState) => {
@@ -171,6 +187,36 @@ function Page() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par statut">
+        <Button
+          size="sm"
+          variant={statusFilter === "all" ? "default" : "outline"}
+          onClick={() => setStatusFilter("all")}
+          className={
+            statusFilter === "all"
+              ? "min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+              : "min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+          }
+        >
+          Tous ({allRows.length})
+        </Button>
+        {NEWSLETTER_STATUSES.map((s) => (
+          <Button
+            key={s}
+            size="sm"
+            variant={statusFilter === s ? "default" : "outline"}
+            onClick={() => setStatusFilter(s)}
+            className={
+              statusFilter === s
+                ? "min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+                : "min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+            }
+          >
+            {NEWSLETTER_STATUS_LABELS[s]} ({allRows.filter((r) => r.status === s).length})
+          </Button>
+        ))}
+      </div>
+
       <div className="grid gap-3">
         {isLoading && (
           <Card className="bg-[#1d0d3d] border-white/10">
@@ -215,14 +261,37 @@ function Page() {
                     .filter(Boolean)
                     .join(" · ") || "Brief à compléter"}
                 </p>
+                <p className="mt-1 text-xs text-white/40">
+                  Modifiée le {new Date(row.updated_at).toLocaleString("fr-CH")}
+                  {row.created_by_email ? ` · ${row.created_by_email}` : ""}
+                </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => openEdit(row)}
-                className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-              >
-                Ouvrir le brief
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => openEdit(row)}
+                  className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+                >
+                  <PencilLine className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Brief
+                </Button>
+                <Button asChild className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
+                  <Link to="/admin/newsletter/$id" params={{ id: row.id }}>
+                    Ouvrir l'éditeur
+                  </Link>
+                </Button>
+                {row.status !== "archivee" && (
+                  <Button
+                    variant="outline"
+                    aria-label={`Archiver ${row.title}`}
+                    disabled={archive.isPending}
+                    onClick={() => archive.mutate(row.id)}
+                    className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                  >
+                    <Archive className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
