@@ -22,7 +22,7 @@ const META: Record<string, { title: string; description: string }> = {
   en: {
     title: "FAQ — Find a holistic therapist in Switzerland | Holiswiss",
     description:
-      "Frequently asked questions about Holiswiss: finding a therapist in Switzerland, reimbursement of complementary medicine (LAMal, ASCA, RME), specialties and booking. 4 languages.",
+      "Find a therapist in Switzerland: reimbursement of complementary medicine (LAMal, ASCA, RME), specialties, booking — your questions answered.",
   },
 };
 
