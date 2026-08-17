@@ -502,6 +502,10 @@ function Page() {
                   </p>
                 )}
 
+                {trustBadges.length > 0 && (
+                  <TrustBadges badges={trustBadges} lang={lang} className="mb-3" />
+                )}
+
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
                   {avg && (
                     <span className="flex items-center gap-1.5">
