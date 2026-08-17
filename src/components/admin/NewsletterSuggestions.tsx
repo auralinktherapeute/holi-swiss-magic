@@ -3,7 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Lightbulb, RefreshCw, Trash2, PencilLine, ArrowRight, Undo2, EyeOff } from "lucide-react";
+import {
+  Lightbulb,
+  RefreshCw,
+  Trash2,
+  PencilLine,
+  ArrowRight,
+  Undo2,
+  EyeOff,
+  ExternalLink,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ActionTooltip } from "@/components/admin/ActionTooltip";
 import {
   listNewsletterSuggestions,
   saveNewsletterSuggestion,
@@ -92,6 +102,8 @@ export function NewsletterSuggestions() {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [showDismissed, setShowDismissed] = useState(false);
   const [toDelete, setToDelete] = useState<NewsletterSuggestion | null>(null);
+  const [toDismiss, setToDismiss] = useState<NewsletterSuggestion | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const q = useQuery({ queryKey: ["newsletter-suggestions"], queryFn: () => list() });
   const allRows = (q.data?.rows ?? []) as NewsletterSuggestion[];
@@ -105,8 +117,11 @@ export function NewsletterSuggestions() {
   const mRefresh = useMutation({
     mutationFn: () => refresh(),
     onSuccess: (r) => {
+      setLastRefresh(new Date());
       toast.success(
-        r.added > 0 ? `${r.added} nouvelle(s) suggestion(s).` : "Aucune nouvelle suggestion.",
+        r.added > 0
+          ? `${r.added} nouvelle(s) suggestion(s). Aucune suggestion existante n'a été supprimée.`
+          : "Aucune nouvelle suggestion. La liste existante est inchangée.",
       );
       invalidate();
     },
@@ -126,6 +141,7 @@ export function NewsletterSuggestions() {
     mutationFn: (id: string) => setStatus({ data: { id, status: "rejetee" as const } }),
     onSuccess: () => {
       toast.success("Suggestion écartée — récupérable via « Afficher les écartées ».");
+      setToDismiss(null);
       invalidate();
     },
     onError,
@@ -150,6 +166,9 @@ export function NewsletterSuggestions() {
   const mBrief = useMutation({
     mutationFn: (id: string) => toBrief({ data: { id } }),
     onSuccess: (r) => {
+      toast.success(
+        "Le brief a été créé. Vous pouvez maintenant le compléter avant de générer le contenu.",
+      );
       invalidate();
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
       navigate({ to: "/admin/newsletter/$id", params: { id: r.id } });
@@ -167,36 +186,62 @@ export function NewsletterSuggestions() {
             <Badge className="bg-white/10 text-white/70 border-0">{rows.length}</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              disabled={mRefresh.isPending}
-              onClick={() => mRefresh.mutate()}
-              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-              {mRefresh.isPending ? "Analyse…" : "Actualiser"}
-            </Button>
-            <Button
-              onClick={() => {
-                setDraft(EMPTY);
-                setOpen(true);
-              }}
-              className="min-h-11 bg-white/10 hover:bg-white/20 text-white"
-            >
-              Ajouter un sujet
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowDismissed((v) => !v)}
-              className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
-            >
-              <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
-              {showDismissed
-                ? "Masquer les écartées"
-                : `Afficher les écartées (${dismissedCount})`}
-            </Button>
+            <ActionTooltip label="Recalcule les suggestions à partir des données récentes. N'écrase aucune suggestion existante et ne génère aucune newsletter.">
+              <Button
+                variant="outline"
+                aria-label="Actualiser les suggestions"
+                aria-busy={mRefresh.isPending}
+                disabled={mRefresh.isPending}
+                onClick={() => mRefresh.mutate()}
+                className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${mRefresh.isPending ? "animate-spin" : ""}`}
+                  aria-hidden="true"
+                />
+                {mRefresh.isPending ? "Analyse en cours…" : "Actualiser les suggestions"}
+              </Button>
+            </ActionTooltip>
+            <ActionTooltip label="Créer manuellement une suggestion de sujet. Aucun contenu n'est généré.">
+              <Button
+                aria-label="Ajouter un sujet de suggestion"
+                onClick={() => {
+                  setDraft(EMPTY);
+                  setOpen(true);
+                }}
+                className="min-h-11 bg-white/10 hover:bg-white/20 text-white"
+              >
+                Ajouter un sujet
+              </Button>
+            </ActionTooltip>
+            <ActionTooltip label="Afficher ou masquer les suggestions écartées afin de pouvoir les restaurer.">
+              <Button
+                variant="outline"
+                aria-pressed={showDismissed}
+                aria-label={
+                  showDismissed
+                    ? "Masquer les suggestions écartées"
+                    : `Afficher les ${dismissedCount} suggestions écartées`
+                }
+                onClick={() => setShowDismissed((v) => !v)}
+                className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+              >
+                <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
+                {showDismissed
+                  ? "Masquer les écartées"
+                  : `Afficher les écartées (${dismissedCount})`}
+              </Button>
+            </ActionTooltip>
           </div>
         </div>
+
+        <p className="text-xs text-white/45" aria-live="polite">
+          {mRefresh.isPending
+            ? "Actualisation en cours…"
+            : lastRefresh
+              ? `Dernière actualisation : ${lastRefresh.toLocaleString("fr-CH")}`
+              : "Aucune actualisation depuis l'ouverture de la page."}
+        </p>
 
         <p className="text-xs text-white/45">
           Les suggestions sont calculées sur des totaux anonymes. Aucune newsletter n'est générée ni
@@ -241,19 +286,40 @@ export function NewsletterSuggestions() {
                   {s.rationale && <p className="text-xs text-white/40">{s.rationale}</p>}
                 </div>
                 <div className="flex flex-wrap items-start gap-2">
-                  <Button
-                    disabled={mBrief.isPending || !!s.issue_id}
-                    onClick={() => mBrief.mutate(s.id)}
-                    title="Crée un brouillon de newsletter à partir de cette suggestion et ouvre l'éditeur. Aucun envoi."
-                    className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-                  >
-                    <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {s.issue_id ? "Brief créé" : "Créer un brief"}
-                  </Button>
+                  {s.issue_id ? (
+                    <ActionTooltip label="Un brief a déjà été créé à partir de cette suggestion. Ouvrir le brief existant plutôt que d'en créer un second.">
+                      <Button
+                        aria-label={`Ouvrir le brief existant créé depuis « ${s.subject} »`}
+                        onClick={() =>
+                          navigate({
+                            to: "/admin/newsletter/$id",
+                            params: { id: s.issue_id as string },
+                          })
+                        }
+                        className="min-h-11 bg-[#4ade80]/15 hover:bg-[#4ade80]/25 text-[#4ade80]"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Ouvrir le brief créé
+                      </Button>
+                    </ActionTooltip>
+                  ) : (
+                    <ActionTooltip label="Crée un brief de newsletter prérempli (sujet, public cible, pilier éditorial, fonctionnalité, objectif) puis l'ouvre en édition. Aucun contenu n'est généré, aucun envoi n'est déclenché.">
+                      <Button
+                        aria-label={`Créer un brief à partir de la suggestion « ${s.subject} »`}
+                        aria-busy={mBrief.isPending}
+                        disabled={mBrief.isPending}
+                        onClick={() => mBrief.mutate(s.id)}
+                        className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+                      >
+                        <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
+                        {mBrief.isPending ? "Création…" : "Créer un brief"}
+                      </Button>
+                    </ActionTooltip>
+                  )}
+                  <ActionTooltip label="Modifier cette suggestion">
                   <Button
                     variant="outline"
-                    aria-label="Modifier la suggestion"
-                    title="Modifier le sujet, le public et la priorité de cette suggestion"
+                    aria-label={`Modifier la suggestion « ${s.subject} »`}
                     onClick={() => {
                       setDraft({
                         id: s.id,
@@ -271,37 +337,43 @@ export function NewsletterSuggestions() {
                   >
                     <PencilLine className="h-4 w-4" aria-hidden="true" />
                   </Button>
+                  </ActionTooltip>
                   {s.status === "rejetee" ? (
-                    <Button
-                      variant="outline"
-                      disabled={mRestore.isPending}
-                      onClick={() => mRestore.mutate(s.id)}
-                      title="Remettre cette suggestion dans la liste active"
-                      className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
-                    >
-                      <Undo2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Restaurer
-                    </Button>
+                    <ActionTooltip label="Remettre cette suggestion dans la liste des suggestions prioritaires.">
+                      <Button
+                        variant="outline"
+                        aria-label={`Restaurer la suggestion « ${s.subject} »`}
+                        disabled={mRestore.isPending}
+                        onClick={() => mRestore.mutate(s.id)}
+                        className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+                      >
+                        <Undo2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Restaurer
+                      </Button>
+                    </ActionTooltip>
                   ) : (
-                    <Button
-                      variant="outline"
-                      disabled={mDismiss.isPending}
-                      onClick={() => mDismiss.mutate(s.id)}
-                      title="Masquer cette suggestion sans la supprimer (réversible)"
-                      className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
-                    >
-                      Écarter
-                    </Button>
+                    <ActionTooltip label="Retire la suggestion de la liste principale sans supprimer les données. Elle reste restaurable via le filtre « Suggestions écartées ».">
+                      <Button
+                        variant="outline"
+                        aria-label={`Écarter la suggestion « ${s.subject} »`}
+                        disabled={mDismiss.isPending}
+                        onClick={() => setToDismiss(s)}
+                        className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                      >
+                        Écarter
+                      </Button>
+                    </ActionTooltip>
                   )}
+                  <ActionTooltip label="Suppression définitive de la suggestion. Préférez « Écarter » pour la masquer tout en la conservant.">
                   <Button
                     variant="outline"
-                    aria-label="Supprimer définitivement la suggestion"
-                    title="Supprimer définitivement cette suggestion"
+                    aria-label={`Supprimer définitivement la suggestion « ${s.subject} »`}
                     onClick={() => setToDelete(s)}
                     className="min-h-11 min-w-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
+                  </ActionTooltip>
                 </div>
               </li>
             );
@@ -444,13 +516,46 @@ export function NewsletterSuggestions() {
           </DialogContent>
         </Dialog>
 
+        <AlertDialog open={toDismiss !== null} onOpenChange={(o) => !o && setToDismiss(null)}>
+          <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Écarter cette suggestion ?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/65">
+                Elle ne sera plus affichée dans les suggestions prioritaires. Aucune donnée n'est
+                supprimée : vous pourrez la restaurer depuis le filtre « Suggestions écartées ».
+                <br />
+                <span className="mt-2 block text-white/80">
+                  Suggestion : « {toDismiss?.subject} »
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="min-h-11 bg-white/15 text-white hover:bg-white/25"
+                onClick={() => toDismiss && mDismiss.mutate(toDismiss.id)}
+              >
+                Écarter la suggestion
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <AlertDialog open={toDelete !== null} onOpenChange={(o) => !o && setToDelete(null)}>
           <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
             <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer définitivement cette suggestion ?</AlertDialogTitle>
+              <AlertDialogTitle>Supprimer définitivement cet élément ?</AlertDialogTitle>
               <AlertDialogDescription className="text-white/65">
-                « {toDelete?.subject} » sera effacée sans possibilité de restauration. Pour la
-                masquer tout en pouvant la récupérer, utilisez plutôt « Écarter ».
+                Cette action peut être irréversible. Pour masquer l'élément tout en le conservant,
+                utilisez plutôt « Écarter ».
+                <br />
+                <span className="mt-2 block text-white/80">
+                  Type : suggestion de sujet
+                  <br />
+                  Nom : « {toDelete?.subject} »
+                </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
