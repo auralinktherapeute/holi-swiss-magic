@@ -19,6 +19,12 @@ export type BrainNodeState = {
   tone: Tone;
   hint: string;
   href?: string;
+  /**
+   * false = la table source n'existe pas encore en production (ex. la
+   * délégation, développée mais pas déployée). Un tableau de bord qui affiche
+   * « 0 » pour une source absente ment par omission : on le dit à la place.
+   */
+  available: boolean;
 };
 
 export type BrainActivityItem = {
@@ -41,14 +47,17 @@ export const getBrainState = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
 
-    // Une table absente ou renommée ne doit pas faire tomber tout le cerveau :
-    // le nœud concerné retombe simplement à zéro.
-    const count = async (build: () => any): Promise<number> => {
+    // Une table absente ou renommée ne doit pas faire tomber tout le cerveau.
+    // On distingue « 0 en attente » de « la table n'existe pas » (PGRST205) :
+    // les deux valent zéro, mais ne veulent pas dire la même chose.
+    type Counted = { n: number; ok: boolean };
+    const count = async (build: () => any): Promise<Counted> => {
       try {
-        const { count: c } = await build();
-        return c ?? 0;
+        const { count: c, error } = await build();
+        if (error) return { n: 0, ok: error.code !== "PGRST205" && error.code !== "42P01" };
+        return { n: c ?? 0, ok: true };
       } catch {
-        return 0;
+        return { n: 0, ok: false };
       }
     };
     const rows = async <T>(build: () => any): Promise<T[]> => {
@@ -103,68 +112,102 @@ export const getBrainState = createServerFn({ method: "GET" })
       count(() => db.from("therapists").select("id", head).eq("status", "active")),
     ]);
 
-    const reviewsTotal = reviewsPending + reviewRepliesPending;
+    const reviewsTotal = reviewsPending.n + reviewRepliesPending.n;
+    const reviewsOk = reviewsPending.ok && reviewRepliesPending.ok;
+    const agentsOk = agentRuns24h.ok && agentErrors24h.ok;
+    const ABSENT = "Source absente en production";
+
+    /** Un nœud vivant : compteur, seuils, et lien vers la page qui le traite. */
+    const node = (
+      c: Counted,
+      hint: string,
+      href: string,
+      watchAt = 1,
+      urgentAt = 5,
+    ): BrainNodeState => ({
+      pending: c.ok ? c.n : 0,
+      tone: c.ok ? tone(c.n, watchAt, urgentAt) : "idle",
+      hint: c.ok ? hint : ABSENT,
+      href,
+      available: c.ok,
+    });
 
     const nodes: Record<string, BrainNodeState> = {
-      routes_admin_therapeutes_tsx: {
-        pending: therapistsPending,
-        tone: tone(therapistsPending, 1, 3),
-        hint: `${therapistsPending} fiche(s) en attente de validation`,
-        href: "/admin/therapeutes",
-      },
-      routes_admin_liste_attente_tsx: {
-        pending: waitlistPending,
-        tone: tone(waitlistPending, 1, 5),
-        hint: `${waitlistPending} inscription(s) en liste d'attente`,
-        href: "/admin/liste-attente",
-      },
-      routes_admin_avis_tsx: {
-        pending: reviewsTotal,
-        tone: tone(reviewsTotal, 1, 5),
-        hint: `${reviewsPending} avis + ${reviewRepliesPending} réponse(s) à modérer`,
-        href: "/admin/avis",
-      },
-      routes_admin_articles_tsx: {
-        pending: articlesPending,
-        tone: tone(articlesPending, 1, 4),
-        hint: `${articlesPending} article(s) en attente de validation`,
-        href: "/admin/articles",
-      },
-      routes_admin_paroles_tsx: {
-        pending: expertArticlesPending,
-        tone: tone(expertArticlesPending, 1, 4),
-        hint: `${expertArticlesPending} texte(s) de thérapeute à relire`,
-        href: "/admin/paroles",
-      },
-      routes_admin_evenements_tsx: {
-        pending: eventsPending,
-        tone: tone(eventsPending, 1, 4),
-        hint: `${eventsPending} événement(s) à relire`,
-        href: "/admin/evenements",
-      },
-      routes_admin_notifications_tsx: {
-        pending: notificationsUnread,
-        tone: tone(notificationsUnread, 1, 8),
-        hint: `${notificationsUnread} notification(s) non lue(s)`,
-        href: "/admin/notifications",
-      },
-      routes_admin_delegation_tsx: {
-        pending: delegationsOpen,
-        tone: tone(delegationsOpen, 1, 3),
-        hint: `${delegationsOpen} délégation(s) en cours`,
-        href: "/admin/delegation",
-      },
+      routes_admin_therapeutes_tsx: node(
+        therapistsPending,
+        `${therapistsPending.n} fiche(s) en attente de validation`,
+        "/admin/therapeutes",
+        1,
+        3,
+      ),
+      routes_admin_liste_attente_tsx: node(
+        waitlistPending,
+        `${waitlistPending.n} inscription(s) en liste d'attente`,
+        "/admin/liste-attente",
+      ),
+      routes_admin_avis_tsx: node(
+        { n: reviewsTotal, ok: reviewsOk },
+        `${reviewsPending.n} avis + ${reviewRepliesPending.n} réponse(s) à modérer`,
+        "/admin/avis",
+      ),
+      routes_admin_articles_tsx: node(
+        articlesPending,
+        `${articlesPending.n} article(s) en attente de validation`,
+        "/admin/articles",
+        1,
+        4,
+      ),
+      routes_admin_paroles_tsx: node(
+        expertArticlesPending,
+        `${expertArticlesPending.n} texte(s) de thérapeute à relire`,
+        "/admin/paroles",
+        1,
+        4,
+      ),
+      routes_admin_evenements_tsx: node(
+        eventsPending,
+        `${eventsPending.n} événement(s) à relire`,
+        "/admin/evenements",
+        1,
+        4,
+      ),
+      routes_admin_notifications_tsx: node(
+        notificationsUnread,
+        `${notificationsUnread.n} notification(s) non lue(s)`,
+        "/admin/notifications",
+        1,
+        8,
+      ),
+      routes_admin_delegation_tsx: node(
+        delegationsOpen,
+        `${delegationsOpen.n} délégation(s) en cours`,
+        "/admin/delegation",
+        1,
+        3,
+      ),
+      routes_admin_crm_tsx: node(
+        crmLeadsNew,
+        `${crmLeadsNew.n} lead(s) à traiter`,
+        "/admin/crm",
+        1,
+        6,
+      ),
+      // Les agents ne se mesurent pas en file d'attente mais en exécutions :
+      // seuil propre, et une erreur suffit à passer en rouge.
       routes_admin_agents_tsx: {
-        pending: agentErrors24h,
-        tone: agentErrors24h > 0 ? "urgent" : agentRuns24h > 0 ? "watch" : "idle",
-        hint: `${agentRuns24h} exécution(s) sur 24 h · ${agentErrors24h} en erreur`,
+        pending: agentsOk ? agentErrors24h.n : 0,
+        tone: !agentsOk
+          ? "idle"
+          : agentErrors24h.n > 0
+            ? "urgent"
+            : agentRuns24h.n > 0
+              ? "watch"
+              : "idle",
+        hint: agentsOk
+          ? `${agentRuns24h.n} exécution(s) sur 24 h · ${agentErrors24h.n} en erreur`
+          : ABSENT,
         href: "/admin/agents",
-      },
-      routes_admin_crm_tsx: {
-        pending: crmLeadsNew,
-        tone: tone(crmLeadsNew, 1, 6),
-        hint: `${crmLeadsNew} lead(s) à traiter`,
-        href: "/admin/crm",
+        available: agentsOk,
       },
     };
 
@@ -215,16 +258,17 @@ export const getBrainState = createServerFn({ method: "GET" })
       nodes,
       activity,
       totals: {
-        therapistsTotal,
-        therapistsActive,
+        therapistsTotal: therapistsTotal.n,
+        therapistsActive: therapistsActive.n,
         pendingAll:
-          therapistsPending +
-          waitlistPending +
+          therapistsPending.n +
+          waitlistPending.n +
           reviewsTotal +
-          articlesPending +
-          eventsPending +
-          expertArticlesPending,
-        agentRuns24h,
+          articlesPending.n +
+          eventsPending.n +
+          expertArticlesPending.n,
+        // null = pas de source en production, à distinguer de « aucune exécution »
+        agentRuns24h: agentsOk ? agentRuns24h.n : null,
       },
     };
   });

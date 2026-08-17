@@ -773,7 +773,7 @@ function BrainPage() {
       therapistsTotal: number;
       therapistsActive: number;
       pendingAll: number;
-      agentRuns24h: number;
+      agentRuns24h: number | null;
     };
     ts: string;
   } | null>(null);
@@ -889,7 +889,7 @@ function BrainPage() {
   const topQueues = useMemo(() => {
     if (!live) return [];
     return Object.entries(live.nodes)
-      .filter(([, s]) => s.pending > 0)
+      .filter(([, s]) => s.available && s.pending > 0)
       .sort((a, b) => b[1].pending - a[1].pending);
   }, [live]);
 
@@ -1079,7 +1079,11 @@ function BrainPage() {
             }}
           >
             <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Flux</h2>
-            <span style={{ fontSize: 10, color: C.text2 }}>notifications · agents</span>
+            <span style={{ fontSize: 10, color: C.text2 }}>
+              {live?.nodes.routes_admin_agents_tsx?.available === false
+                ? "notifications"
+                : "notifications · agents"}
+            </span>
             <button
               onClick={() => setShowFlux(false)}
               style={btnGhost}
@@ -1270,19 +1274,24 @@ function BrainPage() {
                   marginTop: 2,
                   padding: "10px 12px",
                   borderRadius: 10,
-                  background: `${toneColor(selectedState.tone)}18`,
-                  border: `1px solid ${toneColor(selectedState.tone)}55`,
+                  background: selectedState.available
+                    ? `${toneColor(selectedState.tone)}18`
+                    : "rgba(255,255,255,.04)",
+                  border: `1px solid ${
+                    selectedState.available ? `${toneColor(selectedState.tone)}55` : C.border
+                  }`,
                 }}
               >
+                {/* Sans source en base, un « 0 » serait un mensonge rassurant. */}
                 <div
                   style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: toneColor(selectedState.tone),
-                    lineHeight: 1,
+                    fontSize: selectedState.available ? 22 : 13,
+                    fontWeight: selectedState.available ? 800 : 600,
+                    color: selectedState.available ? toneColor(selectedState.tone) : C.text2,
+                    lineHeight: 1.2,
                   }}
                 >
-                  {selectedState.pending}
+                  {selectedState.available ? selectedState.pending : "Pas encore branché"}
                 </div>
                 <div style={{ fontSize: 11, color: C.text2, marginTop: 4 }}>
                   {selectedState.hint}
