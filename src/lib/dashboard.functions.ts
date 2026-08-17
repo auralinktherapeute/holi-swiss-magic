@@ -15,6 +15,7 @@ const profileSchema = z.object({
   photo_url: z.string().url().max(2000).nullable(),
   first_name: z.string().min(1).max(120),
   last_name: z.string().max(120),
+  title: z.string().max(120).nullable().optional(),
   city: z.string().max(120),
   postal_code: z.string().max(30),
   address: z.string().max(300),
