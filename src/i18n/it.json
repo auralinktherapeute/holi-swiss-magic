@@ -475,9 +475,12 @@
     "newsletter_consent_label": "Accetto di ricevere La Lettre Holiswiss via email.",
     "newsletter_consent_note": "L'iscrizione è facoltativa e non influisce sul tuo account. Consulta la nostra",
     "newsletter_privacy_link": "politica sulla privacy",
-    "newsletter_subscribed": "Iscrizione alla newsletter confermata",
+    "newsletter_subscribed": "La tua iscrizione a La Lettre Holiswiss è stata registrata. Riceverai le prossime novità, risorse e offerte dedicate ai terapisti.",
     "newsletter_unsubscribed": "Disiscrizione confermata",
-    "newsletter_error": "Impossibile aggiornare la tua preferenza"
+    "newsletter_error": "Impossibile aggiornare la tua preferenza",
+    "newsletter_already_subscribed": "La tua iscrizione a La Lettre Holiswiss è già attiva.",
+    "newsletter_status_active": "La tua iscrizione a La Lettre Holiswiss è attiva",
+    "newsletter_status_since": "dal"
   },
   "hero": {
     "title_part1": "Trova il giusto",

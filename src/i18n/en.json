@@ -475,9 +475,12 @@
     "newsletter_consent_label": "I agree to receive La Lettre Holiswiss by email.",
     "newsletter_consent_note": "Subscription is optional and has no impact on your account. Read our",
     "newsletter_privacy_link": "privacy policy",
-    "newsletter_subscribed": "Newsletter subscription confirmed",
+    "newsletter_subscribed": "Your subscription to La Lettre Holiswiss has been saved. You will receive our next news, resources, updates and offers for therapists.",
     "newsletter_unsubscribed": "Unsubscription confirmed",
-    "newsletter_error": "Could not update your preference"
+    "newsletter_error": "Could not update your preference",
+    "newsletter_already_subscribed": "Your subscription to La Lettre Holiswiss is already active.",
+    "newsletter_status_active": "Your subscription to La Lettre Holiswiss is active",
+    "newsletter_status_since": "since"
   },
   "hero": {
     "title_part1": "Find the right",

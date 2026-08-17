@@ -80,7 +80,7 @@ const THERAPIST_PROFILE_SELECT = [
   "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
-  "ide_verified", "accreditations", "newsletter_opt_in",
+  "ide_verified", "accreditations", "newsletter_opt_in", "newsletter_opt_in_at",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
@@ -179,6 +179,7 @@ function ProfilePage() {
   // Newsletter consent
   const [newsletterOptIn, setNewsletterOptIn] = useSessionState<boolean>(`${profileStatePrefix}.newsletterOptIn`, false);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterOptInAt, setNewsletterOptInAt] = useState<string | null>(null);
   const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
 
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -329,6 +330,7 @@ function ProfilePage() {
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
         setNewsletterOptIn((data as any).newsletter_opt_in ?? false);
+        setNewsletterOptInAt((data as any).newsletter_opt_in_at ?? null);
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
@@ -1088,9 +1090,16 @@ function ProfilePage() {
                   const next = e.target.checked;
                   setNewsletterLoading(true);
                   try {
-                    await updateNewsletterConsent({ data: { optIn: next } });
+                    const res = await updateNewsletterConsent({ data: { optIn: next } });
                     setNewsletterOptIn(next);
-                    toast.success(next ? t("profile_edit.newsletter_subscribed") : t("profile_edit.newsletter_unsubscribed"));
+                    setNewsletterOptInAt(res?.optInAt ?? null);
+                    toast.success(
+                      next
+                        ? res?.alreadySubscribed
+                          ? t("profile_edit.newsletter_already_subscribed")
+                          : t("profile_edit.newsletter_subscribed")
+                        : t("profile_edit.newsletter_unsubscribed")
+                    );
                   } catch (err) {
                     toast.error(t("profile_edit.newsletter_error"));
                   } finally {
@@ -1110,6 +1119,17 @@ function ProfilePage() {
                 </span>
               </div>
             </label>
+            {newsletterOptIn && (
+              <p className="mt-3 flex items-start gap-2 rounded-lg border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.08)] p-3 text-xs text-[#7de3b8]">
+                <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  {t("profile_edit.newsletter_status_active")}
+                  {newsletterOptInAt
+                    ? ` ${t("profile_edit.newsletter_status_since")} ${new Date(newsletterOptInAt).toLocaleDateString("fr-CH", { day: "2-digit", month: "long", year: "numeric" })}.`
+                    : "."}
+                </span>
+              </p>
+            )}
           </div>
         </Section>
       </div>

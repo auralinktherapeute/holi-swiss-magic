@@ -3736,6 +3736,9 @@ export type Database = {
           longitude: number | null
           meta_description: string | null
           meta_title: string | null
+          newsletter_consent_email: string | null
+          newsletter_consent_source: string | null
+          newsletter_consent_version: string | null
           newsletter_opt_in: boolean
           newsletter_opt_in_at: string | null
           newsletter_unsubscribe_token: string
@@ -3791,6 +3794,9 @@ export type Database = {
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          newsletter_consent_email?: string | null
+          newsletter_consent_source?: string | null
+          newsletter_consent_version?: string | null
           newsletter_opt_in?: boolean
           newsletter_opt_in_at?: string | null
           newsletter_unsubscribe_token?: string
@@ -3846,6 +3852,9 @@ export type Database = {
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          newsletter_consent_email?: string | null
+          newsletter_consent_source?: string | null
+          newsletter_consent_version?: string | null
           newsletter_opt_in?: boolean
           newsletter_opt_in_at?: string | null
           newsletter_unsubscribe_token?: string
