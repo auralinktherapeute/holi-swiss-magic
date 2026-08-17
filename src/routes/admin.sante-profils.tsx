@@ -714,26 +714,18 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
               <button
                 type="button"
                 disabled={accessBusy}
-                onClick={() => toggleAccess(true, "admin_manual")}
+                onClick={() => toggleAccess(true)}
                 className="min-h-[32px] rounded-md border border-white/15 px-2 py-1 text-white/80 hover:bg-white/5 disabled:opacity-60"
               >
-                Activer (manuel)
+                Activer l'accès
               </button>
               <button
                 type="button"
                 disabled={accessBusy}
-                onClick={() => toggleAccess(true, "commercial_offer")}
-                className="min-h-[32px] rounded-md border border-white/15 px-2 py-1 text-white/80 hover:bg-white/5 disabled:opacity-60"
-              >
-                Offre commerciale
-              </button>
-              <button
-                type="button"
-                disabled={accessBusy}
-                onClick={() => toggleAccess(false, "admin_manual")}
+                onClick={() => toggleAccess(false)}
                 className="min-h-[32px] rounded-md border border-white/15 px-2 py-1 text-white/70 hover:bg-white/5 disabled:opacity-60"
               >
-                Retirer
+                Désactiver l'accès
               </button>
               <button
                 type="button"
@@ -745,10 +737,62 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
               </button>
             </div>
           </div>
+          <div className="mt-2 grid gap-2 sm:grid-cols-4">
+            <label className="flex flex-col gap-1 text-white/60">
+              Source
+              <select
+                value={form.source}
+                onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}
+                className="min-h-[36px] rounded-md border border-white/15 bg-[#1b0f2e] px-2 py-1 text-white/85"
+              >
+                <option value="founding_70">founding_70</option>
+                <option value="elite_pro">elite_pro</option>
+                <option value="commercial_offer">commercial_offer</option>
+                <option value="manual_grant">manual_grant</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-white/60">
+              Début
+              <input
+                type="datetime-local"
+                value={form.startsAt}
+                onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
+                className="min-h-[36px] rounded-md border border-white/15 bg-[#1b0f2e] px-2 py-1 text-white/85"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-white/60">
+              Expiration
+              <input
+                type="datetime-local"
+                value={form.expiresAt}
+                onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                className="min-h-[36px] rounded-md border border-white/15 bg-[#1b0f2e] px-2 py-1 text-white/85"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-white/60">
+              Note interne
+              <input
+                type="text"
+                maxLength={500}
+                value={form.note}
+                onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
+                placeholder="Contexte commercial…"
+                className="min-h-[36px] rounded-md border border-white/15 bg-[#1b0f2e] px-2 py-1 text-white/85 placeholder:text-white/30"
+              />
+            </label>
+          </div>
           <p className="mt-1.5 text-white/50">
             Source : {access.sources?.length ? access.sources.join(", ") : "—"} · Rang d'inscription :{" "}
             {access.earlyRank ?? "—"} / {access.earlySlots} · Activation :{" "}
             {access.since ? new Date(access.since).toLocaleDateString("fr-CH") : "—"}
+          </p>
+          <p className="mt-1 text-white/50">
+            Abonnement (source de vérité) : plan « {access.subscriptionPlan ?? "—"} » ·
+            facture Elite en cours : {access.subscriptionVerified ? "oui" : "non"}
+            {access.subscriptionPeriodEnd ? ` (jusqu'au ${new Date(access.subscriptionPeriodEnd).toLocaleDateString("fr-CH")})` : ""} ·
+            Fenêtre accordée : {access.grantStartsAt ? new Date(access.grantStartsAt).toLocaleDateString("fr-CH") : "—"} →{" "}
+            {access.grantExpiresAt ? new Date(access.grantExpiresAt).toLocaleDateString("fr-CH") : "sans expiration"}
+            {access.grantNote ? ` · Note : ${access.grantNote}` : ""}
           </p>
           <p className="mt-1 text-white/50">
             Place fondateur : {access.seatNumber ? `n°${access.seatNumber} / ${access.earlySlots}` : "aucune"} ·
@@ -756,6 +800,27 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
             Attribuée le {access.seatGrantedAt ? new Date(access.seatGrantedAt).toLocaleDateString("fr-CH") : "—"} ·
             Places restantes : {access.seatsRemaining ?? "—"}
           </p>
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            className="mt-2 min-h-[32px] rounded-md border border-white/10 px-2 py-1 text-white/70 hover:bg-white/5"
+            aria-expanded={showHistory}
+          >
+            Historique des accès ({events.length})
+          </button>
+          {showHistory && (
+            <ul className="mt-2 space-y-1">
+              {events.length === 0 && <li className="text-white/40">Aucune modification enregistrée.</li>}
+              {events.map((ev) => (
+                <li key={ev.id} className="rounded-md bg-white/5 px-2 py-1 text-white/65">
+                  {new Date(ev.created_at).toLocaleString("fr-CH")} — {ev.action === "revoked" ? "retiré" : "accordé"} ·{" "}
+                  {ev.source ?? "—"}
+                  {ev.expires_at ? ` · expire le ${new Date(ev.expires_at).toLocaleDateString("fr-CH")}` : ""}
+                  {ev.note ? ` · ${ev.note}` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">
