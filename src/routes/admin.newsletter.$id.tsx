@@ -1411,6 +1411,79 @@ function Page() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Aperçu obligatoire avant tout envoi */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl bg-[#1d0d3d] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Aperçu de l'email</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Vérifiez l'objet, le contenu, le bouton et le pied de page. Aucun email n'est envoyé
+              depuis cette fenêtre.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-white/70">
+              Objet : <span className="text-white">{form.email_subject || form.title}</span>
+            </p>
+            <iframe
+              title="Aperçu avant envoi"
+              srcDoc={previewHtml}
+              className="h-[55vh] w-full rounded-lg border border-white/10 bg-white"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPreviewOpen(false)}
+              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+            >
+              Fermer sans valider
+            </Button>
+            <Button
+              onClick={() => {
+                setCheckedVersion(emailVersion);
+                setPreviewOpen(false);
+                toast.success("Aperçu validé : l'envoi est débloqué pour cette version.");
+              }}
+              className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+            >
+              J'ai vérifié cet aperçu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation des changements de statut sensibles */}
+      <AlertDialog open={confirmStatus !== null} onOpenChange={(o) => !o && setConfirmStatus(null)}>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmStatus === "archivee" ? "Archiver cette newsletter ?" : "Rejeter ce brief ?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/65">
+              {confirmStatus === "archivee"
+                ? "La newsletter sort du flux de travail et l'édition est verrouillée. Aucun contenu n'est supprimé et un administrateur peut la repasser en brouillon."
+                : "Le brief repasse au statut « Idée ». Aucun contenu n'est supprimé et vous pourrez le reprendre à tout moment."}
+              {" Aucun email n'est envoyé par cette action."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+              onClick={() => {
+                if (confirmStatus) changeStatus.mutate(confirmStatus);
+                setConfirmStatus(null);
+              }}
+            >
+              {confirmStatus === "archivee" ? "Archiver" : "Rejeter"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
