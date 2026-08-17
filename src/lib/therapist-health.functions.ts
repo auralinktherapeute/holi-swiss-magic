@@ -416,3 +416,45 @@ export const runCitabilityScan = createServerFn({ method: "POST" })
 
     return { processed, reachable };
   });
+
+/**
+ * Contrôles automatiques de la vitrine publique (admin).
+ * Réutilise le module pur `showcase-audit` : deux totaux (visibilité SEO
+ * et conversion) calculés à partir des données réelles, jamais estimées.
+ */
+export const auditTherapistShowcase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { runShowcaseAudit, auditTotals } = await import("@/lib/showcase-audit");
+    const sb = supabaseAdmin as any;
+
+    const [therRes, certRes, revRes, availRes] = await Promise.all([
+      sb
+        .from("therapists")
+        .select(
+          "id,slug,bio,short_bio,photo_url,city,canton,latitude,longitude,specialties,languages,consultation_modes,price_min,meta_title,meta_description,website,booking_note,verified,gallery_urls",
+        )
+        .eq("id", data.therapistId)
+        .maybeSingle(),
+      sb.from("therapist_certifications").select("verification_status").eq("therapist_id", data.therapistId),
+      sb.from("reviews").select("id").eq("therapist_id", data.therapistId).eq("status", "approved"),
+      sb.from("availabilities").select("id").eq("therapist_id", data.therapistId).eq("is_active", true),
+    ]);
+
+    const t = therRes.data;
+    if (!t) throw new Error("Thérapeute introuvable");
+
+    const certs = (certRes.data ?? []) as Array<{ verification_status: string | null }>;
+    const checks = runShowcaseAudit({
+      ...t,
+      certificationsVerified: certs.filter((c) => c.verification_status === "verified").length,
+      certificationsDeclared: certs.filter((c) => c.verification_status !== "verified").length,
+      reviewsCount: (revRes.data ?? []).length,
+      availabilitiesCount: (availRes.data ?? []).length,
+    });
+
+    return { slug: t.slug as string, checks, totals: auditTotals(checks) };
+  });
