@@ -93,7 +93,9 @@ export function TherapistNav() {
       await reset();
       await qc.invalidateQueries({ queryKey: ["onboarding-state"] });
       window.dispatchEvent(new CustomEvent("holiswiss:start-tour"));
-    } catch {}
+    } catch {
+      // Le redémarrage du tutoriel est une action best-effort.
+    }
   };
 
   const handleLogout = async () => {
