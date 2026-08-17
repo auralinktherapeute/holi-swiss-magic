@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-iight";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/holiswiss/Logo";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,11 +8,13 @@ import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
 import { AccountManageDialog } from "@/components/dashboard/AccountManageDialog";
 import {
   LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
-  Star, CalendarDays, CreditCard, Gift, Settings, Crown, Package, ClipboardList, Receipt, HelpCircle,
+  Star, CalendarDays, CreditCard, Gift, Crown, Package, ClipboardList, Receipt, HelpCircle, LogOut,
 } from "lucide-react";
 import { useServerFn as useServerFnHelp } from "@tanstack/react-start";
 import { resetOnboarding } from "@/lib/onboarding.functions";
 import { useQueryClient } from "@tanstack/react-query";
+import { signOutCompletely } from "@/lib/auth-utils";
+import { toast } from "sonner";
 
 export function TherapistNav() {
   const { t } = useTranslation();
