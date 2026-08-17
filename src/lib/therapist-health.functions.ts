@@ -53,7 +53,7 @@ export const getHealthDetail = createServerFn({ method: "POST" })
       sb.from("therapist_health_scores").select("*").eq("therapist_id", data.therapistId).maybeSingle(),
       sb
         .from("therapists")
-        .select("id,user_id,first_name,last_name,email,phone,address,city,canton,created_at,slug,specialties,languages,is_premium")
+        .select("id,user_id,first_name,last_name,email,phone,address,city,canton,created_at,slug,specialties,languages,subscription_plan")
         .eq("id", data.therapistId)
         .maybeSingle(),
       sb.from("therapist_health_recommendations").select("*").eq("therapist_id", data.therapistId),
@@ -64,10 +64,11 @@ export const getHealthDetail = createServerFn({ method: "POST" })
         .order("computed_at", { ascending: false })
         .limit(12),
     ]);
-    let plan = "basic";
-    if (therRes.data?.user_id) {
-      const { data: sub } = await sb.from("subscriptions").select("plan").eq("user_id", therRes.data.user_id).maybeSingle();
-      if (sub?.plan) plan = sub.plan as string;
+    // Le plan est porté par therapists.subscription_plan (la table
+    // `subscriptions` n'existe pas en production).
+    let plan = "free";
+    if (therRes.data?.subscription_plan) {
+      plan = therRes.data.subscription_plan as string;
     }
     // Moyenne par spécialité principale (thérapeutes partageant la 1re spécialité)
     let specialtyAvg: { specialty: string | null; avg: number | null; sample: number } = { specialty: null, avg: null, sample: 0 };
