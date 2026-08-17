@@ -429,14 +429,21 @@ export const auditTherapistShowcase = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadShowcaseAudit } = await import("@/lib/showcase-audit.server");
-    return loadShowcaseAudit(supabaseAdmin as any, data.therapistId);
+    const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
+    const sb = supabaseAdmin as any;
+    const [audit, access] = await Promise.all([
+      loadShowcaseAudit(sb, data.therapistId),
+      resolveScoringAccess(sb, data.therapistId),
+    ]);
+    return { ...audit, level: "admin" as const, access };
   });
 
 /**
  * Audit de SA PROPRE vitrine, pour le tableau de bord thérapeute.
  * Même moteur de scoring que l'admin ; la fiche est résolue à partir de
- * l'utilisateur authentifié — aucun identifiant n'est accepté en entrée,
- * donc aucune donnée d'un autre thérapeute n'est accessible.
+ * l'utilisateur authentifié — aucun identifiant n'est accepté en entrée.
+ * Niveau 1 (base) : score global simplifié + essentiels. Niveau 2 (avancé) :
+ * détail complet des contrôles, réservé aux thérapeutes éligibles.
  */
 export const auditMyShowcase = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -450,5 +457,57 @@ export const auditMyShowcase = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!me?.id) return null;
     const { loadShowcaseAudit } = await import("@/lib/showcase-audit.server");
-    return loadShowcaseAudit(sb, me.id as string);
+    const { basicSummary } = await import("@/lib/showcase-audit");
+    const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
+    const [audit, access] = await Promise.all([
+      loadShowcaseAudit(sb, me.id as string),
+      resolveScoringAccess(sb, me.id as string),
+    ]);
+    const basic = basicSummary(audit.checks);
+    return access.advanced
+      ? { slug: audit.slug, access, basic, checks: audit.checks, totals: audit.totals }
+      : { slug: audit.slug, access, basic, checks: null, totals: null };
+  });
+
+/** Éligibilité + accès accordé (admin). */
+export const getTherapistScoringAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
+    return resolveScoringAccess(supabaseAdmin as any, data.therapistId);
+  });
+
+/** Accorder / retirer l'accès avancé (admin). */
+export const setTherapistScoringAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      therapistId: z.string().uuid(),
+      enabled: z.boolean(),
+      source: z.enum(["admin_manual", "commercial_offer", "offer_accepted"]).default("admin_manual"),
+      note: z.string().max(500).optional(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
+    const sb = supabaseAdmin as any;
+    const { error } = await sb.from("therapist_advanced_scoring_access").upsert(
+      {
+        therapist_id: data.therapistId,
+        enabled: data.enabled,
+        source: data.source,
+        note: data.note ?? null,
+        granted_by: context.userId,
+        granted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "therapist_id" },
+    );
+    if (error) throw new Error(error.message);
+    return resolveScoringAccess(sb, data.therapistId);
   });
