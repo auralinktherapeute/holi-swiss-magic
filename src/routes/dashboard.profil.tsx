@@ -179,6 +179,7 @@ function ProfilePage() {
   // Newsletter consent
   const [newsletterOptIn, setNewsletterOptIn] = useSessionState<boolean>(`${profileStatePrefix}.newsletterOptIn`, false);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterOptInAt, setNewsletterOptInAt] = useState<string | null>(null);
   const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
 
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -329,6 +330,7 @@ function ProfilePage() {
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
         setNewsletterOptIn((data as any).newsletter_opt_in ?? false);
+        setNewsletterOptInAt((data as any).newsletter_opt_in_at ?? null);
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
