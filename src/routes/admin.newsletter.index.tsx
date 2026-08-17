@@ -20,6 +20,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   listNewsletterIssues,
   createNewsletterIssue,
   updateNewsletterIssue,
@@ -95,6 +105,7 @@ function Page() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [toArchive, setToArchive] = useState<NewsletterIssue | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-newsletter-issues"],
@@ -106,7 +117,8 @@ function Page() {
   const archive = useMutation({
     mutationFn: (id: string) => setStatus({ data: { id, status: "archivee" as NewsletterStatus } }),
     onSuccess: () => {
-      toast.success("Newsletter archivée.");
+      toast.success("Newsletter archivée — aucun contenu supprimé.");
+      setToArchive(null);
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Archivage impossible."),
