@@ -36,6 +36,7 @@ import {
   listNewsletterRevisions,
 } from "@/lib/newsletter.functions";
 import { renderNewsletterEmail } from "@/lib/newsletter-email.shared";
+import { NEWSLETTER_TEMPLATES } from "@/lib/newsletter-templates.shared";
 import {
   getNewsletterSendPreview,
   sendNewsletterTestEmail,
@@ -656,6 +657,31 @@ function Page() {
             <div className="grid gap-5 lg:grid-cols-2">
               <Card className="bg-[#1d0d3d] border-white/10">
                 <CardContent className="p-5 sm:p-6 space-y-5">
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm font-medium text-white">Modèles</p>
+                    <p className="mt-1 text-xs text-white/55">
+                      Pré-remplit les champs ci-dessous. Une ligne « Titre :: description » est
+                      affichée sous forme de carte dans l'email.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {NEWSLETTER_TEMPLATES.map((tpl) => (
+                        <Button
+                          key={tpl.id}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={locked}
+                          title={tpl.hint}
+                          className="min-h-11 border-white/20 bg-transparent text-white hover:bg-white/10"
+                          onClick={() => {
+                            setForm((f) => (f ? { ...f, ...tpl.values } : f));
+                          }}
+                        >
+                          {tpl.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                   <Field
                     id="e-subject"
                     label="Objet"

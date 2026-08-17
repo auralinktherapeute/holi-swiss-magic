@@ -18,7 +18,18 @@ function paragraphs(text: string | null | undefined): string {
   if (!text) return "";
   return String(text)
     .split(/\n{2,}/)
-    .map((block) => `<p style="margin:0 0 14px;">${escapeHtml(block).replace(/\n/g, "<br/>")}</p>`)
+    .map((block) => {
+      // « Titre :: description » devient une carte « nouveauté ».
+      const m = block.match(/^([^\n:]{2,80})\s*::\s*([\s\S]+)$/);
+      if (m) {
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;border-collapse:separate;">
+      <tr><td style="background:#f6f4ef;border-left:3px solid #6B7B5E;border-radius:6px;padding:14px 16px;">
+        <div style="margin:0 0 4px;color:#1c1c1e;font-size:15px;font-weight:700;line-height:1.4;">${escapeHtml(m[1].trim())}</div>
+        <div style="margin:0;color:#4a463f;font-size:14px;line-height:1.6;">${escapeHtml(m[2].trim()).replace(/\n/g, "<br/>")}</div>
+      </td></tr></table>`;
+      }
+      return `<p style="margin:0 0 14px;">${escapeHtml(block).replace(/\n/g, "<br/>")}</p>`;
+    })
     .join("");
 }
 
