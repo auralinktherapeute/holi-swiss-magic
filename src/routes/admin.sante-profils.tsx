@@ -368,6 +368,8 @@ function Page() {
         </div>
       </header>
 
+      <FounderSeatsPanel />
+
       {loading ? (
         <div className="flex items-center gap-2 text-white/60"><Loader2 className="animate-spin" size={16} /> Chargement…</div>
       ) : (
