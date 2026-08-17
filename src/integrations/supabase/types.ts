@@ -1915,6 +1915,115 @@ export type Database = {
           },
         ]
       }
+      newsletter_send_recipients: {
+        Row: {
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          provider_message_id: string | null
+          send_id: string
+          status: string
+          therapist_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          provider_message_id?: string | null
+          send_id: string
+          status?: string
+          therapist_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          provider_message_id?: string | null
+          send_id?: string
+          status?: string
+          therapist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_send_recipients_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_sends: {
+        Row: {
+          actor_email: string | null
+          actor_id: string | null
+          error_message: string | null
+          failed_count: number
+          finished_at: string | null
+          from_address: string | null
+          id: string
+          is_test: boolean
+          issue_id: string
+          recipient_count: number
+          resource_url: string | null
+          segment: string
+          sent_count: number
+          started_at: string
+          status: string
+          subject: string | null
+          version_label: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id?: string | null
+          error_message?: string | null
+          failed_count?: number
+          finished_at?: string | null
+          from_address?: string | null
+          id?: string
+          is_test?: boolean
+          issue_id: string
+          recipient_count?: number
+          resource_url?: string | null
+          segment: string
+          sent_count?: number
+          started_at?: string
+          status?: string
+          subject?: string | null
+          version_label?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string | null
+          error_message?: string | null
+          failed_count?: number
+          finished_at?: string | null
+          from_address?: string | null
+          id?: string
+          is_test?: boolean
+          issue_id?: string
+          recipient_count?: number
+          resource_url?: string | null
+          segment?: string
+          sent_count?: number
+          started_at?: string
+          status?: string
+          subject?: string | null
+          version_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_sends_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_deliveries: {
         Row: {
           attempts: number
@@ -3436,6 +3545,10 @@ export type Database = {
           longitude: number | null
           meta_description: string | null
           meta_title: string | null
+          newsletter_opt_in: boolean
+          newsletter_opt_in_at: string | null
+          newsletter_unsubscribe_token: string
+          newsletter_unsubscribed_at: string | null
           onboarding_complete: boolean
           onboarding_completed_at: string | null
           payment_link: string | null
@@ -3487,6 +3600,10 @@ export type Database = {
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          newsletter_opt_in?: boolean
+          newsletter_opt_in_at?: string | null
+          newsletter_unsubscribe_token?: string
+          newsletter_unsubscribed_at?: string | null
           onboarding_complete?: boolean
           onboarding_completed_at?: string | null
           payment_link?: string | null
@@ -3538,6 +3655,10 @@ export type Database = {
           longitude?: number | null
           meta_description?: string | null
           meta_title?: string | null
+          newsletter_opt_in?: boolean
+          newsletter_opt_in_at?: string | null
+          newsletter_unsubscribe_token?: string
+          newsletter_unsubscribed_at?: string | null
           onboarding_complete?: boolean
           onboarding_completed_at?: string | null
           payment_link?: string | null
