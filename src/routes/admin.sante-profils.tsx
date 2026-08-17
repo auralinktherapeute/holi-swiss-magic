@@ -21,6 +21,7 @@ import {
   setFounderSeat,
   setFounderSeatDisplay,
 } from "@/lib/therapist-health.functions";
+import TherapistScorePanel from "@/components/admin/TherapistScorePanel";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
 
@@ -534,6 +535,8 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
       <div className="mt-2 rounded-lg border border-dashed border-white/10 bg-white/[0.03] p-2 text-center text-[11px] text-white/45">
         Réactivité aux messages · <span className="text-white/60">en cours de calibrage</span>
       </div>
+
+      <TherapistScorePanel therapistId={tid} slug={t.slug ?? null} />
 
       <ShowcaseAudit therapistId={tid} />
 

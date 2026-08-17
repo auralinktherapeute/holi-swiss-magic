@@ -647,6 +647,35 @@ export const getMyShowcaseReport = createServerFn({ method: "GET" })
     return buildShowcaseReport(sb, me.id as string, false);
   });
 
+/**
+ * Rapport complet d'un thérapeute pour l'administration.
+ * Même moteur que le tableau de bord thérapeute ; l'admin voit toujours le
+ * détail avancé (`forceAdvanced`), y compris pour un profil non éligible.
+ * `persist: true` relance l'analyse et enregistre un nouvel instantané.
+ */
+export const getTherapistShowcaseReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid(), persist: z.boolean().default(false) }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { buildShowcaseReport } = await import("@/lib/showcase-audit.server");
+    const sb = supabaseAdmin as any;
+    const report = await buildShowcaseReport(sb, data.therapistId, data.persist, { forceAdvanced: true });
+    const { data: history } = await sb
+      .from("therapist_showcase_snapshots")
+      .select("score,score_visibilite,score_conversion,created_at")
+      .eq("therapist_id", data.therapistId)
+      .order("created_at", { ascending: false })
+      .limit(12);
+    return {
+      ...report,
+      openCount: report.recommendations.filter((r: any) => r.status === "a_traiter").length,
+      resolvedCount: report.recommendations.filter((r: any) => r.status === "resolu").length,
+      snapshots: (history ?? []) as any[],
+    };
+  });
+
 /** Relance l'analyse et enregistre un nouvel instantané. */
 export const runMyShowcaseAnalysis = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
