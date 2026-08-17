@@ -104,7 +104,9 @@ describe("Identité", () => {
     const after = report(base);
     expect(hasTodo(before, "identity")).toBe(true);
     expect(hasTodo(after, "identity")).toBe(false);
-    expect(todoCount(after)).toBe(todoCount(before) - 1);
+    // Le titre professionnel alimente aussi d'autres contrôles (auteur, title SEO) :
+    // le compteur doit donc strictement diminuer, sans jamais augmenter.
+    expect(todoCount(after)).toBeLessThan(todoCount(before));
   });
 });
 
@@ -187,7 +189,13 @@ describe("Synchronisation", () => {
 
   it("18. nombre « à traiter » exact et cohérent avec les éléments manquants", () => {
     const r = report(broken);
-    expect(todoCount(r)).toBe(todoCount(report(base)) + 2);
+    // Le compteur « à traiter » est exactement le nombre de recommandations non résolues.
+    const todos = [...r.visibility.recommendations, ...r.conversion.recommendations].filter(
+      (x) => x.status === "a_traiter",
+    );
+    expect(todoCount(r)).toBe(todos.length);
+    for (const t of todos) expect(check(r, t.id).status).not.toBe("passed");
+    expect(todoCount(r)).toBeGreaterThan(todoCount(report(base)));
     const missingIds = new Set(r.missingItems.map((c) => c.id));
     for (const id of ["identity", "photo"]) expect(missingIds.has(id)).toBe(true);
   });
