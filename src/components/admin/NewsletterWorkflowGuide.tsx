@@ -155,7 +155,11 @@ export function NewsletterWorkflowGuide({ states, onStepClick, className }: Prop
             </>
           );
           const label = `Étape ${i + 1} : ${step.label}. ${step.hint} ${
-            state === "done" ? "Étape terminée." : state === "current" ? "Étape en cours." : "Étape à venir."
+            state === "done"
+              ? "Étape terminée."
+              : state === "current"
+                ? "Étape en cours."
+                : "Étape à venir."
           }`;
           const base = cn(
             "flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-xs",
