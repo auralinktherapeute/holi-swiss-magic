@@ -88,6 +88,7 @@ import { Route as ApiPublicAnalyticsEndSessionRouteImport } from './routes/api/p
 import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
 import { Route as ApiPublicHooksResendEventsRouteImport } from './routes/api/public/hooks/resend-events'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
+import { Route as ApiPublicNewsletterUnsubscribeRouteImport } from './routes/api/public/newsletter/unsubscribe'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -496,6 +497,12 @@ const ApiPublicHooksSeoAuditAgentRoute =
     path: '/api/public/hooks/seo-audit-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicNewsletterUnsubscribeRoute =
+  ApiPublicNewsletterUnsubscribeRouteImport.update({
+    id: '/api/public/newsletter/unsubscribe',
+    path: '/api/public/newsletter/unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -577,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
+  '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -655,6 +663,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
+  '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -737,6 +746,7 @@ export interface FileRoutesById {
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
+  '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -820,6 +830,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
+    | '/api/public/newsletter/unsubscribe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -898,6 +909,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
+    | '/api/public/newsletter/unsubscribe'
   id:
     | '__root__'
     | '/'
@@ -979,6 +991,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
+    | '/api/public/newsletter/unsubscribe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -999,6 +1012,7 @@ export interface RootRouteChildren {
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
   ApiPublicHooksResendEventsRoute: typeof ApiPublicHooksResendEventsRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
+  ApiPublicNewsletterUnsubscribeRoute: typeof ApiPublicNewsletterUnsubscribeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1556,6 +1570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSeoAuditAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/newsletter/unsubscribe': {
+      id: '/api/public/newsletter/unsubscribe'
+      path: '/api/public/newsletter/unsubscribe'
+      fullPath: '/api/public/newsletter/unsubscribe'
+      preLoaderRoute: typeof ApiPublicNewsletterUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1742,6 +1763,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
   ApiPublicHooksResendEventsRoute: ApiPublicHooksResendEventsRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
+  ApiPublicNewsletterUnsubscribeRoute: ApiPublicNewsletterUnsubscribeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

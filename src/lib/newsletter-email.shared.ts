@@ -11,6 +11,7 @@ export type NewsletterEmailInput = {
   buttonUrl?: string | null;
   footer?: string | null;
   unsubscribeUrl?: string | null;
+  preferencesUrl?: string | null;
 };
 
 function paragraphs(text: string | null | undefined): string {
@@ -28,6 +29,7 @@ export function renderNewsletterEmail(input: NewsletterEmailInput): {
 } {
   const subject = input.subject?.trim() || "La Lettre Holiswiss";
   const unsubscribe = input.unsubscribeUrl || "https://holiswiss.ch/desinscription";
+  const preferences = input.preferencesUrl || "https://holiswiss.ch/dashboard/profil";
 
   const preheader = input.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(input.preheader)}</div>`
@@ -52,7 +54,28 @@ export function renderNewsletterEmail(input: NewsletterEmailInput): {
     ${button}
     ${legal}`;
 
-  const footerExtra = `<br/><a href="${escapeHtml(unsubscribe)}" style="color:#8a8377;text-decoration:underline;">Se désinscrire de La Lettre Holiswiss</a>`;
+  // Mentions légales obligatoires : raison de réception, préférences, désinscription,
+  // confidentialité et contact valide. Uniquement marketing — les emails de compte,
+  // de rendez-vous et de sécurité ne sont pas concernés.
+  const linkStyle = "color:#6B7B5E;text-decoration:underline;";
+  const footerExtra = `
+    <div style="margin-top:12px;color:#8a8377;font-size:12px;line-height:1.7;">
+      Vous recevez La Lettre Holiswiss parce que vous êtes thérapeute inscrit·e sur Holiswiss
+      et que vous avez accepté de recevoir nos informations professionnelles.
+      <br/>
+      <a href="${escapeHtml(preferences)}" style="${linkStyle}">Gérer mes préférences</a>
+      &nbsp;·&nbsp;
+      <a href="${escapeHtml(unsubscribe)}" style="${linkStyle}">Se désinscrire</a>
+      &nbsp;·&nbsp;
+      <a href="https://holiswiss.ch/fr/confidentialite" style="${linkStyle}">Politique de confidentialité</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:contact@holiswiss.ch" style="${linkStyle}">contact@holiswiss.ch</a>
+      <br/>
+      HoliSwiss — Annuaire des thérapeutes en Suisse · contact@holiswiss.ch
+      <br/>
+      La désinscription est gratuite et immédiate ; elle n'affecte ni votre compte,
+      ni les emails liés à vos rendez-vous et à la sécurité de votre profil.
+    </div>`;
 
   return { subject, html: emailShell(inner, footerExtra) };
 }
