@@ -437,7 +437,7 @@ function Page() {
   const sendReal = useMutation({
     mutationFn: () => sendIssueFn({ data: { id, segment, confirm: true } }),
     onSuccess: (r) => {
-      setConfirmOpen(false);
+      setFinalConfirmOpen(false);
       if (r.status === "sent") toast.success(`Newsletter envoyée à ${r.sentCount} destinataires.`);
       else if (r.status === "partially_failed")
         toast.warning(`Envoi partiel : ${r.sentCount}/${r.total} réussis.`);
@@ -449,7 +449,7 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
     },
     onError: (e: unknown) => {
-      setConfirmOpen(false);
+      setFinalConfirmOpen(false);
       toast.error(e instanceof Error ? e.message : "Envoi impossible.");
     },
   });
