@@ -435,7 +435,8 @@ export const auditTherapistShowcase = createServerFn({ method: "POST" })
       loadShowcaseAudit(sb, data.therapistId),
       resolveScoringAccess(sb, data.therapistId),
     ]);
-    return { ...audit, level: "admin" as const, access };
+    const { input: _input, ...auditPublic } = audit;
+    return { ...auditPublic, level: "admin" as const, access };
   });
 
 /**
