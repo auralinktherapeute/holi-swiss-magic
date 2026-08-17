@@ -74,12 +74,8 @@ export function NewsletterStatusLegend() {
                   <Icon className={`h-4 w-4 ${text} ${isAnimated ? "animate-spin" : ""}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={`font-medium ${text}`}>
-                    {NEWSLETTER_STATUS_LABELS[status]}
-                  </p>
-                  <p className="text-sm text-white/60">
-                    {NEWSLETTER_STATUS_DESCRIPTIONS[status]}
-                  </p>
+                  <p className={`font-medium ${text}`}>{NEWSLETTER_STATUS_LABELS[status]}</p>
+                  <p className="text-sm text-white/60">{NEWSLETTER_STATUS_DESCRIPTIONS[status]}</p>
                 </div>
               </div>
             );

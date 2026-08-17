@@ -301,10 +301,7 @@ function Page() {
                   </Button>
                 </ActionTooltip>
                 <ActionTooltip label="Ouvre l'éditeur complet : brief, email, page ressource, SEO et contrôle qualité, avec le statut actuel et l'historique des versions.">
-                  <Button
-                    asChild
-                    className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-                  >
+                  <Button asChild className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
                     <Link
                       to="/admin/newsletter/$id"
                       params={{ id: row.id }}

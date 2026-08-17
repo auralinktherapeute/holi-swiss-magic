@@ -191,7 +191,9 @@ export const saveNewsletterSuggestion = createServerFn({ method: "POST" })
 export const setNewsletterSuggestionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({ id: z.string().uuid(), status: z.enum(["ouverte", "acceptee", "rejetee"]) }).parse(data),
+    z
+      .object({ id: z.string().uuid(), status: z.enum(["ouverte", "acceptee", "rejetee"]) })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
