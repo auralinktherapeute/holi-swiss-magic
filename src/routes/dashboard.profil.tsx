@@ -1117,7 +1117,18 @@ function ProfilePage() {
           subtitle="Le titre et la description affichés par Google pour votre fiche. Laissez vide pour utiliser le texte généré automatiquement."
         >
           <div id="seo-title">
-          <Field label={<label htmlFor="meta-title">Title SEO</label>}>
+          <Field
+            label={
+              <label htmlFor="meta-title" className="inline-flex items-center gap-2">
+                Title SEO
+                {seoTitleStatus.passed && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(159,216,168,0.15)] px-2 py-0.5 text-[11px] font-medium text-[#9fd8a8]">
+                    <BadgeCheck className="h-3 w-3" aria-hidden="true" />Validé
+                  </span>
+                )}
+              </label>
+            }
+          >
             <Input
               id="meta-title"
               value={metaTitle}
@@ -1127,10 +1138,17 @@ function ProfilePage() {
               className={inputClass}
             />
             <p className="mt-1.5 text-xs text-[#a89bc4]">
-              {metaTitle.length}/70 · visez 20 à 60 caractères.
-              {metaTitle.length > 0 && metaTitle.length < 20 && " — trop court pour être explicite."}
-              {metaTitle.length > 60 && " — Google risque de le tronquer."}
+              {seoTitleResolution.length} caractères · règle : {SEO_TITLE_MIN} à {SEO_TITLE_MAX} caractères.
+              {seoTitleResolution.source === "generated" && " Titre généré automatiquement (champ vide)."}
             </p>
+            <p className={`mt-1 text-xs ${seoTitleStatus.passed ? "text-[#9fd8a8]" : "text-[#f0b26b]"}`}>
+              {seoTitleStatus.message}
+            </p>
+            {seoTitleResolution.value && (
+              <p className="mt-1 truncate text-xs text-[#a89bc4]">
+                Valeur publiée : « {seoTitleResolution.value} »
+              </p>
+            )}
           </Field>
           </div>
 
@@ -1158,7 +1176,7 @@ function ProfilePage() {
             <p className="text-xs font-medium uppercase tracking-wide text-[#a89bc4]">Aperçu dans les résultats de recherche</p>
             <p className="mt-2 truncate text-xs text-[#9fd8a8]">holiswiss.ch › thérapeute</p>
             <p className="mt-0.5 line-clamp-2 text-base text-[#8ab4f8]">
-              {metaTitle.trim() || `${firstName} ${lastName}`.trim() || "Titre de votre fiche"}
+              {seoTitleResolution.value || "Titre de votre fiche"}
             </p>
             <p className="mt-1 line-clamp-2 text-sm text-[#c7bcd8]">
               {metaDescription.trim() || shortBio?.trim() || "La description affichée sous votre titre dans Google."}
