@@ -154,12 +154,48 @@ export const regenerateArticleIdea = createServerFn({ method: "POST" })
     });
 
     const specs = (t.specialties ?? []).join(", ") || "bien-être holistique";
+
+    // AUDIT DE DIVERSITÉ — regarder ce qui a déjà été couvert pour ne pas répéter les
+    // mêmes thèmes (le blog sur-produisait remboursement/assurance, ostéopathie,
+    // acupuncture, naturopathie, massage). On donne cette réalité à l'IA en contexte.
+    const { data: recent } = await sb
+      .from("articles")
+      .select("category,title_fr")
+      .order("created_at", { ascending: false })
+      .limit(60);
+    const recentRows = (recent ?? []) as Array<{ category: string | null; title_fr: string | null }>;
+    const catCounts = recentRows.reduce<Record<string, number>>((acc, r) => {
+      const c = (r.category ?? "").trim();
+      if (c) acc[c] = (acc[c] ?? 0) + 1;
+      return acc;
+    }, {});
+    const saturated = Object.entries(catCounts)
+      .filter(([, n]) => n >= 3)
+      .sort((a, b) => b[1] - a[1])
+      .map(([c, n]) => `${c} (${n} articles)`);
+    const recentTitles = recentRows.slice(0, 15).map((r) => r.title_fr).filter(Boolean) as string[];
+    const coverage = saturated.length
+      ? `Spécialités DÉJÀ SATURÉES sur le blog (à éviter sauf si absentes des titres récents) : ${saturated.join(", ")}.`
+      : "Aucune spécialité encore saturée.";
+    const titlesBlock = recentTitles.length
+      ? `Titres RÉCENTS — n'en répète ni le thème ni l'angle :\n- ${recentTitles.join("\n- ")}`
+      : "";
+
     const system = `Tu es l'assistant éditorial de Holiswiss, annuaire suisse de thérapeutes holistiques.
-À partir des spécialités d'un praticien, propose UN seul sujet d'article pour la section « Voix d'experts ».
-Contraintes : titre concret et cliquable en français, orienté patient suisse, 8 à 14 mots, angle utile
-(bienfaits, idées reçues, remboursement, quand consulter). Respect LPMéd : éviter « soin/guérison/traitement/diagnostic ».
-Réponds UNIQUEMENT par le titre, sans guillemets.`;
-    const prompt = `Spécialités : ${specs}. Canton : ${t.canton ?? "Suisse"}. Propose UN titre d'article.`;
+Propose UN seul sujet d'article pour la section « Voix d'experts », en VARIANT délibérément les thèmes.
+RÈGLE DE DIVERSITÉ (prioritaire sur tout le reste) :
+- N'utilise PAS les angles saturés du blog : remboursement/assurance/LAMal/ASCA-RME, douleurs
+  ostéopathiques (cervicales, sciatique, tendinite), acupuncture générique, naturopathie féminine,
+  massage — SAUF s'ils sont clairement absents des titres récents ci-dessous.
+- Choisis un ANGLE frais : prévention, saison, sommeil, stress au travail, digestion, énergie,
+  émotions, transitions de vie, sport, écrans, respiration, alimentation.
+- Si le praticien a plusieurs spécialités, mets en avant la MOINS couverte sur le blog.
+Contraintes : titre concret et cliquable en français, orienté patient suisse, 8 à 14 mots.
+Respect LPMéd : éviter « soin/guérison/traitement/diagnostic ». Réponds UNIQUEMENT par le titre, sans guillemets.`;
+    const prompt = `Spécialités du praticien : ${specs}. Canton : ${t.canton ?? "Suisse"}.
+${coverage}
+${titlesBlock}
+Propose UN titre d'article qui APPORTE DE LA VARIÉTÉ par rapport à tout ce qui précède.`;
 
     let title = "";
     try {
