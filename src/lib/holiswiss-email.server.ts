@@ -43,11 +43,21 @@ export function emailSenderConfigured(): boolean {
 }
 
 /** Envoi unitaire générique (réutilise le transport Resend existant). */
-export async function sendRawEmail(args: { to: string; subject: string; html: string }) {
-  return send({ to: args.to, subject: args.subject, html: args.html });
+export async function sendRawEmail(args: {
+  to: string;
+  subject: string;
+  html: string;
+  headers?: Record<string, string>;
+}) {
+  return send({
+    to: args.to,
+    subject: args.subject,
+    html: args.html,
+    ...(args.headers ? { headers: args.headers } : {}),
+  });
 }
 
-export type BatchEmail = { to: string; subject: string; html: string };
+export type BatchEmail = { to: string; subject: string; html: string; headers?: Record<string, string> };
 export type BatchResult = { ok: boolean; ids: (string | null)[]; error?: string; status: number };
 
 /**
@@ -68,7 +78,15 @@ export async function sendEmailBatch(emails: BatchEmail[]): Promise<BatchResult>
         Authorization: `Bearer ${lovableKey}`,
         "X-Connection-Api-Key": resendKey,
       },
-      body: JSON.stringify(emails.map((e) => ({ from: FROM, to: [e.to], subject: e.subject, html: e.html }))),
+      body: JSON.stringify(
+        emails.map((e) => ({
+          from: FROM,
+          to: [e.to],
+          subject: e.subject,
+          html: e.html,
+          ...(e.headers ? { headers: e.headers } : {}),
+        })),
+      ),
     });
     const text = await res.text().catch(() => "");
     if (!res.ok) {
