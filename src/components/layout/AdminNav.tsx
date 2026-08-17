@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
   Menu, X, Home, Gauge, Workflow, Bell, Sparkles, Globe2, Mic, Megaphone, HeartPulse,
-  Activity, Newspaper,
+  Activity, Newspaper, BrainCircuit,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -87,6 +87,7 @@ export function AdminNav() {
 
   const items = [
     { to: "/admin",                  icon: LayoutDashboard, label: t("admin.overview"),       exact: true },
+    { to: "/admin/cerveau",          icon: BrainCircuit,    label: "Le Cerveau" },
     { to: "/admin/analytics",        icon: Activity,        label: "Analytics" },
     { to: "/admin/notifications",    icon: Bell,            label: "Notifications",           badge: visibleCount("/admin/notifications", unread) },
     { to: "/admin/therapeutes",      icon: Users,           label: t("admin.therapists"),     badge: visibleCount("/admin/therapeutes", counts.therapists) },
