@@ -176,6 +176,11 @@ function ProfilePage() {
   // Documents
   const [documents, setDocuments] = useSessionState<DocRow[]>(`${profileStatePrefix}.documents`, []);
 
+  // Newsletter consent
+  const [newsletterOptIn, setNewsletterOptIn] = useSessionState<boolean>(`${profileStatePrefix}.newsletterOptIn`, false);
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
+
   const docInputRef = useRef<HTMLInputElement>(null);
 
   // ---- Auto-save draft ----
