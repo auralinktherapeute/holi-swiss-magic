@@ -14,6 +14,7 @@ import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowc
 import { CantonDirectory } from "@/components/holiswiss/CantonDirectory";
 import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
+import { NewsletterSection } from "@/components/holiswiss/NewsletterSignup";
 import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 
@@ -149,6 +150,9 @@ function HomePage() {
 
       {/* Les 26 cantons — liens crawlables vers l'annuaire filtré */}
       <CantonDirectory />
+
+      {/* Inscription publique à La Lettre Holiswiss */}
+      <NewsletterSection />
 
       {/* SEO/AI FAQ section */}
       {(() => {
