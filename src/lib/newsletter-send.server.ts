@@ -32,13 +32,15 @@ export async function resolveRecipients(
   let q = client
     .from("therapists")
     .select(
-      "id,email,newsletter_unsubscribe_token,created_at,onboarding_complete,subscription_plan",
+      "id,email,newsletter_unsubscribe_token,created_at,onboarding_complete,subscription_plan,photo_url,bio,short_bio,services,price_min,price_max",
     )
-    .eq("status", "active")
     .eq("newsletter_opt_in", true)
     .is("newsletter_unsubscribed_at", null)
     .not("email", "is", null)
     .limit(5000);
+
+  // Le profil non publié est le seul segment qui sort des profils actifs.
+  q = segment === "profil_non_publie" ? q.neq("status", "active") : q.eq("status", "active");
 
   if (segment === "nouveaux") {
     const since = new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString();
@@ -47,10 +49,41 @@ export async function resolveRecipients(
     q = q.eq("onboarding_complete", false);
   } else if (segment === "premium") {
     q = q.neq("subscription_plan", "free");
+  } else if (segment === "sans_photo") {
+    q = q.is("photo_url", null);
+  } else if (segment === "sans_tarifs") {
+    q = q.is("price_min", null);
   }
 
   const { data, error } = await q;
   if (error) throw new Error("Impossible de calculer les destinataires.");
+
+  // Segments dérivés d'autres tables : on ne lit qu'un identifiant, jamais de données personnelles.
+  let allowed: Set<string> | null = null;
+  if (segment === "sans_disponibilite") {
+    const { data: rows } = await client.from("availabilities").select("therapist_id").limit(20000);
+    const withAvail = new Set(((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+    allowed = new Set(
+      ((data ?? []) as { id: string }[]).map((r) => r.id).filter((id) => !withAvail.has(id)),
+    );
+  } else if (segment === "sans_contenu_expert") {
+    const { data: rows } = await client
+      .from("therapist_articles")
+      .select("therapist_id")
+      .eq("statut", "publie")
+      .limit(20000);
+    const authors = new Set(((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+    allowed = new Set(
+      ((data ?? []) as { id: string }[]).map((r) => r.id).filter((id) => !authors.has(id)),
+    );
+  } else if (segment === "score_faible") {
+    const { data: rows } = await client
+      .from("therapist_health_scores")
+      .select("therapist_id")
+      .lt("score_total", 50)
+      .limit(20000);
+    allowed = new Set(((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+  }
 
   const seen = new Set<string>();
   const out: Recipient[] = [];
@@ -58,7 +91,15 @@ export async function resolveRecipients(
     id: string;
     email: string | null;
     newsletter_unsubscribe_token: string | null;
+    bio: string | null;
+    short_bio: string | null;
+    services: unknown;
   }[]) {
+    if (allowed && !allowed.has(row.id)) continue;
+    if (segment === "sans_presentation" && (row.bio ?? row.short_bio ?? "").trim().length > 0)
+      continue;
+    if (segment === "sans_prestations" && Array.isArray(row.services) && row.services.length > 0)
+      continue;
     const email = (row.email ?? "").trim().toLowerCase();
     if (!email || !isValidEmail(email) || seen.has(email)) continue;
     if (!row.newsletter_unsubscribe_token) continue;
