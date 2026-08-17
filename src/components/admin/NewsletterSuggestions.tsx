@@ -244,6 +244,7 @@ export function NewsletterSuggestions() {
                   <Button
                     disabled={mBrief.isPending || !!s.issue_id}
                     onClick={() => mBrief.mutate(s.id)}
+                    title="Crée un brouillon de newsletter à partir de cette suggestion et ouvre l'éditeur. Aucun envoi."
                     className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
                   >
                     <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -252,6 +253,7 @@ export function NewsletterSuggestions() {
                   <Button
                     variant="outline"
                     aria-label="Modifier la suggestion"
+                    title="Modifier le sujet, le public et la priorité de cette suggestion"
                     onClick={() => {
                       setDraft({
                         id: s.id,
@@ -269,17 +271,33 @@ export function NewsletterSuggestions() {
                   >
                     <PencilLine className="h-4 w-4" aria-hidden="true" />
                   </Button>
+                  {s.status === "rejetee" ? (
+                    <Button
+                      variant="outline"
+                      disabled={mRestore.isPending}
+                      onClick={() => mRestore.mutate(s.id)}
+                      title="Remettre cette suggestion dans la liste active"
+                      className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+                    >
+                      <Undo2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Restaurer
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      disabled={mDismiss.isPending}
+                      onClick={() => mDismiss.mutate(s.id)}
+                      title="Masquer cette suggestion sans la supprimer (réversible)"
+                      className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                    >
+                      Écarter
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
-                    onClick={() => mDismiss.mutate(s.id)}
-                    className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
-                  >
-                    Écarter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    aria-label="Supprimer la suggestion"
-                    onClick={() => mDelete.mutate(s.id)}
+                    aria-label="Supprimer définitivement la suggestion"
+                    title="Supprimer définitivement cette suggestion"
+                    onClick={() => setToDelete(s)}
                     className="min-h-11 min-w-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
