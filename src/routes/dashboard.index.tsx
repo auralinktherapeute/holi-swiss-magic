@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { ShowcaseScoreCard } from "@/components/dashboard/ShowcaseScoreCard";
 
 const SHOW_STATS = false;
 
@@ -67,6 +68,8 @@ function Page() {
       </div>
 
       <OnboardingChecklist />
+
+      <ShowcaseScoreCard />
 
       {/* Statistics — hidden during launch phase; set SHOW_STATS = true to restore */}
       {SHOW_STATS && (
