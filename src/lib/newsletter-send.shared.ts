@@ -72,6 +72,7 @@ export const NEWSLETTER_SEGMENT_KEYS = NEWSLETTER_SEGMENTS.map((s) => s.key) as 
 ];
 
 export const SEND_STATUSES = [
+  "test_sent",
   "approved",
   "sending",
   "sent",
@@ -83,6 +84,7 @@ export const SEND_STATUSES = [
 export type SendStatus = (typeof SEND_STATUSES)[number];
 
 export const SEND_STATUS_LABELS: Record<SendStatus, string> = {
+  test_sent: "Test envoyé",
   approved: "Prête",
   sending: "Envoi en cours",
   sent: "Envoyée",
