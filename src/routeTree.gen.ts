@@ -30,7 +30,6 @@ import { Route as AdminIndexationRouteImport } from './routes/admin.indexation'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
 import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
-import { Route as AdminNewsletterRouteImport } from './routes/admin.newsletter'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
@@ -68,6 +67,7 @@ import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.
 import { Route as LangFaqIndexRouteImport } from './routes/$lang.faq.index'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
+import { Route as LangLettreSlugRouteImport } from './routes/$lang.lettre.$slug'
 import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
 import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
 import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
@@ -77,6 +77,8 @@ import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeutes.$slug'
+import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newsletter.index'
+import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
@@ -189,11 +191,6 @@ const AdminMarketingRoute = AdminMarketingRouteImport.update({
 const AdminModerationRoute = AdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
-  id: '/newsletter',
-  path: '/newsletter',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -383,6 +380,11 @@ const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
   path: '/inscription/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangLettreSlugRoute = LangLettreSlugRouteImport.update({
+  id: '/lettre/$slug',
+  path: '/lettre/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangMotDePasseOublieIndexRoute =
   LangMotDePasseOublieIndexRouteImport.update({
     id: '/mot-de-passe-oublie/',
@@ -430,6 +432,16 @@ const LangTherapeutesSlugRoute = LangTherapeutesSlugRouteImport.update({
   id: '/therapeutes/$slug',
   path: '/therapeutes/$slug',
   getParentRoute: () => LangRoute,
+} as any)
+const AdminNewsletterIndexRoute = AdminNewsletterIndexRouteImport.update({
+  id: '/newsletter/',
+  path: '/newsletter/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNewsletterIdRoute = AdminNewsletterIdRouteImport.update({
+  id: '/newsletter/$id',
+  path: '/newsletter/$id',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
   id: '/api/public/admin-notify',
@@ -492,7 +504,6 @@ export interface FileRoutesByFullPath {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
-  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -523,10 +534,12 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -542,6 +555,7 @@ export interface FileRoutesByFullPath {
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/admin/newsletter/': typeof AdminNewsletterIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -566,7 +580,6 @@ export interface FileRoutesByTo {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
-  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -597,10 +610,12 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
@@ -616,6 +631,7 @@ export interface FileRoutesByTo {
   '/$lang/reinitialiser-mot-de-passe': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
+  '/admin/newsletter': typeof AdminNewsletterIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -644,7 +660,6 @@ export interface FileRoutesById {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
-  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -675,10 +690,12 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -694,6 +711,7 @@ export interface FileRoutesById {
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/admin/newsletter/': typeof AdminNewsletterIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -723,7 +741,6 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/marketing'
     | '/admin/moderation'
-    | '/admin/newsletter'
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
@@ -754,10 +771,12 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -773,6 +792,7 @@ export interface FileRouteTypes {
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/admin/newsletter/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -797,7 +817,6 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/marketing'
     | '/admin/moderation'
-    | '/admin/newsletter'
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
@@ -828,10 +847,12 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/$lang/blog'
     | '/$lang/conditions'
@@ -847,6 +868,7 @@ export interface FileRouteTypes {
     | '/$lang/reinitialiser-mot-de-passe'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
+    | '/admin/newsletter'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -874,7 +896,6 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/marketing'
     | '/admin/moderation'
-    | '/admin/newsletter'
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
@@ -905,10 +926,12 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -924,6 +947,7 @@ export interface FileRouteTypes {
     | '/$lang/reinitialiser-mot-de-passe/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/admin/newsletter/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -1097,13 +1121,6 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/admin/moderation'
       preLoaderRoute: typeof AdminModerationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/newsletter': {
-      id: '/admin/newsletter'
-      path: '/newsletter'
-      fullPath: '/admin/newsletter'
-      preLoaderRoute: typeof AdminNewsletterRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/notifications': {
@@ -1365,6 +1382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangInscriptionIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/lettre/$slug': {
+      id: '/$lang/lettre/$slug'
+      path: '/lettre/$slug'
+      fullPath: '/$lang/lettre/$slug'
+      preLoaderRoute: typeof LangLettreSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/mot-de-passe-oublie/': {
       id: '/$lang/mot-de-passe-oublie/'
       path: '/mot-de-passe-oublie'
@@ -1427,6 +1451,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$lang/therapeutes/$slug'
       preLoaderRoute: typeof LangTherapeutesSlugRouteImport
       parentRoute: typeof LangRoute
+    }
+    '/admin/newsletter/': {
+      id: '/admin/newsletter/'
+      path: '/newsletter'
+      fullPath: '/admin/newsletter/'
+      preLoaderRoute: typeof AdminNewsletterIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/newsletter/$id': {
+      id: '/admin/newsletter/$id'
+      path: '/newsletter/$id'
+      fullPath: '/admin/newsletter/$id'
+      preLoaderRoute: typeof AdminNewsletterIdRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/api/public/admin-notify': {
       id: '/api/public/admin-notify'
@@ -1500,6 +1538,7 @@ interface LangRouteChildren {
   LangBlogSlugRoute: typeof LangBlogSlugRoute
   LangBlogQuEstCeQueLaSophrologieRoute: typeof LangBlogQuEstCeQueLaSophrologieRoute
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
+  LangLettreSlugRoute: typeof LangLettreSlugRoute
   LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangSpecialitesSpecialtySlugRoute: typeof LangSpecialitesSpecialtySlugRouteWithChildren
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
@@ -1527,6 +1566,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogSlugRoute: LangBlogSlugRoute,
   LangBlogQuEstCeQueLaSophrologieRoute: LangBlogQuEstCeQueLaSophrologieRoute,
   LangEvenementsIdRoute: LangEvenementsIdRoute,
+  LangLettreSlugRoute: LangLettreSlugRoute,
   LangParolesSlugRoute: LangParolesSlugRoute,
   LangSpecialitesSpecialtySlugRoute:
     LangSpecialitesSpecialtySlugRouteWithChildren,
@@ -1566,7 +1606,6 @@ interface AdminRouteChildren {
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
   AdminMarketingRoute: typeof AdminMarketingRoute
   AdminModerationRoute: typeof AdminModerationRoute
-  AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminParolesRoute: typeof AdminParolesRoute
@@ -1575,6 +1614,8 @@ interface AdminRouteChildren {
   AdminTherapeutesRoute: typeof AdminTherapeutesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminNewsletterIdRoute: typeof AdminNewsletterIdRoute
+  AdminNewsletterIndexRoute: typeof AdminNewsletterIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1591,7 +1632,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminListeAttenteRoute: AdminListeAttenteRoute,
   AdminMarketingRoute: AdminMarketingRoute,
   AdminModerationRoute: AdminModerationRoute,
-  AdminNewsletterRoute: AdminNewsletterRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminParolesRoute: AdminParolesRoute,
@@ -1600,6 +1640,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTherapeutesRoute: AdminTherapeutesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminNewsletterIdRoute: AdminNewsletterIdRoute,
+  AdminNewsletterIndexRoute: AdminNewsletterIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
