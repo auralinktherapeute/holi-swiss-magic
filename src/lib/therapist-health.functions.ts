@@ -511,3 +511,93 @@ export const setTherapistScoringAccess = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return resolveScoringAccess(sb, data.therapistId);
   });
+
+// ── Places fondateur (70 premiers thérapeutes) ───────────────────────────────
+
+/** Vue d'ensemble des places fondateur + historique (admin). */
+export const listFounderSeats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const [{ data: seats }, { data: events }, { data: setting }] = await Promise.all([
+      sb
+        .from("founder_seats")
+        .select("seat_number,therapist_id,source,status,granted_at,revoked_at,note")
+        .order("seat_number", { ascending: true }),
+      sb
+        .from("founder_seat_events")
+        .select("id,therapist_id,seat_number,action,source,note,created_at")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      sb.from("app_settings").select("value").eq("key", "founder_seat_number_display").maybeSingle(),
+    ]);
+    const ids = Array.from(
+      new Set([...(seats ?? []), ...(events ?? [])].map((r: any) => r.therapist_id)),
+    );
+    const { data: people } = ids.length
+      ? await sb.from("therapists").select("id,first_name,last_name,slug,status,subscription_plan").in("id", ids)
+      : { data: [] as any[] };
+    const byId = new Map((people ?? []).map((p: any) => [p.id, p]));
+    const decorate = (r: any) => ({ ...r, therapist: byId.get(r.therapist_id) ?? null });
+    const used = (seats ?? []).length;
+    return {
+      total: 70,
+      used,
+      remaining: Math.max(0, 70 - used),
+      active: (seats ?? []).filter((s: any) => s.status === "active").length,
+      seats: (seats ?? []).map(decorate),
+      events: (events ?? []).map(decorate),
+      showSeatNumber: setting?.value === true || setting?.value === "true" || setting == null,
+    };
+  });
+
+/** Attribuer / retirer une place fondateur (admin). */
+export const setFounderSeat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      therapistId: z.string().uuid(),
+      enabled: z.boolean(),
+      source: z.enum(["admin_manual", "commercial_offer", "offer_accepted"]).default("admin_manual"),
+      note: z.string().max(500).optional(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    if (data.enabled) {
+      const { data: seat, error } = await sb.rpc("claim_founder_seat", {
+        _therapist_id: data.therapistId,
+        _source: data.source,
+        _actor: context.userId,
+        _note: data.note ?? null,
+      });
+      if (error) throw new Error(error.message);
+      if (seat == null) throw new Error("Les 70 places fondateur sont toutes attribuées.");
+      return { ok: true, seatNumber: seat as number };
+    }
+    const { error } = await sb.rpc("revoke_founder_seat", {
+      _therapist_id: data.therapistId,
+      _actor: context.userId,
+      _note: data.note ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true, seatNumber: null };
+  });
+
+/** Afficher ou masquer le numéro de place côté thérapeute (admin). */
+export const setFounderSeatDisplay = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ show: z.boolean() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("app_settings")
+      .upsert({ key: "founder_seat_number_display", value: data.show, updated_at: new Date().toISOString() });
+    if (error) throw new Error("Impossible de modifier le réglage.");
+    return { ok: true, show: data.show };
+  });
