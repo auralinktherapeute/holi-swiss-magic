@@ -7,12 +7,12 @@ const META: Record<string, { title: string; description: string }> = {
   fr: {
     title: "FAQ — Trouver un thérapeute holistique en Suisse | Holiswiss",
     description:
-      "Questions fréquentes sur Holiswiss : trouver un thérapeute en Suisse, remboursement des médecines douces (LAMal, ASCA, RME), spécialités et réservation. 4 langues.",
+      "Questions fréquentes : trouver un thérapeute en Suisse, remboursement des médecines douces (LAMal, ASCA, RME), spécialités et réservation en ligne.",
   },
   de: {
-    title: "FAQ — Ganzheitliche Therapeuten in der Schweiz finden | Holiswiss",
+    title: "FAQ — Therapeuten in der Schweiz finden | Holiswiss",
     description:
-      "Häufige Fragen zu Holiswiss: Therapeuten in der Schweiz finden, Rückerstattung der Komplementärmedizin (KVG, ASCA, EMR), Fachgebiete und Buchung. 4 Sprachen.",
+      "Häufige Fragen: Therapeuten in der Schweiz finden, Rückerstattung der Komplementärmedizin (KVG, ASCA, EMR), Fachgebiete und Online-Buchung.",
   },
   it: {
     title: "FAQ — Trovare un terapeuta olistico in Svizzera | Holiswiss",
