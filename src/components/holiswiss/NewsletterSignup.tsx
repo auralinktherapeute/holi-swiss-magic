@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Mail, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,38 +80,50 @@ function PrivacyLink({ lang }: { lang: Locale }) {
 export function NewsletterSection() {
   const { t, email, setEmail, consent, setConsent, loading, done, submit, locale } =
     useSubscribeForm("homepage_newsletter");
-  const benefits = t("newsletter_public.benefits", { returnObjects: true }) as string[];
+  const raw = t("newsletter_public.benefits", { returnObjects: true });
+  const benefits = Array.isArray(raw) ? (raw as string[]) : [];
 
   return (
-    <section aria-labelledby="newsletter-title" className="bg-[#2d1248]">
-      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="grid gap-10 rounded-3xl border border-[rgba(184,110,249,0.25)] bg-gradient-to-br from-[#3d1a5c] to-[#2d1248] p-6 sm:p-10 lg:grid-cols-2">
+    <section aria-labelledby="newsletter-title" className="relative overflow-hidden bg-[#2d1248]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#b86ef9]/20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-[#5cc8fa]/15 blur-3xl"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="grid gap-10 rounded-3xl border border-[rgba(184,110,249,0.3)] bg-gradient-to-br from-[#3d1a5c] via-[#341552] to-[#2d1248] p-6 shadow-[0_0_60px_rgba(184,110,249,0.18)] sm:p-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#b86ef9]/15 px-3 py-1 text-xs font-semibold text-[#d4a5f9]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#d4a5f9]">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               {t("newsletter_public.badge")}
             </span>
             <h2
               id="newsletter-title"
-              className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl"
+              className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl"
             >
               {t("newsletter_public.title")}
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#d4c4e0]">
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-[#d4c4e0]">
               {t("newsletter_public.text")}
             </p>
-            <ul className="mt-6 grid gap-2 sm:grid-cols-2">
+            <ul className="mt-7 grid gap-3 sm:grid-cols-2">
               {benefits.map((b) => (
-                <li key={b} className="flex items-start gap-2 text-sm text-[#d4c4e0]">
+                <li
+                  key={b}
+                  className="flex items-start gap-2.5 rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(20,8,40,0.4)] px-3 py-2.5 text-sm text-[#d4c4e0]"
+                >
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#7de3b8]" aria-hidden="true" />
                   <span>{b}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-xs italic text-[#a89bc4]">{t("newsletter_public.promo_note")}</p>
+            <p className="mt-6 text-xs italic text-[#a89bc4]">{t("newsletter_public.promo_note")}</p>
           </div>
 
-          <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.6)] p-5 sm:p-6">
+          <div className="rounded-2xl border border-[rgba(184,110,249,0.3)] bg-[rgba(20,8,40,0.7)] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur sm:p-7">
             {done ? (
               <p className="flex items-start gap-2 text-sm text-[#7de3b8]">
                 <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -147,13 +159,17 @@ export function NewsletterSection() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="min-h-[44px] w-full gap-2 bg-[#b86ef9] text-white hover:bg-[#a855f7]"
+                  className="min-h-[48px] w-full gap-2 bg-gradient-to-r from-[#b86ef9] to-[#8b4ddb] text-base font-semibold text-white shadow-lg shadow-[#b86ef9]/30 transition-transform duration-200 hover:from-[#a855f7] hover:to-[#7c3aed] hover:brightness-110 motion-safe:hover:-translate-y-0.5"
                 >
                   <Mail className="h-4 w-4" aria-hidden="true" />
                   {t("newsletter_public.cta")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <p className="text-xs text-[#a89bc4]">
-                  {t("newsletter_public.reassurance")} <PrivacyLink lang={locale} />.
+                <p className="flex items-start gap-2 text-xs text-[#a89bc4]">
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    {t("newsletter_public.reassurance")} <PrivacyLink lang={locale} />.
+                  </span>
                 </p>
               </form>
             )}
