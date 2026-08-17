@@ -16,7 +16,7 @@ const FULL_COLUMNS = `${BRIEF_COLUMNS},email_subject,email_preheader,email_intro
 
 /** Colonnes strictement publiques : jamais de notes internes ni de brief. */
 const PUBLIC_COLUMNS =
-  "id,slug,lang,resource_title,resource_intro,resource_body,resource_sections,resource_example,resource_checklist,resource_takeaway,resource_cta,seo_title,meta_description,share_image_url,canonical_url,published_at,title";
+  "id,slug,lang,resource_title,resource_intro,resource_body,resource_sections,resource_example,resource_checklist,resource_takeaway,resource_cta,seo_title,meta_description,share_image_url,canonical_url,published_at";
 
 const nullableText = (max: number) =>
   z
