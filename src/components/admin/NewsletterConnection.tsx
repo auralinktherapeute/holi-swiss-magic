@@ -228,12 +228,12 @@ export function NewsletterConnection(props: Props) {
               <option value="" className="bg-[#1d0d3d]">
                 Aucune
               </option>
-              {(content.data?.expert ?? []).map((a) => (
+              {(content.data?.expert ?? []).map((a: { id: string; title: string }) => (
                 <option key={a.id} value={`expert:${a.id}`} className="bg-[#1d0d3d]">
                   Voix d'experts — {a.title}
                 </option>
               ))}
-              {(content.data?.blog ?? []).map((a) => (
+              {(content.data?.blog ?? []).map((a: { id: string; title: string }) => (
                 <option key={a.id} value={`blog:${a.id}`} className="bg-[#1d0d3d]">
                   Article — {a.title}
                 </option>
@@ -259,7 +259,7 @@ export function NewsletterConnection(props: Props) {
               <option value="" className="bg-[#1d0d3d]">
                 Page ressource de cette édition
               </option>
-              {(content.data?.resources ?? []).map((r) => (
+              {(content.data?.resources ?? []).map((r: { id: string; slug: string; title: string | null }) => (
                 <option key={r.id} value={r.slug} className="bg-[#1d0d3d]">
                   {r.title || r.slug}
                 </option>

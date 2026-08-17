@@ -285,7 +285,7 @@ function Page() {
           target_route: form.target_route,
           action_label: form.action_label,
           action_difficulty: form.action_difficulty,
-          action_minutes: form.action_minutes,
+          action_minutes: form.action_minutes ? Number(form.action_minutes) : "",
           linked_article_id: form.linked_article_id,
           linked_article_kind: form.linked_article_kind,
           linked_resource_slug: form.linked_resource_slug,
