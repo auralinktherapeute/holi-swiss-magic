@@ -14,6 +14,21 @@ export function unsubscribeUrl(token: string): string {
   return `${SITE_URL}/desinscription?token=${encodeURIComponent(token)}`;
 }
 
+/** Endpoint POST « one-click » (RFC 8058), utilisable sans connexion. */
+export function unsubscribeOneClickUrl(token: string): string {
+  return `${SITE_URL}/api/public/newsletter/unsubscribe?token=${encodeURIComponent(token)}`;
+}
+
+export const PREFERENCES_URL = `${SITE_URL}/dashboard/profil`;
+
+/** En-têtes de désinscription reconnus par Gmail, Outlook, Apple Mail… */
+export function listUnsubscribeHeaders(token: string): Record<string, string> {
+  return {
+    "List-Unsubscribe": `<${unsubscribeOneClickUrl(token)}>, <mailto:contact@holiswiss.ch?subject=Desinscription>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
 export function resourceUrl(lang: string, slug: string | null): string | null {
   return slug ? `${SITE_URL}/${lang || "fr"}/lettre/${slug}` : null;
 }
@@ -138,6 +153,7 @@ export function buildEmailFor(issue: IssueForSend, token: string) {
     buttonUrl: issue.email_button_url,
     footer: issue.email_footer,
     unsubscribeUrl: unsubscribeUrl(token),
+    preferencesUrl: PREFERENCES_URL,
   });
 }
 
@@ -159,7 +175,7 @@ export async function deliverToRecipients(
     const chunk = recipients.slice(i, i + BATCH_SIZE);
     const emails = chunk.map((r) => {
       const { subject, html } = buildEmailFor(issue, r.token);
-      return { to: r.email, subject, html };
+      return { to: r.email, subject, html, headers: listUnsubscribeHeaders(r.token) };
     });
     const res = await sendEmailBatch(emails);
     chunk.forEach((r, idx) => {
@@ -177,8 +193,14 @@ export async function deliverToRecipients(
 
 /** Email de test : même gabarit, même transport, aucun changement de statut. */
 export async function deliverTest(issue: IssueForSend, to: string) {
-  const { subject, html } = buildEmailFor(issue, "test-token");
-  return sendRawEmail({ to, subject: `[TEST] ${subject}`, html });
+  const testToken = "00000000-0000-0000-0000-000000000000";
+  const { subject, html } = buildEmailFor(issue, testToken);
+  return sendRawEmail({
+    to,
+    subject: `[TEST] ${subject}`,
+    html,
+    headers: listUnsubscribeHeaders(testToken),
+  });
 }
 
 export const SENDER_ADDRESS = FROM;
