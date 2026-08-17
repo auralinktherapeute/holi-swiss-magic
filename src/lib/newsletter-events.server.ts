@@ -73,7 +73,21 @@ export async function applyResendEvent(
 ): Promise<{ handled: boolean; reason?: string }> {
   const type = TYPE_MAP[event.type ?? ""] ?? null;
   const messageId = (event.data?.email_id as string | undefined) ?? null;
-  if (!type || !messageId) return { handled: false, reason: "ignored" };
+  const occurredAt = event.created_at
+    ? new Date(event.created_at).toISOString()
+    : new Date().toISOString();
+
+  if (!type || !messageId) {
+    // Trace de diagnostic : aucun contenu d'email, aucune donnée client.
+    await db.from("newsletter_send_events").insert({
+      provider_event_id: eventId,
+      provider_message_id: messageId,
+      event_type: (event.type ?? "unknown").slice(0, 60),
+      occurred_at: occurredAt,
+      detail: "ignored",
+    });
+    return { handled: false, reason: "ignored" };
+  }
 
   const { data: recipient } = await db
     .from("newsletter_send_recipients")
@@ -81,19 +95,14 @@ export async function applyResendEvent(
     .eq("provider_message_id", messageId)
     .maybeSingle();
 
-  if (!recipient) return { handled: false, reason: "unknown_message" };
-
-  const occurredAt = event.created_at
-    ? new Date(event.created_at).toISOString()
-    : new Date().toISOString();
-
   const { error: insertError } = await db.from("newsletter_send_events").insert({
-    send_id: recipient.send_id,
-    recipient_id: recipient.id,
+    send_id: recipient?.send_id ?? null,
+    recipient_id: recipient?.id ?? null,
     provider_message_id: messageId,
     provider_event_id: eventId,
     event_type: type,
     occurred_at: occurredAt,
+    detail: recipient ? null : "unknown_message",
   });
 
   // 23505 = événement déjà reçu : rien à recompter.
@@ -102,6 +111,9 @@ export async function applyResendEvent(
       return { handled: true, reason: "duplicate" };
     throw new Error("Enregistrement de l'événement impossible.");
   }
+
+  // Email hors newsletter (ex. email de test) : tracé, mais aucun compteur à mettre à jour.
+  if (!recipient) return { handled: true, reason: "unknown_message" };
 
   const patch: Record<string, unknown> = { last_event_type: type, last_event_at: occurredAt };
   let alreadyCounted = false;
