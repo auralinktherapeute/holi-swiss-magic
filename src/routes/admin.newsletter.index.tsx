@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ActionTooltip } from "@/components/admin/ActionTooltip";
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
+import { NewsletterWorkflowGuide } from "@/components/admin/NewsletterWorkflowGuide";
 import {
   listNewsletterIssues,
   createNewsletterIssue,
@@ -204,6 +205,8 @@ function Page() {
           </Button>
         </div>
       </div>
+
+      <NewsletterWorkflowGuide />
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par statut">
         <Button

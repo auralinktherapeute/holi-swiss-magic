@@ -47,6 +47,12 @@ import {
 } from "@/components/admin/NewsletterConnection";
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
+  NewsletterWorkflowGuide,
+  NEWSLETTER_WORKFLOW_STEPS,
+  type WorkflowStepKey,
+  type WorkflowStepState,
+} from "@/components/admin/NewsletterWorkflowGuide";
+import {
   getNewsletterIssue,
   updateNewsletterIssue,
   updateNewsletterContent,
@@ -468,6 +474,48 @@ function Page() {
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
   const approved = issue?.status === "approuvee";
 
+  // Progression réelle du parcours en 13 étapes, dérivée des données du dossier.
+  const workflowStates = useMemo<Partial<Record<WorkflowStepKey, WorkflowStepState>>>(() => {
+    if (!issue || !form) return {};
+    const raw = sends.data as unknown;
+    const sendRows: { is_test?: boolean }[] = Array.isArray(raw)
+      ? (raw as { is_test?: boolean }[])
+      : (((raw as { rows?: { is_test?: boolean }[] } | undefined)?.rows ?? []) as {
+          is_test?: boolean;
+        }[]);
+    const hasTest = sendRows.some((s) => s.is_test);
+    const done = {
+      suggestion: true,
+      brief: true,
+      completer: Boolean(form.title && form.pillar && form.audience),
+      rediger: Boolean(form.email_subject && form.email_body),
+      editeur: Boolean(form.email_subject && form.email_body),
+      apercu_email: previewChecked,
+      apercu_ressource: Boolean(issue.published_at),
+      checklist: qcDone === qcTotal,
+      test: hasTest,
+      controle: hasTest && previewChecked,
+      approbation: ["approuvee", "programmee", "envoi_en_cours", "envoyee"].includes(issue.status),
+      segment: (sendPreview.data?.recipientCount ?? 0) > 0,
+      confirmation: canSend,
+      envoi: issue.status === "envoyee",
+    } satisfies Record<WorkflowStepKey, boolean>;
+
+    const out: Partial<Record<WorkflowStepKey, WorkflowStepState>> = {};
+    let currentSet = false;
+    for (const step of NEWSLETTER_WORKFLOW_STEPS) {
+      if (done[step.key]) {
+        out[step.key] = "done";
+      } else if (!currentSet) {
+        out[step.key] = "current";
+        currentSet = true;
+      } else {
+        out[step.key] = "todo";
+      }
+    }
+    return out;
+  }, [issue, form, sends.data, previewChecked, qcDone, qcTotal, sendPreview.data, canSend]);
+
   if (isLoading) {
     return <div className="p-6 md:p-10 text-white/60">Chargement de la newsletter…</div>;
   }
@@ -537,6 +585,8 @@ function Page() {
             </CardContent>
           </Card>
         )}
+
+        <NewsletterWorkflowGuide states={workflowStates} onStepClick={(t) => setTab(t)} />
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-5">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-white/5 p-1 h-auto">
