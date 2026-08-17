@@ -634,3 +634,27 @@ export const setFounderSeatDisplay = createServerFn({ method: "POST" })
     if (error) throw new Error("Impossible de modifier le réglage.");
     return { ok: true, show: data.show };
   });
+
+/** Rapport « Score de visibilité » du thérapeute connecté (lecture). */
+export const getMyShowcaseReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: me } = await sb.from("therapists").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!me?.id) return null;
+    const { buildShowcaseReport } = await import("@/lib/showcase-audit.server");
+    return buildShowcaseReport(sb, me.id as string, false);
+  });
+
+/** Relance l'analyse et enregistre un nouvel instantané. */
+export const runMyShowcaseAnalysis = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+    const { data: me } = await sb.from("therapists").select("id").eq("user_id", context.userId).maybeSingle();
+    if (!me?.id) return null;
+    const { buildShowcaseReport } = await import("@/lib/showcase-audit.server");
+    return buildShowcaseReport(sb, me.id as string, true);
+  });
