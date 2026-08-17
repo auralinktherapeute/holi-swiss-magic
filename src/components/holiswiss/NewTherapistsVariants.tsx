@@ -45,7 +45,7 @@ function SectionShell({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <section className="@container mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <h2
         className="text-2xl font-bold tracking-tight text-white sm:text-3xl"
         style={{ fontFamily: "'Cormorant Garamond', serif" }}
@@ -62,7 +62,7 @@ function SectionShell({
 function VersionA() {
   return (
     <SectionShell title="Nouveaux thérapeutes" subtitle="Ils viennent de rejoindre le réseau Holiswiss">
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-1 gap-6 @[560px]:grid-cols-2 @[960px]:grid-cols-4">
         {DEMO_THERAPISTS.map((t) => (
           <li key={t.id}>
             <a
@@ -93,7 +93,7 @@ function VersionA() {
 function VersionB() {
   return (
     <SectionShell title="Nouveaux thérapeutes" subtitle="Ils viennent de rejoindre le réseau Holiswiss">
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-1 gap-6 @[560px]:grid-cols-2 @[960px]:grid-cols-4">
         {DEMO_THERAPISTS.map((t) => (
           <li key={t.id}>
             <a
@@ -134,7 +134,7 @@ function VersionB() {
 function VersionC() {
   return (
     <SectionShell title="Nouveaux thérapeutes" subtitle="Ils viennent de rejoindre le réseau Holiswiss">
-      <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-1 gap-8 @[560px]:grid-cols-2 @[960px]:grid-cols-4">
         {DEMO_THERAPISTS.map((t) => (
           <li key={t.id}>
             <a

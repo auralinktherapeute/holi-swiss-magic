@@ -53,6 +53,7 @@ import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
 import { Route as DesinscriptionIndexRouteImport } from './routes/desinscription.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
+import { Route as PreviewAnimationsTherapeutesRouteImport } from './routes/preview.animations-therapeutes'
 import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrousels'
 import { Route as PreviewFooterRouteImport } from './routes/preview.footer'
 import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.marketing-topics'
@@ -313,6 +314,12 @@ const IntakeSlugRoute = IntakeSlugRouteImport.update({
   path: '/intake/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewAnimationsTherapeutesRoute =
+  PreviewAnimationsTherapeutesRouteImport.update({
+    id: '/preview/animations-therapeutes',
+    path: '/preview/animations-therapeutes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PreviewCarrouselsRoute = PreviewCarrouselsRouteImport.update({
   id: '/preview/carrousels',
   path: '/preview/carrousels',
@@ -557,6 +564,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
@@ -638,6 +646,7 @@ export interface FileRoutesByTo {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
@@ -723,6 +732,7 @@ export interface FileRoutesById {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
@@ -809,6 +819,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/preview/animations-therapeutes'
     | '/preview/carrousels'
     | '/preview/footer'
     | '/preview/marketing-topics'
@@ -890,6 +901,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/preview/animations-therapeutes'
     | '/preview/carrousels'
     | '/preview/footer'
     | '/preview/marketing-topics'
@@ -974,6 +986,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/intake/$slug'
+    | '/preview/animations-therapeutes'
     | '/preview/carrousels'
     | '/preview/footer'
     | '/preview/marketing-topics'
@@ -1027,6 +1040,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
+  PreviewAnimationsTherapeutesRoute: typeof PreviewAnimationsTherapeutesRoute
   PreviewCarrouselsRoute: typeof PreviewCarrouselsRoute
   PreviewFooterRoute: typeof PreviewFooterRoute
   PreviewMarketingTopicsRoute: typeof PreviewMarketingTopicsRoute
@@ -1350,6 +1364,13 @@ declare module '@tanstack/react-router' {
       path: '/intake/$slug'
       fullPath: '/intake/$slug'
       preLoaderRoute: typeof IntakeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/animations-therapeutes': {
+      id: '/preview/animations-therapeutes'
+      path: '/preview/animations-therapeutes'
+      fullPath: '/preview/animations-therapeutes'
+      preLoaderRoute: typeof PreviewAnimationsTherapeutesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preview/carrousels': {
@@ -1794,6 +1815,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
+  PreviewAnimationsTherapeutesRoute: PreviewAnimationsTherapeutesRoute,
   PreviewCarrouselsRoute: PreviewCarrouselsRoute,
   PreviewFooterRoute: PreviewFooterRoute,
   PreviewMarketingTopicsRoute: PreviewMarketingTopicsRoute,
