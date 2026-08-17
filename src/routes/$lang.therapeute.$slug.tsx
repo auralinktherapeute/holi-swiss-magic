@@ -58,6 +58,8 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
           city?: string;
           canton?: string;
           bio?: string;
+          meta_title?: string | null;
+          meta_description?: string | null;
           photo_url?: string;
           address?: string | null;
           postal_code?: string | null;
@@ -115,10 +117,14 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const copy = profileCopy(pageLang);
     const place = [t.city, t.canton].filter(Boolean).join(", ");
     const role = copy.role(t.title ?? copy.fallbackRole, place);
-    const title = `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, 60);
+    const title = resolveSeoTitle(
+      t.meta_title,
+      `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, 60),
+    ).value;
     const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
     const fallback = copy.descFallback(fullName, role);
-    const rawDescription = bio.length >= 50 ? bio : fallback;
+    const customDesc = (t.meta_description ?? "").replace(/\s+/g, " ").trim();
+    const rawDescription = customDesc || (bio.length >= 50 ? bio : fallback);
     const description =
       rawDescription.length > 157
         ? `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}…`
