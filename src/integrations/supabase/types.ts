@@ -3095,28 +3095,34 @@ export type Database = {
       therapist_advanced_scoring_access: {
         Row: {
           enabled: boolean
+          expires_at: string | null
           granted_at: string
           granted_by: string | null
           note: string | null
           source: string
+          starts_at: string
           therapist_id: string
           updated_at: string
         }
         Insert: {
           enabled?: boolean
+          expires_at?: string | null
           granted_at?: string
           granted_by?: string | null
           note?: string | null
           source?: string
+          starts_at?: string
           therapist_id: string
           updated_at?: string
         }
         Update: {
           enabled?: boolean
+          expires_at?: string | null
           granted_at?: string
           granted_by?: string | null
           note?: string | null
           source?: string
+          starts_at?: string
           therapist_id?: string
           updated_at?: string
         }
@@ -3864,6 +3870,57 @@ export type Database = {
           },
           {
             foreignKeyName: "therapist_profile_views_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_scoring_access_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          note: string | null
+          source: string | null
+          starts_at: string | null
+          therapist_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          note?: string | null
+          source?: string | null
+          starts_at?: string | null
+          therapist_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          note?: string | null
+          source?: string | null
+          starts_at?: string | null
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_scoring_access_events_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_scoring_access_events_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
