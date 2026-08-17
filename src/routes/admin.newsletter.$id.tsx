@@ -1111,7 +1111,7 @@ function Page() {
                     <Button
                       variant="outline"
                       disabled={locked || changeStatus.isPending}
-                      onClick={() => changeStatus.mutate("idee")}
+                      onClick={() => setConfirmStatus("idee")}
                       className="min-h-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
                     >
                       Rejeter
@@ -1119,12 +1119,35 @@ function Page() {
                     <Button
                       variant="outline"
                       disabled={changeStatus.isPending}
-                      onClick={() => changeStatus.mutate("archivee")}
+                      onClick={() => setConfirmStatus("archivee")}
                       className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
                     >
                       <Archive className="h-4 w-4 mr-2" aria-hidden="true" /> Archiver
                     </Button>
                   </div>
+                  <ul className="text-xs text-white/45 space-y-1">
+                    <li>
+                      <strong className="text-white/65">Repasser en brouillon</strong> : rouvre
+                      l'édition. Aucun email n'est envoyé.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Envoyer en révision</strong> : change
+                      uniquement le statut pour relecture. Aucun email n'est envoyé.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Approuver</strong> : rend l'envoi possible
+                      depuis l'onglet « Envoi ». Ne déclenche aucun envoi.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Rejeter</strong> : renvoie la newsletter au
+                      statut « Idée ». Réversible, avec confirmation.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Archiver</strong> : sort la newsletter du
+                      flux de travail et verrouille l'édition. Réversible par un admin, avec
+                      confirmation.
+                    </li>
+                  </ul>
                   {qcDone < qcTotal && !locked && (
                     <p className="text-xs text-[#fbbf24]">
                       Cochez les {qcTotal} points de contrôle pour pouvoir approuver.
