@@ -23,6 +23,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  NewsletterConnection,
+  NewsletterLinkCheck,
+  type ConnectionKey,
+} from "@/components/admin/NewsletterConnection";
+import {
   getNewsletterIssue,
   updateNewsletterIssue,
   updateNewsletterContent,
@@ -641,7 +646,7 @@ function Page() {
                 subject={form.email_subject || form.title}
                 audience={form.audience}
                 cta={form.cta}
-                recipientCount={sendPreview.data?.count ?? null}
+                recipientCount={sendPreview.data?.recipientCount ?? null}
               />
             </div>
           </TabsContent>
