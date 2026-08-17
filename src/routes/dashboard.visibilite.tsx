@@ -206,38 +206,22 @@ function Page() {
     onError: () => toast.error("L'analyse n'a pas pu être relancée. Réessayez dans un instant."),
   });
 
-  const checks = (data?.checks ?? []) as ReportCheck[];
-  const recommendations = (data?.recommendations ?? []) as Recommendation[];
-  // Single source of truth: a recommendation is only "à traiter" if its check
-  // is actually not passed. Gain is realigned on the check weight.
-  const { todo, resolved } = useMemo(() => {
-    const byId = new Map(checks.map((c) => [c.id, c]));
-    const normalized = recommendations.map((r) => {
-      const c = byId.get(r.id);
-      if (!c) return r;
-      return {
-        ...r,
-        status: (c.passed ? "resolu" : "a_traiter") as Recommendation["status"],
-        action: c.passed ? null : r.action,
-        gain: c.passed ? 0 : c.weight,
-      };
-    });
-    return {
-      todo: normalized.filter((r) => r.status === "a_traiter"),
-      resolved: normalized.filter((r) => r.status === "resolu"),
-    };
-  }, [checks, recommendations]);
-  const { blocking, missing, done, priority } = useMemo(() => {
-    const sorter = (a: ReportCheck, b: ReportCheck) =>
-      SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.weight - a.weight;
-    const ko = checks.filter((c) => !c.passed).sort(sorter);
-    return {
-      blocking: ko.filter((c) => c.severity === "critical"),
-      missing: ko.filter((c) => c.severity !== "critical"),
-      done: checks.filter((c) => c.passed).sort(sorter),
-      priority: ko.slice(0, 3),
-    };
-  }, [checks]);
+  // Source unique : tout provient de l'objet d'audit renvoyé par le serveur.
+  // Aucune reconstruction ici.
+  const report = (data?.report ?? null) as ShowcaseAuditReport | null;
+  const checks: ReportCheck[] = report
+    ? [...report.visibility.checks, ...report.conversion.checks]
+    : [];
+  const recommendations: Recommendation[] = report
+    ? [...report.visibility.recommendations, ...report.conversion.recommendations]
+    : [];
+  const todo = recommendations.filter((r) => r.status === "a_traiter");
+  const resolved = recommendations.filter((r) => r.status === "resolu");
+  const blocking = report ? [...report.visibility.blocking, ...report.conversion.blocking] : [];
+  const blockingIds = new Set(blocking.map((c) => c.id));
+  const missing = report ? report.missingItems.filter((c) => !blockingIds.has(c.id)) : [];
+  const done = checks.filter((c) => c.status === "passed");
+  const priority = report?.priorityActions ?? [];
 
   if (isLoading) {
     return (
