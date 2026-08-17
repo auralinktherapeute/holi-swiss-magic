@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export type SendPreviewTab = "brief" | "email" | "resource" | "seo" | "qc";
+export type SendPreviewTab = "brief" | "email" | "resource" | "seo" | "qc" | "send";
 
 /** Checklist bloquante avant envoi — chaque point renvoie vers l'onglet de correction. */
 export const SEND_CHECKLIST = [

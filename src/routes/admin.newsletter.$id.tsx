@@ -54,7 +54,11 @@ import {
   setNewsletterResourcePublished,
   listNewsletterRevisions,
 } from "@/lib/newsletter.functions";
-import { renderNewsletterEmail } from "@/lib/newsletter-email.shared";
+import { renderNewsletterEmail, renderNewsletterText } from "@/lib/newsletter-email.shared";
+import {
+  NewsletterSendPreview,
+  type SendPreviewTab,
+} from "@/components/admin/NewsletterSendPreview";
 import { NEWSLETTER_TEMPLATES } from "@/lib/newsletter-templates.shared";
 import {
   getNewsletterSendPreview,
@@ -227,6 +231,7 @@ function Page() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [tab, setTab] = useState<string>("brief");
   const [checkedVersion, setCheckedVersion] = useState<string | null>(null);
   const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
 
@@ -404,6 +409,20 @@ function Page() {
     }).html;
   }, [form]);
 
+  const previewText = useMemo(() => {
+    if (!form) return "";
+    return renderNewsletterText({
+      subject: form.email_subject || form.title,
+      preheader: form.email_preheader,
+      intro: form.email_intro,
+      body: form.email_body,
+      buttonLabel: form.email_button_label,
+      buttonUrl: form.email_button_url,
+      footer: form.email_footer,
+      unsubscribeUrl: "https://holiswiss.ch/desinscription",
+    });
+  }, [form]);
+
   // Empreinte du contenu email : toute modification invalide l'aperçu déjà vérifié.
   const emailVersion = useMemo(() => previewHtml, [previewHtml]);
   const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
@@ -515,7 +534,7 @@ function Page() {
           </Card>
         )}
 
-        <Tabs defaultValue="brief" className="space-y-5">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-5">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-white/5 p-1 h-auto">
             <TabsTrigger value="brief" className={tabCls}>
               Brief
@@ -1248,7 +1267,7 @@ function Page() {
                       onClick={() => setPreviewOpen(true)}
                       className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
-                      Prévisualiser l'email
+                      Prévisualiser avant envoi
                     </Button>
                     <Badge
                       className={
