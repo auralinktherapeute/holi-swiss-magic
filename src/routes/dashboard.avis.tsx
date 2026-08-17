@@ -72,11 +72,16 @@ function Page() {
 
   return (
     <div className="mx-auto max-w-3xl p-6 text-white">
-      <header className="mb-6 flex items-center gap-3">
+      <header id="avis" className="mb-6 flex items-center gap-3">
         <MessageSquare className="text-[#5cc8fa]" />
         <div>
           <h1 className="text-2xl font-semibold">Mes avis</h1>
           <p className="text-sm text-white/50">Répondez à vos avis clients — votre réponse est visible publiquement sur votre fiche.</p>
+          <p className="mt-1 text-xs text-white/40">
+            Pour obtenir des avis authentiques, invitez vos client·es après une séance à laisser un
+            témoignage depuis votre fiche publique. Holiswiss ne crée jamais d'avis et le nombre
+            d'avis ne garantit aucun classement.
+          </p>
         </div>
       </header>
 
