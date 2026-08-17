@@ -615,6 +615,7 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
   const run = useServerFn(auditTherapistShowcase);
   const loadAccess = useServerFn(getTherapistScoringAccess);
   const saveAccess = useServerFn(setTherapistScoringAccess);
+  const saveSeat = useServerFn(setFounderSeat);
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [access, setAccess] = useState<any>(null);
@@ -646,6 +647,22 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
       }
     },
     [saveAccess, therapistId],
+  );
+
+  const toggleSeat = useCallback(
+    async (enabled: boolean) => {
+      setAccessBusy(true);
+      try {
+        await saveSeat({ data: { therapistId, enabled, source: "admin_manual" } });
+        setAccess(await loadAccess({ data: { therapistId } }));
+        toast.success(enabled ? "Place fondateur attribuée" : "Place fondateur retirée");
+      } catch (e: any) {
+        toast.error(e?.message ?? "Modification impossible");
+      } finally {
+        setAccessBusy(false);
+      }
+    },
+    [saveSeat, loadAccess, therapistId],
   );
 
   useEffect(() => {
