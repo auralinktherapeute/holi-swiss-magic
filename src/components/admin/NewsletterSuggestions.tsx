@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Lightbulb, RefreshCw, Trash2, PencilLine, ArrowRight } from "lucide-react";
+import { Lightbulb, RefreshCw, Trash2, PencilLine, ArrowRight, Undo2, EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   listNewsletterSuggestions,
   saveNewsletterSuggestion,
@@ -80,11 +90,13 @@ export function NewsletterSuggestions() {
 
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [showDismissed, setShowDismissed] = useState(false);
+  const [toDelete, setToDelete] = useState<NewsletterSuggestion | null>(null);
 
   const q = useQuery({ queryKey: ["newsletter-suggestions"], queryFn: () => list() });
-  const rows = ((q.data?.rows ?? []) as NewsletterSuggestion[]).filter(
-    (r) => r.status !== "rejetee",
-  );
+  const allRows = (q.data?.rows ?? []) as NewsletterSuggestion[];
+  const rows = allRows.filter((r) => (showDismissed ? true : r.status !== "rejetee"));
+  const dismissedCount = allRows.filter((r) => r.status === "rejetee").length;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["newsletter-suggestions"] });
   const onError = (e: unknown) =>
@@ -113,7 +125,15 @@ export function NewsletterSuggestions() {
   const mDismiss = useMutation({
     mutationFn: (id: string) => setStatus({ data: { id, status: "rejetee" as const } }),
     onSuccess: () => {
-      toast.success("Suggestion écartée.");
+      toast.success("Suggestion écartée — récupérable via « Afficher les écartées ».");
+      invalidate();
+    },
+    onError,
+  });
+  const mRestore = useMutation({
+    mutationFn: (id: string) => setStatus({ data: { id, status: "ouverte" as const } }),
+    onSuccess: () => {
+      toast.success("Suggestion remise dans la liste.");
       invalidate();
     },
     onError,
@@ -121,7 +141,8 @@ export function NewsletterSuggestions() {
   const mDelete = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
-      toast.success("Suggestion supprimée.");
+      toast.success("Suggestion supprimée définitivement.");
+      setToDelete(null);
       invalidate();
     },
     onError,
@@ -164,12 +185,24 @@ export function NewsletterSuggestions() {
             >
               Ajouter un sujet
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDismissed((v) => !v)}
+              className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+            >
+              <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
+              {showDismissed
+                ? "Masquer les écartées"
+                : `Afficher les écartées (${dismissedCount})`}
+            </Button>
           </div>
         </div>
 
         <p className="text-xs text-white/45">
           Les suggestions sont calculées sur des totaux anonymes. Aucune newsletter n'est générée ni
-          envoyée automatiquement.
+          envoyée automatiquement. « Créer un brief » ouvre un brouillon éditable · « Écarter »
+          masque la suggestion et reste réversible · « Supprimer » est définitif et demande une
+          confirmation.
         </p>
 
         {q.isLoading && <p className="text-sm text-white/60">Chargement…</p>}
@@ -211,6 +244,7 @@ export function NewsletterSuggestions() {
                   <Button
                     disabled={mBrief.isPending || !!s.issue_id}
                     onClick={() => mBrief.mutate(s.id)}
+                    title="Crée un brouillon de newsletter à partir de cette suggestion et ouvre l'éditeur. Aucun envoi."
                     className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
                   >
                     <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -219,6 +253,7 @@ export function NewsletterSuggestions() {
                   <Button
                     variant="outline"
                     aria-label="Modifier la suggestion"
+                    title="Modifier le sujet, le public et la priorité de cette suggestion"
                     onClick={() => {
                       setDraft({
                         id: s.id,
@@ -236,17 +271,33 @@ export function NewsletterSuggestions() {
                   >
                     <PencilLine className="h-4 w-4" aria-hidden="true" />
                   </Button>
+                  {s.status === "rejetee" ? (
+                    <Button
+                      variant="outline"
+                      disabled={mRestore.isPending}
+                      onClick={() => mRestore.mutate(s.id)}
+                      title="Remettre cette suggestion dans la liste active"
+                      className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+                    >
+                      <Undo2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Restaurer
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      disabled={mDismiss.isPending}
+                      onClick={() => mDismiss.mutate(s.id)}
+                      title="Masquer cette suggestion sans la supprimer (réversible)"
+                      className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                    >
+                      Écarter
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
-                    onClick={() => mDismiss.mutate(s.id)}
-                    className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
-                  >
-                    Écarter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    aria-label="Supprimer la suggestion"
-                    onClick={() => mDelete.mutate(s.id)}
+                    aria-label="Supprimer définitivement la suggestion"
+                    title="Supprimer définitivement cette suggestion"
+                    onClick={() => setToDelete(s)}
                     className="min-h-11 min-w-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -392,6 +443,29 @@ export function NewsletterSuggestions() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={toDelete !== null} onOpenChange={(o) => !o && setToDelete(null)}>
+          <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer définitivement cette suggestion ?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/65">
+                « {toDelete?.subject} » sera effacée sans possibilité de restauration. Pour la
+                masquer tout en pouvant la récupérer, utilisez plutôt « Écarter ».
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="min-h-11 bg-[#f87171] text-white hover:bg-[#ef4444]"
+                onClick={() => toDelete && mDelete.mutate(toDelete.id)}
+              >
+                Supprimer définitivement
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

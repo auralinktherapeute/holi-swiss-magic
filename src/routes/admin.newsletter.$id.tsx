@@ -15,6 +15,24 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -204,6 +222,10 @@ function Page() {
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [checkedVersion, setCheckedVersion] = useState<string | null>(null);
+  const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
 
   const sendPreview = useQuery({
     queryKey: ["admin-newsletter-send-preview", id, segment],
@@ -375,6 +397,10 @@ function Page() {
     }).html;
   }, [form]);
 
+  // Empreinte du contenu email : toute modification invalide l'aperçu déjà vérifié.
+  const emailVersion = useMemo(() => previewHtml, [previewHtml]);
+  const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
+
   const sendTest = useMutation({
     mutationFn: () => sendTestFn({ data: { id, to: testEmail || undefined } }),
     onSuccess: (r) => {
@@ -406,7 +432,7 @@ function Page() {
   });
 
   const blockers = sendPreview.data?.blockers ?? [];
-  const canSend = blockers.length === 0 && !sendReal.isPending;
+  const canSend = blockers.length === 0 && !sendReal.isPending && previewChecked;
 
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
@@ -1085,7 +1111,7 @@ function Page() {
                     <Button
                       variant="outline"
                       disabled={locked || changeStatus.isPending}
-                      onClick={() => changeStatus.mutate("idee")}
+                      onClick={() => setConfirmStatus("idee")}
                       className="min-h-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
                     >
                       Rejeter
@@ -1093,12 +1119,35 @@ function Page() {
                     <Button
                       variant="outline"
                       disabled={changeStatus.isPending}
-                      onClick={() => changeStatus.mutate("archivee")}
+                      onClick={() => setConfirmStatus("archivee")}
                       className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
                     >
                       <Archive className="h-4 w-4 mr-2" aria-hidden="true" /> Archiver
                     </Button>
                   </div>
+                  <ul className="text-xs text-white/45 space-y-1">
+                    <li>
+                      <strong className="text-white/65">Repasser en brouillon</strong> : rouvre
+                      l'édition. Aucun email n'est envoyé.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Envoyer en révision</strong> : change
+                      uniquement le statut pour relecture. Aucun email n'est envoyé.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Approuver</strong> : rend l'envoi possible
+                      depuis l'onglet « Envoi ». Ne déclenche aucun envoi.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Rejeter</strong> : renvoie la newsletter au
+                      statut « Idée ». Réversible, avec confirmation.
+                    </li>
+                    <li>
+                      <strong className="text-white/65">Archiver</strong> : sort la newsletter du
+                      flux de travail et verrouille l'édition. Réversible par un admin, avec
+                      confirmation.
+                    </li>
+                  </ul>
                   {qcDone < qcTotal && !locked && (
                     <p className="text-xs text-[#fbbf24]">
                       Cochez les {qcTotal} points de contrôle pour pouvoir approuver.
@@ -1179,6 +1228,34 @@ function Page() {
 
                 {/* TEST */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
+                  <h3 className="font-semibold text-sm">Aperçu obligatoire</h3>
+                  <p className="text-xs text-white/50">
+                    Aucun email — test ou réel — ne peut partir avant que l'aperçu de la version
+                    actuelle ait été ouvert et validé. Toute modification du contenu annule la
+                    validation.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPreviewOpen(true)}
+                      className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+                    >
+                      Prévisualiser l'email
+                    </Button>
+                    <Badge
+                      className={
+                        previewChecked
+                          ? "bg-[#4ade80]/15 text-[#4ade80] border-0"
+                          : "bg-[#fbbf24]/15 text-[#fbbf24] border-0"
+                      }
+                    >
+                      {previewChecked ? "Aperçu vérifié" : "Aperçu non vérifié"}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* TEST */}
+                <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Email de test</h3>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
@@ -1193,7 +1270,7 @@ function Page() {
                     <Button
                       variant="outline"
                       onClick={() => sendTest.mutate()}
-                      disabled={sendTest.isPending}
+                      disabled={sendTest.isPending || !previewChecked}
                       className="min-h-11 shrink-0 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
                       {sendTest.isPending ? "Envoi…" : "Envoyer un email de test"}
@@ -1202,6 +1279,7 @@ function Page() {
                   <p className="text-xs text-white/50">
                     Le test utilise la version actuelle et le même gabarit que l'envoi réel. Il ne
                     change pas le statut de la newsletter.
+                    {!previewChecked && " Validez d'abord l'aperçu ci-dessus."}
                   </p>
                 </div>
 
@@ -1209,13 +1287,21 @@ function Page() {
                 <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Envoi réel</h3>
                   {!confirmOpen ? (
-                    <Button
-                      onClick={() => setConfirmOpen(true)}
-                      disabled={!canSend}
-                      className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-                    >
-                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => setConfirmOpen(true)}
+                        disabled={!canSend}
+                        className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+                      >
+                        <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer à tout le
+                        segment
+                      </Button>
+                      <p className="text-xs text-white/50">
+                        Ce bouton ouvre uniquement une fenêtre de confirmation : rien n'est envoyé
+                        tant que vous n'avez pas confirmé.
+                        {!previewChecked && " Aperçu à valider avant tout envoi."}
+                      </p>
+                    </div>
                   ) : (
                     <div className="rounded-lg border border-[#f87171]/40 bg-[#f87171]/10 p-4 space-y-3">
                       <p className="text-sm font-medium text-white">Confirmer l'envoi</p>
@@ -1325,6 +1411,79 @@ function Page() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Aperçu obligatoire avant tout envoi */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl bg-[#1d0d3d] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Aperçu de l'email</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Vérifiez l'objet, le contenu, le bouton et le pied de page. Aucun email n'est envoyé
+              depuis cette fenêtre.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-white/70">
+              Objet : <span className="text-white">{form.email_subject || form.title}</span>
+            </p>
+            <iframe
+              title="Aperçu avant envoi"
+              srcDoc={previewHtml}
+              className="h-[55vh] w-full rounded-lg border border-white/10 bg-white"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPreviewOpen(false)}
+              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+            >
+              Fermer sans valider
+            </Button>
+            <Button
+              onClick={() => {
+                setCheckedVersion(emailVersion);
+                setPreviewOpen(false);
+                toast.success("Aperçu validé : l'envoi est débloqué pour cette version.");
+              }}
+              className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+            >
+              J'ai vérifié cet aperçu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation des changements de statut sensibles */}
+      <AlertDialog open={confirmStatus !== null} onOpenChange={(o) => !o && setConfirmStatus(null)}>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmStatus === "archivee" ? "Archiver cette newsletter ?" : "Rejeter ce brief ?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/65">
+              {confirmStatus === "archivee"
+                ? "La newsletter sort du flux de travail et l'édition est verrouillée. Aucun contenu n'est supprimé et un administrateur peut la repasser en brouillon."
+                : "Le brief repasse au statut « Idée ». Aucun contenu n'est supprimé et vous pourrez le reprendre à tout moment."}
+              {" Aucun email n'est envoyé par cette action."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+              onClick={() => {
+                if (confirmStatus) changeStatus.mutate(confirmStatus);
+                setConfirmStatus(null);
+              }}
+            >
+              {confirmStatus === "archivee" ? "Archiver" : "Rejeter"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -20,6 +20,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   listNewsletterIssues,
   createNewsletterIssue,
   updateNewsletterIssue,
@@ -95,6 +105,7 @@ function Page() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [toArchive, setToArchive] = useState<NewsletterIssue | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-newsletter-issues"],
@@ -106,7 +117,8 @@ function Page() {
   const archive = useMutation({
     mutationFn: (id: string) => setStatus({ data: { id, status: "archivee" as NewsletterStatus } }),
     onSuccess: () => {
-      toast.success("Newsletter archivée.");
+      toast.success("Newsletter archivée — aucun contenu supprimé.");
+      setToArchive(null);
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Archivage impossible."),
@@ -273,12 +285,17 @@ function Page() {
                 <Button
                   variant="outline"
                   onClick={() => openEdit(row)}
+                  title="Modifier le brief éditorial (titre, objectif, angle). Aucun envoi."
                   className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                 >
                   <PencilLine className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Brief
+                  Modifier le brief
                 </Button>
-                <Button asChild className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
+                <Button
+                  asChild
+                  title="Ouvrir la rédaction de l'email, l'aperçu et l'onglet Envoi"
+                  className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+                >
                   <Link to="/admin/newsletter/$id" params={{ id: row.id }}>
                     Ouvrir l'éditeur
                   </Link>
@@ -287,8 +304,9 @@ function Page() {
                   <Button
                     variant="outline"
                     aria-label={`Archiver ${row.title}`}
+                    title="Archiver : sort la newsletter du flux de travail, réversible"
                     disabled={archive.isPending}
-                    onClick={() => archive.mutate(row.id)}
+                    onClick={() => setToArchive(row)}
                     className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
                   >
                     <Archive className="h-4 w-4" aria-hidden="true" />
@@ -491,6 +509,30 @@ function Page() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={toArchive !== null} onOpenChange={(o) => !o && setToArchive(null)}>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archiver cette newsletter ?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/65">
+              « {toArchive?.title} » sortira du flux de travail et son édition sera verrouillée.
+              Rien n'est supprimé, aucun email n'est envoyé, et un administrateur peut la repasser
+              en brouillon depuis l'éditeur.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+              onClick={() => toArchive && archive.mutate(toArchive.id)}
+            >
+              Archiver
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
