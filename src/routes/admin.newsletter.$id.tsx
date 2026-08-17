@@ -1329,8 +1329,7 @@ function Page() {
                       disabled={!canSend}
                       className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
                     >
-                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Continuer vers
-                      l’envoi
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Continuer vers l’envoi
                     </Button>
                     <p className="text-xs text-white/50">
                       Ce bouton ouvre une dernière confirmation : rien n’est envoyé tant que vous
@@ -1546,8 +1545,9 @@ function Page() {
                 <div className="flex justify-between gap-3">
                   <dt className="text-white/55">Langue</dt>
                   <dd className="text-right text-white/90">
-                    {NEWSLETTER_LANG_LABELS[(form.lang || "fr") as (typeof NEWSLETTER_LANGS)[number]] ??
-                      form.lang}
+                    {NEWSLETTER_LANG_LABELS[
+                      (form.lang || "fr") as (typeof NEWSLETTER_LANGS)[number]
+                    ] ?? form.lang}
                   </dd>
                 </div>
               </dl>
@@ -1616,9 +1616,7 @@ function Page() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-white/55">CTA</dt>
-                  <dd className="text-right text-white/90">
-                    {form.email_button_label || "—"}
-                  </dd>
+                  <dd className="text-right text-white/90">{form.email_button_label || "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-white/55 mb-1">URL</dt>
@@ -1660,9 +1658,7 @@ function Page() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-white/55">Date</dt>
-                  <dd className="text-right text-white/90">
-                    {new Date().toLocaleString("fr-CH")}
-                  </dd>
+                  <dd className="text-right text-white/90">{new Date().toLocaleString("fr-CH")}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-white/55">Statut</dt>
@@ -1696,9 +1692,7 @@ function Page() {
               )}
               <div>
                 <p className="font-medium text-white">
-                  {canSend
-                    ? "Prêt à envoyer"
-                    : "Corrections nécessaires avant l’envoi"}
+                  {canSend ? "Prêt à envoyer" : "Corrections nécessaires avant l’envoi"}
                 </p>
                 <p className="text-sm text-white/60">
                   {canSend

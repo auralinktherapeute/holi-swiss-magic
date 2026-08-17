@@ -24,7 +24,7 @@ export const getMyNewsletterConsent = createServerFn({ method: "POST" })
     const { data } = await supabaseAdmin
       .from("therapists")
       .select(
-        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_unsubscribed_at,newsletter_consent_source,newsletter_consent_version" as never
+        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_unsubscribed_at,newsletter_consent_source,newsletter_consent_version" as never,
       )
       .eq("user_id", context.userId)
       .maybeSingle();
@@ -54,7 +54,7 @@ export const updateMyNewsletterConsent = createServerFn({ method: "POST" })
     const { data: therapistRow } = await supabaseAdmin
       .from("therapists")
       .select(
-        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version" as never
+        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version" as never,
       )
       .eq("user_id", context.userId)
       .maybeSingle();
@@ -79,13 +79,13 @@ export const updateMyNewsletterConsent = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = { newsletter_opt_in: data.optIn };
 
     if (data.optIn) {
-      patch['newsletter_opt_in_at'] = now;
-      patch['newsletter_unsubscribed_at'] = null;
-      patch['newsletter_consent_source'] = NEWSLETTER_CONSENT_SOURCE_THERAPIST_PROFILE;
-      patch['newsletter_consent_version'] = NEWSLETTER_CONSENT_VERSION;
-      patch['newsletter_consent_email'] = therapist.email;
+      patch["newsletter_opt_in_at"] = now;
+      patch["newsletter_unsubscribed_at"] = null;
+      patch["newsletter_consent_source"] = NEWSLETTER_CONSENT_SOURCE_THERAPIST_PROFILE;
+      patch["newsletter_consent_version"] = NEWSLETTER_CONSENT_VERSION;
+      patch["newsletter_consent_email"] = therapist.email;
     } else {
-      patch['newsletter_unsubscribed_at'] = now;
+      patch["newsletter_unsubscribed_at"] = now;
     }
 
     const { error } = await supabaseAdmin

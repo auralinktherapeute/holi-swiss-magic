@@ -317,26 +317,26 @@ export function NewsletterSuggestions() {
                     </ActionTooltip>
                   )}
                   <ActionTooltip label="Modifier cette suggestion">
-                  <Button
-                    variant="outline"
-                    aria-label={`Modifier la suggestion « ${s.subject} »`}
-                    onClick={() => {
-                      setDraft({
-                        id: s.id,
-                        subject: s.subject,
-                        audience: s.audience ?? "",
-                        pillar: s.pillar ?? "",
-                        feature_key: s.feature_key ?? "",
-                        objective: s.objective ?? "",
-                        rationale: s.rationale ?? "",
-                        priority: (s.priority as Draft["priority"]) ?? "moyenne",
-                      });
-                      setOpen(true);
-                    }}
-                    className="min-h-11 min-w-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-                  >
-                    <PencilLine className="h-4 w-4" aria-hidden="true" />
-                  </Button>
+                    <Button
+                      variant="outline"
+                      aria-label={`Modifier la suggestion « ${s.subject} »`}
+                      onClick={() => {
+                        setDraft({
+                          id: s.id,
+                          subject: s.subject,
+                          audience: s.audience ?? "",
+                          pillar: s.pillar ?? "",
+                          feature_key: s.feature_key ?? "",
+                          objective: s.objective ?? "",
+                          rationale: s.rationale ?? "",
+                          priority: (s.priority as Draft["priority"]) ?? "moyenne",
+                        });
+                        setOpen(true);
+                      }}
+                      className="min-h-11 min-w-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+                    >
+                      <PencilLine className="h-4 w-4" aria-hidden="true" />
+                    </Button>
                   </ActionTooltip>
                   {s.status === "rejetee" ? (
                     <ActionTooltip label="Remettre cette suggestion dans la liste des suggestions prioritaires.">
@@ -365,14 +365,14 @@ export function NewsletterSuggestions() {
                     </ActionTooltip>
                   )}
                   <ActionTooltip label="Suppression définitive de la suggestion. Préférez « Écarter » pour la masquer tout en la conservant.">
-                  <Button
-                    variant="outline"
-                    aria-label={`Supprimer définitivement la suggestion « ${s.subject} »`}
-                    onClick={() => setToDelete(s)}
-                    className="min-h-11 min-w-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </Button>
+                    <Button
+                      variant="outline"
+                      aria-label={`Supprimer définitivement la suggestion « ${s.subject} »`}
+                      onClick={() => setToDelete(s)}
+                      className="min-h-11 min-w-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
                   </ActionTooltip>
                 </div>
               </li>

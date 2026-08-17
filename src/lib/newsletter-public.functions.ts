@@ -2,11 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { NEWSLETTER_CONSENT_VERSION } from "@/lib/newsletter-consent.shared";
 
-const SOURCES = [
-  "homepage_newsletter",
-  "public_footer",
-  "newsletter_resource_page",
-] as const;
+const SOURCES = ["homepage_newsletter", "public_footer", "newsletter_resource_page"] as const;
 
 const schema = z.object({
   email: z.string().trim().email().max(255),
