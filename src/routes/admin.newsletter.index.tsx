@@ -29,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ActionTooltip } from "@/components/admin/ActionTooltip";
 import {
   listNewsletterIssues,
   createNewsletterIssue,
@@ -282,35 +283,43 @@ function Page() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => openEdit(row)}
-                  title="Modifier le brief éditorial (titre, objectif, angle). Aucun envoi."
-                  className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-                >
-                  <PencilLine className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Modifier le brief
-                </Button>
-                <Button
-                  asChild
-                  title="Ouvrir la rédaction de l'email, l'aperçu et l'onglet Envoi"
-                  className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-                >
-                  <Link to="/admin/newsletter/$id" params={{ id: row.id }}>
-                    Ouvrir l'éditeur
-                  </Link>
-                </Button>
-                {row.status !== "archivee" && (
+                <ActionTooltip label="Modifier cette newsletter : ouvre le brief éditorial existant (sujet, audience, objectif, ton, fonctionnalité liée). Aucune newsletter n'est générée, aucun envoi n'est déclenché.">
                   <Button
                     variant="outline"
-                    aria-label={`Archiver ${row.title}`}
-                    title="Archiver : sort la newsletter du flux de travail, réversible"
-                    disabled={archive.isPending}
-                    onClick={() => setToArchive(row)}
-                    className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                    aria-label={`Modifier le brief éditorial de « ${row.title} »`}
+                    onClick={() => openEdit(row)}
+                    className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                   >
-                    <Archive className="h-4 w-4" aria-hidden="true" />
+                    <PencilLine className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Modifier le brief
                   </Button>
+                </ActionTooltip>
+                <ActionTooltip label="Ouvre l'éditeur complet : brief, email, page ressource, SEO et contrôle qualité, avec le statut actuel et l'historique des versions.">
+                  <Button
+                    asChild
+                    className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+                  >
+                    <Link
+                      to="/admin/newsletter/$id"
+                      params={{ id: row.id }}
+                      aria-label={`Ouvrir l'éditeur complet de « ${row.title} »`}
+                    >
+                      Ouvrir l'éditeur
+                    </Link>
+                  </Button>
+                </ActionTooltip>
+                {row.status !== "archivee" && (
+                  <ActionTooltip label="Archiver : retire la newsletter de la vue active tout en conservant son historique. Retrouvable dans les archives. Aucun envoi n'est déclenché.">
+                    <Button
+                      variant="outline"
+                      aria-label={`Archiver la newsletter « ${row.title} »`}
+                      disabled={archive.isPending}
+                      onClick={() => setToArchive(row)}
+                      className="min-h-11 min-w-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                    >
+                      <Archive className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </ActionTooltip>
                 )}
               </div>
             </CardContent>
