@@ -1,4 +1,5 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
+import { resolveSeoTitle } from "@/lib/seo-title";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef, lazy, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
