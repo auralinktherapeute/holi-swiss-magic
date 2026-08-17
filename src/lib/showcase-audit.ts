@@ -9,6 +9,8 @@
  * Et une organisation en 8 catégories métier (voir AUDIT_CATEGORIES).
  */
 
+import { buildGeneratedSeoTitle, evaluateSeoTitle, resolveSeoTitle } from "./seo-title";
+
 export type AuditAxis = "visibilite" | "conversion";
 export type AuditSeverity = "critical" | "warning" | "info";
 
