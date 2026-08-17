@@ -222,6 +222,10 @@ function Page() {
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [checkedVersion, setCheckedVersion] = useState<string | null>(null);
+  const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
 
   const sendPreview = useQuery({
     queryKey: ["admin-newsletter-send-preview", id, segment],
@@ -393,6 +397,10 @@ function Page() {
     }).html;
   }, [form]);
 
+  // Empreinte du contenu email : toute modification invalide l'aperçu déjà vérifié.
+  const emailVersion = useMemo(() => previewHtml, [previewHtml]);
+  const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
+
   const sendTest = useMutation({
     mutationFn: () => sendTestFn({ data: { id, to: testEmail || undefined } }),
     onSuccess: (r) => {
@@ -424,7 +432,7 @@ function Page() {
   });
 
   const blockers = sendPreview.data?.blockers ?? [];
-  const canSend = blockers.length === 0 && !sendReal.isPending;
+  const canSend = blockers.length === 0 && !sendReal.isPending && previewChecked;
 
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
