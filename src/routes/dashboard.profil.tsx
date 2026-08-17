@@ -606,14 +606,17 @@ function ProfilePage() {
         </div>
 
         {/* Photos du cabinet & certifications (agent Santé de Profil) */}
-        <Section>
+        <Section id="photos-cabinet">
           <CabinetPhotosUploader userId={user!.id} />
           <Divider />
-          <CertificationsUploader userId={user!.id} />
+          <div id="certifications">
+            <CertificationsUploader userId={user!.id} />
+          </div>
         </Section>
 
         {/* Identity */}
-        <Section>
+        <Section id="identite">
+          <div id="photo">
           <ProfilePhotoUploader
             userId={user!.id}
             currentPhotoUrl={photoUrl}
@@ -624,6 +627,7 @@ function ProfilePage() {
               markDirty();
             }}
           />
+          </div>
 
           <Divider />
 
@@ -671,7 +675,7 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+          <div id="localisation" className="mt-5 grid gap-5 sm:grid-cols-3">
             <Field label={t("profile_edit.city") + " *"}>
               <div className="relative">
                 <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
@@ -686,7 +690,7 @@ function ProfilePage() {
             </Field>
           </div>
 
-          <div className="mt-5">
+          <div id="contact" className="mt-5">
             <Field
               label={
                 <span className="inline-flex items-center gap-2">
@@ -705,8 +709,9 @@ function ProfilePage() {
         </Section>
 
         {/* Approaches & languages */}
-        <Section title={t("profile_edit.section_approaches")}>
+        <Section id="langues" title={t("profile_edit.section_approaches")}>
           <div className="grid gap-5 sm:grid-cols-2">
+            <div id="canton">
             <Field label={t("profile_edit.canton")}>
               <Select value={canton} onValueChange={(v) => { setCanton(v); markDirty(); }}>
                 <SelectTrigger className={selectClass}><SelectValue /></SelectTrigger>
@@ -717,6 +722,7 @@ function ProfilePage() {
                 </SelectContent>
               </Select>
             </Field>
+            </div>
             <Field label={t("profile_edit.languages")}>
               <div className="flex flex-wrap gap-2">
                 {SPOKEN_LANGUAGES.map((l) => {
@@ -736,7 +742,7 @@ function ProfilePage() {
             </Field>
           </div>
 
-          <div className="mt-5">
+          <div id="tarifs" className="mt-5">
             <Label className="text-sm font-medium text-white/90">{t("profile_edit.price_label")}</Label>
             <div className="mt-2 grid gap-3 sm:grid-cols-[1fr_1fr_180px]">
               <Input type="number" placeholder={t("profile_edit.price_min")} value={priceMin} onChange={(e) => { setPriceMin(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
@@ -753,7 +759,7 @@ function ProfilePage() {
             </p>
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div id="experience" className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label={t("profile_edit.session_duration")}>
               <Input type="number" value={sessionDuration} onChange={(e) => { setSessionDuration(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
             </Field>
@@ -764,7 +770,7 @@ function ProfilePage() {
         </Section>
 
         {/* Specialties */}
-        <Section title={t("profile_edit.section_specialties") + " *"}>
+        <Section id="specialites" title={t("profile_edit.section_specialties") + " *"}>
           <TaxonomySpecialtyPicker
             selectedIds={specialtyIds}
             onChange={(ids) => { setSpecialtyIds(ids); markDirty(); }}
@@ -819,7 +825,7 @@ function ProfilePage() {
         </Section>
 
         {/* Services */}
-        <Section title={t("profile_edit.section_services")} action={
+        <Section id="prestations" title={t("profile_edit.section_services")} action={
           <ServiceDialog onAdd={(s) => { setServices((prev) => [...prev, s]); markDirty(); }} />
         } subtitle={t("profile_edit.services_help")}>
           <div className="space-y-3">
@@ -914,11 +920,13 @@ function ProfilePage() {
         </Section>
 
         {/* Bio + links */}
-        <Section>
+        <Section id="presentation">
+          <div id="accroche">
           <Field label={t("profile_edit.short_bio")}>
             <Input value={shortBio} maxLength={150} onChange={(e) => { setShortBio(e.target.value); markDirty(); }} className={inputClass} />
             <p className="mt-1.5 text-xs text-[#a89bc4]">{shortBio.length}/150</p>
           </Field>
+          </div>
 
           <div className="mt-5">
             <Field label={t("profile_edit.full_description")}>
@@ -926,7 +934,7 @@ function ProfilePage() {
             </Field>
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div id="liens" className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label={<span className="inline-flex items-center gap-2"><Link2 className="h-4 w-4" />{t("profile_edit.google_reviews_link")}</span>}>
               <Input value={googleReviewsUrl} onChange={(e) => { setGoogleReviewsUrl(e.target.value); markDirty(); }} placeholder="https://g.page/..." className={inputClass} />
             </Field>
@@ -937,6 +945,7 @@ function ProfilePage() {
 
           <Divider />
 
+          <div id="ide">
           <Field label={
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[#b86ef9]" />
@@ -970,6 +979,7 @@ function ProfilePage() {
               </div>
             )}
           </Field>
+          </div>
 
           <Divider />
 
@@ -1258,15 +1268,16 @@ const selectClass =
   "h-11 w-full rounded-xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.55)] px-3 text-white focus:ring-2 focus:ring-[#b86ef9]/40 [&>span]:text-white";
 
 function Section({
-  title, subtitle, action, children,
+  id, title, subtitle, action, children,
 }: {
+  id?: string;
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-6 rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md sm:p-8">
+    <section id={id} className="mt-6 rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md sm:p-8">
       {(title || action) && (
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
