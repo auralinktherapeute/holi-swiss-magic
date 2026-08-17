@@ -180,6 +180,8 @@ function ProfilePage() {
   const [newsletterOptIn, setNewsletterOptIn] = useSessionState<boolean>(`${profileStatePrefix}.newsletterOptIn`, false);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterOptInAt, setNewsletterOptInAt] = useState<string | null>(null);
+  const [newsletterPrefsOpen, setNewsletterPrefsOpen] = useState(false);
+  const [newsletterUnsubOpen, setNewsletterUnsubOpen] = useState(false);
   const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
 
   const docInputRef = useRef<HTMLInputElement>(null);
