@@ -29,7 +29,11 @@ export const updateMyNewsletterConsent = createServerFn({ method: "POST" })
     }
 
     const now = new Date().toISOString();
-    const patch: Record<string, unknown> = {
+    const patch: {
+      newsletter_opt_in: boolean;
+      newsletter_opt_in_at?: string | null;
+      newsletter_unsubscribed_at?: string | null;
+    } = {
       newsletter_opt_in: data.optIn,
     };
 
