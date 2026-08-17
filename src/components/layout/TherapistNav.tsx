@@ -53,7 +53,6 @@ export function TherapistNav() {
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
   ];
   const reset = useServerFnHelp(resetOnboarding);
-  const qc = useQueryClient();
   const restartTour = async () => {
     try {
       await reset();
