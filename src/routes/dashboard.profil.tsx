@@ -1091,6 +1091,7 @@ function ProfilePage() {
           title={<span className="inline-flex items-center gap-2"><Globe className="h-5 w-5 text-[#b86ef9]" />Référencement (SEO)</span>}
           subtitle="Le titre et la description affichés par Google pour votre fiche. Laissez vide pour utiliser le texte généré automatiquement."
         >
+          <div id="seo-title">
           <Field label={<label htmlFor="meta-title">Title SEO</label>}>
             <Input
               id="meta-title"
@@ -1100,10 +1101,15 @@ function ProfilePage() {
               placeholder="Prénom Nom — Thérapeute à Genève"
               className={inputClass}
             />
-            <p className="mt-1.5 text-xs text-[#a89bc4]">{metaTitle.length}/70 · visez 20 à 60 caractères.</p>
+            <p className="mt-1.5 text-xs text-[#a89bc4]">
+              {metaTitle.length}/70 · visez 20 à 60 caractères.
+              {metaTitle.length > 0 && metaTitle.length < 20 && " — trop court pour être explicite."}
+              {metaTitle.length > 60 && " — Google risque de le tronquer."}
+            </p>
           </Field>
+          </div>
 
-          <div className="mt-5">
+          <div id="seo-description" className="mt-5">
             <Field label={<label htmlFor="meta-description">Meta description</label>}>
               <Textarea
                 id="meta-description"
@@ -1114,8 +1120,24 @@ function ProfilePage() {
                 placeholder="Accompagnement en… à … . Séances au cabinet ou en visio, sur rendez-vous."
                 className={`${inputClass} h-auto resize-y py-2`}
               />
-              <p className="mt-1.5 text-xs text-[#a89bc4]">{metaDescription.length}/170 · visez 80 à 160 caractères.</p>
+              <p className="mt-1.5 text-xs text-[#a89bc4]">
+                {metaDescription.length}/170 · visez 80 à 160 caractères.
+                {metaDescription.length > 0 && metaDescription.length < 80 && " — trop courte pour convaincre."}
+                {metaDescription.length > 160 && " — Google risque de la tronquer."}
+              </p>
             </Field>
+          </div>
+
+          {/* Aperçu du résultat de recherche */}
+          <div className="mt-5 rounded-xl border border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.45)] p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#a89bc4]">Aperçu dans les résultats de recherche</p>
+            <p className="mt-2 truncate text-xs text-[#9fd8a8]">holiswiss.ch › thérapeute</p>
+            <p className="mt-0.5 line-clamp-2 text-base text-[#8ab4f8]">
+              {metaTitle.trim() || `${firstName} ${lastName}`.trim() || "Titre de votre fiche"}
+            </p>
+            <p className="mt-1 line-clamp-2 text-sm text-[#c7bcd8]">
+              {metaDescription.trim() || shortBio?.trim() || "La description affichée sous votre titre dans Google."}
+            </p>
           </div>
         </Section>
 
