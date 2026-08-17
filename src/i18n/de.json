@@ -475,9 +475,12 @@
     "newsletter_consent_label": "Ich bin einverstanden, La Lettre Holiswiss per E-Mail zu erhalten.",
     "newsletter_consent_note": "Die Anmeldung ist freiwillig und hat keine Auswirkungen auf Ihr Konto. Lesen Sie unsere",
     "newsletter_privacy_link": "Datenschutzerklärung",
-    "newsletter_subscribed": "Newsletter-Anmeldung bestätigt",
+    "newsletter_subscribed": "Ihre Anmeldung zu La Lettre Holiswiss wurde gespeichert. Sie erhalten unsere nächsten News, Ressourcen, Neuigkeiten und Angebote für Therapeuten.",
     "newsletter_unsubscribed": "Abmeldung bestätigt",
-    "newsletter_error": "Ihre Präferenz konnte nicht aktualisiert werden"
+    "newsletter_error": "Ihre Präferenz konnte nicht aktualisiert werden",
+    "newsletter_already_subscribed": "Ihre Anmeldung zu La Lettre Holiswiss ist bereits aktiv.",
+    "newsletter_status_active": "Ihre Anmeldung zu La Lettre Holiswiss ist aktiv",
+    "newsletter_status_since": "seit dem"
   },
   "hero": {
     "title_part1": "Finden Sie den richtigen",

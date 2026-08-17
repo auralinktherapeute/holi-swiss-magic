@@ -475,9 +475,12 @@
     "newsletter_consent_label": "J'accepte de recevoir La Lettre Holiswiss par email.",
     "newsletter_consent_note": "L'inscription est facultative et sans impact sur votre compte. Consultez notre",
     "newsletter_privacy_link": "politique de confidentialité",
-    "newsletter_subscribed": "Inscription à la newsletter confirmée",
+    "newsletter_subscribed": "Votre inscription à La Lettre Holiswiss est bien enregistrée. Vous recevrez nos prochaines actualités, ressources, nouveautés et offres destinées aux thérapeutes.",
     "newsletter_unsubscribed": "Désinscription confirmée",
-    "newsletter_error": "Impossible de mettre à jour votre préférence"
+    "newsletter_error": "Impossible de mettre à jour votre préférence",
+    "newsletter_already_subscribed": "Votre inscription à La Lettre Holiswiss est déjà active.",
+    "newsletter_status_active": "Votre inscription à La Lettre Holiswiss est active",
+    "newsletter_status_since": "depuis le"
   },
   "hero": {
     "title_part1": "Trouvez le bon",
