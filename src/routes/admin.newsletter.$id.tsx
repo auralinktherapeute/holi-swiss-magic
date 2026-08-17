@@ -1025,15 +1025,193 @@ function Page() {
                     </p>
                   )}
                   <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-                    <Button disabled className="min-h-11 w-full sm:w-auto">
-                      Envoyer la newsletter
-                    </Button>
-                    <p className="mt-2 text-xs text-white/50">
+                    <p className="text-xs text-white/50">
                       {approved
-                        ? "L'envoi sera disponible après configuration du segment et validation finale."
-                        : "Une newsletter ne peut être envoyée qu'avec le statut « Approuvée ». L'envoi sera disponible après configuration du segment et validation finale."}
+                        ? "L'envoi se pilote depuis l'onglet « Envoi »."
+                        : "Une newsletter ne peut être envoyée qu'avec le statut « Approuvée »."}
                     </p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ENVOI */}
+          <TabsContent value="send">
+            <Card className="bg-[#1d0d3d] border-white/10">
+              <CardContent className="p-5 sm:p-6 space-y-6">
+                <div className="space-y-1.5">
+                  <Label htmlFor="segment" className="text-white/85">
+                    Segment de destinataires
+                  </Label>
+                  <select
+                    id="segment"
+                    className={selectCls}
+                    value={segment}
+                    onChange={(e) => setSegment(e.target.value as NewsletterSegmentKey)}
+                  >
+                    {NEWSLETTER_SEGMENTS.map((s) => (
+                      <option key={s.key} value={s.key} className="bg-[#1d0d3d]">
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-white/50">
+                    {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.description}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Destinataires estimés</span>
+                    <span className="font-semibold">
+                      {sendPreview.isFetching ? "…" : (sendPreview.data?.recipientCount ?? 0)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Expéditeur</span>
+                    <span className="text-white/85">{sendPreview.data?.sender ?? "—"}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-white/60">Page ressource</span>
+                    <span className="text-right break-all text-white/85">
+                      {sendPreview.data?.resourceUrl ?? "Non utilisée"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Version approuvée</span>
+                    <span className="text-white/85">{sendPreview.data?.versionLabel ?? "—"}</span>
+                  </div>
+                </div>
+
+                {blockers.length > 0 && (
+                  <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-4">
+                    <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
+                      <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi bloqué
+                    </p>
+                    <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
+                      {blockers.map((b) => (
+                        <li key={b}>{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* TEST */}
+                <div className="border-t border-white/10 pt-5 space-y-3">
+                  <h3 className="font-semibold text-sm">Email de test</h3>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      id="test-email"
+                      type="email"
+                      aria-label="Adresse email de test"
+                      placeholder="Votre adresse administrateur par défaut"
+                      value={testEmail}
+                      onChange={(e) => setTestEmail(e.target.value)}
+                      className={inputCls}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => sendTest.mutate()}
+                      disabled={sendTest.isPending}
+                      className="min-h-11 shrink-0 border-white/15 bg-transparent text-white hover:bg-white/10"
+                    >
+                      {sendTest.isPending ? "Envoi…" : "Envoyer un email de test"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/50">
+                    Le test utilise la version actuelle et le même gabarit que l'envoi réel. Il ne
+                    change pas le statut de la newsletter.
+                  </p>
+                </div>
+
+                {/* ENVOI RÉEL */}
+                <div className="border-t border-white/10 pt-5 space-y-3">
+                  <h3 className="font-semibold text-sm">Envoi réel</h3>
+                  {!confirmOpen ? (
+                    <Button
+                      onClick={() => setConfirmOpen(true)}
+                      disabled={!canSend}
+                      className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+                    >
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer
+                    </Button>
+                  ) : (
+                    <div className="rounded-lg border border-[#f87171]/40 bg-[#f87171]/10 p-4 space-y-3">
+                      <p className="text-sm font-medium text-white">Confirmer l'envoi</p>
+                      <ul className="text-sm text-white/80 space-y-1">
+                        <li>Newsletter : {sendPreview.data?.title}</li>
+                        <li>Objet : {sendPreview.data?.subject ?? "—"}</li>
+                        <li>Expéditeur : {sendPreview.data?.sender}</li>
+                        <li>
+                          Segment :{" "}
+                          {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label}
+                        </li>
+                        <li>Destinataires : {sendPreview.data?.recipientCount}</li>
+                        <li className="break-all">
+                          Page ressource : {sendPreview.data?.resourceUrl ?? "Non utilisée"}
+                        </li>
+                        <li>Version : {sendPreview.data?.versionLabel}</li>
+                        <li>Date : {new Date().toLocaleString("fr-CH")}</li>
+                      </ul>
+                      <p className="text-xs text-[#f87171]">
+                        Cette action est irréversible.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          onClick={() => sendReal.mutate()}
+                          disabled={!canSend}
+                          className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+                        >
+                          {sendReal.isPending ? "Envoi en cours…" : "Confirmer et envoyer"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setConfirmOpen(false)}
+                          disabled={sendReal.isPending}
+                          className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+                        >
+                          Annuler
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* JOURNAL */}
+                <div className="border-t border-white/10 pt-5 space-y-3">
+                  <h3 className="font-semibold text-sm">Journal des envois</h3>
+                  {(sends.data?.rows ?? []).length === 0 && (
+                    <p className="text-sm text-white/55">Aucun envoi enregistré.</p>
+                  )}
+                  <ul className="space-y-2">
+                    {((sends.data?.rows ?? []) as NewsletterSendRow[]).map((s) => (
+                      <li
+                        key={s.id}
+                        className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/5 pb-2 text-sm"
+                      >
+                        <Badge className="bg-white/10 text-white/70 border-0">
+                          {SEND_STATUS_LABELS[s.status as SendStatus] ?? s.status}
+                        </Badge>
+                        {s.is_test && (
+                          <Badge className="bg-[#5cc8fa]/15 text-[#5cc8fa] border-0">Test</Badge>
+                        )}
+                        <span className="text-white/70">
+                          {s.sent_count}/{s.recipient_count} envoyés
+                        </span>
+                        <span className="text-white/50">segment {s.segment}</span>
+                        <span className="text-white/50">
+                          {new Date(s.started_at).toLocaleString("fr-CH")}
+                        </span>
+                        {s.actor_email && <span className="text-white/50">{s.actor_email}</span>}
+                        {s.error_message && (
+                          <span className="w-full text-xs text-[#f87171] break-all">
+                            {s.error_message}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </CardContent>
             </Card>
