@@ -51,6 +51,7 @@ import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parr
 import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
+import { Route as DesinscriptionIndexRouteImport } from './routes/desinscription.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrousels'
 import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.marketing-topics'
@@ -298,6 +299,11 @@ const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
   path: '/reservations',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DesinscriptionIndexRoute = DesinscriptionIndexRouteImport.update({
+  id: '/desinscription/',
+  path: '/desinscription/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntakeSlugRoute = IntakeSlugRouteImport.update({
   id: '/intake/$slug',
   path: '/intake/$slug',
@@ -531,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/creer-profil/': typeof CreerProfilIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/desinscription/': typeof DesinscriptionIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
@@ -607,6 +614,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/creer-profil': typeof CreerProfilIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/desinscription': typeof DesinscriptionIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
@@ -687,6 +695,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/creer-profil/': typeof CreerProfilIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/desinscription/': typeof DesinscriptionIndexRoute
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
@@ -768,6 +777,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/creer-profil/'
     | '/dashboard/'
+    | '/desinscription/'
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/creer-profil'
     | '/dashboard'
+    | '/desinscription'
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/creer-profil/'
     | '/dashboard/'
+    | '/desinscription/'
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
@@ -968,6 +980,7 @@ export interface RootRouteChildren {
   PreviewMarketingTopicsRoute: typeof PreviewMarketingTopicsRoute
   QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
+  DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
   ApiPublicAnalyticsEndSessionRoute: typeof ApiPublicAnalyticsEndSessionRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
@@ -1269,6 +1282,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/reservations'
       preLoaderRoute: typeof DashboardReservationsRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/desinscription/': {
+      id: '/desinscription/'
+      path: '/desinscription'
+      fullPath: '/desinscription/'
+      preLoaderRoute: typeof DesinscriptionIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/intake/$slug': {
       id: '/intake/$slug'
@@ -1695,6 +1715,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewMarketingTopicsRoute: PreviewMarketingTopicsRoute,
   QuestionnaireIdRoute: QuestionnaireIdRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
+  DesinscriptionIndexRoute: DesinscriptionIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
   ApiPublicAnalyticsEndSessionRoute: ApiPublicAnalyticsEndSessionRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
