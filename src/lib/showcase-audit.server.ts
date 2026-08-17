@@ -33,13 +33,15 @@ export async function loadShowcaseAudit(
   const certs = (certRes.data ?? []) as Array<{ verification_status: string | null; expires_at: string | null }>;
   const avails = (availRes.data ?? []) as Array<{ created_at: string | null }>;
   const now = Date.now();
+  const isExpired = (c: { expires_at: string | null }) =>
+    c.expires_at != null && new Date(c.expires_at).getTime() < now;
   const checks = runShowcaseAudit({
     ...t,
-    certificationsVerified: certs.filter((c) => c.verification_status === "verified").length,
-    certificationsDeclared: certs.filter((c) => c.verification_status !== "verified").length,
-    certificationsExpired: certs.filter(
-      (c) => c.expires_at != null && new Date(c.expires_at).getTime() < now,
-    ).length,
+    // Une certification expirée n'est plus comptée comme vérifiée : elle est
+    // rétrogradée en « déclarée », comme sur la vitrine publique.
+    certificationsVerified: certs.filter((c) => c.verification_status === "verified" && !isExpired(c)).length,
+    certificationsDeclared: certs.filter((c) => c.verification_status !== "verified" || isExpired(c)).length,
+    certificationsExpired: certs.filter(isExpired).length,
     reviewsCount: (revRes.data ?? []).length,
     availabilitiesCount: avails.length,
     availabilitiesUpdatedAt: avails
