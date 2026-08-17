@@ -6,7 +6,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 export const FROM = "HoliSwiss <contact@holiswiss.ch>";
 const shell = emailShell;
 
-async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; status: number; error?: string }> {
+async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; status: number; error?: string; id?: string | null }> {
   const lovableKey = process.env.LOVABLE_API_KEY;
   const resendKey = process.env.RESEND_API_KEY;
   if (!lovableKey || !resendKey) return { ok: false, status: 0, error: "missing_credentials" };
@@ -24,7 +24,14 @@ async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; st
       const text = await res.text().catch(() => "");
       return { ok: false, status: res.status, error: text.slice(0, 300) };
     }
-    return { ok: true, status: res.status };
+    const text = await res.text().catch(() => "");
+    let id: string | null = null;
+    try {
+      id = (JSON.parse(text) as { id?: string }).id ?? null;
+    } catch {
+      id = null;
+    }
+    return { ok: true, status: res.status, id };
   } catch (e) {
     return { ok: false, status: 0, error: String(e) };
   }
