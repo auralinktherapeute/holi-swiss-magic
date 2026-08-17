@@ -280,6 +280,11 @@ function Page() {
   const blockingIds = new Set(blocking.map((c) => c.id));
   const missing = report ? report.missingItems.filter((c) => !blockingIds.has(c.id)) : [];
   const done = checks.filter((c) => c.status === "passed");
+  const validated = [...done].sort((a, b) => {
+    const ia = VALIDATED_ORDER.indexOf(a.id);
+    const ib = VALIDATED_ORDER.indexOf(b.id);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib) || b.weight - a.weight;
+  });
   const priority = report?.priorityActions ?? [];
 
   if (isLoading) {
@@ -526,23 +531,32 @@ function Page() {
         </Card>
       )}
 
-      {done.length > 0 && (
+      {validated.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Éléments réussis ({done.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {done.map((c) => (
-                <li key={c.id} className="flex items-start gap-2.5 rounded-lg border border-border bg-surface p-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                  <div>
-                    <p className="text-sm font-medium">{c.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.explanation}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <CardContent className="p-0">
+            <details className="group" open>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span className="flex items-center gap-2 text-base font-semibold">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  Éléments validés ({validated.length})
+                </span>
+                <ChevronDown
+                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className="px-4 pb-4">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Ces points sont conformes : ils n'apparaissent pas dans les éléments manquants. Vous
+                  pouvez les modifier à tout moment sans perdre les points acquis.
+                </p>
+                <ul className="space-y-2">
+                  {validated.map((c) => (
+                    <ValidatedRow key={c.id} check={c} />
+                  ))}
+                </ul>
+              </div>
+            </details>
           </CardContent>
         </Card>
       )}
