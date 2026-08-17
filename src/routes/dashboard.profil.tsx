@@ -328,6 +328,7 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+        setNewsletterOptIn((data as any).newsletter_opt_in ?? false);
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
