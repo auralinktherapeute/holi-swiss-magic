@@ -221,7 +221,6 @@ function Page() {
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
   const [confirmTestOpen, setConfirmTestOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
   // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
