@@ -190,7 +190,7 @@ function Page() {
   const rerun = useServerFn(runMyShowcaseAnalysis);
   const qc = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isFetching } = useQuery({
     queryKey: ["my-showcase-report"],
     queryFn: () => load(),
     staleTime: 60_000,
@@ -205,6 +205,9 @@ function Page() {
     },
     onError: () => toast.error("L'analyse n'a pas pu être relancée. Réessayez dans un instant."),
   });
+
+  const recalculating = mutation.isPending || (isFetching && !isLoading);
+  const recalcFailed = mutation.isError && !mutation.isPending;
 
   // Source unique : tout provient de l'objet d'audit renvoyé par le serveur.
   // Aucune reconstruction ici.
@@ -263,11 +266,11 @@ function Page() {
         <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
+            disabled={recalculating}
             className="h-11 min-h-[44px] gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${mutation.isPending ? "animate-spin" : ""}`} aria-hidden="true" />
-            {mutation.isPending ? "Analyse en cours…" : "Relancer l'analyse"}
+            <RefreshCw className={`h-4 w-4 ${recalculating ? "animate-spin" : ""}`} aria-hidden="true" />
+            {recalculating ? "Analyse en cours…" : recalcFailed ? "Réessayer l'analyse" : "Relancer l'analyse"}
           </Button>
           {data.slug && (
             <Button asChild variant="outline" className="h-11 min-h-[44px] gap-2">
@@ -280,7 +283,43 @@ function Page() {
         </div>
       </header>
 
-      <Card>
+      {recalculating && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm"
+        >
+          <RefreshCw className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+          <span className="font-medium">Analyse en cours…</span>
+          <span className="text-muted-foreground">
+            Le résultat affiché ci-dessous date du {formatDate(data.analyzedAt)} et est temporairement obsolète.
+          </span>
+        </div>
+      )}
+
+      {recalcFailed && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="font-medium">L'analyse n'a pas pu être relancée.</span>
+          <span>
+            Aucun score n'a été modifié : les résultats et recommandations ci-dessous restent ceux de l'analyse du{" "}
+            {formatDate(data.analyzedAt)}.
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 min-h-[36px] border-red-300 text-xs text-red-700"
+            onClick={() => mutation.mutate()}
+          >
+            Réessayer l'analyse
+          </Button>
+        </div>
+      )}
+
+      <Card className={recalculating ? "opacity-60 transition-opacity" : "transition-opacity"} aria-busy={recalculating}>
         <CardContent className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-start">
           <ScoreGauge score={data.score} status={status.label} />
           <div className="min-w-0 flex-1 space-y-3 text-center sm:text-left">
