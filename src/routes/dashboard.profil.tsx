@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
   FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check, BadgeCheck,
-  ArrowUp, ArrowDown, Package as PackageIcon,
+  ArrowUp, ArrowDown, Package as PackageIcon, Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ import {
   saveMyTherapistProfile,
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
+import { updateMyNewsletterConsent } from "@/lib/newsletter-consent.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
@@ -79,7 +80,7 @@ const THERAPIST_PROFILE_SELECT = [
   "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
-  "ide_verified", "accreditations",
+  "ide_verified", "accreditations", "newsletter_opt_in",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
@@ -174,6 +175,11 @@ function ProfilePage() {
 
   // Documents
   const [documents, setDocuments] = useSessionState<DocRow[]>(`${profileStatePrefix}.documents`, []);
+
+  // Newsletter consent
+  const [newsletterOptIn, setNewsletterOptIn] = useSessionState<boolean>(`${profileStatePrefix}.newsletterOptIn`, false);
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
 
   const docInputRef = useRef<HTMLInputElement>(null);
 
@@ -322,6 +328,7 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+        setNewsletterOptIn((data as any).newsletter_opt_in ?? false);
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
@@ -1033,6 +1040,77 @@ function ProfilePage() {
               ))}
             </div>
           )}
+        </Section>
+
+        {/* Newsletter */}
+        <Section
+          title={<span className="inline-flex items-center gap-2"><Mail className="h-5 w-5 text-[#b86ef9]" />{t("profile_edit.newsletter_title")}</span>}
+          subtitle={t("profile_edit.newsletter_subtitle")}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-xl border border-[rgba(184,110,249,0.15)] bg-[rgba(20,8,40,0.4)] p-4">
+              <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#b86ef9]" />
+              <div>
+                <p className="font-medium text-white">{t("profile_edit.newsletter_benefit_1_title")}</p>
+                <p className="text-sm text-[#a89bc4]">{t("profile_edit.newsletter_benefit_1_body")}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-[rgba(184,110,249,0.15)] bg-[rgba(20,8,40,0.4)] p-4">
+              <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#b86ef9]" />
+              <div>
+                <p className="font-medium text-white">{t("profile_edit.newsletter_benefit_2_title")}</p>
+                <p className="text-sm text-[#a89bc4]">{t("profile_edit.newsletter_benefit_2_body")}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-[rgba(184,110,249,0.15)] bg-[rgba(20,8,40,0.4)] p-4">
+              <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#b86ef9]" />
+              <div>
+                <p className="font-medium text-white">{t("profile_edit.newsletter_benefit_3_title")}</p>
+                <p className="text-sm text-[#a89bc4]">{t("profile_edit.newsletter_benefit_3_body")}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-[rgba(184,110,249,0.15)] bg-[rgba(20,8,40,0.4)] p-4">
+              <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#b86ef9]" />
+              <div>
+                <p className="font-medium text-white">{t("profile_edit.newsletter_benefit_4_title")}</p>
+                <p className="text-sm text-[#a89bc4]">{t("profile_edit.newsletter_benefit_4_body")}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.6)] p-4 sm:p-5">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={newsletterOptIn}
+                disabled={newsletterLoading}
+                onChange={async (e) => {
+                  const next = e.target.checked;
+                  setNewsletterLoading(true);
+                  try {
+                    await updateNewsletterConsent({ data: { optIn: next } });
+                    setNewsletterOptIn(next);
+                    toast.success(next ? t("profile_edit.newsletter_subscribed") : t("profile_edit.newsletter_unsubscribed"));
+                  } catch (err) {
+                    toast.error(t("profile_edit.newsletter_error"));
+                  } finally {
+                    setNewsletterLoading(false);
+                  }
+                }}
+                className="mt-1 h-5 w-5 shrink-0 rounded border-[rgba(184,110,249,0.4)] bg-[rgba(20,8,40,0.5)] text-[#b86ef9] focus:ring-[#b86ef9] focus:ring-offset-0"
+              />
+              <div className="space-y-1">
+                <span className="block text-sm font-medium text-white">{t("profile_edit.newsletter_consent_label")}</span>
+                <span className="block text-xs text-[#a89bc4]">
+                  {t("profile_edit.newsletter_consent_note")}{" "}
+                  <a href={`/fr/confidentialite`} target="_blank" rel="noreferrer" className="underline hover:text-[#d4a5f9]">
+                    {t("profile_edit.newsletter_privacy_link")}
+                  </a>
+                  .
+                </span>
+              </div>
+            </label>
+          </div>
         </Section>
       </div>
 
