@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { subscribePublicNewsletter } from "@/lib/newsletter-public.functions";
 
-type Source = "homepage_newsletter" | "public_footer" | "newsletter_resource_page";
+export type Source = "homepage_newsletter" | "public_footer" | "newsletter_resource_page";
 
 const LOCALES = ["fr", "de", "it", "en"] as const;
 type Locale = (typeof LOCALES)[number];
@@ -25,7 +25,7 @@ function useLang(): Locale {
 }
 
 /** Formulaire d'inscription publique (aucun compte créé). */
-function useSubscribeForm(source: Source) {
+export function useSubscribeForm(source: Source) {
   const { t } = useTranslation();
   const locale = useLang();
   const subscribe = useServerFn(subscribePublicNewsletter);
@@ -62,7 +62,7 @@ function useSubscribeForm(source: Source) {
   return { t, email, setEmail, consent, setConsent, loading, done, submit, locale };
 }
 
-function PrivacyLink({ lang }: { lang: Locale }) {
+export function PrivacyLink({ lang }: { lang: Locale }) {
   const { t } = useTranslation();
   return (
     <a

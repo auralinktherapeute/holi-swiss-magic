@@ -54,6 +54,7 @@ import { Route as DashboardReservationsRouteImport } from './routes/dashboard.re
 import { Route as DesinscriptionIndexRouteImport } from './routes/desinscription.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrousels'
+import { Route as PreviewFooterRouteImport } from './routes/preview.footer'
 import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.marketing-topics'
 import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
@@ -316,6 +317,11 @@ const PreviewCarrouselsRoute = PreviewCarrouselsRouteImport.update({
   path: '/preview/carrousels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewFooterRoute = PreviewFooterRouteImport.update({
+  id: '/preview/footer',
+  path: '/preview/footer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PreviewMarketingTopicsRoute = PreviewMarketingTopicsRouteImport.update({
   id: '/preview/marketing-topics',
   path: '/preview/marketing-topics',
@@ -545,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
+  '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
@@ -624,6 +631,7 @@ export interface FileRoutesByTo {
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
+  '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang': typeof LangIndexRoute
@@ -707,6 +715,7 @@ export interface FileRoutesById {
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
+  '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
@@ -791,6 +800,7 @@ export interface FileRouteTypes {
     | '/dashboard/reservations'
     | '/intake/$slug'
     | '/preview/carrousels'
+    | '/preview/footer'
     | '/preview/marketing-topics'
     | '/questionnaire/$id'
     | '/$lang/'
@@ -870,6 +880,7 @@ export interface FileRouteTypes {
     | '/dashboard/reservations'
     | '/intake/$slug'
     | '/preview/carrousels'
+    | '/preview/footer'
     | '/preview/marketing-topics'
     | '/questionnaire/$id'
     | '/$lang'
@@ -952,6 +963,7 @@ export interface FileRouteTypes {
     | '/dashboard/reservations'
     | '/intake/$slug'
     | '/preview/carrousels'
+    | '/preview/footer'
     | '/preview/marketing-topics'
     | '/questionnaire/$id'
     | '/$lang/'
@@ -1003,6 +1015,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
   PreviewCarrouselsRoute: typeof PreviewCarrouselsRoute
+  PreviewFooterRoute: typeof PreviewFooterRoute
   PreviewMarketingTopicsRoute: typeof PreviewMarketingTopicsRoute
   QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
@@ -1330,6 +1343,13 @@ declare module '@tanstack/react-router' {
       path: '/preview/carrousels'
       fullPath: '/preview/carrousels'
       preLoaderRoute: typeof PreviewCarrouselsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/footer': {
+      id: '/preview/footer'
+      path: '/preview/footer'
+      fullPath: '/preview/footer'
+      preLoaderRoute: typeof PreviewFooterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preview/marketing-topics': {
@@ -1754,6 +1774,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
   PreviewCarrouselsRoute: PreviewCarrouselsRoute,
+  PreviewFooterRoute: PreviewFooterRoute,
   PreviewMarketingTopicsRoute: PreviewMarketingTopicsRoute,
   QuestionnaireIdRoute: QuestionnaireIdRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
