@@ -7,8 +7,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
 import { AccountManageDialog } from "@/components/dashboard/AccountManageDialog";
 import {
-  LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
-  Star, CalendarDays, CreditCard, Gift, Crown, Package, ClipboardList, Receipt, HelpCircle, LogOut,
+  LayoutDashboard,
+  User,
+  Calendar,
+  BookmarkCheck,
+  FileText,
+  Star,
+  CalendarDays,
+  CreditCard,
+  Gift,
+  Crown,
+  Package,
+  ClipboardList,
+  Receipt,
+  HelpCircle,
+  LogOut,
 } from "lucide-react";
 import { useServerFn as useServerFnHelp } from "@tanstack/react-start";
 import { resetOnboarding } from "@/lib/onboarding.functions";
@@ -38,13 +51,35 @@ export function TherapistNav() {
   }, [fetchPendingCount, user]);
 
   const items = [
-    { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard.overview"), exact: true, tourId: "nav-overview" },
+    {
+      to: "/dashboard",
+      icon: LayoutDashboard,
+      label: t("dashboard.overview"),
+      exact: true,
+      tourId: "nav-overview",
+    },
     { to: "/dashboard/profil", icon: User, label: t("dashboard.profile"), tourId: "nav-profil" },
     { to: "/dashboard/agenda", icon: Calendar, label: t("dashboard.agenda"), tourId: "nav-agenda" },
-    { to: "/dashboard/reservations", icon: BookmarkCheck, label: t("dashboard.reservations"), badge: pendingCount, tourId: "nav-reservations" },
+    {
+      to: "/dashboard/reservations",
+      icon: BookmarkCheck,
+      label: t("dashboard.reservations"),
+      badge: pendingCount,
+      tourId: "nav-reservations",
+    },
     { to: "/dashboard/forfaits", icon: Package, label: "Forfaits", tourId: "nav-forfaits" },
-    { to: "/dashboard/questionnaires", icon: ClipboardList, label: "Questionnaires", tourId: "nav-questionnaires" },
-    { to: "/dashboard/facturation", icon: Receipt, label: "Facturation", tourId: "nav-facturation" },
+    {
+      to: "/dashboard/questionnaires",
+      icon: ClipboardList,
+      label: "Questionnaires",
+      tourId: "nav-questionnaires",
+    },
+    {
+      to: "/dashboard/facturation",
+      icon: Receipt,
+      label: "Facturation",
+      tourId: "nav-facturation",
+    },
     { to: "/dashboard/articles", icon: FileText, label: t("dashboard.articles") },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
@@ -68,7 +103,9 @@ export function TherapistNav() {
       await signOutCompletely(qc);
       navigate({ to: "/$lang/connexion", params: { lang: "fr" }, replace: true });
     } catch (e: any) {
-      toast.error(e?.message ?? t("dashboard.logout_error", "La déconnexion a échoué. Veuillez réessayer."));
+      toast.error(
+        e?.message ?? t("dashboard.logout_error", "La déconnexion a échoué. Veuillez réessayer."),
+      );
       setIsLoggingOut(false);
     }
   };
@@ -103,7 +140,9 @@ export function TherapistNav() {
               to={it.to}
               data-tour-id={(it as { tourId?: string }).tourId}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                active ? "bg-primary-xlight text-primary" : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                active
+                  ? "bg-primary-xlight text-primary"
+                  : "text-foreground/70 hover:bg-muted hover:text-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -119,11 +158,17 @@ export function TherapistNav() {
       </nav>
       <div className="border-t border-border p-3 space-y-3">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-primary-xlight text-primary flex items-center justify-center text-sm font-semibold">T</div>
+          <div className="h-9 w-9 rounded-full bg-primary-xlight text-primary flex items-center justify-center text-sm font-semibold">
+            T
+          </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium truncate">{t("dashboard.therapist_label")}</div>
-            <div className="text-xs text-muted-foreground truncate">{t("dashboard.demo_account")}</div>
-            <div className="mt-1"><AccountManageDialog /></div>
+            <div className="text-xs text-muted-foreground truncate">
+              {t("dashboard.demo_account")}
+            </div>
+            <div className="mt-1">
+              <AccountManageDialog />
+            </div>
           </div>
         </div>
         <button
@@ -134,7 +179,10 @@ export function TherapistNav() {
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-red-500/10 hover:text-red-500 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoggingOut ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+            <span
+              className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+              aria-hidden="true"
+            />
           ) : (
             <LogOut className="h-4 w-4" aria-hidden="true" />
           )}
