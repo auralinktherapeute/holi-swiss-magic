@@ -180,6 +180,28 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     if (t.phone) person.telephone = t.phone;
     if (t.website) person.sameAs = [t.website];
     person.worksFor = { "@id": "https://holiswiss.ch/#organization" };
+    (person as any).inLanguage = pageLang;
+
+    // hasCredential : uniquement les certifications réellement vérifiées et
+    // affichées sur la page. Aucune donnée déclarative n'est balisée.
+    const verifiedCerts = (((loaderData as any)?.certifications ?? []) as Array<{
+      name?: string | null;
+      issuer?: string | null;
+      verification_status?: string | null;
+      expires_at?: string | null;
+    }>).filter(
+      (c) =>
+        c?.verification_status === "verified" &&
+        (c.name ?? "").trim().length > 0 &&
+        (!c.expires_at || Date.parse(c.expires_at) >= Date.now()),
+    );
+    if (verifiedCerts.length) {
+      (person as any).hasCredential = verifiedCerts.slice(0, 10).map((c) => ({
+        "@type": "EducationalOccupationalCredential",
+        name: c.name,
+        ...(c.issuer ? { recognizedBy: { "@type": "Organization", name: c.issuer } } : {}),
+      }));
+    }
 
     // AggregateRating + Reviews — uniquement si des avis approuvés existent
     const ratings = reviews.map((r) => r.rating).filter((n) => typeof n === "number");
