@@ -190,7 +190,7 @@ function Page() {
   const rerun = useServerFn(runMyShowcaseAnalysis);
   const qc = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isFetching } = useQuery({
     queryKey: ["my-showcase-report"],
     queryFn: () => load(),
     staleTime: 60_000,
@@ -205,6 +205,9 @@ function Page() {
     },
     onError: () => toast.error("L'analyse n'a pas pu être relancée. Réessayez dans un instant."),
   });
+
+  const recalculating = mutation.isPending || (isFetching && !isLoading);
+  const recalcFailed = mutation.isError && !mutation.isPending;
 
   // Source unique : tout provient de l'objet d'audit renvoyé par le serveur.
   // Aucune reconstruction ici.
