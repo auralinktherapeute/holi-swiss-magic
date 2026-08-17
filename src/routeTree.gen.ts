@@ -67,6 +67,7 @@ import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.
 import { Route as LangFaqIndexRouteImport } from './routes/$lang.faq.index'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
+import { Route as LangLettreSlugRouteImport } from './routes/$lang.lettre.$slug'
 import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mot-de-passe-oublie.index'
 import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
 import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
@@ -379,6 +380,11 @@ const LangInscriptionIndexRoute = LangInscriptionIndexRouteImport.update({
   path: '/inscription/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangLettreSlugRoute = LangLettreSlugRouteImport.update({
+  id: '/lettre/$slug',
+  path: '/lettre/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangMotDePasseOublieIndexRoute =
   LangMotDePasseOublieIndexRouteImport.update({
     id: '/mot-de-passe-oublie/',
@@ -528,6 +534,7 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
@@ -603,6 +610,7 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
@@ -682,6 +690,7 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
@@ -762,6 +771,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
@@ -837,6 +847,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
@@ -915,6 +926,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
@@ -1370,6 +1382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangInscriptionIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/lettre/$slug': {
+      id: '/$lang/lettre/$slug'
+      path: '/lettre/$slug'
+      fullPath: '/$lang/lettre/$slug'
+      preLoaderRoute: typeof LangLettreSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/mot-de-passe-oublie/': {
       id: '/$lang/mot-de-passe-oublie/'
       path: '/mot-de-passe-oublie'
@@ -1519,6 +1538,7 @@ interface LangRouteChildren {
   LangBlogSlugRoute: typeof LangBlogSlugRoute
   LangBlogQuEstCeQueLaSophrologieRoute: typeof LangBlogQuEstCeQueLaSophrologieRoute
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
+  LangLettreSlugRoute: typeof LangLettreSlugRoute
   LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangSpecialitesSpecialtySlugRoute: typeof LangSpecialitesSpecialtySlugRouteWithChildren
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
@@ -1546,6 +1566,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogSlugRoute: LangBlogSlugRoute,
   LangBlogQuEstCeQueLaSophrologieRoute: LangBlogQuEstCeQueLaSophrologieRoute,
   LangEvenementsIdRoute: LangEvenementsIdRoute,
+  LangLettreSlugRoute: LangLettreSlugRoute,
   LangParolesSlugRoute: LangParolesSlugRoute,
   LangSpecialitesSpecialtySlugRoute:
     LangSpecialitesSpecialtySlugRouteWithChildren,

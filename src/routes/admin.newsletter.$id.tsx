@@ -50,7 +50,9 @@ const selectCls =
 const tabCls =
   "data-[state=active]:bg-[#b86ef9] data-[state=active]:text-white text-white/70";
 
-type Form = Record<string, string> & { qc: Record<string, boolean> };
+type Form = { [k: string]: string | Record<string, boolean> } & {
+  qc: Record<string, boolean>;
+};
 
 function str(v: unknown): string {
   return v === null || v === undefined ? "" : String(v);
