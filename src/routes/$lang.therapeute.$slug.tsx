@@ -1,5 +1,6 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
-import { resolveSeoTitle } from "@/lib/seo-title";
+import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
+import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef, lazy, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -120,16 +121,25 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const role = copy.role(t.title ?? copy.fallbackRole, place);
     const title = resolveSeoTitle(
       t.meta_title,
-      `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, 60),
+      buildGeneratedSeoTitle({
+        first_name: t.first_name,
+        last_name: t.last_name,
+        title: t.title,
+        city: t.city,
+        canton: t.canton,
+        roleLabel: role,
+      }),
     ).value;
-    const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
     const fallback = copy.descFallback(fullName, role);
-    const customDesc = (t.meta_description ?? "").replace(/\s+/g, " ").trim();
-    const rawDescription = customDesc || (bio.length >= 50 ? bio : fallback);
-    const description =
-      rawDescription.length > 157
-        ? `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}…`
-        : rawDescription;
+    // Même résolution que l'audit de visibilité et que l'aperçu SEO du dashboard.
+    const description = truncateSeoDescription(
+      resolveSeoDescription({
+        meta_description: t.meta_description,
+        bio: t.bio,
+        short_bio: (t as any).short_bio,
+        fallback,
+      }).value,
+    );
     const image = t.photo_url;
     const meta: Array<Record<string, string>> = [
       { title },
