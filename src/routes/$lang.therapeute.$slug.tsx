@@ -60,6 +60,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
           city?: string;
           canton?: string;
           bio?: string;
+          short_bio?: string | null;
           meta_title?: string | null;
           meta_description?: string | null;
           photo_url?: string;
