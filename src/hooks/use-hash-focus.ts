@@ -19,6 +19,17 @@ export function useHashFocus(ready: boolean = true) {
       el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
       el.classList.add("hash-target");
       window.setTimeout(() => el.classList.remove("hash-target"), 2600);
+
+      // Focus le premier champ incomplet de la section (sinon le premier contrôle).
+      const controls = Array.from(
+        el.querySelectorAll<HTMLElement>(
+          'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      const isEmpty = (n: HTMLElement) =>
+        (n instanceof HTMLInputElement || n instanceof HTMLTextAreaElement) && n.value.trim() === "";
+      const target = controls.find(isEmpty) ?? controls[0];
+      if (target) window.setTimeout(() => target.focus({ preventScroll: true }), reduce ? 0 : 420);
     };
     const raf = window.requestAnimationFrame(() => window.setTimeout(jump, 120));
     window.addEventListener("hashchange", jump);
