@@ -118,7 +118,7 @@ function Page() {
   const archive = useMutation({
     mutationFn: (id: string) => setStatus({ data: { id, status: "archivee" as NewsletterStatus } }),
     onSuccess: () => {
-      toast.success("Newsletter archivée — aucun contenu supprimé.");
+      toast.success("L'élément a été archivé. Son historique est conservé dans les archives.");
       setToArchive(null);
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
     },
