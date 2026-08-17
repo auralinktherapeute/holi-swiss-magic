@@ -73,6 +73,11 @@ type DocRow = {
 };
 
 const CURRENCIES = ["CHF", "EUR", "USD"];
+const CONSULTATION_MODES = [
+  { value: "in_person", label: "Au cabinet" },
+  { value: "online", label: "En visio" },
+  { value: "home", label: "À domicile" },
+] as const;
 const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#ef4444"];
 // NOTE: `phone` and `email` are column-restricted at the database level and
 // cannot be read directly by the authenticated role. The owner's phone is
@@ -824,6 +829,43 @@ function ProfilePage() {
           </div>
         </Section>
 
+        {/* Modes de consultation */}
+        <Section
+          id="modes"
+          title="Modes de consultation"
+          subtitle="Indiquez comment vos client·es peuvent vous rencontrer. Ces modes apparaissent sur votre fiche publique."
+        >
+          <div className="flex flex-wrap gap-2.5">
+            {CONSULTATION_MODES.map((m) => {
+              const active = consultationModes.includes(m.value);
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    setConsultationModes((prev) =>
+                      prev.includes(m.value) ? prev.filter((x) => x !== m.value) : [...prev, m.value],
+                    );
+                    markDirty();
+                  }}
+                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]/60 ${
+                    active
+                      ? "border-[#b86ef9] bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white shadow-md shadow-[#b86ef9]/40"
+                      : "border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.45)] text-[#d4c4e0] hover:border-[#b86ef9]"
+                  }`}
+                >
+                  {active && <Check className="h-4 w-4" aria-hidden="true" />}
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-[#a89bc4]">
+            Au moins un mode est nécessaire pour que le visiteur sache comment réserver.
+          </p>
+        </Section>
+
         {/* Services */}
         <Section id="prestations" title={t("profile_edit.section_services")} action={
           <ServiceDialog onAdd={(s) => { setServices((prev) => [...prev, s]); markDirty(); }} />
@@ -1041,6 +1083,40 @@ function ProfilePage() {
               <Check className="h-4 w-4" />{t("profile_edit.no_changes")}
             </div>
           )}
+        </Section>
+
+        {/* SEO */}
+        <Section
+          id="seo"
+          title={<span className="inline-flex items-center gap-2"><Globe className="h-5 w-5 text-[#b86ef9]" />Référencement (SEO)</span>}
+          subtitle="Le titre et la description affichés par Google pour votre fiche. Laissez vide pour utiliser le texte généré automatiquement."
+        >
+          <Field label={<label htmlFor="meta-title">Title SEO</label>}>
+            <Input
+              id="meta-title"
+              value={metaTitle}
+              maxLength={70}
+              onChange={(e) => { setMetaTitle(e.target.value); markDirty(); }}
+              placeholder="Prénom Nom — Thérapeute à Genève"
+              className={inputClass}
+            />
+            <p className="mt-1.5 text-xs text-[#a89bc4]">{metaTitle.length}/70 · visez 20 à 60 caractères.</p>
+          </Field>
+
+          <div className="mt-5">
+            <Field label={<label htmlFor="meta-description">Meta description</label>}>
+              <Textarea
+                id="meta-description"
+                value={metaDescription}
+                maxLength={170}
+                rows={3}
+                onChange={(e) => { setMetaDescription(e.target.value); markDirty(); }}
+                placeholder="Accompagnement en… à … . Séances au cabinet ou en visio, sur rendez-vous."
+                className={`${inputClass} h-auto resize-y py-2`}
+              />
+              <p className="mt-1.5 text-xs text-[#a89bc4]">{metaDescription.length}/170 · visez 80 à 160 caractères.</p>
+            </Field>
+          </div>
         </Section>
 
         {/* Payment methods (private, used only on invoices) */}
