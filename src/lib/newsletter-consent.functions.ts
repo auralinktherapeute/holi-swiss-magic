@@ -23,7 +23,7 @@ export const getMyNewsletterConsent = createServerFn({ method: "POST" })
     const { data } = await supabaseAdmin
       .from("therapists")
       .select(
-        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version"
+        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version" as never
       )
       .eq("user_id", context.userId)
       .maybeSingle();
@@ -52,7 +52,7 @@ export const updateMyNewsletterConsent = createServerFn({ method: "POST" })
     const { data: therapistRow } = await supabaseAdmin
       .from("therapists")
       .select(
-        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version"
+        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version" as never
       )
       .eq("user_id", context.userId)
       .maybeSingle();
@@ -88,7 +88,7 @@ export const updateMyNewsletterConsent = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("therapists")
-      .update(patch)
+      .update(patch as never)
       .eq("id", therapist.id)
       .eq("user_id", context.userId);
 
