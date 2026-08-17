@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
   Menu, X, Home, Gauge, Workflow, Bell, Sparkles, Globe2, Mic, Megaphone, HeartPulse,
-  Activity,
+  Activity, Newspaper,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -101,6 +101,7 @@ export function AdminNav() {
     { to: "/admin/abonnements",      icon: CreditCard,      label: t("admin.subscriptions"),  badge: visibleCount("/admin/abonnements", counts.subscriptions) },
     { to: "/admin/agents",           icon: Bot,             label: t("admin.agents") },
     { to: "/admin/emails",           icon: Mail,            label: t("admin.emails") },
+    { to: "/admin/newsletter",       icon: Newspaper,       label: "Newsletter thérapeutes" },
     { to: "/admin/seo",              icon: Gauge,           label: "Score SEO & GEO" },
     { to: "/admin/ameliorations-seo", icon: Sparkles,       label: "Amélioration SEO/GEO via Claude" },
     { to: "/admin/indexation",       icon: Globe2,          label: "Indexation Google" },
