@@ -53,6 +53,7 @@ import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
 import { listAllSpecialties } from "@/lib/specialties.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { refreshShowcaseAfterSave, formatAnalysisDate } from "@/lib/showcase-cache";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -553,15 +554,18 @@ function ProfilePage() {
       setSaving(false);
       return toast.error(t("profile_edit.save_error") + " — " + (error instanceof Error ? error.message : "Erreur"));
     }
-    setSaving(false);
     setDirty(false);
     await clearDraft();
-    // Recompute visibility score immediately after a profile save.
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["my-showcase-report"] }),
-      queryClient.invalidateQueries({ queryKey: ["my-showcase-audit"] }),
-    ]);
-    toast.success(t("profile_edit.saved_toast"));
+    // Sauvegarde confirmée côté serveur : on invalide profil + audit, puis on
+    // relance l'audit depuis les données persistées (score, catégories,
+    // actions prioritaires et éléments manquants recalculés).
+    const analyzedAt = await refreshShowcaseAfterSave(queryClient);
+    setSaving(false);
+    const when = formatAnalysisDate(analyzedAt);
+    toast.success(
+      `${t("profile_edit.saved_toast")} Votre score a été recalculé.`,
+      when ? { description: `Nouvelle analyse : ${when}` } : undefined,
+    );
   };
 
   const verifyIde = () => {
