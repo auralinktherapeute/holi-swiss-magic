@@ -88,7 +88,7 @@ export async function buildShowcaseReport(
 ) {
   const { basicSummary } = await import("@/lib/showcase-audit");
   const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
-  const { buildRecommendations } = await import("@/lib/showcase-recommendations");
+  const { buildShowcaseAuditReport } = await import("@/lib/showcase-report");
 
   const [audit, access, prevRes] = await Promise.all([
     loadShowcaseAudit(sb, therapistId),
@@ -155,10 +155,19 @@ export async function buildShowcaseReport(
     gain: Math.round((c.weight / maxWeight) * 100),
   }));
 
-  const recommendations = buildRecommendations(checks, resolvedDates);
+  // Objet d'audit unique : score, contrôles, manquants, actions prioritaires
+  // et recommandations proviennent tous de cette construction.
+  const report = buildShowcaseAuditReport(audit.input, audit.checks, {
+    generatedAt: analyzedAt,
+    profileVersion: audit.input.updated_at ?? null,
+    resolvedDates,
+  });
+  const recommendations = [...report.visibility.recommendations, ...report.conversion.recommendations]
+    .sort((a, b) => (a.status === b.status ? 0 : a.status === "a_traiter" ? -1 : 1));
 
   return {
     slug: audit.slug,
+    report,
     recommendations,
     access,
     basic,
