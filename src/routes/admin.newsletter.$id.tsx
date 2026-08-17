@@ -47,6 +47,11 @@ import {
 } from "@/components/admin/NewsletterConnection";
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
+  NewsletterWorkflowGuide,
+  type WorkflowStepKey,
+  type WorkflowStepState,
+} from "@/components/admin/NewsletterWorkflowGuide";
+import {
   getNewsletterIssue,
   updateNewsletterIssue,
   updateNewsletterContent,
@@ -467,6 +472,42 @@ function Page() {
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
   const approved = issue?.status === "approuvee";
+
+  // Progression réelle du parcours en 13 étapes, dérivée des données du dossier.
+  const workflowStates = useMemo<Partial<Record<WorkflowStepKey, WorkflowStepState>>>(() => {
+    if (!issue || !form) return {};
+    const sendRows = sends.data ?? [];
+    const done = {
+      suggestion: true,
+      brief: true,
+      completer: Boolean(form.title && form.pillar && form.audience),
+      rediger: Boolean(form.email_subject && form.email_body),
+      editeur: Boolean(form.email_subject && form.email_body),
+      apercu_email: previewChecked,
+      apercu_ressource: Boolean(issue.published_at),
+      checklist: qcDone === qcTotal,
+      test: sendRows.some((s: { is_test?: boolean }) => s.is_test),
+      controle: sendRows.some((s: { is_test?: boolean }) => s.is_test) && previewChecked,
+      approbation: ["approuvee", "programmee", "envoi_en_cours", "envoyee"].includes(issue.status),
+      segment: (sendPreview.data?.recipientCount ?? 0) > 0,
+      confirmation: canSend,
+      envoi: issue.status === "envoyee",
+    } satisfies Record<WorkflowStepKey, boolean>;
+
+    const out: Partial<Record<WorkflowStepKey, WorkflowStepState>> = {};
+    let currentSet = false;
+    for (const step of NEWSLETTER_WORKFLOW_STEPS) {
+      if (done[step.key]) {
+        out[step.key] = "done";
+      } else if (!currentSet) {
+        out[step.key] = "current";
+        currentSet = true;
+      } else {
+        out[step.key] = "todo";
+      }
+    }
+    return out;
+  }, [issue, form, sends.data, previewChecked, qcDone, qcTotal, sendPreview.data, canSend]);
 
   if (isLoading) {
     return <div className="p-6 md:p-10 text-white/60">Chargement de la newsletter…</div>;
