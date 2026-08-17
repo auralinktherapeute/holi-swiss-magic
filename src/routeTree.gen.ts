@@ -23,6 +23,7 @@ import { Route as AdminAmeliorationsSeoRouteImport } from './routes/admin.amelio
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
+import { Route as AdminCerveauRouteImport } from './routes/admin.cerveau'
 import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
@@ -163,6 +164,11 @@ const AdminArticlesRoute = AdminArticlesRouteImport.update({
 const AdminAvisRoute = AdminAvisRouteImport.update({
   id: '/avis',
   path: '/avis',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCerveauRoute = AdminCerveauRouteImport.update({
+  id: '/cerveau',
+  path: '/cerveau',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCrmRoute = AdminCrmRouteImport.update({
@@ -543,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/cerveau': typeof AdminCerveauRoute
   '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
@@ -626,6 +633,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/cerveau': typeof AdminCerveauRoute
   '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
@@ -713,6 +721,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/articles': typeof AdminArticlesRoute
   '/admin/avis': typeof AdminAvisRoute
+  '/admin/cerveau': typeof AdminCerveauRoute
   '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
@@ -801,6 +810,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/cerveau'
     | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
@@ -884,6 +894,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/cerveau'
     | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
@@ -970,6 +981,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/articles'
     | '/admin/avis'
+    | '/admin/cerveau'
     | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
@@ -1166,6 +1178,13 @@ declare module '@tanstack/react-router' {
       path: '/avis'
       fullPath: '/admin/avis'
       preLoaderRoute: typeof AdminAvisRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/cerveau': {
+      id: '/admin/cerveau'
+      path: '/cerveau'
+      fullPath: '/admin/cerveau'
+      preLoaderRoute: typeof AdminCerveauRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/crm': {
@@ -1742,6 +1761,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminArticlesRoute: typeof AdminArticlesRoute
   AdminAvisRoute: typeof AdminAvisRoute
+  AdminCerveauRoute: typeof AdminCerveauRoute
   AdminCrmRoute: typeof AdminCrmRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEvenementsRoute: typeof AdminEvenementsRoute
@@ -1768,6 +1788,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminArticlesRoute: AdminArticlesRoute,
   AdminAvisRoute: AdminAvisRoute,
+  AdminCerveauRoute: AdminCerveauRoute,
   AdminCrmRoute: AdminCrmRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEvenementsRoute: AdminEvenementsRoute,
