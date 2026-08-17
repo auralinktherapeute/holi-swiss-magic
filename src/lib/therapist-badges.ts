@@ -45,7 +45,12 @@ export function isProPlan(plan?: string | null): boolean {
   return p.length > 0 && p !== "free" && p !== "basic" && p !== "none";
 }
 
-const L = {
+type BadgeDict = {
+  pro: string; proDesc: string; verified: string; verifiedDesc: string;
+  declaredSuffix: string; verifiedSuffix: string; certOf: (n: string) => string;
+};
+
+const L: Record<string, BadgeDict> = {
   fr: {
     pro: "Pro", proDesc: "Praticien abonné à une offre Holiswiss Pro.",
     verified: "Profil vérifié", verifiedDesc: "Identité et informations professionnelles contrôlées par l'équipe Holiswiss.",
@@ -74,7 +79,7 @@ const L = {
     verifiedSuffix: "Document validated by Holiswiss",
     certOf: (n: string) => `${n} certification.`,
   },
-} as const;
+};
 
 const ORG_NOTES: Record<string, string> = {
   ASCA: "Fondation suisse pour les médecines complémentaires — reconnue par la plupart des assurances complémentaires.",
@@ -83,7 +88,7 @@ const ORG_NOTES: Record<string, string> = {
 };
 
 function dict(lang?: string) {
-  return (L as Record<string, typeof L.fr>)[(lang ?? "fr").slice(0, 2)] ?? L.fr;
+  return L[(lang ?? "fr").slice(0, 2)] ?? L.fr;
 }
 
 /**
