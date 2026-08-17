@@ -24,7 +24,7 @@ export function TherapistNav() {
   const [pendingCount, setPendingCount] = useState(0);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (!user) return;
