@@ -90,3 +90,40 @@ export function renderNewsletterEmail(input: NewsletterEmailInput): {
 
   return { subject, html: emailShell(inner, footerExtra) };
 }
+
+/** Version texte brut de l'email (contrôle avant envoi, clients sans HTML). */
+export function renderNewsletterText(input: NewsletterEmailInput): string {
+  const subject = input.subject?.trim() || "La Lettre Holiswiss";
+  const unsubscribe = input.unsubscribeUrl || "https://holiswiss.ch/desinscription";
+  const preferences = input.preferencesUrl || "https://holiswiss.ch/dashboard/profil";
+
+  const plain = (text: string | null | undefined) =>
+    (text ?? "")
+      .split(/\n{2,}/)
+      .map((block) => {
+        const m = block.match(/^([^\n:]{2,80})\s*::\s*([\s\S]+)$/);
+        return m ? `${m[1].trim().toUpperCase()}\n${m[2].trim()}` : block.trim();
+      })
+      .filter(Boolean)
+      .join("\n\n");
+
+  const lines: string[] = ["LA LETTRE HOLISWISS", "", subject];
+  if (input.preheader) lines.push("", input.preheader.trim());
+  const intro = plain(input.intro);
+  if (intro) lines.push("", intro);
+  const body = plain(input.body);
+  if (body) lines.push("", body);
+  if (input.buttonLabel && input.buttonUrl)
+    lines.push("", `${input.buttonLabel.trim()} : ${input.buttonUrl.trim()}`);
+  if (input.footer) lines.push("", input.footer.trim());
+  lines.push(
+    "",
+    "—",
+    "Vous recevez La Lettre Holiswiss parce que vous êtes thérapeute inscrit·e sur Holiswiss et que vous avez accepté de recevoir nos informations professionnelles.",
+    `Gérer mes préférences : ${preferences}`,
+    `Se désinscrire : ${unsubscribe}`,
+    "Politique de confidentialité : https://holiswiss.ch/fr/confidentialite",
+    "HoliSwiss — Annuaire des thérapeutes en Suisse · contact@holiswiss.ch",
+  );
+  return lines.join("\n");
+}
