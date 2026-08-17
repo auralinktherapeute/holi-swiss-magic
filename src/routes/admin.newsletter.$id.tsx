@@ -1316,59 +1316,21 @@ function Page() {
                 {/* ENVOI RÉEL */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Envoi réel</h3>
-                  {!confirmOpen ? (
-                    <div className="space-y-2">
-                      <Button
-                        onClick={() => setConfirmOpen(true)}
-                        disabled={!canSend}
-                        className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-                      >
-                        <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer à tout le
-                        segment
-                      </Button>
-                      <p className="text-xs text-white/50">
-                        Ce bouton ouvre uniquement une fenêtre de confirmation : rien n'est envoyé
-                        tant que vous n'avez pas confirmé.
-                        {!previewChecked && " Aperçu à valider avant tout envoi."}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-[#f87171]/40 bg-[#f87171]/10 p-4 space-y-3">
-                      <p className="text-sm font-medium text-white">Confirmer l'envoi</p>
-                      <ul className="text-sm text-white/80 space-y-1">
-                        <li>Newsletter : {sendPreview.data?.title}</li>
-                        <li>Objet : {sendPreview.data?.subject ?? "—"}</li>
-                        <li>Expéditeur : {sendPreview.data?.sender}</li>
-                        <li>
-                          Segment : {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label}
-                        </li>
-                        <li>Destinataires : {sendPreview.data?.recipientCount}</li>
-                        <li className="break-all">
-                          Page ressource : {sendPreview.data?.resourceUrl ?? "Non utilisée"}
-                        </li>
-                        <li>Version : {sendPreview.data?.versionLabel}</li>
-                        <li>Date : {new Date().toLocaleString("fr-CH")}</li>
-                      </ul>
-                      <p className="text-xs text-[#f87171]">Cette action est irréversible.</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={() => sendReal.mutate()}
-                          disabled={!canSend}
-                          className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-                        >
-                          {sendReal.isPending ? "Envoi en cours…" : "Confirmer et envoyer"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setConfirmOpen(false)}
-                          disabled={sendReal.isPending}
-                          className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-                        >
-                          Annuler
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => setFinalConfirmOpen(true)}
+                      disabled={!canSend}
+                      className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+                    >
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Continuer vers
+                      l’envoi
+                    </Button>
+                    <p className="text-xs text-white/50">
+                      Ce bouton ouvre une dernière confirmation : rien n’est envoyé tant que vous
+                      n’avez pas cliqué sur « Envoyer maintenant ».
+                      {!previewChecked && " Aperçu à valider avant tout envoi."}
+                    </p>
+                  </div>
                 </div>
 
                 {/* JOURNAL */}
