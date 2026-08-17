@@ -185,12 +185,24 @@ export function NewsletterSuggestions() {
             >
               Ajouter un sujet
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDismissed((v) => !v)}
+              className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+            >
+              <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
+              {showDismissed
+                ? "Masquer les écartées"
+                : `Afficher les écartées (${dismissedCount})`}
+            </Button>
           </div>
         </div>
 
         <p className="text-xs text-white/45">
           Les suggestions sont calculées sur des totaux anonymes. Aucune newsletter n'est générée ni
-          envoyée automatiquement.
+          envoyée automatiquement. « Créer un brief » ouvre un brouillon éditable · « Écarter »
+          masque la suggestion et reste réversible · « Supprimer » est définitif et demande une
+          confirmation.
         </p>
 
         {q.isLoading && <p className="text-sm text-white/60">Chargement…</p>}
