@@ -625,7 +625,7 @@ function Page() {
                 transition={{ delay: 0.2 }}
                 className="flex gap-2 shrink-0"
               >
-                <button onClick={share} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
+                <button type="button" onClick={share} aria-label={copied ? t("therapist_profile.copied") : t("therapist_profile.share")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
                   {copied ? <span className="text-[10px] font-bold text-[#5cc8fa]">✓</span> : <Share2 className="h-4 w-4" />}
                 </button>
                 <FavoriteButton therapistId={th.id} />
