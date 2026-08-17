@@ -292,7 +292,38 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       ],
     };
 
-    const graph: Array<Record<string, unknown>> = [person, ...serviceNodes, breadcrumbs];
+    // LocalBusiness — l'établissement physique, si une adresse réelle existe
+    const businessNodes: Array<Record<string, unknown>> = [];
+    if (address && (t.city || t.address)) {
+      const business: Record<string, unknown> = {
+        "@type": "HealthAndBeautyBusiness",
+        "@id": `${url}#business`,
+        name: fullName || copy.fallbackRole,
+        url,
+        description,
+        address,
+        areaServed: t.canton
+          ? { "@type": "AdministrativeArea", name: t.canton }
+          : { "@type": "Country", name: "Switzerland" },
+        employee: { "@id": personId },
+      };
+      if (image) business.image = image;
+      if (t.phone) business.telephone = t.phone;
+      if (t.website) business.sameAs = [t.website];
+      if (priceRange) business.priceRange = priceRange;
+      if (typeof t.latitude === "number" && typeof t.longitude === "number") {
+        business.geo = {
+          "@type": "GeoCoordinates",
+          latitude: t.latitude,
+          longitude: t.longitude,
+        };
+      }
+      if (Array.isArray(t.languages) && t.languages.length) business.knowsLanguage = t.languages;
+      if (person.aggregateRating) business.aggregateRating = person.aggregateRating;
+      businessNodes.push(business);
+    }
+
+    const graph: Array<Record<string, unknown>> = [person, ...businessNodes, ...serviceNodes, breadcrumbs];
     const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
@@ -594,7 +625,7 @@ function Page() {
                 transition={{ delay: 0.2 }}
                 className="flex gap-2 shrink-0"
               >
-                <button onClick={share} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
+                <button type="button" onClick={share} aria-label={copied ? t("therapist_profile.copied") : t("therapist_profile.share")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
                   {copied ? <span className="text-[10px] font-bold text-[#5cc8fa]">✓</span> : <Share2 className="h-4 w-4" />}
                 </button>
                 <FavoriteButton therapistId={th.id} />
