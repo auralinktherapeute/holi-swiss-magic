@@ -57,7 +57,7 @@ export function NewTherapistsShowcase() {
           return (
             <article
               key={th.id}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[#2d1248]/70 transition hover:border-[#b86ef9]/60 hover:shadow-[0_0_28px_rgba(184,110,249,0.25)]"
+              className="nt-card nt-breathe group flex flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[#2d1248]/70 hover:border-[#b86ef9]/60"
             >
               <Link
                 to="/$lang/therapeute/$slug"
@@ -106,7 +106,7 @@ export function NewTherapistsShowcase() {
                   <Link
                     to="/$lang/therapeute/$slug"
                     params={{ lang, slug: th.slug }}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#b86ef9] px-3 py-2 text-xs font-semibold text-white shadow-md shadow-[#b86ef9]/30 transition hover:bg-[#a855f7]"
+                    className="nt-shine inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#b86ef9] px-3 py-2 text-xs font-semibold text-white shadow-md shadow-[#b86ef9]/30 transition-colors hover:bg-[#a855f7]"
                   >
                     <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
                     {t("home.newest.book", "Prendre rendez-vous")}
@@ -114,10 +114,10 @@ export function NewTherapistsShowcase() {
                   <Link
                     to="/$lang/therapeute/$slug"
                     params={{ lang, slug: th.slug }}
-                    className="inline-flex items-center justify-center rounded-lg border border-[rgba(184,110,249,0.35)] px-3 py-2 text-xs font-semibold text-[#d4a5f9] transition hover:border-[#b86ef9] hover:text-white"
+                    className="nt-shine inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[rgba(184,110,249,0.35)] px-3 py-2 text-xs font-semibold text-[#d4a5f9] transition-colors hover:border-[#b86ef9] hover:text-white"
                     aria-label={t("home.newest.profile", "Voir le profil")}
                   >
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                    <ArrowRight className="nt-arrow h-3.5 w-3.5" aria-hidden />
                   </Link>
                 </div>
               </div>

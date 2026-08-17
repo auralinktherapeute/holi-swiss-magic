@@ -343,7 +343,8 @@
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
   transform: translateX(-120%) skewX(-18deg);
 }
-.nt-card:hover .nt-shine::after { animation: nt-shine 700ms ease-out; }
+.nt-shine:hover::after,
+.nt-shine:focus-visible::after { animation: nt-shine 700ms ease-out; }
 
 /* Micro-décalage de la flèche */
 .nt-arrow { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
