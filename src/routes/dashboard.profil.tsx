@@ -32,6 +32,7 @@ import {
   saveMyTherapistProfile,
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
+import { updateMyNewsletterConsent } from "@/lib/newsletter-consent.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
