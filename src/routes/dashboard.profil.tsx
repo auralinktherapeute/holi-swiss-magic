@@ -184,6 +184,28 @@ function ProfilePage() {
   const [newsletterUnsubOpen, setNewsletterUnsubOpen] = useState(false);
   const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
 
+  const applyNewsletterConsent = async (next: boolean) => {
+    setNewsletterLoading(true);
+    try {
+      const res = await updateNewsletterConsent({ data: { optIn: next } });
+      setNewsletterOptIn(next);
+      setNewsletterOptInAt(res?.optInAt ?? null);
+      toast.success(
+        next
+          ? res?.alreadySubscribed
+            ? t("profile_edit.newsletter_already_subscribed")
+            : t("profile_edit.newsletter_subscribed")
+          : t("profile_edit.newsletter_unsubscribed")
+      );
+      return true;
+    } catch {
+      toast.error(t("profile_edit.newsletter_error"));
+      return false;
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
+
   const docInputRef = useRef<HTMLInputElement>(null);
 
   // ---- Auto-save draft ----
