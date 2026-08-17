@@ -4,13 +4,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 import { NEWSLETTER_STATUSES, NEWSLETTER_LANGS } from "@/lib/newsletter.shared";
 
-/** `newsletter_issues` n'est pas encore dans les types générés Supabase. */
+/* eslint-disable @typescript-eslint/no-explicit-any -- `newsletter_issues` n'est pas encore dans les types générés Supabase. */
 type SupabaseAnyClient = {
-  from: (table: string) => {
-    select: (columns: string) => any;
-    insert: (values: Record<string, unknown>) => any;
-    update: (values: Record<string, unknown>) => any;
-  };
+  from: (table: string) => any;
 };
 
 const COLUMNS =
