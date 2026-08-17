@@ -62,7 +62,9 @@ export async function resolveRecipients(
   let allowed: Set<string> | null = null;
   if (segment === "sans_disponibilite") {
     const { data: rows } = await client.from("availabilities").select("therapist_id").limit(20000);
-    const withAvail = new Set(((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+    const withAvail = new Set(
+      ((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id),
+    );
     allowed = new Set(
       ((data ?? []) as { id: string }[]).map((r) => r.id).filter((id) => !withAvail.has(id)),
     );
@@ -72,7 +74,9 @@ export async function resolveRecipients(
       .select("therapist_id")
       .eq("statut", "publie")
       .limit(20000);
-    const authors = new Set(((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+    const authors = new Set(
+      ((rows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id),
+    );
     allowed = new Set(
       ((data ?? []) as { id: string }[]).map((r) => r.id).filter((id) => !authors.has(id)),
     );

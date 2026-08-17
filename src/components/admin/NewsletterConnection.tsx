@@ -217,7 +217,11 @@ export function NewsletterConnection(props: Props) {
             <select
               id="c-content"
               disabled={disabled}
-              value={values.linked_article_id ? `${values.linked_article_kind}:${values.linked_article_id}` : ""}
+              value={
+                values.linked_article_id
+                  ? `${values.linked_article_kind}:${values.linked_article_id}`
+                  : ""
+              }
               className={selectCls}
               onChange={(e) => {
                 const [kind, id] = e.target.value.split(":");
@@ -259,11 +263,13 @@ export function NewsletterConnection(props: Props) {
               <option value="" className="bg-[#1d0d3d]">
                 Page ressource de cette édition
               </option>
-              {(content.data?.resources ?? []).map((r: { id: string; slug: string; title: string | null }) => (
-                <option key={r.id} value={r.slug} className="bg-[#1d0d3d]">
-                  {r.title || r.slug}
-                </option>
-              ))}
+              {(content.data?.resources ?? []).map(
+                (r: { id: string; slug: string; title: string | null }) => (
+                  <option key={r.id} value={r.slug} className="bg-[#1d0d3d]">
+                    {r.title || r.slug}
+                  </option>
+                ),
+              )}
             </select>
           </div>
 
@@ -389,9 +395,7 @@ export function NewsletterLinkCheck({ issueId }: { issueId: string }) {
           <h2 className="font-semibold">Contrôle des liens</h2>
           <div className="flex items-center gap-2">
             {q.data?.blocking && (
-              <Badge className="bg-[#f87171]/15 text-[#f87171] border-0">
-                Approbation bloquée
-              </Badge>
+              <Badge className="bg-[#f87171]/15 text-[#f87171] border-0">Approbation bloquée</Badge>
             )}
             <Button
               variant="outline"
