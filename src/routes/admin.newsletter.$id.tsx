@@ -632,6 +632,18 @@ function Page() {
                 />
               </CardContent>
             </Card>
+            <div className="mt-5">
+              <NewsletterConnection
+                issueId={id}
+                values={form as unknown as Record<ConnectionKey, string>}
+                set={(k, v) => set(k as TextKey, v)}
+                disabled={locked}
+                subject={form.email_subject || form.title}
+                audience={form.audience}
+                cta={form.cta}
+                recipientCount={sendPreview.data?.count ?? null}
+              />
+            </div>
           </TabsContent>
 
           {/* EMAIL */}
@@ -982,6 +994,9 @@ function Page() {
 
           {/* CONTRÔLE QUALITÉ */}
           <TabsContent value="qc">
+            <div className="mb-5">
+              <NewsletterLinkCheck issueId={id} />
+            </div>
             <Card className="bg-[#1d0d3d] border-white/10">
               <CardContent className="p-5 sm:p-6 space-y-5">
                 <div className="flex items-center justify-between gap-3">
