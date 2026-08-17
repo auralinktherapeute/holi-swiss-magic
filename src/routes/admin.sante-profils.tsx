@@ -16,6 +16,7 @@ import {
   auditTherapistShowcase,
   getTherapistScoringAccess,
   setTherapistScoringAccess,
+  listScoringAccessEvents,
   listFounderSeats,
   setFounderSeat,
   setFounderSeatDisplay,
@@ -616,10 +617,19 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
   const loadAccess = useServerFn(getTherapistScoringAccess);
   const saveAccess = useServerFn(setTherapistScoringAccess);
   const saveSeat = useServerFn(setFounderSeat);
+  const loadEvents = useServerFn(listScoringAccessEvents);
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [access, setAccess] = useState<any>(null);
   const [accessBusy, setAccessBusy] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [form, setForm] = useState({
+    source: "manual_grant",
+    startsAt: "",
+    expiresAt: "",
+    note: "",
+  });
 
   const launch = useCallback(async () => {
     setLoading(true);
@@ -635,10 +645,22 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
   }, [run, therapistId]);
 
   const toggleAccess = useCallback(
-    async (enabled: boolean, source: "admin_manual" | "commercial_offer" | "offer_accepted") => {
+    async (enabled: boolean) => {
       setAccessBusy(true);
       try {
-        setAccess(await saveAccess({ data: { therapistId, enabled, source } }));
+        setAccess(
+          await saveAccess({
+            data: {
+              therapistId,
+              enabled,
+              source: form.source as any,
+              startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+              expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : null,
+              note: form.note || undefined,
+            },
+          }),
+        );
+        setEvents(await loadEvents({ data: { therapistId } }));
         toast.success(enabled ? "Accès avancé accordé" : "Accès avancé retiré");
       } catch (e: any) {
         toast.error(e?.message ?? "Modification impossible");
@@ -646,7 +668,7 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
         setAccessBusy(false);
       }
     },
-    [saveAccess, therapistId],
+    [saveAccess, loadEvents, therapistId, form],
   );
 
   const toggleSeat = useCallback(
@@ -668,10 +690,14 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
   useEffect(() => {
     setState(null);
     setAccess(null);
+    setEvents([]);
     loadAccess({ data: { therapistId } })
       .then(setAccess)
       .catch(() => setAccess(null));
-  }, [therapistId, loadAccess]);
+    loadEvents({ data: { therapistId } })
+      .then((r: any) => setEvents(r ?? []))
+      .catch(() => setEvents([]));
+  }, [therapistId, loadAccess, loadEvents]);
 
   return (
     <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.03] p-3">
