@@ -78,20 +78,22 @@ export function showcaseStatus(score: number): ShowcaseStatus {
 export async function buildShowcaseReport(sb: any, therapistId: string, persist: boolean) {
   const { basicSummary } = await import("@/lib/showcase-audit");
   const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
+  const { buildRecommendations } = await import("@/lib/showcase-recommendations");
 
   const [audit, access, prevRes] = await Promise.all([
     loadShowcaseAudit(sb, therapistId),
     resolveScoringAccess(sb, therapistId),
     sb
       .from("therapist_showcase_snapshots")
-      .select("score,created_at")
+      .select("score,created_at,checks")
       .eq("therapist_id", therapistId)
       .order("created_at", { ascending: false })
-      .limit(1),
+      .limit(20),
   ]);
 
   const basic = basicSummary(audit.checks);
-  const previous = (prevRes?.data ?? [])[0] as { score: number; created_at: string } | undefined;
+  const history = (prevRes?.data ?? []) as Array<{ score: number; created_at: string; checks: any }>;
+  const previous = history[0];
   let analyzedAt = new Date().toISOString();
 
   const shouldPersist = persist || !previous;
@@ -114,6 +116,28 @@ export async function buildShowcaseReport(sb: any, therapistId: string, persist:
     analyzedAt = previous.created_at;
   }
 
+  /**
+   * Date de résolution : premier instantané où un contrôle passe de non
+   * conforme à conforme. Uniquement des données réelles ; null si inconnue.
+   */
+  const resolvedDates: Record<string, string> = {};
+  const seenFailed = new Set<string>();
+  for (const snap of [...history].reverse()) {
+    const list = Array.isArray(snap.checks) ? (snap.checks as Array<{ id: string; passed: boolean }>) : [];
+    for (const item of list) {
+      if (!item?.id) continue;
+      if (!item.passed) {
+        seenFailed.add(item.id);
+        delete resolvedDates[item.id];
+      } else if (seenFailed.has(item.id) && !resolvedDates[item.id]) {
+        resolvedDates[item.id] = snap.created_at;
+      }
+    }
+  }
+  for (const c of audit.checks) {
+    if (c.passed && seenFailed.has(c.id) && !resolvedDates[c.id]) resolvedDates[c.id] = analyzedAt;
+  }
+
   const maxWeight = audit.checks.reduce((s, c) => s + c.weight, 0) || 1;
   const checks = audit.checks.map((c) => ({
     ...c,
@@ -121,8 +145,11 @@ export async function buildShowcaseReport(sb: any, therapistId: string, persist:
     gain: Math.round((c.weight / maxWeight) * 100),
   }));
 
+  const recommendations = buildRecommendations(checks, resolvedDates);
+
   return {
     slug: audit.slug,
+    recommendations,
     access,
     basic,
     score: basic.score,

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getMyShowcaseReport, runMyShowcaseAnalysis } from "@/lib/therapist-health.functions";
 import { SHOWCASE_ACTIONS, SHOWCASE_STATUS_LABEL } from "@/lib/showcase-actions";
+import type { Recommendation } from "@/lib/showcase-recommendations";
 import { AUDIT_CATEGORY_LABEL, type AuditCategory, type AuditSeverity } from "@/lib/showcase-audit";
 
 export const Route = createFileRoute("/dashboard/visibilite")({ component: Page });
@@ -131,6 +132,57 @@ function CheckRow({ check }: { check: ReportCheck }) {
   );
 }
 
+const IMPORTANCE_STYLE: Record<string, string> = {
+  essentiel: "border-red-200 bg-red-50 text-red-700",
+  important: "border-amber-200 bg-amber-50 text-amber-700",
+  conseille: "border-sky-200 bg-sky-50 text-sky-700",
+};
+
+function RecommendationCard({ reco }: { reco: Recommendation }) {
+  const resolved = reco.status === "resolu";
+  return (
+    <li className="rounded-lg border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${IMPORTANCE_STYLE[reco.importance]}`}
+        >
+          {reco.importanceLabel}
+        </span>
+        <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+          {reco.categoryLabel}
+        </span>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+            resolved ? "bg-emerald-50 text-emerald-700" : "bg-muted text-foreground/70"
+          }`}
+        >
+          {resolved ? (
+            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+          ) : (
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+          )}
+          {resolved ? "Résolu" : "À traiter"}
+        </span>
+      </div>
+      <p className="mt-2 text-sm font-semibold">{reco.title}</p>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{reco.explanation}</p>
+      <p className={`mt-2 text-xs font-medium ${resolved ? "text-muted-foreground" : "text-emerald-700"}`}>
+        {resolved
+          ? `Acquis : ${reco.gain} point${reco.gain > 1 ? "s" : ""} sur votre score`
+          : `Gain possible : +${reco.gain} point${reco.gain > 1 ? "s" : ""}`}
+      </p>
+      {resolved && reco.resolvedAt && (
+        <p className="mt-1 text-xs text-muted-foreground">Résolu le {formatDate(reco.resolvedAt)}</p>
+      )}
+      {reco.action && (
+        <Button asChild size="sm" variant="outline" className="mt-3 h-9 min-h-[36px] text-xs">
+          <Link to={reco.action.to}>{reco.action.cta}</Link>
+        </Button>
+      )}
+    </li>
+  );
+}
+
 function Page() {
   const load = useServerFn(getMyShowcaseReport);
   const rerun = useServerFn(runMyShowcaseAnalysis);
@@ -153,6 +205,9 @@ function Page() {
   });
 
   const checks = (data?.checks ?? []) as ReportCheck[];
+  const recommendations = (data?.recommendations ?? []) as Recommendation[];
+  const todo = recommendations.filter((r) => r.status === "a_traiter");
+  const resolved = recommendations.filter((r) => r.status === "resolu");
   const { blocking, missing, done, priority } = useMemo(() => {
     const sorter = (a: ReportCheck, b: ReportCheck) =>
       SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.weight - a.weight;
@@ -304,6 +359,39 @@ function Page() {
                 );
               })}
             </ol>
+          </CardContent>
+        </Card>
+      )}
+
+      {recommendations.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Recommandations ({todo.length} à traiter)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {todo.length > 0 ? (
+              <ul className="space-y-3">
+                {todo.map((r) => (
+                  <RecommendationCard key={r.id} reco={r} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Aucune recommandation en attente : votre vitrine couvre tous les points contrôlés.
+              </p>
+            )}
+            {resolved.length > 0 && (
+              <details className="rounded-lg border border-border bg-surface p-3">
+                <summary className="cursor-pointer text-sm font-medium">
+                  Points déjà résolus ({resolved.length})
+                </summary>
+                <ul className="mt-3 space-y-3">
+                  {resolved.map((r) => (
+                    <RecommendationCard key={r.id} reco={r} />
+                  ))}
+                </ul>
+              </details>
+            )}
           </CardContent>
         </Card>
       )}
