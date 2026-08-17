@@ -228,6 +228,7 @@
     "referral": "Affiliazione",
     "subscription": "Abbonamento",
     "logout": "Disconnetti",
+    "logout_error": "Disconnessione fallita. Riprova."
     "therapist_space": "Area terapeuta",
     "common": {
       "loading": "Caricamento…",
