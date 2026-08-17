@@ -9,6 +9,8 @@
  * Et une organisation en 8 catégories métier (voir AUDIT_CATEGORIES).
  */
 
+import { buildGeneratedSeoTitle, evaluateSeoTitle, resolveSeoTitle } from "./seo-title";
+
 export type AuditAxis = "visibilite" | "conversion";
 export type AuditSeverity = "critical" | "warning" | "info";
 
@@ -157,6 +159,18 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
           : "Renseignez votre prénom, votre nom et votre titre professionnel (ex. « Naturopathe »).")
       : "Votre prénom et votre nom sont renseignés. Ajoutez maintenant votre titre professionnel (ex. « Naturopathe »).";
 
+  // Title SEO : on audite la valeur réellement publiée (meta_title saisi,
+  // sinon titre généré identique à celui de la page publique).
+  const seoTitle = evaluateSeoTitle(
+    resolveSeoTitle(t.meta_title, buildGeneratedSeoTitle(t)),
+    {
+      published:
+        (t.status ?? "").toLowerCase() === "active" ||
+        (t.status ?? "").toLowerCase() === "published",
+      expectedLang,
+    },
+  );
+
   return [
     // ── 1. Profil professionnel ─────────────────────────────────────────
     c("identity", "visibilite", "profil", "Nom et titre professionnel",
@@ -248,8 +262,8 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
 
     // ── 6. SEO technique ────────────────────────────────────────────────
     c("meta_title", "visibilite", "seo_technique", "Title SEO",
-      "Le title est le texte cliquable dans les résultats de recherche.",
-      8, len(t.meta_title) >= 20),
+      seoTitle.message,
+      8, seoTitle.passed),
     c("meta_description", "visibilite", "seo_technique", "Meta description",
       "Sans meta description, Google génère un extrait arbitraire.",
       8, len(t.meta_description) >= 80),
