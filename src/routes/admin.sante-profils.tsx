@@ -16,6 +16,9 @@ import {
   auditTherapistShowcase,
   getTherapistScoringAccess,
   setTherapistScoringAccess,
+  listFounderSeats,
+  setFounderSeat,
+  setFounderSeatDisplay,
 } from "@/lib/therapist-health.functions";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
@@ -29,6 +32,154 @@ const CAT_LABEL: Record<string, string> = {
 };
 const CAT_MAX: Record<string, number> = { completude: 35, contenu: 25, activite: 20, visibilite: 20 };
 const SEV_ICON: Record<string, string> = { critical: "🔴", warning: "🟠", info: "🔵" };
+
+const SEAT_SOURCE_LABEL: Record<string, string> = {
+  auto_activation: "Activation automatique",
+  admin_manual: "Activation manuelle",
+  commercial_offer: "Offre commerciale",
+  offer_accepted: "Offre acceptée",
+  backfill: "Reprise historique",
+};
+const SEAT_ACTION_LABEL: Record<string, string> = {
+  granted: "Attribution",
+  revoked: "Retrait",
+  restored: "Rétablissement",
+};
+
+function fmtDate(v: string | null) {
+  return v ? new Date(v).toLocaleDateString("fr-CH", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+}
+
+/** Places fondateur : 70 numéros d'ordre immuables, historique et réglage d'affichage. */
+function FounderSeatsPanel() {
+  const load = useServerFn(listFounderSeats);
+  const toggleDisplay = useServerFn(setFounderSeatDisplay);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    load()
+      .then(setData)
+      .catch((e: any) => toast.error(e?.message ?? "Chargement impossible"))
+      .finally(() => setLoading(false));
+  }, [load]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const onToggleDisplay = async (show: boolean) => {
+    try {
+      await toggleDisplay({ data: { show } });
+      setData((d: any) => (d ? { ...d, showSeatNumber: show } : d));
+      toast.success(show ? "Numéro de place affiché aux thérapeutes" : "Numéro de place masqué");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Modification impossible");
+    }
+  };
+
+  return (
+    <section className="mb-6 rounded-2xl border border-[rgba(168,85,247,.25)] bg-[#2d1b4e]/60 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="text-[#d9b4ff]" size={18} aria-hidden="true" />
+          <h2 className="text-base font-semibold">Places fondateur — scoring avancé</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-white/70">
+            <input
+              type="checkbox"
+              checked={data?.showSeatNumber ?? true}
+              onChange={(e) => onToggleDisplay(e.target.checked)}
+              className="h-4 w-4 accent-[#8b5cf6]"
+            />
+            Afficher le numéro au thérapeute
+          </label>
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 disabled:opacity-60"
+          >
+            {loading ? <Loader2 className="animate-spin" size={13} /> : <RefreshCw size={13} />} Actualiser
+          </button>
+        </div>
+      </div>
+
+      {data && (
+        <>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
+              <div className="text-lg font-semibold">{data.used}</div>
+              <div className="text-[11px] text-white/50">Places utilisées</div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
+              <div className="text-lg font-semibold text-green-400">{data.remaining}</div>
+              <div className="text-[11px] text-white/50">Places restantes</div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
+              <div className="text-lg font-semibold">{data.active}/{data.total}</div>
+              <div className="text-[11px] text-white/50">Accès actifs</div>
+            </div>
+          </div>
+
+          <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-white/10">
+            <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 bg-[#1a0a2e] text-white/60">
+                <tr>
+                  <th scope="col" className="px-2 py-1.5">N°</th>
+                  <th scope="col" className="px-2 py-1.5">Thérapeute</th>
+                  <th scope="col" className="px-2 py-1.5">Activation</th>
+                  <th scope="col" className="px-2 py-1.5">Source</th>
+                  <th scope="col" className="px-2 py-1.5">Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.seats.length === 0 && (
+                  <tr><td colSpan={5} className="px-2 py-3 text-white/50">Aucune place attribuée pour l’instant.</td></tr>
+                )}
+                {data.seats.map((s: any) => (
+                  <tr key={s.seat_number} className="border-t border-white/5">
+                    <td className="px-2 py-1.5 font-semibold text-white/80">{s.seat_number}</td>
+                    <td className="px-2 py-1.5">
+                      {s.therapist ? `${s.therapist.first_name ?? ""} ${s.therapist.last_name ?? ""}`.trim() : "—"}
+                    </td>
+                    <td className="px-2 py-1.5 text-white/60">{fmtDate(s.granted_at)}</td>
+                    <td className="px-2 py-1.5 text-white/60">{SEAT_SOURCE_LABEL[s.source] ?? s.source}</td>
+                    <td className="px-2 py-1.5">
+                      <span className={s.status === "active" ? "text-green-400" : "text-white/40"}>
+                        {s.status === "active" ? "Actif" : "Retiré"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            className="mt-2 min-h-[36px] text-xs text-white/60 underline underline-offset-2 hover:text-white/85"
+          >
+            {showHistory ? "Masquer l’historique" : `Historique des modifications (${data.events.length})`}
+          </button>
+          {showHistory && (
+            <ul className="mt-2 max-h-56 space-y-1 overflow-auto text-[11px] text-white/60">
+              {data.events.map((e: any) => (
+                <li key={e.id} className="rounded border border-white/10 px-2 py-1">
+                  {fmtDate(e.created_at)} — {SEAT_ACTION_LABEL[e.action] ?? e.action} n°{e.seat_number ?? "—"} ·{" "}
+                  {e.therapist ? `${e.therapist.first_name ?? ""} ${e.therapist.last_name ?? ""}`.trim() : "—"}
+                  {e.source ? ` · ${SEAT_SOURCE_LABEL[e.source] ?? e.source}` : ""}
+                </li>
+              ))}
+              {data.events.length === 0 && <li className="text-white/40">Aucune modification enregistrée.</li>}
+            </ul>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
 
 type Row = {
   therapist_id: string;
@@ -216,6 +367,8 @@ function Page() {
           </button>
         </div>
       </header>
+
+      <FounderSeatsPanel />
 
       {loading ? (
         <div className="flex items-center gap-2 text-white/60"><Loader2 className="animate-spin" size={16} /> Chargement…</div>
@@ -462,6 +615,7 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
   const run = useServerFn(auditTherapistShowcase);
   const loadAccess = useServerFn(getTherapistScoringAccess);
   const saveAccess = useServerFn(setTherapistScoringAccess);
+  const saveSeat = useServerFn(setFounderSeat);
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [access, setAccess] = useState<any>(null);
@@ -493,6 +647,22 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
       }
     },
     [saveAccess, therapistId],
+  );
+
+  const toggleSeat = useCallback(
+    async (enabled: boolean) => {
+      setAccessBusy(true);
+      try {
+        await saveSeat({ data: { therapistId, enabled, source: "admin_manual" } });
+        setAccess(await loadAccess({ data: { therapistId } }));
+        toast.success(enabled ? "Place fondateur attribuée" : "Place fondateur retirée");
+      } catch (e: any) {
+        toast.error(e?.message ?? "Modification impossible");
+      } finally {
+        setAccessBusy(false);
+      }
+    },
+    [saveSeat, loadAccess, therapistId],
   );
 
   useEffect(() => {
@@ -539,12 +709,26 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
               >
                 Retirer
               </button>
+              <button
+                type="button"
+                disabled={accessBusy}
+                onClick={() => toggleSeat(access.seatStatus !== "active")}
+                className="min-h-[32px] rounded-md border border-[#b86ef9]/40 bg-[#b86ef9]/10 px-2 py-1 text-[#e7d3ff] hover:bg-[#b86ef9]/20 disabled:opacity-60"
+              >
+                {access.seatStatus === "active" ? "Retirer la place fondateur" : "Attribuer une place fondateur"}
+              </button>
             </div>
           </div>
           <p className="mt-1.5 text-white/50">
             Source : {access.sources?.length ? access.sources.join(", ") : "—"} · Rang d'inscription :{" "}
             {access.earlyRank ?? "—"} / {access.earlySlots} · Activation :{" "}
             {access.since ? new Date(access.since).toLocaleDateString("fr-CH") : "—"}
+          </p>
+          <p className="mt-1 text-white/50">
+            Place fondateur : {access.seatNumber ? `n°${access.seatNumber} / ${access.earlySlots}` : "aucune"} ·
+            Statut : {access.seatStatus === "active" ? "actif" : access.seatStatus === "revoked" ? "retiré" : "—"} ·
+            Attribuée le {access.seatGrantedAt ? new Date(access.seatGrantedAt).toLocaleDateString("fr-CH") : "—"} ·
+            Places restantes : {access.seatsRemaining ?? "—"}
           </p>
         </div>
       )}

@@ -1426,6 +1426,90 @@ export type Database = {
           },
         ]
       }
+      founder_seat_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          id: string
+          note: string | null
+          seat_number: number | null
+          source: string | null
+          therapist_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          seat_number?: number | null
+          source?: string | null
+          therapist_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          seat_number?: number | null
+          source?: string | null
+          therapist_id?: string
+        }
+        Relationships: []
+      }
+      founder_seats: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          note: string | null
+          revoked_at: string | null
+          seat_number: number
+          source: string
+          status: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          note?: string | null
+          revoked_at?: string | null
+          seat_number: number
+          source?: string
+          status?: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          note?: string | null
+          revoked_at?: string | null
+          seat_number?: number
+          source?: string
+          status?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_seats_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "founder_seats_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -4319,6 +4403,15 @@ export type Database = {
         Returns: Json
       }
       anonymize_user_analytics: { Args: { _uid: string }; Returns: undefined }
+      claim_founder_seat: {
+        Args: {
+          _actor?: string
+          _note?: string
+          _source?: string
+          _therapist_id: string
+        }
+        Returns: number
+      }
       close_marketing_topic: {
         Args: { _id: string; _reject_reason?: string; _secret: string }
         Returns: boolean
@@ -4429,6 +4522,10 @@ export type Database = {
           _therapist_id: string
           _user_id: string
         }
+        Returns: boolean
+      }
+      revoke_founder_seat: {
+        Args: { _actor?: string; _note?: string; _therapist_id: string }
         Returns: boolean
       }
       search_specialties:

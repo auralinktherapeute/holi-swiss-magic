@@ -102,6 +102,8 @@ export function ShowcaseScoreCard() {
   const basic = data.basic;
   const total = basic.total;
   const okCount = basic.completed;
+  const founder = data.access?.seatStatus === "active";
+  const seatNumber = data.access?.showSeatNumber ? data.access?.seatNumber : null;
 
   return (
     <Card className="border-[rgba(184,110,249,0.25)] bg-[#2d1248]/70">
@@ -143,6 +145,16 @@ export function ShowcaseScoreCard() {
             )}
           </div>
         </div>
+
+        {founder && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-[#b86ef9]/35 bg-[#b86ef9]/10 p-3">
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#d9b4ff]" aria-hidden="true" />
+            <p className="text-xs leading-relaxed text-[#e7d3ff]">
+              Vous bénéficiez de l’accès fondateur au scoring avancé Holiswiss.
+              {seatNumber ? ` Accès fondateur — place n°${seatNumber} sur ${data.access?.earlySlots ?? 70}.` : ""}
+            </p>
+          </div>
+        )}
 
         {advanced && data.totals ? (
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
