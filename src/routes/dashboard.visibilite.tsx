@@ -141,6 +141,67 @@ const IMPORTANCE_STYLE: Record<string, string> = {
   conseille: "border-sky-200 bg-sky-50 text-sky-700",
 };
 
+/** Ordre d'affichage prioritaire des éléments validés. */
+const VALIDATED_ORDER = [
+  "identity",
+  "meta_title",
+  "meta_description",
+  "photo",
+  "city",
+  "canton",
+  "address",
+  "geo_consistency",
+  "languages",
+  "canton_language",
+  "services",
+  "durations",
+  "price",
+  "availability",
+  "availability_fresh",
+  "credentials",
+  "ide_verified",
+  "structured_data",
+];
+
+function ValidatedRow({ check }: { check: ReportCheck }) {
+  const action = SHOWCASE_ACTIONS[check.id];
+  return (
+    <li className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3">
+      <div className="flex items-start gap-2.5">
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">
+            {check.label}
+            <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-normal text-emerald-800">
+              Validé
+            </span>
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{check.explanation}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Actuel : {check.currentValueSummary}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Dernière vérification : {formatDate(check.evaluatedAt)}
+            {check.resolvedAt ? ` · Validé depuis le ${formatDate(check.resolvedAt)}` : ""}
+          </p>
+          {action && (
+            <Button asChild variant="outline" size="sm" className="mt-2 h-9 min-h-[36px] gap-1.5 text-xs">
+              <Link to={action.to} hash={action.hash}>
+                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                Modifier cet élément
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
+
+const UNUSED_IMPORTANCE_STYLE: Record<string, string> = {
+  essentiel: "border-red-200 bg-red-50 text-red-700",
+  important: "border-amber-200 bg-amber-50 text-amber-700",
+  conseille: "border-sky-200 bg-sky-50 text-sky-700",
+};
+
 function RecommendationCard({ reco }: { reco: Recommendation }) {
   const resolved = reco.status === "resolu";
   return (
