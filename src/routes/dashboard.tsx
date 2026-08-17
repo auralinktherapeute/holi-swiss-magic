@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { TherapistNav } from "@/components/layout/TherapistNav";
@@ -58,6 +58,10 @@ function DashboardLayout() {
   const fetchState = useServerFn(getOnboardingState);
   const qc = useQueryClient();
   const [tourOpen, setTourOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // La page « Mon profil » contient déjà sa propre rubrique newsletter :
+  // on évite ainsi le doublon de consentement en bas de page.
+  const showNewsletterFooter = !pathname.startsWith("/dashboard/profil");
   useEffect(() => {
     if (loading) return;
     (ensureShell as any)().catch(() => {});
@@ -96,9 +100,9 @@ function DashboardLayout() {
         <TherapistNav />
         <div className="flex flex-1 flex-col overflow-x-hidden">
           <MobileDashboardHeader />
-          <main className="flex-1 pb-20 md:pb-0">
+          <main className="flex-1 pb-28 md:pb-12">
             <Outlet />
-            <NewsletterFooterSection />
+            {showNewsletterFooter && <NewsletterFooterSection />}
           </main>
         </div>
         <MobileDashboardBottomNav />
