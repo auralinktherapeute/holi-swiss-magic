@@ -113,9 +113,7 @@ function Page() {
         internal_notes: payload.internal_notes,
         status: payload.status,
       };
-      return payload.id
-        ? update({ data: { ...body, id: payload.id } })
-        : create({ data: body });
+      return payload.id ? update({ data: { ...body, id: payload.id } }) : create({ data: body });
     },
     onSuccess: () => {
       toast.success("Newsletter enregistrée en brouillon.");
@@ -163,13 +161,11 @@ function Page() {
             Newsletter thérapeutes
           </h1>
           <p className="text-white/60 mt-1">
-            « La Lettre Holiswiss » — briefs éditoriaux. Aucun envoi n'est déclenché depuis cette page.
+            « La Lettre Holiswiss » — briefs éditoriaux. Aucun envoi n'est déclenché depuis cette
+            page.
           </p>
         </div>
-        <Button
-          onClick={openNew}
-          className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-        >
+        <Button onClick={openNew} className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
           <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           Nouvelle newsletter
         </Button>
@@ -211,7 +207,11 @@ function Page() {
                   </Badge>
                 </div>
                 <p className="mt-1 text-sm text-white/55">
-                  {[row.pillar, row.audience, row.target_date ? `Souhaitée le ${row.target_date}` : null]
+                  {[
+                    row.pillar,
+                    row.audience,
+                    row.target_date ? `Souhaitée le ${row.target_date}` : null,
+                  ]
                     .filter(Boolean)
                     .join(" · ") || "Brief à compléter"}
                 </p>

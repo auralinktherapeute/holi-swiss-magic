@@ -2,6 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
+type SupabaseAnyClient = {
+  from: (table: string) => any; // eslint-disable-line -eslint/no-explicit-any
+};
 import { NEWSLETTER_STATUSES, NEWSLETTER_LANGS } from "@/lib/newsletter.shared";
 
 const COLUMNS =
@@ -41,7 +44,7 @@ export const listNewsletterIssues = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await (supabaseAdmin as SupabaseAnyClient)
       .from("newsletter_issues")
       .select(COLUMNS)
       .order("created_at", { ascending: false })
@@ -57,7 +60,7 @@ export const createNewsletterIssue = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await (supabaseAdmin as any)
+    const { data: row, error } = await (supabaseAdmin as SupabaseAnyClient)
       .from("newsletter_issues")
       .insert({ ...data, created_by: context.userId })
       .select("id")
@@ -74,7 +77,7 @@ export const updateNewsletterIssue = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { id, ...patch } = data;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await (supabaseAdmin as SupabaseAnyClient)
       .from("newsletter_issues")
       .update(patch)
       .eq("id", id);
@@ -91,7 +94,7 @@ export const setNewsletterIssueStatus = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await (supabaseAdmin as SupabaseAnyClient)
       .from("newsletter_issues")
       .update({ status: data.status })
       .eq("id", data.id);
