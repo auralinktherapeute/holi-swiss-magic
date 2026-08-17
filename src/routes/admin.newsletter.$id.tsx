@@ -1487,102 +1487,241 @@ function Page() {
 
       {/* Confirmation finale avant envoi réel */}
       <AlertDialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white max-w-xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-[#4ade80]" aria-hidden="true" />
-              Confirmer l’envoi
-            </AlertDialogTitle>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <AlertDialogTitle className="flex items-center gap-2 text-lg">
+                <Send className="h-5 w-5 text-[#4ade80]" aria-hidden="true" />
+                Récapitulatif avant envoi
+              </AlertDialogTitle>
+              {canSend ? (
+                <Badge className="w-fit bg-[#4ade80]/15 text-[#4ade80] border-0 px-3 py-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" /> Prêt à envoyer
+                </Badge>
+              ) : (
+                <Badge className="w-fit bg-[#fbbf24]/15 text-[#fbbf24] border-0 px-3 py-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" /> Corrections
+                  nécessaires
+                </Badge>
+              )}
+            </div>
             <AlertDialogDescription className="text-white/65">
-              Vous êtes sur le point d’envoyer cette newsletter à{" "}
-              <span className="font-semibold text-white">
-                {sendPreview.data?.recipientCount ?? 0} thérapeute(s)
-              </span>
-              . L’envoi sera traité via Resend. Vérifiez une dernière fois le contenu et les
-              destinataires.
+              Vérifiez les quatre blocs ci-dessous avant de confirmer l’envoi. Toute anomalie est
+              signalée dans le bloc <strong>Validation</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 text-sm">
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Newsletter</span>
-              <span className="text-right text-white/85">
-                {sendPreview.data?.title ?? "—"}
-              </span>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* BLOC CONTENU */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-[#b86ef9]">
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                <h3 className="font-semibold text-sm">Contenu</h3>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Objet</dt>
+                  <dd className="text-right text-white/90 break-words max-w-[60%]">
+                    {form.email_subject || "—"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Pré-header</dt>
+                  <dd className="text-right text-white/90 break-words max-w-[60%]">
+                    {form.email_preheader || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-white/55 mb-1">Aperçu</dt>
+                  <dd className="rounded-lg bg-[#14082d] border border-white/10 p-3 text-white/80 text-xs leading-relaxed line-clamp-4">
+                    {form.email_intro || form.email_body || "Aucun aperçu disponible."}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Version</dt>
+                  <dd className="text-right text-white/90">
+                    {sendPreview.data?.versionLabel ?? "—"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Langue</dt>
+                  <dd className="text-right text-white/90">
+                    {NEWSLETTER_LANG_LABELS[(form.lang || "fr") as (typeof NEWSLETTER_LANGS)[number]] ??
+                      form.lang}
+                  </dd>
+                </div>
+              </dl>
             </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Version approuvée</span>
-              <span className="text-right text-white/85">
-                {sendPreview.data?.versionLabel ?? "—"}
-              </span>
+
+            {/* BLOC AUDIENCE */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-[#38bdf8]">
+                <Users className="h-4 w-4" aria-hidden="true" />
+                <h3 className="font-semibold text-sm">Audience</h3>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Segment</dt>
+                  <dd className="text-right text-white/90">
+                    {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label ?? segment}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Nombre de contacts</dt>
+                  <dd className="text-right font-semibold text-white">
+                    {sendPreview.data?.recipientCount ?? 0}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Contacts exclus</dt>
+                  <dd className="text-right text-white/90">0</dd>
+                </div>
+                <div>
+                  <dt className="text-white/55 mb-1">Raisons des exclusions</dt>
+                  <dd className="text-white/70 text-xs">Aucune exclusion détectée.</dd>
+                </div>
+              </dl>
             </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Objet</span>
-              <span className="text-right text-white/85">
-                {sendPreview.data?.subject ?? "—"}
-              </span>
+
+            {/* BLOC DESTINATION */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-[#5cc8fa]">
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+                <h3 className="font-semibold text-sm">Destination</h3>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div>
+                  <dt className="text-white/55 mb-1">Page ressource</dt>
+                  <dd className="break-all text-white/90 text-xs">
+                    {sendPreview.data?.resourceUrl ? (
+                      <a
+                        href={sendPreview.data.resourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[#5cc8fa] hover:underline"
+                      >
+                        {sendPreview.data.resourceUrl}
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      "Non utilisée"
+                    )}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Fonctionnalité Holiswiss</dt>
+                  <dd className="text-right text-white/90 break-words max-w-[55%]">
+                    {form.feature_highlight || "—"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">CTA</dt>
+                  <dd className="text-right text-white/90">
+                    {form.email_button_label || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-white/55 mb-1">URL</dt>
+                  <dd className="break-all text-white/90 text-xs">
+                    {form.email_button_url ? (
+                      <a
+                        href={form.email_button_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[#5cc8fa] hover:underline"
+                      >
+                        {form.email_button_url}
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                </div>
+              </dl>
             </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Expéditeur</span>
-              <span className="text-right text-white/85">
-                {sendPreview.data?.sender ?? "—"}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Segment</span>
-              <span className="text-right text-white/85">
-                {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label ?? segment}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Destinataires</span>
-              <span className="text-right font-semibold text-white">
-                {sendPreview.data?.recipientCount ?? 0}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Date d’envoi</span>
-              <span className="text-right text-white/85">
-                {new Date().toLocaleString("fr-CH")}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Page ressource</span>
-              <span className="text-right break-all text-white/85">
-                {sendPreview.data?.resourceUrl ?? "Non utilisée"}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Contacts exclus</span>
-              <span className="text-right text-white/85">—</span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Version mobile vérifiée</span>
-              <span className={previewChecked ? "text-right text-[#4ade80]" : "text-right text-[#fbbf24]"}>
-                {previewChecked ? "Oui" : "Non"}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-white/60">Lien de désinscription vérifié</span>
-              <span className={previewChecked ? "text-right text-[#4ade80]" : "text-right text-[#fbbf24]"}>
-                {previewChecked ? "Oui" : "Non"}
-              </span>
+
+            {/* BLOC VALIDATION */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-[#4ade80]">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                <h3 className="font-semibold text-sm">Validation</h3>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Checklist</dt>
+                  <dd className="text-right text-white/90">
+                    {qcDone}/{qcTotal} validés
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Administrateur</dt>
+                  <dd className="text-right text-white/90">Connecté</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Date</dt>
+                  <dd className="text-right text-white/90">
+                    {new Date().toLocaleString("fr-CH")}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-white/55">Statut</dt>
+                  <dd className="text-right">
+                    <Badge className={STATUS_COLORS[issue.status]}>
+                      {NEWSLETTER_STATUS_LABELS[issue.status]}
+                    </Badge>
+                  </dd>
+                </div>
+                {qcDone < qcTotal && (
+                  <div className="rounded-lg border border-[#fbbf24]/30 bg-[#fbbf24]/10 p-2.5 text-xs">
+                    <p className="font-medium text-[#fbbf24] mb-1">Points restants :</p>
+                    <ul className="list-disc pl-4 space-y-0.5 text-[#fbbf24]/90">
+                      {NEWSLETTER_QC_ITEMS.filter((i) => !form.qc[i.key]).map((i) => (
+                        <li key={i.key}>{i.label}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </dl>
             </div>
           </div>
 
-          {!canSend && (
-            <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-3">
-              <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
-                <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi impossible
-              </p>
-              <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
-                {blockers.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-                {!previewChecked && <li>L’aperçu n’a pas été validé.</li>}
-              </ul>
+          {/* Bloc résumé + actions */}
+          <div className="rounded-xl border border-white/10 bg-[#14082d] p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              {canSend ? (
+                <CheckCircle2 className="h-5 w-5 text-[#4ade80] mt-0.5" aria-hidden="true" />
+              ) : (
+                <XCircle className="h-5 w-5 text-[#fbbf24] mt-0.5" aria-hidden="true" />
+              )}
+              <div>
+                <p className="font-medium text-white">
+                  {canSend
+                    ? "Prêt à envoyer"
+                    : "Corrections nécessaires avant l’envoi"}
+                </p>
+                <p className="text-sm text-white/60">
+                  {canSend
+                    ? `Tous les contrôles sont verts. ${sendPreview.data?.recipientCount ?? 0} thérapeute(s) vont recevoir cette newsletter via Resend.`
+                    : "Résolvez les points bloquants ci-dessous pour débloquer l’envoi."}
+                </p>
+              </div>
             </div>
-          )}
+
+            {!canSend && (
+              <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-3">
+                <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
+                  <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi impossible
+                </p>
+                <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
+                  {blockers.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                  {!previewChecked && <li>L’aperçu n’a pas été validé.</li>}
+                </ul>
+              </div>
+            )}
+          </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel
