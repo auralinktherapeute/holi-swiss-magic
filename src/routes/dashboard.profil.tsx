@@ -180,7 +180,31 @@ function ProfilePage() {
   const [newsletterOptIn, setNewsletterOptIn] = useSessionState<boolean>(`${profileStatePrefix}.newsletterOptIn`, false);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterOptInAt, setNewsletterOptInAt] = useState<string | null>(null);
+  const [newsletterPrefsOpen, setNewsletterPrefsOpen] = useState(false);
+  const [newsletterUnsubOpen, setNewsletterUnsubOpen] = useState(false);
   const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
+
+  const applyNewsletterConsent = async (next: boolean) => {
+    setNewsletterLoading(true);
+    try {
+      const res = await updateNewsletterConsent({ data: { optIn: next } });
+      setNewsletterOptIn(next);
+      setNewsletterOptInAt(res?.optInAt ?? null);
+      toast.success(
+        next
+          ? res?.alreadySubscribed
+            ? t("profile_edit.newsletter_already_subscribed")
+            : t("profile_edit.newsletter_subscribed")
+          : t("profile_edit.newsletter_unsubscribed")
+      );
+      return true;
+    } catch {
+      toast.error(t("profile_edit.newsletter_error"));
+      return false;
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   const docInputRef = useRef<HTMLInputElement>(null);
 
@@ -1081,30 +1105,53 @@ function ProfilePage() {
           </div>
 
           <div className="mt-6 rounded-xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.6)] p-4 sm:p-5">
+            {newsletterOptIn && (
+              <div className="mb-4">
+                <p className="flex items-start gap-2 rounded-lg border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.08)] p-3 text-sm text-[#7de3b8]">
+                  <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    {t("profile_edit.newsletter_status_active")}
+                    {newsletterOptInAt
+                      ? ` ${t("profile_edit.newsletter_status_since")} ${new Date(newsletterOptInAt).toLocaleDateString("fr-CH", { day: "2-digit", month: "long", year: "numeric" })}.`
+                      : ""}
+                  </span>
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-[44px]"
+                    onClick={() => setNewsletterPrefsOpen((v) => !v)}
+                    aria-expanded={newsletterPrefsOpen}
+                  >
+                    {t("profile_edit.newsletter_manage_prefs")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-[44px] text-[#ff8f8f] hover:bg-[rgba(239,68,68,0.12)] hover:text-[#ffb1b1]"
+                    disabled={newsletterLoading}
+                    onClick={() => setNewsletterUnsubOpen(true)}
+                  >
+                    {t("profile_edit.newsletter_unsubscribe_action")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {(!newsletterOptIn || newsletterPrefsOpen) && (
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={newsletterOptIn}
                 disabled={newsletterLoading}
-                onChange={async (e) => {
+                onChange={(e) => {
                   const next = e.target.checked;
-                  setNewsletterLoading(true);
-                  try {
-                    const res = await updateNewsletterConsent({ data: { optIn: next } });
-                    setNewsletterOptIn(next);
-                    setNewsletterOptInAt(res?.optInAt ?? null);
-                    toast.success(
-                      next
-                        ? res?.alreadySubscribed
-                          ? t("profile_edit.newsletter_already_subscribed")
-                          : t("profile_edit.newsletter_subscribed")
-                        : t("profile_edit.newsletter_unsubscribed")
-                    );
-                  } catch (err) {
-                    toast.error(t("profile_edit.newsletter_error"));
-                  } finally {
-                    setNewsletterLoading(false);
+                  if (!next) {
+                    setNewsletterUnsubOpen(true);
+                    return;
                   }
+                  void applyNewsletterConsent(true);
                 }}
                 className="mt-1 h-5 w-5 shrink-0 rounded border-[rgba(184,110,249,0.4)] bg-[rgba(20,8,40,0.5)] text-[#b86ef9] focus:ring-[#b86ef9] focus:ring-offset-0"
               />
@@ -1119,18 +1166,41 @@ function ProfilePage() {
                 </span>
               </div>
             </label>
-            {newsletterOptIn && (
-              <p className="mt-3 flex items-start gap-2 rounded-lg border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.08)] p-3 text-xs text-[#7de3b8]">
-                <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>
-                  {t("profile_edit.newsletter_status_active")}
-                  {newsletterOptInAt
-                    ? ` ${t("profile_edit.newsletter_status_since")} ${new Date(newsletterOptInAt).toLocaleDateString("fr-CH", { day: "2-digit", month: "long", year: "numeric" })}.`
-                    : "."}
-                </span>
-              </p>
             )}
           </div>
+
+          <Dialog open={newsletterUnsubOpen} onOpenChange={setNewsletterUnsubOpen}>
+            <DialogContent className="border-[rgba(184,110,249,0.25)] bg-[#1a0b2e] text-white">
+              <DialogHeader>
+                <DialogTitle>{t("profile_edit.newsletter_unsub_confirm_title")}</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-[#a89bc4]">{t("profile_edit.newsletter_unsub_confirm_body")}</p>
+              <DialogFooter className="gap-2 sm:gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-[44px]"
+                  onClick={() => setNewsletterUnsubOpen(false)}
+                >
+                  {t("profile_edit.newsletter_unsub_cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  className="min-h-[44px] bg-[#ef4444] text-white hover:bg-[#dc2626]"
+                  disabled={newsletterLoading}
+                  onClick={async () => {
+                    const ok = await applyNewsletterConsent(false);
+                    if (ok) {
+                      setNewsletterUnsubOpen(false);
+                      setNewsletterPrefsOpen(false);
+                    }
+                  }}
+                >
+                  {t("profile_edit.newsletter_unsub_confirm_cta")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </Section>
       </div>
 
