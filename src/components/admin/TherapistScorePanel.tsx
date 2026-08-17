@@ -150,12 +150,14 @@ export default function TherapistScorePanel({ therapistId, slug }: { therapistId
         />
       </div>
 
-      {report.categories && (
+      {Array.isArray(report.categories) && (
         <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
-          {Object.entries(report.categories as Record<string, { score: number }>).map(([key, val]) => (
-            <li key={key} className="flex items-center justify-between gap-2 rounded-md bg-white/5 px-2 py-1 text-[11px]">
-              <span className="text-white/70">{(AUDIT_CATEGORY_LABEL as any)[key] ?? key}</span>
-              <span className="font-semibold text-white">{val?.score ?? 0}/100</span>
+          {report.categories.map((cat: any) => (
+            <li key={cat.id} className="flex items-center justify-between gap-2 rounded-md bg-white/5 px-2 py-1 text-[11px]">
+              <span className="text-white/70">{cat.label}</span>
+              <span className="font-semibold text-white">
+                {cat.score}/100 <span className="text-white/40">({cat.passed}/{cat.total})</span>
+              </span>
             </li>
           ))}
         </ul>
