@@ -215,11 +215,19 @@ export function ShowcaseScoreCard() {
             <p className="flex items-start gap-2 rounded-lg border border-[#b86ef9]/25 bg-[#b86ef9]/10 p-3 text-xs text-[#e6ccff]">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
-                Le score avancé (visibilité et conversion détaillées, actions prioritaires point par
-                point) est réservé aux thérapeutes Elite Pro, aux {data.access?.earlySlots ?? 70} premiers
-                inscrits et aux accès accordés par Holiswiss.
+                Le score avancé — visibilité et conversion détaillées, actions prioritaires point par
+                point — est disponible avec la formule Elite Pro, l’accès fondateur ou un accompagnement
+                accordé par Holiswiss. Votre tableau de bord reste complet sans lui.
               </span>
             </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" className="min-h-[40px] bg-[#b86ef9] text-white hover:bg-[#a458e8]">
+                <Link to="/dashboard/abonnement">Découvrir Elite Pro</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="min-h-[40px]">
+                <a href="/fr/contact">Demander un accompagnement commercial</a>
+              </Button>
+            </div>
           </div>
         )}
 

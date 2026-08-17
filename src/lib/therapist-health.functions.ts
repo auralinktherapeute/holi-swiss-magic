@@ -487,7 +487,11 @@ export const setTherapistScoringAccess = createServerFn({ method: "POST" })
     z.object({
       therapistId: z.string().uuid(),
       enabled: z.boolean(),
-      source: z.enum(["admin_manual", "commercial_offer", "offer_accepted"]).default("admin_manual"),
+      source: z
+        .enum(["founding_70", "elite_pro", "commercial_offer", "manual_grant", "admin_manual", "offer_accepted"])
+        .default("manual_grant"),
+      startsAt: z.string().datetime().nullable().optional(),
+      expiresAt: z.string().datetime().nullable().optional(),
       note: z.string().max(500).optional(),
     }),
   )
@@ -496,12 +500,15 @@ export const setTherapistScoringAccess = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
     const sb = supabaseAdmin as any;
+    const startsAt = data.startsAt ?? new Date().toISOString();
     const { error } = await sb.from("therapist_advanced_scoring_access").upsert(
       {
         therapist_id: data.therapistId,
         enabled: data.enabled,
         source: data.source,
         note: data.note ?? null,
+        starts_at: startsAt,
+        expires_at: data.expiresAt ?? null,
         granted_by: context.userId,
         granted_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -509,7 +516,33 @@ export const setTherapistScoringAccess = createServerFn({ method: "POST" })
       { onConflict: "therapist_id" },
     );
     if (error) throw new Error(error.message);
+    await sb.from("therapist_scoring_access_events").insert({
+      therapist_id: data.therapistId,
+      action: data.enabled ? "granted" : "revoked",
+      source: data.source,
+      starts_at: startsAt,
+      expires_at: data.expiresAt ?? null,
+      note: data.note ?? null,
+      actor: context.userId,
+    });
     return resolveScoringAccess(sb, data.therapistId);
+  });
+
+/** Historique des modifications d'accès avancé (admin). */
+export const listScoringAccessEvents = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ therapistId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await (supabaseAdmin as any)
+      .from("therapist_scoring_access_events")
+      .select("id,action,source,starts_at,expires_at,note,created_at")
+      .eq("therapist_id", data.therapistId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
   });
 
 // ── Places fondateur (70 premiers thérapeutes) ───────────────────────────────
