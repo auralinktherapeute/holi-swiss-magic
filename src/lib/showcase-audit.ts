@@ -227,7 +227,7 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
       4, langs.length >= 2, "info"),
     c("hreflang", "visibilite", "langues", "Balises hreflang",
       "Générées automatiquement par Holiswiss dès que votre fiche est publiée.",
-      3, len(t.slugSafe ?? "") >= 0 && true, "info"),
+      3, true, "info"),
     c("canonical", "visibilite", "langues", "URL canonique",
       "Générée automatiquement par Holiswiss : elle évite le contenu dupliqué.",
       3, true, "info"),
