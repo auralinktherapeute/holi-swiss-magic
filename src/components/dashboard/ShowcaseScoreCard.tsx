@@ -146,6 +146,16 @@ export function ShowcaseScoreCard() {
           </div>
         </div>
 
+        {founder && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-[#b86ef9]/35 bg-[#b86ef9]/10 p-3">
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#d9b4ff]" aria-hidden="true" />
+            <p className="text-xs leading-relaxed text-[#e7d3ff]">
+              Vous bénéficiez de l’accès fondateur au scoring avancé Holiswiss.
+              {seatNumber ? ` Accès fondateur — place n°${seatNumber} sur ${data.access?.earlySlots ?? 70}.` : ""}
+            </p>
+          </div>
+        )}
+
         {advanced && data.totals ? (
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <ScoreBar
