@@ -37,6 +37,7 @@ import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
+import { useHashFocus } from "@/hooks/use-hash-focus";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
@@ -80,7 +81,7 @@ const THERAPIST_PROFILE_SELECT = [
   "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
-  "ide_verified", "accreditations",
+  "ide_verified", "accreditations", "meta_title", "meta_description", "consultation_modes",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
@@ -162,6 +163,9 @@ function ProfilePage() {
   const [shortBio, setShortBio] = useSessionState(`${profileStatePrefix}.shortBio`, "");
   const [bio, setBio] = useSessionState(`${profileStatePrefix}.bio`, "");
   const [googleReviewsUrl, setGoogleReviewsUrl] = useSessionState(`${profileStatePrefix}.googleReviewsUrl`, "");
+  const [metaTitle, setMetaTitle] = useSessionState(`${profileStatePrefix}.metaTitle`, "");
+  const [metaDescription, setMetaDescription] = useSessionState(`${profileStatePrefix}.metaDescription`, "");
+  const [consultationModes, setConsultationModes] = useSessionState<string[]>(`${profileStatePrefix}.consultationModes`, []);
   const [website, setWebsite] = useSessionState(`${profileStatePrefix}.website`, "");
 
   // SIRET
@@ -367,6 +371,9 @@ function ProfilePage() {
         setShortBio(data.short_bio ?? "");
         setBio(data.bio ?? "");
         setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
+        setMetaTitle((data as any).meta_title ?? "");
+        setMetaDescription((data as any).meta_description ?? "");
+        setConsultationModes(((data as any).consultation_modes as string[]) ?? []);
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
@@ -388,6 +395,8 @@ function ProfilePage() {
       setLoading(false);
     })();
   }, [user, profileStatePrefix]);
+
+  useHashFocus(!loading);
 
   const markDirty = () => setDirty(true);
 
@@ -509,6 +518,9 @@ function ProfilePage() {
           bio: payload.bio,
           google_reviews_url: payload.google_reviews_url,
           website: payload.website,
+          meta_title: metaTitle.trim() || null,
+          meta_description: metaDescription.trim() || null,
+          consultation_modes: consultationModes,
           accreditations,
           ide: ide || null,
         },
