@@ -34,12 +34,13 @@ export function NewsletterFooterSection() {
     queryKey: ["newsletter-consent"],
     queryFn: () => fetchConsent(),
     staleTime: 60_000,
+    retry: false,
   });
 
-  if (!data) return null;
-
-  const optIn = data.optIn === true;
-  const wasUnsubscribed = !optIn && Boolean(data.unsubscribedAt);
+  // La rubrique reste visible même si le statut n'est pas encore chargé
+  // (ou si la lecture échoue) : le thérapeute doit toujours pouvoir s'inscrire.
+  const optIn = data?.optIn === true;
+  const wasUnsubscribed = !optIn && Boolean(data?.unsubscribedAt);
 
   const benefits = [
     t("profile_edit.nlf_b1"),
@@ -111,7 +112,7 @@ export function NewsletterFooterSection() {
             <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
               {statusLabel}
-              {optIn && data.optInAt
+              {optIn && data?.optInAt
                 ? ` ${t("profile_edit.newsletter_status_since")} ${new Date(
                     data.optInAt
                   ).toLocaleDateString("fr-CH", {

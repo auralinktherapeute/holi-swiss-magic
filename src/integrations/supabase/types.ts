@@ -2153,6 +2153,66 @@ export type Database = {
           },
         ]
       }
+      newsletter_subscribers: {
+        Row: {
+          consent_version: string | null
+          created_at: string
+          email: string
+          id: string
+          locale: string
+          opt_in: boolean
+          opt_in_at: string
+          source: string
+          therapist_id: string | null
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          consent_version?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          locale?: string
+          opt_in?: boolean
+          opt_in_at?: string
+          source?: string
+          therapist_id?: string | null
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          consent_version?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          locale?: string
+          opt_in?: boolean
+          opt_in_at?: string
+          source?: string
+          therapist_id?: string | null
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_subscribers_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_suggestions: {
         Row: {
           audience: string | null

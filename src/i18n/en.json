@@ -792,5 +792,31 @@
     },
     "head_title": "Wellness events in Switzerland | HoliSwiss",
     "head_desc": "Workshops, retreats, circles and meditations from holistic therapists in Switzerland. Book your seat."
+  },
+  "newsletter_public": {
+    "badge": "The Holiswiss Letter",
+    "title": "The resources that move your practice forward",
+    "text": "Get The Holiswiss Letter, a newsletter for therapists to grow your visibility, structure your business and discover new platform opportunities.",
+    "benefits": [
+      "Discover Holiswiss news before it goes public.",
+      "Get concrete advice to grow your practice.",
+      "Learn how to improve your professional visibility.",
+      "Explore digital tools and AI assistance.",
+      "Receive resources on running your practice.",
+      "Be the first to hear about upcoming offers and promotions.",
+      "Get invitations to Holiswiss community content and initiatives."
+    ],
+    "promo_note": "Some Holiswiss offers and promotions may be announced first to newsletter subscribers.",
+    "email_label": "Email address",
+    "email_placeholder": "you@example.ch",
+    "consent": "I agree to receive The Holiswiss Letter by email, including tips, news, invitations and information about Holiswiss offers and promotions.",
+    "consent_required": "Please tick the consent box.",
+    "reassurance": "Subscription is optional. You can unsubscribe at any time via the link in every email.",
+    "cta": "Subscribe to the newsletter",
+    "success": "Your subscription to The Holiswiss Letter is registered. You will receive our next resources, news and opportunities for therapists.",
+    "error": "Something went wrong. Please check your email address and try again.",
+    "privacy": "privacy policy",
+    "footer_title": "The Holiswiss Letter",
+    "footer_text": "Resources, news and opportunities for therapists."
   }
 }
