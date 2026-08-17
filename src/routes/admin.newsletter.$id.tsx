@@ -48,6 +48,7 @@ import {
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
   NewsletterWorkflowGuide,
+  NEWSLETTER_WORKFLOW_STEPS,
   type WorkflowStepKey,
   type WorkflowStepState,
 } from "@/components/admin/NewsletterWorkflowGuide";
@@ -476,7 +477,13 @@ function Page() {
   // Progression réelle du parcours en 13 étapes, dérivée des données du dossier.
   const workflowStates = useMemo<Partial<Record<WorkflowStepKey, WorkflowStepState>>>(() => {
     if (!issue || !form) return {};
-    const sendRows = sends.data ?? [];
+    const raw = sends.data as unknown;
+    const sendRows: { is_test?: boolean }[] = Array.isArray(raw)
+      ? (raw as { is_test?: boolean }[])
+      : (((raw as { rows?: { is_test?: boolean }[] } | undefined)?.rows ?? []) as {
+          is_test?: boolean;
+        }[]);
+    const hasTest = sendRows.some((s) => s.is_test);
     const done = {
       suggestion: true,
       brief: true,
@@ -486,8 +493,8 @@ function Page() {
       apercu_email: previewChecked,
       apercu_ressource: Boolean(issue.published_at),
       checklist: qcDone === qcTotal,
-      test: sendRows.some((s: { is_test?: boolean }) => s.is_test),
-      controle: sendRows.some((s: { is_test?: boolean }) => s.is_test) && previewChecked,
+      test: hasTest,
+      controle: hasTest && previewChecked,
       approbation: ["approuvee", "programmee", "envoi_en_cours", "envoyee"].includes(issue.status),
       segment: (sendPreview.data?.recipientCount ?? 0) > 0,
       confirmation: canSend,
