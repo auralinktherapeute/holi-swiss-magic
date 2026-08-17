@@ -60,6 +60,19 @@ export function TherapistNav() {
       window.dispatchEvent(new CustomEvent("holiswiss:start-tour"));
     } catch {}
   };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await signOutCompletely(qc);
+      navigate({ to: "/$lang/connexion", params: { lang: "fr" }, replace: true });
+    } catch (e: any) {
+      toast.error(e?.message ?? t("dashboard.logout_error", "La déconnexion a échoué. Veuillez réessayer."));
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-border bg-surface">
       <div className="h-16 flex items-center justify-between px-6 border-b border-border">
