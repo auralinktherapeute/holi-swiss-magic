@@ -13,6 +13,7 @@ import {
   sendProfileHealthInvite,
   sendProfileHealthRecap,
   runCitabilityScan,
+  auditTherapistShowcase,
 } from "@/lib/therapist-health.functions";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
@@ -378,6 +379,8 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
         Réactivité aux messages · <span className="text-white/60">en cours de calibrage</span>
       </div>
 
+      <ShowcaseAudit therapistId={tid} />
+
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <div>
           <h3 className="mb-1 text-sm font-semibold text-green-400">Points forts</h3>
@@ -448,6 +451,88 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
         </button>
         {lastRecap && <span className="text-[11px] text-white/40">Dernier envoi : {lastRecap}</span>}
       </div>
+    </div>
+  );
+}
+
+/** Contrôles automatiques de la vitrine publique (visibilité vs conversion). */
+function ShowcaseAudit({ therapistId }: { therapistId: string }) {
+  const run = useServerFn(auditTherapistShowcase);
+  const [state, setState] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const launch = useCallback(async () => {
+    setLoading(true);
+    try {
+      setState(await run({ data: { therapistId } }));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Audit impossible");
+    } finally {
+      setLoading(false);
+    }
+  }, [run, therapistId]);
+
+  useEffect(() => {
+    setState(null);
+  }, [therapistId]);
+
+  return (
+    <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-white/85">Contrôles automatiques de la vitrine</h3>
+        <button
+          type="button"
+          onClick={launch}
+          disabled={loading}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-white/15 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/5 disabled:opacity-60"
+        >
+          {loading ? <Loader2 className="animate-spin" size={13} /> : <Radar size={13} />}
+          {state ? "Relancer" : "Lancer l'audit"}
+        </button>
+      </div>
+
+      {!state && !loading && (
+        <p className="mt-2 text-xs text-white/45">
+          Vérifie 15 points réels de la fiche publique : contenu indexable, données locales, tarif,
+          disponibilités, preuves de confiance.
+        </p>
+      )}
+
+      {state && (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs">
+            <div className="rounded-lg bg-white/5 p-2">
+              <div className="text-base font-semibold text-white">{state.totals.visibilite}<span className="text-white/40">/100</span></div>
+              <div className="text-white/55">Visibilité (SEO / IA)</div>
+            </div>
+            <div className="rounded-lg bg-white/5 p-2">
+              <div className="text-base font-semibold text-white">{state.totals.conversion}<span className="text-white/40">/100</span></div>
+              <div className="text-white/55">Conversion</div>
+            </div>
+          </div>
+
+          <ul className="mt-3 space-y-1">
+            {state.checks.map((c: any) => (
+              <li key={c.id} className="flex items-start gap-2 text-xs">
+                {c.passed ? (
+                  <CheckCircle2 className="mt-0.5 shrink-0 text-green-400" size={13} aria-hidden />
+                ) : (
+                  <AlertTriangle
+                    className={`mt-0.5 shrink-0 ${c.severity === "critical" ? "text-red-400" : c.severity === "warning" ? "text-amber-400" : "text-cyan-300"}`}
+                    size={13}
+                    aria-hidden
+                  />
+                )}
+                <span className={c.passed ? "text-white/50" : "text-white/85"}>
+                  <span className="sr-only">{c.passed ? "Conforme :" : "À corriger :"} </span>
+                  {c.label}
+                  {!c.passed && <span className="block text-white/45">{c.hint}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
