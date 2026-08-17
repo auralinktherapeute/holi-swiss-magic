@@ -41,6 +41,13 @@ import { useHashFocus } from "@/hooks/use-hash-focus";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
+import {
+  SEO_TITLE_MAX,
+  SEO_TITLE_MIN,
+  buildGeneratedSeoTitle,
+  evaluateSeoTitle,
+  resolveSeoTitle,
+} from "@/lib/seo-title";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
@@ -174,6 +181,13 @@ function ProfilePage() {
   const [metaDescription, setMetaDescription] = useSessionState(`${profileStatePrefix}.metaDescription`, "");
   const [consultationModes, setConsultationModes] = useSessionState<string[]>(`${profileStatePrefix}.consultationModes`, []);
   const [website, setWebsite] = useSessionState(`${profileStatePrefix}.website`, "");
+
+  // Title SEO : même résolution que la page publique et que l'audit.
+  const seoTitleResolution = resolveSeoTitle(
+    metaTitle,
+    buildGeneratedSeoTitle({ first_name: firstName, last_name: lastName, title: proTitle, city, canton }),
+  );
+  const seoTitleStatus = evaluateSeoTitle(seoTitleResolution, { expectedLang: null });
 
   // SIRET
   // Swiss IDE / UID (CHE-XXX.XXX.XXX)
