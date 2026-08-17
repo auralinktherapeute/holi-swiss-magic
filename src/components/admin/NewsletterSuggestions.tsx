@@ -286,19 +286,40 @@ export function NewsletterSuggestions() {
                   {s.rationale && <p className="text-xs text-white/40">{s.rationale}</p>}
                 </div>
                 <div className="flex flex-wrap items-start gap-2">
-                  <Button
-                    disabled={mBrief.isPending || !!s.issue_id}
-                    onClick={() => mBrief.mutate(s.id)}
-                    title="Crée un brouillon de newsletter à partir de cette suggestion et ouvre l'éditeur. Aucun envoi."
-                    className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-                  >
-                    <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {s.issue_id ? "Brief créé" : "Créer un brief"}
-                  </Button>
+                  {s.issue_id ? (
+                    <ActionTooltip label="Un brief a déjà été créé à partir de cette suggestion. Ouvrir le brief existant plutôt que d'en créer un second.">
+                      <Button
+                        aria-label={`Ouvrir le brief existant créé depuis « ${s.subject} »`}
+                        onClick={() =>
+                          navigate({
+                            to: "/admin/newsletter/$id",
+                            params: { id: s.issue_id as string },
+                          })
+                        }
+                        className="min-h-11 bg-[#4ade80]/15 hover:bg-[#4ade80]/25 text-[#4ade80]"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Ouvrir le brief créé
+                      </Button>
+                    </ActionTooltip>
+                  ) : (
+                    <ActionTooltip label="Crée un brief de newsletter prérempli (sujet, public cible, pilier éditorial, fonctionnalité, objectif) puis l'ouvre en édition. Aucun contenu n'est généré, aucun envoi n'est déclenché.">
+                      <Button
+                        aria-label={`Créer un brief à partir de la suggestion « ${s.subject} »`}
+                        aria-busy={mBrief.isPending}
+                        disabled={mBrief.isPending}
+                        onClick={() => mBrief.mutate(s.id)}
+                        className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+                      >
+                        <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
+                        {mBrief.isPending ? "Création…" : "Créer un brief"}
+                      </Button>
+                    </ActionTooltip>
+                  )}
+                  <ActionTooltip label="Modifier cette suggestion">
                   <Button
                     variant="outline"
-                    aria-label="Modifier la suggestion"
-                    title="Modifier le sujet, le public et la priorité de cette suggestion"
+                    aria-label={`Modifier la suggestion « ${s.subject} »`}
                     onClick={() => {
                       setDraft({
                         id: s.id,
@@ -316,37 +337,43 @@ export function NewsletterSuggestions() {
                   >
                     <PencilLine className="h-4 w-4" aria-hidden="true" />
                   </Button>
+                  </ActionTooltip>
                   {s.status === "rejetee" ? (
-                    <Button
-                      variant="outline"
-                      disabled={mRestore.isPending}
-                      onClick={() => mRestore.mutate(s.id)}
-                      title="Remettre cette suggestion dans la liste active"
-                      className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
-                    >
-                      <Undo2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Restaurer
-                    </Button>
+                    <ActionTooltip label="Remettre cette suggestion dans la liste des suggestions prioritaires.">
+                      <Button
+                        variant="outline"
+                        aria-label={`Restaurer la suggestion « ${s.subject} »`}
+                        disabled={mRestore.isPending}
+                        onClick={() => mRestore.mutate(s.id)}
+                        className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+                      >
+                        <Undo2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Restaurer
+                      </Button>
+                    </ActionTooltip>
                   ) : (
-                    <Button
-                      variant="outline"
-                      disabled={mDismiss.isPending}
-                      onClick={() => mDismiss.mutate(s.id)}
-                      title="Masquer cette suggestion sans la supprimer (réversible)"
-                      className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
-                    >
-                      Écarter
-                    </Button>
+                    <ActionTooltip label="Retire la suggestion de la liste principale sans supprimer les données. Elle reste restaurable via le filtre « Suggestions écartées ».">
+                      <Button
+                        variant="outline"
+                        aria-label={`Écarter la suggestion « ${s.subject} »`}
+                        disabled={mDismiss.isPending}
+                        onClick={() => setToDismiss(s)}
+                        className="min-h-11 border-white/15 bg-transparent text-white/70 hover:bg-white/10"
+                      >
+                        Écarter
+                      </Button>
+                    </ActionTooltip>
                   )}
+                  <ActionTooltip label="Suppression définitive de la suggestion. Préférez « Écarter » pour la masquer tout en la conservant.">
                   <Button
                     variant="outline"
-                    aria-label="Supprimer définitivement la suggestion"
-                    title="Supprimer définitivement cette suggestion"
+                    aria-label={`Supprimer définitivement la suggestion « ${s.subject} »`}
                     onClick={() => setToDelete(s)}
                     className="min-h-11 min-w-11 border-[#f87171]/40 bg-transparent text-[#f87171] hover:bg-[#f87171]/10"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
+                  </ActionTooltip>
                 </div>
               </li>
             );
