@@ -1751,16 +1751,39 @@ export type Database = {
       newsletter_issues: {
         Row: {
           audience: string | null
+          canonical_url: string | null
           created_at: string
           created_by: string | null
+          created_by_email: string | null
           cta: string | null
+          email_body: string | null
+          email_button_label: string | null
+          email_button_url: string | null
+          email_footer: string | null
+          email_intro: string | null
+          email_preheader: string | null
+          email_subject: string | null
           feature_highlight: string | null
           id: string
           internal_notes: string | null
           lang: string
+          meta_description: string | null
           objective: string | null
           pillar: string | null
           problem: string | null
+          published_at: string | null
+          qc_checklist: Json
+          resource_body: string | null
+          resource_checklist: string | null
+          resource_cta: string | null
+          resource_example: string | null
+          resource_intro: string | null
+          resource_sections: string | null
+          resource_takeaway: string | null
+          resource_title: string | null
+          seo_title: string | null
+          share_image_url: string | null
+          slug: string | null
           status: string
           target_date: string | null
           title: string
@@ -1769,16 +1792,39 @@ export type Database = {
         }
         Insert: {
           audience?: string | null
+          canonical_url?: string | null
           created_at?: string
           created_by?: string | null
+          created_by_email?: string | null
           cta?: string | null
+          email_body?: string | null
+          email_button_label?: string | null
+          email_button_url?: string | null
+          email_footer?: string | null
+          email_intro?: string | null
+          email_preheader?: string | null
+          email_subject?: string | null
           feature_highlight?: string | null
           id?: string
           internal_notes?: string | null
           lang?: string
+          meta_description?: string | null
           objective?: string | null
           pillar?: string | null
           problem?: string | null
+          published_at?: string | null
+          qc_checklist?: Json
+          resource_body?: string | null
+          resource_checklist?: string | null
+          resource_cta?: string | null
+          resource_example?: string | null
+          resource_intro?: string | null
+          resource_sections?: string | null
+          resource_takeaway?: string | null
+          resource_title?: string | null
+          seo_title?: string | null
+          share_image_url?: string | null
+          slug?: string | null
           status?: string
           target_date?: string | null
           title: string
@@ -1787,16 +1833,39 @@ export type Database = {
         }
         Update: {
           audience?: string | null
+          canonical_url?: string | null
           created_at?: string
           created_by?: string | null
+          created_by_email?: string | null
           cta?: string | null
+          email_body?: string | null
+          email_button_label?: string | null
+          email_button_url?: string | null
+          email_footer?: string | null
+          email_intro?: string | null
+          email_preheader?: string | null
+          email_subject?: string | null
           feature_highlight?: string | null
           id?: string
           internal_notes?: string | null
           lang?: string
+          meta_description?: string | null
           objective?: string | null
           pillar?: string | null
           problem?: string | null
+          published_at?: string | null
+          qc_checklist?: Json
+          resource_body?: string | null
+          resource_checklist?: string | null
+          resource_cta?: string | null
+          resource_example?: string | null
+          resource_intro?: string | null
+          resource_sections?: string | null
+          resource_takeaway?: string | null
+          resource_title?: string | null
+          seo_title?: string | null
+          share_image_url?: string | null
+          slug?: string | null
           status?: string
           target_date?: string | null
           title?: string
@@ -1804,6 +1873,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      newsletter_revisions: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          issue_id: string
+          status: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          issue_id: string
+          status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          issue_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_revisions_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_issues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_deliveries: {
         Row: {
