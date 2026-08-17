@@ -296,6 +296,9 @@ export function isRelevant(check: Pick<AuditCheck, "id">): boolean {
   return !NOT_ACTIONABLE.has(check.id);
 }
 
+/** Checks whose wording is computed by the audit itself (precise missing field). */
+const DYNAMIC_COPY = new Set(["identity"]);
+
 export function buildRecommendations(
   checks: Array<AuditCheck & { gain?: number }>,
   resolvedDates: Record<string, string> = {},
@@ -308,7 +311,9 @@ export function buildRecommendations(
       return {
         id: c.id,
         title: copy?.title ?? c.label,
-        explanation: c.passed ? (copy?.done ?? c.label) : (copy?.explanation ?? c.hint),
+        explanation: DYNAMIC_COPY.has(c.id)
+          ? c.hint
+          : c.passed ? (copy?.done ?? c.label) : (copy?.explanation ?? c.hint),
         importance: imp.key,
         importanceLabel: imp.label,
         category: c.category,
