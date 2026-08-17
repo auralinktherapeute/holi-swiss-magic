@@ -509,6 +509,30 @@ function Page() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={toArchive !== null} onOpenChange={(o) => !o && setToArchive(null)}>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archiver cette newsletter ?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/65">
+              « {toArchive?.title} » sortira du flux de travail et son édition sera verrouillée.
+              Rien n'est supprimé, aucun email n'est envoyé, et un administrateur peut la repasser
+              en brouillon depuis l'éditeur.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+              onClick={() => toArchive && archive.mutate(toArchive.id)}
+            >
+              Archiver
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
