@@ -3,7 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Lightbulb, RefreshCw, Trash2, PencilLine, ArrowRight, Undo2, EyeOff } from "lucide-react";
+import {
+  Lightbulb,
+  RefreshCw,
+  Trash2,
+  PencilLine,
+  ArrowRight,
+  Undo2,
+  EyeOff,
+  ExternalLink,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ActionTooltip } from "@/components/admin/ActionTooltip";
 import {
   listNewsletterSuggestions,
   saveNewsletterSuggestion,
@@ -92,6 +102,8 @@ export function NewsletterSuggestions() {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [showDismissed, setShowDismissed] = useState(false);
   const [toDelete, setToDelete] = useState<NewsletterSuggestion | null>(null);
+  const [toDismiss, setToDismiss] = useState<NewsletterSuggestion | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const q = useQuery({ queryKey: ["newsletter-suggestions"], queryFn: () => list() });
   const allRows = (q.data?.rows ?? []) as NewsletterSuggestion[];
@@ -105,8 +117,11 @@ export function NewsletterSuggestions() {
   const mRefresh = useMutation({
     mutationFn: () => refresh(),
     onSuccess: (r) => {
+      setLastRefresh(new Date());
       toast.success(
-        r.added > 0 ? `${r.added} nouvelle(s) suggestion(s).` : "Aucune nouvelle suggestion.",
+        r.added > 0
+          ? `${r.added} nouvelle(s) suggestion(s). Aucune suggestion existante n'a été supprimée.`
+          : "Aucune nouvelle suggestion. La liste existante est inchangée.",
       );
       invalidate();
     },
@@ -126,6 +141,7 @@ export function NewsletterSuggestions() {
     mutationFn: (id: string) => setStatus({ data: { id, status: "rejetee" as const } }),
     onSuccess: () => {
       toast.success("Suggestion écartée — récupérable via « Afficher les écartées ».");
+      setToDismiss(null);
       invalidate();
     },
     onError,
@@ -150,6 +166,9 @@ export function NewsletterSuggestions() {
   const mBrief = useMutation({
     mutationFn: (id: string) => toBrief({ data: { id } }),
     onSuccess: (r) => {
+      toast.success(
+        "Le brief a été créé. Vous pouvez maintenant le compléter avant de générer le contenu.",
+      );
       invalidate();
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
       navigate({ to: "/admin/newsletter/$id", params: { id: r.id } });
