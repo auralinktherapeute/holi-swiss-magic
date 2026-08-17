@@ -56,6 +56,7 @@ import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrousels'
 import { Route as PreviewFooterRouteImport } from './routes/preview.footer'
 import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.marketing-topics'
+import { Route as PreviewNouveauxTherapeutesRouteImport } from './routes/preview.nouveaux-therapeutes'
 import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -327,6 +328,12 @@ const PreviewMarketingTopicsRoute = PreviewMarketingTopicsRouteImport.update({
   path: '/preview/marketing-topics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewNouveauxTherapeutesRoute =
+  PreviewNouveauxTherapeutesRouteImport.update({
+    id: '/preview/nouveaux-therapeutes',
+    path: '/preview/nouveaux-therapeutes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
   id: '/questionnaire/$id',
   path: '/questionnaire/$id',
@@ -553,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
+  '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -633,6 +641,7 @@ export interface FileRoutesByTo {
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
+  '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -717,6 +726,7 @@ export interface FileRoutesById {
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
+  '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -802,6 +812,7 @@ export interface FileRouteTypes {
     | '/preview/carrousels'
     | '/preview/footer'
     | '/preview/marketing-topics'
+    | '/preview/nouveaux-therapeutes'
     | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
@@ -882,6 +893,7 @@ export interface FileRouteTypes {
     | '/preview/carrousels'
     | '/preview/footer'
     | '/preview/marketing-topics'
+    | '/preview/nouveaux-therapeutes'
     | '/questionnaire/$id'
     | '/$lang'
     | '/admin'
@@ -965,6 +977,7 @@ export interface FileRouteTypes {
     | '/preview/carrousels'
     | '/preview/footer'
     | '/preview/marketing-topics'
+    | '/preview/nouveaux-therapeutes'
     | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
@@ -1017,6 +1030,7 @@ export interface RootRouteChildren {
   PreviewCarrouselsRoute: typeof PreviewCarrouselsRoute
   PreviewFooterRoute: typeof PreviewFooterRoute
   PreviewMarketingTopicsRoute: typeof PreviewMarketingTopicsRoute
+  PreviewNouveauxTherapeutesRoute: typeof PreviewNouveauxTherapeutesRoute
   QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
@@ -1357,6 +1371,13 @@ declare module '@tanstack/react-router' {
       path: '/preview/marketing-topics'
       fullPath: '/preview/marketing-topics'
       preLoaderRoute: typeof PreviewMarketingTopicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/nouveaux-therapeutes': {
+      id: '/preview/nouveaux-therapeutes'
+      path: '/preview/nouveaux-therapeutes'
+      fullPath: '/preview/nouveaux-therapeutes'
+      preLoaderRoute: typeof PreviewNouveauxTherapeutesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/questionnaire/$id': {
@@ -1776,6 +1797,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewCarrouselsRoute: PreviewCarrouselsRoute,
   PreviewFooterRoute: PreviewFooterRoute,
   PreviewMarketingTopicsRoute: PreviewMarketingTopicsRoute,
+  PreviewNouveauxTherapeutesRoute: PreviewNouveauxTherapeutesRoute,
   QuestionnaireIdRoute: QuestionnaireIdRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   DesinscriptionIndexRoute: DesinscriptionIndexRoute,
