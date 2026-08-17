@@ -32,7 +32,7 @@ import {
   saveMyTherapistProfile,
   updateMyTherapistDocument,
 } from "@/lib/dashboard.functions";
-import { updateMyNewsletterConsent } from "@/lib/newsletter-consent.functions";
+import { updateMyNewsletterConsent, getMyNewsletterConsent } from "@/lib/newsletter-consent.functions";
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
@@ -80,7 +80,7 @@ const THERAPIST_PROFILE_SELECT = [
   "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
-  "ide_verified", "accreditations", "newsletter_opt_in", "newsletter_opt_in_at",
+  "ide_verified", "accreditations",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
@@ -183,6 +183,23 @@ function ProfilePage() {
   const [newsletterPrefsOpen, setNewsletterPrefsOpen] = useState(false);
   const [newsletterUnsubOpen, setNewsletterUnsubOpen] = useState(false);
   const updateNewsletterConsent = useServerFn(updateMyNewsletterConsent);
+  const fetchNewsletterConsent = useServerFn(getMyNewsletterConsent);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetchNewsletterConsent({ data: undefined as never });
+        if (cancelled || !res) return;
+        setNewsletterOptIn(res.optIn ?? false);
+        setNewsletterOptInAt(res.optInAt ?? null);
+      } catch {
+        /* état newsletter non bloquant pour l'édition du profil */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyNewsletterConsent = async (next: boolean) => {
     setNewsletterLoading(true);
@@ -353,8 +370,6 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
-        setNewsletterOptIn((data as any).newsletter_opt_in ?? false);
-        setNewsletterOptInAt((data as any).newsletter_opt_in_at ?? null);
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
