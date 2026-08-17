@@ -1,9 +1,11 @@
 export const NEWSLETTER_STATUSES = [
   "idee",
+  "brief_cree",
   "brouillon",
   "en_revision",
   "approuvee",
   "programmee",
+  "envoi_en_cours",
   "envoyee",
   "echec",
   "archivee",
@@ -13,13 +15,28 @@ export type NewsletterStatus = (typeof NEWSLETTER_STATUSES)[number];
 
 export const NEWSLETTER_STATUS_LABELS: Record<NewsletterStatus, string> = {
   idee: "Idée",
+  brief_cree: "Brief créé",
   brouillon: "Brouillon",
   en_revision: "En révision",
   approuvee: "Approuvée",
   programmee: "Programmée",
+  envoi_en_cours: "Envoi en cours",
   envoyee: "Envoyée",
   echec: "Échec",
   archivee: "Archivée",
+};
+
+export const NEWSLETTER_STATUS_DESCRIPTIONS: Record<NewsletterStatus, string> = {
+  idee: "Sujet proposé, aucun brief finalisé.",
+  brief_cree: "Le sujet possède un brief éditorial mais aucun contenu final.",
+  brouillon: "Le contenu est en cours de rédaction ou de modification.",
+  en_revision: "Le contenu est prêt à être relu par l'administrateur.",
+  approuvee: "L'administrateur a validé le contenu pour l'envoi.",
+  programmee: "La newsletter est approuvée et prévue pour une date future.",
+  envoi_en_cours: "Resend traite l'envoi.",
+  envoyee: "L'envoi a été déclenché. La livraison doit être vérifiée séparément.",
+  echec: "L'envoi n'a pas abouti ou a rencontré une erreur.",
+  archivee: "La newsletter n'est plus dans la liste active mais reste consultable.",
 };
 
 export const NEWSLETTER_LANGS = ["fr", "de", "it", "en"] as const;

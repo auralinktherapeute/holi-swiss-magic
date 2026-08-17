@@ -45,6 +45,7 @@ import {
   NewsletterLinkCheck,
   type ConnectionKey,
 } from "@/components/admin/NewsletterConnection";
+import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
   getNewsletterIssue,
   updateNewsletterIssue,
@@ -86,10 +87,12 @@ export const Route = createFileRoute("/admin/newsletter/$id")({ component: Page 
 
 const STATUS_COLORS: Record<NewsletterStatus, string> = {
   idee: "bg-white/10 text-white/70",
+  brief_cree: "bg-[#38bdf8]/15 text-[#38bdf8]",
   brouillon: "bg-[#5cc8fa]/15 text-[#5cc8fa]",
   en_revision: "bg-[#fbbf24]/15 text-[#fbbf24]",
   approuvee: "bg-[#4ade80]/15 text-[#4ade80]",
   programmee: "bg-[#b86ef9]/15 text-[#b86ef9]",
+  envoi_en_cours: "bg-[#fb923c]/15 text-[#fb923c]",
   envoyee: "bg-white/15 text-white",
   echec: "bg-[#f87171]/15 text-[#f87171]",
   archivee: "bg-white/5 text-white/40",
@@ -290,7 +293,11 @@ function Page() {
   const setQc = (key: string, value: boolean) =>
     setForm((f) => (f ? { ...f, qc: { ...f.qc, [key]: value } } : f));
 
-  const locked = issue?.status === "envoyee" || issue?.status === "archivee";
+  const locked =
+    issue?.status === "envoyee" ||
+    issue?.status === "envoi_en_cours" ||
+    issue?.status === "echec" ||
+    issue?.status === "archivee";
 
   const save = useMutation({
     mutationFn: async () => {
@@ -470,6 +477,7 @@ function Page() {
               <Badge className={`${STATUS_COLORS[issue.status]} border-0`}>
                 {NEWSLETTER_STATUS_LABELS[issue.status]}
               </Badge>
+              <NewsletterStatusLegend />
               {issue.published_at && (
                 <Badge className="bg-[#4ade80]/15 text-[#4ade80] border-0">
                   Page ressource publiée

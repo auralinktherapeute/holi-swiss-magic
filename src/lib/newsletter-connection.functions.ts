@@ -191,7 +191,9 @@ export const saveNewsletterSuggestion = createServerFn({ method: "POST" })
 export const setNewsletterSuggestionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({ id: z.string().uuid(), status: z.enum(["ouverte", "acceptee", "rejetee"]) }).parse(data),
+    z
+      .object({ id: z.string().uuid(), status: z.enum(["ouverte", "acceptee", "rejetee"]) })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -274,7 +276,7 @@ export const createBriefFromSuggestion = createServerFn({ method: "POST" })
         cta: feature?.ctaLabel ?? null,
         connection_priority: s.priority,
         internal_notes: s.rationale,
-        status: "brouillon",
+        status: "brief_cree",
         lang: "fr",
         created_by: context.userId,
         created_by_email: email,
@@ -290,7 +292,7 @@ export const createBriefFromSuggestion = createServerFn({ method: "POST" })
     await client.from("newsletter_revisions").insert({
       issue_id: issue.id,
       action: "Brief créé depuis une suggestion",
-      status: "brouillon",
+      status: "brief_cree",
       actor_id: context.userId,
       actor_email: email,
     });

@@ -207,6 +207,11 @@ export const sendNewsletterIssue = createServerFn({ method: "POST" })
       throw new Error("Impossible de démarrer l'envoi.");
     }
 
+    await db
+      .from("newsletter_issues")
+      .update({ status: "envoi_en_cours", updated_at: new Date().toISOString() })
+      .eq("id", data.id);
+
     const results = await deliverToRecipients(issue, recipients);
     const sentCount = results.filter((r) => r.ok).length;
     const failedCount = results.length - sentCount;

@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ActionTooltip } from "@/components/admin/ActionTooltip";
+import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
   listNewsletterIssues,
   createNewsletterIssue,
@@ -51,10 +52,12 @@ export const Route = createFileRoute("/admin/newsletter/")({ component: Page });
 
 const STATUS_COLORS: Record<NewsletterStatus, string> = {
   idee: "bg-white/10 text-white/70",
+  brief_cree: "bg-[#38bdf8]/15 text-[#38bdf8]",
   brouillon: "bg-[#5cc8fa]/15 text-[#5cc8fa]",
   en_revision: "bg-[#fbbf24]/15 text-[#fbbf24]",
   approuvee: "bg-[#4ade80]/15 text-[#4ade80]",
   programmee: "bg-[#b86ef9]/15 text-[#b86ef9]",
+  envoi_en_cours: "bg-[#fb923c]/15 text-[#fb923c]",
   envoyee: "bg-white/15 text-white",
   echec: "bg-[#f87171]/15 text-[#f87171]",
   archivee: "bg-white/5 text-white/40",
@@ -193,10 +196,13 @@ function Page() {
             page.
           </p>
         </div>
-        <Button onClick={openNew} className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
-          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-          Nouvelle newsletter
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <NewsletterStatusLegend />
+          <Button onClick={openNew} className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
+            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+            Nouvelle newsletter
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par statut">
@@ -295,10 +301,7 @@ function Page() {
                   </Button>
                 </ActionTooltip>
                 <ActionTooltip label="Ouvre l'éditeur complet : brief, email, page ressource, SEO et contrôle qualité, avec le statut actuel et l'historique des versions.">
-                  <Button
-                    asChild
-                    className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-                  >
+                  <Button asChild className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
                     <Link
                       to="/admin/newsletter/$id"
                       params={{ id: row.id }}
