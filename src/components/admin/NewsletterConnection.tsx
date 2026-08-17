@@ -79,7 +79,7 @@ function RouteState({ value }: { value: string }) {
 }
 
 export function NewsletterConnection(props: Props) {
-  const { issueId, values, set, disabled, subject, audience, cta, recipientCount } = props;
+  const { values, set, disabled, subject, audience, cta, recipientCount } = props;
   const loadContent = useServerFn(listLinkableContent);
   const content = useQuery({
     queryKey: ["newsletter-linkable-content"],
