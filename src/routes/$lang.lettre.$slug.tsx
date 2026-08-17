@@ -87,9 +87,7 @@ function Page() {
         )}
 
         {!isLoading && !issue && (
-          <p className="py-16 text-center text-white/60">
-            Cette ressource n'est pas disponible.
-          </p>
+          <p className="py-16 text-center text-white/60">Cette ressource n'est pas disponible.</p>
         )}
 
         {issue && (

@@ -17,10 +17,7 @@ function paragraphs(text: string | null | undefined): string {
   if (!text) return "";
   return String(text)
     .split(/\n{2,}/)
-    .map(
-      (block) =>
-        `<p style="margin:0 0 14px;">${escapeHtml(block).replace(/\n/g, "<br/>")}</p>`,
-    )
+    .map((block) => `<p style="margin:0 0 14px;">${escapeHtml(block).replace(/\n/g, "<br/>")}</p>`)
     .join("");
 }
 

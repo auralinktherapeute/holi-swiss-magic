@@ -100,8 +100,7 @@ function Page() {
     queryFn: () => list(),
   });
   const allRows: NewsletterIssue[] = (data?.rows ?? []) as NewsletterIssue[];
-  const rows =
-    statusFilter === "all" ? allRows : allRows.filter((r) => r.status === statusFilter);
+  const rows = statusFilter === "all" ? allRows : allRows.filter((r) => r.status === statusFilter);
 
   const archive = useMutation({
     mutationFn: (id: string) => setStatus({ data: { id, status: "archivee" as NewsletterStatus } }),
@@ -109,8 +108,7 @@ function Page() {
       toast.success("Newsletter archivée.");
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
     },
-    onError: (e: unknown) =>
-      toast.error(e instanceof Error ? e.message : "Archivage impossible."),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Archivage impossible."),
   });
 
   const save = useMutation({

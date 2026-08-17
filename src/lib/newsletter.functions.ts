@@ -269,9 +269,7 @@ export const setNewsletterIssueStatus = createServerFn({ method: "POST" })
 /** Publie ou dépublie la page ressource publique. */
 export const setNewsletterResourcePublished = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
-    z.object({ id: z.string().uuid(), published: z.boolean() }).parse(data),
-  )
+  .inputValidator((data) => z.object({ id: z.string().uuid(), published: z.boolean() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -311,9 +309,7 @@ export const setNewsletterResourcePublished = createServerFn({ method: "POST" })
  * Projection explicite — les notes internes et le brief ne sortent jamais.
  */
 export const getPublishedNewsletterBySlug = createServerFn({ method: "POST" })
-  .inputValidator((data) =>
-    z.object({ slug: z.string().trim().min(1).max(80) }).parse(data),
-  )
+  .inputValidator((data) => z.object({ slug: z.string().trim().min(1).max(80) }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await (supabaseAdmin as SupabaseAnyClient)
