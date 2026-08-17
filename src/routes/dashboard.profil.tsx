@@ -53,6 +53,7 @@ import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
 import { listAllSpecialties } from "@/lib/specialties.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { refreshShowcaseAfterSave, formatAnalysisDate } from "@/lib/showcase-cache";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
