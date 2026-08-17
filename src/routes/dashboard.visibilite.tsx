@@ -443,7 +443,7 @@ function Page() {
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
                   <div>
                     <p className="text-sm font-medium">{c.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.hint}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{c.explanation}</p>
                   </div>
                 </li>
               ))}
