@@ -186,36 +186,62 @@ export function NewsletterSuggestions() {
             <Badge className="bg-white/10 text-white/70 border-0">{rows.length}</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              disabled={mRefresh.isPending}
-              onClick={() => mRefresh.mutate()}
-              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-              {mRefresh.isPending ? "Analyse…" : "Actualiser"}
-            </Button>
-            <Button
-              onClick={() => {
-                setDraft(EMPTY);
-                setOpen(true);
-              }}
-              className="min-h-11 bg-white/10 hover:bg-white/20 text-white"
-            >
-              Ajouter un sujet
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowDismissed((v) => !v)}
-              className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
-            >
-              <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
-              {showDismissed
-                ? "Masquer les écartées"
-                : `Afficher les écartées (${dismissedCount})`}
-            </Button>
+            <ActionTooltip label="Recalcule les suggestions à partir des données récentes. N'écrase aucune suggestion existante et ne génère aucune newsletter.">
+              <Button
+                variant="outline"
+                aria-label="Actualiser les suggestions"
+                aria-busy={mRefresh.isPending}
+                disabled={mRefresh.isPending}
+                onClick={() => mRefresh.mutate()}
+                className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${mRefresh.isPending ? "animate-spin" : ""}`}
+                  aria-hidden="true"
+                />
+                {mRefresh.isPending ? "Analyse en cours…" : "Actualiser les suggestions"}
+              </Button>
+            </ActionTooltip>
+            <ActionTooltip label="Créer manuellement une suggestion de sujet. Aucun contenu n'est généré.">
+              <Button
+                aria-label="Ajouter un sujet de suggestion"
+                onClick={() => {
+                  setDraft(EMPTY);
+                  setOpen(true);
+                }}
+                className="min-h-11 bg-white/10 hover:bg-white/20 text-white"
+              >
+                Ajouter un sujet
+              </Button>
+            </ActionTooltip>
+            <ActionTooltip label="Afficher ou masquer les suggestions écartées afin de pouvoir les restaurer.">
+              <Button
+                variant="outline"
+                aria-pressed={showDismissed}
+                aria-label={
+                  showDismissed
+                    ? "Masquer les suggestions écartées"
+                    : `Afficher les ${dismissedCount} suggestions écartées`
+                }
+                onClick={() => setShowDismissed((v) => !v)}
+                className="min-h-11 border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+              >
+                <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
+                {showDismissed
+                  ? "Masquer les écartées"
+                  : `Afficher les écartées (${dismissedCount})`}
+              </Button>
+            </ActionTooltip>
           </div>
         </div>
+
+        <p className="text-xs text-white/45" aria-live="polite">
+          {mRefresh.isPending
+            ? "Actualisation en cours…"
+            : lastRefresh
+              ? `Dernière actualisation : ${lastRefresh.toLocaleString("fr-CH")}`
+              : "Aucune actualisation depuis l'ouverture de la page."}
+        </p>
 
         <p className="text-xs text-white/45">
           Les suggestions sont calculées sur des totaux anonymes. Aucune newsletter n'est générée ni
