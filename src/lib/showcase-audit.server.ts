@@ -75,7 +75,12 @@ export function showcaseStatus(score: number): ShowcaseStatus {
  * et `resolveScoringAccess` (niveau d'accès).
  * `persist` enregistre un instantané (bouton « Relancer l'analyse »).
  */
-export async function buildShowcaseReport(sb: any, therapistId: string, persist: boolean) {
+export async function buildShowcaseReport(
+  sb: any,
+  therapistId: string,
+  persist: boolean,
+  opts: { forceAdvanced?: boolean } = {},
+) {
   const { basicSummary } = await import("@/lib/showcase-audit");
   const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
   const { buildRecommendations } = await import("@/lib/showcase-recommendations");
@@ -159,8 +164,8 @@ export async function buildShowcaseReport(sb: any, therapistId: string, persist:
     previousScore: previous ? previous.score : null,
     previousAt: previous ? previous.created_at : null,
     delta: previous ? basic.score - previous.score : null,
-    totals: access.advanced ? audit.totals : null,
-    categories: access.advanced ? audit.categories : null,
+    totals: access.advanced || opts.forceAdvanced ? audit.totals : null,
+    categories: access.advanced || opts.forceAdvanced ? audit.categories : null,
     checks,
   };
 }
