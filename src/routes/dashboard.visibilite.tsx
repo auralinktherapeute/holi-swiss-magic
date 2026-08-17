@@ -12,6 +12,7 @@ import {
   Minus,
   ShieldAlert,
 } from "lucide-react";
+import { ChevronDown, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,61 @@ const IMPORTANCE_STYLE: Record<string, string> = {
   conseille: "border-sky-200 bg-sky-50 text-sky-700",
 };
 
+/** Ordre d'affichage prioritaire des éléments validés. */
+const VALIDATED_ORDER = [
+  "identity",
+  "meta_title",
+  "meta_description",
+  "photo",
+  "city",
+  "canton",
+  "address",
+  "geo_consistency",
+  "languages",
+  "canton_language",
+  "services",
+  "durations",
+  "price",
+  "availability",
+  "availability_fresh",
+  "credentials",
+  "ide_verified",
+  "structured_data",
+];
+
+function ValidatedRow({ check }: { check: ReportCheck }) {
+  const action = SHOWCASE_ACTIONS[check.id];
+  return (
+    <li className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3">
+      <div className="flex items-start gap-2.5">
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">
+            {check.label}
+            <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-normal text-emerald-800">
+              Validé
+            </span>
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{check.explanation}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Actuel : {check.currentValueSummary}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Dernière vérification : {formatDate(check.evaluatedAt)}
+            {check.resolvedAt ? ` · Validé depuis le ${formatDate(check.resolvedAt)}` : ""}
+          </p>
+          {action && (
+            <Button asChild variant="outline" size="sm" className="mt-2 h-9 min-h-[36px] gap-1.5 text-xs">
+              <Link to={action.to} hash={action.hash}>
+                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                Modifier cet élément
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
+
 function RecommendationCard({ reco }: { reco: Recommendation }) {
   const resolved = reco.status === "resolu";
   return (
@@ -224,6 +280,11 @@ function Page() {
   const blockingIds = new Set(blocking.map((c) => c.id));
   const missing = report ? report.missingItems.filter((c) => !blockingIds.has(c.id)) : [];
   const done = checks.filter((c) => c.status === "passed");
+  const validated = [...done].sort((a, b) => {
+    const ia = VALIDATED_ORDER.indexOf(a.id);
+    const ib = VALIDATED_ORDER.indexOf(b.id);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib) || b.weight - a.weight;
+  });
   const priority = report?.priorityActions ?? [];
 
   if (isLoading) {
@@ -470,23 +531,32 @@ function Page() {
         </Card>
       )}
 
-      {done.length > 0 && (
+      {validated.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Éléments réussis ({done.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {done.map((c) => (
-                <li key={c.id} className="flex items-start gap-2.5 rounded-lg border border-border bg-surface p-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                  <div>
-                    <p className="text-sm font-medium">{c.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.explanation}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <CardContent className="p-0">
+            <details className="group" open>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 min-h-[44px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span className="flex items-center gap-2 text-base font-semibold">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  Éléments validés ({validated.length})
+                </span>
+                <ChevronDown
+                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className="px-4 pb-4">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Ces points sont conformes : ils n'apparaissent pas dans les éléments manquants. Vous
+                  pouvez les modifier à tout moment sans perdre les points acquis.
+                </p>
+                <ul className="space-y-2">
+                  {validated.map((c) => (
+                    <ValidatedRow key={c.id} check={c} />
+                  ))}
+                </ul>
+              </div>
+            </details>
           </CardContent>
         </Card>
       )}
