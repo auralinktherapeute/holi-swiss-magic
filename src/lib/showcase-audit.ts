@@ -143,11 +143,25 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
   const hasGeo = t.latitude != null && t.longitude != null;
   const priceUpToDate = t.price_min != null && daysSince(t.updated_at) <= 365;
 
+  // Identity: distinguish first_name / last_name / title (professional title,
+  // persisted in therapists.title — the same column read by the public page).
+  const hasFirstName = len(t.first_name) > 0;
+  const hasLastName = len(t.last_name) > 0;
+  const hasProTitle = len(t.title) > 0;
+  const identityPassed = hasFirstName && hasLastName && hasProTitle;
+  const identityHint = identityPassed
+    ? "Votre identité et votre titre professionnel sont complets."
+    : !hasFirstName || !hasLastName
+      ? (hasProTitle
+          ? "Votre titre professionnel est renseigné. Complétez votre prénom et votre nom."
+          : "Renseignez votre prénom, votre nom et votre titre professionnel (ex. « Naturopathe »).")
+      : "Votre prénom et votre nom sont renseignés. Ajoutez maintenant votre titre professionnel (ex. « Naturopathe »).";
+
   return [
     // ── 1. Profil professionnel ─────────────────────────────────────────
     c("identity", "visibilite", "profil", "Nom et titre professionnel",
-      "Le nom complet et l'intitulé de pratique identifient votre fiche auprès des moteurs.",
-      6, len(t.first_name) > 0 && len(t.last_name) > 0 && len(t.title) > 0, "critical"),
+      identityHint,
+      6, identityPassed, "critical"),
     c("photo", "visibilite", "profil", "Photo de profil",
       "La photo est l'image sociale de la fiche (partages, aperçus).",
       10, len(t.photo_url) > 0, "critical"),
