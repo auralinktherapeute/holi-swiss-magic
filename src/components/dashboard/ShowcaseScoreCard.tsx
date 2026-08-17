@@ -102,6 +102,8 @@ export function ShowcaseScoreCard() {
   const basic = data.basic;
   const total = basic.total;
   const okCount = basic.completed;
+  const founder = data.access?.seatStatus === "active";
+  const seatNumber = data.access?.showSeatNumber ? data.access?.seatNumber : null;
 
   return (
     <Card className="border-[rgba(184,110,249,0.25)] bg-[#2d1248]/70">
