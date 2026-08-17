@@ -2,10 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
-type SupabaseAnyClient = {
-  from: (table: string) => any; // eslint-disable-line -eslint/no-explicit-any
-};
 import { NEWSLETTER_STATUSES, NEWSLETTER_LANGS } from "@/lib/newsletter.shared";
+
+/** `newsletter_issues` n'est pas encore dans les types générés Supabase. */
+type SupabaseAnyClient = {
+  from: (table: string) => {
+    select: (columns: string) => any;
+    insert: (values: Record<string, unknown>) => any;
+    update: (values: Record<string, unknown>) => any;
+  };
+};
 
 const COLUMNS =
   "id,title,problem,objective,audience,pillar,tone,feature_highlight,cta,lang,target_date,internal_notes,status,created_at,updated_at";
