@@ -337,23 +337,22 @@ function Page() {
           </CardHeader>
           <CardContent>
             <ol className="space-y-2">
-              {priority.map((c, i) => {
-                const action = SHOWCASE_ACTIONS[c.id];
+              {priority.map((a) => {
                 return (
-                  <li key={c.id} className="rounded-lg border border-border bg-surface p-3">
+                  <li key={a.checkId} className="rounded-lg border border-border bg-surface p-3">
                     <div className="flex items-start gap-3">
                       <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-xlight text-xs font-bold text-primary">
-                        {i + 1}
+                        {a.rank}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{c.label}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{c.hint}</p>
+                        <p className="text-sm font-medium">{a.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{a.explanation}</p>
                         <p className="mt-1 text-xs font-medium text-emerald-700">
-                          Gain potentiel estimé : +{c.gain} points
+                          Gain potentiel estimé : +{a.points} points
                         </p>
-                        {action && (
+                        {a.actionHref && (
                           <Button asChild size="sm" className="mt-2 h-9 min-h-[36px] text-xs">
-                            <Link to={action.to} hash={action.hash}>{action.cta}</Link>
+                            <a href={a.actionHref}>{a.actionLabel}</a>
                           </Button>
                         )}
                       </div>
