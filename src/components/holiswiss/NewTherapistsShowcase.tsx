@@ -62,7 +62,7 @@ export function NewTherapistsShowcase() {
               <Link
                 to="/$lang/therapeute/$slug"
                 params={{ lang, slug: th.slug }}
-                className="nt-ring relative block aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#3d1a5c] to-[#1a1035]"
+                className="relative block aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#3d1a5c] to-[#1a1035]"
                 aria-label={`${th.first_name} ${th.last_name}`}
               >
                 <TherapistAvatar
