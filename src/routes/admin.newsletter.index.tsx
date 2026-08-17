@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Mail, Plus, Archive, PencilLine } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { NewsletterSuggestions } from "@/components/admin/NewsletterSuggestions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -213,6 +214,10 @@ function Page() {
             {NEWSLETTER_STATUS_LABELS[s]} ({allRows.filter((r) => r.status === s).length})
           </Button>
         ))}
+      </div>
+
+      <div className="mb-6">
+        <NewsletterSuggestions />
       </div>
 
       <div className="grid gap-3">
