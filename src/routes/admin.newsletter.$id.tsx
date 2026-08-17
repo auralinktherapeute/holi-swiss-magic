@@ -1228,6 +1228,34 @@ function Page() {
 
                 {/* TEST */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
+                  <h3 className="font-semibold text-sm">Aperçu obligatoire</h3>
+                  <p className="text-xs text-white/50">
+                    Aucun email — test ou réel — ne peut partir avant que l'aperçu de la version
+                    actuelle ait été ouvert et validé. Toute modification du contenu annule la
+                    validation.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPreviewOpen(true)}
+                      className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+                    >
+                      Prévisualiser l'email
+                    </Button>
+                    <Badge
+                      className={
+                        previewChecked
+                          ? "bg-[#4ade80]/15 text-[#4ade80] border-0"
+                          : "bg-[#fbbf24]/15 text-[#fbbf24] border-0"
+                      }
+                    >
+                      {previewChecked ? "Aperçu vérifié" : "Aperçu non vérifié"}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* TEST */}
+                <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Email de test</h3>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
@@ -1242,7 +1270,7 @@ function Page() {
                     <Button
                       variant="outline"
                       onClick={() => sendTest.mutate()}
-                      disabled={sendTest.isPending}
+                      disabled={sendTest.isPending || !previewChecked}
                       className="min-h-11 shrink-0 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
                       {sendTest.isPending ? "Envoi…" : "Envoyer un email de test"}
@@ -1251,6 +1279,7 @@ function Page() {
                   <p className="text-xs text-white/50">
                     Le test utilise la version actuelle et le même gabarit que l'envoi réel. Il ne
                     change pas le statut de la newsletter.
+                    {!previewChecked && " Validez d'abord l'aperçu ci-dessus."}
                   </p>
                 </div>
 
@@ -1258,13 +1287,21 @@ function Page() {
                 <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Envoi réel</h3>
                   {!confirmOpen ? (
-                    <Button
-                      onClick={() => setConfirmOpen(true)}
-                      disabled={!canSend}
-                      className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-                    >
-                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => setConfirmOpen(true)}
+                        disabled={!canSend}
+                        className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+                      >
+                        <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer à tout le
+                        segment
+                      </Button>
+                      <p className="text-xs text-white/50">
+                        Ce bouton ouvre uniquement une fenêtre de confirmation : rien n'est envoyé
+                        tant que vous n'avez pas confirmé.
+                        {!previewChecked && " Aperçu à valider avant tout envoi."}
+                      </p>
+                    </div>
                   ) : (
                     <div className="rounded-lg border border-[#f87171]/40 bg-[#f87171]/10 p-4 space-y-3">
                       <p className="text-sm font-medium text-white">Confirmer l'envoi</p>
