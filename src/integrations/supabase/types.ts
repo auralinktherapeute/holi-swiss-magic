@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_pulse: {
+        Row: {
+          created_at: string
+          event: string
+          id: number
+          node_id: string
+          source_table: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: never
+          node_id: string
+          source_table: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: never
+          node_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
