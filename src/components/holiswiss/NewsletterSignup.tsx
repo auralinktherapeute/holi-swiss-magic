@@ -159,13 +159,17 @@ export function NewsletterSection() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="min-h-[44px] w-full gap-2 bg-[#b86ef9] text-white hover:bg-[#a855f7]"
+                  className="min-h-[48px] w-full gap-2 bg-gradient-to-r from-[#b86ef9] to-[#8b4ddb] text-base font-semibold text-white shadow-lg shadow-[#b86ef9]/30 transition-transform duration-200 hover:from-[#a855f7] hover:to-[#7c3aed] hover:brightness-110 motion-safe:hover:-translate-y-0.5"
                 >
                   <Mail className="h-4 w-4" aria-hidden="true" />
                   {t("newsletter_public.cta")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <p className="text-xs text-[#a89bc4]">
-                  {t("newsletter_public.reassurance")} <PrivacyLink lang={locale} />.
+                <p className="flex items-start gap-2 text-xs text-[#a89bc4]">
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    {t("newsletter_public.reassurance")} <PrivacyLink lang={locale} />.
+                  </span>
                 </p>
               </form>
             )}
