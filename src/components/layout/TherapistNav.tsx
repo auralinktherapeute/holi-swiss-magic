@@ -117,14 +117,29 @@ export function TherapistNav() {
           );
         })}
       </nav>
-      <div className="border-t border-border p-3 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-primary-xlight text-primary flex items-center justify-center text-sm font-semibold">T</div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">{t("dashboard.therapist_label")}</div>
-          <div className="text-xs text-muted-foreground truncate">{t("dashboard.demo_account")}</div>
-          <div className="mt-1"><AccountManageDialog /></div>
+      <div className="border-t border-border p-3 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-full bg-primary-xlight text-primary flex items-center justify-center text-sm font-semibold">T</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate">{t("dashboard.therapist_label")}</div>
+            <div className="text-xs text-muted-foreground truncate">{t("dashboard.demo_account")}</div>
+            <div className="mt-1"><AccountManageDialog /></div>
+          </div>
         </div>
-        <Settings className="h-4 w-4 text-muted-foreground" />
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          aria-label={t("dashboard.logout")}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-red-500/10 hover:text-red-500 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isLoggingOut ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+          ) : (
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+          )}
+          {t("dashboard.logout")}
+        </button>
       </div>
     </aside>
   );
