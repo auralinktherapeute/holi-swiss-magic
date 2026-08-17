@@ -86,6 +86,7 @@ import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './rout
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
 import { Route as ApiPublicAnalyticsEndSessionRouteImport } from './routes/api/public/analytics/end-session'
 import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
+import { Route as ApiPublicHooksResendEventsRouteImport } from './routes/api/public/hooks/resend-events'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
 
 const IndexRoute = IndexRouteImport.update({
@@ -483,6 +484,12 @@ const ApiPublicHooksArticleAgentRoute =
     path: '/api/public/hooks/article-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksResendEventsRoute =
+  ApiPublicHooksResendEventsRouteImport.update({
+    id: '/api/public/hooks/resend-events',
+    path: '/api/public/hooks/resend-events',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSeoAuditAgentRoute =
   ApiPublicHooksSeoAuditAgentRouteImport.update({
     id: '/api/public/hooks/seo-audit-agent',
@@ -568,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
+  '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesByTo {
@@ -645,6 +653,7 @@ export interface FileRoutesByTo {
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
+  '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRoutesById {
@@ -726,6 +735,7 @@ export interface FileRoutesById {
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
+  '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
 }
 export interface FileRouteTypes {
@@ -808,6 +818,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/famille/$familySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
+    | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -885,6 +896,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/famille/$familySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
+    | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
   id:
     | '__root__'
@@ -965,6 +977,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/famille/$familySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
+    | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
   fileRoutesById: FileRoutesById
 }
@@ -984,6 +997,7 @@ export interface RootRouteChildren {
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
   ApiPublicAnalyticsEndSessionRoute: typeof ApiPublicAnalyticsEndSessionRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
+  ApiPublicHooksResendEventsRoute: typeof ApiPublicHooksResendEventsRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
 }
 
@@ -1528,6 +1542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksArticleAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/resend-events': {
+      id: '/api/public/hooks/resend-events'
+      path: '/api/public/hooks/resend-events'
+      fullPath: '/api/public/hooks/resend-events'
+      preLoaderRoute: typeof ApiPublicHooksResendEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/seo-audit-agent': {
       id: '/api/public/hooks/seo-audit-agent'
       path: '/api/public/hooks/seo-audit-agent'
@@ -1719,6 +1740,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
   ApiPublicAnalyticsEndSessionRoute: ApiPublicAnalyticsEndSessionRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
+  ApiPublicHooksResendEventsRoute: ApiPublicHooksResendEventsRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
 }
 export const routeTree = rootRouteImport
