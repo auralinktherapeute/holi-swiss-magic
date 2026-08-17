@@ -19,13 +19,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getMyShowcaseReport, runMyShowcaseAnalysis } from "@/lib/therapist-health.functions";
 import { SHOWCASE_ACTIONS, SHOWCASE_STATUS_LABEL } from "@/lib/showcase-actions";
-import type { AuditSeverity } from "@/lib/showcase-audit";
+import { AUDIT_CATEGORY_LABEL, type AuditCategory, type AuditSeverity } from "@/lib/showcase-audit";
 
 export const Route = createFileRoute("/dashboard/visibilite")({ component: Page });
 
 type ReportCheck = {
   id: string;
   axis: "visibilite" | "conversion";
+  category: AuditCategory;
   label: string;
   hint: string;
   weight: number;
@@ -111,6 +112,9 @@ function CheckRow({ check }: { check: ReportCheck }) {
           <p className="text-sm font-medium">
             {check.label}
             <span className={`ml-2 text-[11px] font-normal ${meta.cls}`}>{meta.label}</span>
+          </p>
+          <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+            {AUDIT_CATEGORY_LABEL[check.category]}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">{check.hint}</p>
           <p className="mt-1 text-xs font-medium text-emerald-700">
@@ -250,22 +254,20 @@ function Page() {
         </CardContent>
       </Card>
 
-      {data.totals && (
+      {data.categories && data.categories.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Catégories de score</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 sm:grid-cols-2">
-            <CategoryBar
-              label="Visibilité"
-              hint="Ce qui aide Google et les moteurs IA à comprendre et indexer votre fiche."
-              value={data.totals.visibilite}
-            />
-            <CategoryBar
-              label="Conversion"
-              hint="Ce qui transforme une visite en demande de rendez-vous."
-              value={data.totals.conversion}
-            />
+            {data.categories.map((cat) => (
+              <CategoryBar
+                key={cat.id}
+                label={cat.label}
+                hint={`${cat.hint} — ${cat.passed}/${cat.total} critères validés.`}
+                value={cat.score}
+              />
+            ))}
           </CardContent>
         </Card>
       )}
