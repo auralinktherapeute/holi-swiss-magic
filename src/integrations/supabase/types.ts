@@ -3123,29 +3123,44 @@ export type Database = {
       therapist_certifications: {
         Row: {
           created_at: string
+          expires_at: string | null
           file_url: string | null
           id: string
           issuer: string | null
           name: string
+          source_label: string | null
           therapist_id: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
           year: number | null
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           file_url?: string | null
           id?: string
           issuer?: string | null
           name: string
+          source_label?: string | null
           therapist_id: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
           year?: number | null
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           file_url?: string | null
           id?: string
           issuer?: string | null
           name?: string
+          source_label?: string | null
           therapist_id?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
           year?: number | null
         }
         Relationships: [

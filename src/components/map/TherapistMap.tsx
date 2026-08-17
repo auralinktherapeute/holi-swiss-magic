@@ -17,7 +17,7 @@ export type TherapistMapTherapist = {
   longitude?: number;
   price_min?: number;
   currency?: string;
-  is_premium?: boolean;
+  subscription_plan?: string | null;
   verified?: boolean;
   specialties?: string[];
 };

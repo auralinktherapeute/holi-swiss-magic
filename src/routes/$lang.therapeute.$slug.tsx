@@ -21,7 +21,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { hreflangLinks, ogLocale, profileCopy, resolveProfileLang } from "@/lib/seo";
+import { TrustBadges } from "@/components/holiswiss/TrustBadges";
+import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
 
 const LANG_FLAG: Record<string, string> = {
   fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
@@ -38,10 +40,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist, reviews } = await getTherapistBySlug({ data: { slug: params.slug } });
-      return { therapist, reviews: reviews ?? [] };
+      const { therapist, reviews, certifications } = await getTherapistBySlug({
+        data: { slug: params.slug },
+      });
+      return { therapist, reviews: reviews ?? [], certifications: certifications ?? [] };
     } catch {
-      return { therapist: null, reviews: [] };
+      return { therapist: null, reviews: [], certifications: [] };
     }
   },
   head: ({ params, loaderData }) => {
@@ -93,21 +97,27 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
     const altLinks = hreflangLinks(`/therapeute/${params.slug}`);
     if (!t) {
+      const c0 = profileCopy(params.lang);
       return {
         meta: [
-          { title: "Thérapeute — Holiswiss" },
-          { name: "description", content: "Découvrez ce thérapeute holistique sur Holiswiss, l'annuaire des praticiens en Suisse." },
+          { title: c0.genericTitle },
+          { name: "description", content: c0.genericDescription },
           { property: "og:url", content: url },
         ],
         links: [{ rel: "canonical", href: url }, ...altLinks],
       };
     }
     const fullName = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
+    // SEO local : la langue de la version consultée pilote les libellés
+    // générés (« Therapeut in Zürich », « Thérapeute à Genève »). Les textes
+    // rédigés par le praticien (bio, approche) ne sont jamais traduits.
+    const pageLang = resolveProfileLang(params.lang, t.canton, t.languages ?? null);
+    const copy = profileCopy(pageLang);
     const place = [t.city, t.canton].filter(Boolean).join(", ");
-    const role = t.title ? `${t.title}${place ? ` à ${place}` : ""}` : place;
+    const role = copy.role(t.title ?? copy.fallbackRole, place);
     const title = `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, 60);
     const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
-    const fallback = `Profil de ${fullName}${role ? `, ${role}` : ""}. Prenez rendez-vous sur Holiswiss.`;
+    const fallback = copy.descFallback(fullName, role);
     const rawDescription = bio.length >= 50 ? bio : fallback;
     const description =
       rawDescription.length > 157
@@ -121,7 +131,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       { property: "og:description", content: description },
       { property: "og:type", content: "profile" },
       { property: "og:url", content: url },
-      { property: "og:locale", content: ogLocale(params.lang) },
+      { property: "og:locale", content: ogLocale(pageLang) },
       { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
     ];
     if (image) {
@@ -151,7 +161,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const person: Record<string, unknown> = {
       "@type": "Person",
       "@id": personId,
-      name: fullName || "Thérapeute",
+      name: fullName || copy.fallbackRole,
       url,
       description,
     };
@@ -170,6 +180,28 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     if (t.phone) person.telephone = t.phone;
     if (t.website) person.sameAs = [t.website];
     person.worksFor = { "@id": "https://holiswiss.ch/#organization" };
+    (person as any).inLanguage = pageLang;
+
+    // hasCredential : uniquement les certifications réellement vérifiées et
+    // affichées sur la page. Aucune donnée déclarative n'est balisée.
+    const verifiedCerts = (((loaderData as any)?.certifications ?? []) as Array<{
+      name?: string | null;
+      issuer?: string | null;
+      verification_status?: string | null;
+      expires_at?: string | null;
+    }>).filter(
+      (c) =>
+        c?.verification_status === "verified" &&
+        (c.name ?? "").trim().length > 0 &&
+        (!c.expires_at || Date.parse(c.expires_at) >= Date.now()),
+    );
+    if (verifiedCerts.length) {
+      (person as any).hasCredential = verifiedCerts.slice(0, 10).map((c) => ({
+        "@type": "EducationalOccupationalCredential",
+        name: c.name,
+        ...(c.issuer ? { recognizedBy: { "@type": "Organization", name: c.issuer } } : {}),
+      }));
+    }
 
     // AggregateRating + Reviews — uniquement si des avis approuvés existent
     const ratings = reviews.map((r) => r.rating).filter((n) => typeof n === "number");
@@ -231,11 +263,11 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const breadcrumbs = {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Accueil", item: `${SITE}/${params.lang}` },
+        { "@type": "ListItem", position: 1, name: copy.breadcrumbHome, item: `${SITE}/${params.lang}` },
         {
           "@type": "ListItem",
           position: 2,
-          name: "Thérapeutes",
+          name: copy.breadcrumbList,
           item: `${SITE}/${params.lang}/therapeutes`,
         },
         { "@type": "ListItem", position: 3, name: fullName, item: url },
@@ -299,7 +331,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,services,years_experience,google_reviews_url,accreditations")
+        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
@@ -403,7 +435,18 @@ function Page() {
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
   const gallery: string[] = Array.isArray(th.gallery_urls) ? th.gallery_urls.filter((u: any) => typeof u === "string" && u.length > 0) : [];
-  const showGallery = !!th.is_premium && gallery.length > 0;
+  // Régression corrigée : `is_premium` n'existe pas en production — le plan
+  // réel est porté par `subscription_plan`.
+  const isPro = isProPlan(th.subscription_plan);
+  const showGallery = isPro && gallery.length > 0;
+  const certifications = ((loaderData as any)?.certifications ?? []) as any[];
+  const trustBadges = buildTrustBadges({
+    lang,
+    verified: th.verified,
+    subscriptionPlan: th.subscription_plan,
+    certifications,
+    accreditations,
+  });
   const bioIsLong = (th.bio ?? "").length > 280;
   const avg = reviews?.length
     ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -452,10 +495,10 @@ function Page() {
                     />
                   </div>
                 </div>
-                {th.is_premium && (
+                {isPro && (
                   <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-sm shadow-lg" title={t("therapist_profile.premium")}>⚡</span>
                 )}
-                {!th.is_premium && th.verified && (
+                {!isPro && th.verified && (
                   <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#b86ef9] shadow-lg" title={t("therapist_profile.verified")}>
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
@@ -485,6 +528,10 @@ function Page() {
                   <p className="mb-3 max-w-2xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
                     {th.short_bio}
                   </p>
+                )}
+
+                {trustBadges.length > 0 && (
+                  <TrustBadges badges={trustBadges} lang={lang} className="mb-3" />
                 )}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
@@ -675,29 +722,23 @@ function Page() {
             )}
 
             {/* Accréditations */}
-            {accreditations.length > 0 && (
+            {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.certifications_title")}</h2>
-                <TooltipProvider delayDuration={150}>
-                  <div className="flex flex-wrap gap-2">
-                    {accreditations.map((a) => (
-                      <Tooltip key={a.org}>
-                        <TooltipTrigger asChild>
-                          <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-300 cursor-help">
-                            <BadgeCheck className="h-4 w-4" /> {a.org}{a.number ? ` · ${a.number}` : ""}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs border-emerald-500/30 bg-[#0f0a1e] text-white">
-                          {a.org === "ASCA" && "Fondation suisse pour les médecines complémentaires — agréée par la plupart des assurances complémentaires."}
-                          {a.org === "RME" && "Registre de Médecine Empirique — label de qualité reconnu par les assurances complémentaires en Suisse."}
-                          {a.org !== "ASCA" && a.org !== "RME" && `Certification ${a.org}${a.number ? ` (n° ${a.number})` : ""}.`}
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                </TooltipProvider>
+                <TrustBadges
+                  badges={trustBadges.filter((b) => b.kind === "certification" || b.kind === "accreditation")}
+                  lang={lang}
+                />
+                {trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified) && (
+                  <p className="mt-3 text-xs text-[rgba(255,255,255,0.5)]">
+                    {t("therapist_profile.declared_notice", {
+                      defaultValue:
+                        "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
+                    })}
+                  </p>
+                )}
               </motion.section>
             )}
 

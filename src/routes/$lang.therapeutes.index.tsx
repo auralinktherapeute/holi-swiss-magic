@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { isProPlan } from "@/lib/therapist-badges";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Zap, BadgeCheck, Map, List, SlidersHorizontal, Search, X } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
@@ -101,7 +102,7 @@ type Therapist = {
   title?: string; short_bio?: string; photo_url?: string;
   city?: string; canton?: string; latitude?: number; longitude?: number;
   price_min?: number; price_max?: number; currency?: string;
-  is_premium?: boolean; verified?: boolean; specialties?: string[];
+  subscription_plan?: string | null; verified?: boolean; specialties?: string[];
   distance_m?: number;
   score?: number;
   matched_city?: string | null;
@@ -363,12 +364,12 @@ function Page() {
                           </div>
                         </div>
                         {/* Badge premium */}
-                        {th.is_premium && (
+                        {isProPlan(th.subscription_plan) && (
                           <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[10px] shadow-md" title={t("therapist_profile.premium")}>
                             ⚡
                           </span>
                         )}
-                        {!th.is_premium && th.verified && (
+                        {!isProPlan(th.subscription_plan) && th.verified && (
                           <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#b86ef9] text-[10px] shadow-md" title={t("therapist_profile.verified")}>
                             ✓
                           </span>

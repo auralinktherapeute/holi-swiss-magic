@@ -22,7 +22,7 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     );
     const { data: therapist, error } = await supabase
       .from("therapists")
-      .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,services,years_experience,google_reviews_url,accreditations,status")
+      .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,status")
       .eq("slug", data.slug)
       .eq("status", "active")
       .maybeSingle();
@@ -44,7 +44,27 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
         .limit(20);
       reviews = (rows ?? []) as any;
     }
-    return { therapist, reviews };
+    // Certifications : lecture publique, avec leur état de vérification réel
+    // (jamais présentées comme vérifiées sans validation administrateur).
+    let certifications: Array<{
+      id: string;
+      name: string | null;
+      issuer: string | null;
+      year: number | null;
+      verification_status: string | null;
+      verified_at: string | null;
+      expires_at: string | null;
+      source_label: string | null;
+    }> = [];
+    if (therapist?.id) {
+      const { data: certs } = await supabase
+        .from("therapist_certifications")
+        .select("id,name,issuer,year,verification_status,verified_at,expires_at,source_label")
+        .eq("therapist_id", therapist.id)
+        .order("year", { ascending: false });
+      certifications = (certs ?? []) as any;
+    }
+    return { therapist, reviews, certifications };
   });
 
 export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
