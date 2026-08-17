@@ -297,7 +297,7 @@ export function isRelevant(check: Pick<AuditCheck, "id">): boolean {
 }
 
 /** Checks whose wording is computed by the audit itself (precise missing field). */
-const DYNAMIC_COPY = new Set(["identity"]);
+const DYNAMIC_COPY = new Set(["identity", "meta_title"]);
 
 export function buildRecommendations(
   checks: Array<AuditCheck & { gain?: number }>,
