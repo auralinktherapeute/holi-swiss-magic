@@ -16,7 +16,7 @@ export const SHOWCASE_ACTIONS: Record<string, ShowcaseAction> = {
   certifications_valid: { to: "/dashboard/profil", hash: "certifications", cta: "Mettre à jour mes certifications" },
   ide_verified: { to: "/dashboard/profil", hash: "ide", cta: "Renseigner mon identifiant professionnel" },
   training: { to: "/dashboard/profil", hash: "experience", cta: "Ajouter ma formation" },
-  reviews: { to: "/dashboard/avis", cta: "Inviter mes clients à témoigner" },
+  reviews: { to: "/dashboard/avis", hash: "avis", cta: "Inviter mes clients à témoigner" },
   verified: { to: "/dashboard/profil", hash: "certifications", cta: "Compléter mon profil pour la vérification" },
 
   // ── Prestations et conversion ─────────────────────────────────────────
@@ -44,8 +44,8 @@ export const SHOWCASE_ACTIONS: Record<string, ShowcaseAction> = {
 
   // ── SEO technique ─────────────────────────────────────────────────────
   meta: { to: "/dashboard/profil", hash: "seo", cta: "Renseigner titre et description SEO" },
-  meta_title: { to: "/dashboard/profil", hash: "seo", cta: "Rédiger mon title SEO" },
-  meta_description: { to: "/dashboard/profil", hash: "seo", cta: "Rédiger ma meta description" },
+  meta_title: { to: "/dashboard/profil", hash: "seo-title", cta: "Rédiger mon title SEO" },
+  meta_description: { to: "/dashboard/profil", hash: "seo-description", cta: "Rédiger ma meta description" },
   h1: { to: "/dashboard/profil", hash: "identite", cta: "Compléter mon identité" },
   structured_data: { to: "/dashboard/profil", hash: "identite", cta: "Compléter les champs balisés" },
   alt_text: { to: "/dashboard/profil", hash: "photo", cta: "Compléter photo et ville" },
