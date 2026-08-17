@@ -190,6 +190,15 @@ function ProfilePage() {
   );
   const seoTitleStatus = evaluateSeoTitle(seoTitleResolution, { expectedLang: null });
 
+  // Meta description : même résolution et mêmes seuils que la page publique
+  // et que l'audit de visibilité.
+  const seoDescResolution = resolveSeoDescription({
+    meta_description: metaDescription,
+    bio,
+    short_bio: shortBio,
+  });
+  const seoDescStatus = evaluateSeoDescription(seoDescResolution);
+
   // SIRET
   // Swiss IDE / UID (CHE-XXX.XXX.XXX)
   const [ide, setIde] = useSessionState(`${profileStatePrefix}.ide`, "");
