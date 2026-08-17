@@ -586,6 +586,8 @@ function Page() {
           </Card>
         )}
 
+        <NewsletterWorkflowGuide states={workflowStates} onStepClick={(t) => setTab(t)} />
+
         <Tabs value={tab} onValueChange={setTab} className="space-y-5">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-white/5 p-1 h-auto">
             <TabsTrigger value="brief" className={tabCls}>
