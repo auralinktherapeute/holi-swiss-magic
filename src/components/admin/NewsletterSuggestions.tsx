@@ -516,13 +516,46 @@ export function NewsletterSuggestions() {
           </DialogContent>
         </Dialog>
 
+        <AlertDialog open={toDismiss !== null} onOpenChange={(o) => !o && setToDismiss(null)}>
+          <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Écarter cette suggestion ?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/65">
+                Elle ne sera plus affichée dans les suggestions prioritaires. Aucune donnée n'est
+                supprimée : vous pourrez la restaurer depuis le filtre « Suggestions écartées ».
+                <br />
+                <span className="mt-2 block text-white/80">
+                  Suggestion : « {toDismiss?.subject} »
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="min-h-11 bg-white/15 text-white hover:bg-white/25"
+                onClick={() => toDismiss && mDismiss.mutate(toDismiss.id)}
+              >
+                Écarter la suggestion
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <AlertDialog open={toDelete !== null} onOpenChange={(o) => !o && setToDelete(null)}>
           <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
             <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer définitivement cette suggestion ?</AlertDialogTitle>
+              <AlertDialogTitle>Supprimer définitivement cet élément ?</AlertDialogTitle>
               <AlertDialogDescription className="text-white/65">
-                « {toDelete?.subject} » sera effacée sans possibilité de restauration. Pour la
-                masquer tout en pouvant la récupérer, utilisez plutôt « Écarter ».
+                Cette action peut être irréversible. Pour masquer l'élément tout en le conservant,
+                utilisez plutôt « Écarter ».
+                <br />
+                <span className="mt-2 block text-white/80">
+                  Type : suggestion de sujet
+                  <br />
+                  Nom : « {toDelete?.subject} »
+                </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
