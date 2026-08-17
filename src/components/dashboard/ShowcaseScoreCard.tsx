@@ -221,7 +221,7 @@ export function ShowcaseScoreCard() {
               </span>
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm" className="min-h-[40px] bg-[#b86ef9] text-white hover:bg-[#a css]">
+              <Button asChild size="sm" className="min-h-[40px] bg-[#b86ef9] text-white hover:bg-[#a458e8]">
                 <Link to="/dashboard/abonnement">Découvrir Elite Pro</Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="min-h-[40px]">
