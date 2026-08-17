@@ -14,6 +14,8 @@ import {
   sendProfileHealthRecap,
   runCitabilityScan,
   auditTherapistShowcase,
+  getTherapistScoringAccess,
+  setTherapistScoringAccess,
 } from "@/lib/therapist-health.functions";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
@@ -458,13 +460,19 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
 /** Contrôles automatiques de la vitrine publique (visibilité vs conversion). */
 function ShowcaseAudit({ therapistId }: { therapistId: string }) {
   const run = useServerFn(auditTherapistShowcase);
+  const loadAccess = useServerFn(getTherapistScoringAccess);
+  const saveAccess = useServerFn(setTherapistScoringAccess);
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [access, setAccess] = useState<any>(null);
+  const [accessBusy, setAccessBusy] = useState(false);
 
   const launch = useCallback(async () => {
     setLoading(true);
     try {
-      setState(await run({ data: { therapistId } }));
+      const res: any = await run({ data: { therapistId } });
+      setState(res);
+      setAccess(res?.access ?? null);
     } catch (e: any) {
       toast.error(e?.message ?? "Audit impossible");
     } finally {
@@ -472,12 +480,74 @@ function ShowcaseAudit({ therapistId }: { therapistId: string }) {
     }
   }, [run, therapistId]);
 
+  const toggleAccess = useCallback(
+    async (enabled: boolean, source: "admin_manual" | "commercial_offer" | "offer_accepted") => {
+      setAccessBusy(true);
+      try {
+        setAccess(await saveAccess({ data: { therapistId, enabled, source } }));
+        toast.success(enabled ? "Accès avancé accordé" : "Accès avancé retiré");
+      } catch (e: any) {
+        toast.error(e?.message ?? "Modification impossible");
+      } finally {
+        setAccessBusy(false);
+      }
+    },
+    [saveAccess, therapistId],
+  );
+
   useEffect(() => {
     setState(null);
-  }, [therapistId]);
+    setAccess(null);
+    loadAccess({ data: { therapistId } })
+      .then(setAccess)
+      .catch(() => setAccess(null));
+  }, [therapistId, loadAccess]);
 
   return (
     <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      {access && (
+        <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.04] p-2.5 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-semibold text-white/85">
+              Scoring avancé :{" "}
+              <span className={access.advanced ? "text-green-400" : "text-white/50"}>
+                {access.advanced ? "éligible" : "non éligible"}
+              </span>
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                disabled={accessBusy}
+                onClick={() => toggleAccess(true, "admin_manual")}
+                className="min-h-[32px] rounded-md border border-white/15 px-2 py-1 text-white/80 hover:bg-white/5 disabled:opacity-60"
+              >
+                Activer (manuel)
+              </button>
+              <button
+                type="button"
+                disabled={accessBusy}
+                onClick={() => toggleAccess(true, "commercial_offer")}
+                className="min-h-[32px] rounded-md border border-white/15 px-2 py-1 text-white/80 hover:bg-white/5 disabled:opacity-60"
+              >
+                Offre commerciale
+              </button>
+              <button
+                type="button"
+                disabled={accessBusy}
+                onClick={() => toggleAccess(false, "admin_manual")}
+                className="min-h-[32px] rounded-md border border-white/15 px-2 py-1 text-white/70 hover:bg-white/5 disabled:opacity-60"
+              >
+                Retirer
+              </button>
+            </div>
+          </div>
+          <p className="mt-1.5 text-white/50">
+            Source : {access.sources?.length ? access.sources.join(", ") : "—"} · Rang d'inscription :{" "}
+            {access.earlyRank ?? "—"} / {access.earlySlots} · Activation :{" "}
+            {access.since ? new Date(access.since).toLocaleDateString("fr-CH") : "—"}
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-white/85">Contrôles automatiques de la vitrine</h3>
         <button

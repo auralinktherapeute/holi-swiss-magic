@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, AlertTriangle, Info, ChevronDown, Gauge, ArrowUpRight, RefreshCw } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Info, ChevronDown, Gauge, ArrowUpRight, RefreshCw, Lock, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -98,8 +98,10 @@ export function ShowcaseScoreCard() {
 
   if (isError || !data) return null;
 
-  const total = data.checks.length;
-  const okCount = done.length;
+  const advanced = data.access?.advanced === true;
+  const basic = data.basic;
+  const total = basic.total;
+  const okCount = basic.completed;
 
   return (
     <Card className="border-[rgba(184,110,249,0.25)] bg-[#2d1248]/70">
@@ -108,7 +110,13 @@ export function ShowcaseScoreCard() {
           <div className="flex items-center gap-2">
             <Gauge className="h-5 w-5 text-[#b86ef9]" aria-hidden="true" />
             <div>
-              <h2 className="text-base font-semibold text-foreground">Qualité de ma vitrine</h2>
+              <h2 className="flex flex-wrap items-center gap-2 text-base font-semibold text-foreground">
+                Qualité de ma vitrine
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/10 px-2 py-0.5 text-[11px] font-medium text-[#d9b4ff]">
+                  {advanced ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Lock className="h-3 w-3" aria-hidden="true" />}
+                  {advanced ? "Score avancé" : "Score de base"}
+                </span>
+              </h2>
               <p className="text-xs text-muted-foreground">
                 {okCount} élément{okCount > 1 ? "s" : ""} optimisé{okCount > 1 ? "s" : ""} sur {total}
               </p>
@@ -136,20 +144,74 @@ export function ShowcaseScoreCard() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <ScoreBar
-            label="Visibilité"
-            hint="Ce qui aide Google et les moteurs IA à comprendre et indexer votre fiche."
-            value={data.totals.visibilite}
-          />
-          <ScoreBar
-            label="Conversion"
-            hint="Ce qui transforme une visite en demande de rendez-vous."
-            value={data.totals.conversion}
-          />
-        </div>
+        {advanced && data.totals ? (
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <ScoreBar
+              label="Visibilité"
+              hint="Ce qui aide Google et les moteurs IA à comprendre et indexer votre fiche."
+              value={data.totals.visibilite}
+            />
+            <ScoreBar
+              label="Conversion"
+              hint="Ce qui transforme une visite en demande de rendez-vous."
+              value={data.totals.conversion}
+            />
+          </div>
+        ) : (
+          <div className="mt-5">
+            <ScoreBar
+              label="Score global"
+              hint="Niveau de complétion de votre fiche publique."
+              value={basic.score}
+            />
+          </div>
+        )}
 
-        {missing.length === 0 ? (
+        {!advanced && (
+          <div className="mt-5 space-y-3">
+            {basic.essentials.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground/90">Éléments essentiels à compléter</h3>
+                <ul className="mt-2 space-y-2">
+                  {basic.essentials.map((e) => {
+                    const action = ACTIONS[e.id];
+                    return (
+                      <li key={e.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                        <p className="text-sm font-medium text-foreground/90">{e.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{e.hint}</p>
+                        {action && (
+                          <Button asChild variant="link" size="sm" className="mt-1 h-auto min-h-[32px] p-0 text-xs text-[#d9b4ff] hover:text-white">
+                            <Link to={action.to}>{action.cta}</Link>
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+            {basic.recommendations.length > 0 && (
+              <ul className="space-y-1.5">
+                {basic.recommendations.map((r) => (
+                  <li key={r} className="flex items-start gap-2 text-xs text-foreground/75">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-300" aria-hidden="true" />
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="flex items-start gap-2 rounded-lg border border-[#b86ef9]/25 bg-[#b86ef9]/10 p-3 text-xs text-[#e6ccff]">
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                Le score avancé (visibilité et conversion détaillées, actions prioritaires point par
+                point) est réservé aux thérapeutes Elite Pro, aux {data.access?.earlySlots ?? 70} premiers
+                inscrits et aux accès accordés par Holiswiss.
+              </span>
+            </p>
+          </div>
+        )}
+
+        {advanced && (missing.length === 0 ? (
           <p className="mt-5 flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3 text-sm text-emerald-200">
             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
             Votre vitrine est complète : tous les contrôles sont validés.
@@ -192,9 +254,9 @@ export function ShowcaseScoreCard() {
               })}
             </ul>
           </div>
-        )}
+        ))}
 
-        {done.length > 0 && (
+        {advanced && done.length > 0 && (
           <div className="mt-4">
             <button
               type="button"

@@ -120,3 +120,46 @@ export function auditTotals(checks: AuditCheck[]) {
   };
   return { visibilite: per("visibilite"), conversion: per("conversion") };
 }
+
+export type BasicSummary = {
+  /** Score global simplifié, pondéré sur l'ensemble des contrôles. */
+  score: number;
+  /** Niveau de complétion : nombre de contrôles validés. */
+  completed: number;
+  total: number;
+  /** Essentiels manquants (contrôles critiques), limités aux 3 premiers. */
+  essentials: Array<Pick<AuditCheck, "id" | "label" | "hint">>;
+  /** Recommandations générales, sans détail du barème. */
+  recommendations: string[];
+};
+
+/**
+ * Vue simplifiée du niveau 1. Aucun second calcul : uniquement une
+ * agrégation des contrôles déjà produits par `runShowcaseAudit`.
+ */
+export function basicSummary(checks: AuditCheck[]): BasicSummary {
+  const max = checks.reduce((s, c) => s + c.weight, 0) || 1;
+  const got = checks.reduce((s, c) => s + (c.passed ? c.weight : 0), 0);
+  const missing = checks.filter((c) => !c.passed);
+  const essentials = missing
+    .filter((c) => c.severity === "critical")
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 3)
+    .map((c) => ({ id: c.id, label: c.label, hint: c.hint }));
+
+  const recommendations: string[] = [];
+  if (missing.some((c) => c.axis === "visibilite"))
+    recommendations.push("Complétez le contenu de votre fiche : c'est ce que les moteurs lisent en premier.");
+  if (missing.some((c) => c.axis === "conversion"))
+    recommendations.push("Ajoutez les informations pratiques (tarif, modes, disponibilités) attendues avant une prise de contact.");
+  if (missing.length === 0)
+    recommendations.push("Votre fiche couvre tous les points essentiels : pensez à la mettre à jour régulièrement.");
+
+  return {
+    score: Math.round((got / max) * 100),
+    completed: checks.filter((c) => c.passed).length,
+    total: checks.length,
+    essentials,
+    recommendations,
+  };
+}
