@@ -196,12 +196,6 @@ function ValidatedRow({ check }: { check: ReportCheck }) {
   );
 }
 
-const UNUSED_IMPORTANCE_STYLE: Record<string, string> = {
-  essentiel: "border-red-200 bg-red-50 text-red-700",
-  important: "border-amber-200 bg-amber-50 text-amber-700",
-  conseille: "border-sky-200 bg-sky-50 text-sky-700",
-};
-
 function RecommendationCard({ reco }: { reco: Recommendation }) {
   const resolved = reco.status === "resolu";
   return (
