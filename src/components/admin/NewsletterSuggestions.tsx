@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Lightbulb, RefreshCw, Trash2, PencilLine, ArrowRight } from "lucide-react";
+import { Lightbulb, RefreshCw, Trash2, PencilLine, ArrowRight, Undo2, EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   listNewsletterSuggestions,
   saveNewsletterSuggestion,
@@ -80,11 +90,13 @@ export function NewsletterSuggestions() {
 
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [showDismissed, setShowDismissed] = useState(false);
+  const [toDelete, setToDelete] = useState<NewsletterSuggestion | null>(null);
 
   const q = useQuery({ queryKey: ["newsletter-suggestions"], queryFn: () => list() });
-  const rows = ((q.data?.rows ?? []) as NewsletterSuggestion[]).filter(
-    (r) => r.status !== "rejetee",
-  );
+  const allRows = (q.data?.rows ?? []) as NewsletterSuggestion[];
+  const rows = allRows.filter((r) => (showDismissed ? true : r.status !== "rejetee"));
+  const dismissedCount = allRows.filter((r) => r.status === "rejetee").length;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["newsletter-suggestions"] });
   const onError = (e: unknown) =>
@@ -113,7 +125,15 @@ export function NewsletterSuggestions() {
   const mDismiss = useMutation({
     mutationFn: (id: string) => setStatus({ data: { id, status: "rejetee" as const } }),
     onSuccess: () => {
-      toast.success("Suggestion écartée.");
+      toast.success("Suggestion écartée — récupérable via « Afficher les écartées ».");
+      invalidate();
+    },
+    onError,
+  });
+  const mRestore = useMutation({
+    mutationFn: (id: string) => setStatus({ data: { id, status: "ouverte" as const } }),
+    onSuccess: () => {
+      toast.success("Suggestion remise dans la liste.");
       invalidate();
     },
     onError,
@@ -121,7 +141,8 @@ export function NewsletterSuggestions() {
   const mDelete = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
-      toast.success("Suggestion supprimée.");
+      toast.success("Suggestion supprimée définitivement.");
+      setToDelete(null);
       invalidate();
     },
     onError,
