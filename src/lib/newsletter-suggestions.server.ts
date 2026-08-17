@@ -102,8 +102,13 @@ export async function buildSuggestions(client: AnyClient): Promise<GeneratedSugg
   }
 
   // Agenda : thérapeutes sans aucune disponibilité déclarée.
-  const { data: availRows } = await client.from("availabilities").select("therapist_id").limit(5000);
-  const withAvail = new Set(((availRows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+  const { data: availRows } = await client
+    .from("availabilities")
+    .select("therapist_id")
+    .limit(5000);
+  const withAvail = new Set(
+    ((availRows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id),
+  );
   const withoutAvail = Math.max(total - withAvail.size, 0);
   if (withoutAvail > 0) {
     out.push({
@@ -123,7 +128,9 @@ export async function buildSuggestions(client: AnyClient): Promise<GeneratedSugg
     .select("therapist_id")
     .eq("statut", "publie")
     .limit(5000);
-  const authors = new Set(((artRows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id));
+  const authors = new Set(
+    ((artRows ?? []) as { therapist_id: string }[]).map((r) => r.therapist_id),
+  );
   const withoutContent = Math.max(total - authors.size, 0);
   if (withoutContent > 0) {
     out.push({

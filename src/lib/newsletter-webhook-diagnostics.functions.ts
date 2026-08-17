@@ -38,7 +38,9 @@ export const listWebhookEvents = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: rows, error } = await db
       .from("newsletter_send_events")
-      .select("id,created_at,occurred_at,event_type,provider_event_id,provider_message_id,detail,send_id")
+      .select(
+        "id,created_at,occurred_at,event_type,provider_event_id,provider_message_id,detail,send_id",
+      )
       .order("created_at", { ascending: false })
       .limit(data.limit);
     if (error) throw new Error("Lecture des événements impossible.");
@@ -67,5 +69,11 @@ export const sendWebhookProbeEmail = createServerFn({ method: "POST" })
       subject: `[DIAGNOSTIC] Webhook Resend — ${stamp}`,
       html: `<p>Email de diagnostic Holiswiss.</p><p>Horodatage : ${stamp}</p>`,
     });
-    return { ok: res.ok, status: res.status, messageId: res.id ?? null, to: PROBE_TO, error: res.error ?? null };
+    return {
+      ok: res.ok,
+      status: res.status,
+      messageId: res.id ?? null,
+      to: PROBE_TO,
+      error: res.error ?? null,
+    };
   });
