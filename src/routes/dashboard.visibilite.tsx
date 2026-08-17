@@ -123,7 +123,7 @@ function CheckRow({ check }: { check: ReportCheck }) {
           </p>
           {action && (
             <Button asChild variant="outline" size="sm" className="mt-2 h-9 min-h-[36px] text-xs">
-              <Link to={action.to}>{action.cta}</Link>
+              <Link to={action.to} hash={action.hash}>{action.cta}</Link>
             </Button>
           )}
         </div>
@@ -176,7 +176,7 @@ function RecommendationCard({ reco }: { reco: Recommendation }) {
       )}
       {reco.action && (
         <Button asChild size="sm" variant="outline" className="mt-3 h-9 min-h-[36px] text-xs">
-          <Link to={reco.action.to}>{reco.action.cta}</Link>
+          <Link to={reco.action.to} hash={reco.action.hash}>{reco.action.cta}</Link>
         </Button>
       )}
     </li>
@@ -350,7 +350,7 @@ function Page() {
                         </p>
                         {action && (
                           <Button asChild size="sm" className="mt-2 h-9 min-h-[36px] text-xs">
-                            <Link to={action.to}>{action.cta}</Link>
+                            <Link to={action.to} hash={action.hash}>{action.cta}</Link>
                           </Button>
                         )}
                       </div>
@@ -464,7 +464,7 @@ function Page() {
                   <p className="mt-0.5 text-xs text-muted-foreground">{e.hint}</p>
                   {action && (
                     <Button asChild size="sm" variant="outline" className="mt-2 h-9 min-h-[36px] text-xs">
-                      <Link to={action.to}>{action.cta}</Link>
+                      <Link to={action.to} hash={action.hash}>{action.cta}</Link>
                     </Button>
                   )}
                 </div>
