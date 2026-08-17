@@ -206,6 +206,8 @@ function Page() {
         </div>
       </div>
 
+      <NewsletterWorkflowGuide />
+
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par statut">
         <Button
           size="sm"
