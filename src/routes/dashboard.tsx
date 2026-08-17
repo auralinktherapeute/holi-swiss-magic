@@ -13,6 +13,7 @@ import { ensureMyTherapistShell } from "@/lib/dashboard.functions";
 import { getOnboardingState } from "@/lib/onboarding.functions";
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { RequireRole } from "@/components/auth/RequireRole";
+import { NewsletterFooterSection } from "@/components/dashboard/NewsletterFooterSection";
 import { requireCurrentRole } from "@/lib/auth-utils";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -97,6 +98,7 @@ function DashboardLayout() {
           <MobileDashboardHeader />
           <main className="flex-1 pb-20 md:pb-0">
             <Outlet />
+            <NewsletterFooterSection />
           </main>
         </div>
         <MobileDashboardBottomNav />
