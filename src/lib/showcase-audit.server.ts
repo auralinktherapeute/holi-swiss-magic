@@ -4,7 +4,7 @@
  * Le client Supabase est injecté (service-role côté admin, session du
  * thérapeute côté dashboard) — le calcul, lui, est strictement identique.
  */
-import { runShowcaseAudit, auditTotals, categoryTotals, type AuditCheck } from "@/lib/showcase-audit";
+import { runShowcaseAudit, auditTotals, categoryTotals, type AuditCheck, type ShowcaseInput } from "@/lib/showcase-audit";
 
 export const SHOWCASE_COLUMNS =
   "id,slug,first_name,last_name,title,bio,short_bio,photo_url,city,canton,address,postal_code,latitude,longitude,specialties,approaches,languages,consultation_modes,services,price_min,price_max,meta_title,meta_description,website,google_reviews_url,booking_note,phone,email,verified,ide_verified,years_experience,subscription_plan,status,updated_at,gallery_urls";
@@ -15,6 +15,7 @@ export async function loadShowcaseAudit(
 ): Promise<{
   slug: string;
   checks: AuditCheck[];
+  input: ShowcaseInput;
   totals: { visibilite: number; conversion: number };
   categories: ReturnType<typeof categoryTotals>;
 }> {
@@ -35,7 +36,7 @@ export async function loadShowcaseAudit(
   const now = Date.now();
   const isExpired = (c: { expires_at: string | null }) =>
     c.expires_at != null && new Date(c.expires_at).getTime() < now;
-  const checks = runShowcaseAudit({
+  const auditInput: ShowcaseInput = {
     ...t,
     // Une certification expirée n'est plus comptée comme vérifiée : elle est
     // rétrogradée en « déclarée », comme sur la vitrine publique.
@@ -51,11 +52,13 @@ export async function loadShowcaseAudit(
       .pop() ?? null,
     articlesCount: (artRes.data ?? []).length,
     packagesCount: (packRes.data ?? []).length,
-  });
+  };
+  const checks = runShowcaseAudit(auditInput);
 
   return {
     slug: (t.slug ?? "") as string,
     checks,
+    input: auditInput,
     totals: auditTotals(checks),
     categories: categoryTotals(checks),
   };
@@ -85,7 +88,7 @@ export async function buildShowcaseReport(
 ) {
   const { basicSummary } = await import("@/lib/showcase-audit");
   const { resolveScoringAccess } = await import("@/lib/scoring-access.server");
-  const { buildRecommendations } = await import("@/lib/showcase-recommendations");
+  const { buildShowcaseAuditReport } = await import("@/lib/showcase-report");
 
   const [audit, access, prevRes] = await Promise.all([
     loadShowcaseAudit(sb, therapistId),
@@ -152,10 +155,19 @@ export async function buildShowcaseReport(
     gain: Math.round((c.weight / maxWeight) * 100),
   }));
 
-  const recommendations = buildRecommendations(checks, resolvedDates);
+  // Objet d'audit unique : score, contrôles, manquants, actions prioritaires
+  // et recommandations proviennent tous de cette construction.
+  const report = buildShowcaseAuditReport(audit.input, audit.checks, {
+    generatedAt: analyzedAt,
+    profileVersion: audit.input.updated_at ?? null,
+    resolvedDates,
+  });
+  const recommendations = [...report.visibility.recommendations, ...report.conversion.recommendations]
+    .sort((a, b) => (a.status === b.status ? 0 : a.status === "a_traiter" ? -1 : 1));
 
   return {
     slug: audit.slug,
+    report,
     recommendations,
     access,
     basic,

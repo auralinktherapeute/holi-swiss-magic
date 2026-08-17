@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,23 +19,18 @@ import { Progress } from "@/components/ui/progress";
 import { getMyShowcaseReport, runMyShowcaseAnalysis } from "@/lib/therapist-health.functions";
 import { SHOWCASE_ACTIONS, SHOWCASE_STATUS_LABEL } from "@/lib/showcase-actions";
 import type { Recommendation } from "@/lib/showcase-recommendations";
-import { AUDIT_CATEGORY_LABEL, type AuditCategory, type AuditSeverity } from "@/lib/showcase-audit";
+import { type AuditSeverity } from "@/lib/showcase-audit";
+import type { ReportCheck, ShowcaseAuditReport } from "@/lib/showcase-report";
 
 export const Route = createFileRoute("/dashboard/visibilite")({ component: Page });
 
-type ReportCheck = {
-  id: string;
-  axis: "visibilite" | "conversion";
-  category: AuditCategory;
-  label: string;
-  hint: string;
-  weight: number;
-  passed: boolean;
-  severity: AuditSeverity;
-  gain: number;
+const STATUS_LABEL: Record<ReportCheck["status"], string> = {
+  passed: "Validé",
+  missing: "Manquant",
+  invalid: "À corriger",
+  pending: "En attente de validation",
+  blocked: "Bloqué",
 };
-
-const SEVERITY_RANK: Record<AuditSeverity, number> = { critical: 0, warning: 1, info: 2 };
 const SEVERITY_META: Record<AuditSeverity, { label: string; cls: string; icon: typeof AlertTriangle }> = {
   critical: { label: "Bloquant", cls: "text-red-600", icon: ShieldAlert },
   warning: { label: "Important", cls: "text-amber-600", icon: AlertTriangle },
@@ -104,7 +98,6 @@ function CategoryBar({ label, hint, value }: { label: string; hint: string; valu
 function CheckRow({ check }: { check: ReportCheck }) {
   const meta = SEVERITY_META[check.severity];
   const Icon = meta.icon;
-  const action = SHOWCASE_ACTIONS[check.id];
   return (
     <li className="rounded-lg border border-border bg-surface p-3">
       <div className="flex items-start gap-2.5">
@@ -113,17 +106,26 @@ function CheckRow({ check }: { check: ReportCheck }) {
           <p className="text-sm font-medium">
             {check.label}
             <span className={`ml-2 text-[11px] font-normal ${meta.cls}`}>{meta.label}</span>
+            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal text-foreground/70">
+              {STATUS_LABEL[check.status]}
+            </span>
           </p>
           <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
-            {AUDIT_CATEGORY_LABEL[check.category]}
+            {check.categoryLabel}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{check.hint}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{check.explanation}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Attendu : {check.expectedValueSummary}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Actuel : {check.currentValueSummary}
+          </p>
           <p className="mt-1 text-xs font-medium text-emerald-700">
-            Gain potentiel estimé : +{check.gain} points
+            Gain potentiel estimé : +{check.points} points
           </p>
-          {action && (
+          {check.actionHref && (
             <Button asChild variant="outline" size="sm" className="mt-2 h-9 min-h-[36px] text-xs">
-              <Link to={action.to} hash={action.hash}>{action.cta}</Link>
+              <a href={check.actionHref}>{check.actionLabel}</a>
             </Button>
           )}
         </div>
@@ -204,38 +206,22 @@ function Page() {
     onError: () => toast.error("L'analyse n'a pas pu être relancée. Réessayez dans un instant."),
   });
 
-  const checks = (data?.checks ?? []) as ReportCheck[];
-  const recommendations = (data?.recommendations ?? []) as Recommendation[];
-  // Single source of truth: a recommendation is only "à traiter" if its check
-  // is actually not passed. Gain is realigned on the check weight.
-  const { todo, resolved } = useMemo(() => {
-    const byId = new Map(checks.map((c) => [c.id, c]));
-    const normalized = recommendations.map((r) => {
-      const c = byId.get(r.id);
-      if (!c) return r;
-      return {
-        ...r,
-        status: (c.passed ? "resolu" : "a_traiter") as Recommendation["status"],
-        action: c.passed ? null : r.action,
-        gain: c.passed ? 0 : c.weight,
-      };
-    });
-    return {
-      todo: normalized.filter((r) => r.status === "a_traiter"),
-      resolved: normalized.filter((r) => r.status === "resolu"),
-    };
-  }, [checks, recommendations]);
-  const { blocking, missing, done, priority } = useMemo(() => {
-    const sorter = (a: ReportCheck, b: ReportCheck) =>
-      SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.weight - a.weight;
-    const ko = checks.filter((c) => !c.passed).sort(sorter);
-    return {
-      blocking: ko.filter((c) => c.severity === "critical"),
-      missing: ko.filter((c) => c.severity !== "critical"),
-      done: checks.filter((c) => c.passed).sort(sorter),
-      priority: ko.slice(0, 3),
-    };
-  }, [checks]);
+  // Source unique : tout provient de l'objet d'audit renvoyé par le serveur.
+  // Aucune reconstruction ici.
+  const report = (data?.report ?? null) as ShowcaseAuditReport | null;
+  const checks: ReportCheck[] = report
+    ? [...report.visibility.checks, ...report.conversion.checks]
+    : [];
+  const recommendations: Recommendation[] = report
+    ? [...report.visibility.recommendations, ...report.conversion.recommendations]
+    : [];
+  const todo = recommendations.filter((r) => r.status === "a_traiter");
+  const resolved = recommendations.filter((r) => r.status === "resolu");
+  const blocking = report ? [...report.visibility.blocking, ...report.conversion.blocking] : [];
+  const blockingIds = new Set(blocking.map((c) => c.id));
+  const missing = report ? report.missingItems.filter((c) => !blockingIds.has(c.id)) : [];
+  const done = checks.filter((c) => c.status === "passed");
+  const priority = report?.priorityActions ?? [];
 
   if (isLoading) {
     return (
@@ -351,23 +337,22 @@ function Page() {
           </CardHeader>
           <CardContent>
             <ol className="space-y-2">
-              {priority.map((c, i) => {
-                const action = SHOWCASE_ACTIONS[c.id];
+              {priority.map((a) => {
                 return (
-                  <li key={c.id} className="rounded-lg border border-border bg-surface p-3">
+                  <li key={a.checkId} className="rounded-lg border border-border bg-surface p-3">
                     <div className="flex items-start gap-3">
                       <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-xlight text-xs font-bold text-primary">
-                        {i + 1}
+                        {a.rank}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{c.label}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{c.hint}</p>
+                        <p className="text-sm font-medium">{a.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{a.explanation}</p>
                         <p className="mt-1 text-xs font-medium text-emerald-700">
-                          Gain potentiel estimé : +{c.gain} points
+                          Gain potentiel estimé : +{a.points} points
                         </p>
-                        {action && (
+                        {a.actionHref && (
                           <Button asChild size="sm" className="mt-2 h-9 min-h-[36px] text-xs">
-                            <Link to={action.to} hash={action.hash}>{action.cta}</Link>
+                            <a href={a.actionHref}>{a.actionLabel}</a>
                           </Button>
                         )}
                       </div>
@@ -458,7 +443,7 @@ function Page() {
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
                   <div>
                     <p className="text-sm font-medium">{c.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.hint}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{c.explanation}</p>
                   </div>
                 </li>
               ))}
