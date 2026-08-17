@@ -46,7 +46,16 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     }
     // Certifications : lecture publique, avec leur état de vérification réel
     // (jamais présentées comme vérifiées sans validation administrateur).
-    let certifications: Array<Record<string, unknown>> = [];
+    let certifications: Array<{
+      id: string;
+      name: string | null;
+      issuer: string | null;
+      year: number | null;
+      verification_status: string | null;
+      verified_at: string | null;
+      expires_at: string | null;
+      source_label: string | null;
+    }> = [];
     if (therapist?.id) {
       const { data: certs } = await supabase
         .from("therapist_certifications")
