@@ -273,3 +273,86 @@
   .eg-reveal--delay { opacity: 1; animation: none; transform: none; }
   .eg-beta-glow { animation: none; }
 }
+
+/* ============================================================
+ * « Nouveaux thérapeutes » — animations premium (aperçus B1/B2/B3)
+ * Uniquement transform / opacity / box-shadow. 150–400ms.
+ * ============================================================ */
+@keyframes nt-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes nt-halo {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(184,110,249,0.22), 0 0 18px -8px rgba(184,110,249,0.35); }
+  50%      { box-shadow: 0 0 0 1px rgba(184,110,249,0.40), 0 0 34px -4px rgba(184,110,249,0.55); }
+}
+@keyframes nt-ring {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes nt-shine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(220%) skewX(-18deg); }
+}
+
+/* Entrée échelonnée (stagger piloté par --nt-i) */
+.nt-rise {
+  opacity: 0;
+  animation: nt-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--nt-i, 0) * 60ms);
+}
+
+/* Carte : élévation + halo au survol / focus */
+.nt-card {
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms ease-out,
+    border-color 220ms ease-out;
+  will-change: transform;
+}
+.nt-card:hover,
+.nt-card:focus-within {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,0.65), 0 0 34px -6px rgba(184,110,249,0.45);
+}
+
+/* Avatar : anneau lumineux animé */
+.nt-ring::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, rgba(184,110,249,0), rgba(184,110,249,0.85), rgba(92,200,250,0.6), rgba(184,110,249,0));
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+  animation: nt-ring 5s linear infinite;
+}
+.nt-card:hover .nt-ring::before,
+.nt-card:focus-within .nt-ring::before { opacity: 1; }
+
+/* Halo respirant permanent (discret) */
+.nt-breathe { animation: nt-halo 4.5s ease-in-out infinite; }
+
+/* Reflet balayant le CTA */
+.nt-shine { position: relative; overflow: hidden; }
+.nt-shine::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+}
+.nt-card:hover .nt-shine::after { animation: nt-shine 700ms ease-out; }
+
+/* Micro-décalage de la flèche */
+.nt-arrow { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.nt-card:hover .nt-arrow,
+.nt-card:focus-within .nt-arrow { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-rise { opacity: 1; animation: none; }
+  .nt-card, .nt-arrow { transition: none; }
+  .nt-card:hover, .nt-card:focus-within { transform: none; }
+  .nt-ring::before, .nt-breathe, .nt-shine::after { animation: none; }
+}
