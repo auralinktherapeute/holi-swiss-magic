@@ -293,7 +293,11 @@ function Page() {
   const setQc = (key: string, value: boolean) =>
     setForm((f) => (f ? { ...f, qc: { ...f.qc, [key]: value } } : f));
 
-  const locked = issue?.status === "envoyee" || issue?.status === "archivee";
+  const locked =
+    issue?.status === "envoyee" ||
+    issue?.status === "envoi_en_cours" ||
+    issue?.status === "echec" ||
+    issue?.status === "archivee";
 
   const save = useMutation({
     mutationFn: async () => {
@@ -473,6 +477,7 @@ function Page() {
               <Badge className={`${STATUS_COLORS[issue.status]} border-0`}>
                 {NEWSLETTER_STATUS_LABELS[issue.status]}
               </Badge>
+              <NewsletterStatusLegend />
               {issue.published_at && (
                 <Badge className="bg-[#4ade80]/15 text-[#4ade80] border-0">
                   Page ressource publiée

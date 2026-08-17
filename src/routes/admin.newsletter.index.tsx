@@ -196,10 +196,13 @@ function Page() {
             page.
           </p>
         </div>
-        <Button onClick={openNew} className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
-          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-          Nouvelle newsletter
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <NewsletterStatusLegend />
+          <Button onClick={openNew} className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white">
+            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+            Nouvelle newsletter
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par statut">
