@@ -10,7 +10,7 @@ type SupabaseAnyClient = {
 };
 
 const BRIEF_COLUMNS =
-  "id,title,problem,objective,audience,pillar,tone,feature_highlight,cta,lang,target_date,internal_notes,status,created_at,updated_at,created_by_email,slug,published_at";
+  "id,title,problem,objective,audience,pillar,tone,feature_highlight,cta,lang,target_date,internal_notes,status,created_at,updated_at,created_by_email,slug,published_at,feature_key,target_route,action_label,action_difficulty,action_minutes,linked_article_id,linked_article_kind,linked_resource_slug,segment_key,connection_priority,connection_notes";
 
 const FULL_COLUMNS = `${BRIEF_COLUMNS},email_subject,email_preheader,email_intro,email_body,email_button_label,email_button_url,email_footer,resource_title,resource_intro,resource_body,resource_sections,resource_example,resource_checklist,resource_takeaway,resource_cta,seo_title,meta_description,share_image_url,canonical_url,qc_checklist`;
 
@@ -44,6 +44,26 @@ const briefSchema = z.object({
     .transform((v) => (v ? v : null)),
   internal_notes: nullableText(4000),
   status: z.enum(NEWSLETTER_STATUSES).default("brouillon"),
+  // Connexion avec les fonctionnalités Holiswiss existantes.
+  feature_key: nullableText(60),
+  target_route: nullableText(500),
+  action_label: nullableText(300),
+  action_difficulty: nullableText(30),
+  action_minutes: z
+    .union([z.number().int().min(0).max(600), z.literal(""), z.null()])
+    .optional()
+    .transform((v) => (typeof v === "number" ? v : null)),
+  linked_article_id: z
+    .string()
+    .uuid()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
+  linked_article_kind: nullableText(20),
+  linked_resource_slug: nullableText(80),
+  segment_key: nullableText(40),
+  connection_priority: nullableText(20),
+  connection_notes: nullableText(4000),
 });
 
 const contentSchema = z.object({
@@ -250,6 +270,26 @@ export const setNewsletterIssueStatus = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Approbation bloquée si un lien principal est invalide ou fictif.
+    if (data.status === "approuvee") {
+      const { auditIssueLinks, LINK_AUDIT_COLUMNS } = await import("@/lib/newsletter-links.server");
+      const { data: row } = await (supabaseAdmin as SupabaseAnyClient)
+        .from("newsletter_issues")
+        .select(LINK_AUDIT_COLUMNS)
+        .eq("id", data.id)
+        .maybeSingle();
+      if (!row) throw new Error("Newsletter introuvable.");
+      const audit = await auditIssueLinks(supabaseAdmin as SupabaseAnyClient, row);
+      if (audit.blocking) {
+        const issues = audit.checks
+          .filter((c) => c.severity === "error")
+          .map((c) => `${c.label} : ${c.detail}`)
+          .join(" · ");
+        throw new Error(`Approbation bloquée — ${issues}`);
+      }
+    }
+
     const { error } = await (supabaseAdmin as SupabaseAnyClient)
       .from("newsletter_issues")
       .update({ status: data.status, updated_at: new Date().toISOString() })

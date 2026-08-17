@@ -23,6 +23,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  NewsletterConnection,
+  NewsletterLinkCheck,
+  type ConnectionKey,
+} from "@/components/admin/NewsletterConnection";
+import {
   getNewsletterIssue,
   updateNewsletterIssue,
   updateNewsletterContent,
@@ -108,7 +113,18 @@ type TextKey =
   | "seo_title"
   | "meta_description"
   | "share_image_url"
-  | "canonical_url";
+  | "canonical_url"
+  | "feature_key"
+  | "target_route"
+  | "action_label"
+  | "action_difficulty"
+  | "action_minutes"
+  | "linked_article_id"
+  | "linked_article_kind"
+  | "linked_resource_slug"
+  | "segment_key"
+  | "connection_priority"
+  | "connection_notes";
 
 type Form = Record<TextKey, string> & { qc: Record<string, boolean> };
 
@@ -231,8 +247,20 @@ function Page() {
       meta_description: str(issue.meta_description),
       share_image_url: str(issue.share_image_url),
       canonical_url: str(issue.canonical_url),
+      feature_key: str(issue.feature_key),
+      target_route: str(issue.target_route),
+      action_label: str(issue.action_label),
+      action_difficulty: str(issue.action_difficulty),
+      action_minutes: str(issue.action_minutes),
+      linked_article_id: str(issue.linked_article_id),
+      linked_article_kind: str(issue.linked_article_kind),
+      linked_resource_slug: str(issue.linked_resource_slug),
+      segment_key: str(issue.segment_key),
+      connection_priority: str(issue.connection_priority),
+      connection_notes: str(issue.connection_notes),
       qc: (issue.qc_checklist ?? {}) as Record<string, boolean>,
     });
+    if (issue.segment_key) setSegment(issue.segment_key as NewsletterSegmentKey);
   }, [issue]);
 
   const set = (key: TextKey, value: string) => setForm((f) => (f ? { ...f, [key]: value } : f));
@@ -258,6 +286,17 @@ function Page() {
           lang: form.lang as (typeof NEWSLETTER_LANGS)[number],
           target_date: form.target_date,
           internal_notes: form.internal_notes,
+          feature_key: form.feature_key,
+          target_route: form.target_route,
+          action_label: form.action_label,
+          action_difficulty: form.action_difficulty,
+          action_minutes: form.action_minutes ? Number(form.action_minutes) : "",
+          linked_article_id: form.linked_article_id,
+          linked_article_kind: form.linked_article_kind,
+          linked_resource_slug: form.linked_resource_slug,
+          segment_key: form.segment_key,
+          connection_priority: form.connection_priority,
+          connection_notes: form.connection_notes,
           status: (issue?.status ?? "brouillon") as NewsletterStatus,
         },
       });
@@ -598,6 +637,18 @@ function Page() {
                 />
               </CardContent>
             </Card>
+            <div className="mt-5">
+              <NewsletterConnection
+                issueId={id}
+                values={form as unknown as Record<ConnectionKey, string>}
+                set={(k, v) => set(k as TextKey, v)}
+                disabled={locked}
+                subject={form.email_subject || form.title}
+                audience={form.audience}
+                cta={form.cta}
+                recipientCount={sendPreview.data?.recipientCount ?? null}
+              />
+            </div>
           </TabsContent>
 
           {/* EMAIL */}
@@ -948,6 +999,9 @@ function Page() {
 
           {/* CONTRÔLE QUALITÉ */}
           <TabsContent value="qc">
+            <div className="mb-5">
+              <NewsletterLinkCheck issueId={id} />
+            </div>
             <Card className="bg-[#1d0d3d] border-white/10">
               <CardContent className="p-5 sm:p-6 space-y-5">
                 <div className="flex items-center justify-between gap-3">

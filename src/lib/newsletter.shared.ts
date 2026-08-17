@@ -129,6 +129,17 @@ export type NewsletterIssue = {
   share_image_url: string | null;
   canonical_url: string | null;
   qc_checklist: Record<string, boolean> | null;
+  feature_key: string | null;
+  target_route: string | null;
+  action_label: string | null;
+  action_difficulty: string | null;
+  action_minutes: number | null;
+  linked_article_id: string | null;
+  linked_article_kind: string | null;
+  linked_resource_slug: string | null;
+  segment_key: string | null;
+  connection_priority: string | null;
+  connection_notes: string | null;
 };
 
 export type NewsletterRevision = {
