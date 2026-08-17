@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ActionTooltip } from "@/components/admin/ActionTooltip";
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
+import { NewsletterWorkflowGuide } from "@/components/admin/NewsletterWorkflowGuide";
 import {
   listNewsletterIssues,
   createNewsletterIssue,
