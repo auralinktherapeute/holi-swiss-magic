@@ -410,9 +410,7 @@ export function NewsletterSendPreview(props: Props) {
                 <Checkbox
                   id={`chk-${item.key}`}
                   checked={!!checks[item.key]}
-                  onCheckedChange={(v) =>
-                    setChecks((c) => ({ ...c, [item.key]: v === true }))
-                  }
+                  onCheckedChange={(v) => setChecks((c) => ({ ...c, [item.key]: v === true }))}
                   className="mt-0.5"
                 />
                 <Label
