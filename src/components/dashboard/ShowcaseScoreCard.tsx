@@ -179,7 +179,7 @@ export function ShowcaseScoreCard() {
                         <p className="mt-0.5 text-xs text-muted-foreground">{e.hint}</p>
                         {action && (
                           <Button asChild variant="link" size="sm" className="mt-1 h-auto min-h-[32px] p-0 text-xs text-[#d9b4ff] hover:text-white">
-                            <Link to={action.to}>{action.cta}</Link>
+                            <Link to={action.to} hash={action.hash}>{action.cta}</Link>
                           </Button>
                         )}
                       </li>
@@ -250,7 +250,7 @@ export function ShowcaseScoreCard() {
                             size="sm"
                             className="mt-1 h-auto min-h-[32px] p-0 text-xs text-[#d9b4ff] hover:text-white"
                           >
-                            <Link to={action.to}>{action.cta}</Link>
+                            <Link to={action.to} hash={action.hash}>{action.cta}</Link>
                           </Button>
                         )}
                       </div>
