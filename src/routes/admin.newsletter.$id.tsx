@@ -167,6 +167,10 @@ function Page() {
   const setStatus = useServerFn(setNewsletterIssueStatus);
   const setPublished = useServerFn(setNewsletterResourcePublished);
   const loadHistory = useServerFn(listNewsletterRevisions);
+  const loadSendPreview = useServerFn(getNewsletterSendPreview);
+  const sendTestFn = useServerFn(sendNewsletterTestEmail);
+  const sendIssueFn = useServerFn(sendNewsletterIssue);
+  const loadSends = useServerFn(listNewsletterSends);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-newsletter-issue", id],
@@ -180,6 +184,18 @@ function Page() {
   const issue = data?.issue as NewsletterIssue | undefined;
   const [form, setForm] = useState<Form | null>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
+  const [testEmail, setTestEmail] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const sendPreview = useQuery({
+    queryKey: ["admin-newsletter-send-preview", id, segment],
+    queryFn: () => loadSendPreview({ data: { id, segment } }),
+  });
+  const sends = useQuery({
+    queryKey: ["admin-newsletter-sends", id],
+    queryFn: () => loadSends({ data: { id } }),
+  });
 
   useEffect(() => {
     if (!issue) return;
