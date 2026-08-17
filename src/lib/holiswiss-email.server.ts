@@ -3,7 +3,7 @@
 import { escapeHtml, emailShell } from "./email-shell.shared";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-const FROM = "HoliSwiss <contact@holiswiss.ch>";
+export const FROM = "HoliSwiss <contact@holiswiss.ch>";
 const shell = emailShell;
 
 async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; status: number; error?: string }> {
@@ -27,6 +27,57 @@ async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; st
     return { ok: true, status: res.status };
   } catch (e) {
     return { ok: false, status: 0, error: String(e) };
+  }
+}
+
+/** Expéditeur configuré (aucune clé API exposée). */
+export function emailSenderConfigured(): boolean {
+  return Boolean(process.env.LOVABLE_API_KEY && process.env.RESEND_API_KEY && FROM);
+}
+
+/** Envoi unitaire générique (réutilise le transport Resend existant). */
+export async function sendRawEmail(args: { to: string; subject: string; html: string }) {
+  return send({ to: args.to, subject: args.subject, html: args.html });
+}
+
+export type BatchEmail = { to: string; subject: string; html: string };
+export type BatchResult = { ok: boolean; ids: (string | null)[]; error?: string; status: number };
+
+/**
+ * Envoi par lot via l'endpoint batch de Resend (max 100 par appel côté fournisseur).
+ * Renvoie un identifiant fournisseur par email, dans l'ordre d'entrée.
+ */
+export async function sendEmailBatch(emails: BatchEmail[]): Promise<BatchResult> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!lovableKey || !resendKey) {
+    return { ok: false, ids: [], status: 0, error: "missing_credentials" };
+  }
+  try {
+    const res = await fetch(`${GATEWAY_URL}/emails/batch`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": resendKey,
+      },
+      body: JSON.stringify(emails.map((e) => ({ from: FROM, to: [e.to], subject: e.subject, html: e.html }))),
+    });
+    const text = await res.text().catch(() => "");
+    if (!res.ok) {
+      console.error(`Resend batch failed [${res.status}]: ${text.slice(0, 500)}`);
+      return { ok: false, ids: [], status: res.status, error: text.slice(0, 300) };
+    }
+    let ids: (string | null)[] = [];
+    try {
+      const parsed = JSON.parse(text) as { data?: { id?: string }[] };
+      ids = (parsed.data ?? []).map((d) => d?.id ?? null);
+    } catch {
+      ids = [];
+    }
+    return { ok: true, ids, status: res.status };
+  } catch (e) {
+    return { ok: false, ids: [], status: 0, error: String(e).slice(0, 300) };
   }
 }
 
