@@ -792,5 +792,31 @@
     },
     "head_title": "Événements bien-être en Suisse | HoliSwiss",
     "head_desc": "Ateliers, retraites, cercles et méditations proposés par les thérapeutes holistiques de Suisse. Réservez votre place."
+  },
+  "newsletter_public": {
+    "badge": "La Lettre Holiswiss",
+    "title": "Les ressources qui font avancer votre pratique",
+    "text": "Recevez La Lettre Holiswiss, une newsletter réservée aux thérapeutes pour développer votre visibilité, structurer votre activité et découvrir les nouvelles opportunités de la plateforme.",
+    "benefits": [
+      "Découvrez les nouveautés Holiswiss avant leur communication générale.",
+      "Recevez des conseils concrets pour développer votre pratique.",
+      "Apprenez à améliorer votre visibilité professionnelle.",
+      "Découvrez les outils numériques et l’assistance IA.",
+      "Recevez des ressources sur l’organisation du cabinet.",
+      "Soyez informé en priorité des offres et promotions à venir.",
+      "Recevez des invitations liées aux contenus et initiatives de la communauté Holiswiss."
+    ],
+    "promo_note": "Certaines offres et promotions Holiswiss pourront être annoncées en avant-première aux abonnés de la newsletter.",
+    "email_label": "Adresse email",
+    "email_placeholder": "vous@exemple.ch",
+    "consent": "J’accepte de recevoir La Lettre Holiswiss par email, notamment ses conseils, nouveautés, invitations et informations sur les offres et promotions Holiswiss.",
+    "consent_required": "Merci de cocher la case de consentement.",
+    "reassurance": "Inscription facultative. Vous pouvez vous désinscrire à tout moment grâce au lien présent dans chaque email.",
+    "cta": "S’inscrire à la newsletter",
+    "success": "Votre inscription à La Lettre Holiswiss est bien enregistrée. Vous recevrez nos prochaines ressources, nouveautés et opportunités réservées aux thérapeutes.",
+    "error": "Une erreur est survenue. Vérifiez votre adresse email et réessayez.",
+    "privacy": "politique de confidentialité",
+    "footer_title": "La Lettre Holiswiss",
+    "footer_text": "Ressources, nouveautés et opportunités réservées aux thérapeutes."
   }
 }

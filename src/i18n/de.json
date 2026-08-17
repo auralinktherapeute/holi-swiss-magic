@@ -792,5 +792,31 @@
     },
     "head_title": "Wellness-Veranstaltungen in der Schweiz | HoliSwiss",
     "head_desc": "Workshops, Retreats, Kreise und Meditationen von holistischen Therapeut:innen in der Schweiz. Reservieren Sie Ihren Platz."
+  },
+  "newsletter_public": {
+    "badge": "Der Holiswiss-Brief",
+    "title": "Ressourcen, die Ihre Praxis voranbringen",
+    "text": "Erhalten Sie den Holiswiss-Brief, einen Newsletter für Therapeutinnen und Therapeuten: mehr Sichtbarkeit, bessere Organisation und neue Möglichkeiten der Plattform.",
+    "benefits": [
+      "Entdecken Sie Holiswiss-Neuheiten vor der allgemeinen Kommunikation.",
+      "Erhalten Sie konkrete Tipps zur Entwicklung Ihrer Praxis.",
+      "Lernen Sie, Ihre berufliche Sichtbarkeit zu verbessern.",
+      "Entdecken Sie digitale Werkzeuge und KI-Unterstützung.",
+      "Erhalten Sie Ressourcen zur Praxisorganisation.",
+      "Erfahren Sie zuerst von kommenden Angeboten und Aktionen.",
+      "Erhalten Sie Einladungen zu Inhalten und Initiativen der Holiswiss-Community."
+    ],
+    "promo_note": "Bestimmte Holiswiss-Angebote und -Aktionen können den Newsletter-Abonnenten vorab angekündigt werden.",
+    "email_label": "E-Mail-Adresse",
+    "email_placeholder": "sie@beispiel.ch",
+    "consent": "Ich stimme zu, den Holiswiss-Brief per E-Mail zu erhalten, einschliesslich Tipps, Neuheiten, Einladungen sowie Informationen zu Angeboten und Aktionen von Holiswiss.",
+    "consent_required": "Bitte kreuzen Sie das Einwilligungsfeld an.",
+    "reassurance": "Die Anmeldung ist freiwillig. Sie können sich jederzeit über den Link in jeder E-Mail abmelden.",
+    "cta": "Newsletter abonnieren",
+    "success": "Ihre Anmeldung zum Holiswiss-Brief ist registriert. Sie erhalten unsere nächsten Ressourcen, Neuheiten und Angebote für Therapeutinnen und Therapeuten.",
+    "error": "Ein Fehler ist aufgetreten. Bitte prüfen Sie Ihre E-Mail-Adresse und versuchen Sie es erneut.",
+    "privacy": "Datenschutzerklärung",
+    "footer_title": "Der Holiswiss-Brief",
+    "footer_text": "Ressourcen, Neuheiten und Chancen für Therapeutinnen und Therapeuten."
   }
 }

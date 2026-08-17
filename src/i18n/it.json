@@ -792,5 +792,31 @@
     },
     "head_title": "Eventi benessere in Svizzera | HoliSwiss",
     "head_desc": "Laboratori, ritiri, cerchi e meditazioni dei terapisti olistici in Svizzera. Prenota il tuo posto."
+  },
+  "newsletter_public": {
+    "badge": "La Lettera Holiswiss",
+    "title": "Le risorse che fanno crescere la tua pratica",
+    "text": "Ricevi La Lettera Holiswiss, una newsletter riservata ai terapeuti per sviluppare la tua visibilità, strutturare la tua attività e scoprire le nuove opportunità della piattaforma.",
+    "benefits": [
+      "Scopri le novità Holiswiss prima della comunicazione generale.",
+      "Ricevi consigli concreti per sviluppare la tua pratica.",
+      "Impara a migliorare la tua visibilità professionale.",
+      "Scopri gli strumenti digitali e l’assistenza IA.",
+      "Ricevi risorse sull’organizzazione dello studio.",
+      "Sii informato per primo sulle offerte e promozioni future.",
+      "Ricevi inviti legati ai contenuti e alle iniziative della comunità Holiswiss."
+    ],
+    "promo_note": "Alcune offerte e promozioni Holiswiss potranno essere annunciate in anteprima agli iscritti alla newsletter.",
+    "email_label": "Indirizzo email",
+    "email_placeholder": "tu@esempio.ch",
+    "consent": "Accetto di ricevere La Lettera Holiswiss via email, inclusi consigli, novità, inviti e informazioni su offerte e promozioni Holiswiss.",
+    "consent_required": "Seleziona la casella di consenso.",
+    "reassurance": "Iscrizione facoltativa. Puoi disiscriverti in qualsiasi momento tramite il link presente in ogni email.",
+    "cta": "Iscriviti alla newsletter",
+    "success": "La tua iscrizione a La Lettera Holiswiss è registrata. Riceverai le prossime risorse, novità e opportunità riservate ai terapeuti.",
+    "error": "Si è verificato un errore. Verifica il tuo indirizzo email e riprova.",
+    "privacy": "informativa sulla privacy",
+    "footer_title": "La Lettera Holiswiss",
+    "footer_text": "Risorse, novità e opportunità riservate ai terapeuti."
   }
 }
