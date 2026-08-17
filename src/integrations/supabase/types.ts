@@ -1915,36 +1915,105 @@ export type Database = {
           },
         ]
       }
-      newsletter_send_recipients: {
+      newsletter_send_events: {
         Row: {
           created_at: string
+          detail: string | null
+          event_type: string
+          id: string
+          occurred_at: string
+          provider_event_id: string
+          provider_message_id: string | null
+          recipient_id: string | null
+          send_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          id?: string
+          occurred_at?: string
+          provider_event_id: string
+          provider_message_id?: string | null
+          recipient_id?: string | null
+          send_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          provider_event_id?: string
+          provider_message_id?: string | null
+          recipient_id?: string | null
+          send_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_send_events_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_send_recipients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_send_events_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_send_recipients: {
+        Row: {
+          clicked_at: string | null
+          created_at: string
+          delivered_at: string | null
           email: string
           error_message: string | null
           id: string
+          last_event_at: string | null
+          last_event_type: string | null
+          opened_at: string | null
           provider_message_id: string | null
           send_id: string
           status: string
           therapist_id: string | null
+          unsubscribed_at: string | null
         }
         Insert: {
+          clicked_at?: string | null
           created_at?: string
+          delivered_at?: string | null
           email: string
           error_message?: string | null
           id?: string
+          last_event_at?: string | null
+          last_event_type?: string | null
+          opened_at?: string | null
           provider_message_id?: string | null
           send_id: string
           status?: string
           therapist_id?: string | null
+          unsubscribed_at?: string | null
         }
         Update: {
+          clicked_at?: string | null
           created_at?: string
+          delivered_at?: string | null
           email?: string
           error_message?: string | null
           id?: string
+          last_event_at?: string | null
+          last_event_type?: string | null
+          opened_at?: string | null
           provider_message_id?: string | null
           send_id?: string
           status?: string
           therapist_id?: string | null
+          unsubscribed_at?: string | null
         }
         Relationships: [
           {
@@ -1960,6 +2029,11 @@ export type Database = {
         Row: {
           actor_email: string | null
           actor_id: string | null
+          bounced_count: number
+          clicked_count: number
+          complained_count: number
+          delivered_count: number
+          details_purged_at: string | null
           error_message: string | null
           failed_count: number
           finished_at: string | null
@@ -1967,6 +2041,9 @@ export type Database = {
           id: string
           is_test: boolean
           issue_id: string
+          last_event_at: string | null
+          opened_count: number
+          queued_at: string | null
           recipient_count: number
           resource_url: string | null
           segment: string
@@ -1974,11 +2051,17 @@ export type Database = {
           started_at: string
           status: string
           subject: string | null
+          unsubscribed_count: number
           version_label: string | null
         }
         Insert: {
           actor_email?: string | null
           actor_id?: string | null
+          bounced_count?: number
+          clicked_count?: number
+          complained_count?: number
+          delivered_count?: number
+          details_purged_at?: string | null
           error_message?: string | null
           failed_count?: number
           finished_at?: string | null
@@ -1986,6 +2069,9 @@ export type Database = {
           id?: string
           is_test?: boolean
           issue_id: string
+          last_event_at?: string | null
+          opened_count?: number
+          queued_at?: string | null
           recipient_count?: number
           resource_url?: string | null
           segment: string
@@ -1993,11 +2079,17 @@ export type Database = {
           started_at?: string
           status?: string
           subject?: string | null
+          unsubscribed_count?: number
           version_label?: string | null
         }
         Update: {
           actor_email?: string | null
           actor_id?: string | null
+          bounced_count?: number
+          clicked_count?: number
+          complained_count?: number
+          delivered_count?: number
+          details_purged_at?: string | null
           error_message?: string | null
           failed_count?: number
           finished_at?: string | null
@@ -2005,6 +2097,9 @@ export type Database = {
           id?: string
           is_test?: boolean
           issue_id?: string
+          last_event_at?: string | null
+          opened_count?: number
+          queued_at?: string | null
           recipient_count?: number
           resource_url?: string | null
           segment?: string
@@ -2012,6 +2107,7 @@ export type Database = {
           started_at?: string
           status?: string
           subject?: string | null
+          unsubscribed_count?: number
           version_label?: string | null
         }
         Relationships: [
@@ -4070,6 +4166,10 @@ export type Database = {
           _summary: string
         }
         Returns: undefined
+      }
+      purge_newsletter_send_details: {
+        Args: { _months?: number }
+        Returns: number
       }
       purge_user_analytics: { Args: { _uid: string }; Returns: undefined }
       reserve_next_invoice_number: {
