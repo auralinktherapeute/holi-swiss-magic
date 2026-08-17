@@ -486,7 +486,21 @@
     "newsletter_unsub_confirm_title": "Confirmer la désinscription",
     "newsletter_unsub_confirm_body": "Souhaitez-vous vraiment ne plus recevoir La Lettre Holiswiss ? Les emails nécessaires au fonctionnement de votre compte ou de vos rendez-vous continueront à vous être envoyés.",
     "newsletter_unsub_cancel": "Annuler",
-    "newsletter_unsub_confirm_cta": "Me désinscrire"
+    "newsletter_unsub_confirm_cta": "Me désinscrire",
+    "nlf_title": "La Lettre Holiswiss",
+    "nlf_subtitle": "Les informations, ressources et opportunités réservées aux thérapeutes.",
+    "nlf_text": "Recevez en avant-première les nouveautés Holiswiss, les évolutions de la plateforme, des conseils pour développer votre pratique et les offres ou promotions à venir.",
+    "nlf_b1": "Nouveautés avant tout le monde.",
+    "nlf_b2": "Conseils pratiques pour les thérapeutes.",
+    "nlf_b3": "Ressources de visibilité et de développement.",
+    "nlf_b4": "Accompagnement numérique et IA.",
+    "nlf_b5": "Informations sur les offres et promotions à venir.",
+    "nlf_b6": "Invitations et initiatives de la communauté Holiswiss.",
+    "nlf_state_none": "Vous n’êtes pas inscrit.",
+    "nlf_state_active": "Vous êtes inscrit.",
+    "nlf_state_off": "Votre inscription est désactivée.",
+    "nlf_consent": "J’accepte de recevoir La Lettre Holiswiss par email.",
+    "nlf_optional": "Inscription facultative, résiliable à tout moment."
   },
   "hero": {
     "title_part1": "Trouvez le bon",
