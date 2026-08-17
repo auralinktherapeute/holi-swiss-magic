@@ -8,7 +8,7 @@ import { getMyPendingReservationCount } from "@/lib/dashboard.functions";
 import { AccountManageDialog } from "@/components/dashboard/AccountManageDialog";
 import {
   LayoutDashboard, User, Calendar, BookmarkCheck, FileText,
-  Star, CalendarDays, CreditCard, Gift, Settings, Crown, Package, ClipboardList, Receipt, HelpCircle, LogOut,
+  Star, CalendarDays, CreditCard, Gift, Crown, Package, ClipboardList, Receipt, HelpCircle, LogOut,
 } from "lucide-react";
 import { useServerFn as useServerFnHelp } from "@tanstack/react-start";
 import { resetOnboarding } from "@/lib/onboarding.functions";
