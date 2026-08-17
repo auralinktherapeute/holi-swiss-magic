@@ -132,7 +132,7 @@ export const sendNewsletterTestEmail = createServerFn({ method: "POST" })
         recipient_count: 1,
         sent_count: res.ok ? 1 : 0,
         failed_count: res.ok ? 0 : 1,
-        status: res.ok ? "sent" : "failed",
+        status: res.ok ? "test_sent" : "failed",
         error_message: res.ok ? null : (res.error ?? `HTTP ${res.status}`),
         actor_id: context.userId,
         actor_email: fallback,

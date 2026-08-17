@@ -220,6 +220,7 @@ function Page() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
+  const [confirmTestOpen, setConfirmTestOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -419,8 +420,11 @@ function Page() {
   const emailVersion = useMemo(() => previewHtml, [previewHtml]);
   const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
 
+  const testTarget = testEmail.trim();
+  const testEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(testTarget);
+
   const sendTest = useMutation({
-    mutationFn: () => sendTestFn({ data: { id, to: testEmail || undefined } }),
+    mutationFn: () => sendTestFn({ data: { id, to: testTarget } }),
     onSuccess: (r) => {
       toast.success(`Email de test envoyé à ${r.to}.`);
       qc.invalidateQueries({ queryKey: ["admin-newsletter-sends", id] });
@@ -1281,23 +1285,29 @@ function Page() {
                       id="test-email"
                       type="email"
                       aria-label="Adresse email de test"
-                      placeholder="Votre adresse administrateur par défaut"
+                      placeholder="adresse@exemple.ch"
                       value={testEmail}
                       onChange={(e) => setTestEmail(e.target.value)}
                       className={inputCls}
                     />
                     <Button
                       variant="outline"
-                      onClick={() => sendTest.mutate()}
-                      disabled={sendTest.isPending || !previewChecked}
+                      onClick={() => setConfirmTestOpen(true)}
+                      disabled={sendTest.isPending || !previewChecked || !testEmailValid}
                       className="min-h-11 shrink-0 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
                       {sendTest.isPending ? "Envoi…" : "Envoyer un email de test"}
                     </Button>
                   </div>
+                  {testTarget.length > 0 && !testEmailValid && (
+                    <p className="text-xs text-[#f87171]" role="alert">
+                      Adresse email invalide — format attendu : nom@domaine.ch
+                    </p>
+                  )}
                   <p className="text-xs text-white/50">
-                    Le test utilise la version actuelle et le même gabarit que l'envoi réel. Il ne
-                    change pas le statut de la newsletter.
+                    Le test part uniquement à l'adresse saisie — jamais à un segment. Il utilise
+                    exactement la version prévisualisée, n'affecte pas le statut de la newsletter et
+                    est enregistré dans l'historique comme « Test envoyé ».
                     {!previewChecked && " Validez d'abord l'aperçu ci-dessus."}
                   </p>
                 </div>
@@ -1477,6 +1487,34 @@ function Page() {
       />
 
       {/* Confirmation des changements de statut sensibles */}
+      <AlertDialog open={confirmTestOpen} onOpenChange={setConfirmTestOpen}>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Envoyer un email de test à cette adresse ?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/65">
+              Un seul email part, à l'adresse{" "}
+              <span className="font-semibold text-white break-all">{testTarget}</span>. Aucun
+              destinataire du segment n'est contacté, le statut de la newsletter reste inchangé et
+              l'envoi est enregistré comme « Test envoyé ».
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
+              onClick={() => {
+                setConfirmTestOpen(false);
+                sendTest.mutate();
+              }}
+            >
+              Envoyer le test
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={confirmStatus !== null} onOpenChange={(o) => !o && setConfirmStatus(null)}>
         <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
           <AlertDialogHeader>
