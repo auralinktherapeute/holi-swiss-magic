@@ -443,6 +443,29 @@ export function NewsletterSuggestions() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={toDelete !== null} onOpenChange={(o) => !o && setToDelete(null)}>
+          <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer définitivement cette suggestion ?</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/65">
+                « {toDelete?.subject} » sera effacée sans possibilité de restauration. Pour la
+                masquer tout en pouvant la récupérer, utilisez plutôt « Écarter ».
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="min-h-11 bg-[#f87171] text-white hover:bg-[#ef4444]"
+                onClick={() => toDelete && mDelete.mutate(toDelete.id)}
+              >
+                Supprimer définitivement
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
