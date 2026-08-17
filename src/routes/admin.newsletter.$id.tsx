@@ -221,7 +221,7 @@ function Page() {
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
   const [confirmTestOpen, setConfirmTestOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
   // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
   const [tab, setTab] = useState<string>("brief");
@@ -436,7 +436,7 @@ function Page() {
   const sendReal = useMutation({
     mutationFn: () => sendIssueFn({ data: { id, segment, confirm: true } }),
     onSuccess: (r) => {
-      setConfirmOpen(false);
+      setFinalConfirmOpen(false);
       if (r.status === "sent") toast.success(`Newsletter envoyée à ${r.sentCount} destinataires.`);
       else if (r.status === "partially_failed")
         toast.warning(`Envoi partiel : ${r.sentCount}/${r.total} réussis.`);
@@ -448,7 +448,7 @@ function Page() {
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
     },
     onError: (e: unknown) => {
-      setConfirmOpen(false);
+      setFinalConfirmOpen(false);
       toast.error(e instanceof Error ? e.message : "Envoi impossible.");
     },
   });
@@ -1315,59 +1315,21 @@ function Page() {
                 {/* ENVOI RÉEL */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Envoi réel</h3>
-                  {!confirmOpen ? (
-                    <div className="space-y-2">
-                      <Button
-                        onClick={() => setConfirmOpen(true)}
-                        disabled={!canSend}
-                        className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-                      >
-                        <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Envoyer à tout le
-                        segment
-                      </Button>
-                      <p className="text-xs text-white/50">
-                        Ce bouton ouvre uniquement une fenêtre de confirmation : rien n'est envoyé
-                        tant que vous n'avez pas confirmé.
-                        {!previewChecked && " Aperçu à valider avant tout envoi."}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-[#f87171]/40 bg-[#f87171]/10 p-4 space-y-3">
-                      <p className="text-sm font-medium text-white">Confirmer l'envoi</p>
-                      <ul className="text-sm text-white/80 space-y-1">
-                        <li>Newsletter : {sendPreview.data?.title}</li>
-                        <li>Objet : {sendPreview.data?.subject ?? "—"}</li>
-                        <li>Expéditeur : {sendPreview.data?.sender}</li>
-                        <li>
-                          Segment : {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label}
-                        </li>
-                        <li>Destinataires : {sendPreview.data?.recipientCount}</li>
-                        <li className="break-all">
-                          Page ressource : {sendPreview.data?.resourceUrl ?? "Non utilisée"}
-                        </li>
-                        <li>Version : {sendPreview.data?.versionLabel}</li>
-                        <li>Date : {new Date().toLocaleString("fr-CH")}</li>
-                      </ul>
-                      <p className="text-xs text-[#f87171]">Cette action est irréversible.</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={() => sendReal.mutate()}
-                          disabled={!canSend}
-                          className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
-                        >
-                          {sendReal.isPending ? "Envoi en cours…" : "Confirmer et envoyer"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setConfirmOpen(false)}
-                          disabled={sendReal.isPending}
-                          className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-                        >
-                          Annuler
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => setFinalConfirmOpen(true)}
+                      disabled={!canSend}
+                      className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
+                    >
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Continuer vers
+                      l’envoi
+                    </Button>
+                    <p className="text-xs text-white/50">
+                      Ce bouton ouvre une dernière confirmation : rien n’est envoyé tant que vous
+                      n’avez pas cliqué sur « Envoyer maintenant ».
+                      {!previewChecked && " Aperçu à valider avant tout envoi."}
+                    </p>
+                  </div>
                 </div>
 
                 {/* JOURNAL */}
@@ -1510,6 +1472,126 @@ function Page() {
               }}
             >
               Envoyer le test
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation finale avant envoi réel */}
+      <AlertDialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
+        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white max-w-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-[#4ade80]" aria-hidden="true" />
+              Confirmer l’envoi
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/65">
+              Vous êtes sur le point d’envoyer cette newsletter à{" "}
+              <span className="font-semibold text-white">
+                {sendPreview.data?.recipientCount ?? 0} thérapeute(s)
+              </span>
+              . L’envoi sera traité via Resend. Vérifiez une dernière fois le contenu et les
+              destinataires.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 text-sm">
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Newsletter</span>
+              <span className="text-right text-white/85">
+                {sendPreview.data?.title ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Version approuvée</span>
+              <span className="text-right text-white/85">
+                {sendPreview.data?.versionLabel ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Objet</span>
+              <span className="text-right text-white/85">
+                {sendPreview.data?.subject ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Expéditeur</span>
+              <span className="text-right text-white/85">
+                {sendPreview.data?.sender ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Segment</span>
+              <span className="text-right text-white/85">
+                {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label ?? segment}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Destinataires</span>
+              <span className="text-right font-semibold text-white">
+                {sendPreview.data?.recipientCount ?? 0}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Date d’envoi</span>
+              <span className="text-right text-white/85">
+                {new Date().toLocaleString("fr-CH")}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Page ressource</span>
+              <span className="text-right break-all text-white/85">
+                {sendPreview.data?.resourceUrl ?? "Non utilisée"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Contacts exclus</span>
+              <span className="text-right text-white/85">—</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Version mobile vérifiée</span>
+              <span className={previewChecked ? "text-right text-[#4ade80]" : "text-right text-[#fbbf24]"}>
+                {previewChecked ? "Oui" : "Non"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-white/60">Lien de désinscription vérifié</span>
+              <span className={previewChecked ? "text-right text-[#4ade80]" : "text-right text-[#fbbf24]"}>
+                {previewChecked ? "Oui" : "Non"}
+              </span>
+            </div>
+          </div>
+
+          {!canSend && (
+            <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-3">
+              <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
+                <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi impossible
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
+                {blockers.map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+                {!previewChecked && <li>L’aperçu n’a pas été validé.</li>}
+              </ul>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setFinalConfirmOpen(false);
+                setPreviewOpen(true);
+              }}
+              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
+            >
+              Retour à l’aperçu
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => sendReal.mutate()}
+              disabled={!canSend}
+              className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30 disabled:opacity-50"
+            >
+              {sendReal.isPending ? "Envoi en cours…" : "Envoyer maintenant"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
