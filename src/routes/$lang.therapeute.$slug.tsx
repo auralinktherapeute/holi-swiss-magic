@@ -407,7 +407,18 @@ function Page() {
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
   const gallery: string[] = Array.isArray(th.gallery_urls) ? th.gallery_urls.filter((u: any) => typeof u === "string" && u.length > 0) : [];
-  const showGallery = !!th.is_premium && gallery.length > 0;
+  // Régression corrigée : `is_premium` n'existe pas en production — le plan
+  // réel est porté par `subscription_plan`.
+  const isPro = isProPlan(th.subscription_plan);
+  const showGallery = isPro && gallery.length > 0;
+  const certifications = ((loaderData as any)?.certifications ?? []) as any[];
+  const trustBadges = buildTrustBadges({
+    lang,
+    verified: th.verified,
+    subscriptionPlan: th.subscription_plan,
+    certifications,
+    accreditations,
+  });
   const bioIsLong = (th.bio ?? "").length > 280;
   const avg = reviews?.length
     ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -456,10 +467,10 @@ function Page() {
                     />
                   </div>
                 </div>
-                {th.is_premium && (
+                {isPro && (
                   <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-sm shadow-lg" title={t("therapist_profile.premium")}>⚡</span>
                 )}
-                {!th.is_premium && th.verified && (
+                {!isPro && th.verified && (
                   <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#b86ef9] shadow-lg" title={t("therapist_profile.verified")}>
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
