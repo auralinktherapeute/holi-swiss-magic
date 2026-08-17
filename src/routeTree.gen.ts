@@ -30,6 +30,7 @@ import { Route as AdminIndexationRouteImport } from './routes/admin.indexation'
 import { Route as AdminListeAttenteRouteImport } from './routes/admin.liste-attente'
 import { Route as AdminMarketingRouteImport } from './routes/admin.marketing'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminNewsletterRouteImport } from './routes/admin.newsletter'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminParolesRouteImport } from './routes/admin.paroles'
@@ -188,6 +189,11 @@ const AdminMarketingRoute = AdminMarketingRouteImport.update({
 const AdminModerationRoute = AdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
+  id: '/newsletter',
+  path: '/newsletter',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -486,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -559,6 +566,7 @@ export interface FileRoutesByTo {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -636,6 +644,7 @@ export interface FileRoutesById {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -714,6 +723,7 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/marketing'
     | '/admin/moderation'
+    | '/admin/newsletter'
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
@@ -787,6 +797,7 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/marketing'
     | '/admin/moderation'
+    | '/admin/newsletter'
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
@@ -863,6 +874,7 @@ export interface FileRouteTypes {
     | '/admin/liste-attente'
     | '/admin/marketing'
     | '/admin/moderation'
+    | '/admin/newsletter'
     | '/admin/notifications'
     | '/admin/parametres'
     | '/admin/paroles'
@@ -1085,6 +1097,13 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/admin/moderation'
       preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/newsletter': {
+      id: '/admin/newsletter'
+      path: '/newsletter'
+      fullPath: '/admin/newsletter'
+      preLoaderRoute: typeof AdminNewsletterRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/notifications': {
@@ -1547,6 +1566,7 @@ interface AdminRouteChildren {
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
   AdminMarketingRoute: typeof AdminMarketingRoute
   AdminModerationRoute: typeof AdminModerationRoute
+  AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminParolesRoute: typeof AdminParolesRoute
@@ -1571,6 +1591,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminListeAttenteRoute: AdminListeAttenteRoute,
   AdminMarketingRoute: AdminMarketingRoute,
   AdminModerationRoute: AdminModerationRoute,
+  AdminNewsletterRoute: AdminNewsletterRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminParolesRoute: AdminParolesRoute,
