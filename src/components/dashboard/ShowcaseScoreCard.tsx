@@ -8,25 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { auditMyShowcase } from "@/lib/therapist-health.functions";
 import type { AuditCheck, AuditSeverity } from "@/lib/showcase-audit";
+import { SHOWCASE_ACTIONS as ACTIONS } from "@/lib/showcase-actions";
 
-/** Où corriger chaque point manquant, dans le tableau de bord. */
-const ACTIONS: Record<string, { to: string; cta: string }> = {
-  bio_length: { to: "/dashboard/profil", cta: "Compléter ma biographie" },
-  short_bio: { to: "/dashboard/profil", cta: "Écrire mon accroche" },
-  meta: { to: "/dashboard/profil", cta: "Renseigner titre et description SEO" },
-  specialties: { to: "/dashboard/profil", cta: "Ajouter mes spécialités" },
-  geo: { to: "/dashboard/profil", cta: "Compléter mon adresse" },
-  languages: { to: "/dashboard/profil", cta: "Déclarer mes langues" },
-  photo: { to: "/dashboard/profil", cta: "Ajouter ma photo" },
-  credentials: { to: "/dashboard/profil", cta: "Déposer une certification" },
-  price: { to: "/dashboard/profil", cta: "Indiquer mon tarif" },
-  modes: { to: "/dashboard/profil", cta: "Choisir mes modes de consultation" },
-  availability: { to: "/dashboard/agenda", cta: "Publier mes disponibilités" },
-  booking_note: { to: "/dashboard/profil", cta: "Écrire mon message d'accueil" },
-  reviews: { to: "/dashboard/avis", cta: "Inviter mes clients à témoigner" },
-  gallery: { to: "/dashboard/profil", cta: "Ajouter des photos du cabinet" },
-  verified: { to: "/dashboard/profil", cta: "Compléter mon profil pour la vérification" },
-};
 
 const SEVERITY_RANK: Record<AuditSeverity, number> = { critical: 0, warning: 1, info: 2 };
 
@@ -134,6 +117,9 @@ export function ShowcaseScoreCard() {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
               Recalculer
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-9 min-h-[36px] gap-1.5 text-xs">
+              <Link to="/dashboard/visibilite">Voir le détail</Link>
             </Button>
             {data.slug && (
               <Button asChild variant="outline" size="sm" className="h-9 min-h-[36px] gap-1.5 text-xs">

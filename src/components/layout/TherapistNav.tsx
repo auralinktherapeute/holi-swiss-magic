@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Receipt,
   HelpCircle,
+  Gauge,
   LogOut,
 } from "lucide-react";
 import { useServerFn as useServerFnHelp } from "@tanstack/react-start";
@@ -80,6 +81,7 @@ export function TherapistNav() {
       label: "Facturation",
       tourId: "nav-facturation",
     },
+    { to: "/dashboard/visibilite", icon: Gauge, label: "Score de visibilité", tourId: "nav-visibilite" },
     { to: "/dashboard/articles", icon: FileText, label: t("dashboard.articles") },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },

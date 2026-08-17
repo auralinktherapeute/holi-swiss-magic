@@ -51,6 +51,7 @@ import { Route as DashboardParrainageRouteImport } from './routes/dashboard.parr
 import { Route as DashboardProfilRouteImport } from './routes/dashboard.profil'
 import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.questionnaires'
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
+import { Route as DashboardVisibiliteRouteImport } from './routes/dashboard.visibilite'
 import { Route as DesinscriptionIndexRouteImport } from './routes/desinscription.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as PreviewAnimationsTherapeutesRouteImport } from './routes/preview.animations-therapeutes'
@@ -302,6 +303,11 @@ const DashboardQuestionnairesRoute = DashboardQuestionnairesRouteImport.update({
 const DashboardReservationsRoute = DashboardReservationsRouteImport.update({
   id: '/reservations',
   path: '/reservations',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardVisibiliteRoute = DashboardVisibiliteRouteImport.update({
+  id: '/visibilite',
+  path: '/visibilite',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DesinscriptionIndexRoute = DesinscriptionIndexRouteImport.update({
@@ -563,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
+  '/dashboard/visibilite': typeof DashboardVisibiliteRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
@@ -645,6 +652,7 @@ export interface FileRoutesByTo {
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
+  '/dashboard/visibilite': typeof DashboardVisibiliteRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
@@ -731,6 +739,7 @@ export interface FileRoutesById {
   '/dashboard/profil': typeof DashboardProfilRoute
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
+  '/dashboard/visibilite': typeof DashboardVisibiliteRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
@@ -818,6 +827,7 @@ export interface FileRouteTypes {
     | '/dashboard/profil'
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
+    | '/dashboard/visibilite'
     | '/intake/$slug'
     | '/preview/animations-therapeutes'
     | '/preview/carrousels'
@@ -900,6 +910,7 @@ export interface FileRouteTypes {
     | '/dashboard/profil'
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
+    | '/dashboard/visibilite'
     | '/intake/$slug'
     | '/preview/animations-therapeutes'
     | '/preview/carrousels'
@@ -985,6 +996,7 @@ export interface FileRouteTypes {
     | '/dashboard/profil'
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
+    | '/dashboard/visibilite'
     | '/intake/$slug'
     | '/preview/animations-therapeutes'
     | '/preview/carrousels'
@@ -1350,6 +1362,13 @@ declare module '@tanstack/react-router' {
       path: '/reservations'
       fullPath: '/dashboard/reservations'
       preLoaderRoute: typeof DashboardReservationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/visibilite': {
+      id: '/dashboard/visibilite'
+      path: '/visibilite'
+      fullPath: '/dashboard/visibilite'
+      preLoaderRoute: typeof DashboardVisibiliteRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/desinscription/': {
@@ -1783,6 +1802,7 @@ interface DashboardRouteChildren {
   DashboardProfilRoute: typeof DashboardProfilRoute
   DashboardQuestionnairesRoute: typeof DashboardQuestionnairesRoute
   DashboardReservationsRoute: typeof DashboardReservationsRoute
+  DashboardVisibiliteRoute: typeof DashboardVisibiliteRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -1799,6 +1819,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardProfilRoute: DashboardProfilRoute,
   DashboardQuestionnairesRoute: DashboardQuestionnairesRoute,
   DashboardReservationsRoute: DashboardReservationsRoute,
+  DashboardVisibiliteRoute: DashboardVisibiliteRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
