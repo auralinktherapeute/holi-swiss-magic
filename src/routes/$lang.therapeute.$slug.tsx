@@ -694,29 +694,23 @@ function Page() {
             )}
 
             {/* Accréditations */}
-            {accreditations.length > 0 && (
+            {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.certifications_title")}</h2>
-                <TooltipProvider delayDuration={150}>
-                  <div className="flex flex-wrap gap-2">
-                    {accreditations.map((a) => (
-                      <Tooltip key={a.org}>
-                        <TooltipTrigger asChild>
-                          <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-300 cursor-help">
-                            <BadgeCheck className="h-4 w-4" /> {a.org}{a.number ? ` · ${a.number}` : ""}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs border-emerald-500/30 bg-[#0f0a1e] text-white">
-                          {a.org === "ASCA" && "Fondation suisse pour les médecines complémentaires — agréée par la plupart des assurances complémentaires."}
-                          {a.org === "RME" && "Registre de Médecine Empirique — label de qualité reconnu par les assurances complémentaires en Suisse."}
-                          {a.org !== "ASCA" && a.org !== "RME" && `Certification ${a.org}${a.number ? ` (n° ${a.number})` : ""}.`}
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                </TooltipProvider>
+                <TrustBadges
+                  badges={trustBadges.filter((b) => b.kind === "certification" || b.kind === "accreditation")}
+                  lang={lang}
+                />
+                {trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified) && (
+                  <p className="mt-3 text-xs text-[rgba(255,255,255,0.5)]">
+                    {t("therapist_profile.declared_notice", {
+                      defaultValue:
+                        "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
+                    })}
+                  </p>
+                )}
               </motion.section>
             )}
 
