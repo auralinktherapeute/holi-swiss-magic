@@ -70,7 +70,8 @@ export async function buildShowcaseReport(sb: any, therapistId: string, persist:
   const previous = (prevRes?.data ?? [])[0] as { score: number; created_at: string } | undefined;
   let analyzedAt = new Date().toISOString();
 
-  if (persist) {
+  const shouldPersist = persist || !previous;
+  if (shouldPersist) {
     const { data: inserted } = await sb
       .from("therapist_showcase_snapshots")
       .insert({
