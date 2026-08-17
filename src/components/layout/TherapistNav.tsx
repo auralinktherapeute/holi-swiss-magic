@@ -103,7 +103,10 @@ export function TherapistNav() {
       await signOutCompletely(qc);
       navigate({ to: "/$lang/connexion", params: { lang: "fr" }, replace: true });
     } catch (e) {
-      const message = e instanceof Error ? e.message : t("dashboard.logout_error", "La déconnexion a échoué. Veuillez réessayer.");
+      const message =
+        e instanceof Error
+          ? e.message
+          : t("dashboard.logout_error", "La déconnexion a échoué. Veuillez réessayer.");
       toast.error(message);
       setIsLoggingOut(false);
     }
