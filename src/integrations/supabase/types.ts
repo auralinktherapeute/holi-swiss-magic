@@ -1748,6 +1748,63 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_issues: {
+        Row: {
+          audience: string | null
+          created_at: string
+          created_by: string | null
+          cta: string | null
+          feature_highlight: string | null
+          id: string
+          internal_notes: string | null
+          lang: string
+          objective: string | null
+          pillar: string | null
+          problem: string | null
+          status: string
+          target_date: string | null
+          title: string
+          tone: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta?: string | null
+          feature_highlight?: string | null
+          id?: string
+          internal_notes?: string | null
+          lang?: string
+          objective?: string | null
+          pillar?: string | null
+          problem?: string | null
+          status?: string
+          target_date?: string | null
+          title: string
+          tone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta?: string | null
+          feature_highlight?: string | null
+          id?: string
+          internal_notes?: string | null
+          lang?: string
+          objective?: string | null
+          pillar?: string | null
+          problem?: string | null
+          status?: string
+          target_date?: string | null
+          title?: string
+          tone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_deliveries: {
         Row: {
           attempts: number
