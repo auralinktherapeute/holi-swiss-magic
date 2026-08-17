@@ -292,7 +292,38 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       ],
     };
 
-    const graph: Array<Record<string, unknown>> = [person, ...serviceNodes, breadcrumbs];
+    // LocalBusiness — l'établissement physique, si une adresse réelle existe
+    const businessNodes: Array<Record<string, unknown>> = [];
+    if (address && (t.city || t.address)) {
+      const business: Record<string, unknown> = {
+        "@type": "HealthAndBeautyBusiness",
+        "@id": `${url}#business`,
+        name: fullName || copy.fallbackRole,
+        url,
+        description,
+        address,
+        areaServed: t.canton
+          ? { "@type": "AdministrativeArea", name: t.canton }
+          : { "@type": "Country", name: "Switzerland" },
+        employee: { "@id": personId },
+      };
+      if (image) business.image = image;
+      if (t.phone) business.telephone = t.phone;
+      if (t.website) business.sameAs = [t.website];
+      if (priceRange) business.priceRange = priceRange;
+      if (typeof t.latitude === "number" && typeof t.longitude === "number") {
+        business.geo = {
+          "@type": "GeoCoordinates",
+          latitude: t.latitude,
+          longitude: t.longitude,
+        };
+      }
+      if (Array.isArray(t.languages) && t.languages.length) business.knowsLanguage = t.languages;
+      if (person.aggregateRating) business.aggregateRating = person.aggregateRating;
+      businessNodes.push(business);
+    }
+
+    const graph: Array<Record<string, unknown>> = [person, ...businessNodes, ...serviceNodes, breadcrumbs];
     const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
