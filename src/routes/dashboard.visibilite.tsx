@@ -206,8 +206,25 @@ function Page() {
 
   const checks = (data?.checks ?? []) as ReportCheck[];
   const recommendations = (data?.recommendations ?? []) as Recommendation[];
-  const todo = recommendations.filter((r) => r.status === "a_traiter");
-  const resolved = recommendations.filter((r) => r.status === "resolu");
+  // Single source of truth: a recommendation is only "à traiter" if its check
+  // is actually not passed. Gain is realigned on the check weight.
+  const { todo, resolved } = useMemo(() => {
+    const byId = new Map(checks.map((c) => [c.id, c]));
+    const normalized = recommendations.map((r) => {
+      const c = byId.get(r.id);
+      if (!c) return r;
+      return {
+        ...r,
+        status: (c.passed ? "resolu" : "a_traiter") as Recommendation["status"],
+        action: c.passed ? null : r.action,
+        gain: c.passed ? 0 : c.weight,
+      };
+    });
+    return {
+      todo: normalized.filter((r) => r.status === "a_traiter"),
+      resolved: normalized.filter((r) => r.status === "resolu"),
+    };
+  }, [checks, recommendations]);
   const { blocking, missing, done, priority } = useMemo(() => {
     const sorter = (a: ReportCheck, b: ReportCheck) =>
       SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.weight - a.weight;

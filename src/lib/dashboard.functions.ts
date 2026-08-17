@@ -15,6 +15,7 @@ const profileSchema = z.object({
   photo_url: z.string().url().max(2000).nullable(),
   first_name: z.string().min(1).max(120),
   last_name: z.string().max(120),
+  title: z.string().max(120).nullable().optional(),
   city: z.string().max(120),
   postal_code: z.string().max(30),
   address: z.string().max(300),
@@ -283,6 +284,7 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       accreditations: data.accreditations,
     };
     if (data.meta_title !== undefined) payload.meta_title = data.meta_title;
+    if (data.title !== undefined) payload.title = data.title;
     if (data.meta_description !== undefined) payload.meta_description = data.meta_description;
     if (data.consultation_modes !== undefined) payload.consultation_modes = data.consultation_modes;
     if (geo) {

@@ -45,7 +45,7 @@ import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
 import { listAllSpecialties } from "@/lib/specialties.functions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 export const Route = createFileRoute("/dashboard/profil")({ component: ProfilePage });
@@ -83,7 +83,7 @@ const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "
 // cannot be read directly by the authenticated role. The owner's phone is
 // fetched via the security-definer RPC `get_my_therapist_contact()` below.
 const THERAPIST_PROFILE_SELECT = [
-  "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
+  "id", "slug", "photo_url", "first_name", "last_name", "title", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations", "meta_title", "meta_description", "consultation_modes",
@@ -105,6 +105,7 @@ function profileDraftScore(draft: unknown) {
 function ProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const profileStatePrefix = user?.id ? `dashboard.profile.${user.id}` : "dashboard.profile.pending";
   const saveProfile = useServerFn(saveMyTherapistProfile);
   const addDocument = useServerFn(addMyTherapistDocument);
@@ -121,6 +122,7 @@ function ProfilePage() {
   const [photoPublicUrl, setPhotoPublicUrl] = useSessionState<string>(`${profileStatePrefix}.photoPublicUrl`, "");
   const [firstName, setFirstName] = useSessionState(`${profileStatePrefix}.firstName`, "");
   const [lastName, setLastName] = useSessionState(`${profileStatePrefix}.lastName`, "");
+  const [proTitle, setProTitle] = useSessionState(`${profileStatePrefix}.proTitle`, "");
   const [publicSlug, setPublicSlug] = useSessionState(`${profileStatePrefix}.publicSlug`, "");
   const [city, setCity] = useSessionState(`${profileStatePrefix}.city`, "");
   const [postalCode, setPostalCode] = useSessionState(`${profileStatePrefix}.postalCode`, "");
@@ -376,6 +378,7 @@ function ProfilePage() {
         setShortBio(data.short_bio ?? "");
         setBio(data.bio ?? "");
         setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
+        setProTitle((data as any).title ?? "");
         setMetaTitle((data as any).meta_title ?? "");
         setMetaDescription((data as any).meta_description ?? "");
         setConsultationModes(((data as any).consultation_modes as string[]) ?? []);
@@ -523,6 +526,7 @@ function ProfilePage() {
           bio: payload.bio,
           google_reviews_url: payload.google_reviews_url,
           website: payload.website,
+          title: proTitle.trim() || null,
           meta_title: metaTitle.trim() || null,
           meta_description: metaDescription.trim() || null,
           consultation_modes: consultationModes,
@@ -538,6 +542,11 @@ function ProfilePage() {
     setSaving(false);
     setDirty(false);
     await clearDraft();
+    // Recompute visibility score immediately after a profile save.
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["my-showcase-report"] }),
+      queryClient.invalidateQueries({ queryKey: ["my-showcase-audit"] }),
+    ]);
     toast.success(t("profile_edit.saved_toast"));
   };
 
@@ -642,6 +651,22 @@ function ProfilePage() {
             </Field>
             <Field label={t("profile_edit.last_name") + " *"}>
               <Input value={lastName} onChange={(e) => { setLastName(e.target.value); markDirty(); }} className={inputClass} />
+            </Field>
+          </div>
+
+          <div className="mt-5">
+            <Field label={<label htmlFor="pro-title">Titre professionnel *</label>}>
+              <Input
+                id="pro-title"
+                value={proTitle}
+                maxLength={80}
+                onChange={(e) => { setProTitle(e.target.value); markDirty(); }}
+                placeholder="Naturopathe · Praticienne en hypnose"
+                className={inputClass}
+              />
+              <p className="mt-1.5 text-xs text-[#a89bc4]">
+                Affiché sous votre nom sur la fiche publique. Requis pour valider le critère « Nom et titre professionnel ».
+              </p>
             </Field>
           </div>
 
