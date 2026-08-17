@@ -21,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { hreflangLinks, ogLocale, profileCopy, resolveProfileLang } from "@/lib/seo";
 import { TrustBadges } from "@/components/holiswiss/TrustBadges";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
 
@@ -97,21 +97,27 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
     const altLinks = hreflangLinks(`/therapeute/${params.slug}`);
     if (!t) {
+      const c0 = profileCopy(params.lang);
       return {
         meta: [
-          { title: "Thérapeute — Holiswiss" },
-          { name: "description", content: "Découvrez ce thérapeute holistique sur Holiswiss, l'annuaire des praticiens en Suisse." },
+          { title: c0.genericTitle },
+          { name: "description", content: c0.genericDescription },
           { property: "og:url", content: url },
         ],
         links: [{ rel: "canonical", href: url }, ...altLinks],
       };
     }
     const fullName = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
+    // SEO local : la langue de la version consultée pilote les libellés
+    // générés (« Therapeut in Zürich », « Thérapeute à Genève »). Les textes
+    // rédigés par le praticien (bio, approche) ne sont jamais traduits.
+    const pageLang = resolveProfileLang(params.lang, t.canton, t.languages ?? null);
+    const copy = profileCopy(pageLang);
     const place = [t.city, t.canton].filter(Boolean).join(", ");
-    const role = t.title ? `${t.title}${place ? ` à ${place}` : ""}` : place;
+    const role = copy.role(t.title ?? copy.fallbackRole, place);
     const title = `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, 60);
     const bio = (t.bio ?? "").replace(/\s+/g, " ").trim();
-    const fallback = `Profil de ${fullName}${role ? `, ${role}` : ""}. Prenez rendez-vous sur Holiswiss.`;
+    const fallback = copy.descFallback(fullName, role);
     const rawDescription = bio.length >= 50 ? bio : fallback;
     const description =
       rawDescription.length > 157
@@ -125,7 +131,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       { property: "og:description", content: description },
       { property: "og:type", content: "profile" },
       { property: "og:url", content: url },
-      { property: "og:locale", content: ogLocale(params.lang) },
+      { property: "og:locale", content: ogLocale(pageLang) },
       { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
     ];
     if (image) {
@@ -155,7 +161,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const person: Record<string, unknown> = {
       "@type": "Person",
       "@id": personId,
-      name: fullName || "Thérapeute",
+      name: fullName || copy.fallbackRole,
       url,
       description,
     };
@@ -235,11 +241,11 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const breadcrumbs = {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Accueil", item: `${SITE}/${params.lang}` },
+        { "@type": "ListItem", position: 1, name: copy.breadcrumbHome, item: `${SITE}/${params.lang}` },
         {
           "@type": "ListItem",
           position: 2,
-          name: "Thérapeutes",
+          name: copy.breadcrumbList,
           item: `${SITE}/${params.lang}/therapeutes`,
         },
         { "@type": "ListItem", position: 3, name: fullName, item: url },
