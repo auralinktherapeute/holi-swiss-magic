@@ -50,9 +50,40 @@ const selectCls =
 const tabCls =
   "data-[state=active]:bg-[#b86ef9] data-[state=active]:text-white text-white/70";
 
-type Form = { [k: string]: string | Record<string, boolean> } & {
-  qc: Record<string, boolean>;
-};
+type TextKey =
+  "title"
+  | "problem"
+  | "objective"
+  | "audience"
+  | "pillar"
+  | "tone"
+  | "feature_highlight"
+  | "cta"
+  | "lang"
+  | "target_date"
+  | "internal_notes"
+  | "email_subject"
+  | "email_preheader"
+  | "email_intro"
+  | "email_body"
+  | "email_button_label"
+  | "email_button_url"
+  | "email_footer"
+  | "resource_title"
+  | "resource_intro"
+  | "resource_body"
+  | "resource_sections"
+  | "resource_example"
+  | "resource_checklist"
+  | "resource_takeaway"
+  | "resource_cta"
+  | "slug"
+  | "seo_title"
+  | "meta_description"
+  | "share_image_url"
+  | "canonical_url";
+
+type Form = Record<TextKey, string> & { qc: Record<string, boolean> };
 
 function str(v: unknown): string {
   return v === null || v === undefined ? "" : String(v);
@@ -126,7 +157,7 @@ function Page() {
     });
   }, [issue]);
 
-  const set = (key: string, value: string) =>
+  const set = (key: TextKey, value: string) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
   const setQc = (key: string, value: boolean) =>
     setForm((f) => (f ? { ...f, qc: { ...f.qc, [key]: value } } : f));
