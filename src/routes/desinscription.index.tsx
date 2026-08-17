@@ -10,8 +10,7 @@ export const Route = createFileRoute("/desinscription/")({
       { title: "Désinscription — La Lettre Holiswiss" },
       {
         name: "description",
-        content:
-          "Gérez votre abonnement à La Lettre Holiswiss et désinscrivez-vous en un clic.",
+        content: "Gérez votre abonnement à La Lettre Holiswiss et désinscrivez-vous en un clic.",
       },
       { property: "og:title", content: "Désinscription — La Lettre Holiswiss" },
       {

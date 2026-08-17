@@ -45,8 +45,7 @@ function checkSendable(issue: any, recipientCount: number, senderOk: boolean): s
   if (recipientCount <= 0) blockers.push("Le segment ne contient aucun destinataire.");
   if (!senderOk) blockers.push("L'expéditeur n'est pas configuré.");
   const usesResource =
-    Boolean(issue.slug) &&
-    (issue.email_button_url ?? "").includes(`/lettre/${issue.slug}`);
+    Boolean(issue.slug) && (issue.email_button_url ?? "").includes(`/lettre/${issue.slug}`);
   if (usesResource && !issue.published_at) {
     blockers.push("La page ressource utilisée n'est pas publiée.");
   }
@@ -57,16 +56,13 @@ function checkSendable(issue: any, recipientCount: number, senderOk: boolean): s
 export const getNewsletterSendPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z
-      .object({ id: z.string().uuid(), segment: z.enum(NEWSLETTER_SEGMENT_KEYS) })
-      .parse(data),
+    z.object({ id: z.string().uuid(), segment: z.enum(NEWSLETTER_SEGMENT_KEYS) }).parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const db = await admin();
-    const { resolveRecipients, resourceUrl, SENDER_ADDRESS } = await import(
-      "@/lib/newsletter-send.server"
-    );
+    const { resolveRecipients, resourceUrl, SENDER_ADDRESS } =
+      await import("@/lib/newsletter-send.server");
     const { emailSenderConfigured } = await import("@/lib/holiswiss-email.server");
 
     const issue = await loadIssue(db, data.id);
@@ -173,9 +169,8 @@ export const sendNewsletterIssue = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const db = await admin();
-    const { resolveRecipients, deliverToRecipients, resourceUrl, SENDER_ADDRESS } = await import(
-      "@/lib/newsletter-send.server"
-    );
+    const { resolveRecipients, deliverToRecipients, resourceUrl, SENDER_ADDRESS } =
+      await import("@/lib/newsletter-send.server");
     const { emailSenderConfigured } = await import("@/lib/holiswiss-email.server");
 
     const issue = await loadIssue(db, data.id);
@@ -215,8 +210,7 @@ export const sendNewsletterIssue = createServerFn({ method: "POST" })
     const results = await deliverToRecipients(issue, recipients);
     const sentCount = results.filter((r) => r.ok).length;
     const failedCount = results.length - sentCount;
-    const status =
-      sentCount === 0 ? "failed" : failedCount === 0 ? "sent" : "partially_failed";
+    const status = sentCount === 0 ? "failed" : failedCount === 0 ? "sent" : "partially_failed";
     const firstError = results.find((r) => !r.ok)?.error ?? null;
 
     if (results.length > 0) {

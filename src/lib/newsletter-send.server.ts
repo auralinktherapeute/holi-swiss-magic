@@ -31,7 +31,9 @@ export async function resolveRecipients(
 ): Promise<Recipient[]> {
   let q = client
     .from("therapists")
-    .select("id,email,newsletter_unsubscribe_token,created_at,onboarding_complete,subscription_plan")
+    .select(
+      "id,email,newsletter_unsubscribe_token,created_at,onboarding_complete,subscription_plan",
+    )
     .eq("status", "active")
     .eq("newsletter_opt_in", true)
     .is("newsletter_unsubscribed_at", null)

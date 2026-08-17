@@ -1144,8 +1144,7 @@ function Page() {
                         <li>Objet : {sendPreview.data?.subject ?? "—"}</li>
                         <li>Expéditeur : {sendPreview.data?.sender}</li>
                         <li>
-                          Segment :{" "}
-                          {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label}
+                          Segment : {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label}
                         </li>
                         <li>Destinataires : {sendPreview.data?.recipientCount}</li>
                         <li className="break-all">
@@ -1154,9 +1153,7 @@ function Page() {
                         <li>Version : {sendPreview.data?.versionLabel}</li>
                         <li>Date : {new Date().toLocaleString("fr-CH")}</li>
                       </ul>
-                      <p className="text-xs text-[#f87171]">
-                        Cette action est irréversible.
-                      </p>
+                      <p className="text-xs text-[#f87171]">Cette action est irréversible.</p>
                       <div className="flex flex-wrap gap-2">
                         <Button
                           onClick={() => sendReal.mutate()}
