@@ -335,6 +335,39 @@ function Page() {
     }).html;
   }, [form]);
 
+  const sendTest = useMutation({
+    mutationFn: () => sendTestFn({ data: { id, to: testEmail || undefined } }),
+    onSuccess: (r) => {
+      toast.success(`Email de test envoyé à ${r.to}.`);
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-sends", id] });
+    },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Envoi de test impossible."),
+  });
+
+  const sendReal = useMutation({
+    mutationFn: () => sendIssueFn({ data: { id, segment, confirm: true } }),
+    onSuccess: (r) => {
+      setConfirmOpen(false);
+      if (r.status === "sent") toast.success(`Newsletter envoyée à ${r.sentCount} destinataires.`);
+      else if (r.status === "partially_failed")
+        toast.warning(`Envoi partiel : ${r.sentCount}/${r.total} réussis.`);
+      else toast.error("L'envoi a échoué. Consultez le journal.");
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-issue", id] });
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-sends", id] });
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-send-preview", id] });
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-revisions", id] });
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
+    },
+    onError: (e: unknown) => {
+      setConfirmOpen(false);
+      toast.error(e instanceof Error ? e.message : "Envoi impossible.");
+    },
+  });
+
+  const blockers = sendPreview.data?.blockers ?? [];
+  const canSend = blockers.length === 0 && !sendReal.isPending;
+
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
   const approved = issue?.status === "approuvee";
@@ -424,6 +457,9 @@ function Page() {
             </TabsTrigger>
             <TabsTrigger value="qc" className={tabCls}>
               Contrôle qualité
+            </TabsTrigger>
+            <TabsTrigger value="send" className={tabCls}>
+              Envoi
             </TabsTrigger>
             <TabsTrigger value="history" className={tabCls}>
               Historique
