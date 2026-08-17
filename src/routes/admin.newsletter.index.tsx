@@ -34,7 +34,7 @@ import {
   type NewsletterStatus,
 } from "@/lib/newsletter.shared";
 
-export const Route = createFileRoute("/admin/newsletter")({ component: Page });
+export const Route = createFileRoute("/admin/newsletter/")({ component: Page });
 
 const STATUS_COLORS: Record<NewsletterStatus, string> = {
   idee: "bg-white/10 text-white/70",
