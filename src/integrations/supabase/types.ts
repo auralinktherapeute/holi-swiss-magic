@@ -4285,6 +4285,19 @@ export type Database = {
           lng: number
         }[]
       }
+      reviews_reply_only_unchanged: {
+        Args: {
+          _author_name: string
+          _comment: string
+          _created_at: string
+          _id: string
+          _rating: number
+          _status: string
+          _therapist_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       search_specialties:
         | {
             Args: { _limit?: number; _q: string }
