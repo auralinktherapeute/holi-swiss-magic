@@ -10,6 +10,7 @@
  */
 
 import { buildGeneratedSeoTitle, evaluateSeoTitle, resolveSeoTitle } from "./seo-title";
+import { evaluateSeoDescription, resolveSeoDescription } from "./seo-description";
 
 export type AuditAxis = "visibilite" | "conversion";
 export type AuditSeverity = "critical" | "warning" | "info";
@@ -171,6 +172,16 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
     },
   );
 
+  // Meta description : même résolution et mêmes seuils que la page publique
+  // et que l'aperçu SEO du dashboard.
+  const seoDescription = evaluateSeoDescription(
+    resolveSeoDescription({
+      meta_description: t.meta_description,
+      bio: t.bio,
+      short_bio: t.short_bio,
+    }),
+  );
+
   return [
     // ── 1. Profil professionnel ─────────────────────────────────────────
     c("identity", "visibilite", "profil", "Nom et titre professionnel",
@@ -265,8 +276,8 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
       seoTitle.message,
       8, seoTitle.passed),
     c("meta_description", "visibilite", "seo_technique", "Meta description",
-      "Sans meta description, Google génère un extrait arbitraire.",
-      8, len(t.meta_description) >= 80),
+      seoDescription.message,
+      8, seoDescription.passed),
     c("h1", "visibilite", "seo_technique", "H1 de la fiche",
       "Le H1 reprend votre nom et votre titre : il doit être renseigné.",
       5, len(t.first_name) > 0 && len(t.last_name) > 0),

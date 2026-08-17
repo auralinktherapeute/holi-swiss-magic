@@ -102,10 +102,14 @@ export function buildGeneratedSeoTitle(input: {
   title?: string | null;
   city?: string | null;
   canton?: string | null;
+  /** Libellé de rôle déjà localisé (page publique). Sinon reconstruit ici. */
+  roleLabel?: string | null;
 }): string {
   const fullName = `${input.first_name ?? ""} ${input.last_name ?? ""}`.trim();
   if (!fullName) return "";
   const place = [input.city, input.canton].filter(Boolean).join(", ");
-  const role = [input.title?.trim(), place ? `à ${place}` : ""].filter(Boolean).join(" ");
+  const role =
+    cleanSeoTitle(input.roleLabel) ||
+    [input.title?.trim(), place ? `à ${place}` : ""].filter(Boolean).join(" ");
   return `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, SEO_TITLE_MAX);
 }

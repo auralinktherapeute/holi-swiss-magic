@@ -48,6 +48,12 @@ import {
   evaluateSeoTitle,
   resolveSeoTitle,
 } from "@/lib/seo-title";
+import {
+  SEO_DESC_MAX,
+  SEO_DESC_MIN,
+  evaluateSeoDescription,
+  resolveSeoDescription,
+} from "@/lib/seo-description";
 import PaymentMethodsPanel from "@/components/dashboard/PaymentMethodsPanel";
 import QrCodePanel from "@/components/dashboard/QrCodePanel";
 import { TaxonomySpecialtyPicker } from "@/components/dashboard/TaxonomySpecialtyPicker";
@@ -189,6 +195,15 @@ function ProfilePage() {
     buildGeneratedSeoTitle({ first_name: firstName, last_name: lastName, title: proTitle, city, canton }),
   );
   const seoTitleStatus = evaluateSeoTitle(seoTitleResolution, { expectedLang: null });
+
+  // Meta description : même résolution et mêmes seuils que la page publique
+  // et que l'audit de visibilité.
+  const seoDescResolution = resolveSeoDescription({
+    meta_description: metaDescription,
+    bio,
+    short_bio: shortBio,
+  });
+  const seoDescStatus = evaluateSeoDescription(seoDescResolution);
 
   // SIRET
   // Swiss IDE / UID (CHE-XXX.XXX.XXX)
@@ -1182,9 +1197,10 @@ function ProfilePage() {
                 className={`${inputClass} h-auto resize-y py-2`}
               />
               <p className="mt-1.5 text-xs text-[#a89bc4]">
-                {metaDescription.length}/170 · visez 80 à 160 caractères.
-                {metaDescription.length > 0 && metaDescription.length < 80 && " — trop courte pour convaincre."}
-                {metaDescription.length > 160 && " — Google risque de la tronquer."}
+                {metaDescription.length}/170 · visez {SEO_DESC_MIN} à {SEO_DESC_MAX} caractères.
+              </p>
+              <p className={`mt-1 text-xs ${seoDescStatus.passed ? "text-[#9fd8a8]" : "text-[#f0b26b]"}`}>
+                {seoDescStatus.message}
               </p>
             </Field>
           </div>
@@ -1197,7 +1213,7 @@ function ProfilePage() {
               {seoTitleResolution.value || "Titre de votre fiche"}
             </p>
             <p className="mt-1 line-clamp-2 text-sm text-[#c7bcd8]">
-              {metaDescription.trim() || shortBio?.trim() || "La description affichée sous votre titre dans Google."}
+              {seoDescResolution.value || "La description affichée sous votre titre dans Google."}
             </p>
           </div>
         </Section>
