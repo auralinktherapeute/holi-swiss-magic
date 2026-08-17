@@ -228,6 +228,7 @@
     "referral": "Empfehlung",
     "subscription": "Abonnement",
     "logout": "Abmelden",
+    "logout_error": "Abmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "therapist_space": "Therapeutenbereich",
     "common": {
       "loading": "Laden…",

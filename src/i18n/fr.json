@@ -228,6 +228,7 @@
     "referral": "Parrainage",
     "subscription": "Abonnement",
     "logout": "Se déconnecter",
+    "logout_error": "La déconnexion a échoué. Veuillez réessayer.",
     "therapist_space": "Espace thérapeute",
     "common": {
       "loading": "Chargement…",
