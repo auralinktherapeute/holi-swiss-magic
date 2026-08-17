@@ -137,7 +137,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       resolveSeoDescription({
         meta_description: t.meta_description,
         bio: t.bio,
-        short_bio: (t as any).short_bio,
+        short_bio: t.short_bio,
         fallback,
       }).value,
     );
