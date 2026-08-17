@@ -80,7 +80,7 @@ const THERAPIST_PROFILE_SELECT = [
   "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
-  "ide_verified", "accreditations",
+  "ide_verified", "accreditations", "newsletter_opt_in",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
