@@ -13,6 +13,14 @@ import {
   CheckCircle2,
   Send,
   AlertTriangle,
+  Users,
+  FileText,
+  Link2,
+  Globe,
+  MousePointer,
+  Calendar,
+  ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
