@@ -3008,6 +3008,51 @@ export type Database = {
           },
         ]
       }
+      therapist_advanced_scoring_access: {
+        Row: {
+          enabled: boolean
+          granted_at: string
+          granted_by: string | null
+          note: string | null
+          source: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          granted_at?: string
+          granted_by?: string | null
+          note?: string | null
+          source?: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          granted_at?: string
+          granted_by?: string | null
+          note?: string | null
+          source?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_advanced_scoring_access_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_advanced_scoring_access_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_articles: {
         Row: {
           contenu: string
@@ -4269,6 +4314,10 @@ export type Database = {
         }[]
       }
       admin_unread_count: { Args: never; Returns: number }
+      advanced_scoring_eligibility: {
+        Args: { _therapist_id: string }
+        Returns: Json
+      }
       anonymize_user_analytics: { Args: { _uid: string }; Returns: undefined }
       close_marketing_topic: {
         Args: { _id: string; _reject_reason?: string; _secret: string }
