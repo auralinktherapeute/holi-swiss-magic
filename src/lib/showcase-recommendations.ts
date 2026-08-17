@@ -13,7 +13,7 @@ import {
   type AuditCheck,
   type AuditSeverity,
 } from "@/lib/showcase-audit";
-import { SHOWCASE_ACTIONS } from "@/lib/showcase-actions";
+import { SHOWCASE_ACTIONS, type ShowcaseAction } from "@/lib/showcase-actions";
 
 export type RecommendationImportance = "essentiel" | "important" | "conseille";
 export type RecommendationStatus = "a_traiter" | "resolu";
@@ -28,7 +28,7 @@ export type Recommendation = {
   categoryLabel: string;
   /** Points gagnés sur 100 si le point est corrigé (ou déjà acquis). */
   gain: number;
-  action: { to: string; cta: string } | null;
+  action: ShowcaseAction | null;
   status: RecommendationStatus;
   /** Date à laquelle le point est devenu conforme, si connue. */
   resolvedAt: string | null;

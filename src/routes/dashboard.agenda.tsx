@@ -10,6 +10,7 @@ import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
 import SpecificAvailabilityManager from "@/components/dashboard/SpecificAvailabilityManager";
 import UnavailabilityManager from "@/components/dashboard/UnavailabilityManager";
 import WeeklyScheduleEditor from "@/components/dashboard/WeeklyScheduleEditor";
+import { useHashFocus } from "@/hooks/use-hash-focus";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
 
@@ -19,6 +20,8 @@ function Page() {
   const fetchAgenda = useServerFn(listMyAgenda);
   const [therapistId, setTherapistId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useHashFocus(!loading);
 
   useEffect(() => {
     if (!user) return;
@@ -48,11 +51,23 @@ function Page() {
         </Card>
       )}
 
-      {therapistId && <WeeklyScheduleEditor therapistId={therapistId} />}
+      {therapistId && (
+        <div id="disponibilites" className="space-y-6">
+          <WeeklyScheduleEditor therapistId={therapistId} />
+        </div>
+      )}
 
-      {therapistId && <BookingNoteEditor therapistId={therapistId} />}
+      {therapistId && (
+        <div id="message-accueil">
+          <BookingNoteEditor therapistId={therapistId} />
+        </div>
+      )}
 
-      {therapistId && <SpecificAvailabilityManager therapistId={therapistId} />}
+      {therapistId && (
+        <div id="disponibilites-ponctuelles">
+          <SpecificAvailabilityManager therapistId={therapistId} />
+        </div>
+      )}
 
       {therapistId && (
         <InteractiveAgenda therapistId={therapistId} />

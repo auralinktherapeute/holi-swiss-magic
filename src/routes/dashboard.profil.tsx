@@ -37,6 +37,7 @@ import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
+import { useHashFocus } from "@/hooks/use-hash-focus";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
@@ -72,6 +73,11 @@ type DocRow = {
 };
 
 const CURRENCIES = ["CHF", "EUR", "USD"];
+const CONSULTATION_MODES = [
+  { value: "in_person", label: "Au cabinet" },
+  { value: "online", label: "En visio" },
+  { value: "home", label: "À domicile" },
+] as const;
 const SERVICE_COLORS = ["#3b82f6", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#ef4444"];
 // NOTE: `phone` and `email` are column-restricted at the database level and
 // cannot be read directly by the authenticated role. The owner's phone is
@@ -80,7 +86,7 @@ const THERAPIST_PROFILE_SELECT = [
   "id", "slug", "photo_url", "first_name", "last_name", "city", "postal_code", "address",
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
-  "ide_verified", "accreditations",
+  "ide_verified", "accreditations", "meta_title", "meta_description", "consultation_modes",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
@@ -162,6 +168,9 @@ function ProfilePage() {
   const [shortBio, setShortBio] = useSessionState(`${profileStatePrefix}.shortBio`, "");
   const [bio, setBio] = useSessionState(`${profileStatePrefix}.bio`, "");
   const [googleReviewsUrl, setGoogleReviewsUrl] = useSessionState(`${profileStatePrefix}.googleReviewsUrl`, "");
+  const [metaTitle, setMetaTitle] = useSessionState(`${profileStatePrefix}.metaTitle`, "");
+  const [metaDescription, setMetaDescription] = useSessionState(`${profileStatePrefix}.metaDescription`, "");
+  const [consultationModes, setConsultationModes] = useSessionState<string[]>(`${profileStatePrefix}.consultationModes`, []);
   const [website, setWebsite] = useSessionState(`${profileStatePrefix}.website`, "");
 
   // SIRET
@@ -367,6 +376,9 @@ function ProfilePage() {
         setShortBio(data.short_bio ?? "");
         setBio(data.bio ?? "");
         setGoogleReviewsUrl((data as any).google_reviews_url ?? "");
+        setMetaTitle((data as any).meta_title ?? "");
+        setMetaDescription((data as any).meta_description ?? "");
+        setConsultationModes(((data as any).consultation_modes as string[]) ?? []);
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
@@ -388,6 +400,8 @@ function ProfilePage() {
       setLoading(false);
     })();
   }, [user, profileStatePrefix]);
+
+  useHashFocus(!loading);
 
   const markDirty = () => setDirty(true);
 
@@ -509,6 +523,9 @@ function ProfilePage() {
           bio: payload.bio,
           google_reviews_url: payload.google_reviews_url,
           website: payload.website,
+          meta_title: metaTitle.trim() || null,
+          meta_description: metaDescription.trim() || null,
+          consultation_modes: consultationModes,
           accreditations,
           ide: ide || null,
         },
@@ -594,14 +611,17 @@ function ProfilePage() {
         </div>
 
         {/* Photos du cabinet & certifications (agent Santé de Profil) */}
-        <Section>
+        <Section id="photos-cabinet">
           <CabinetPhotosUploader userId={user!.id} />
           <Divider />
-          <CertificationsUploader userId={user!.id} />
+          <div id="certifications">
+            <CertificationsUploader userId={user!.id} />
+          </div>
         </Section>
 
         {/* Identity */}
-        <Section>
+        <Section id="identite">
+          <div id="photo">
           <ProfilePhotoUploader
             userId={user!.id}
             currentPhotoUrl={photoUrl}
@@ -612,6 +632,7 @@ function ProfilePage() {
               markDirty();
             }}
           />
+          </div>
 
           <Divider />
 
@@ -659,7 +680,7 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+          <div id="localisation" className="mt-5 grid gap-5 sm:grid-cols-3">
             <Field label={t("profile_edit.city") + " *"}>
               <div className="relative">
                 <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
@@ -674,7 +695,7 @@ function ProfilePage() {
             </Field>
           </div>
 
-          <div className="mt-5">
+          <div id="contact" className="mt-5">
             <Field
               label={
                 <span className="inline-flex items-center gap-2">
@@ -693,8 +714,9 @@ function ProfilePage() {
         </Section>
 
         {/* Approaches & languages */}
-        <Section title={t("profile_edit.section_approaches")}>
+        <Section id="langues" title={t("profile_edit.section_approaches")}>
           <div className="grid gap-5 sm:grid-cols-2">
+            <div id="canton">
             <Field label={t("profile_edit.canton")}>
               <Select value={canton} onValueChange={(v) => { setCanton(v); markDirty(); }}>
                 <SelectTrigger className={selectClass}><SelectValue /></SelectTrigger>
@@ -705,6 +727,7 @@ function ProfilePage() {
                 </SelectContent>
               </Select>
             </Field>
+            </div>
             <Field label={t("profile_edit.languages")}>
               <div className="flex flex-wrap gap-2">
                 {SPOKEN_LANGUAGES.map((l) => {
@@ -724,7 +747,7 @@ function ProfilePage() {
             </Field>
           </div>
 
-          <div className="mt-5">
+          <div id="tarifs" className="mt-5">
             <Label className="text-sm font-medium text-white/90">{t("profile_edit.price_label")}</Label>
             <div className="mt-2 grid gap-3 sm:grid-cols-[1fr_1fr_180px]">
               <Input type="number" placeholder={t("profile_edit.price_min")} value={priceMin} onChange={(e) => { setPriceMin(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
@@ -741,7 +764,7 @@ function ProfilePage() {
             </p>
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div id="experience" className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label={t("profile_edit.session_duration")}>
               <Input type="number" value={sessionDuration} onChange={(e) => { setSessionDuration(e.target.value === "" ? "" : Number(e.target.value)); markDirty(); }} className={inputClass} />
             </Field>
@@ -752,7 +775,7 @@ function ProfilePage() {
         </Section>
 
         {/* Specialties */}
-        <Section title={t("profile_edit.section_specialties") + " *"}>
+        <Section id="specialites" title={t("profile_edit.section_specialties") + " *"}>
           <TaxonomySpecialtyPicker
             selectedIds={specialtyIds}
             onChange={(ids) => { setSpecialtyIds(ids); markDirty(); }}
@@ -806,8 +829,45 @@ function ProfilePage() {
           </div>
         </Section>
 
+        {/* Modes de consultation */}
+        <Section
+          id="modes"
+          title="Modes de consultation"
+          subtitle="Indiquez comment vos client·es peuvent vous rencontrer. Ces modes apparaissent sur votre fiche publique."
+        >
+          <div className="flex flex-wrap gap-2.5">
+            {CONSULTATION_MODES.map((m) => {
+              const active = consultationModes.includes(m.value);
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    setConsultationModes((prev) =>
+                      prev.includes(m.value) ? prev.filter((x) => x !== m.value) : [...prev, m.value],
+                    );
+                    markDirty();
+                  }}
+                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]/60 ${
+                    active
+                      ? "border-[#b86ef9] bg-gradient-to-r from-[#b86ef9] to-[#a855f7] text-white shadow-md shadow-[#b86ef9]/40"
+                      : "border-[rgba(184,110,249,0.25)] bg-[rgba(20,8,40,0.45)] text-[#d4c4e0] hover:border-[#b86ef9]"
+                  }`}
+                >
+                  {active && <Check className="h-4 w-4" aria-hidden="true" />}
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-[#a89bc4]">
+            Au moins un mode est nécessaire pour que le visiteur sache comment réserver.
+          </p>
+        </Section>
+
         {/* Services */}
-        <Section title={t("profile_edit.section_services")} action={
+        <Section id="prestations" title={t("profile_edit.section_services")} action={
           <ServiceDialog onAdd={(s) => { setServices((prev) => [...prev, s]); markDirty(); }} />
         } subtitle={t("profile_edit.services_help")}>
           <div className="space-y-3">
@@ -902,11 +962,13 @@ function ProfilePage() {
         </Section>
 
         {/* Bio + links */}
-        <Section>
+        <Section id="presentation">
+          <div id="accroche">
           <Field label={t("profile_edit.short_bio")}>
             <Input value={shortBio} maxLength={150} onChange={(e) => { setShortBio(e.target.value); markDirty(); }} className={inputClass} />
             <p className="mt-1.5 text-xs text-[#a89bc4]">{shortBio.length}/150</p>
           </Field>
+          </div>
 
           <div className="mt-5">
             <Field label={t("profile_edit.full_description")}>
@@ -914,7 +976,7 @@ function ProfilePage() {
             </Field>
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div id="liens" className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label={<span className="inline-flex items-center gap-2"><Link2 className="h-4 w-4" />{t("profile_edit.google_reviews_link")}</span>}>
               <Input value={googleReviewsUrl} onChange={(e) => { setGoogleReviewsUrl(e.target.value); markDirty(); }} placeholder="https://g.page/..." className={inputClass} />
             </Field>
@@ -925,6 +987,7 @@ function ProfilePage() {
 
           <Divider />
 
+          <div id="ide">
           <Field label={
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[#b86ef9]" />
@@ -958,6 +1021,7 @@ function ProfilePage() {
               </div>
             )}
           </Field>
+          </div>
 
           <Divider />
 
@@ -1019,6 +1083,40 @@ function ProfilePage() {
               <Check className="h-4 w-4" />{t("profile_edit.no_changes")}
             </div>
           )}
+        </Section>
+
+        {/* SEO */}
+        <Section
+          id="seo"
+          title={<span className="inline-flex items-center gap-2"><Globe className="h-5 w-5 text-[#b86ef9]" />Référencement (SEO)</span>}
+          subtitle="Le titre et la description affichés par Google pour votre fiche. Laissez vide pour utiliser le texte généré automatiquement."
+        >
+          <Field label={<label htmlFor="meta-title">Title SEO</label>}>
+            <Input
+              id="meta-title"
+              value={metaTitle}
+              maxLength={70}
+              onChange={(e) => { setMetaTitle(e.target.value); markDirty(); }}
+              placeholder="Prénom Nom — Thérapeute à Genève"
+              className={inputClass}
+            />
+            <p className="mt-1.5 text-xs text-[#a89bc4]">{metaTitle.length}/70 · visez 20 à 60 caractères.</p>
+          </Field>
+
+          <div className="mt-5">
+            <Field label={<label htmlFor="meta-description">Meta description</label>}>
+              <Textarea
+                id="meta-description"
+                value={metaDescription}
+                maxLength={170}
+                rows={3}
+                onChange={(e) => { setMetaDescription(e.target.value); markDirty(); }}
+                placeholder="Accompagnement en… à … . Séances au cabinet ou en visio, sur rendez-vous."
+                className={`${inputClass} h-auto resize-y py-2`}
+              />
+              <p className="mt-1.5 text-xs text-[#a89bc4]">{metaDescription.length}/170 · visez 80 à 160 caractères.</p>
+            </Field>
+          </div>
         </Section>
 
         {/* Payment methods (private, used only on invoices) */}
@@ -1246,15 +1344,16 @@ const selectClass =
   "h-11 w-full rounded-xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.55)] px-3 text-white focus:ring-2 focus:ring-[#b86ef9]/40 [&>span]:text-white";
 
 function Section({
-  title, subtitle, action, children,
+  id, title, subtitle, action, children,
 }: {
+  id?: string;
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-6 rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md sm:p-8">
+    <section id={id} className="mt-6 rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[rgba(20,8,40,0.5)] p-6 backdrop-blur-md sm:p-8">
       {(title || action) && (
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>

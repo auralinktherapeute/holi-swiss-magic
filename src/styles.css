@@ -357,3 +357,19 @@
   .nt-card:hover, .nt-card:focus-within { transform: none; }
   .nt-ring::before, .nt-breathe, .nt-shine::after { animation: none; }
 }
+
+/* Cible d'ancre (actions du score de visibilité) */
+.hash-target {
+  scroll-margin-top: 96px;
+  animation: hash-target-pulse 2.4s ease-out 1;
+  border-radius: 1rem;
+}
+@keyframes hash-target-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(184, 110, 249, 0); }
+  15% { box-shadow: 0 0 0 4px rgba(184, 110, 249, 0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(184, 110, 249, 0); }
+}
+[id] { scroll-margin-top: 96px; }
+@media (prefers-reduced-motion: reduce) {
+  .hash-target { animation: none; outline: 3px solid rgba(184, 110, 249, 0.7); }
+}

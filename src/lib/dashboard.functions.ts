@@ -33,6 +33,9 @@ const profileSchema = z.object({
   google_reviews_url: z.string().url().max(1000).nullable().or(z.literal(null)),
   website: z.string().url().max(1000).nullable().or(z.literal(null)),
   accreditations: z.array(z.unknown()).max(30),
+  meta_title: z.string().max(120).nullable().optional(),
+  meta_description: z.string().max(320).nullable().optional(),
+  consultation_modes: z.array(z.string().max(40)).max(10).optional(),
   ide: z.string().max(40).nullable(),
 });
 
@@ -279,6 +282,9 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       website: data.website,
       accreditations: data.accreditations,
     };
+    if (data.meta_title !== undefined) payload.meta_title = data.meta_title;
+    if (data.meta_description !== undefined) payload.meta_description = data.meta_description;
+    if (data.consultation_modes !== undefined) payload.consultation_modes = data.consultation_modes;
     if (geo) {
       payload.latitude = geo.latitude;
       payload.longitude = geo.longitude;
