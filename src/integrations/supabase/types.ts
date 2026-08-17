@@ -4535,6 +4535,15 @@ export type Database = {
         Returns: Json
       }
       anonymize_user_analytics: { Args: { _uid: string }; Returns: undefined }
+      certification_verification_unchanged: {
+        Args: {
+          _id: string
+          _verification_status: string
+          _verified_at: string
+          _verified_by: string
+        }
+        Returns: boolean
+      }
       claim_founder_seat: {
         Args: {
           _actor?: string
@@ -4753,6 +4762,17 @@ export type Database = {
         }[]
       }
       therapist_review_stats: { Args: { _therapist_id: string }; Returns: Json }
+      therapists_admin_fields_unchanged: {
+        Args: {
+          _id: string
+          _ide_verified: boolean
+          _siret_verified: boolean
+          _status: string
+          _subscription_plan: string
+          _verified: boolean
+        }
+        Returns: boolean
+      }
       therapists_within_radius: {
         Args: { _lat: number; _lng: number; _radius_m?: number }
         Returns: {
