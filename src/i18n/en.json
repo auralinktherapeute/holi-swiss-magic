@@ -486,7 +486,21 @@
     "newsletter_unsub_confirm_title": "Confirm unsubscription",
     "newsletter_unsub_confirm_body": "Do you really want to stop receiving La Lettre Holiswiss? Emails required for your account or your appointments will still be sent.",
     "newsletter_unsub_cancel": "Cancel",
-    "newsletter_unsub_confirm_cta": "Unsubscribe"
+    "newsletter_unsub_confirm_cta": "Unsubscribe",
+    "nlf_title": "The Holiswiss Letter",
+    "nlf_subtitle": "News, resources and opportunities reserved for therapists.",
+    "nlf_text": "Be the first to hear about Holiswiss news, platform updates, tips to grow your practice and upcoming offers or promotions.",
+    "nlf_b1": "News before everyone else.",
+    "nlf_b2": "Practical advice for therapists.",
+    "nlf_b3": "Visibility and growth resources.",
+    "nlf_b4": "Digital and AI support.",
+    "nlf_b5": "Information about upcoming offers and promotions.",
+    "nlf_b6": "Invitations and Holiswiss community initiatives.",
+    "nlf_state_none": "You are not subscribed.",
+    "nlf_state_active": "You are subscribed.",
+    "nlf_state_off": "Your subscription is disabled.",
+    "nlf_consent": "I agree to receive The Holiswiss Letter by email.",
+    "nlf_optional": "Optional subscription, you can unsubscribe at any time."
   },
   "hero": {
     "title_part1": "Find the right",

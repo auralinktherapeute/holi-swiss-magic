@@ -11,6 +11,7 @@ type ConsentRow = {
   email: string | null;
   newsletter_opt_in: boolean | null;
   newsletter_opt_in_at: string | null;
+  newsletter_unsubscribed_at?: string | null;
   newsletter_consent_source: string | null;
   newsletter_consent_version: string | null;
 };
@@ -23,7 +24,7 @@ export const getMyNewsletterConsent = createServerFn({ method: "POST" })
     const { data } = await supabaseAdmin
       .from("therapists")
       .select(
-        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_consent_source,newsletter_consent_version" as never
+        "id,email,newsletter_opt_in,newsletter_opt_in_at,newsletter_unsubscribed_at,newsletter_consent_source,newsletter_consent_version" as never
       )
       .eq("user_id", context.userId)
       .maybeSingle();
@@ -31,6 +32,7 @@ export const getMyNewsletterConsent = createServerFn({ method: "POST" })
     return {
       optIn: row?.newsletter_opt_in ?? false,
       optInAt: row?.newsletter_opt_in_at ?? null,
+      unsubscribedAt: row?.newsletter_unsubscribed_at ?? null,
       email: row?.email ?? null,
       source: row?.newsletter_consent_source ?? null,
       version: row?.newsletter_consent_version ?? null,
