@@ -22,6 +22,46 @@ export const NEWSLETTER_SEGMENTS = [
     label: "Abonnés payants",
     description: "Thérapeutes dont l'abonnement n'est pas gratuit.",
   },
+  {
+    key: "sans_photo",
+    label: "Thérapeutes sans photo",
+    description: "Profil actif sans photo de profil.",
+  },
+  {
+    key: "sans_presentation",
+    label: "Thérapeutes sans présentation",
+    description: "Profil actif sans texte de présentation.",
+  },
+  {
+    key: "sans_prestations",
+    label: "Thérapeutes sans prestations",
+    description: "Aucune prestation renseignée sur le profil.",
+  },
+  {
+    key: "sans_tarifs",
+    label: "Thérapeutes sans tarifs",
+    description: "Aucun tarif indiqué sur le profil.",
+  },
+  {
+    key: "sans_disponibilite",
+    label: "Thérapeutes sans disponibilité",
+    description: "Aucune plage de disponibilité déclarée dans l'agenda.",
+  },
+  {
+    key: "sans_contenu_expert",
+    label: "Thérapeutes sans contenu expert",
+    description: "Aucun article publié dans Voix d'experts.",
+  },
+  {
+    key: "score_faible",
+    label: "Score de visibilité faible",
+    description: "Santé du profil inférieure à 50 points.",
+  },
+  {
+    key: "profil_non_publie",
+    label: "Profil non publié",
+    description: "Profil renseigné mais pas encore visible publiquement.",
+  },
 ] as const;
 
 export type NewsletterSegmentKey = (typeof NEWSLETTER_SEGMENTS)[number]["key"];

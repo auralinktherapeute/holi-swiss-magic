@@ -1750,8 +1750,13 @@ export type Database = {
       }
       newsletter_issues: {
         Row: {
+          action_difficulty: string | null
+          action_label: string | null
+          action_minutes: number | null
           audience: string | null
           canonical_url: string | null
+          connection_notes: string | null
+          connection_priority: string | null
           created_at: string
           created_by: string | null
           created_by_email: string | null
@@ -1764,9 +1769,13 @@ export type Database = {
           email_preheader: string | null
           email_subject: string | null
           feature_highlight: string | null
+          feature_key: string | null
           id: string
           internal_notes: string | null
           lang: string
+          linked_article_id: string | null
+          linked_article_kind: string | null
+          linked_resource_slug: string | null
           meta_description: string | null
           objective: string | null
           pillar: string | null
@@ -1781,18 +1790,25 @@ export type Database = {
           resource_sections: string | null
           resource_takeaway: string | null
           resource_title: string | null
+          segment_key: string | null
           seo_title: string | null
           share_image_url: string | null
           slug: string | null
           status: string
           target_date: string | null
+          target_route: string | null
           title: string
           tone: string | null
           updated_at: string
         }
         Insert: {
+          action_difficulty?: string | null
+          action_label?: string | null
+          action_minutes?: number | null
           audience?: string | null
           canonical_url?: string | null
+          connection_notes?: string | null
+          connection_priority?: string | null
           created_at?: string
           created_by?: string | null
           created_by_email?: string | null
@@ -1805,9 +1821,13 @@ export type Database = {
           email_preheader?: string | null
           email_subject?: string | null
           feature_highlight?: string | null
+          feature_key?: string | null
           id?: string
           internal_notes?: string | null
           lang?: string
+          linked_article_id?: string | null
+          linked_article_kind?: string | null
+          linked_resource_slug?: string | null
           meta_description?: string | null
           objective?: string | null
           pillar?: string | null
@@ -1822,18 +1842,25 @@ export type Database = {
           resource_sections?: string | null
           resource_takeaway?: string | null
           resource_title?: string | null
+          segment_key?: string | null
           seo_title?: string | null
           share_image_url?: string | null
           slug?: string | null
           status?: string
           target_date?: string | null
+          target_route?: string | null
           title: string
           tone?: string | null
           updated_at?: string
         }
         Update: {
+          action_difficulty?: string | null
+          action_label?: string | null
+          action_minutes?: number | null
           audience?: string | null
           canonical_url?: string | null
+          connection_notes?: string | null
+          connection_priority?: string | null
           created_at?: string
           created_by?: string | null
           created_by_email?: string | null
@@ -1846,9 +1873,13 @@ export type Database = {
           email_preheader?: string | null
           email_subject?: string | null
           feature_highlight?: string | null
+          feature_key?: string | null
           id?: string
           internal_notes?: string | null
           lang?: string
+          linked_article_id?: string | null
+          linked_article_kind?: string | null
+          linked_resource_slug?: string | null
           meta_description?: string | null
           objective?: string | null
           pillar?: string | null
@@ -1863,11 +1894,13 @@ export type Database = {
           resource_sections?: string | null
           resource_takeaway?: string | null
           resource_title?: string | null
+          segment_key?: string | null
           seo_title?: string | null
           share_image_url?: string | null
           slug?: string | null
           status?: string
           target_date?: string | null
+          target_route?: string | null
           title?: string
           tone?: string | null
           updated_at?: string
@@ -2113,6 +2146,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "newsletter_sends_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_suggestions: {
+        Row: {
+          audience: string | null
+          created_at: string
+          created_by: string | null
+          created_by_email: string | null
+          feature_key: string | null
+          id: string
+          issue_id: string | null
+          objective: string | null
+          pillar: string | null
+          priority: string
+          rationale: string | null
+          source: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          feature_key?: string | null
+          id?: string
+          issue_id?: string | null
+          objective?: string | null
+          pillar?: string | null
+          priority?: string
+          rationale?: string | null
+          source?: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          feature_key?: string | null
+          id?: string
+          issue_id?: string | null
+          objective?: string | null
+          pillar?: string | null
+          priority?: string
+          rationale?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_suggestions_issue_id_fkey"
             columns: ["issue_id"]
             isOneToOne: false
             referencedRelation: "newsletter_issues"
