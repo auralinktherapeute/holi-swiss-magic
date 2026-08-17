@@ -77,6 +77,7 @@ import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeutes.$slug'
+import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
@@ -431,6 +432,11 @@ const LangTherapeutesSlugRoute = LangTherapeutesSlugRouteImport.update({
   path: '/therapeutes/$slug',
   getParentRoute: () => LangRoute,
 } as any)
+const AdminNewsletterIdRoute = AdminNewsletterIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminNewsletterRoute,
+} as any)
 const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
   id: '/api/public/admin-notify',
   path: '/api/public/admin-notify',
@@ -492,7 +498,7 @@ export interface FileRoutesByFullPath {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
-  '/admin/newsletter': typeof AdminNewsletterRoute
+  '/admin/newsletter': typeof AdminNewsletterRouteWithChildren
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -527,6 +533,7 @@ export interface FileRoutesByFullPath {
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -566,7 +573,7 @@ export interface FileRoutesByTo {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
-  '/admin/newsletter': typeof AdminNewsletterRoute
+  '/admin/newsletter': typeof AdminNewsletterRouteWithChildren
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -601,6 +608,7 @@ export interface FileRoutesByTo {
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
@@ -644,7 +652,7 @@ export interface FileRoutesById {
   '/admin/liste-attente': typeof AdminListeAttenteRoute
   '/admin/marketing': typeof AdminMarketingRoute
   '/admin/moderation': typeof AdminModerationRoute
-  '/admin/newsletter': typeof AdminNewsletterRoute
+  '/admin/newsletter': typeof AdminNewsletterRouteWithChildren
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/paroles': typeof AdminParolesRoute
@@ -679,6 +687,7 @@ export interface FileRoutesById {
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
@@ -758,6 +767,7 @@ export interface FileRouteTypes {
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -832,6 +842,7 @@ export interface FileRouteTypes {
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/$lang/blog'
     | '/$lang/conditions'
@@ -909,6 +920,7 @@ export interface FileRouteTypes {
     | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/$lang/blog/'
     | '/$lang/conditions/'
@@ -1428,6 +1440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTherapeutesSlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/admin/newsletter/$id': {
+      id: '/admin/newsletter/$id'
+      path: '/$id'
+      fullPath: '/admin/newsletter/$id'
+      preLoaderRoute: typeof AdminNewsletterIdRouteImport
+      parentRoute: typeof AdminNewsletterRoute
+    }
     '/api/public/admin-notify': {
       id: '/api/public/admin-notify'
       path: '/api/public/admin-notify'
@@ -1552,6 +1571,18 @@ const LangRouteChildren: LangRouteChildren = {
 
 const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
 
+interface AdminNewsletterRouteChildren {
+  AdminNewsletterIdRoute: typeof AdminNewsletterIdRoute
+}
+
+const AdminNewsletterRouteChildren: AdminNewsletterRouteChildren = {
+  AdminNewsletterIdRoute: AdminNewsletterIdRoute,
+}
+
+const AdminNewsletterRouteWithChildren = AdminNewsletterRoute._addFileChildren(
+  AdminNewsletterRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminAbonnementsRoute: typeof AdminAbonnementsRoute
   AdminAgentsRoute: typeof AdminAgentsRoute
@@ -1566,7 +1597,7 @@ interface AdminRouteChildren {
   AdminListeAttenteRoute: typeof AdminListeAttenteRoute
   AdminMarketingRoute: typeof AdminMarketingRoute
   AdminModerationRoute: typeof AdminModerationRoute
-  AdminNewsletterRoute: typeof AdminNewsletterRoute
+  AdminNewsletterRoute: typeof AdminNewsletterRouteWithChildren
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminParolesRoute: typeof AdminParolesRoute
@@ -1591,7 +1622,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminListeAttenteRoute: AdminListeAttenteRoute,
   AdminMarketingRoute: AdminMarketingRoute,
   AdminModerationRoute: AdminModerationRoute,
-  AdminNewsletterRoute: AdminNewsletterRoute,
+  AdminNewsletterRoute: AdminNewsletterRouteWithChildren,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminParolesRoute: AdminParolesRoute,
