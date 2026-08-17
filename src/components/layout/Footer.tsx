@@ -1,6 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/holiswiss/Logo";
+import { NewsletterFooterCompact } from "@/components/holiswiss/NewsletterSignup";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -14,7 +15,7 @@ export function Footer() {
   return (
     <footer className="mt-24 border-t border-[rgba(184,110,249,0.15)] bg-[#2d1248]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-4 lg:grid-cols-5">
           <div>
             <Logo size={32} />
             <p className="mt-3 text-sm text-[#d4c4e0]">{t("brand.tagline")}</p>
@@ -73,6 +74,9 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
+          </div>
+          <div className="md:col-span-4 lg:col-span-1">
+            <NewsletterFooterCompact />
           </div>
         </div>
         <div className="mt-10 border-t border-[rgba(184,110,249,0.15)] pt-6 text-center text-xs text-[#d4c4e0]">
