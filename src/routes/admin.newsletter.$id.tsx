@@ -45,6 +45,7 @@ import {
   NewsletterLinkCheck,
   type ConnectionKey,
 } from "@/components/admin/NewsletterConnection";
+import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
   getNewsletterIssue,
   updateNewsletterIssue,

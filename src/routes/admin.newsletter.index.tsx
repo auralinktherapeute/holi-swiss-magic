@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ActionTooltip } from "@/components/admin/ActionTooltip";
+import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
   listNewsletterIssues,
   createNewsletterIssue,
