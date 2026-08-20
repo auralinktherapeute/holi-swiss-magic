@@ -461,7 +461,6 @@ export function NewsletterSendPreview(props: Props) {
             <CheckCircle2 className="h-4 w-4 mr-2" aria-hidden="true" /> Terminer la vérification
           </Button>
         </DialogFooter>
-
       </DialogContent>
     </Dialog>
   );
