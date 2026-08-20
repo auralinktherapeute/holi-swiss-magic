@@ -372,8 +372,10 @@ function Page() {
     onSuccess: () => {
       toast.success("Modifications enregistrées.");
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issue", id] });
+      qc.invalidateQueries({ queryKey: ["admin-newsletter-send-preview", id] });
       qc.invalidateQueries({ queryKey: ["admin-newsletter-revisions", id] });
       qc.invalidateQueries({ queryKey: ["admin-newsletter-issues"] });
+
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Enregistrement impossible."),
