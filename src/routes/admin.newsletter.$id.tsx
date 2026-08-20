@@ -428,9 +428,6 @@ function Page() {
     });
   }, [form]);
 
-
-
-
   const testTarget = testEmail.trim();
   const testEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(testTarget);
 
@@ -518,7 +515,6 @@ function Page() {
     return out;
   }, [form, blockers.length, hasTestSent, issue?.status, alreadySent]);
 
-
   if (isLoading) {
     return <div className="p-6 md:p-10 text-white/60">Chargement de la newsletter…</div>;
   }
@@ -594,7 +590,6 @@ function Page() {
           statusLabel={flowStatus}
           onStepClick={(t: string) => setTab(t)}
         />
-
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-5">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-white/5 p-1 h-auto">
@@ -1417,8 +1412,6 @@ function Page() {
                   </div>
                 </div>
 
-
-
                 {/* JOURNAL */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
                   <h3 className="font-semibold text-sm">Journal des envois</h3>
@@ -1606,7 +1599,6 @@ function Page() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
 
       <AlertDialog open={confirmStatus !== null} onOpenChange={(o) => !o && setConfirmStatus(null)}>
         <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
