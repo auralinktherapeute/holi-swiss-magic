@@ -1420,7 +1420,7 @@ function Page() {
                   </div>
                 </div>
 
-                </div>
+
 
                 {/* JOURNAL */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
