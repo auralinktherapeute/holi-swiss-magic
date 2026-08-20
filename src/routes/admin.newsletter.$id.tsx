@@ -1531,7 +1531,7 @@ function Page() {
             ? `${window.location.origin}/admin/newsletter/${id}`
             : `/admin/newsletter/${id}`
         }
-        onValidated={() => setCheckedVersion(emailVersion)}
+        onValidated={() => setPreviewOpen(false)}
         onGoto={(t: SendPreviewTab) => setTab(t)}
       />
 
