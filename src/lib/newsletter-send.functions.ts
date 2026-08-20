@@ -60,7 +60,13 @@ function checkSendable(issue: any, recipientCount: number, senderOk: boolean): s
 export const getNewsletterSendPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({ id: z.string().uuid(), segment: z.enum(NEWSLETTER_SEGMENT_KEYS) }).parse(data),
+    z
+      .object({
+        id: z.string().uuid(),
+        segment: z.enum(NEWSLETTER_SEGMENT_KEYS),
+        recipientIds: z.array(z.string().uuid()).max(5000).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -70,7 +76,18 @@ export const getNewsletterSendPreview = createServerFn({ method: "POST" })
     const { emailSenderConfigured } = await import("@/lib/holiswiss-email.server");
 
     const issue = await loadIssue(db, data.id);
-    const recipients = await resolveRecipients(db, data.segment as NewsletterSegmentKey);
+    const recipients = await resolveRecipients(db, data.segment as NewsletterSegmentKey, {
+      ids: data.recipientIds ?? [],
+    });
+    // Combien de profils correspondent au segment si l'on ignore le consentement ?
+    const candidates =
+      data.segment === "selection_manuelle"
+        ? recipients.length
+        : (
+            await resolveRecipients(db, data.segment as NewsletterSegmentKey, {
+              ignoreConsent: true,
+            })
+          ).length;
 
     const { data: inProgress } = await db
       .from("newsletter_sends")
@@ -92,6 +109,8 @@ export const getNewsletterSendPreview = createServerFn({ method: "POST" })
       subject: (issue.email_subject as string | null) ?? null,
       sender: SENDER_ADDRESS,
       recipientCount: recipients.length,
+      candidateCount: candidates,
+      missingConsentCount: Math.max(0, candidates - recipients.length),
       resourceUrl: resourceUrl(issue.lang as string, issue.slug as string | null),
       resourcePublished: Boolean(issue.published_at),
       versionLabel: `Version du ${new Date(issue.updated_at as string).toLocaleString("fr-CH")}`,
@@ -166,6 +185,7 @@ export const sendNewsletterIssue = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid(),
         segment: z.enum(NEWSLETTER_SEGMENT_KEYS),
+        recipientIds: z.array(z.string().uuid()).max(5000).optional(),
         confirm: z.literal(true),
       })
       .parse(data),
@@ -178,7 +198,9 @@ export const sendNewsletterIssue = createServerFn({ method: "POST" })
     const { emailSenderConfigured } = await import("@/lib/holiswiss-email.server");
 
     const issue = await loadIssue(db, data.id);
-    const recipients = await resolveRecipients(db, data.segment as NewsletterSegmentKey);
+    const recipients = await resolveRecipients(db, data.segment as NewsletterSegmentKey, {
+      ids: data.recipientIds ?? [],
+    });
     const blockers = checkSendable(issue, recipients.length, emailSenderConfigured());
     if (blockers.length > 0) throw new Error(blockers.join(" "));
 
@@ -301,4 +323,33 @@ export const unsubscribeNewsletter = createServerFn({ method: "POST" })
       .update({ newsletter_unsubscribed_at: new Date().toISOString(), newsletter_opt_in: false })
       .eq("id", row.id);
     return { ok: true as const };
+  });
+
+/** Liste des thérapeutes du CRM pour la sélection manuelle des destinataires. */
+export const listNewsletterCrmContacts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const db = await admin();
+    const { data } = await db
+      .from("therapists")
+      .select(
+        "id,first_name,last_name,email,city,status,subscription_plan,newsletter_opt_in,newsletter_unsubscribed_at",
+      )
+      .not("email", "is", null)
+      .order("last_name", { ascending: true })
+      .limit(2000);
+    const rows = ((data ?? []) as any[])
+      .filter((r) => isValidEmail(String(r.email ?? "")))
+      .map((r) => ({
+        id: r.id as string,
+        name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || (r.email as string),
+        email: String(r.email).trim().toLowerCase(),
+        city: (r.city as string | null) ?? null,
+        status: (r.status as string | null) ?? null,
+        plan: (r.subscription_plan as string | null) ?? null,
+        optIn: Boolean(r.newsletter_opt_in),
+        unsubscribed: Boolean(r.newsletter_unsubscribed_at),
+      }));
+    return { rows };
   });
