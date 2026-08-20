@@ -58,6 +58,12 @@ export const NEWSLETTER_SEGMENTS = [
     description: "Santé du profil inférieure à 50 points.",
   },
   {
+    key: "selection_manuelle",
+    label: "Sélection manuelle (CRM thérapeutes)",
+    description:
+      "Vous choisissez les adresses une par une dans la liste des thérapeutes. Les personnes désinscrites restent exclues.",
+  },
+  {
     key: "profil_non_publie",
     label: "Profil non publié",
     description: "Profil renseigné mais pas encore visible publiquement.",
