@@ -121,9 +121,9 @@ export async function sendInvoiceEmail(args: {
     <h2 style="margin:0 0 12px;color:#1c1c1e;font-size:20px;">Votre facture est disponible</h2>
     <p style="margin:0 0 14px;">Bonjour,</p>
     <p style="margin:0 0 14px;">Vous trouverez ci-joint la facture <strong>${escapeHtml(args.invoiceNumber)}</strong> d'un montant de <strong>${args.amount.toFixed(2)} ${escapeHtml(args.currency)}</strong>, incluant le bulletin QR-facture suisse.</p>
-    ${args.message ? `<div style="background:#faf7f2;border-left:3px solid #6B7B5E;padding:12px 14px;margin:14px 0;border-radius:4px;">${escapeHtml(args.message).replace(/\n/g, "<br/>")}</div>` : ""}
+    ${args.message ? `<div style="background:#faf7f2;border-left:3px solid #7c3aed;padding:12px 14px;margin:14px 0;border-radius:4px;">${escapeHtml(args.message).replace(/\n/g, "<br/>")}</div>` : ""}
     <p style="text-align:center;margin:24px 0;">
-      <a href="${args.viewUrl}" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#6B7B5E;color:#fff;font-weight:600;text-decoration:none;">Voir la facture en ligne</a>
+      <a href="${args.viewUrl}" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#7c3aed;color:#fff;font-weight:600;text-decoration:none;">Voir la facture en ligne</a>
     </p>
     <p style="margin:16px 0 0;font-size:13px;color:#666;">Émise par ${escapeHtml(args.therapistName)}<br/>Via HoliSwiss</p>
   `;
@@ -149,9 +149,9 @@ export async function sendQuestionnaireEmail(args: {
     <h2 style="margin:0 0 12px;color:#1c1c1e;font-size:20px;">Questionnaire à remplir</h2>
     <p style="margin:0 0 14px;">Bonjour,</p>
     <p style="margin:0 0 14px;"><strong>${escapeHtml(args.therapistName)}</strong> vous invite à remplir le questionnaire suivant : <strong>${escapeHtml(args.questionnaireTitle)}</strong>.</p>
-    ${args.message ? `<div style="background:#faf7f2;border-left:3px solid #6B7B5E;padding:12px 14px;margin:14px 0;border-radius:4px;">${escapeHtml(args.message).replace(/\n/g, "<br/>")}</div>` : ""}
+    ${args.message ? `<div style="background:#faf7f2;border-left:3px solid #7c3aed;padding:12px 14px;margin:14px 0;border-radius:4px;">${escapeHtml(args.message).replace(/\n/g, "<br/>")}</div>` : ""}
     <p style="text-align:center;margin:24px 0;">
-      <a href="${args.link}" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#6B7B5E;color:#fff;font-weight:600;text-decoration:none;">Ouvrir le questionnaire</a>
+      <a href="${args.link}" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#7c3aed;color:#fff;font-weight:600;text-decoration:none;">Ouvrir le questionnaire</a>
     </p>
     <p style="margin:16px 0 0;font-size:12px;color:#888;word-break:break-all;">Si le bouton ne fonctionne pas : ${escapeHtml(args.link)}</p>
   `;
