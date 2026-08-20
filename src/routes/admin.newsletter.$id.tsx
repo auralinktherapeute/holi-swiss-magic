@@ -249,7 +249,7 @@ function Page() {
 
   const contacts = useQuery({
     queryKey: ["admin-newsletter-crm-contacts"],
-    queryFn: () => loadCrmContacts({ data: {} }),
+    queryFn: () => loadCrmContacts(),
     enabled: manual,
   });
 
