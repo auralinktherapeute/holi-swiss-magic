@@ -47,11 +47,11 @@ import {
 } from "@/components/admin/NewsletterConnection";
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
-  NewsletterWorkflowGuide,
-  NEWSLETTER_WORKFLOW_STEPS,
-  type WorkflowStepKey,
-  type WorkflowStepState,
-} from "@/components/admin/NewsletterWorkflowGuide";
+  NewsletterSteps,
+  type SendStepKey,
+  type SendStepState,
+} from "@/components/admin/NewsletterSteps";
+
 import {
   getNewsletterIssue,
   updateNewsletterIssue,
