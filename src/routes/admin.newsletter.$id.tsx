@@ -47,11 +47,11 @@ import {
 } from "@/components/admin/NewsletterConnection";
 import { NewsletterStatusLegend } from "@/components/admin/NewsletterStatusLegend";
 import {
-  NewsletterWorkflowGuide,
-  NEWSLETTER_WORKFLOW_STEPS,
-  type WorkflowStepKey,
-  type WorkflowStepState,
-} from "@/components/admin/NewsletterWorkflowGuide";
+  NewsletterSteps,
+  type SendStepKey,
+  type SendStepState,
+} from "@/components/admin/NewsletterSteps";
+
 import {
   getNewsletterIssue,
   updateNewsletterIssue,
@@ -234,12 +234,10 @@ function Page() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
-  const [confirmTestOpen, setConfirmTestOpen] = useState(false);
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
-  // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
   const [tab, setTab] = useState<string>("brief");
-  const [checkedVersion, setCheckedVersion] = useState<string | null>(null);
+
   const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
 
   const sendPreview = useQuery({
@@ -430,10 +428,6 @@ function Page() {
     });
   }, [form]);
 
-  // Empreinte du contenu email : toute modification invalide l'aperçu déjà vérifié.
-  const emailVersion = useMemo(() => previewHtml, [previewHtml]);
-  const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
-
   const testTarget = testEmail.trim();
   const testEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(testTarget);
 
@@ -468,53 +462,58 @@ function Page() {
   });
 
   const blockers = sendPreview.data?.blockers ?? [];
-  const canSend = blockers.length === 0 && !sendReal.isPending && previewChecked;
+  const alreadySent = Boolean(sendPreview.data?.alreadySent);
+  const canSend = blockers.length === 0 && !sendReal.isPending;
 
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
   const approved = issue?.status === "approuvee";
 
-  // Progression réelle du parcours en 13 étapes, dérivée des données du dossier.
-  const workflowStates = useMemo<Partial<Record<WorkflowStepKey, WorkflowStepState>>>(() => {
-    if (!issue || !form) return {};
+  const hasTestSent = useMemo(() => {
     const raw = sends.data as unknown;
-    const sendRows: { is_test?: boolean }[] = Array.isArray(raw)
+    const rows: { is_test?: boolean }[] = Array.isArray(raw)
       ? (raw as { is_test?: boolean }[])
       : (((raw as { rows?: { is_test?: boolean }[] } | undefined)?.rows ?? []) as {
           is_test?: boolean;
         }[]);
-    const hasTest = sendRows.some((s) => s.is_test);
-    const done = {
-      suggestion: true,
-      brief: true,
-      completer: Boolean(form.title && form.pillar && form.audience),
-      rediger: Boolean(form.email_subject && form.email_body),
-      editeur: Boolean(form.email_subject && form.email_body),
-      apercu_email: previewChecked,
-      apercu_ressource: Boolean(issue.published_at),
-      checklist: qcDone === qcTotal,
-      test: hasTest,
-      controle: hasTest && previewChecked,
-      approbation: ["approuvee", "programmee", "envoi_en_cours", "envoyee"].includes(issue.status),
-      segment: (sendPreview.data?.recipientCount ?? 0) > 0,
-      confirmation: canSend,
-      envoi: issue.status === "envoyee",
-    } satisfies Record<WorkflowStepKey, boolean>;
+    return rows.some((s) => s.is_test);
+  }, [sends.data]);
 
-    const out: Partial<Record<WorkflowStepKey, WorkflowStepState>> = {};
+  /** Statut fonctionnel déduit de l'état réel du formulaire et des envois. */
+  const flowStatus = useMemo(() => {
+    if (!issue) return "Brouillon";
+    if (issue.status === "envoi_en_cours" || sendReal.isPending) return "Envoi en cours";
+    if (issue.status === "envoyee" || alreadySent) return "Envoyée";
+    if (issue.status === "echec") return "Erreur lors de l'envoi";
+    if (blockers.length > 0) return "Brouillon — informations incomplètes";
+    if (hasTestSent) return "Test envoyé — prête à envoyer";
+    return "Prête à envoyer";
+  }, [issue, blockers.length, hasTestSent, alreadySent, sendReal.isPending]);
+
+  /** Progression du parcours simplifié en 4 étapes. */
+  const stepStates = useMemo<Record<SendStepKey, SendStepState>>(() => {
+    const prepared = Boolean(
+      form && form.email_subject.trim() && (form.email_body.trim() || form.email_intro.trim()),
+    );
+    const verified = prepared && blockers.length === 0;
+    const sent = issue?.status === "envoyee" || alreadySent;
+    const done: Record<SendStepKey, boolean> = {
+      preparer: prepared,
+      verifier: verified,
+      tester: hasTestSent,
+      envoyer: sent,
+    };
+    const out = {} as Record<SendStepKey, SendStepState>;
     let currentSet = false;
-    for (const step of NEWSLETTER_WORKFLOW_STEPS) {
-      if (done[step.key]) {
-        out[step.key] = "done";
-      } else if (!currentSet) {
-        out[step.key] = "current";
+    for (const key of ["preparer", "verifier", "tester", "envoyer"] as SendStepKey[]) {
+      if (done[key]) out[key] = "done";
+      else if (!currentSet) {
+        out[key] = "current";
         currentSet = true;
-      } else {
-        out[step.key] = "todo";
-      }
+      } else out[key] = "todo";
     }
     return out;
-  }, [issue, form, sends.data, previewChecked, qcDone, qcTotal, sendPreview.data, canSend]);
+  }, [form, blockers.length, hasTestSent, issue?.status, alreadySent]);
 
   if (isLoading) {
     return <div className="p-6 md:p-10 text-white/60">Chargement de la newsletter…</div>;
@@ -586,7 +585,11 @@ function Page() {
           </Card>
         )}
 
-        <NewsletterWorkflowGuide states={workflowStates} onStepClick={(t) => setTab(t)} />
+        <NewsletterSteps
+          states={stepStates}
+          statusLabel={flowStatus}
+          onStepClick={(t: string) => setTab(t)}
+        />
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-5">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-white/5 p-1 h-auto">
@@ -1282,22 +1285,43 @@ function Page() {
                     <span className="text-white/60">Expéditeur</span>
                     <span className="text-white/85">{sendPreview.data?.sender ?? "—"}</span>
                   </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Objet</span>
+                    <span className="text-right text-white/85 break-words">
+                      {form.email_subject || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Pré-header</span>
+                    <span className="text-right text-white/85 break-words">
+                      {form.email_preheader || "—"}
+                    </span>
+                  </div>
                   <div className="flex items-start justify-between gap-3">
-                    <span className="text-white/60">Page ressource</span>
+                    <span className="text-white/60">Bouton</span>
+                    <span className="text-right break-all text-white/85">
+                      {form.email_button_label
+                        ? `${form.email_button_label} → ${form.email_button_url || "aucun lien"}`
+                        : "Aucun bouton"}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-white/60">Page ressource (facultative)</span>
                     <span className="text-right break-all text-white/85">
                       {sendPreview.data?.resourceUrl ?? "Non utilisée"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-white/60">Version approuvée</span>
+                    <span className="text-white/60">Version</span>
                     <span className="text-white/85">{sendPreview.data?.versionLabel ?? "—"}</span>
                   </div>
                 </div>
 
-                {blockers.length > 0 && (
+                {blockers.length > 0 ? (
                   <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-4">
                     <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
-                      <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi bloqué
+                      <AlertTriangle className="h-4 w-4" aria-hidden="true" /> À corriger avant
+                      l’envoi
                     </p>
                     <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
                       {blockers.map((b) => (
@@ -1305,39 +1329,41 @@ function Page() {
                       ))}
                     </ul>
                   </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-lg border border-[#4ade80]/30 bg-[#4ade80]/10 p-3 text-sm text-[#4ade80]">
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Toutes les vérifications
+                    indispensables sont validées.
+                  </div>
                 )}
 
-                {/* TEST */}
+                {/* APERÇU SUR LA MÊME PAGE */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
-                  <h3 className="font-semibold text-sm">Aperçu obligatoire</h3>
-                  <p className="text-xs text-white/50">
-                    Aucun email — test ou réel — ne peut partir avant que l'aperçu de la version
-                    actuelle ait été ouvert et validé. Toute modification du contenu annule la
-                    validation.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-sm">Aperçu de l’email</h3>
                     <Button
                       variant="outline"
                       onClick={() => setPreviewOpen(true)}
                       className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
-                      Prévisualiser avant envoi
+                      Aperçu détaillé (facultatif)
                     </Button>
-                    <Badge
-                      className={
-                        previewChecked
-                          ? "bg-[#4ade80]/15 text-[#4ade80] border-0"
-                          : "bg-[#fbbf24]/15 text-[#fbbf24] border-0"
-                      }
-                    >
-                      {previewChecked ? "Aperçu vérifié" : "Aperçu non vérifié"}
-                    </Badge>
                   </div>
+                  <div className="overflow-x-auto rounded-lg bg-white/5 p-2">
+                    <iframe
+                      title="Aperçu de l'email avant envoi"
+                      srcDoc={previewHtml}
+                      className="w-full rounded bg-white border-0"
+                      style={{ minWidth: 320, height: 480 }}
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">
+                    Le lien de désinscription est ajouté automatiquement dans le pied de page.
+                  </p>
                 </div>
 
                 {/* TEST */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
-                  <h3 className="font-semibold text-sm">Email de test</h3>
+                  <h3 className="font-semibold text-sm">Envoyer un email de test</h3>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       id="test-email"
@@ -1350,8 +1376,8 @@ function Page() {
                     />
                     <Button
                       variant="outline"
-                      onClick={() => setConfirmTestOpen(true)}
-                      disabled={sendTest.isPending || !previewChecked || !testEmailValid}
+                      onClick={() => sendTest.mutate()}
+                      disabled={sendTest.isPending || !testEmailValid}
                       className="min-h-11 shrink-0 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
                       {sendTest.isPending ? "Envoi…" : "Envoyer un email de test"}
@@ -1363,28 +1389,25 @@ function Page() {
                     </p>
                   )}
                   <p className="text-xs text-white/50">
-                    Le test part uniquement à l'adresse saisie — jamais à un segment. Il utilise
-                    exactement la version prévisualisée, n'affecte pas le statut de la newsletter et
-                    est enregistré dans l'historique comme « Test envoyé ».
-                    {!previewChecked && " Validez d'abord l'aperçu ci-dessus."}
+                    Le test part uniquement à l’adresse ci-dessus — jamais à un segment. Il
+                    n’affecte pas le statut de la newsletter et n’est pas l’envoi réel.
                   </p>
                 </div>
 
                 {/* ENVOI RÉEL */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
-                  <h3 className="font-semibold text-sm">Envoi réel</h3>
+                  <h3 className="font-semibold text-sm">Envoyer la newsletter</h3>
                   <div className="space-y-2">
                     <Button
                       onClick={() => setFinalConfirmOpen(true)}
                       disabled={!canSend}
                       className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
                     >
-                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Continuer vers l’envoi
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {sendReal.isPending ? "Envoi en cours…" : "Envoyer la newsletter"}
                     </Button>
                     <p className="text-xs text-white/50">
-                      Ce bouton ouvre une dernière confirmation : rien n’est envoyé tant que vous
-                      n’avez pas cliqué sur « Envoyer maintenant ».
-                      {!previewChecked && " Aperçu à valider avant tout envoi."}
+                      Une confirmation est demandée : rien n’est envoyé avant votre validation.
                     </p>
                   </div>
                 </div>
@@ -1501,288 +1524,77 @@ function Page() {
             ? `${window.location.origin}/admin/newsletter/${id}`
             : `/admin/newsletter/${id}`
         }
-        onValidated={() => setCheckedVersion(emailVersion)}
+        onValidated={() => setPreviewOpen(false)}
         onGoto={(t: SendPreviewTab) => setTab(t)}
       />
 
-      {/* Confirmation des changements de statut sensibles */}
-      <AlertDialog open={confirmTestOpen} onOpenChange={setConfirmTestOpen}>
+      {/* Confirmation finale avant envoi réel */}
+      <AlertDialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
         <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Envoyer un email de test à cette adresse ?</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/65">
-              Un seul email part, à l'adresse{" "}
-              <span className="font-semibold text-white break-all">{testTarget}</span>. Aucun
-              destinataire du segment n'est contacté, le statut de la newsletter reste inchangé et
-              l'envoi est enregistré comme « Test envoyé ».
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-[#4ade80]" aria-hidden="true" />
+              Confirmer l’envoi ?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/70">
+              Vous êtes sur le point d’envoyer cette newsletter à{" "}
+              <span className="font-semibold text-white">
+                {sendPreview.data?.recipientCount ?? 0}
+              </span>{" "}
+              thérapeute(s). Confirmer l’envoi ?
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <dl className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-4 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/55">Objet</dt>
+              <dd className="max-w-[60%] break-words text-right text-white/90">
+                {form.email_subject || "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/55">Sujet / campagne</dt>
+              <dd className="max-w-[60%] break-words text-right text-white/90">
+                {form.title || "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/55">Segment</dt>
+              <dd className="text-right text-white/90">
+                {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label ?? segment}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/55">Expéditeur</dt>
+              <dd className="text-right text-white/90">{sendPreview.data?.sender ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-white/55">Date prévue</dt>
+              <dd className="text-right text-white/90">
+                {form.target_date
+                  ? new Date(form.target_date).toLocaleDateString("fr-CH")
+                  : "Envoi immédiat"}
+              </dd>
+            </div>
+          </dl>
+
+          {alreadySent && (
+            <p className="flex items-start gap-2 rounded-lg border border-[#f87171]/40 bg-[#f87171]/10 p-3 text-xs text-[#f87171]">
+              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Cette campagne a déjà été envoyée : un nouvel envoi est refusé par le serveur.
+            </p>
+          )}
+
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10">
               Annuler
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="min-h-11 bg-[#b86ef9] hover:bg-[#a355f0] text-white"
-              onClick={() => {
-                setConfirmTestOpen(false);
-                sendTest.mutate();
-              }}
-            >
-              Envoyer le test
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Confirmation finale avant envoi réel */}
-      <AlertDialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-        <AlertDialogContent className="bg-[#1d0d3d] border-white/10 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
-          <AlertDialogHeader className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <AlertDialogTitle className="flex items-center gap-2 text-lg">
-                <Send className="h-5 w-5 text-[#4ade80]" aria-hidden="true" />
-                Récapitulatif avant envoi
-              </AlertDialogTitle>
-              {canSend ? (
-                <Badge className="w-fit bg-[#4ade80]/15 text-[#4ade80] border-0 px-3 py-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" /> Prêt à envoyer
-                </Badge>
-              ) : (
-                <Badge className="w-fit bg-[#fbbf24]/15 text-[#fbbf24] border-0 px-3 py-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" /> Corrections
-                  nécessaires
-                </Badge>
-              )}
-            </div>
-            <AlertDialogDescription className="text-white/65">
-              Vérifiez les quatre blocs ci-dessous avant de confirmer l’envoi. Toute anomalie est
-              signalée dans le bloc <strong>Validation</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* BLOC CONTENU */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-[#b86ef9]">
-                <FileText className="h-4 w-4" aria-hidden="true" />
-                <h3 className="font-semibold text-sm">Contenu</h3>
-              </div>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Objet</dt>
-                  <dd className="text-right text-white/90 break-words max-w-[60%]">
-                    {form.email_subject || "—"}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Pré-header</dt>
-                  <dd className="text-right text-white/90 break-words max-w-[60%]">
-                    {form.email_preheader || "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-white/55 mb-1">Aperçu</dt>
-                  <dd className="rounded-lg bg-[#14082d] border border-white/10 p-3 text-white/80 text-xs leading-relaxed line-clamp-4">
-                    {form.email_intro || form.email_body || "Aucun aperçu disponible."}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Version</dt>
-                  <dd className="text-right text-white/90">
-                    {sendPreview.data?.versionLabel ?? "—"}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Langue</dt>
-                  <dd className="text-right text-white/90">
-                    {NEWSLETTER_LANG_LABELS[
-                      (form.lang || "fr") as (typeof NEWSLETTER_LANGS)[number]
-                    ] ?? form.lang}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* BLOC AUDIENCE */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-[#38bdf8]">
-                <Users className="h-4 w-4" aria-hidden="true" />
-                <h3 className="font-semibold text-sm">Audience</h3>
-              </div>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Segment</dt>
-                  <dd className="text-right text-white/90">
-                    {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.label ?? segment}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Nombre de contacts</dt>
-                  <dd className="text-right font-semibold text-white">
-                    {sendPreview.data?.recipientCount ?? 0}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Contacts exclus</dt>
-                  <dd className="text-right text-white/90">0</dd>
-                </div>
-                <div>
-                  <dt className="text-white/55 mb-1">Raisons des exclusions</dt>
-                  <dd className="text-white/70 text-xs">Aucune exclusion détectée.</dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* BLOC DESTINATION */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-[#5cc8fa]">
-                <Link2 className="h-4 w-4" aria-hidden="true" />
-                <h3 className="font-semibold text-sm">Destination</h3>
-              </div>
-              <dl className="space-y-2 text-sm">
-                <div>
-                  <dt className="text-white/55 mb-1">Page ressource</dt>
-                  <dd className="break-all text-white/90 text-xs">
-                    {sendPreview.data?.resourceUrl ? (
-                      <a
-                        href={sendPreview.data.resourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#5cc8fa] hover:underline"
-                      >
-                        {sendPreview.data.resourceUrl}
-                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                      </a>
-                    ) : (
-                      "Non utilisée"
-                    )}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Fonctionnalité Holiswiss</dt>
-                  <dd className="text-right text-white/90 break-words max-w-[55%]">
-                    {form.feature_highlight || "—"}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">CTA</dt>
-                  <dd className="text-right text-white/90">{form.email_button_label || "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-white/55 mb-1">URL</dt>
-                  <dd className="break-all text-white/90 text-xs">
-                    {form.email_button_url ? (
-                      <a
-                        href={form.email_button_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#5cc8fa] hover:underline"
-                      >
-                        {form.email_button_url}
-                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* BLOC VALIDATION */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-[#4ade80]">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                <h3 className="font-semibold text-sm">Validation</h3>
-              </div>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Checklist</dt>
-                  <dd className="text-right text-white/90">
-                    {qcDone}/{qcTotal} validés
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Administrateur</dt>
-                  <dd className="text-right text-white/90">Connecté</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Date</dt>
-                  <dd className="text-right text-white/90">{new Date().toLocaleString("fr-CH")}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-white/55">Statut</dt>
-                  <dd className="text-right">
-                    <Badge className={STATUS_COLORS[issue.status]}>
-                      {NEWSLETTER_STATUS_LABELS[issue.status]}
-                    </Badge>
-                  </dd>
-                </div>
-                {qcDone < qcTotal && (
-                  <div className="rounded-lg border border-[#fbbf24]/30 bg-[#fbbf24]/10 p-2.5 text-xs">
-                    <p className="font-medium text-[#fbbf24] mb-1">Points restants :</p>
-                    <ul className="list-disc pl-4 space-y-0.5 text-[#fbbf24]/90">
-                      {NEWSLETTER_QC_ITEMS.filter((i) => !form.qc[i.key]).map((i) => (
-                        <li key={i.key}>{i.label}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </div>
-
-          {/* Bloc résumé + actions */}
-          <div className="rounded-xl border border-white/10 bg-[#14082d] p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              {canSend ? (
-                <CheckCircle2 className="h-5 w-5 text-[#4ade80] mt-0.5" aria-hidden="true" />
-              ) : (
-                <XCircle className="h-5 w-5 text-[#fbbf24] mt-0.5" aria-hidden="true" />
-              )}
-              <div>
-                <p className="font-medium text-white">
-                  {canSend ? "Prêt à envoyer" : "Corrections nécessaires avant l’envoi"}
-                </p>
-                <p className="text-sm text-white/60">
-                  {canSend
-                    ? `Tous les contrôles sont verts. ${sendPreview.data?.recipientCount ?? 0} thérapeute(s) vont recevoir cette newsletter via Resend.`
-                    : "Résolvez les points bloquants ci-dessous pour débloquer l’envoi."}
-                </p>
-              </div>
-            </div>
-
-            {!canSend && (
-              <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-3">
-                <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
-                  <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi impossible
-                </p>
-                <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
-                  {blockers.map((b) => (
-                    <li key={b}>{b}</li>
-                  ))}
-                  {!previewChecked && <li>L’aperçu n’a pas été validé.</li>}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setFinalConfirmOpen(false);
-                setPreviewOpen(true);
-              }}
-              className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
-            >
-              Retour à l’aperçu
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => sendReal.mutate()}
               disabled={!canSend}
               className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30 disabled:opacity-50"
             >
-              {sendReal.isPending ? "Envoi en cours…" : "Envoyer maintenant"}
+              {sendReal.isPending ? "Envoi en cours…" : "Confirmer l’envoi"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

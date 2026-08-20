@@ -448,18 +448,17 @@ export function NewsletterSendPreview(props: Props) {
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} className={outlineBtn}>
-            Fermer sans valider
+            Fermer
           </Button>
           <Button
             onClick={() => {
               onValidated();
               onOpenChange(false);
-              toast.success("Prévisualisation validée : l'envoi est débloqué pour cette version.");
+              toast.success("Aperçu vérifié.");
             }}
-            disabled={!allChecked}
-            className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30 disabled:opacity-50"
+            className="min-h-11 bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
           >
-            <CheckCircle2 className="h-4 w-4 mr-2" aria-hidden="true" /> Valider la prévisualisation
+            <CheckCircle2 className="h-4 w-4 mr-2" aria-hidden="true" /> Terminer la vérification
           </Button>
         </DialogFooter>
       </DialogContent>

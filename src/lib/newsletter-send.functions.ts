@@ -33,24 +33,28 @@ async function loadIssue(db: AnyClient, id: string) {
   return data as any;
 }
 
-/** Contrôles d'envoi partagés (les mêmes côté aperçu et côté envoi réel). */
+/**
+ * Contrôles d'envoi indispensables (identiques côté aperçu et côté envoi réel).
+ * Volontairement limités : approbation manuelle, checklist qualité et page
+ * ressource ne bloquent plus l'envoi — ils restent disponibles comme outils.
+ */
 function checkSendable(issue: any, recipientCount: number, senderOk: boolean): string[] {
   const blockers: string[] = [];
-  if (issue.status !== "approuvee") blockers.push("La newsletter n'est pas approuvée.");
-  const qc = (issue.qc_checklist ?? {}) as Record<string, boolean>;
-  const qcCount = Object.values(qc).filter(Boolean).length;
-  if (qcCount < 12) blockers.push("La checklist qualité n'est pas entièrement validée.");
-  if (!issue.email_subject) blockers.push("L'objet de l'email est manquant.");
-  if (!issue.email_body && !issue.email_intro) blockers.push("Le contenu de l'email est vide.");
-  if (recipientCount <= 0) blockers.push("Le segment ne contient aucun destinataire.");
+  const subject = String(issue.email_subject ?? "").trim();
+  const intro = String(issue.email_intro ?? "").trim();
+  const body = String(issue.email_body ?? "").trim();
+  const buttonUrl = String(issue.email_button_url ?? "").trim();
+
+  if (!subject) blockers.push("Ajoutez un objet avant de continuer.");
+  if (!body && !intro) blockers.push("Le contenu de l'email est vide.");
+  if (recipientCount <= 0) blockers.push("Aucun destinataire ne correspond à ce segment.");
   if (!senderOk) blockers.push("L'expéditeur n'est pas configuré.");
-  const usesResource =
-    Boolean(issue.slug) && (issue.email_button_url ?? "").includes(`/lettre/${issue.slug}`);
-  if (usesResource && !issue.published_at) {
-    blockers.push("La page ressource utilisée n'est pas publiée.");
+  if (buttonUrl && !/^https?:\/\/\S+$/i.test(buttonUrl)) {
+    blockers.push("Le lien du bouton est invalide.");
   }
   return blockers;
 }
+
 
 /** Aperçu de l'audience + blocages, pour la fenêtre de confirmation. */
 export const getNewsletterSendPreview = createServerFn({ method: "POST" })
