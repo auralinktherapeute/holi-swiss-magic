@@ -461,9 +461,72 @@ function Page() {
     },
   });
 
-  const blockers = sendPreview.data?.blockers ?? [];
   const alreadySent = Boolean(sendPreview.data?.alreadySent);
+
+  /** Amène l'administrateur directement sur le champ à corriger. */
+  const focusField = (targetTab: string, fieldId?: string) => {
+    setTab(targetTab);
+    if (!fieldId) return;
+    window.setTimeout(() => {
+      const el = document.getElementById(fieldId) as HTMLElement | null;
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.focus({ preventScroll: true });
+    }, 120);
+  };
+
+  /**
+   * Blocages recalculés à partir du formulaire affiché (et non de la dernière
+   * version enregistrée) : plus de blocage fantôme quand le champ est rempli.
+   */
+  const blockers = useMemo(() => {
+    const list: { message: string; tab: string; fieldId?: string; action?: "save" }[] = [];
+    if (!form) return list;
+
+    const subject = form.email_subject.trim();
+    const body = form.email_body.trim();
+    const intro = form.email_intro.trim();
+    const buttonUrl = form.email_button_url.trim();
+
+    if (!subject)
+      list.push({ message: "Ajoutez un objet avant de continuer.", tab: "email", fieldId: "e-subject" });
+    if (!body && !intro)
+      list.push({ message: "Le contenu de l'email est vide.", tab: "email", fieldId: "e-body" });
+    if (buttonUrl && !/^https?:\/\/\S+$/i.test(buttonUrl))
+      list.push({ message: "Le lien du bouton est invalide.", tab: "email", fieldId: "e-url" });
+
+    // Contrôles qui ne dépendent que du serveur (audience, expéditeur, doublon d'envoi).
+    for (const b of sendPreview.data?.blockers ?? []) {
+      if (/objet|contenu de l'email|lien du bouton/i.test(b)) continue;
+      list.push({
+        message: b,
+        tab: "send",
+        fieldId: /destinataire|segment/i.test(b) ? "segment" : undefined,
+      });
+    }
+
+    // L'envoi utilise la version enregistrée : signaler les modifications en attente.
+    const dirty =
+      issue !== undefined &&
+      (str(issue.email_subject) !== form.email_subject ||
+        str(issue.email_intro) !== form.email_intro ||
+        str(issue.email_body) !== form.email_body ||
+        str(issue.email_button_label) !== form.email_button_label ||
+        str(issue.email_button_url) !== form.email_button_url ||
+        str(issue.email_preheader) !== form.email_preheader ||
+        str(issue.email_footer) !== form.email_footer);
+    if (dirty)
+      list.push({
+        message: "Modifications non enregistrées — cliquez ici pour les enregistrer.",
+        tab: "email",
+        action: "save",
+      });
+
+    return list;
+  }, [form, issue, sendPreview.data?.blockers]);
+
   const canSend = blockers.length === 0 && !sendReal.isPending;
+
 
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
