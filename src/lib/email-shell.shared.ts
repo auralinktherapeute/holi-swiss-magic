@@ -2,7 +2,7 @@
 // pour être réutilisable côté prévisualisation admin). Aucun changement visuel.
 
 export const EMAIL_LOGO_URL =
-  "https://holiswiss.ch/__l5e/assets-v1/b34e4e20-5d40-4759-bd7c-aefb0fa59668/lotus-logo.png";
+  "https://holiswiss.ch/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png";
 
 export function escapeHtml(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
