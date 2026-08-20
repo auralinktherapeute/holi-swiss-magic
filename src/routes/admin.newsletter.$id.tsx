@@ -73,6 +73,7 @@ import {
   sendNewsletterTestEmail,
   sendNewsletterIssue,
   listNewsletterSends,
+  listNewsletterCrmContacts,
 } from "@/lib/newsletter-send.functions";
 import {
   NEWSLETTER_SEGMENTS,
@@ -218,6 +219,7 @@ function Page() {
   const setPublished = useServerFn(setNewsletterResourcePublished);
   const loadHistory = useServerFn(listNewsletterRevisions);
   const loadSendPreview = useServerFn(getNewsletterSendPreview);
+  const loadCrmContacts = useServerFn(listNewsletterCrmContacts);
   const sendTestFn = useServerFn(sendNewsletterTestEmail);
   const sendIssueFn = useServerFn(sendNewsletterIssue);
   const loadSends = useServerFn(listNewsletterSends);
@@ -241,10 +243,20 @@ function Page() {
   const [tab, setTab] = useState<string>("brief");
 
   const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
+  const [manualIds, setManualIds] = useState<string[]>([]);
+  const [contactSearch, setContactSearch] = useState("");
+  const manual = segment === "selection_manuelle";
+
+  const contacts = useQuery({
+    queryKey: ["admin-newsletter-crm-contacts"],
+    queryFn: () => loadCrmContacts(),
+    enabled: manual,
+  });
 
   const sendPreview = useQuery({
-    queryKey: ["admin-newsletter-send-preview", id, segment],
-    queryFn: () => loadSendPreview({ data: { id, segment } }),
+    queryKey: ["admin-newsletter-send-preview", id, segment, manual ? manualIds : []],
+    queryFn: () =>
+      loadSendPreview({ data: { id, segment, recipientIds: manual ? manualIds : [] } }),
   });
   const sends = useQuery({
     queryKey: ["admin-newsletter-sends", id],
@@ -446,7 +458,10 @@ function Page() {
   });
 
   const sendReal = useMutation({
-    mutationFn: () => sendIssueFn({ data: { id, segment, confirm: true } }),
+    mutationFn: () =>
+      sendIssueFn({
+        data: { id, segment, recipientIds: manual ? manualIds : [], confirm: true },
+      }),
     onSuccess: (r) => {
       setFinalConfirmOpen(false);
       if (r.status === "sent") toast.success(`Newsletter envoyée à ${r.sentCount} destinataires.`);
@@ -1339,7 +1354,119 @@ function Page() {
                   <p className="text-xs text-white/50">
                     {NEWSLETTER_SEGMENTS.find((s) => s.key === segment)?.description}
                   </p>
+                  {!manual && (sendPreview.data?.missingConsentCount ?? 0) > 0 && (
+                    <p className="text-xs text-[#fbbf24]">
+                      {sendPreview.data?.candidateCount} profil(s) correspondent à ce segment, mais
+                      {" "}
+                      {sendPreview.data?.missingConsentCount} n’ont pas accepté la newsletter et
+                      sont donc exclus. Utilisez « Sélection manuelle » pour choisir vous-même les
+                      adresses.
+                    </p>
+                  )}
                 </div>
+
+                {manual && (
+                  <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Label htmlFor="crm-search" className="text-white/85">
+                        Choisir les destinataires ({manualIds.length} sélectionné
+                        {manualIds.length > 1 ? "s" : ""})
+                      </Label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="min-h-11 rounded-md border border-white/15 px-3 text-xs text-white/80 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
+                          onClick={() =>
+                            setManualIds(
+                              (contacts.data?.rows ?? [])
+                                .filter((c) => !c.unsubscribed)
+                                .map((c) => c.id),
+                            )
+                          }
+                        >
+                          Tout sélectionner
+                        </button>
+                        <button
+                          type="button"
+                          className="min-h-11 rounded-md border border-white/15 px-3 text-xs text-white/80 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
+                          onClick={() => setManualIds([])}
+                        >
+                          Tout effacer
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      id="crm-search"
+                      type="search"
+                      value={contactSearch}
+                      onChange={(e) => setContactSearch(e.target.value)}
+                      placeholder="Rechercher un nom, un email, une ville…"
+                      className="min-h-11 w-full rounded-md border border-white/15 bg-[#1d0d3d] px-3 text-sm text-white placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a78bfa]"
+                    />
+                    <div className="max-h-72 overflow-y-auto rounded-md border border-white/10">
+                      {contacts.isLoading && (
+                        <p className="p-3 text-xs text-white/50">Chargement des thérapeutes…</p>
+                      )}
+                      {!contacts.isLoading &&
+                        (contacts.data?.rows ?? [])
+                          .filter((c) => {
+                            const q = contactSearch.trim().toLowerCase();
+                            return (
+                              !q ||
+                              c.name.toLowerCase().includes(q) ||
+                              c.email.includes(q) ||
+                              (c.city ?? "").toLowerCase().includes(q)
+                            );
+                          })
+                          .map((c) => {
+                            const checked = manualIds.includes(c.id);
+                            return (
+                              <label
+                                key={c.id}
+                                className={`flex min-h-11 cursor-pointer items-center gap-3 border-b border-white/5 px-3 py-2 text-sm last:border-0 ${
+                                  c.unsubscribed ? "opacity-50" : "hover:bg-white/5"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 accent-[#7c3aed]"
+                                  disabled={c.unsubscribed}
+                                  checked={checked}
+                                  onChange={() =>
+                                    setManualIds((prev) =>
+                                      prev.includes(c.id)
+                                        ? prev.filter((x) => x !== c.id)
+                                        : [...prev, c.id],
+                                    )
+                                  }
+                                />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-white/90">{c.name}</span>
+                                  <span className="block truncate text-xs text-white/50">
+                                    {c.email}
+                                    {c.city ? ` · ${c.city}` : ""}
+                                  </span>
+                                </span>
+                                <span className="shrink-0 text-xs text-white/50">
+                                  {c.unsubscribed
+                                    ? "Désinscrit"
+                                    : c.optIn
+                                      ? "Consentement"
+                                      : "Sans consentement"}
+                                </span>
+                              </label>
+                            );
+                          })}
+                      {!contacts.isLoading && (contacts.data?.rows.length ?? 0) === 0 && (
+                        <p className="p-3 text-xs text-white/50">Aucun thérapeute avec email.</p>
+                      )}
+                    </div>
+                    <p className="text-xs text-white/45">
+                      Les personnes désinscrites ne peuvent pas être sélectionnées (obligation
+                      légale).
+                    </p>
+                  </div>
+                )}
 
                 <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-3">

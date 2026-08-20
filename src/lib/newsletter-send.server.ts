@@ -43,19 +43,43 @@ type AnyClient = { from: (table: string) => any };
 export async function resolveRecipients(
   client: AnyClient,
   segment: NewsletterSegmentKey,
+  options: { ids?: string[]; ignoreConsent?: boolean } = {},
 ): Promise<Recipient[]> {
   let q = client
     .from("therapists")
     .select(
       "id,email,newsletter_unsubscribe_token,created_at,onboarding_complete,subscription_plan,photo_url,bio,short_bio,services,price_min,price_max",
     )
-    .eq("newsletter_opt_in", true)
     .is("newsletter_unsubscribed_at", null)
     .not("email", "is", null)
     .limit(5000);
 
+  // Sélection manuelle : l'administrateur choisit lui-même les fiches CRM.
+  if (segment === "selection_manuelle") {
+    const ids = (options.ids ?? []).filter(Boolean);
+    if (ids.length === 0) return [];
+    const { data } = await q.in("id", ids);
+    const seen = new Set<string>();
+    const out: Recipient[] = [];
+    for (const row of (data ?? []) as {
+      id: string;
+      email: string | null;
+      newsletter_unsubscribe_token: string | null;
+    }[]) {
+      const email = (row.email ?? "").trim().toLowerCase();
+      if (!email || !isValidEmail(email) || seen.has(email)) continue;
+      if (!row.newsletter_unsubscribe_token) continue;
+      seen.add(email);
+      out.push({ therapist_id: row.id, email, token: row.newsletter_unsubscribe_token });
+    }
+    return out;
+  }
+
+  if (!options.ignoreConsent) q = q.eq("newsletter_opt_in", true);
+
   // Le profil non publié est le seul segment qui sort des profils actifs.
   q = segment === "profil_non_publie" ? q.neq("status", "active") : q.eq("status", "active");
+
 
   if (segment === "nouveaux") {
     const since = new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString();
