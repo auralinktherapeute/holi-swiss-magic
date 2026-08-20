@@ -428,9 +428,8 @@ function Page() {
     });
   }, [form]);
 
-  // Empreinte du contenu email : toute modification invalide l'aperçu déjà vérifié.
-  const emailVersion = useMemo(() => previewHtml, [previewHtml]);
-  const previewChecked = checkedVersion !== null && checkedVersion === emailVersion;
+
+
 
   const testTarget = testEmail.trim();
   const testEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(testTarget);
