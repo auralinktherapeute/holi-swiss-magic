@@ -468,53 +468,59 @@ function Page() {
   });
 
   const blockers = sendPreview.data?.blockers ?? [];
-  const canSend = blockers.length === 0 && !sendReal.isPending && previewChecked;
+  const alreadySent = Boolean(sendPreview.data?.alreadySent);
+  const canSend = blockers.length === 0 && !sendReal.isPending;
 
   const qcDone = form ? NEWSLETTER_QC_ITEMS.filter((i) => form.qc[i.key]).length : 0;
   const qcTotal = NEWSLETTER_QC_ITEMS.length;
   const approved = issue?.status === "approuvee";
 
-  // Progression réelle du parcours en 13 étapes, dérivée des données du dossier.
-  const workflowStates = useMemo<Partial<Record<WorkflowStepKey, WorkflowStepState>>>(() => {
-    if (!issue || !form) return {};
+  const hasTestSent = useMemo(() => {
     const raw = sends.data as unknown;
-    const sendRows: { is_test?: boolean }[] = Array.isArray(raw)
+    const rows: { is_test?: boolean }[] = Array.isArray(raw)
       ? (raw as { is_test?: boolean }[])
       : (((raw as { rows?: { is_test?: boolean }[] } | undefined)?.rows ?? []) as {
           is_test?: boolean;
         }[]);
-    const hasTest = sendRows.some((s) => s.is_test);
-    const done = {
-      suggestion: true,
-      brief: true,
-      completer: Boolean(form.title && form.pillar && form.audience),
-      rediger: Boolean(form.email_subject && form.email_body),
-      editeur: Boolean(form.email_subject && form.email_body),
-      apercu_email: previewChecked,
-      apercu_ressource: Boolean(issue.published_at),
-      checklist: qcDone === qcTotal,
-      test: hasTest,
-      controle: hasTest && previewChecked,
-      approbation: ["approuvee", "programmee", "envoi_en_cours", "envoyee"].includes(issue.status),
-      segment: (sendPreview.data?.recipientCount ?? 0) > 0,
-      confirmation: canSend,
-      envoi: issue.status === "envoyee",
-    } satisfies Record<WorkflowStepKey, boolean>;
+    return rows.some((s) => s.is_test);
+  }, [sends.data]);
 
-    const out: Partial<Record<WorkflowStepKey, WorkflowStepState>> = {};
+  /** Statut fonctionnel déduit de l'état réel du formulaire et des envois. */
+  const flowStatus = useMemo(() => {
+    if (!issue) return "Brouillon";
+    if (issue.status === "envoi_en_cours" || sendReal.isPending) return "Envoi en cours";
+    if (issue.status === "envoyee" || alreadySent) return "Envoyée";
+    if (issue.status === "echec") return "Erreur lors de l'envoi";
+    if (blockers.length > 0) return "Brouillon — informations incomplètes";
+    if (hasTestSent) return "Test envoyé — prête à envoyer";
+    return "Prête à envoyer";
+  }, [issue, blockers.length, hasTestSent, alreadySent, sendReal.isPending]);
+
+  /** Progression du parcours simplifié en 4 étapes. */
+  const stepStates = useMemo<Record<SendStepKey, SendStepState>>(() => {
+    const prepared = Boolean(
+      form && form.email_subject.trim() && (form.email_body.trim() || form.email_intro.trim()),
+    );
+    const verified = prepared && blockers.length === 0;
+    const sent = issue?.status === "envoyee" || alreadySent;
+    const done: Record<SendStepKey, boolean> = {
+      preparer: prepared,
+      verifier: verified,
+      tester: hasTestSent,
+      envoyer: sent,
+    };
+    const out = {} as Record<SendStepKey, SendStepState>;
     let currentSet = false;
-    for (const step of NEWSLETTER_WORKFLOW_STEPS) {
-      if (done[step.key]) {
-        out[step.key] = "done";
-      } else if (!currentSet) {
-        out[step.key] = "current";
+    for (const key of ["preparer", "verifier", "tester", "envoyer"] as SendStepKey[]) {
+      if (done[key]) out[key] = "done";
+      else if (!currentSet) {
+        out[key] = "current";
         currentSet = true;
-      } else {
-        out[step.key] = "todo";
-      }
+      } else out[key] = "todo";
     }
     return out;
-  }, [issue, form, sends.data, previewChecked, qcDone, qcTotal, sendPreview.data, canSend]);
+  }, [form, blockers.length, hasTestSent, issue?.status, alreadySent]);
+
 
   if (isLoading) {
     return <div className="p-6 md:p-10 text-white/60">Chargement de la newsletter…</div>;
