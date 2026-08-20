@@ -234,12 +234,10 @@ function Page() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [segment, setSegment] = useState<NewsletterSegmentKey>("tous");
   const [testEmail, setTestEmail] = useState("");
-  const [confirmTestOpen, setConfirmTestOpen] = useState(false);
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
-  // Aperçu obligatoire : mémorise la version exacte du contenu email validée à l'écran.
   const [previewOpen, setPreviewOpen] = useState(false);
   const [tab, setTab] = useState<string>("brief");
-  const [checkedVersion, setCheckedVersion] = useState<string | null>(null);
+
   const [confirmStatus, setConfirmStatus] = useState<null | "idee" | "archivee">(null);
 
   const sendPreview = useQuery({
