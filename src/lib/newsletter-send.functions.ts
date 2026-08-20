@@ -47,7 +47,7 @@ function checkSendable(issue: any, recipientCount: number, senderOk: boolean): s
 
   if (!subject) blockers.push("Ajoutez un objet avant de continuer.");
   if (!body && !intro) blockers.push("Le contenu de l'email est vide.");
-  if (recipientCount <= 0) blockers.push("Aucun destinataire ne correspond à ce segment.");
+  if (recipientCount <= 0) blockers.push("Aucun destinataire : personne dans ce segment n’a accepté la newsletter. Choisissez « Sélection manuelle » pour désigner les adresses.");
   if (!senderOk) blockers.push("L'expéditeur n'est pas configuré.");
   if (buttonUrl && !/^https?:\/\/\S+$/i.test(buttonUrl)) {
     blockers.push("Le lien du bouton est invalide.");
