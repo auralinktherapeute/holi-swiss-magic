@@ -1293,22 +1293,43 @@ function Page() {
                     <span className="text-white/60">Expéditeur</span>
                     <span className="text-white/85">{sendPreview.data?.sender ?? "—"}</span>
                   </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Objet</span>
+                    <span className="text-right text-white/85 break-words">
+                      {form.email_subject || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/60">Pré-header</span>
+                    <span className="text-right text-white/85 break-words">
+                      {form.email_preheader || "—"}
+                    </span>
+                  </div>
                   <div className="flex items-start justify-between gap-3">
-                    <span className="text-white/60">Page ressource</span>
+                    <span className="text-white/60">Bouton</span>
+                    <span className="text-right break-all text-white/85">
+                      {form.email_button_label
+                        ? `${form.email_button_label} → ${form.email_button_url || "aucun lien"}`
+                        : "Aucun bouton"}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-white/60">Page ressource (facultative)</span>
                     <span className="text-right break-all text-white/85">
                       {sendPreview.data?.resourceUrl ?? "Non utilisée"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-white/60">Version approuvée</span>
+                    <span className="text-white/60">Version</span>
                     <span className="text-white/85">{sendPreview.data?.versionLabel ?? "—"}</span>
                   </div>
                 </div>
 
-                {blockers.length > 0 && (
+                {blockers.length > 0 ? (
                   <div className="rounded-lg border border-[#fbbf24]/40 bg-[#fbbf24]/10 p-4">
                     <p className="flex items-center gap-2 text-sm font-medium text-[#fbbf24]">
-                      <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Envoi bloqué
+                      <AlertTriangle className="h-4 w-4" aria-hidden="true" /> À corriger avant
+                      l’envoi
                     </p>
                     <ul className="mt-2 list-disc pl-5 text-xs text-[#fbbf24] space-y-1">
                       {blockers.map((b) => (
@@ -1316,39 +1337,41 @@ function Page() {
                       ))}
                     </ul>
                   </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-lg border border-[#4ade80]/30 bg-[#4ade80]/10 p-3 text-sm text-[#4ade80]">
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Toutes les vérifications
+                    indispensables sont validées.
+                  </div>
                 )}
 
-                {/* TEST */}
+                {/* APERÇU SUR LA MÊME PAGE */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
-                  <h3 className="font-semibold text-sm">Aperçu obligatoire</h3>
-                  <p className="text-xs text-white/50">
-                    Aucun email — test ou réel — ne peut partir avant que l'aperçu de la version
-                    actuelle ait été ouvert et validé. Toute modification du contenu annule la
-                    validation.
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-sm">Aperçu de l’email</h3>
                     <Button
                       variant="outline"
                       onClick={() => setPreviewOpen(true)}
                       className="min-h-11 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
-                      Prévisualiser avant envoi
+                      Aperçu détaillé (facultatif)
                     </Button>
-                    <Badge
-                      className={
-                        previewChecked
-                          ? "bg-[#4ade80]/15 text-[#4ade80] border-0"
-                          : "bg-[#fbbf24]/15 text-[#fbbf24] border-0"
-                      }
-                    >
-                      {previewChecked ? "Aperçu vérifié" : "Aperçu non vérifié"}
-                    </Badge>
                   </div>
+                  <div className="overflow-x-auto rounded-lg bg-white/5 p-2">
+                    <iframe
+                      title="Aperçu de l'email avant envoi"
+                      srcDoc={previewHtml}
+                      className="w-full rounded bg-white border-0"
+                      style={{ minWidth: 320, height: 480 }}
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">
+                    Le lien de désinscription est ajouté automatiquement dans le pied de page.
+                  </p>
                 </div>
 
                 {/* TEST */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
-                  <h3 className="font-semibold text-sm">Email de test</h3>
+                  <h3 className="font-semibold text-sm">Envoyer un email de test</h3>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       id="test-email"
@@ -1361,8 +1384,8 @@ function Page() {
                     />
                     <Button
                       variant="outline"
-                      onClick={() => setConfirmTestOpen(true)}
-                      disabled={sendTest.isPending || !previewChecked || !testEmailValid}
+                      onClick={() => sendTest.mutate()}
+                      disabled={sendTest.isPending || !testEmailValid}
                       className="min-h-11 shrink-0 border-white/15 bg-transparent text-white hover:bg-white/10"
                     >
                       {sendTest.isPending ? "Envoi…" : "Envoyer un email de test"}
@@ -1374,30 +1397,29 @@ function Page() {
                     </p>
                   )}
                   <p className="text-xs text-white/50">
-                    Le test part uniquement à l'adresse saisie — jamais à un segment. Il utilise
-                    exactement la version prévisualisée, n'affecte pas le statut de la newsletter et
-                    est enregistré dans l'historique comme « Test envoyé ».
-                    {!previewChecked && " Validez d'abord l'aperçu ci-dessus."}
+                    Le test part uniquement à l’adresse ci-dessus — jamais à un segment. Il
+                    n’affecte pas le statut de la newsletter et n’est pas l’envoi réel.
                   </p>
                 </div>
 
                 {/* ENVOI RÉEL */}
                 <div className="border-t border-white/10 pt-5 space-y-3">
-                  <h3 className="font-semibold text-sm">Envoi réel</h3>
+                  <h3 className="font-semibold text-sm">Envoyer la newsletter</h3>
                   <div className="space-y-2">
                     <Button
                       onClick={() => setFinalConfirmOpen(true)}
                       disabled={!canSend}
                       className="min-h-11 w-full sm:w-auto bg-[#4ade80]/20 text-[#4ade80] hover:bg-[#4ade80]/30"
                     >
-                      <Send className="h-4 w-4 mr-2" aria-hidden="true" /> Continuer vers l’envoi
+                      <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {sendReal.isPending ? "Envoi en cours…" : "Envoyer la newsletter"}
                     </Button>
                     <p className="text-xs text-white/50">
-                      Ce bouton ouvre une dernière confirmation : rien n’est envoyé tant que vous
-                      n’avez pas cliqué sur « Envoyer maintenant ».
-                      {!previewChecked && " Aperçu à valider avant tout envoi."}
+                      Une confirmation est demandée : rien n’est envoyé avant votre validation.
                     </p>
                   </div>
+                </div>
+
                 </div>
 
                 {/* JOURNAL */}
