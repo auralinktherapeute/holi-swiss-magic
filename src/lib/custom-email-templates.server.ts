@@ -3,7 +3,7 @@ export type { TemplateId } from "./custom-email-templates.shared";
 export { TEMPLATE_OPTIONS } from "./custom-email-templates.shared";
 
 const LOGO_URL =
-  "https://holiswiss.ch/__l5e/assets-v1/b34e4e20-5d40-4759-bd7c-aefb0fa59668/lotus-logo.png";
+  "https://holiswiss.ch/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png";
 const SITE_URL = "https://holiswiss.ch";
 
 export type WaitlistVars = {

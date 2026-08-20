@@ -33,7 +33,7 @@ export function buildProfileHealthEmail(args: ProfileHealthEmailArgs): { subject
 <body style="margin:0;padding:0;background:#1a0a2e;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
     <div style="text-align:center;padding-bottom:20px;">
-      <img src="${SITE_URL}/lotus-logo.png" alt="HoliSwiss" width="56" height="56" style="display:inline-block;" />
+      <img src="${SITE_URL}/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png" alt="HoliSwiss" width="56" height="56" style="display:inline-block;" />
       <div style="font-size:20px;font-weight:700;color:#ffffff;margin-top:8px;">Holi<span style="color:#b86ef9;">Swiss</span></div>
     </div>
     <div style="background:#2d1248;border:1px solid rgba(184,110,249,0.25);border-radius:16px;padding:28px 24px;color:#ffffff;">
