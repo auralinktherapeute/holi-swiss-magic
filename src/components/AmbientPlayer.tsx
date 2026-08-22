@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Music2, Volume2 } from "lucide-react";
 import ambientAudio from "@/assets/ambient-handpan.mp3.asset.json";
 
 const STORAGE_KEY = "holiswiss-ambient";
 const DEFAULT_VOLUME = 0.3;
 const AUDIO_URL = ambientAudio.url;
 
+const PURPLE = "#b86ef9";
+const CYAN = "#5cc8fa";
+
 export function AmbientPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fadeRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // SSR-safe mount
@@ -102,92 +104,78 @@ export function AmbientPlayer() {
   if (!mounted) return null;
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      aria-label={playing ? "Désactiver la musique" : "Activer l'ambiance sonore"}
-      className="fixed z-50 flex items-center justify-center transition-all duration-200 ease-out hover:scale-105"
-      style={{
-        bottom: 24,
-        left: 24,
-        width: 44,
-        height: 44,
-        borderRadius: 999,
-        background: "rgba(184,110,249,0.15)",
-        border: "1px solid rgba(184,110,249,0.3)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        color: playing ? "#b86ef9" : "rgba(255,255,255,0.5)",
-      }}
-      onMouseDown={(e) => {
-        (e.currentTarget.style.background as unknown as string) = "rgba(184,110,249,0.25)";
-      }}
-      onMouseUp={(e) => {
-        (e.currentTarget.style.background as unknown as string) = "rgba(184,110,249,0.15)";
-      }}
-    >
-      {playing ? (
-        <span className="flex items-end gap-[3px] h-4">
+    <>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={playing ? "Désactiver la musique" : "Activer l'ambiance sonore"}
+        aria-pressed={playing}
+        className="ambient-pill fixed z-50 flex h-14 items-center overflow-hidden rounded-full pl-[3px] pr-[3px] transition-[padding] duration-300 ease-out hover:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f0a1e]"
+        style={{
+          bottom: 24,
+          left: 24,
+          background: "rgba(20,10,40,0.7)",
+          border: "1px solid rgba(184,110,249,0.35)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        <span className="relative grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full">
+          <span className={playing ? "ambient-conic ambient-conic--on" : "ambient-conic"} />
           <span
-            className="inline-block rounded-full"
-            style={{
-              width: 3,
-              background: "#b86ef9",
-              animation: "ambient-bar-1 0.8s ease-in-out infinite alternate",
-            }}
-          />
-          <span
-            className="inline-block rounded-full"
-            style={{
-              width: 3,
-              background: "#5cc8fa",
-              animation: "ambient-bar-2 0.7s ease-in-out infinite alternate",
-            }}
-          />
-          <span
-            className="inline-block rounded-full"
-            style={{
-              width: 3,
-              background: "#b86ef9",
-              animation: "ambient-bar-3 0.9s ease-in-out infinite alternate",
-            }}
-          />
+            className="relative grid h-[38px] w-[38px] place-items-center rounded-full"
+            style={{ background: "#1a1035", color: playing ? PURPLE : "rgba(255,255,255,0.7)" }}
+          >
+            {playing ? <Bars /> : <Music2 className="h-[18px] w-[18px]" />}
+          </span>
         </span>
-      ) : (
-        <Volume2 className="h-5 w-5" />
-      )}
-
-      {hovered && (
-        <span
-          className="absolute left-full ml-2 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium"
-          style={{
-            background: "rgba(15,10,30,0.9)",
-            border: "1px solid rgba(184,110,249,0.3)",
-            color: "rgba(255,255,255,0.85)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {playing ? "Désactiver la musique" : "Activer l'ambiance sonore"}
+        <span className="ambient-label whitespace-nowrap text-sm font-medium text-white/90">
+          {playing ? "Musique active" : "Ambiance sonore"}
         </span>
-      )}
+      </button>
 
       <style>{`
-        @keyframes ambient-bar-1 {
-          0% { height: 4px; }
-          100% { height: 14px; }
+        @keyframes ambient-bar-0 { from { height: 4px } to { height: 15px } }
+        @keyframes ambient-bar-1 { from { height: 8px } to { height: 18px } }
+        @keyframes ambient-bar-2 { from { height: 6px } to { height: 13px } }
+        @keyframes ambient-spin { to { transform: rotate(360deg) } }
+        .ambient-conic {
+          position: absolute; inset: 0; border-radius: 999px;
+          background: conic-gradient(from 0deg, transparent 0 60%, ${PURPLE} 78%, ${CYAN} 92%, transparent 100%);
+          opacity: .5;
         }
-        @keyframes ambient-bar-2 {
-          0% { height: 8px; }
-          100% { height: 16px; }
+        .ambient-conic--on { opacity: 1; animation: ambient-spin 3.2s linear infinite }
+        .ambient-label {
+          max-width: 0; opacity: 0; margin-left: 0;
+          transition: max-width .35s ease-out, opacity .25s ease-out, margin-left .35s ease-out;
         }
-        @keyframes ambient-bar-3 {
-          0% { height: 6px; }
-          100% { height: 12px; }
+        .ambient-pill:hover .ambient-label,
+        .ambient-pill:focus-visible .ambient-label {
+          max-width: 200px; opacity: 1; margin-left: 10px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ambient-conic--on { animation: none !important }
         }
       `}</style>
-    </button>
+    </>
+  );
+}
+
+function Bars({ color = PURPLE }: { color?: string }) {
+  return (
+    <span className="flex items-end gap-[3px] h-4" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="inline-block rounded-full"
+          style={{
+            width: 3,
+            background: i === 1 ? CYAN : color,
+            animation: `ambient-bar-${i} ${0.7 + i * 0.1}s ease-in-out infinite alternate`,
+          }}
+        />
+      ))}
+    </span>
   );
 }
 
