@@ -55,6 +55,7 @@ import { Route as DashboardReservationsRouteImport } from './routes/dashboard.re
 import { Route as DashboardVisibiliteRouteImport } from './routes/dashboard.visibilite'
 import { Route as DesinscriptionIndexRouteImport } from './routes/desinscription.index'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
+import { Route as PreviewAmbianceRouteImport } from './routes/preview.ambiance'
 import { Route as PreviewAnimationsTherapeutesRouteImport } from './routes/preview.animations-therapeutes'
 import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrousels'
 import { Route as PreviewFooterRouteImport } from './routes/preview.footer'
@@ -326,6 +327,11 @@ const IntakeSlugRoute = IntakeSlugRouteImport.update({
   path: '/intake/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewAmbianceRoute = PreviewAmbianceRouteImport.update({
+  id: '/preview/ambiance',
+  path: '/preview/ambiance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PreviewAnimationsTherapeutesRoute =
   PreviewAnimationsTherapeutesRouteImport.update({
     id: '/preview/animations-therapeutes',
@@ -578,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/dashboard/visibilite': typeof DashboardVisibiliteRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/ambiance': typeof PreviewAmbianceRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
@@ -662,6 +669,7 @@ export interface FileRoutesByTo {
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/dashboard/visibilite': typeof DashboardVisibiliteRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/ambiance': typeof PreviewAmbianceRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
@@ -750,6 +758,7 @@ export interface FileRoutesById {
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/dashboard/visibilite': typeof DashboardVisibiliteRoute
   '/intake/$slug': typeof IntakeSlugRoute
+  '/preview/ambiance': typeof PreviewAmbianceRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
   '/preview/carrousels': typeof PreviewCarrouselsRoute
   '/preview/footer': typeof PreviewFooterRoute
@@ -839,6 +848,7 @@ export interface FileRouteTypes {
     | '/dashboard/reservations'
     | '/dashboard/visibilite'
     | '/intake/$slug'
+    | '/preview/ambiance'
     | '/preview/animations-therapeutes'
     | '/preview/carrousels'
     | '/preview/footer'
@@ -923,6 +933,7 @@ export interface FileRouteTypes {
     | '/dashboard/reservations'
     | '/dashboard/visibilite'
     | '/intake/$slug'
+    | '/preview/ambiance'
     | '/preview/animations-therapeutes'
     | '/preview/carrousels'
     | '/preview/footer'
@@ -1010,6 +1021,7 @@ export interface FileRouteTypes {
     | '/dashboard/reservations'
     | '/dashboard/visibilite'
     | '/intake/$slug'
+    | '/preview/ambiance'
     | '/preview/animations-therapeutes'
     | '/preview/carrousels'
     | '/preview/footer'
@@ -1064,6 +1076,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
+  PreviewAmbianceRoute: typeof PreviewAmbianceRoute
   PreviewAnimationsTherapeutesRoute: typeof PreviewAnimationsTherapeutesRoute
   PreviewCarrouselsRoute: typeof PreviewCarrouselsRoute
   PreviewFooterRoute: typeof PreviewFooterRoute
@@ -1402,6 +1415,13 @@ declare module '@tanstack/react-router' {
       path: '/intake/$slug'
       fullPath: '/intake/$slug'
       preLoaderRoute: typeof IntakeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/ambiance': {
+      id: '/preview/ambiance'
+      path: '/preview/ambiance'
+      fullPath: '/preview/ambiance'
+      preLoaderRoute: typeof PreviewAmbianceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preview/animations-therapeutes': {
@@ -1857,6 +1877,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   IntakeSlugRoute: IntakeSlugRoute,
+  PreviewAmbianceRoute: PreviewAmbianceRoute,
   PreviewAnimationsTherapeutesRoute: PreviewAnimationsTherapeutesRoute,
   PreviewCarrouselsRoute: PreviewCarrouselsRoute,
   PreviewFooterRoute: PreviewFooterRoute,
