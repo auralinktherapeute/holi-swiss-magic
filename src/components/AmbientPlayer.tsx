@@ -113,7 +113,7 @@ export function AmbientPlayer() {
         className="ambient-pill fixed z-50 flex h-14 items-center overflow-hidden rounded-full pl-[3px] pr-[3px] transition-[padding] duration-300 ease-out hover:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f0a1e]"
         style={{
           bottom: 24,
-          left: 24,
+          right: 24,
           background: "rgba(20,10,40,0.7)",
           border: "1px solid rgba(184,110,249,0.35)",
           backdropFilter: "blur(12px)",
