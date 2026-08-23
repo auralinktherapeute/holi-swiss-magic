@@ -44,8 +44,10 @@ Via `marketing-copywriter` puis `marketing-designer`. Chaque livrable contient :
 9. Suggestion visuelle · 10. Variante de ton · 11. **Bloc « À VÉRIFIER AVANT PUBLICATION »**
 
 ### ÉTAPE 5 — Contrôle qualité
-Via `marketing-qa`. Les 4 critères bloquants (discipline factuelle · deux chaises · score ≥ 80 ·
-conformité santé) puis la checklist complète. Si ❌ → renvoi à l'agent concerné, on recommence ce maillon.
+Via `marketing-qa`. Les 6 critères bloquants (discipline factuelle · deux chaises · score ≥ 80 ·
+livraison dans l'admin · conformité santé · exécution éditoriale et visuelle senior) puis la checklist
+complète. Si ❌ → renvoi à l'agent concerné, on recommence ce maillon. Une caption découpée, un faux
+carrousel d'une slide ou une composition non équilibrée est automatiquement refusé.
 
 ---
 

@@ -54,7 +54,11 @@ Déroule le pipeline complet, en passant le résultat de chaque agent au suivant
    les répétitions, note l'idée sur 100 (seuil 80) et nomme les deux lectures.
 2. **Copywriter** (`marketing-copywriter`) → texte final, carrousel slide par slide, 4 langues.
 3. **Designer** (`marketing-designer`) → brief visuel + prompt génératif + ratio d'export.
-4. **QA** (`marketing-qa`) → 4 critères bloquants puis checklist. Si ❌ → renvoi à l'agent concerné.
+4. **QA** (`marketing-qa`) → 6 critères bloquants puis checklist. Si ❌ → renvoi à l'agent concerné.
+
+Le Copywriter et le Designer doivent livrer un vrai carrousel de 6 à 8 slides, distinct du post et
+de sa caption. Une caption découpée automatiquement, une slide unique présentée comme carrousel ou
+une composition non équilibrée est refusée et repart à l'agent concerné.
 
 Cette proposition porte `source = 'programme'`.
 
