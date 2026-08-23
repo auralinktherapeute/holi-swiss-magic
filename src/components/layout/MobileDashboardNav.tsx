@@ -42,6 +42,12 @@ function usePageTitle(): string {
     ["/dashboard/avis", t("dashboard.reviews")],
     ["/dashboard/evenements", t("dashboard.events")],
     ["/dashboard/crm", "CRM Elite"],
+    ["/dashboard/salons", "Salons"],
+    ["/dashboard/forfaits", "Forfaits"],
+    ["/dashboard/questionnaires", "Questionnaires"],
+    ["/dashboard/facturation", "Facturation"],
+    ["/dashboard/visibilite", "Score de visibilité"],
+
     ["/dashboard/abonnement", t("dashboard.subscription")],
     ["/dashboard/parrainage", t("dashboard.referral")],
   ];
