@@ -196,7 +196,7 @@ function Page() {
                   </label>
                   <textarea
                     id={`edit-${m.id}`}
-                    value={editing.content}
+                    value={editing?.content ?? ""}
                     onChange={(e) => setEditing({ id: m.id, content: e.target.value })}
                     rows={3}
                     className="w-full rounded-lg border border-border bg-background p-2 text-base text-foreground"
@@ -204,8 +204,8 @@ function Page() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => editMutation.mutate(editing)}
-                      disabled={editMutation.isPending || !editing.content.trim()}
+                      onClick={() => editing && editMutation.mutate(editing)}
+                      disabled={editMutation.isPending || !editing?.content.trim()}
                       className="min-h-11 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground disabled:opacity-50"
                     >
                       Enregistrer
