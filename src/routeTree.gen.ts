@@ -87,6 +87,9 @@ import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeu
 import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newsletter.index'
 import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
+import { Route as ApiPublicModerateMessageRouteImport } from './routes/api/public/moderate-message'
+import { Route as DashboardSalonsIndexRouteImport } from './routes/dashboard.salons.index'
+import { Route as DashboardSalonsSlugRouteImport } from './routes/dashboard.salons.$slug'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
@@ -494,6 +497,22 @@ const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
   path: '/api/public/admin-notify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicModerateMessageRoute =
+  ApiPublicModerateMessageRouteImport.update({
+    id: '/api/public/moderate-message',
+    path: '/api/public/moderate-message',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardSalonsIndexRoute = DashboardSalonsIndexRouteImport.update({
+  id: '/salons/',
+  path: '/salons/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSalonsSlugRoute = DashboardSalonsSlugRouteImport.update({
+  id: '/salons/$slug',
+  path: '/salons/$slug',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   id: '/blog/categorie/$slug',
   path: '/blog/categorie/$slug',
@@ -606,6 +625,8 @@ export interface FileRoutesByFullPath {
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
+  '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -621,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/admin/newsletter/': typeof AdminNewsletterIndexRoute
+  '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -691,6 +713,8 @@ export interface FileRoutesByTo {
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
+  '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
   '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
@@ -706,6 +730,7 @@ export interface FileRoutesByTo {
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
   '/admin/newsletter': typeof AdminNewsletterIndexRoute
+  '/dashboard/salons': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -780,6 +805,8 @@ export interface FileRoutesById {
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
+  '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -795,6 +822,7 @@ export interface FileRoutesById {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/admin/newsletter/': typeof AdminNewsletterIndexRoute
+  '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -870,6 +898,8 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
+    | '/api/public/moderate-message'
+    | '/dashboard/salons/$slug'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -885,6 +915,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/admin/newsletter/'
+    | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -955,6 +986,8 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
+    | '/api/public/moderate-message'
+    | '/dashboard/salons/$slug'
     | '/$lang/blog'
     | '/$lang/conditions'
     | '/$lang/confidentialite'
@@ -970,6 +1003,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
     | '/admin/newsletter'
+    | '/dashboard/salons'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -1043,6 +1077,8 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
+    | '/api/public/moderate-message'
+    | '/dashboard/salons/$slug'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -1058,6 +1094,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/admin/newsletter/'
+    | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -1086,6 +1123,7 @@ export interface RootRouteChildren {
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
+  ApiPublicModerateMessageRoute: typeof ApiPublicModerateMessageRoute
   ApiPublicAnalyticsEndSessionRoute: typeof ApiPublicAnalyticsEndSessionRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
   ApiPublicHooksResendEventsRoute: typeof ApiPublicHooksResendEventsRoute
@@ -1641,6 +1679,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/moderate-message': {
+      id: '/api/public/moderate-message'
+      path: '/api/public/moderate-message'
+      fullPath: '/api/public/moderate-message'
+      preLoaderRoute: typeof ApiPublicModerateMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/salons/': {
+      id: '/dashboard/salons/'
+      path: '/salons'
+      fullPath: '/dashboard/salons/'
+      preLoaderRoute: typeof DashboardSalonsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/salons/$slug': {
+      id: '/dashboard/salons/$slug'
+      path: '/salons/$slug'
+      fullPath: '/dashboard/salons/$slug'
+      preLoaderRoute: typeof DashboardSalonsSlugRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/$lang/blog/categorie/$slug': {
       id: '/$lang/blog/categorie/$slug'
       path: '/blog/categorie/$slug'
@@ -1845,6 +1904,8 @@ interface DashboardRouteChildren {
   DashboardReservationsRoute: typeof DashboardReservationsRoute
   DashboardVisibiliteRoute: typeof DashboardVisibiliteRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardSalonsSlugRoute: typeof DashboardSalonsSlugRoute
+  DashboardSalonsIndexRoute: typeof DashboardSalonsIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -1862,6 +1923,8 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardReservationsRoute: DashboardReservationsRoute,
   DashboardVisibiliteRoute: DashboardVisibiliteRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardSalonsSlugRoute: DashboardSalonsSlugRoute,
+  DashboardSalonsIndexRoute: DashboardSalonsIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -1887,6 +1950,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   DesinscriptionIndexRoute: DesinscriptionIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
+  ApiPublicModerateMessageRoute: ApiPublicModerateMessageRoute,
   ApiPublicAnalyticsEndSessionRoute: ApiPublicAnalyticsEndSessionRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
   ApiPublicHooksResendEventsRoute: ApiPublicHooksResendEventsRoute,
