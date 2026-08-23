@@ -18,6 +18,12 @@ import {
   CreditCard,
   Gift,
   Crown,
+  Users,
+  Package,
+  ClipboardList,
+  Receipt,
+  Gauge,
+
   X,
   HelpCircle,
 } from "lucide-react";
