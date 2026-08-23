@@ -533,6 +533,7 @@ function Page() {
     queryFn: () => getAllArticlesAdmin(),
     retry: false,
   });
+  useAdminSectionRead("articles", !isLoading && !error);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteArticle({ data: { id } }),
