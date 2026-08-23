@@ -9,8 +9,11 @@ export const BLOG_SLUG_REDIRECTS: Record<string, string> = {
     "remboursement-asca-rme-naturopathie-acupuncture-suisse",
   "remboursement-lamal-naturopathie-acupuncture-canton-suisse":
     "remboursement-asca-rme-naturopathie-acupuncture-suisse",
+  "remboursement-osteopathie-suisse-2024-lamal-assurances":
+    "remboursement-asca-rme-naturopathie-acupuncture-suisse",
   "remboursement-osteopathie-suisse-2024-lamal":
     "remboursement-asca-rme-naturopathie-acupuncture-suisse",
+
   "therapies-remboursees-suisse-lamal":
     "remboursement-asca-rme-naturopathie-acupuncture-suisse",
 };
