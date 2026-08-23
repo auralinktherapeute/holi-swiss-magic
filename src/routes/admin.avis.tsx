@@ -5,6 +5,7 @@ import { Star, Check, X, Clock, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { listPendingTherapistReplies, moderateTherapistReply } from "@/lib/therapist-profile-extra.functions";
+import { useAdminSectionRead } from "@/hooks/use-admin-section-read";
 
 export const Route = createFileRoute("/admin/avis")({ component: Page });
 
@@ -29,6 +30,7 @@ function Page() {
   const [replies, setReplies] = useState<any[]>([]);
   const fetchReplies = useServerFn(listPendingTherapistReplies);
   const moderateReply = useServerFn(moderateTherapistReply);
+  useAdminSectionRead("reviews", !loading);
 
   const load = useCallback(async () => {
     setLoading(true);

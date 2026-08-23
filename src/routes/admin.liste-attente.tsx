@@ -14,6 +14,7 @@ import { deleteWaitingListEntryAdmin, listWaitingListAdmin, updateWaitingListSta
 import { sendWaitlistInvitation } from "@/lib/invitations.functions";
 import { useSessionState } from "@/hooks/use-session-state";
 import { SendEmailDialog } from "@/components/admin/SendEmailDialog";
+import { useAdminSectionRead } from "@/hooks/use-admin-section-read";
 
 export const Route = createFileRoute("/admin/liste-attente")({
   component: WaitingListAdminPage,
@@ -89,6 +90,7 @@ function WaitingListAdminPage() {
   const [emailFor, setEmailFor] = useState<Entry | null>(null);
   const knownIds = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
+  useAdminSectionRead("waitlist", !loading);
 
   const load = useCallback(async () => {
     try {

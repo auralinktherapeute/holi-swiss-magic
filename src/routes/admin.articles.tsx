@@ -21,6 +21,7 @@ import { translateArticle, translateAllMissingArticles, importAgentArticlesAdmin
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
+import { useAdminSectionRead } from "@/hooks/use-admin-section-read";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
 
