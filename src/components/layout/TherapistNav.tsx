@@ -86,6 +86,7 @@ export function TherapistNav() {
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
     { to: "/dashboard/crm", icon: Crown, label: "CRM Elite", tourId: "nav-crm" },
+    { to: "/dashboard/salons", icon: Users, label: "Salons", tourId: "nav-salons" },
     { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
   ];
