@@ -216,6 +216,82 @@ function MarketingPage() {
   );
 }
 
+/* -------------------------------------------------------- Carrousels ----- */
+
+/**
+ * Carrousels = ceux produits éditorialement + TOUTE proposition validée
+ * (générée automatiquement depuis sa caption). Au-delà de 7 jours, un carrousel
+ * bascule dans les archives : listing replié, mais toujours consultable.
+ */
+function CarouselsTab({ proposals }: { proposals: Proposal[] }) {
+  const [ouvert, setOuvert] = useState<string | null>(null);
+
+  const validees = proposals.filter((p) => p.status === "valide" || p.status === "publie");
+  const tous = [...validees.map((p) => proposalToCarousel(p as never)), ...CAROUSELS];
+  const recents = tous.filter((c) => !isArchived(c));
+  const archives = tous.filter((c) => isArchived(c));
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-[#d4c4e0]">
+        Carrousels produits et validés, au format réel 4:5. Toute proposition validée est générée ici
+        automatiquement. Au-delà de 7 jours, elle passe dans les archives, en bas de page.
+      </p>
+
+      {recents.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center text-white/60">
+          Aucun carrousel récent. Validez une proposition pour en générer un.
+        </div>
+      )}
+      {recents.map((c) => (
+        <CarouselViewer key={c.id} carousel={c} />
+      ))}
+
+      {archives.length > 0 && (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+            <Archive className="h-4 w-4 text-[#b86ef9]" /> Archives
+            <span className="rounded-full bg-white/10 px-1.5 text-[11px] font-normal text-white/60">
+              {archives.length}
+            </span>
+            <span className="ml-2 text-xs font-normal text-white/45">Publications de plus de 7 jours</span>
+          </h2>
+          <ul className="divide-y divide-white/5">
+            {archives.map((c) => {
+              const open = ouvert === c.id;
+              return (
+                <li key={c.id} className="py-1">
+                  <button
+                    onClick={() => setOuvert(open ? null : c.id)}
+                    aria-expanded={open}
+                    className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]"
+                  >
+                    <ChevronRight
+                      className={`h-4 w-4 shrink-0 text-white/40 transition-transform ${open ? "rotate-90" : ""}`}
+                    />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#b86ef9]">
+                      {c.pilier}
+                    </span>
+                    <span className="truncate text-sm text-white">{c.titre}</span>
+                    <span className="ml-auto shrink-0 text-xs tabular-nums text-white/45">
+                      {c.date} · {c.slides[c.langueOrigine]?.length ?? 0} slides
+                    </span>
+                  </button>
+                  {open && (
+                    <div className="mt-2">
+                      <CarouselViewer carousel={c} />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------ Sujets ----- */
 
 /** Branche le panneau extrait sur les vraies fonctions serveur. */
