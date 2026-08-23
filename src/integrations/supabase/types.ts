@@ -431,6 +431,38 @@ export type Database = {
           },
         ]
       }
+      charter_acceptances: {
+        Row: {
+          accepted_at: string
+          charter_version: string
+          family_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          charter_version?: string
+          family_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          charter_version?: string
+          family_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charter_acceptances_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cities: {
         Row: {
           aliases: string[]
@@ -674,6 +706,53 @@ export type Database = {
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_messages: {
+        Row: {
+          content: string
+          created_at: string
+          edited_at: string | null
+          family_id: string
+          flagged_reason: string | null
+          id: string
+          is_flagged: boolean
+          moderated_at: string | null
+          moderation_severity: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          edited_at?: string | null
+          family_id: string
+          flagged_reason?: string | null
+          id?: string
+          is_flagged?: boolean
+          moderated_at?: string | null
+          moderation_severity?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          edited_at?: string | null
+          family_id?: string
+          flagged_reason?: string | null
+          id?: string
+          is_flagged?: boolean
+          moderated_at?: string | null
+          moderation_severity?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_messages_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_families"
             referencedColumns: ["id"]
           },
         ]
@@ -1879,6 +1958,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      moderation_reports: {
+        Row: {
+          created_at: string
+          excerpt: string | null
+          family_id: string | null
+          id: string
+          message_id: string | null
+          report_md: string | null
+          rule: string | null
+          severity: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          excerpt?: string | null
+          family_id?: string | null
+          id?: string
+          message_id?: string | null
+          report_md?: string | null
+          rule?: string | null
+          severity?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          excerpt?: string | null
+          family_id?: string | null
+          id?: string
+          message_id?: string | null
+          report_md?: string | null
+          rule?: string | null
+          severity?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_reports_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "community_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       newsletter_issues: {
         Row: {
@@ -3411,6 +3544,33 @@ export type Database = {
           },
         ]
       }
+      therapist_families: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       therapist_health_recommendations: {
         Row: {
           category: string | null
@@ -4265,6 +4425,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sanctions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          family_id: string | null
+          id: string
+          kind: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          family_id?: string | null
+          id?: string
+          kind: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          family_id?: string | null
+          id?: string
+          kind?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sanctions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_sessions: {
         Row: {
           created_at: string
@@ -4582,6 +4783,7 @@ export type Database = {
         Returns: boolean
       }
       close_stale_sessions: { Args: never; Returns: undefined }
+      community_is_muted: { Args: { _uid: string }; Returns: boolean }
       compute_therapist_health: { Args: never; Returns: number }
       compute_therapist_health_one: { Args: { _id: string }; Returns: boolean }
       create_admin_notification: {
@@ -4639,6 +4841,7 @@ export type Database = {
       is_admin: { Args: { _uid: string }; Returns: boolean }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
       is_therapist_owner: { Args: { _therapist_id: string }; Returns: boolean }
+      is_verified_therapist: { Args: { _uid: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_notification_read: { Args: { _id: string }; Returns: undefined }
       marketing_agent_secret_ok: { Args: { _secret: string }; Returns: boolean }
