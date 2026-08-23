@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Instagram, Linkedin, Music2, Clock, CheckCircle2, Pencil, XCircle, Sparkles, MessageSquare, ListChecks, Lightbulb, LayoutGrid } from "lucide-react";
+import { Instagram, Linkedin, Music2, Clock, CheckCircle2, Pencil, XCircle, Sparkles, MessageSquare, ListChecks, Lightbulb, LayoutGrid, Archive, ChevronRight } from "lucide-react";
 import {
   listMarketingProposals,
   setMarketingProposalStatus,
@@ -16,6 +16,7 @@ import { MarketingAgentChat } from "@/components/admin/MarketingAgentChat";
 import { MarketingTopicsPanel, type MarketingTopic } from "@/components/admin/MarketingTopicsPanel";
 import { CarouselViewer } from "@/components/admin/CarouselViewer";
 import { CAROUSELS } from "@/data/marketing-carousels";
+import { proposalToCarousel, isArchived } from "@/lib/proposal-carousel";
 
 export const Route = createFileRoute("/admin/marketing")({
   component: MarketingPage,
