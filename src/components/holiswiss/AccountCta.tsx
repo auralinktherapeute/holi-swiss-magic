@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRole } from "@/hooks/use-role";
 import { LAST_AUTH_SPACE_KEY } from "@/lib/auth-utils";
+import { hasStoredSupabaseSession } from "@/integrations/supabase/auth-space";
+
 
 type Props = {
   lang: string;
