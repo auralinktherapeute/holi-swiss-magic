@@ -37,9 +37,11 @@ export function AccountCta({
   const { role, loading: roleLoading } = useRole();
   // Valeur initiale SSR-safe ; localStorage lu après montage côté client
   const [lastAuthSpace, setLastAuthSpace] = useState<"admin" | "dashboard">("dashboard");
+  const [hasStoredSession, setHasStoredSession] = useState(false);
 
   useEffect(() => {
     setLastAuthSpace(readLastAuthSpace());
+    setHasStoredSession(hasStoredSupabaseSession());
   }, []);
 
   useEffect(() => {
@@ -56,7 +58,25 @@ export function AccountCta({
     }
   }, [user, role]);
 
+  // Tant que la session n'est pas restaurée (Safari est plus lent), on ne
+  // pointe vers un espace privé que si un jeton est réellement stocké. Sinon
+  // le visiteur anonyme atterrissait sur /dashboard, qui le renvoyait ailleurs.
   if (authLoading || (user && roleLoading)) {
+    if (!hasStoredSession) {
+      return (
+        <Link
+          to="/$lang/connexion"
+          params={{ lang }}
+          className={className}
+          style={style}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          onClick={onClick}
+        >
+          {loggedOutLabel}
+        </Link>
+      );
+    }
     const to = lastAuthSpace === "admin" ? "/admin" : "/dashboard";
     const label = lastAuthSpace === "admin" ? "Admin" : "Mon espace";
     return (
@@ -72,6 +92,7 @@ export function AccountCta({
       </Link>
     );
   }
+
 
   if (!user) {
     return (
