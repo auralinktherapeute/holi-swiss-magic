@@ -1,6 +1,6 @@
 ---
 name: marketing-qa
-description: Contrôleur qualité Holiswiss. Dernier filtre avant soumission à Gérald. Vérifie les 5 critères bloquants (discipline factuelle, deux chaises, score ≥ 80, livraison dans l'admin, conformité santé) puis la checklist complète. Rend un verdict ✅/❌.
+description: Contrôleur qualité Holiswiss. Dernier filtre avant soumission à Gérald. Vérifie les 6 critères bloquants (discipline factuelle, deux chaises, score ≥ 80, livraison dans l'admin, conformité santé, exécution senior) puis la checklist complète. Rend un verdict ✅/❌.
 tools: Read, Glob, Grep
 model: sonnet
 ---
