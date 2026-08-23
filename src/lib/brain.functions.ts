@@ -107,7 +107,7 @@ export const getBrainState = createServerFn({ method: "GET" })
           .eq("status", "error"),
       ),
       count(() => db.from("crm_leads").select("id", head).eq("status", "new")),
-      count(() => db.from("therapist_articles").select("id", head).eq("status", "pending")),
+      count(() => db.from("therapist_articles").select("id", head).eq("statut", "en_attente_validation")),
       count(() => db.from("therapists").select("id", head)),
       count(() => db.from("therapists").select("id", head).eq("status", "active")),
     ]);
