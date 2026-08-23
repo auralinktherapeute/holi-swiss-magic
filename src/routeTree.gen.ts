@@ -89,6 +89,7 @@ import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as ApiPublicModerateMessageRouteImport } from './routes/api/public/moderate-message'
 import { Route as DashboardSalonsIndexRouteImport } from './routes/dashboard.salons.index'
+import { Route as DashboardSalonsSlugRouteImport } from './routes/dashboard.salons.$slug'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
@@ -507,6 +508,11 @@ const DashboardSalonsIndexRoute = DashboardSalonsIndexRouteImport.update({
   path: '/salons/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSalonsSlugRoute = DashboardSalonsSlugRouteImport.update({
+  id: '/salons/$slug',
+  path: '/salons/$slug',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   id: '/blog/categorie/$slug',
   path: '/blog/categorie/$slug',
@@ -620,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
+  '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -707,6 +714,7 @@ export interface FileRoutesByTo {
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
+  '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
   '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
@@ -798,6 +806,7 @@ export interface FileRoutesById {
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
+  '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -890,6 +899,7 @@ export interface FileRouteTypes {
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/api/public/moderate-message'
+    | '/dashboard/salons/$slug'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -977,6 +987,7 @@ export interface FileRouteTypes {
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/api/public/moderate-message'
+    | '/dashboard/salons/$slug'
     | '/$lang/blog'
     | '/$lang/conditions'
     | '/$lang/confidentialite'
@@ -1067,6 +1078,7 @@ export interface FileRouteTypes {
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
     | '/api/public/moderate-message'
+    | '/dashboard/salons/$slug'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -1681,6 +1693,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSalonsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/salons/$slug': {
+      id: '/dashboard/salons/$slug'
+      path: '/salons/$slug'
+      fullPath: '/dashboard/salons/$slug'
+      preLoaderRoute: typeof DashboardSalonsSlugRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/$lang/blog/categorie/$slug': {
       id: '/$lang/blog/categorie/$slug'
       path: '/blog/categorie/$slug'
@@ -1885,6 +1904,7 @@ interface DashboardRouteChildren {
   DashboardReservationsRoute: typeof DashboardReservationsRoute
   DashboardVisibiliteRoute: typeof DashboardVisibiliteRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardSalonsSlugRoute: typeof DashboardSalonsSlugRoute
   DashboardSalonsIndexRoute: typeof DashboardSalonsIndexRoute
 }
 
@@ -1903,6 +1923,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardReservationsRoute: DashboardReservationsRoute,
   DashboardVisibiliteRoute: DashboardVisibiliteRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardSalonsSlugRoute: DashboardSalonsSlugRoute,
   DashboardSalonsIndexRoute: DashboardSalonsIndexRoute,
 }
 

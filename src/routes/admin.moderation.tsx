@@ -1,206 +1,214 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShieldAlert, Check, X, Star, FileText, MessageSquare, AlertTriangle } from "lucide-react";
+import { ShieldAlert, Check, Trash2, AlertTriangle, Ban, Clock, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { listFlaggedMessages, applySanction, resolveModerationItem } from "@/lib/community.functions";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/moderation")({ component: Page });
 
-type Item = { id: string; type: "review" | "article"; author: string; preview: string; flag: string; created: string; rating?: number; severity: "high" | "medium" | "low" };
-
-const ITEMS: Item[] = [
-  { id: "r1", type: "review", author: "Marie L.", preview: "Cette personne est incompétente, elle prétend pouvoir guérir n'importe quoi en une séance…", flag: "Termes médicaux interdits (LPMéd)", created: "il y a 2 h", rating: 1, severity: "high" },
-  { id: "a1", type: "article", author: "Claire Dupont", preview: "Comment traiter l'anxiété en 5 séances — résultats garantis à 100%", flag: "Promesse de résultat + vocabulaire LPMéd", created: "il y a 5 h", severity: "high" },
-  { id: "r2", type: "review", author: "Anonyme", preview: "Excellent accompagnement, je recommande chaleureusement à toute la famille !", flag: "Signalé par un utilisateur", created: "il y a 1 j", rating: 5, severity: "low" },
-];
-
-const SEV_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  high:   { bg: "rgba(248,113,113,0.12)", color: "#f87171", label: "Critique" },
-  medium: { bg: "rgba(251,191,36,0.12)",  color: "#fbbf24", label: "Moyen" },
-  low:    { bg: "rgba(255,255,255,0.06)",  color: "rgba(255,255,255,0.5)", label: "Faible" },
+const SEV: Record<string, { bg: string; color: string; label: string }> = {
+  grave: { bg: "rgba(248,113,113,0.12)", color: "#f87171", label: "Grave" },
+  infraction: { bg: "rgba(251,191,36,0.12)", color: "#fbbf24", label: "Infraction" },
 };
 
 function Page() {
-  const [tab, setTab] = useState<"all" | "review" | "article">("all");
-  const [items, setItems] = useState(ITEMS);
+  const qc = useQueryClient();
+  const fetchItems = useServerFn(listFlaggedMessages);
+  const sanction = useServerFn(applySanction);
+  const resolve = useServerFn(resolveModerationItem);
+  const [family, setFamily] = useState<string>("");
 
-  const list = tab === "all" ? items : items.filter((i) => i.type === tab);
+  const query = useQuery({
+    queryKey: ["moderation-queue", family],
+    queryFn: () => fetchItems({ data: { familySlug: family || null } }),
+  });
 
-  const approve = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    toast.success("Contenu approuvé");
-  };
-  const remove = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    toast("Contenu supprimé", { icon: "🗑" });
-  };
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["moderation-queue"] });
+
+  const resolveMutation = useMutation({
+    mutationFn: (v: { messageId: string; action: "keep" | "remove" }) => resolve({ data: v }),
+    onSuccess: (_d, v) => {
+      toast.success(v.action === "remove" ? "Message supprimé" : "Signalement levé");
+      invalidate();
+    },
+    onError: () => toast.error("Action impossible"),
+  });
+
+  const sanctionMutation = useMutation({
+    mutationFn: (v: { userId: string; kind: "warning" | "suspension" | "ban"; familyId?: string | null; reason?: string }) =>
+      sanction({ data: { ...v, days: v.kind === "suspension" ? 7 : undefined } }),
+    onSuccess: (_d, v) => {
+      toast.success(
+        v.kind === "warning" ? "Avertissement enregistré" : v.kind === "suspension" ? "Suspension de 7 jours appliquée" : "Bannissement appliqué",
+      );
+      invalidate();
+    },
+    onError: () => toast.error("Sanction impossible"),
+  });
+
+  const items = (query.data as any)?.messages ?? [];
+  const families = (query.data as any)?.families ?? [];
+  const graves = items.filter((i: any) => i.moderation_severity === "grave").length;
 
   return (
     <div className="adm-root" style={{ minHeight: "100vh", background: "#0f0a1e" }}>
       <div className="adm-page">
-
-        <motion.div
-          className="adm-page-header"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 12,
-              background: "rgba(248,113,113,0.12)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#f87171", flexShrink: 0,
-            }}>
+        <div className="adm-page-header">
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <div
+              style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: "rgba(248,113,113,0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#f87171", flexShrink: 0,
+              }}
+            >
               <ShieldAlert size={22} />
             </div>
             <div>
-              <h1 className="adm-page-title">File de modération</h1>
+              <h1 className="adm-page-title">File de modération — Salons</h1>
               <p className="adm-page-subtitle">
-                {items.length} élément{items.length > 1 ? "s" : ""} en attente · Conformité LPMéd Suisse
+                {items.length} message{items.length > 1 ? "s" : ""} signalé{items.length > 1 ? "s" : ""} par l'agent modérateur
               </p>
             </div>
-            {items.filter((i) => i.severity === "high").length > 0 && (
-              <div style={{
-                marginLeft: "auto",
-                display: "flex", alignItems: "center", gap: 6,
-                background: "rgba(248,113,113,0.12)",
-                border: "1px solid rgba(248,113,113,0.25)",
-                borderRadius: 10, padding: "6px 14px",
-                color: "#f87171", fontSize: 13, fontWeight: 600,
-              }}>
-                <AlertTriangle size={14} />
-                {items.filter((i) => i.severity === "high").length} critique{items.filter((i) => i.severity === "high").length > 1 ? "s" : ""}
+            {graves > 0 && (
+              <div
+                style={{
+                  marginLeft: "auto", display: "flex", alignItems: "center", gap: 6,
+                  background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.25)",
+                  borderRadius: 10, padding: "6px 14px", color: "#f87171", fontSize: 13, fontWeight: 600,
+                }}
+              >
+                <AlertTriangle size={14} /> {graves} grave{graves > 1 ? "s" : ""}
               </div>
             )}
           </div>
-        </motion.div>
-
-        {/* Tabs */}
-        <div className="adm-tabs" style={{ marginBottom: 24, width: "fit-content" }}>
-          {[
-            { value: "all",     label: "Tout",     count: items.length },
-            { value: "review",  label: "Avis",     count: items.filter((i) => i.type === "review").length },
-            { value: "article", label: "Articles", count: items.filter((i) => i.type === "article").length },
-          ].map((t) => (
-            <button
-              key={t.value}
-              className={`adm-tab ${tab === t.value ? "active" : ""}`}
-              onClick={() => setTab(t.value as any)}
-            >
-              {t.label}
-              <span style={{
-                marginLeft: 6, fontSize: 11, fontWeight: 600,
-                background: "rgba(255,255,255,0.08)", padding: "0 6px",
-                borderRadius: 999, color: "rgba(255,255,255,0.5)",
-              }}>{t.count}</span>
-            </button>
-          ))}
         </div>
 
-        {/* Items */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <AnimatePresence mode="popLayout">
-            {list.map((item, i) => {
-              const sev = SEV_STYLE[item.severity];
+        <div style={{ marginBottom: 20 }}>
+          <label htmlFor="family-filter" style={{ display: "block", fontSize: 12, marginBottom: 6, color: "rgba(255,255,255,0.6)" }}>
+            Filtrer par salon
+          </label>
+          <select
+            id="family-filter"
+            value={family}
+            onChange={(e) => setFamily(e.target.value)}
+            style={{
+              minHeight: 44, borderRadius: 10, padding: "0 12px", fontSize: 14,
+              background: "rgba(255,255,255,0.06)", color: "#fff",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            <option value="">Tous les salons</option>
+            {families.map((f: any) => (
+              <option key={f.id} value={f.slug}>{f.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {query.isLoading ? (
+          <div className="adm-card"><div style={{ padding: 24, color: "rgba(255,255,255,0.6)" }}>Chargement…</div></div>
+        ) : items.length === 0 ? (
+          <div className="adm-card">
+            <div className="adm-empty">
+              <div className="adm-empty-icon" style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80" }}>
+                <ShieldAlert size={24} />
+              </div>
+              <div className="adm-empty-title">Aucun signalement en attente</div>
+              <div className="adm-empty-sub">Les salons respectent la Charte de Bienveillance.</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {items.map((item: any) => {
+              const sev = SEV[item.moderation_severity ?? "infraction"] ?? SEV.infraction;
               return (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: 40, transition: { duration: 0.2 } }}
-                  transition={{ delay: i * 0.05 }}
-                  className="adm-card"
-                >
+                <div key={item.id} className="adm-card">
                   <div style={{ padding: "18px 24px" }}>
-                    {/* Header row */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-                      {/* Type */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 6,
-                        background: "rgba(255,255,255,0.06)", borderRadius: 999,
-                        padding: "3px 10px", fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
-                        {item.type === "review" ? <MessageSquare size={12} /> : <FileText size={12} />}
-                        {item.type === "review" ? "Avis" : "Article"}
-                      </div>
-
-                      {/* Flag */}
-                      <div style={{
-                        display: "flex", alignItems: "center", gap: 5,
-                        background: sev.bg, borderRadius: 999,
-                        padding: "3px 10px", fontSize: 12, color: sev.color,
-                        fontWeight: 500,
-                      }}>
-                        <AlertTriangle size={11} /> {item.flag}
-                      </div>
-
-                      {/* Severity */}
-                      <span style={{
-                        fontSize: 11, fontWeight: 600, textTransform: "uppercase",
-                        letterSpacing: "0.06em", color: sev.color,
-                      }}>
-                        {sev.label}
+                      <span style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", borderRadius: 999, padding: "3px 10px", fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
+                        <MessageSquare size={12} /> {item.family?.name ?? "Salon"}
                       </span>
-
-                      {/* Time */}
-                      <span style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-                        {item.created}
+                      <span style={{ display: "flex", alignItems: "center", gap: 5, background: sev.bg, borderRadius: 999, padding: "3px 10px", fontSize: 12, color: sev.color, fontWeight: 600 }}>
+                        <AlertTriangle size={11} /> {sev.label}
                       </span>
-                    </div>
-
-                    {/* Author + stars */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>par {item.author}</span>
-                      {item.rating !== undefined && (
-                        <div style={{ display: "flex", gap: 2 }}>
-                          {Array.from({ length: 5 }).map((_, j) => (
-                            <Star
-                              key={j}
-                              size={12}
-                              style={{ color: j < item.rating! ? "#fbbf24" : "rgba(255,255,255,0.15)" }}
-                              fill={j < item.rating! ? "#fbbf24" : "none"}
-                            />
-                          ))}
-                        </div>
+                      {item.warnings > 0 && (
+                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                          {item.warnings} avertissement{item.warnings > 1 ? "s" : ""} antérieur{item.warnings > 1 ? "s" : ""}
+                        </span>
                       )}
+                      {item.activeSanction && (
+                        <span style={{ fontSize: 12, color: "#f87171", display: "flex", alignItems: "center", gap: 4 }}>
+                          <Clock size={11} /> {item.activeSanction.kind === "ban" ? "Banni" : "Suspendu"}
+                        </span>
+                      )}
+                      <span style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                        {new Date(item.created_at).toLocaleString("fr-CH")}
+                      </span>
                     </div>
 
-                    {/* Preview */}
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.6, marginBottom: 16 }}>
-                      "{item.preview}"
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>par {item.author?.name}</p>
+                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, marginBottom: 12 }}>
+                      « {item.content} »
                     </p>
+                    {item.flagged_reason && (
+                      <p style={{ fontSize: 13, color: sev.color, marginBottom: 12 }}>Motif : {item.flagged_reason}</p>
+                    )}
+                    {item.report?.report_md && (
+                      <details style={{ marginBottom: 14 }}>
+                        <summary style={{ cursor: "pointer", fontSize: 13, color: "rgba(255,255,255,0.6)", minHeight: 44, display: "flex", alignItems: "center" }}>
+                          Rapport de l'agent modérateur
+                        </summary>
+                        <pre style={{ whiteSpace: "pre-wrap", fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 8, fontFamily: "inherit" }}>
+                          {item.report.report_md}
+                        </pre>
+                      </details>
+                    )}
 
-                    {/* Actions */}
-                    <div style={{
-                      display: "flex", justifyContent: "flex-end", gap: 8,
-                      paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)",
-                    }}>
-                      <button className="adm-btn adm-btn-danger" onClick={() => remove(item.id)}>
-                        <X size={14} /> Supprimer
+                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 8, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      <button
+                        className="adm-btn"
+                        onClick={() => sanctionMutation.mutate({ userId: item.user_id, kind: "warning", familyId: item.family_id, reason: item.flagged_reason })}
+                      >
+                        <AlertTriangle size={14} /> Avertir
                       </button>
-                      <button className="adm-btn adm-btn-approve" onClick={() => approve(item.id)}>
-                        <Check size={14} /> Approuver
+                      <button
+                        className="adm-btn"
+                        onClick={() => sanctionMutation.mutate({ userId: item.user_id, kind: "suspension", familyId: item.family_id, reason: item.flagged_reason })}
+                      >
+                        <Clock size={14} /> Suspendre 7 j
+                      </button>
+                      <button
+                        className="adm-btn adm-btn-danger"
+                        onClick={() => {
+                          if (window.confirm("Bannir définitivement ce thérapeute des salons ?")) {
+                            sanctionMutation.mutate({ userId: item.user_id, kind: "ban", familyId: null, reason: item.flagged_reason });
+                          }
+                        }}
+                      >
+                        <Ban size={14} /> Bannir
+                      </button>
+                      <button
+                        className="adm-btn adm-btn-danger"
+                        onClick={() => {
+                          if (window.confirm("Supprimer ce message ?")) resolveMutation.mutate({ messageId: item.id, action: "remove" });
+                        }}
+                      >
+                        <Trash2 size={14} /> Supprimer
+                      </button>
+                      <button className="adm-btn adm-btn-approve" onClick={() => resolveMutation.mutate({ messageId: item.id, action: "keep" })}>
+                        <Check size={14} /> Conserver
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
-          </AnimatePresence>
-
-          {list.length === 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="adm-card">
-                <div className="adm-empty">
-                  <div className="adm-empty-icon" style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80" }}>
-                    <ShieldAlert size={24} />
-                  </div>
-                  <div className="adm-empty-title">File de modération vide 🎉</div>
-                  <div className="adm-empty-sub">Tous les contenus ont été traités. Aucun signalement en attente.</div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
