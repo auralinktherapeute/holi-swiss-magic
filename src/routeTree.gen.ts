@@ -88,6 +88,7 @@ import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newslet
 import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
 import { Route as ApiPublicModerateMessageRouteImport } from './routes/api/public/moderate-message'
+import { Route as DashboardSalonsIndexRouteImport } from './routes/dashboard.salons.index'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
@@ -501,6 +502,11 @@ const ApiPublicModerateMessageRoute =
     path: '/api/public/moderate-message',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DashboardSalonsIndexRoute = DashboardSalonsIndexRouteImport.update({
+  id: '/salons/',
+  path: '/salons/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   id: '/blog/categorie/$slug',
   path: '/blog/categorie/$slug',
@@ -629,6 +635,7 @@ export interface FileRoutesByFullPath {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/admin/newsletter/': typeof AdminNewsletterIndexRoute
+  '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -715,6 +722,7 @@ export interface FileRoutesByTo {
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
   '/admin/newsletter': typeof AdminNewsletterIndexRoute
+  '/dashboard/salons': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -805,6 +813,7 @@ export interface FileRoutesById {
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
   '/admin/newsletter/': typeof AdminNewsletterIndexRoute
+  '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
@@ -896,6 +905,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/admin/newsletter/'
+    | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -982,6 +992,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
     | '/admin/newsletter'
+    | '/dashboard/salons'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -1071,6 +1082,7 @@ export interface FileRouteTypes {
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
     | '/admin/newsletter/'
+    | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/famille/$familySlug'
@@ -1662,6 +1674,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicModerateMessageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/salons/': {
+      id: '/dashboard/salons/'
+      path: '/salons'
+      fullPath: '/dashboard/salons/'
+      preLoaderRoute: typeof DashboardSalonsIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/$lang/blog/categorie/$slug': {
       id: '/$lang/blog/categorie/$slug'
       path: '/blog/categorie/$slug'
@@ -1866,6 +1885,7 @@ interface DashboardRouteChildren {
   DashboardReservationsRoute: typeof DashboardReservationsRoute
   DashboardVisibiliteRoute: typeof DashboardVisibiliteRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardSalonsIndexRoute: typeof DashboardSalonsIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -1883,6 +1903,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardReservationsRoute: DashboardReservationsRoute,
   DashboardVisibiliteRoute: DashboardVisibiliteRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardSalonsIndexRoute: DashboardSalonsIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

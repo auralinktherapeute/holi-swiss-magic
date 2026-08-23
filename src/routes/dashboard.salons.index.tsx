@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { listCommunityFamilies, acceptCharter } from "@/lib/community.functions";
 import { CharterDialog } from "@/components/community/CharterDialog";
 
-export const Route = createFileRoute("/dashboard/salons")({
+export const Route = createFileRoute("/dashboard/salons/")({
   component: Page,
   head: () => {
     const title = "Salons communautaires | Holiswiss";
