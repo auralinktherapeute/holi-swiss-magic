@@ -8,6 +8,8 @@ import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { categoryLabel } from "@/lib/article-categories";
 import { blogCopy } from "@/lib/blog-copy";
+import { redirectTargetForSlug } from "@/lib/blog-redirects";
+
 
 const SITE = "https://holiswiss.ch";
 
