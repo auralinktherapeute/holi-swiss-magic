@@ -209,18 +209,7 @@ function MarketingPage() {
 
       {tab === "topics" && <TopicsTab topics={topics} />}
 
-      {tab === "carrousels" && (
-        <div className="space-y-5">
-          <p className="text-sm text-[#d4c4e0]">
-            Carrousels produits et validés, au format réel 4:5. Faites défiler chaque rangée
-            horizontalement. Le bouton portant un point indique la langue de rédaction d'origine —
-            les autres en sont des adaptations, pas des traductions littérales.
-          </p>
-          {CAROUSELS.map((c) => (
-            <CarouselViewer key={c.id} carousel={c} />
-          ))}
-        </div>
-      )}
+      {tab === "carrousels" && <CarouselsTab proposals={rows} />}
     </div>
   );
 }
