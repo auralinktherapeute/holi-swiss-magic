@@ -87,6 +87,7 @@ import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeu
 import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newsletter.index'
 import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
+import { Route as ApiPublicModerateMessageRouteImport } from './routes/api/public/moderate-message'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
@@ -494,6 +495,12 @@ const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
   path: '/api/public/admin-notify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicModerateMessageRoute =
+  ApiPublicModerateMessageRouteImport.update({
+    id: '/api/public/moderate-message',
+    path: '/api/public/moderate-message',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   id: '/blog/categorie/$slug',
   path: '/blog/categorie/$slug',
@@ -606,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -691,6 +699,7 @@ export interface FileRoutesByTo {
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
   '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
@@ -780,6 +789,7 @@ export interface FileRoutesById {
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -870,6 +880,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
+    | '/api/public/moderate-message'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -955,6 +966,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
+    | '/api/public/moderate-message'
     | '/$lang/blog'
     | '/$lang/conditions'
     | '/$lang/confidentialite'
@@ -1043,6 +1055,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
     | '/api/public/admin-notify'
+    | '/api/public/moderate-message'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -1086,6 +1099,7 @@ export interface RootRouteChildren {
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
+  ApiPublicModerateMessageRoute: typeof ApiPublicModerateMessageRoute
   ApiPublicAnalyticsEndSessionRoute: typeof ApiPublicAnalyticsEndSessionRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
   ApiPublicHooksResendEventsRoute: typeof ApiPublicHooksResendEventsRoute
@@ -1641,6 +1655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/moderate-message': {
+      id: '/api/public/moderate-message'
+      path: '/api/public/moderate-message'
+      fullPath: '/api/public/moderate-message'
+      preLoaderRoute: typeof ApiPublicModerateMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$lang/blog/categorie/$slug': {
       id: '/$lang/blog/categorie/$slug'
       path: '/blog/categorie/$slug'
@@ -1887,6 +1908,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   DesinscriptionIndexRoute: DesinscriptionIndexRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
+  ApiPublicModerateMessageRoute: ApiPublicModerateMessageRoute,
   ApiPublicAnalyticsEndSessionRoute: ApiPublicAnalyticsEndSessionRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
   ApiPublicHooksResendEventsRoute: ApiPublicHooksResendEventsRoute,
