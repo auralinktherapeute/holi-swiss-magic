@@ -4849,6 +4849,7 @@ export type Database = {
       immutable_unaccent: { Args: { "": string }; Returns: string }
       is_admin: { Args: { _uid: string }; Returns: boolean }
       is_elite_pro: { Args: { _user_id: string }; Returns: boolean }
+      is_family_member: { Args: { _family_id: string }; Returns: boolean }
       is_therapist_owner: { Args: { _therapist_id: string }; Returns: boolean }
       is_verified_therapist: { Args: { _uid: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }
