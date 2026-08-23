@@ -185,7 +185,9 @@ function MarketingPage() {
           }`}
         >
           <LayoutGrid className="h-4 w-4" /> Carrousels
-          <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-white/60">{CAROUSELS.length}</span>
+          <span className="rounded-full bg-white/10 px-1.5 text-[11px] text-white/60">
+            {CAROUSELS.length + rows.filter((p) => p.status === "valide" || p.status === "publie").length}
+          </span>
         </button>
       </div>
 
