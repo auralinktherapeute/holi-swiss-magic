@@ -223,7 +223,9 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
 
               <div
                 className={`relative z-10 flex flex-col gap-2 ${
-                  s.kind === "rupture" || s.kind === "cta" ? "my-auto" : ""
+                  s.kind === "hook" || s.kind === "rupture" || s.kind === "cta"
+                    ? "my-auto items-center text-center"
+                    : ""
                 }`}
               >
                 {s.kind === "cta" && (
@@ -372,7 +374,7 @@ function PostView({
           className="absolute left-0 right-0 top-0 h-0.5"
           style={{ background: "linear-gradient(90deg,#a855f7,#22d3ee)" }}
         />
-        <div className="relative z-10 flex flex-col gap-2">
+        <div className="relative z-10 my-auto flex flex-col items-center gap-2 text-center">
           {visuel.label && (
             <p className="m-0 text-[9px] font-bold uppercase tracking-[0.14em] text-[#22d3ee]">
               {visuel.label}

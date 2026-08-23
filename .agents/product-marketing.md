@@ -271,6 +271,30 @@ RGBA). Ne pas repartir d'une reconstitution.
   le taux de complétion.
 - Texte blanc sur fond sombre uniquement. Vérifier la lisibilité en vignette.
 
+### Qualité d'exécution — niveau senior et distinction post/carrousel (bloquant)
+
+Un **post** et un **carrousel** sont deux livrables éditoriaux distincts. Il est interdit de prendre
+la caption du post, de la découper automatiquement en paragraphes et d'appeler le résultat un
+carrousel. Il est également interdit d'utiliser la slide d'accroche comme post sans lui concevoir
+une composition autonome.
+
+- **Post** : une idée autosuffisante, un visuel unique composé pour être compris sans défilement,
+  puis une caption qui approfondit sans répéter mot pour mot le visuel.
+- **Carrousel** : 6 à 8 slides rédigées intentionnellement comme une progression : tension →
+  contexte → développement → pivot → preuve ou outil utile → résolution → CTA. Chaque slide doit
+  apporter une information nouvelle et donner une raison de faire défiler la suivante.
+- La caption accompagne le carrousel : elle ne duplique ni l'ordre ni le texte des slides.
+- Aucun carrousel à une seule slide. Aucune suite de slides issue d'un découpage mécanique de la
+  caption. Si le sujet ne justifie pas 6 slides distinctes, choisir le format **post**, sans simuler
+  un carrousel.
+
+**Contrôle de composition obligatoire avant livraison** : vérifier chaque slide au format 4:5 et
+en vignette. Le bloc principal doit être visuellement équilibré dans la zone sûre ; hook, rupture
+et CTA sont centrés sur leur axe principal. Aucun texte ne doit être tassé en haut, coupé, déborder,
+ou laisser un vide accidentel. Hiérarchie nette, marges régulières, longueurs maîtrisées. Une
+maquette seulement « correcte » est refusée : le niveau attendu est celui d'un directeur artistique
+senior, publiable sans retouche.
+
 ⚠️ Vigilance images : une illustration hors-sujet ruine la crédibilité. *(Un article publié
 affichait une photo de compléments alimentaires pour chiens.)* Toujours vérifier la pertinence
 réelle du visuel, jamais se fier au seul mot-clé de recherche.

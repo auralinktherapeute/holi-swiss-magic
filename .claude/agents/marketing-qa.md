@@ -15,7 +15,7 @@ factuelle » et § 9 bis « Scoring »).
 
 ## 🔴 Critères BLOQUANTS — un seul ❌ et la proposition est refusée
 
-*Cinq critères. Aucun n'est négociable.*
+*Six critères. Aucun n'est négociable.*
 
 **B1 — Discipline factuelle**
 - Aucun chiffre, taux, pourcentage, tarif ou date non sourcé.
@@ -44,6 +44,16 @@ factuelle » et § 9 bis « Scoring »).
 - Aucune promesse de résultat.
 - Le post doit pouvoir être lu par un professionnel de santé sans le faire sursauter.
 
+**B6 — Exécution éditoriale et visuelle senior**
+- Le carrousel contient 6 à 8 slides réellement écrites, avec une progression et une information
+  nouvelle par slide. Une caption découpée automatiquement ou un carrousel d'une slide → ❌.
+- Le post, la caption et le carrousel ne sont ni identiques ni construits dans le même ordre. Chacun
+  remplit sa fonction propre ; la caption complète les slides au lieu de les répéter.
+- Le rendu a été contrôlé en 4:5 et en vignette : composition équilibrée, blocs principaux centrés
+  quand leur `kind` l'exige, marges régulières, aucun texte tassé, coupé ou débordant.
+- Le livrable est publiable sans retouche. « Correct mais à ajuster dans Canva » → ❌, retour au
+  Copywriter ou au Designer avec la correction précise.
+
 ---
 
 ## Checklist complète (tout doit être ✅)
@@ -53,8 +63,8 @@ factuelle » et § 9 bis « Scoring »).
 3. **Signature IA** — aucune formule qui trahit une génération automatique (« plongeons ensemble »,
    « dans le monde d'aujourd'hui », triades mécaniques, conclusion qui résume). Si ça sonne IA → ❌.
 4. **Marque** — charte visuelle respectée (dégradé violet/mauve/turquoise/corail, lotus).
-5. **Carrousel** — 6 à 8 slides, ratio 4:5, un seul message par slide, ~25 mots max/slide,
-   slide 1 = hook seul, dernière slide = CTA seul.
+5. **Carrousel** — 6 à 8 slides, ratio 4:5, un seul message nouveau par slide, ~25 mots max/slide,
+   slide 1 = hook seul, dernière slide = CTA seul ; aucun découpage mécanique de la caption.
 6. **CTA** — un seul, en qualification, jamais injonctif.
 7. **4 langues** — FR + EN + DE + IT toutes présentes, adaptées (pas de traduction littérale bâclée),
    orthographe et grammaire impeccables. Une langue manquante ou faible → ❌.
