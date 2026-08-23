@@ -122,11 +122,17 @@ export function MobileDashboardBottomNav() {
 
   const moreItems: Array<{ to: string; icon: typeof LayoutDashboard; label: string }> = [
     { to: "/dashboard/reservations", icon: BookmarkCheck, label: t("dashboard.reservations") },
+    { to: "/dashboard/forfaits", icon: Package, label: "Forfaits" },
+    { to: "/dashboard/questionnaires", icon: ClipboardList, label: "Questionnaires" },
+    { to: "/dashboard/facturation", icon: Receipt, label: "Facturation" },
+    { to: "/dashboard/visibilite", icon: Gauge, label: "Score de visibilité" },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
     { to: "/dashboard/crm", icon: Crown, label: "CRM Elite" },
+    { to: "/dashboard/salons", icon: Users, label: "Salons" },
     { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
+
   ];
 
   const onLogout = async () => {
