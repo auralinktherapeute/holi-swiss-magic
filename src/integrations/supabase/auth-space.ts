@@ -76,3 +76,15 @@ export function clearLegacySupabaseSessions() {
     }
   } catch {}
 }
+
+/** Vrai si un jeton de session est présent dans l'un des espaces connus. */
+export function hasStoredSupabaseSession() {
+  if (typeof window === "undefined") return false;
+  try {
+    return HOLISWISS_AUTH_SPACES.some((space) =>
+      Boolean(window.localStorage.getItem(getHoliswissAuthStorageKey(space))),
+    );
+  } catch {
+    return false;
+  }
+}

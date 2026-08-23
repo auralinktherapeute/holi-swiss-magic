@@ -37,7 +37,13 @@ function LoginPage() {
   const ensureRole = useServerFn(ensureTherapistRole);
 
   const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
-    let role: AppRole | null = await getCurrentUserRole();
+    let role: AppRole | null = null;
+    try {
+      role = await getCurrentUserRole();
+    } catch {
+      role = null;
+    }
+    let roleResolved = role === "admin" || role === "therapist" || role === "moderator" || role === "user";
     if (role !== "admin" && role !== "therapist") {
       // On ne « répare » le rôle thérapeute que pour un compte qui a déjà un
       // profil (requireProfile). Une connexion Google faite uniquement pour
@@ -45,8 +51,9 @@ function LoginPage() {
       // ne crée pas d'espace thérapeute.
       try {
         role = (await ensureRole({ data: { requireProfile: true } })).role;
+        roleResolved = true;
       } catch {
-        role = "user";
+        // Échec réseau / token : on NE conclut PAS « simple visiteur ».
       }
     }
     const roleSession = session ?? (await supabase.auth.getSession()).data.session;
@@ -54,10 +61,17 @@ function LoginPage() {
       if (roleSession) await persistSessionInRoleSpace(roleSession, role);
       else switchAuthSpace(roleToSpace(role));
       navigate({ to: role === "admin" ? "/admin" : "/dashboard", replace: true });
-    } else {
-      // Visiteur sans espace thérapeute → accueil.
-      navigate({ to: "/$lang", params: { lang }, replace: true });
+      return;
     }
+    if (!roleResolved) {
+      // Rôle indéterminé (Safari : token périmé, requête bloquée…). On laisse
+      // l'utilisateur sur la page de connexion plutôt que de le renvoyer à
+      // l'accueil en boucle.
+      toast.error(t("auth.role_unresolved", "Connexion impossible pour le moment. Réessayez."));
+      return;
+    }
+    // Visiteur sans espace thérapeute → accueil.
+    navigate({ to: "/$lang", params: { lang }, replace: true });
   };
 
   useEffect(() => {
@@ -69,8 +83,20 @@ function LoginPage() {
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
       if (data.session) {
-        await redirectAfterLogin(data.session);
-        return;
+        // Safari conserve volontiers un refresh token révoqué/expiré : on
+        // valide la session auprès du serveur avant toute redirection, sinon
+        // le rôle est introuvable et l'utilisateur est renvoyé à l'accueil.
+        const { data: userData, error } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (!error && userData.user) {
+          await redirectAfterLogin(data.session);
+          return;
+        }
+        try {
+          await supabase.auth.signOut({ scope: "local" });
+        } catch {
+          // Le nettoyage du storage ci-dessous reste la garantie.
+        }
       }
       prepareLoginAuthSpace();
     })();
@@ -78,6 +104,7 @@ function LoginPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {

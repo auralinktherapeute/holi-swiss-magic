@@ -116,9 +116,12 @@ export async function getCurrentUserRole(): Promise<AppRole | null> {
     .from("user_roles")
     .select("role")
     .eq("user_id", user.id);
-  if (error) throw error;
+  // Une erreur réseau/RLS ne doit pas être confondue avec « aucun rôle » :
+  // on renvoie null (rôle indéterminé) et l'appelant décide.
+  if (error) return null;
   const rows = (data ?? []) as Array<{ role: string | null }>;
   return resolvePrimaryRole(rows.map((row) => row.role));
+
 }
 
 export async function requireCurrentRole(role: AppRole): Promise<AppRole | null> {
