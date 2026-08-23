@@ -22,6 +22,7 @@ import {
   Receipt,
   HelpCircle,
   Gauge,
+  Users,
   LogOut,
 } from "lucide-react";
 import { useServerFn as useServerFnHelp } from "@tanstack/react-start";
