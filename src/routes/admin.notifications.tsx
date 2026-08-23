@@ -71,6 +71,26 @@ function NotificationsPage() {
     refresh();
   }, [refresh]);
 
+  // Consulter la rubrique = les notifications sont lues. Le badge rouge doit
+  // disparaître sans avoir à cliquer chaque ligne (demande explicite).
+  useEffect(() => {
+    let alive = true;
+    const timer = window.setTimeout(async () => {
+      try {
+        await markAll();
+      } catch {
+        /* silencieux */
+      }
+      if (!alive) return;
+      setRows((rs) => rs.map((r) => (r.is_read ? r : { ...r, is_read: true, read_at: new Date().toISOString() })));
+      notifyNotificationsChanged();
+    }, 1200);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [markAll]);
+
   const onMarkOne = useCallback(
     async (id: string) => {
       // Optimiste : l'UI se met à jour tout de suite, le serveur persiste ensuite.
