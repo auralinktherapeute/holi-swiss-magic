@@ -35,6 +35,8 @@ export type Carousel = {
   pilier: string;
   titre: string;
   score: number;
+  /** Date de production/validation (AAAA-MM-JJ) — sert à l'archivage après 7 jours. */
+  date?: string;
   /** Langue dans laquelle le carrousel a été rédigé à l'origine. */
   langueOrigine: CarouselLang;
   lectureTherapeute: string;
