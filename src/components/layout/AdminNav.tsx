@@ -12,7 +12,7 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { getAdminBadgeCounts } from "@/lib/admin.functions";
+import { getPersistentAdminBadgeCounts } from "@/lib/admin-badges.functions";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { signOutCompletely } from "@/lib/auth-utils";
 import { onNotificationsChanged } from "@/lib/notification-bus";
@@ -23,7 +23,7 @@ export function AdminNav() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fetchBadgeCounts = useServerFn(getAdminBadgeCounts);
+  const fetchBadgeCounts = useServerFn(getPersistentAdminBadgeCounts);
   const fetchUnread = useServerFn(getUnreadNotificationCount);
   const email = user?.email ?? "admin@holiswiss.ch";
   const initial = email.charAt(0).toUpperCase();

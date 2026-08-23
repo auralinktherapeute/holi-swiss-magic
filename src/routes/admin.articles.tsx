@@ -21,6 +21,7 @@ import { translateArticle, translateAllMissingArticles, importAgentArticlesAdmin
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
+import { useAdminSectionRead } from "@/hooks/use-admin-section-read";
 
 export const Route = createFileRoute("/admin/articles")({ component: Page });
 
@@ -532,6 +533,7 @@ function Page() {
     queryFn: () => getAllArticlesAdmin(),
     retry: false,
   });
+  useAdminSectionRead("articles", !isLoading && !error);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteArticle({ data: { id } }),
