@@ -3099,7 +3099,10 @@ export type Database = {
       specialty_families: {
         Row: {
           created_at: string
+          description_de: string | null
+          description_en: string | null
           description_fr: string | null
+          description_it: string | null
           icon: string | null
           id: string
           is_featured: boolean
@@ -3113,7 +3116,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description_de?: string | null
+          description_en?: string | null
           description_fr?: string | null
+          description_it?: string | null
           icon?: string | null
           id?: string
           is_featured?: boolean
@@ -3127,7 +3133,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description_de?: string | null
+          description_en?: string | null
           description_fr?: string | null
+          description_it?: string | null
           icon?: string | null
           id?: string
           is_featured?: boolean
