@@ -151,8 +151,8 @@ function HomePage() {
       {/* Les 26 cantons — liens crawlables vers l'annuaire filtré */}
       <CantonDirectory />
 
-      {/* Inscription publique à La Lettre Holiswiss */}
-      <NewsletterSection />
+      {/* Inscription à La Lettre Holiswiss : uniquement dans le pied de page (évite le doublon) */}
+
 
       {/* SEO/AI FAQ section */}
       {(() => {
