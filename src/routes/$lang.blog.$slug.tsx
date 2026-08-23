@@ -14,6 +14,15 @@ const SITE = "https://holiswiss.ch";
 export const Route = createFileRoute("/$lang/blog/$slug")({
   component: Page,
   loader: async ({ params }) => {
+    // Redirections 301 permanentes (articles fusionnés) — avant tout accès base.
+    const permanentTarget = redirectTargetForSlug(params.slug);
+    if (permanentTarget) {
+      throw redirect({
+        to: "/$lang/blog/$slug",
+        params: { lang: params.lang, slug: permanentTarget },
+        statusCode: 301,
+      });
+    }
     let article: Record<string, unknown> | null = null;
     try {
       const res = await getArticleBySlug({ data: { slug: params.slug, lang: params.lang } });
@@ -21,6 +30,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     } catch {
       return { article: null };
     }
+
     // L'article peut avoir été retrouvé via son slug de base alors qu'un slug
     // localisé existe pour cette langue : rediriger vers l'URL canonique plutôt
     // que de servir deux URLs pour le même contenu (duplication pour Google).
