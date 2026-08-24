@@ -14,24 +14,27 @@ export function isHoliswissAuthSpace(value: unknown): value is HoliswissAuthSpac
 
 /**
  * Détermine l'espace d'authentification actuel.
- * La priorité est donnée à l'URL (source de vérité pour la navigation),
- * puis à la session en cours, puis au dernier espace connu.
+ * Les routes protégées imposent leur espace. Sur les routes publiques comme
+ * /connexion, l'espace actif explicite reste prioritaire afin que la migration
+ * login → admin/dashboard cible bien le nouveau client avant la navigation.
  */
 export function getHoliswissAuthSpace(): HoliswissAuthSpace {
   if (typeof window === "undefined") return "dashboard";
   try {
     const path = window.location.pathname;
-    
-    // 1. L'URL est prioritaire pour éviter les désynchronisations lors d'une navigation directe
+
+    // 1. Une route protégée impose toujours son client.
     if (path.startsWith("/admin")) return "admin";
     if (path.startsWith("/dashboard")) return "dashboard";
-    if (path.includes("/connexion")) return "login";
 
-    // 2. Session active (persistante uniquement pour la durée de l'onglet)
+    // 2. Sur une route publique, respecter le changement explicite d'espace.
     const active = window.sessionStorage.getItem(ACTIVE_AUTH_SPACE_KEY);
     if (isHoliswissAuthSpace(active)) return active;
 
-    // 3. Dernier espace connu (persistant entre les sessions)
+    // 3. Sans choix explicite, la connexion utilise son espace dédié.
+    if (path.includes("/connexion")) return "login";
+
+    // 4. Dernier espace connu (persistant entre les sessions)
     const last = window.localStorage.getItem(LAST_AUTH_SPACE_KEY);
     if (isHoliswissAuthSpace(last)) return last;
   } catch {
