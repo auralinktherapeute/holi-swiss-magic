@@ -120,11 +120,35 @@ export async function getCurrentUserRole(): Promise<AppRole | null> {
   // on renvoie null (rôle indéterminé) et l'appelant décide.
   if (error) return null;
   const rows = (data ?? []) as Array<{ role: string | null }>;
+  // ZÉRO LIGNE ≠ « simple visiteur ». Une requête partie sans jeton (client
+  // d'un autre espace, session pas encore hydratée) est filtrée par la RLS et
+  // renvoie 0 ligne SANS erreur : conclure "user" renvoyait un administrateur
+  // à l'accueil. Rôle indéterminé → null, l'appelant tranche côté serveur.
+  if (rows.length === 0) return null;
   return resolvePrimaryRole(rows.map((row) => row.role));
+}
 
+/**
+ * Rôle faisant autorité : lecture client, puis repli serveur (service role)
+ * quand la RLS/le jeton rendent la lecture client muette. Sans ce repli, un
+ * administrateur était pris pour un visiteur et renvoyé à l'accueil.
+ */
+export async function resolveAuthoritativeRole(): Promise<AppRole | null> {
+  const clientRole = await getCurrentUserRole();
+  if (clientRole) return clientRole;
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return null;
+  try {
+    const { getMyRole } = await import("@/lib/auth-role.functions");
+    const result = await getMyRole();
+    return (result.role as AppRole | null) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function requireCurrentRole(role: AppRole): Promise<AppRole | null> {
-  const currentRole = await getCurrentUserRole();
+  const currentRole = await resolveAuthoritativeRole();
   return currentRole === role ? currentRole : null;
 }
+

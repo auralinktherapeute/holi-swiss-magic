@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getCurrentUserRole, type AppRole } from "@/lib/auth-utils";
+import { resolveAuthoritativeRole, type AppRole } from "@/lib/auth-utils";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useRole() {
@@ -15,7 +15,7 @@ export function useRole() {
     }
     setLoading(true);
     try {
-      const nextRole = await getCurrentUserRole();
+      const nextRole = await resolveAuthoritativeRole();
       setRole(nextRole);
       return nextRole;
     } finally {
@@ -27,7 +27,7 @@ export function useRole() {
     if (authLoading) return;
     let alive = true;
     setLoading(true);
-    getCurrentUserRole()
+    resolveAuthoritativeRole()
       .then((nextRole) => {
         if (!alive) return;
         setRole(nextRole);

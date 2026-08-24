@@ -48,3 +48,25 @@ export const ensureTherapistRole = createServerFn({ method: "POST" })
     if (upsertError) throw new Error("Impossible d'attribuer le rôle thérapeute.");
     return { role: "therapist", granted: true };
   });
+
+/**
+ * Lecture SEULE du rôle, faisant autorité (service role, hors RLS).
+ * Sert de repli quand la lecture client de `user_roles` renvoie 0 ligne à
+ * cause d'un jeton non attaché : conclure « visiteur » renvoyait alors un
+ * administrateur vers la page d'accueil.
+ */
+export const getMyRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ role: EnsuredRole | "moderator" | null }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (error) throw new Error("Impossible de vérifier le rôle du compte.");
+    const roles = new Set((rows ?? []).map((row) => row.role));
+    if (roles.has("admin")) return { role: "admin" };
+    if (roles.has("therapist")) return { role: "therapist" };
+    if (roles.has("moderator")) return { role: "moderator" };
+    return { role: rows && rows.length > 0 ? "user" : null };
+  });

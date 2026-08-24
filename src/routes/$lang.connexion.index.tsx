@@ -13,7 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import {
   clearHoliswissSessionState,
-  getCurrentUserRole,
+  resolveAuthoritativeRole,
   persistSessionInRoleSpace,
   prepareLoginAuthSpace,
   roleToSpace,
@@ -39,23 +39,24 @@ function LoginPage() {
   const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
     let role: AppRole | null = null;
     try {
-      role = await getCurrentUserRole();
+      role = await resolveAuthoritativeRole();
     } catch {
       role = null;
     }
     let roleResolved = role === "admin" || role === "therapist" || role === "moderator" || role === "user";
     if (role !== "admin" && role !== "therapist") {
-      // On ne « répare » le rôle thérapeute que pour un compte qui a déjà un
-      // profil (requireProfile). Une connexion Google faite uniquement pour
-      // laisser un avis reste un simple visiteur (role "user") : l'auth « avis »
-      // ne crée pas d'espace thérapeute.
+      // Le rôle lu côté client peut être faussé (RLS, jeton pas encore
+      // hydraté). Seul le serveur (service role) fait autorité avant de
+      // conclure « simple visiteur ».
       try {
         role = (await ensureRole({ data: { requireProfile: true } })).role;
         roleResolved = true;
       } catch {
         // Échec réseau / token : on NE conclut PAS « simple visiteur ».
+        roleResolved = false;
       }
     }
+
     const roleSession = session ?? (await supabase.auth.getSession()).data.session;
     if (role === "admin" || role === "therapist") {
       if (roleSession) await persistSessionInRoleSpace(roleSession, role);
