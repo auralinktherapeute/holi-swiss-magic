@@ -21,6 +21,10 @@ export { LAST_AUTH_SPACE_KEY } from "@/integrations/supabase/auth-space";
 export type AppRole = "admin" | "therapist" | "moderator" | "user";
 
 const LAST_ACTIVITY_KEY = "holiswiss-last-activity";
+const OAUTH_FLOW_KEY = "holiswiss-oauth-flow";
+const OAUTH_FLOW_MAX_AGE_MS = 10 * 60 * 1000;
+
+export type OAuthFlow = "login" | "signup";
 
 const rolePriority: AppRole[] = ["admin", "therapist", "moderator", "user"];
 
@@ -71,6 +75,49 @@ export function clearHoliswissSessionState() {
     });
   } catch {
     // Best effort only
+  }
+}
+
+export function beginOAuthFlow(flow: OAuthFlow) {
+  prepareLoginAuthSpace();
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      OAUTH_FLOW_KEY,
+      JSON.stringify({ flow, startedAt: Date.now() }),
+    );
+  } catch {
+    // The OAuth redirect still works when sessionStorage is unavailable.
+  }
+}
+
+export function getPendingOAuthFlow(expectedFlow: OAuthFlow) {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.sessionStorage.getItem(OAUTH_FLOW_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { flow?: unknown; startedAt?: unknown };
+    const isFresh =
+      typeof parsed.startedAt === "number" &&
+      Date.now() - parsed.startedAt <= OAUTH_FLOW_MAX_AGE_MS;
+    if (parsed.flow === expectedFlow && isFresh) return true;
+    window.sessionStorage.removeItem(OAUTH_FLOW_KEY);
+  } catch {
+    try {
+      window.sessionStorage.removeItem(OAUTH_FLOW_KEY);
+    } catch {
+      // Best effort only.
+    }
+  }
+  return false;
+}
+
+export function completeOAuthFlow() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(OAUTH_FLOW_KEY);
+  } catch {
+    // Best effort only.
   }
 }
 

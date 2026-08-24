@@ -12,12 +12,25 @@ import { Eye, EyeOff } from "lucide-react";
 import { useSessionState } from "@/hooks/use-session-state";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import {
+  beginOAuthFlow,
+  completeOAuthFlow,
+  getPendingOAuthFlow,
   persistSessionInRoleSpace,
   prepareLoginAuthSpace,
   type AppRole,
 } from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/$lang/inscription/")({
+  head: () => ({
+    meta: [
+      { title: "Inscription thérapeute — Holiswiss" },
+      { name: "description", content: "Créez votre espace thérapeute Holiswiss." },
+      { property: "og:title", content: "Inscription thérapeute — Holiswiss" },
+      { property: "og:description", content: "Créez votre espace thérapeute Holiswiss." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: SignupPage,
 });
 
@@ -35,7 +48,41 @@ function SignupPage() {
   const ensureRole = useServerFn(ensureTherapistRole);
 
   useEffect(() => {
-    prepareLoginAuthSpace();
+    let active = true;
+    const returningFromGoogle = getPendingOAuthFlow("signup");
+
+    if (!returningFromGoogle) {
+      prepareLoginAuthSpace();
+      return () => {
+        active = false;
+      };
+    }
+
+    setGoogleLoading(true);
+    supabase.auth
+      .getSession()
+      .then(async ({ data, error }) => {
+        if (!active) return;
+        if (error || !data.session) {
+          throw error ?? new Error(t("auth.google_signup_error"));
+        }
+        completeOAuthFlow();
+        await finishSignup(data.session);
+      })
+      .catch((error) => {
+        if (!active) return;
+        completeOAuthFlow();
+        toast.error(error instanceof Error ? error.message : t("auth.google_signup_error"));
+      })
+      .finally(() => {
+        if (active) setGoogleLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+    // Le traitement doit s'exécuter une seule fois au retour OAuth.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Attribue le rôle thérapeute côté serveur puis migre la session vers son
@@ -85,16 +132,21 @@ function SignupPage() {
   const onGoogle = async () => {
     setGoogleLoading(true);
     try {
+      beginOAuthFlow("signup");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/${lang}/inscription`,
+        extraParams: { prompt: "select_account" },
       });
       if (result.redirected) return;
       if (result.error) {
+        completeOAuthFlow();
         toast.error(result.error.message);
         return;
       }
+      completeOAuthFlow();
       await finishSignup();
     } catch (error) {
+      completeOAuthFlow();
       toast.error(error instanceof Error ? error.message : t("auth.google_signup_error"));
     } finally {
       setGoogleLoading(false);

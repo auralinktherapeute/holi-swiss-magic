@@ -12,7 +12,10 @@ import { useSessionState } from "@/hooks/use-session-state";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import {
+  beginOAuthFlow,
   clearHoliswissSessionState,
+  completeOAuthFlow,
+  getPendingOAuthFlow,
   resolveAuthoritativeRole,
   persistSessionInRoleSpace,
   prepareLoginAuthSpace,
@@ -86,10 +89,43 @@ function LoginPage() {
   };
 
   useEffect(() => {
-    // Ouvrir explicitement la page de connexion doit toujours laisser le
-    // formulaire accessible. Une ancienne session (souvent conservée par
-    // Safari) ne doit jamais provoquer une redirection avant toute action.
-    prepareLoginAuthSpace();
+    let active = true;
+    const returningFromGoogle = getPendingOAuthFlow("login");
+
+    if (!returningFromGoogle) {
+      // Une ouverture ordinaire doit afficher un formulaire propre. En revanche,
+      // ne jamais effacer ici la session que Google vient de rendre au callback.
+      prepareLoginAuthSpace();
+      return () => {
+        active = false;
+      };
+    }
+
+    setGoogleLoading(true);
+    supabase.auth
+      .getSession()
+      .then(async ({ data, error }) => {
+        if (!active) return;
+        if (error || !data.session) {
+          throw error ?? new Error(t("auth.google_login_error"));
+        }
+        completeOAuthFlow();
+        await redirectAfterLogin(data.session);
+      })
+      .catch((error) => {
+        if (!active) return;
+        completeOAuthFlow();
+        toast.error(error instanceof Error ? error.message : t("auth.google_login_error"));
+      })
+      .finally(() => {
+        if (active) setGoogleLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+    // Le traitement doit s'exécuter une seule fois au retour OAuth.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -113,16 +149,21 @@ function LoginPage() {
   const onGoogle = async () => {
     setGoogleLoading(true);
     try {
+      beginOAuthFlow("login");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/${lang}/connexion`,
+        extraParams: { prompt: "select_account" },
       });
       if (result.redirected) return;
       if (result.error) {
+        completeOAuthFlow();
         toast.error(result.error.message);
         return;
       }
+      completeOAuthFlow();
       await redirectAfterLogin();
     } catch (error) {
+      completeOAuthFlow();
       toast.error(error instanceof Error ? error.message : t("auth.google_login_error"));
     } finally {
       setGoogleLoading(false);
