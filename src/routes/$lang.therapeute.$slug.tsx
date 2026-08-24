@@ -42,14 +42,21 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist, reviews, certifications } = await getTherapistBySlug({
+      const { therapist, reviews, certifications, articles, events } = await getTherapistBySlug({
         data: { slug: params.slug },
       });
-      return { therapist, reviews: reviews ?? [], certifications: certifications ?? [] };
+      return {
+        therapist,
+        reviews: reviews ?? [],
+        certifications: certifications ?? [],
+        articles: articles ?? [],
+        events: events ?? [],
+      };
     } catch {
-      return { therapist: null, reviews: [], certifications: [] };
+      return { therapist: null, reviews: [], certifications: [], articles: [], events: [] };
     }
   },
+
   head: ({ params, loaderData }) => {
     const t = loaderData?.therapist as
       | {
@@ -489,6 +496,16 @@ function Page() {
   const isPro = isProPlan(th.subscription_plan);
   const showGallery = isPro && gallery.length > 0;
   const certifications = ((loaderData as any)?.certifications ?? []) as any[];
+  const therapistArticles = ((loaderData as any)?.articles ?? []) as Array<{
+    id: string; slug: string; titre: string; extrait: string | null;
+    image_couverture: string | null; date_publication: string | null;
+  }>;
+  const therapistEvents = ((loaderData as any)?.events ?? []) as Array<{
+    id: string; title: string; event_date: string | null; start_time: string | null;
+    location: string | null; is_paid: boolean | null; price: number | null;
+    image_signed_url: string | null;
+  }>;
+
   const trustBadges = buildTrustBadges({
     lang,
     verified: th.verified,
@@ -790,6 +807,97 @@ function Page() {
                 )}
               </motion.section>
             )}
+
+            {/* Événements à venir */}
+            {therapistEvents.length > 0 && (
+              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+              >
+                <h2 className="mb-4 text-lg font-bold text-white">
+                  {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {therapistEvents.map((e) => (
+                    <Link
+                      key={e.id}
+                      to="/$lang/evenements/$id"
+                      params={{ lang, id: e.id }}
+                      className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-colors hover:border-[rgba(184,110,249,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]"
+                    >
+                      {e.image_signed_url && (
+                        <img
+                          src={e.image_signed_url}
+                          alt={e.title}
+                          loading="lazy"
+                          className="h-32 w-full object-cover"
+                        />
+                      )}
+                      <div className="flex flex-1 flex-col gap-1 p-4">
+                        <span className="text-sm font-semibold text-white group-hover:text-[#d5b0ff]">{e.title}</span>
+                        <span className="text-xs text-[rgba(255,255,255,0.6)]">
+                          {[
+                            e.event_date
+                              ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
+                                  day: "numeric", month: "long", year: "numeric",
+                                })
+                              : null,
+                            e.start_time ? e.start_time.slice(0, 5) : null,
+                            e.location,
+                          ].filter(Boolean).join(" · ")}
+                        </span>
+                        {e.is_paid && e.price != null && (
+                          <span className="mt-1 text-xs font-semibold text-[#d5b0ff]">{e.price} CHF</span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
+            {/* Voix d'experts */}
+            {therapistArticles.length > 0 && (
+              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+              >
+                <h2 className="mb-4 text-lg font-bold text-white">
+                  {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts — ses publications" })}
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {therapistArticles.map((a) => (
+                    <Link
+                      key={a.id}
+                      to="/$lang/paroles/$slug"
+                      params={{ lang, slug: a.slug }}
+                      className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-colors hover:border-[rgba(184,110,249,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]"
+                    >
+                      {a.image_couverture && (
+                        <img
+                          src={a.image_couverture}
+                          alt={a.titre}
+                          loading="lazy"
+                          className="h-32 w-full object-cover"
+                        />
+                      )}
+                      <div className="flex flex-1 flex-col gap-1 p-4">
+                        {a.date_publication && (
+                          <span className="text-xs text-[rgba(255,255,255,0.5)]">
+                            {new Date(a.date_publication).toLocaleDateString(lang, {
+                              day: "numeric", month: "long", year: "numeric",
+                            })}
+                          </span>
+                        )}
+                        <span className="text-sm font-semibold text-white group-hover:text-[#d5b0ff]">{a.titre}</span>
+                        {a.extrait && (
+                          <span className="line-clamp-3 text-xs text-[rgba(255,255,255,0.6)]">{a.extrait}</span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
 
             {/* Avis */}
             <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
