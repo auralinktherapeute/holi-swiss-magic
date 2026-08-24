@@ -3,18 +3,17 @@ import { AdminNav } from "@/components/layout/AdminNav";
 import { supabase } from "@/integrations/supabase/client";
 import { InactivityLogout } from "@/components/holiswiss/InactivityLogout";
 import { RequireRole } from "@/components/auth/RequireRole";
-import { requireCurrentRole } from "@/lib/auth-utils";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
   beforeLoad: async () => {
-    // Seule la session locale est vérifiée ici : pas d'appel serveur synchrone,
-    // pour éviter toute redirection intempestive entre les pages admin.
-    // La vérification du rôle admin est faite une seule fois dans le composant,
-    // et chaque server fn admin assert le rôle côté serveur.
+    // La garde de route ne tranche que sur l'existence de la session locale.
+    // Le rôle est vérifié par RequireRole et par chaque fonction serveur. Une
+    // lecture de rôle momentanément indisponible ne doit jamais expulser un
+    // administrateur authentifié pendant la navigation.
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session || !(await requireCurrentRole("admin"))) {
+    if (!sessionData.session) {
       throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
     }
   },
