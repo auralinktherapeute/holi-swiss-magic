@@ -376,6 +376,7 @@ type ContentCardProps = {
   cta: string;
   index: number;
   placeholderIcon?: "calendar" | "article";
+  compact?: boolean;
 };
 
 function ContentCard({
@@ -390,25 +391,29 @@ function ContentCard({
   cta,
   index,
   placeholderIcon = "article",
+  compact = false,
 }: ContentCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const PlaceholderIcon = placeholderIcon === "calendar" ? Calendar : FileText;
 
   return (
     <motion.div
-      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: compact ? 10 : 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.45, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={shouldReduceMotion ? undefined : { y: -6 }}
+      transition={{ duration: 0.4, delay: index * (compact ? 0.05 : 0.08), ease: [0.16, 1, 0.3, 1] }}
+      whileHover={shouldReduceMotion ? undefined : { y: compact ? -4 : -6 }}
       className="group"
     >
       <Link
         to={to}
         params={params}
-        className="flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:border-[rgba(184,110,249,0.45)] hover:bg-[rgba(255,255,255,0.055)] hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]"
+        className={cn(
+          "flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:border-[rgba(184,110,249,0.45)] hover:bg-[rgba(255,255,255,0.055)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]",
+          compact ? "hover:shadow-[0_10px_24px_-12px_rgba(0,0,0,0.45)]" : "hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)]"
+        )}
       >
-        <div className="relative aspect-[16/10] overflow-hidden">
+        <div className={cn("relative overflow-hidden", compact ? "aspect-[16/9]" : "aspect-[16/10]")}>
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -418,38 +423,50 @@ function ContentCard({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2d1248] via-[#231040] to-[#1a0a2e]">
-              <PlaceholderIcon className="h-10 w-10 text-[rgba(184,110,249,0.35)]" />
+              <PlaceholderIcon className={cn("text-[rgba(184,110,249,0.35)]", compact ? "h-7 w-7" : "h-10 w-10")} />
             </div>
           )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[rgba(10,4,20,0.88)] to-transparent" />
+          <div className={cn("pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(10,4,20,0.88)] to-transparent", compact ? "h-14" : "h-24")} />
           {badge && (
-            <span className="absolute left-3 top-3 rounded-full bg-[rgba(184,110,249,0.92)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm">
+            <span className={cn(
+              "absolute left-3 top-3 rounded-full bg-[rgba(184,110,249,0.92)] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm",
+              compact ? "px-2 py-0.5 text-[9px]" : "px-2.5 py-1 text-[10px]"
+            )}>
               {badge}
             </span>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col p-4">
+        <div className={cn("flex flex-1 flex-col", compact ? "p-3" : "p-4")}>
           {meta && (
-            <div className="mb-2 flex items-center gap-2 text-xs text-[rgba(255,255,255,0.55)]">
-              <Calendar className="h-3.5 w-3.5 shrink-0 text-[rgba(184,110,249,0.7)]" />
+            <div className={cn("flex items-center gap-2 text-[rgba(255,255,255,0.55)]", compact ? "mb-1.5 text-[10px]" : "mb-2 text-xs")}>
+              <Calendar className={cn("shrink-0 text-[rgba(184,110,249,0.7)]", compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
               <span className="truncate">{meta}</span>
             </div>
           )}
 
-          <h3 className="mb-2 line-clamp-2 text-base font-semibold leading-snug text-white transition-colors group-hover:text-[#d5b0ff]">
+          <h3 className={cn(
+            "line-clamp-2 font-semibold leading-snug text-white transition-colors group-hover:text-[#d5b0ff]",
+            compact ? "mb-1.5 text-sm" : "mb-2 text-base"
+          )}>
             {title}
           </h3>
 
           {description && (
-            <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-[rgba(255,255,255,0.62)]">
+            <p className={cn(
+              "line-clamp-2 flex-1 leading-relaxed text-[rgba(255,255,255,0.62)]",
+              compact ? "mb-3 text-xs" : "mb-4 text-sm line-clamp-3"
+            )}>
               {description}
             </p>
           )}
 
-          <div className="mt-auto flex items-center gap-1.5 text-sm font-semibold text-[#b86ef9] transition-colors group-hover:text-[#d5b0ff]">
+          <div className={cn(
+            "mt-auto flex items-center gap-1.5 font-semibold text-[#b86ef9] transition-colors group-hover:text-[#d5b0ff]",
+            compact ? "text-xs" : "text-sm"
+          )}>
             <span>{cta}</span>
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            <ArrowRight className={cn("transition-transform duration-300 group-hover:translate-x-1", compact ? "h-3 w-3" : "h-4 w-4")} />
           </div>
         </div>
       </Link>
