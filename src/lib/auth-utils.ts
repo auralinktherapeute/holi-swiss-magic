@@ -2,7 +2,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import {
   forgetAllAuthSpaceSessions,
-  forgetAuthSpaceSession,
   supabase,
 } from "@/integrations/supabase/client";
 import {
@@ -41,30 +40,27 @@ export function setAuthSpaceForRole(role: AppRole) {
 }
 
 export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
+  // Arrêter le client source avant le changement d'espace. Appeler signOut
+  // après la copie peut invalider le refresh token partagé avec le nouveau
+  // client, ce qui provoquait les déconnexions aléatoires (notamment Safari).
+  supabase.auth.stopAutoRefresh();
   const space = setAuthSpaceForRole(role);
-
-  // Avant d'attacher la session, on nettoie l'espace login pour éviter les conflits de refresh
-  clearStoredSupabaseSessions(["login"]);
-  clearLegacySupabaseSessions();
-
   const { error } = await supabase.auth.setSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
   });
-
   if (error) throw error;
 
-  // Le client « login » doit oublier la session en mémoire, sinon son
-  // auto-refresh entre en concurrence avec celui de l'espace cible et fait
-  // révoquer le refresh token (déconnexions aléatoires / rotation).
-  await forgetAuthSpaceSession("login");
+  // Supprimer uniquement le stockage source : aucun appel réseau, donc aucune
+  // révocation possible de la session qui vient d'être attachée.
   clearStoredSupabaseSession("login");
-
+  clearLegacySupabaseSessions();
   return space;
 }
 
 export function clearHoliswissSessionState() {
   clearAllSessionState();
+  clearHoliswissAuthSpace();
   if (typeof window === "undefined") return;
   try {
     // Nettoyage complet des métadonnées de session
