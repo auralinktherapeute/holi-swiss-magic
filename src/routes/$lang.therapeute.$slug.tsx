@@ -496,6 +496,16 @@ function Page() {
   const isPro = isProPlan(th.subscription_plan);
   const showGallery = isPro && gallery.length > 0;
   const certifications = ((loaderData as any)?.certifications ?? []) as any[];
+  const therapistArticles = ((loaderData as any)?.articles ?? []) as Array<{
+    id: string; slug: string; titre: string; extrait: string | null;
+    image_couverture: string | null; date_publication: string | null;
+  }>;
+  const therapistEvents = ((loaderData as any)?.events ?? []) as Array<{
+    id: string; title: string; event_date: string | null; start_time: string | null;
+    location: string | null; is_paid: boolean | null; price: number | null;
+    image_signed_url: string | null;
+  }>;
+
   const trustBadges = buildTrustBadges({
     lang,
     verified: th.verified,
