@@ -120,9 +120,14 @@ export async function getCurrentUserRole(): Promise<AppRole | null> {
   // on renvoie null (rôle indéterminé) et l'appelant décide.
   if (error) return null;
   const rows = (data ?? []) as Array<{ role: string | null }>;
+  // ZÉRO LIGNE ≠ « simple visiteur ». Une requête partie sans jeton (client
+  // d'un autre espace, session pas encore hydratée) est filtrée par la RLS et
+  // renvoie 0 ligne SANS erreur : conclure "user" renvoyait un administrateur
+  // à l'accueil. Rôle indéterminé → null, l'appelant tranche côté serveur.
+  if (rows.length === 0) return null;
   return resolvePrimaryRole(rows.map((row) => row.role));
-
 }
+
 
 export async function requireCurrentRole(role: AppRole): Promise<AppRole | null> {
   const currentRole = await getCurrentUserRole();
