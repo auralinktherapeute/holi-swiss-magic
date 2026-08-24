@@ -22,6 +22,16 @@ import {
 } from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/$lang/connexion/")({
+  head: () => ({
+    meta: [
+      { title: "Connexion thérapeute — Holiswiss" },
+      { name: "description", content: "Connectez-vous à votre espace thérapeute Holiswiss." },
+      { property: "og:title", content: "Connexion thérapeute — Holiswiss" },
+      { property: "og:description", content: "Connectez-vous à votre espace thérapeute Holiswiss." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: LoginPage,
 });
 
@@ -76,36 +86,10 @@ function LoginPage() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      // Une session peut déjà exister ici : retour d'OAuth plein écran (la
-      // session atterrit dans l'espace « login ») ou utilisateur déjà
-      // connecté. La rediriger au lieu de l'effacer avec prepareLoginAuthSpace.
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (data.session) {
-        // Safari conserve volontiers un refresh token révoqué/expiré : on
-        // valide la session auprès du serveur avant toute redirection, sinon
-        // le rôle est introuvable et l'utilisateur est renvoyé à l'accueil.
-        const { data: userData, error } = await supabase.auth.getUser();
-        if (cancelled) return;
-        if (!error && userData.user) {
-          await redirectAfterLogin(data.session);
-          return;
-        }
-        try {
-          await supabase.auth.signOut({ scope: "local" });
-        } catch {
-          // Le nettoyage du storage ci-dessous reste la garantie.
-        }
-      }
-      prepareLoginAuthSpace();
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-
+    // Ouvrir explicitement la page de connexion doit toujours laisser le
+    // formulaire accessible. Une ancienne session (souvent conservée par
+    // Safari) ne doit jamais provoquer une redirection avant toute action.
+    prepareLoginAuthSpace();
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
