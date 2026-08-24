@@ -4768,6 +4768,7 @@ export type Database = {
         Args: { _therapist_id: string }
         Returns: Json
       }
+      agent_notify_secret_ok: { Args: { _secret: string }; Returns: boolean }
       anonymize_user_analytics: { Args: { _uid: string }; Returns: undefined }
       certification_verification_unchanged: {
         Args: {
@@ -4871,6 +4872,16 @@ export type Database = {
         Returns: number
       }
       purge_user_analytics: { Args: { _uid: string }; Returns: undefined }
+      request_admin_notification: {
+        Args: {
+          _kind: string
+          _link?: string
+          _secret: string
+          _subject: string
+          _summary: string
+        }
+        Returns: string
+      }
       reserve_next_invoice_number: {
         Args: { _therapist_id: string }
         Returns: {
