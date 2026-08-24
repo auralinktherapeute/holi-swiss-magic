@@ -919,117 +919,108 @@ function Page() {
               </motion.section>
             )}
 
-            {/* Événements à venir */}
-            <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-            >
-              <h2 className="mb-5 text-lg font-bold text-white">
-                {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
-              </h2>
+            {/* Événements & Voix d'experts — côte à côte sur desktop */}
+            <div className="grid gap-5 lg:grid-cols-2">
+              {/* Événements à venir */}
+              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-4 lg:p-5"
+              >
+                <h2 className="mb-3 text-base font-bold text-white">
+                  {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
+                </h2>
 
-              {therapistEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-10 text-center">
-                  <Calendar className="mb-3 h-8 w-8 text-[rgba(184,110,249,0.35)]" />
-                  <p className="max-w-xs text-sm text-[rgba(255,255,255,0.55)]">
-                    {t("therapist_profile.events_empty", { defaultValue: "Aucun événement à venir pour le moment." })}
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className={cn(
-                    "grid gap-5",
-                    therapistEvents.length === 1 && "grid-cols-1 max-w-xl mx-auto",
-                    therapistEvents.length === 2 && "grid-cols-1 md:grid-cols-2",
-                    therapistEvents.length >= 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-                  )}
-                >
-                  {therapistEvents.map((e, i) => {
-                    const eventMeta = [
-                      e.event_date
-                        ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
-                            day: "numeric", month: "long", year: "numeric",
+                {therapistEvents.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
+                    <Calendar className="mb-2 h-6 w-6 text-[rgba(184,110,249,0.35)]" />
+                    <p className="max-w-xs text-xs text-[rgba(255,255,255,0.55)]">
+                      {t("therapist_profile.events_empty", { defaultValue: "Aucun événement à venir pour le moment." })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {therapistEvents.map((e, i) => {
+                      const eventMeta = [
+                        e.event_date
+                          ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
+                              day: "numeric", month: "short", year: "numeric",
+                            })
+                          : null,
+                        e.start_time ? e.start_time.slice(0, 5) : null,
+                      ].filter(Boolean).join(" · ");
+
+                      const eventDescription = [
+                        e.location,
+                        e.is_paid && e.price != null ? `${e.price} CHF` : null,
+                      ].filter(Boolean).join(" · ");
+
+                      return (
+                        <ContentCard
+                          key={e.id}
+                          imageUrl={e.image_signed_url}
+                          alt={e.title}
+                          to="/$lang/evenements/$id"
+                          params={{ lang, id: e.id }}
+                          badge={e.category || t("therapist_profile.event_badge", { defaultValue: "Événement" })}
+                          title={e.title}
+                          meta={eventMeta}
+                          description={eventDescription || null}
+                          cta={t("therapist_profile.event_cta", { defaultValue: "Voir" })}
+                          index={i}
+                          placeholderIcon="calendar"
+                          compact
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.section>
+
+              {/* Voix d'experts */}
+              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-4 lg:p-5"
+              >
+                <h2 className="mb-3 text-base font-bold text-white">
+                  {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts" })}
+                </h2>
+
+                {therapistArticles.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
+                    <FileText className="mb-2 h-6 w-6 text-[rgba(184,110,249,0.35)]" />
+                    <p className="max-w-xs text-xs text-[rgba(255,255,255,0.55)]">
+                      {t("therapist_profile.articles_empty", { defaultValue: "Aucune publication disponible pour le moment." })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {therapistArticles.map((a, i) => {
+                      const articleMeta = a.date_publication
+                        ? new Date(a.date_publication).toLocaleDateString(lang, {
+                            day: "numeric", month: "short", year: "numeric",
                           })
-                        : null,
-                      e.start_time ? e.start_time.slice(0, 5) : null,
-                    ].filter(Boolean).join(" · ");
+                        : undefined;
 
-                    const eventDescription = [
-                      e.location,
-                      e.is_paid && e.price != null ? `${e.price} CHF` : null,
-                    ].filter(Boolean).join(" · ");
-
-                    return (
-                      <ContentCard
-                        key={e.id}
-                        imageUrl={e.image_signed_url}
-                        alt={e.title}
-                        to="/$lang/evenements/$id"
-                        params={{ lang, id: e.id }}
-                        badge={e.category || t("therapist_profile.event_badge", { defaultValue: "Événement" })}
-                        title={e.title}
-                        meta={eventMeta}
-                        description={eventDescription || null}
-                        cta={t("therapist_profile.event_cta", { defaultValue: "Voir l'événement" })}
-                        index={i}
-                        placeholderIcon="calendar"
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </motion.section>
-
-            {/* Voix d'experts */}
-            <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-            >
-              <h2 className="mb-5 text-lg font-bold text-white">
-                {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts — ses publications" })}
-              </h2>
-
-              {therapistArticles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-10 text-center">
-                  <FileText className="mb-3 h-8 w-8 text-[rgba(184,110,249,0.35)]" />
-                  <p className="max-w-xs text-sm text-[rgba(255,255,255,0.55)]">
-                    {t("therapist_profile.articles_empty", { defaultValue: "Aucune publication disponible pour le moment." })}
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className={cn(
-                    "grid gap-5",
-                    therapistArticles.length === 1 && "grid-cols-1 max-w-xl mx-auto",
-                    therapistArticles.length === 2 && "grid-cols-1 md:grid-cols-2",
-                    therapistArticles.length >= 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-                  )}
-                >
-                  {therapistArticles.map((a, i) => {
-                    const articleMeta = a.date_publication
-                      ? new Date(a.date_publication).toLocaleDateString(lang, {
-                          day: "numeric", month: "long", year: "numeric",
-                        })
-                      : undefined;
-
-                    return (
-                      <ContentCard
-                        key={a.id}
-                        imageUrl={a.image_couverture}
-                        alt={a.titre}
-                        to="/$lang/paroles/$slug"
-                        params={{ lang, slug: a.slug }}
-                        badge={(a as any).category || null}
-                        title={a.titre}
-                        meta={articleMeta}
-                        description={a.extrait}
-                        cta={t("therapist_profile.article_cta", { defaultValue: "Lire l'article" })}
-                        index={i}
-                        placeholderIcon="article"
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </motion.section>
+                      return (
+                        <ContentCard
+                          key={a.id}
+                          imageUrl={a.image_couverture}
+                          alt={a.titre}
+                          to="/$lang/paroles/$slug"
+                          params={{ lang, slug: a.slug }}
+                          badge={(a as any).category || null}
+                          title={a.titre}
+                          meta={articleMeta}
+                          description={a.extrait}
+                          cta={t("therapist_profile.article_cta", { defaultValue: "Lire" })}
+                          index={i}
+                          placeholderIcon="article"
+                          compact
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.section>
+            </div>
 
 
             {/* Avis */}
