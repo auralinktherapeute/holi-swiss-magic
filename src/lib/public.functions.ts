@@ -64,8 +64,67 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
         .order("year", { ascending: false });
       certifications = (certs ?? []) as any;
     }
-    return { therapist, reviews, certifications };
+    // Publications « Voix d'experts » et événements à venir du praticien :
+    // lecture serveur (admin) restreinte aux contenus publiés uniquement.
+    let articles: Array<{
+      id: string;
+      slug: string;
+      titre: string;
+      extrait: string | null;
+      image_couverture: string | null;
+      date_publication: string | null;
+    }> = [];
+    let events: Array<{
+      id: string;
+      title: string;
+      short_description: string | null;
+      category: string | null;
+      event_date: string | null;
+      start_time: string | null;
+      format: string | null;
+      location: string | null;
+      is_paid: boolean | null;
+      price: number | null;
+      image_signed_url: string | null;
+    }> = [];
+    if (therapist?.id) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const today = new Date().toISOString().slice(0, 10);
+      const [{ data: arts }, { data: evs }] = await Promise.all([
+        supabaseAdmin
+          .from("therapist_articles")
+          .select("id,slug,titre,extrait,image_couverture,date_publication")
+          .eq("therapist_id", therapist.id)
+          .eq("statut", "publie")
+          .order("date_publication", { ascending: false })
+          .limit(6),
+        supabaseAdmin
+          .from("events")
+          .select("id,title,short_description,category,event_date,start_time,format,location,is_paid,price,image_url")
+          .eq("therapist_id", therapist.id)
+          .eq("status", "published")
+          .gte("event_date", today)
+          .order("event_date", { ascending: true })
+          .limit(6),
+      ]);
+      articles = (arts ?? []) as any;
+      events = await Promise.all(
+        ((evs ?? []) as any[]).map(async (e) => {
+          let image: string | null = null;
+          if (e.image_url) {
+            const { data: signed } = await supabaseAdmin.storage
+              .from("event-images")
+              .createSignedUrl(e.image_url, 60 * 60 * 24 * 7);
+            image = signed?.signedUrl ?? null;
+          }
+          const { image_url, ...rest } = e;
+          return { ...rest, image_signed_url: image };
+        }),
+      );
+    }
+    return { therapist, reviews, certifications, articles, events };
   });
+
 
 export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
   .inputValidator(
