@@ -90,7 +90,9 @@ function LoginPage() {
 
   useEffect(() => {
     let active = true;
-    const returningFromGoogle = getPendingOAuthFlow("login");
+    const returningFromGoogle =
+      new URLSearchParams(window.location.search).get("oauth") === "google" ||
+      getPendingOAuthFlow("login");
 
     if (!returningFromGoogle) {
       // Une ouverture ordinaire doit afficher un formulaire propre. En revanche,
@@ -151,7 +153,7 @@ function LoginPage() {
     try {
       beginOAuthFlow("login");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/${lang}/connexion`,
+        redirect_uri: `${window.location.origin}/${lang}/connexion?oauth=google`,
         extraParams: { prompt: "select_account" },
       });
       if (result.redirected) return;

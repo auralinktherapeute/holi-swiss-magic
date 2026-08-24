@@ -49,7 +49,9 @@ function SignupPage() {
 
   useEffect(() => {
     let active = true;
-    const returningFromGoogle = getPendingOAuthFlow("signup");
+    const returningFromGoogle =
+      new URLSearchParams(window.location.search).get("oauth") === "google" ||
+      getPendingOAuthFlow("signup");
 
     if (!returningFromGoogle) {
       prepareLoginAuthSpace();
@@ -134,7 +136,7 @@ function SignupPage() {
     try {
       beginOAuthFlow("signup");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/${lang}/inscription`,
+        redirect_uri: `${window.location.origin}/${lang}/inscription?oauth=google`,
         extraParams: { prompt: "select_account" },
       });
       if (result.redirected) return;
