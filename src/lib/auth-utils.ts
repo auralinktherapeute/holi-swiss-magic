@@ -42,24 +42,24 @@ export function setAuthSpaceForRole(role: AppRole) {
 
 export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
   const space = setAuthSpaceForRole(role);
-  
+
   // Avant d'attacher la session, on nettoie l'espace login pour éviter les conflits de refresh
   clearStoredSupabaseSessions(["login"]);
   clearLegacySupabaseSessions();
-  
+
   const { error } = await supabase.auth.setSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
   });
-  
+
   if (error) throw error;
-  
+
   // Le client « login » doit oublier la session en mémoire, sinon son
   // auto-refresh entre en concurrence avec celui de l'espace cible et fait
   // révoquer le refresh token (déconnexions aléatoires / rotation).
   await forgetAuthSpaceSession("login");
   clearStoredSupabaseSession("login");
-  
+
   return space;
 }
 
@@ -86,12 +86,12 @@ export async function signOutCompletely(queryClient?: QueryClient) {
   } catch {
     // Cache cleanup must never block sign-out.
   }
-  
+
   try {
     // On s'assure d'être dans l'espace actuel pour le signOut
     setHoliswissAuthSpace(currentSpace);
-    
-    // scope "local" : ne déconnecte que ce navigateur. 
+
+    // scope "local" : ne déconnecte que ce navigateur.
     // Important pour ne pas invalider les sessions sur les autres appareils.
     await supabase.auth.signOut({ scope: "local" });
   } finally {
@@ -123,21 +123,21 @@ export async function getCurrentUser(): Promise<User | null> {
 export async function getCurrentUserRole(): Promise<AppRole | null> {
   const user = await getCurrentUser();
   if (!user) return null;
-  
+
   // Utilisation de n'importe quel client via proxy
   const { data, error } = await (supabase as any)
     .from("user_roles")
     .select("role")
     .eq("user_id", user.id);
-    
+
   if (error) return null;
   const rows = (data ?? []) as Array<{ role: string | null }>;
-  
-  // ZÉRO LIGNE ≠ « simple visiteur ». 
-  // Une requête partie sans jeton (client d'un autre espace, session pas encore hydratée) 
+
+  // ZÉRO LIGNE ≠ « simple visiteur ».
+  // Une requête partie sans jeton (client d'un autre espace, session pas encore hydratée)
   // est filtrée par la RLS et renvoie 0 ligne SANS erreur.
   if (rows.length === 0) return null;
-  
+
   return resolvePrimaryRole(rows.map((row) => row.role));
 }
 
@@ -148,10 +148,10 @@ export async function getCurrentUserRole(): Promise<AppRole | null> {
 export async function resolveAuthoritativeRole(): Promise<AppRole | null> {
   const clientRole = await getCurrentUserRole();
   if (clientRole) return clientRole;
-  
+
   const { data } = await supabase.auth.getSession();
   if (!data.session) return null;
-  
+
   try {
     const { getMyRole } = await import("@/lib/auth-role.functions");
     const result = await getMyRole();

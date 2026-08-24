@@ -2,6 +2,7 @@ export type HoliswissAuthSpace = "login" | "admin" | "dashboard";
 
 export const ACTIVE_AUTH_SPACE_KEY = "holiswiss-active-auth-space";
 export const LAST_AUTH_SPACE_KEY = "holiswiss-last-auth-space";
+export const AUTH_SPACE_CHANGE_EVENT = "holiswiss-auth-space-change";
 
 export const HOLISWISS_AUTH_SPACES: HoliswissAuthSpace[] = ["login", "admin", "dashboard"];
 
@@ -42,10 +43,16 @@ export function getHoliswissAuthSpace(): HoliswissAuthSpace {
 export function setHoliswissAuthSpace(space: HoliswissAuthSpace) {
   if (typeof window === "undefined") return;
   try {
+    const current = window.sessionStorage.getItem(ACTIVE_AUTH_SPACE_KEY);
+    if (current === space) return;
+
     window.sessionStorage.setItem(ACTIVE_AUTH_SPACE_KEY, space);
     if (space !== "login") {
       window.localStorage.setItem(LAST_AUTH_SPACE_KEY, space);
     }
+    
+    // Notification du changement d'espace pour les hooks réactifs
+    window.dispatchEvent(new CustomEvent(AUTH_SPACE_CHANGE_EVENT, { detail: { space } }));
   } catch {
     // The auth client still works with its current in-memory session.
   }
@@ -56,6 +63,7 @@ export function clearHoliswissAuthSpace() {
   try {
     window.sessionStorage.removeItem(ACTIVE_AUTH_SPACE_KEY);
     window.localStorage.removeItem(LAST_AUTH_SPACE_KEY);
+    window.dispatchEvent(new CustomEvent(AUTH_SPACE_CHANGE_EVENT, { detail: { space: getHoliswissAuthSpace() } }));
   } catch {}
 }
 
@@ -67,7 +75,6 @@ export function clearStoredSupabaseSession(space: HoliswissAuthSpace) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(getHoliswissAuthStorageKey(space));
-    // Safari peut parfois garder des traces en sessionStorage si le client y a accès
     window.sessionStorage.removeItem(getHoliswissAuthStorageKey(space));
   } catch {}
 }
