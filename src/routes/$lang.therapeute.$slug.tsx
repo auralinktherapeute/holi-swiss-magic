@@ -42,14 +42,21 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist, reviews, certifications } = await getTherapistBySlug({
+      const { therapist, reviews, certifications, articles, events } = await getTherapistBySlug({
         data: { slug: params.slug },
       });
-      return { therapist, reviews: reviews ?? [], certifications: certifications ?? [] };
+      return {
+        therapist,
+        reviews: reviews ?? [],
+        certifications: certifications ?? [],
+        articles: articles ?? [],
+        events: events ?? [],
+      };
     } catch {
-      return { therapist: null, reviews: [], certifications: [] };
+      return { therapist: null, reviews: [], certifications: [], articles: [], events: [] };
     }
   },
+
   head: ({ params, loaderData }) => {
     const t = loaderData?.therapist as
       | {
