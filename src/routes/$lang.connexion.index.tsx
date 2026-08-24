@@ -13,7 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
 import {
   clearHoliswissSessionState,
-  getCurrentUserRole,
+  resolveAuthoritativeRole,
   persistSessionInRoleSpace,
   prepareLoginAuthSpace,
   roleToSpace,
@@ -39,7 +39,7 @@ function LoginPage() {
   const redirectAfterLogin = async (session?: { access_token: string; refresh_token: string } | null) => {
     let role: AppRole | null = null;
     try {
-      role = await getCurrentUserRole();
+      role = await resolveAuthoritativeRole();
     } catch {
       role = null;
     }
