@@ -3,15 +3,16 @@ import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
 import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef, lazy, Suspense, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { logTherapistProfileView } from "@/lib/analytics.functions";
 import { getCurrentAnalyticsSessionId } from "@/hooks/use-session-tracking";
+import { cn } from "@/lib/utils";
 import {
   MapPin, Star, BadgeCheck, Globe, Share2,
-  Shield, ChevronUp,
+  Shield, ChevronUp, Calendar, ArrowRight, FileText,
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
@@ -363,6 +364,99 @@ function StarRow({ rating, size = 4 }: { rating: number; size?: number }) {
   );
 }
 
+type ContentCardProps = {
+  imageUrl: string | null;
+  alt: string;
+  to: string;
+  params: Record<string, string>;
+  badge?: string | null;
+  title: string;
+  meta?: string;
+  description?: string | null;
+  cta: string;
+  index: number;
+  placeholderIcon?: "calendar" | "article";
+};
+
+function ContentCard({
+  imageUrl,
+  alt,
+  to,
+  params,
+  badge,
+  title,
+  meta,
+  description,
+  cta,
+  index,
+  placeholderIcon = "article",
+}: ContentCardProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const PlaceholderIcon = placeholderIcon === "calendar" ? Calendar : FileText;
+
+  return (
+    <motion.div
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.45, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={shouldReduceMotion ? undefined : { y: -6 }}
+      className="group"
+    >
+      <Link
+        to={to}
+        params={params}
+        className="flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:border-[rgba(184,110,249,0.45)] hover:bg-[rgba(255,255,255,0.055)] hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]"
+      >
+        <div className="relative aspect-[16/10] overflow-hidden">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={alt}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2d1248] via-[#231040] to-[#1a0a2e]">
+              <PlaceholderIcon className="h-10 w-10 text-[rgba(184,110,249,0.35)]" />
+            </div>
+          )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[rgba(10,4,20,0.88)] to-transparent" />
+          {badge && (
+            <span className="absolute left-3 top-3 rounded-full bg-[rgba(184,110,249,0.92)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm">
+              {badge}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-1 flex-col p-4">
+          {meta && (
+            <div className="mb-2 flex items-center gap-2 text-xs text-[rgba(255,255,255,0.55)]">
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-[rgba(184,110,249,0.7)]" />
+              <span className="truncate">{meta}</span>
+            </div>
+          )}
+
+          <h3 className="mb-2 line-clamp-2 text-base font-semibold leading-snug text-white transition-colors group-hover:text-[#d5b0ff]">
+            {title}
+          </h3>
+
+          {description && (
+            <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-[rgba(255,255,255,0.62)]">
+              {description}
+            </p>
+          )}
+
+          <div className="mt-auto flex items-center gap-1.5 text-sm font-semibold text-[#b86ef9] transition-colors group-hover:text-[#d5b0ff]">
+            <span>{cta}</span>
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 function Page() {
   const { slug, lang } = useParams({ from: "/$lang/therapeute/$slug" });
   const { t } = useTranslation();
@@ -501,9 +595,9 @@ function Page() {
     image_couverture: string | null; date_publication: string | null;
   }>;
   const therapistEvents = ((loaderData as any)?.events ?? []) as Array<{
-    id: string; title: string; event_date: string | null; start_time: string | null;
-    location: string | null; is_paid: boolean | null; price: number | null;
-    image_signed_url: string | null;
+    id: string; title: string; category: string | null; event_date: string | null;
+    start_time: string | null; location: string | null; is_paid: boolean | null;
+    price: number | null; image_signed_url: string | null;
   }>;
 
   const trustBadges = buildTrustBadges({
@@ -809,94 +903,116 @@ function Page() {
             )}
 
             {/* Événements à venir */}
-            {therapistEvents.length > 0 && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 className="mb-4 text-lg font-bold text-white">
-                  {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {therapistEvents.map((e) => (
-                    <Link
-                      key={e.id}
-                      to="/$lang/evenements/$id"
-                      params={{ lang, id: e.id }}
-                      className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-colors hover:border-[rgba(184,110,249,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]"
-                    >
-                      {e.image_signed_url && (
-                        <img
-                          src={e.image_signed_url}
-                          alt={e.title}
-                          loading="lazy"
-                          className="h-32 w-full object-cover"
-                        />
-                      )}
-                      <div className="flex flex-1 flex-col gap-1 p-4">
-                        <span className="text-sm font-semibold text-white group-hover:text-[#d5b0ff]">{e.title}</span>
-                        <span className="text-xs text-[rgba(255,255,255,0.6)]">
-                          {[
-                            e.event_date
-                              ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
-                                  day: "numeric", month: "long", year: "numeric",
-                                })
-                              : null,
-                            e.start_time ? e.start_time.slice(0, 5) : null,
-                            e.location,
-                          ].filter(Boolean).join(" · ")}
-                        </span>
-                        {e.is_paid && e.price != null && (
-                          <span className="mt-1 text-xs font-semibold text-[#d5b0ff]">{e.price} CHF</span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
+            <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+            >
+              <h2 className="mb-5 text-lg font-bold text-white">
+                {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
+              </h2>
+
+              {therapistEvents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-10 text-center">
+                  <Calendar className="mb-3 h-8 w-8 text-[rgba(184,110,249,0.35)]" />
+                  <p className="max-w-xs text-sm text-[rgba(255,255,255,0.55)]">
+                    {t("therapist_profile.events_empty", { defaultValue: "Aucun événement à venir pour le moment." })}
+                  </p>
                 </div>
-              </motion.section>
-            )}
+              ) : (
+                <div
+                  className={cn(
+                    "grid gap-5",
+                    therapistEvents.length === 1 && "grid-cols-1 max-w-xl mx-auto",
+                    therapistEvents.length === 2 && "grid-cols-1 md:grid-cols-2",
+                    therapistEvents.length >= 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                  )}
+                >
+                  {therapistEvents.map((e, i) => {
+                    const eventMeta = [
+                      e.event_date
+                        ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
+                            day: "numeric", month: "long", year: "numeric",
+                          })
+                        : null,
+                      e.start_time ? e.start_time.slice(0, 5) : null,
+                    ].filter(Boolean).join(" · ");
+
+                    const eventDescription = [
+                      e.location,
+                      e.is_paid && e.price != null ? `${e.price} CHF` : null,
+                    ].filter(Boolean).join(" · ");
+
+                    return (
+                      <ContentCard
+                        key={e.id}
+                        imageUrl={e.image_signed_url}
+                        alt={e.title}
+                        to="/$lang/evenements/$id"
+                        params={{ lang, id: e.id }}
+                        badge={e.category || t("therapist_profile.event_badge", { defaultValue: "Événement" })}
+                        title={e.title}
+                        meta={eventMeta}
+                        description={eventDescription || null}
+                        cta={t("therapist_profile.event_cta", { defaultValue: "Voir l'événement" })}
+                        index={i}
+                        placeholderIcon="calendar"
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </motion.section>
 
             {/* Voix d'experts */}
-            {therapistArticles.length > 0 && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 className="mb-4 text-lg font-bold text-white">
-                  {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts — ses publications" })}
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {therapistArticles.map((a) => (
-                    <Link
-                      key={a.id}
-                      to="/$lang/paroles/$slug"
-                      params={{ lang, slug: a.slug }}
-                      className="group flex flex-col overflow-hidden rounded-xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-colors hover:border-[rgba(184,110,249,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]"
-                    >
-                      {a.image_couverture && (
-                        <img
-                          src={a.image_couverture}
-                          alt={a.titre}
-                          loading="lazy"
-                          className="h-32 w-full object-cover"
-                        />
-                      )}
-                      <div className="flex flex-1 flex-col gap-1 p-4">
-                        {a.date_publication && (
-                          <span className="text-xs text-[rgba(255,255,255,0.5)]">
-                            {new Date(a.date_publication).toLocaleDateString(lang, {
-                              day: "numeric", month: "long", year: "numeric",
-                            })}
-                          </span>
-                        )}
-                        <span className="text-sm font-semibold text-white group-hover:text-[#d5b0ff]">{a.titre}</span>
-                        {a.extrait && (
-                          <span className="line-clamp-3 text-xs text-[rgba(255,255,255,0.6)]">{a.extrait}</span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
+            <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+            >
+              <h2 className="mb-5 text-lg font-bold text-white">
+                {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts — ses publications" })}
+              </h2>
+
+              {therapistArticles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-10 text-center">
+                  <FileText className="mb-3 h-8 w-8 text-[rgba(184,110,249,0.35)]" />
+                  <p className="max-w-xs text-sm text-[rgba(255,255,255,0.55)]">
+                    {t("therapist_profile.articles_empty", { defaultValue: "Aucune publication disponible pour le moment." })}
+                  </p>
                 </div>
-              </motion.section>
-            )}
+              ) : (
+                <div
+                  className={cn(
+                    "grid gap-5",
+                    therapistArticles.length === 1 && "grid-cols-1 max-w-xl mx-auto",
+                    therapistArticles.length === 2 && "grid-cols-1 md:grid-cols-2",
+                    therapistArticles.length >= 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                  )}
+                >
+                  {therapistArticles.map((a, i) => {
+                    const articleMeta = a.date_publication
+                      ? new Date(a.date_publication).toLocaleDateString(lang, {
+                          day: "numeric", month: "long", year: "numeric",
+                        })
+                      : undefined;
+
+                    return (
+                      <ContentCard
+                        key={a.id}
+                        imageUrl={a.image_couverture}
+                        alt={a.titre}
+                        to="/$lang/paroles/$slug"
+                        params={{ lang, slug: a.slug }}
+                        badge={(a as any).category || null}
+                        title={a.titre}
+                        meta={articleMeta}
+                        description={a.extrait}
+                        cta={t("therapist_profile.article_cta", { defaultValue: "Lire l'article" })}
+                        index={i}
+                        placeholderIcon="article"
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </motion.section>
 
 
             {/* Avis */}
