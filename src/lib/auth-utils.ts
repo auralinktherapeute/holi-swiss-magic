@@ -68,7 +68,7 @@ export function clearHoliswissSessionState() {
   if (typeof window === "undefined") return;
   try {
     // Nettoyage complet des métadonnées de session
-    const keys = [LAST_AUTH_SPACE_KEY, LAST_ACTIVITY_KEY];
+    const keys = [LAST_AUTH_SPACE_KEY, LAST_ACTIVITY_KEY, OAUTH_FLOW_KEY];
     keys.forEach(key => {
       window.localStorage.removeItem(key);
       window.sessionStorage.removeItem(key);
