@@ -2,7 +2,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import {
   forgetAllAuthSpaceSessions,
-  forgetAuthSpaceSession,
   supabase,
 } from "@/integrations/supabase/client";
 import {
@@ -41,24 +40,27 @@ export function setAuthSpaceForRole(role: AppRole) {
 }
 
 export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
+  // Stopper l'auto-refresh du client source AVANT de changer d'espace. Il ne
+  // faut surtout pas appeler signOut sur ce client après avoir copié la
+  // session : les deux espaces partagent alors le même refresh token et un
+  // signOut peut invalider la session admin/thérapeute fraîchement créée.
+  supabase.auth.stopAutoRefresh();
   const space = setAuthSpaceForRole(role);
-  clearStoredSupabaseSessions(["login"]);
-  clearLegacySupabaseSessions();
   const { error } = await supabase.auth.setSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
   });
   if (error) throw error;
-  // Le client « login » doit oublier la session en mémoire, sinon son
-  // auto-refresh entre en concurrence avec celui de l'espace cible et fait
-  // révoquer le refresh token (déconnexions aléatoires).
-  await forgetAuthSpaceSession("login");
+  // Le client source reste uniquement en mémoire jusqu'au prochain chargement,
+  // auto-refresh arrêté. Supprimer son storage suffit et ne révoque aucun jeton.
   clearStoredSupabaseSession("login");
+  clearLegacySupabaseSessions();
   return space;
 }
 
 export function clearHoliswissSessionState() {
   clearAllSessionState();
+  clearHoliswissAuthSpace();
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(LAST_AUTH_SPACE_KEY);
