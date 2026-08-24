@@ -14,7 +14,16 @@ const T = {
 } as const;
 function tr(lang: string) { return (T as any)[lang] ?? T.fr; }
 
-export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
+// Route déclarée en `.index` (et non `$specialtySlug.tsx`) : en routage à plat
+// TanStack, `a.$b.tsx` devient le PARENT de `a.$b.$c.tsx`. La page spécialité
+// servait donc de layout à la page spécialité × ville, avec deux conséquences
+// mesurées en production le 24/08/2026 :
+//   1. les deux `head` fusionnaient → DEUX <link rel="canonical"> contradictoires
+//      sur chaque page ville (Google les ignore alors tous les deux) ;
+//   2. cette page n'ayant pas d'<Outlet/>, la page ville n'était jamais rendue :
+//      /fr/specialites/hypnose/geneve affichait le H1 « Hypnose en Suisse ».
+// Le suffixe `.index` en refait une feuille : les deux routes deviennent sœurs.
+export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
   component: Page,
   // Chargement serveur : la page (H1, description, thérapeutes) est rendue dès le HTML initial (SEO/GEO)
   loader: async ({ params }) => {
@@ -93,7 +102,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug")({
 });
 
 function Page() {
-  const { lang, specialtySlug } = useParams({ from: "/$lang/specialites/$specialtySlug" });
+  const { lang, specialtySlug } = useParams({ from: "/$lang/specialites/$specialtySlug/" });
   const t = tr(lang);
   const fetchSpec = useServerFn(getSpecialtyPage);
   const loaderData = Route.useLoaderData();

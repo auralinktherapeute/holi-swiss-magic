@@ -25,6 +25,7 @@ import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminCerveauRouteImport } from './routes/admin.cerveau'
 import { Route as AdminCrmRouteImport } from './routes/admin.crm'
+import { Route as AdminDelegationRouteImport } from './routes/admin.delegation'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
 import { Route as AdminIndexationRouteImport } from './routes/admin.indexation'
@@ -79,7 +80,6 @@ import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mo
 import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
 import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
 import { Route as LangReinitialiserMotDePasseIndexRouteImport } from './routes/$lang.reinitialiser-mot-de-passe.index'
-import { Route as LangSpecialitesSpecialtySlugRouteImport } from './routes/$lang.specialites.$specialtySlug'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
@@ -91,6 +91,7 @@ import { Route as ApiPublicModerateMessageRouteImport } from './routes/api/publi
 import { Route as DashboardSalonsIndexRouteImport } from './routes/dashboard.salons.index'
 import { Route as DashboardSalonsSlugRouteImport } from './routes/dashboard.salons.$slug'
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
+import { Route as LangSpecialitesSpecialtySlugIndexRouteImport } from './routes/$lang.specialites.$specialtySlug.index'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
 import { Route as ApiPublicAnalyticsEndSessionRouteImport } from './routes/api/public/analytics/end-session'
@@ -178,6 +179,11 @@ const AdminCerveauRoute = AdminCerveauRouteImport.update({
 const AdminCrmRoute = AdminCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDelegationRoute = AdminDelegationRouteImport.update({
+  id: '/delegation',
+  path: '/delegation',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEmailsRoute = AdminEmailsRouteImport.update({
@@ -456,12 +462,6 @@ const LangReinitialiserMotDePasseIndexRoute =
     path: '/reinitialiser-mot-de-passe/',
     getParentRoute: () => LangRoute,
   } as any)
-const LangSpecialitesSpecialtySlugRoute =
-  LangSpecialitesSpecialtySlugRouteImport.update({
-    id: '/specialites/$specialtySlug',
-    path: '/specialites/$specialtySlug',
-    getParentRoute: () => LangRoute,
-  } as any)
 const LangTarifsIndexRoute = LangTarifsIndexRouteImport.update({
   id: '/tarifs/',
   path: '/tarifs/',
@@ -518,11 +518,17 @@ const LangBlogCategorieSlugRoute = LangBlogCategorieSlugRouteImport.update({
   path: '/blog/categorie/$slug',
   getParentRoute: () => LangRoute,
 } as any)
+const LangSpecialitesSpecialtySlugIndexRoute =
+  LangSpecialitesSpecialtySlugIndexRouteImport.update({
+    id: '/specialites/$specialtySlug/',
+    path: '/specialites/$specialtySlug/',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangSpecialitesSpecialtySlugCitySlugRoute =
   LangSpecialitesSpecialtySlugCitySlugRouteImport.update({
-    id: '/$citySlug',
-    path: '/$citySlug',
-    getParentRoute: () => LangSpecialitesSpecialtySlugRoute,
+    id: '/specialites/$specialtySlug/$citySlug',
+    path: '/specialites/$specialtySlug/$citySlug',
+    getParentRoute: () => LangRoute,
   } as any)
 const LangTherapeutesFamilleFamilySlugRoute =
   LangTherapeutesFamilleFamilySlugRouteImport.update({
@@ -576,6 +582,7 @@ export interface FileRoutesByFullPath {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/cerveau': typeof AdminCerveauRoute
   '/admin/crm': typeof AdminCrmRoute
+  '/admin/delegation': typeof AdminDelegationRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/indexation': typeof AdminIndexationRoute
@@ -620,7 +627,6 @@ export interface FileRoutesByFullPath {
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
-  '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
@@ -651,6 +657,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
+  '/$lang/specialites/$specialtySlug/': typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -664,6 +671,7 @@ export interface FileRoutesByTo {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/cerveau': typeof AdminCerveauRoute
   '/admin/crm': typeof AdminCrmRoute
+  '/admin/delegation': typeof AdminDelegationRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/indexation': typeof AdminIndexationRoute
@@ -708,7 +716,6 @@ export interface FileRoutesByTo {
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
-  '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
@@ -739,6 +746,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
+  '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -756,6 +764,7 @@ export interface FileRoutesById {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/cerveau': typeof AdminCerveauRoute
   '/admin/crm': typeof AdminCrmRoute
+  '/admin/delegation': typeof AdminDelegationRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
   '/admin/indexation': typeof AdminIndexationRoute
@@ -800,7 +809,6 @@ export interface FileRoutesById {
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
   '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
-  '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugRouteWithChildren
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
@@ -831,6 +839,7 @@ export interface FileRoutesById {
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
+  '/$lang/specialites/$specialtySlug/': typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -849,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/cerveau'
     | '/admin/crm'
+    | '/admin/delegation'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/indexation'
@@ -893,7 +903,6 @@ export interface FileRouteTypes {
     | '/$lang/evenements/$id'
     | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
-    | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
@@ -924,6 +933,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
+    | '/$lang/specialites/$specialtySlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -937,6 +947,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/cerveau'
     | '/admin/crm'
+    | '/admin/delegation'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/indexation'
@@ -981,7 +992,6 @@ export interface FileRouteTypes {
     | '/$lang/evenements/$id'
     | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
-    | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
@@ -1012,6 +1022,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
+    | '/$lang/specialites/$specialtySlug'
   id:
     | '__root__'
     | '/'
@@ -1028,6 +1039,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/cerveau'
     | '/admin/crm'
+    | '/admin/delegation'
     | '/admin/emails'
     | '/admin/evenements'
     | '/admin/indexation'
@@ -1072,7 +1084,6 @@ export interface FileRouteTypes {
     | '/$lang/evenements/$id'
     | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
-    | '/$lang/specialites/$specialtySlug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
     | '/admin/newsletter/$id'
@@ -1103,6 +1114,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
+    | '/$lang/specialites/$specialtySlug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1243,6 +1255,13 @@ declare module '@tanstack/react-router' {
       path: '/crm'
       fullPath: '/admin/crm'
       preLoaderRoute: typeof AdminCrmRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/delegation': {
+      id: '/admin/delegation'
+      path: '/delegation'
+      fullPath: '/admin/delegation'
+      preLoaderRoute: typeof AdminDelegationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/emails': {
@@ -1623,13 +1642,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangReinitialiserMotDePasseIndexRouteImport
       parentRoute: typeof LangRoute
     }
-    '/$lang/specialites/$specialtySlug': {
-      id: '/$lang/specialites/$specialtySlug'
-      path: '/specialites/$specialtySlug'
-      fullPath: '/$lang/specialites/$specialtySlug'
-      preLoaderRoute: typeof LangSpecialitesSpecialtySlugRouteImport
-      parentRoute: typeof LangRoute
-    }
     '/$lang/tarifs/': {
       id: '/$lang/tarifs/'
       path: '/tarifs'
@@ -1707,12 +1719,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangBlogCategorieSlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/specialites/$specialtySlug/': {
+      id: '/$lang/specialites/$specialtySlug/'
+      path: '/specialites/$specialtySlug'
+      fullPath: '/$lang/specialites/$specialtySlug/'
+      preLoaderRoute: typeof LangSpecialitesSpecialtySlugIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/specialites/$specialtySlug/$citySlug': {
       id: '/$lang/specialites/$specialtySlug/$citySlug'
-      path: '/$citySlug'
+      path: '/specialites/$specialtySlug/$citySlug'
       fullPath: '/$lang/specialites/$specialtySlug/$citySlug'
       preLoaderRoute: typeof LangSpecialitesSpecialtySlugCitySlugRouteImport
-      parentRoute: typeof LangSpecialitesSpecialtySlugRoute
+      parentRoute: typeof LangRoute
     }
     '/$lang/therapeutes/famille/$familySlug': {
       id: '/$lang/therapeutes/famille/$familySlug'
@@ -1759,21 +1778,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface LangSpecialitesSpecialtySlugRouteChildren {
-  LangSpecialitesSpecialtySlugCitySlugRoute: typeof LangSpecialitesSpecialtySlugCitySlugRoute
-}
-
-const LangSpecialitesSpecialtySlugRouteChildren: LangSpecialitesSpecialtySlugRouteChildren =
-  {
-    LangSpecialitesSpecialtySlugCitySlugRoute:
-      LangSpecialitesSpecialtySlugCitySlugRoute,
-  }
-
-const LangSpecialitesSpecialtySlugRouteWithChildren =
-  LangSpecialitesSpecialtySlugRoute._addFileChildren(
-    LangSpecialitesSpecialtySlugRouteChildren,
-  )
-
 interface LangRouteChildren {
   LangIndexRoute: typeof LangIndexRoute
   LangBlogSlugRoute: typeof LangBlogSlugRoute
@@ -1781,7 +1785,6 @@ interface LangRouteChildren {
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
   LangLettreSlugRoute: typeof LangLettreSlugRoute
   LangParolesSlugRoute: typeof LangParolesSlugRoute
-  LangSpecialitesSpecialtySlugRoute: typeof LangSpecialitesSpecialtySlugRouteWithChildren
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangTherapeutesSlugRoute: typeof LangTherapeutesSlugRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
@@ -1799,7 +1802,9 @@ interface LangRouteChildren {
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
   LangBlogCategorieSlugRoute: typeof LangBlogCategorieSlugRoute
+  LangSpecialitesSpecialtySlugCitySlugRoute: typeof LangSpecialitesSpecialtySlugCitySlugRoute
   LangTherapeutesFamilleFamilySlugRoute: typeof LangTherapeutesFamilleFamilySlugRoute
+  LangSpecialitesSpecialtySlugIndexRoute: typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
@@ -1809,8 +1814,6 @@ const LangRouteChildren: LangRouteChildren = {
   LangEvenementsIdRoute: LangEvenementsIdRoute,
   LangLettreSlugRoute: LangLettreSlugRoute,
   LangParolesSlugRoute: LangParolesSlugRoute,
-  LangSpecialitesSpecialtySlugRoute:
-    LangSpecialitesSpecialtySlugRouteWithChildren,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
   LangTherapeutesSlugRoute: LangTherapeutesSlugRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
@@ -1828,7 +1831,11 @@ const LangRouteChildren: LangRouteChildren = {
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
   LangBlogCategorieSlugRoute: LangBlogCategorieSlugRoute,
+  LangSpecialitesSpecialtySlugCitySlugRoute:
+    LangSpecialitesSpecialtySlugCitySlugRoute,
   LangTherapeutesFamilleFamilySlugRoute: LangTherapeutesFamilleFamilySlugRoute,
+  LangSpecialitesSpecialtySlugIndexRoute:
+    LangSpecialitesSpecialtySlugIndexRoute,
 }
 
 const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
@@ -1842,6 +1849,7 @@ interface AdminRouteChildren {
   AdminAvisRoute: typeof AdminAvisRoute
   AdminCerveauRoute: typeof AdminCerveauRoute
   AdminCrmRoute: typeof AdminCrmRoute
+  AdminDelegationRoute: typeof AdminDelegationRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEvenementsRoute: typeof AdminEvenementsRoute
   AdminIndexationRoute: typeof AdminIndexationRoute
@@ -1869,6 +1877,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAvisRoute: AdminAvisRoute,
   AdminCerveauRoute: AdminCerveauRoute,
   AdminCrmRoute: AdminCrmRoute,
+  AdminDelegationRoute: AdminDelegationRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEvenementsRoute: AdminEvenementsRoute,
   AdminIndexationRoute: AdminIndexationRoute,
