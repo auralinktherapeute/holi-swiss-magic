@@ -1,4 +1,16 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { cantonName } from "@/lib/geo-listings";
+
+const FOOTER_CANTONS = ["GE", "VD", "VS", "FR", "NE", "BE", "ZH", "TI"] as const;
+const FOOTER_CITIES = [
+  { slug: "geneve", name: "Genève" },
+  { slug: "lausanne", name: "Lausanne" },
+  { slug: "sion", name: "Sion" },
+  { slug: "fribourg", name: "Fribourg" },
+  { slug: "neuchatel", name: "Neuchâtel" },
+  { slug: "zurich", name: "Zürich" },
+  { slug: "lugano", name: "Lugano" },
+] as const;
 import { useTranslation } from "react-i18next";
 import { Check, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -171,6 +183,37 @@ export function Footer() {
             </ul>
           </div>
         </div>
+
+        {/* Maillage interne géographique — cantons et villes principales */}
+        <nav aria-label="Thérapeutes par région" className="mt-9 border-t border-[rgba(255,255,255,0.08)] pt-6">
+          <h4 className={headingClass}>{t("footer.by_region", "Thérapeutes par région")}</h4>
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#c3b4dc]">
+            {FOOTER_CANTONS.map((code) => (
+              <li key={code}>
+                <Link
+                  to="/$lang/therapeutes/canton/$canton"
+                  params={{ lang, canton: code }}
+                  className={linkClass}
+                >
+                  {cantonName(code, lang)}
+                </Link>
+              </li>
+            ))}
+            {FOOTER_CITIES.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  to="/$lang/therapeutes/ville/$citySlug"
+                  params={{ lang, citySlug: c.slug }}
+                  className={linkClass}
+                >
+                  {c.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+
 
         <div className="mt-9 border-t border-[rgba(255,255,255,0.08)] pt-5">
           <p className="text-xs text-[#a89bc4]">

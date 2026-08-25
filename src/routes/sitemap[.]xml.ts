@@ -151,6 +151,40 @@ export const Route = createFileRoute("/sitemap.xml")({
             urls.push(urlBlock(`${BASE_URL}/${lang}/therapeute/${t.slug}`, lastmod, "weekly", "0.8"));
           }
 
+          // Listings géographiques indexables : canton et ville. Uniquement
+          // ceux qui comptent au moins une fiche active (pas de page vide).
+          {
+            const { data: geoRows } = await supabaseAdmin
+              .from("therapists")
+              .select("canton, city")
+              .eq("status", "active");
+            const cantons = new Set<string>();
+            const cities = new Set<string>();
+            const toSlug = (c: string) =>
+              c
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/\p{Diacritic}/gu, "")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "");
+            for (const r of (geoRows ?? []) as Array<{ canton: string | null; city: string | null }>) {
+              const code = (r.canton ?? "").trim().toUpperCase();
+              if (code.length === 2) cantons.add(code);
+              const cSlug = toSlug((r.city ?? "").trim());
+              if (cSlug) cities.add(cSlug);
+            }
+            for (const code of cantons) {
+              for (const lang of LANGS) {
+                urls.push(urlBlock(`${BASE_URL}/${lang}/therapeutes/canton/${code}`, undefined, "weekly", "0.7"));
+              }
+            }
+            for (const cSlug of cities) {
+              for (const lang of LANGS) {
+                urls.push(urlBlock(`${BASE_URL}/${lang}/therapeutes/ville/${cSlug}`, undefined, "weekly", "0.7"));
+              }
+            }
+          }
+
           const today = new Date().toISOString().slice(0, 10);
           const { data: events } = await supabaseAdmin
             .from("events")

@@ -92,7 +92,10 @@ import { Route as DashboardSalonsSlugRouteImport } from './routes/dashboard.salo
 import { Route as LangBlogCategorieSlugRouteImport } from './routes/$lang.blog.categorie.$slug'
 import { Route as LangSpecialitesSpecialtySlugIndexRouteImport } from './routes/$lang.specialites.$specialtySlug.index'
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
+import { Route as LangTherapeutesCantonCantonRouteImport } from './routes/$lang.therapeutes.canton.$canton'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
+import { Route as LangTherapeutesSpecialiteSpecialtySlugRouteImport } from './routes/$lang.therapeutes.specialite.$specialtySlug'
+import { Route as LangTherapeutesVilleCitySlugRouteImport } from './routes/$lang.therapeutes.ville.$citySlug'
 import { Route as ApiPublicAnalyticsEndSessionRouteImport } from './routes/api/public/analytics/end-session'
 import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
 import { Route as ApiPublicHooksResendEventsRouteImport } from './routes/api/public/hooks/resend-events'
@@ -524,10 +527,28 @@ const LangSpecialitesSpecialtySlugCitySlugRoute =
     path: '/specialites/$specialtySlug/$citySlug',
     getParentRoute: () => LangRoute,
   } as any)
+const LangTherapeutesCantonCantonRoute =
+  LangTherapeutesCantonCantonRouteImport.update({
+    id: '/therapeutes/canton/$canton',
+    path: '/therapeutes/canton/$canton',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangTherapeutesFamilleFamilySlugRoute =
   LangTherapeutesFamilleFamilySlugRouteImport.update({
     id: '/therapeutes/famille/$familySlug',
     path: '/therapeutes/famille/$familySlug',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangTherapeutesSpecialiteSpecialtySlugRoute =
+  LangTherapeutesSpecialiteSpecialtySlugRouteImport.update({
+    id: '/therapeutes/specialite/$specialtySlug',
+    path: '/therapeutes/specialite/$specialtySlug',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangTherapeutesVilleCitySlugRoute =
+  LangTherapeutesVilleCitySlugRouteImport.update({
+    id: '/therapeutes/ville/$citySlug',
+    path: '/therapeutes/ville/$citySlug',
     getParentRoute: () => LangRoute,
   } as any)
 const ApiPublicAnalyticsEndSessionRoute =
@@ -644,7 +665,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
+  '/$lang/therapeutes/canton/$canton': typeof LangTherapeutesCantonCantonRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
+  '/$lang/therapeutes/specialite/$specialtySlug': typeof LangTherapeutesSpecialiteSpecialtySlugRoute
+  '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
@@ -732,7 +756,10 @@ export interface FileRoutesByTo {
   '/dashboard/salons': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
+  '/$lang/therapeutes/canton/$canton': typeof LangTherapeutesCantonCantonRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
+  '/$lang/therapeutes/specialite/$specialtySlug': typeof LangTherapeutesSpecialiteSpecialtySlugRoute
+  '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
@@ -824,7 +851,10 @@ export interface FileRoutesById {
   '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
+  '/$lang/therapeutes/canton/$canton': typeof LangTherapeutesCantonCantonRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
+  '/$lang/therapeutes/specialite/$specialtySlug': typeof LangTherapeutesSpecialiteSpecialtySlugRoute
+  '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
@@ -917,7 +947,10 @@ export interface FileRouteTypes {
     | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
+    | '/$lang/therapeutes/canton/$canton'
     | '/$lang/therapeutes/famille/$familySlug'
+    | '/$lang/therapeutes/specialite/$specialtySlug'
+    | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/resend-events'
@@ -1005,7 +1038,10 @@ export interface FileRouteTypes {
     | '/dashboard/salons'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
+    | '/$lang/therapeutes/canton/$canton'
     | '/$lang/therapeutes/famille/$familySlug'
+    | '/$lang/therapeutes/specialite/$specialtySlug'
+    | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/resend-events'
@@ -1096,7 +1132,10 @@ export interface FileRouteTypes {
     | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
     | '/$lang/specialites/$specialtySlug/$citySlug'
+    | '/$lang/therapeutes/canton/$canton'
     | '/$lang/therapeutes/famille/$familySlug'
+    | '/$lang/therapeutes/specialite/$specialtySlug'
+    | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
     | '/api/public/hooks/resend-events'
@@ -1714,11 +1753,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangSpecialitesSpecialtySlugCitySlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/therapeutes/canton/$canton': {
+      id: '/$lang/therapeutes/canton/$canton'
+      path: '/therapeutes/canton/$canton'
+      fullPath: '/$lang/therapeutes/canton/$canton'
+      preLoaderRoute: typeof LangTherapeutesCantonCantonRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/therapeutes/famille/$familySlug': {
       id: '/$lang/therapeutes/famille/$familySlug'
       path: '/therapeutes/famille/$familySlug'
       fullPath: '/$lang/therapeutes/famille/$familySlug'
       preLoaderRoute: typeof LangTherapeutesFamilleFamilySlugRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/therapeutes/specialite/$specialtySlug': {
+      id: '/$lang/therapeutes/specialite/$specialtySlug'
+      path: '/therapeutes/specialite/$specialtySlug'
+      fullPath: '/$lang/therapeutes/specialite/$specialtySlug'
+      preLoaderRoute: typeof LangTherapeutesSpecialiteSpecialtySlugRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/therapeutes/ville/$citySlug': {
+      id: '/$lang/therapeutes/ville/$citySlug'
+      path: '/therapeutes/ville/$citySlug'
+      fullPath: '/$lang/therapeutes/ville/$citySlug'
+      preLoaderRoute: typeof LangTherapeutesVilleCitySlugRouteImport
       parentRoute: typeof LangRoute
     }
     '/api/public/analytics/end-session': {
@@ -1784,7 +1844,10 @@ interface LangRouteChildren {
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
   LangBlogCategorieSlugRoute: typeof LangBlogCategorieSlugRoute
   LangSpecialitesSpecialtySlugCitySlugRoute: typeof LangSpecialitesSpecialtySlugCitySlugRoute
+  LangTherapeutesCantonCantonRoute: typeof LangTherapeutesCantonCantonRoute
   LangTherapeutesFamilleFamilySlugRoute: typeof LangTherapeutesFamilleFamilySlugRoute
+  LangTherapeutesSpecialiteSpecialtySlugRoute: typeof LangTherapeutesSpecialiteSpecialtySlugRoute
+  LangTherapeutesVilleCitySlugRoute: typeof LangTherapeutesVilleCitySlugRoute
   LangSpecialitesSpecialtySlugIndexRoute: typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 
@@ -1814,7 +1877,11 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogCategorieSlugRoute: LangBlogCategorieSlugRoute,
   LangSpecialitesSpecialtySlugCitySlugRoute:
     LangSpecialitesSpecialtySlugCitySlugRoute,
+  LangTherapeutesCantonCantonRoute: LangTherapeutesCantonCantonRoute,
   LangTherapeutesFamilleFamilySlugRoute: LangTherapeutesFamilleFamilySlugRoute,
+  LangTherapeutesSpecialiteSpecialtySlugRoute:
+    LangTherapeutesSpecialiteSpecialtySlugRoute,
+  LangTherapeutesVilleCitySlugRoute: LangTherapeutesVilleCitySlugRoute,
   LangSpecialitesSpecialtySlugIndexRoute:
     LangSpecialitesSpecialtySlugIndexRoute,
 }

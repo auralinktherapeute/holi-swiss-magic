@@ -51,9 +51,8 @@ export function CantonDirectory() {
             return (
               <li key={canton.code}>
                 <Link
-                  to="/$lang/therapeutes"
-                  params={{ lang }}
-                  search={{ canton: canton.code } as any}
+                  to="/$lang/therapeutes/canton/$canton"
+                  params={{ lang, canton: canton.code }}
                   className="group flex items-center justify-between gap-2 rounded-xl border border-[rgba(184,110,249,0.2)] bg-[#2d1248]/60 px-3.5 py-2.5 text-sm text-white/85 transition hover:border-[#b86ef9]/70 hover:bg-[#3d1a5c]/70"
                 >
                   <span className="inline-flex min-w-0 items-center gap-2">
