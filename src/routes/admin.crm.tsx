@@ -313,7 +313,7 @@ function AdminCrmPage() {
             <CrmContactCard
               leadId={cardLeadId}
               onClose={() => setCardLeadId(null)}
-              onShowDuplicates={(id) => setDupLeadIds([id])}
+              onShowDuplicates={() => setTab("duplicates")}
             />
           ) : (
             <CrmContactsTable onOpen={(id) => setCardLeadId(id)} />
