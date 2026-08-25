@@ -21,7 +21,31 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
       <p>Catégorie introuvable.</p>
     </div>
   ),
-  head: ({ params }) => {
+  /**
+   * Rendu serveur de la catégorie.
+   *
+   * Avant : aucun loader. Un crawler recevait 167 mots, zéro lien d'article et
+   * parfois pas de H1 — 112 URLs (28 catégories × 4 langues) indexables,
+   * auto-canoniques, munies de hreflang, et vides. Une catégorie inconnue
+   * renvoyait même 200 sur un écran « introuvable » (soft-404) : le
+   * `notFound()` vivait dans le composant, donc après la réponse HTTP.
+   */
+  loader: async ({ params }) => {
+    if (!getCategory(params.slug)) throw notFound();
+    const lang = (params.lang as Lang) ?? "fr";
+    try {
+      let res = await getArticlesByCategory({ data: { slug: params.slug, lang } });
+      // Les articles portent tous lang='fr' : sans ce repli, les catégories
+      // DE/IT/EN seraient vides. Même logique que le listing du blog.
+      if (!res?.articles?.length && lang !== "fr") {
+        res = await getArticlesByCategory({ data: { slug: params.slug, lang: "fr" } });
+      }
+      return { articles: (res?.articles ?? []) as Array<Record<string, unknown>> };
+    } catch {
+      return { articles: [] as Array<Record<string, unknown>> };
+    }
+  },
+  head: ({ params, loaderData }) => {
     const lang = (params.lang as Lang) ?? "fr";
     const cat = getCategory(params.slug);
     const name = cat ? cat[`name_${lang}` as const] || cat.name_fr : params.slug;
@@ -40,10 +64,30 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
     const title = titles[lang];
     const description = descs[lang];
     const url = `https://holiswiss.ch/${lang}/blog/categorie/${params.slug}`;
+
+    const articles = (loaderData as { articles?: Array<Record<string, unknown>> } | undefined)?.articles;
+    /**
+     * Une catégorie n'est indexable qu'à partir de MIN_ARTICLES_INDEXABLE
+     * articles — 18 des 28 catégories n'en comptent qu'un, et la taxonomie se
+     * chevauche (yoga ↔ yoga-therapeutique, coaching ↔ coaching-holistique) :
+     * les indexer toutes reviendrait à faire se concurrencer des pages minces
+     * sur le même sujet.
+     *
+     * ⚠️ Le défaut est VOLONTAIREMENT « indexable » : si `loaderData` venait à
+     * manquer, on n'émet pas de noindex. Le 25/08, une condition d'indexation
+     * s'appuyant sur des données absentes avait désindexé d'un coup toutes les
+     * pages spécialité × ville. Une donnée manquante ne doit jamais retirer une
+     * page de l'index.
+     */
+    const thin = Array.isArray(articles) && articles.length < MIN_ARTICLES_INDEXABLE;
+
+    const listed = (articles ?? []).filter((a) => a && typeof a["slug"] === "string");
+
     return {
       meta: [
         { title },
         { name: "description", content: description },
+        ...(thin ? [{ name: "robots", content: "noindex,follow" }] : []),
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
@@ -54,9 +98,37 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
         { rel: "canonical", href: url },
         ...hreflangLinks(`/blog/categorie/${params.slug}`),
       ],
+      scripts:
+        listed.length > 0 && !thin
+          ? [
+              {
+                type: "application/ld+json",
+                children: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "ItemList",
+                  name: title,
+                  numberOfItems: listed.length,
+                  itemListElement: listed.map((a, i) => ({
+                    "@type": "ListItem",
+                    position: i + 1,
+                    url: `https://holiswiss.ch/${lang}/blog/${slugForLang(a, lang)}`,
+                    name: titleForLang(a, lang),
+                  })),
+                }),
+              },
+            ]
+          : undefined,
     };
   },
 });
+
+/**
+ * Seuil d'indexation d'une catégorie. Repris de la règle du cahier des charges
+ * pour les pages ville (« therapeutes >= 3 → indexable »), qui vaut aussi ici :
+ * une page de regroupement n'a d'intérêt qu'à partir de quelques éléments.
+ * Une catégorie franchit le seuil d'elle-même à mesure que le blog s'étoffe.
+ */
+const MIN_ARTICLES_INDEXABLE = 3;
 
 function formatDate(iso: string | null, lang: string) {
   if (!iso) return "";
@@ -77,8 +149,14 @@ function Page() {
   const name = cat[`name_${l}` as const] || cat.name_fr;
   const groupLabel = GROUP_LABELS[cat.parent as GroupKey][l];
 
+  // `initialData` vient du loader : la liste est ainsi présente dès le HTML
+  // initial. Sans elle, un crawler ne voyait que le gabarit — 167 mots et zéro
+  // lien d'article. La requête n'est ni debouncée ni filtrée et sa clé est
+  // fixe : l'alimenter ne peut pas perturber le comportement client.
+  const loaderData = Route.useLoaderData();
   const { data, isLoading } = useQuery({
     queryKey: ["articles-by-category", slug, l],
+    initialData: loaderData?.articles ? { articles: loaderData.articles } : undefined,
     queryFn: async () => {
       const res = await getArticlesByCategory({ data: { slug, lang: l } });
       if (!res?.articles?.length && l !== "fr") {

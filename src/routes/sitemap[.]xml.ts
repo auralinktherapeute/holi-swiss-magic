@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { resolveProfileLang } from "@/lib/seo";
 import { cityToSlug } from "@/lib/city-slug";
+import { getCategory } from "@/lib/article-categories";
 
 const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
@@ -233,7 +234,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           // silencieusement les 150+ URL du blog du sitemap.
           let { data: articles, error } = await (holiswissPublic as any)
             .from("articles")
-            .select("slug, slug_de, published_at, updated_at")
+            .select("slug, slug_de, category, secondary_tags, published_at, updated_at")
             .eq("status", "validated");
           if (error) {
             ({ data: articles, error } = await (holiswissPublic as any)
@@ -249,6 +250,27 @@ export const Route = createFileRoute("/sitemap.xml")({
             for (const lang of LANGS) {
               const slug = lang === "de" ? (a.slug_de || a.slug) : a.slug;
               urls.push(urlBlock(`${BASE_URL}/${lang}/blog/${slug}`, lastmod, "monthly", "0.7"));
+            }
+          }
+
+          // Catégories du blog : seulement celles qui portent assez d'articles.
+          // Elles étaient indexables mais jamais déclarées — 112 URLs dans un
+          // entre-deux. Le seuil doit rester aligné sur MIN_ARTICLES_INDEXABLE
+          // dans $lang.blog.categorie.$slug.tsx : au-dessous, la page émet un
+          // noindex, et le sitemap ne doit jamais annoncer une page noindex.
+          const MIN_ARTICLES_INDEXABLE = 3;
+          const perCategory = new Map<string, number>();
+          for (const a of (articles ?? []) as Array<{ category?: string | null; secondary_tags?: string[] | null }>) {
+            const keys = new Set<string>();
+            if (a.category) keys.add(a.category);
+            for (const t of a.secondary_tags ?? []) if (t) keys.add(t);
+            for (const k of keys) perCategory.set(k, (perCategory.get(k) ?? 0) + 1);
+          }
+          for (const [slug, count] of perCategory) {
+            if (count < MIN_ARTICLES_INDEXABLE) continue;
+            if (!getCategory(slug)) continue; // catégorie inconnue de la route → 404
+            for (const lang of LANGS) {
+              urls.push(urlBlock(`${BASE_URL}/${lang}/blog/categorie/${slug}`, undefined, "weekly", "0.6"));
             }
           }
         } catch (err) {
