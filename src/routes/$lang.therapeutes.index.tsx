@@ -12,6 +12,7 @@ import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { DIRECTORY_INTRO, DIRECTORY_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
+import { listAllPublicTherapists, type PublicTherapistCard } from "@/lib/geo-listings.functions";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -35,7 +36,20 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
       });
     }
   },
-  head: ({ params }) => {
+  // Index rendu côté serveur. La recherche de cette page vit dans le navigateur
+  // (RPC search_therapists, debounce, carte) : son HTML initial ne contenait donc
+  // aucun lien vers une fiche, et la page centrale de l'annuaire n'ouvrait aucun
+  // chemin de crawl vers les profils. Ce loader n'alimente QUE l'index statique
+  // du bas de page — il ne touche pas au useQuery interactif.
+  loader: async () => {
+    try {
+      const { therapists } = await listAllPublicTherapists();
+      return { seoTherapists: therapists };
+    } catch {
+      return { seoTherapists: [] as PublicTherapistCard[] };
+    }
+  },
+  head: ({ params, loaderData }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Trouver un thérapeute en Suisse — Holiswiss",
@@ -82,7 +96,29 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
                 inLanguage: lang,
                 isPartOf: { "@id": "https://holiswiss.ch/#website" },
                 about: { "@id": "https://holiswiss.ch/#organization" },
+                mainEntity: { "@id": `${url}#itemlist` },
               },
+              // ItemList bâtie sur les MÊMES fiches que l'index HTML ci-dessous :
+              // chaque entrée déclarée ici existe aussi comme <a href> réel.
+              ...(() => {
+                const list = ((loaderData as { seoTherapists?: PublicTherapistCard[] } | undefined)
+                  ?.seoTherapists ?? []).filter((t) => t.slug);
+                if (list.length === 0) return [];
+                return [
+                  {
+                    "@type": "ItemList",
+                    "@id": `${url}#itemlist`,
+                    name: title,
+                    numberOfItems: list.length,
+                    itemListElement: list.map((t, i) => ({
+                      "@type": "ListItem",
+                      position: i + 1,
+                      url: `https://holiswiss.ch/${lang}/therapeute/${t.slug}`,
+                      name: `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim(),
+                    })),
+                  },
+                ];
+              })(),
               {
                 "@type": "BreadcrumbList",
                 itemListElement: [
@@ -158,6 +194,8 @@ function useSmallViewport() {
 
 function Page() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
+  // Index SSR uniquement — la recherche interactive ci-dessous garde sa propre requête.
+  const { seoTherapists } = Route.useLoaderData();
   const navigate = useNavigate({ from: "/$lang/therapeutes/" });
   const searchParams = useSearch({ from: "/$lang/therapeutes/" });
   const { specialite: specFilter, famille: famFilter, canton: cantonFilter } = searchParams;
@@ -471,13 +509,57 @@ function Page() {
         </div>
       </div>
 
-      {/* ── Bloc contenu SEO/GEO + FAQ (rendu serveur, sous la liste/carte) ── */}
-      <DirectorySeoContent lang={lang} />
+      {/* ── Bloc contenu SEO/GEO + index + FAQ (rendu serveur, sous la liste/carte) ── */}
+      <DirectorySeoContent lang={lang} therapists={seoTherapists} />
     </div>
   );
 }
 
-function DirectorySeoContent({ lang }: { lang: string }) {
+const DIRECTORY_INDEX_TITLE: Record<string, string> = {
+  fr: "Tous les thérapeutes",
+  de: "Alle Therapeuten",
+  it: "Tutti i terapeuti",
+  en: "All therapists",
+};
+
+/**
+ * Index rendu côté serveur, en vrais <a href>.
+ *
+ * La recherche de cette page vit dans le navigateur : sans ce bloc, le HTML
+ * initial ne contient aucun lien vers une fiche et l'annuaire n'ouvre aucun
+ * chemin de crawl vers les profils. Chaque entrée correspond exactement à un
+ * élément de l'ItemList émise dans le `head`.
+ */
+function DirectoryIndex({ lang, therapists }: { lang: string; therapists: PublicTherapistCard[] }) {
+  const listed = therapists.filter((t) => t.slug);
+  if (listed.length === 0) return null;
+  return (
+    <div className="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
+      <h3 className="text-lg font-semibold text-white">
+        {DIRECTORY_INDEX_TITLE[lang] ?? DIRECTORY_INDEX_TITLE.fr}
+      </h3>
+      <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
+        {listed.map((t) => {
+          const name = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
+          const place = [t.city, t.canton].filter(Boolean).join(", ");
+          return (
+            <li key={t.id} className="text-sm">
+              <a
+                href={`/${lang}/therapeute/${t.slug}`}
+                className="text-[#d4c4e0] underline decoration-[rgba(184,110,249,0.4)] underline-offset-2 hover:text-white"
+              >
+                {name}
+                {place ? ` — ${place}` : ""}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function DirectorySeoContent({ lang, therapists }: { lang: string; therapists: PublicTherapistCard[] }) {
   const l = asFaqLang(lang);
   const intro = DIRECTORY_INTRO[l];
   const faqItems = DIRECTORY_FAQ[l];
@@ -496,6 +578,7 @@ function DirectorySeoContent({ lang }: { lang: string }) {
           ))}
         </div>
       </div>
+      <DirectoryIndex lang={lang} therapists={therapists} />
       <FaqSection items={faqItems} title={faqTitles.title} subtitle={faqTitles.subtitle} />
     </section>
   );

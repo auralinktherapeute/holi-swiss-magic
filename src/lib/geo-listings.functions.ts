@@ -52,6 +52,31 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
   });
 
 /**
+ * Tous les praticiens actifs, pour l'index rendu côté serveur de la page
+ * d'annuaire.
+ *
+ * L'annuaire interroge `search_therapists` depuis le navigateur (recherche
+ * temps réel, filtres, carte) : son HTML initial ne contenait donc AUCUN lien
+ * vers une fiche — la page centrale de l'annuaire n'ouvrait aucun chemin de
+ * crawl vers les profils (constat P0-2 de l'audit du 25/08/2026). Cette
+ * lecture-ci alimente un index statique qui coexiste avec la recherche sans y
+ * toucher.
+ */
+export const listAllPublicTherapists = createServerFn({ method: "GET" }).handler(async () => {
+  const supabase = await publicClient();
+  const { data: rows, error } = await supabase
+    .from("therapists")
+    .select(PUBLIC_COLUMNS)
+    .eq("status", "active")
+    .not("slug", "is", null)
+    .order("canton", { ascending: true })
+    .order("last_name", { ascending: true })
+    .limit(1000);
+  if (error) throw new Error("Impossible de charger les thérapeutes.");
+  return { therapists: (rows ?? []) as unknown as PublicTherapistCard[] };
+});
+
+/**
  * Toutes les villes disposant d'au moins un thérapeute actif, avec leur canton
  * et leur nombre de fiches. Sert au listing par ville et au maillage interne.
  */
