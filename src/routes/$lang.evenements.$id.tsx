@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { getPublishedEvent } from "@/lib/public.functions";
 import { EventFlyer } from "@/components/events/EventFlyer";
 import { Button } from "@/components/ui/button";
-import { hreflangLinks } from "@/lib/seo";
+import { resolveProfileLang } from "@/lib/seo";
 
 const SITE = "https://holiswiss.ch";
 
@@ -29,6 +29,8 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     if (!e) {
       return { meta: [{ title: "Événement — HoliSwiss" }], links: [{ rel: "canonical", href: url }] };
     }
+    const contentLang = resolveProfileLang(null, (loaderData as any)?.therapist?.canton, null);
+    const canonicalUrl = `${SITE}/${contentLang}/evenements/${params.id}`;
     const title = `${e.title} | HoliSwiss`.slice(0, 60);
     const description = (e.short_description || e.long_description || `Événement bien-être en Suisse.`).slice(0, 160);
     const meta: Array<Record<string, string>> = [
@@ -72,8 +74,20 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     return {
       meta,
       links: [
-        { rel: "canonical", href: url },
-        ...hreflangLinks(`/evenements/${params.id}`),
+        // Une seule langue indexable par événement.
+        //
+        // La table `events` n'a aucune colonne de traduction : titre et
+        // descriptions sont uniques. Publier quatre URLs revenait à déclarer
+        // quatre adresses pour un même texte, chacune canonique d'elle-même et
+        // alternative des trois autres — Google tranchait seul, comme il l'avait
+        // fait pour les fiches thérapeutes (variantes DE/EN/IT marquées
+        // canonical_other). La langue retenue suit le canton du praticien
+        // organisateur, même règle que sa fiche.
+        //
+        // On ne redirige pas : l'habillage d'interface est traduit, la page
+        // reste donc utile dans les quatre langues. Et pas de hreflang : une
+        // grappe hreflang suppose que chaque membre soit canonique de lui-même.
+        { rel: "canonical", href: canonicalUrl },
       ],
       scripts: [
         { type: "application/ld+json", children: JSON.stringify(eventLd) },

@@ -212,15 +212,32 @@ export const Route = createFileRoute("/sitemap.xml")({
           const today = new Date().toISOString().slice(0, 10);
           const { data: events } = await supabaseAdmin
             .from("events")
-            .select("id, updated_at")
+            .select("id, updated_at, therapist_id")
             .eq("status", "published")
             .gte("event_date", today);
 
-          for (const e of (events ?? []) as Array<{ id: string; updated_at: string | null }>) {
-            const lastmod = e.updated_at ? e.updated_at.slice(0, 10) : undefined;
-            for (const lang of LANGS) {
-              urls.push(urlBlock(`${BASE_URL}/${lang}/evenements/${e.id}`, lastmod, "weekly", "0.7"));
+          // Une seule URL par événement, comme pour les fiches : la table
+          // `events` n'a aucune colonne de traduction, publier quatre langues
+          // revenait à déclarer quatre adresses pour un texte unique. La langue
+          // suit le canton du praticien organisateur — même règle que le
+          // canonical de la page, qu'il ne faut pas laisser diverger.
+          const cantonByTherapist = new Map<string, string | null>();
+          try {
+            const { data: ths } = await supabaseAdmin
+              .from("therapists")
+              .select("id, canton")
+              .eq("status", "active");
+            for (const t of (ths ?? []) as Array<{ id: string; canton: string | null }>) {
+              cantonByTherapist.set(t.id, t.canton);
             }
+          } catch (err) {
+            console.error("sitemap: therapist cantons for events failed", err);
+          }
+          for (const e of (events ?? []) as Array<{ id: string; updated_at: string | null; therapist_id?: string | null }>) {
+            const lastmod = e.updated_at ? e.updated_at.slice(0, 10) : undefined;
+            const canton = e.therapist_id ? cantonByTherapist.get(e.therapist_id) ?? null : null;
+            const lang = resolveProfileLang(null, canton, null);
+            urls.push(urlBlock(`${BASE_URL}/${lang}/evenements/${e.id}`, lastmod, "weekly", "0.7"));
           }
         } catch (err) {
           console.error("sitemap: therapists/events fetch failed", err);
