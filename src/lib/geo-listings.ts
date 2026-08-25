@@ -6,14 +6,14 @@
 import { CANTONS } from "@/lib/constants";
 import type { SeoLang } from "@/lib/seo";
 
-export function citySlug(city: string): string {
-  return city
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+/**
+ * Conservé pour les appelants existants, mais délègue à la source unique.
+ * Cette fonction était une copie littérale de `cityToSlug` — il en existait
+ * quatre au total (ici, dans le sitemap, dans `city-slug.ts` et en SQL).
+ * C'est précisément ce genre de duplication qui a fait diverger l'URL publiée
+ * et l'URL calculée, le 25/08. Voir `src/lib/city-slug.ts`.
+ */
+export { cityToSlug as citySlug } from "@/lib/city-slug";
 
 export const CANTON_CODES = CANTONS.map((c) => c.code);
 

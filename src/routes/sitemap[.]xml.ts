@@ -87,6 +87,39 @@ export const Route = createFileRoute("/sitemap.xml")({
             }
           }
 
+          // Slug de ville : `cities.slug` fait autorité.
+          //
+          // Le sitemap slugifiait `therapists.city` tandis que la page lisait
+          // la base : les deux ne coïncidaient que par la grâce du backfill.
+          // Un praticien saisissant « Geneve » sans accent aurait suffi à les
+          // faire diverger — et à rediriger une URL du sitemap vers une URL
+          // absente du sitemap, l'incident du 25/08. La table tranche
+          // désormais ; la slugification directe ne sert plus que de repli si
+          // la ville n'y figure pas encore.
+          const citySlugByKey = new Map<string, string>();
+          try {
+            const { data: cityRows } = await (supabaseAdmin as any)
+              .from("cities")
+              .select("slug, canonical_name, aliases");
+            for (const c of (cityRows ?? []) as Array<{
+              slug: string | null;
+              canonical_name: string | null;
+              aliases: string[] | null;
+            }>) {
+              if (!c.slug) continue;
+              for (const key of [c.canonical_name, ...(c.aliases ?? [])]) {
+                const k = cityToSlug(key ?? "");
+                if (k && !citySlugByKey.has(k)) citySlugByKey.set(k, c.slug);
+              }
+            }
+          } catch (err) {
+            console.error("sitemap: cities lookup failed", err);
+          }
+          const resolveCitySlug = (raw: string) => {
+            const direct = cityToSlug(raw);
+            return citySlugByKey.get(direct) ?? direct;
+          };
+
           // GEO combos: specialty × city, only when at least one active therapist exists
           try {
             let { data: geoPairs, error: geoErr } = await supabaseAdmin
@@ -105,7 +138,7 @@ export const Route = createFileRoute("/sitemap.xml")({
               const city = row.therapists?.city;
               const status = row.therapists?.status;
               if (!specSlug || !isActive || !city || status !== "active") continue;
-              const cSlug = cityToSlug(city);
+              const cSlug = resolveCitySlug(city);
               if (!cSlug) continue;
               const key = `${specSlug}::${cSlug}`;
               if (seen.has(key)) continue;
@@ -154,17 +187,13 @@ export const Route = createFileRoute("/sitemap.xml")({
               .eq("status", "active");
             const cantons = new Set<string>();
             const cities = new Set<string>();
-            const toSlug = (c: string) =>
-              c
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/\p{Diacritic}/gu, "")
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/^-+|-+$/g, "");
+            // `toSlug` était ici une copie littérale de cityToSlug : quatre
+            // implémentations du même calcul coexistaient dans le projet.
+            // On passe par la source unique, puis par la table.
             for (const r of (geoRows ?? []) as Array<{ canton: string | null; city: string | null }>) {
               const code = (r.canton ?? "").trim().toUpperCase();
               if (code.length === 2) cantons.add(code);
-              const cSlug = toSlug((r.city ?? "").trim());
+              const cSlug = resolveCitySlug((r.city ?? "").trim());
               if (cSlug) cities.add(cSlug);
             }
             for (const code of cantons) {
