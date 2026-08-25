@@ -7,21 +7,21 @@
 # (Avant : les Disallow étaient placés après une ligne vide dans un groupe sans
 # user-agent valide, donc ignorés — les zones privées restaient crawlables.)
 
+# Les chemins d'authentification emploient les segments FRANÇAIS dans les quatre
+# langues (/de/connexion, /it/inscription…). Les anciennes lignes visaient des
+# chemins localisés qui n'existent pas — /de/anmeldung, /it/accesso, /en/login —
+# et étaient donc inertes : seules les variantes /fr/ étaient réellement
+# couvertes, les pages DE, IT et EN restaient crawlables. Les motifs ci-dessous
+# couvrent toutes les langues, présentes et futures.
 User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /fr/connexion
-Disallow: /fr/inscription
-Disallow: /fr/mot-de-passe-oublie
-Disallow: /fr/reinitialiser-mot-de-passe
-Disallow: /de/anmeldung
-Disallow: /de/registrierung
-Disallow: /it/accesso
-Disallow: /it/registrazione
-Disallow: /en/login
-Disallow: /en/signup
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 # Assistants IA explicitement bienvenus (recherche générative + entraînement).
 User-agent: GPTBot

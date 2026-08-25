@@ -33,6 +33,10 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
         to: "/$lang/therapeutes/canton/$canton",
         params: { lang: params.lang, canton: search.canton },
         replace: true,
+        // 301 : la page canton est l'adresse définitive de cette intention.
+        // En temporaire (307 par défaut), Google conservait l'URL à paramètre
+        // au lieu de lui transférer son historique.
+        statusCode: 301,
       });
     }
   },
