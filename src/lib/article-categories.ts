@@ -107,6 +107,11 @@ export const ARTICLE_CATEGORIES: ArticleCategory[] = [
   { slug: "bien-etre", name_fr: "Bien-être général", name_de: "Allgemeines Wohlbefinden", name_it: "Benessere generale", name_en: "General well-being", parent: "bien-etre" },
   { slug: "developpement-personnel", name_fr: "Développement personnel", name_de: "Persönliche Entwicklung", name_it: "Sviluppo personale", name_en: "Personal development", parent: "bien-etre" },
   { slug: "spiritualite", name_fr: "Spiritualité", name_de: "Spiritualität", name_it: "Spiritualità", name_en: "Spirituality", parent: "bien-etre" },
+  // Ajoutées le 25/08/2026 : trois catégories orphelines référencées par des articles publiés.
+  // Ce sont des thématiques éditoriales, pas des disciplines, donc rangées dans le groupe général.
+  { slug: "assurances-remboursement", name_fr: "Assurances & remboursement", name_de: "Versicherungen & Rückerstattung", name_it: "Assicurazioni & rimborsi", name_en: "Insurance & reimbursement", parent: "bien-etre" },
+  { slug: "geolocalisation", name_fr: "Géolocalisation", name_de: "Geolokalisierung", name_it: "Geolocalizzazione", name_en: "Geolocation", parent: "bien-etre" },
+  { slug: "insomnie", name_fr: "Insomnie & sommeil", name_de: "Schlaflosigkeit & Schlaf", name_it: "Insonnia & sonno", name_en: "Insomnia & sleep", parent: "bien-etre" },
 ];
 
 export const GROUP_ORDER: GroupKey[] = ["corporelles", "energetiques", "psycho", "naturelles", "bien-etre"];
