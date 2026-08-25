@@ -375,7 +375,7 @@ export const mergeCrmLeads = createServerFn({ method: "POST" })
     if (allNotes.length > 1) merged.notes = [...new Set(allNotes)].join("\n---\n");
 
     merged.updated_at = new Date().toISOString();
-    const { error: upErr } = await supabaseAdmin.from("crm_leads").update(merged).eq("id", data.primaryId);
+    const { error: upErr } = await supabaseAdmin.from("crm_leads").update(merged as never).eq("id", data.primaryId);
     if (upErr) throw new Error(upErr.message);
 
     // Réattribution des relations
@@ -404,7 +404,7 @@ export const mergeCrmLeads = createServerFn({ method: "POST" })
 
     await supabaseAdmin
       .from("crm_merge_log")
-      .update({ reassigned: { activities: aCount ?? 0, tasks: tCount ?? 0, fields: merged } })
+      .update({ reassigned: { activities: aCount ?? 0, tasks: tCount ?? 0, fields: merged as never } })
       .eq("id", logRow?.id ?? "");
 
     await supabaseAdmin.from("crm_field_history").insert(

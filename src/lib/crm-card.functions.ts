@@ -253,7 +253,7 @@ export const updateCrmContact = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const before = await loadLead(data.leadId);
     const patch: Record<string, unknown> = { ...data.patch, updated_at: new Date().toISOString() };
-    const { error } = await supabaseAdmin.from("crm_leads").update(patch).eq("id", data.leadId);
+    const { error } = await supabaseAdmin.from("crm_leads").update(patch as never).eq("id", data.leadId);
     if (error) throw new Error(error.message);
 
     const history = Object.entries(data.patch)
