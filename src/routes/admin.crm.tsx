@@ -308,6 +308,18 @@ function AdminCrmPage() {
             })}
           </div>
         )}
+        {tab === "contacts" && (
+          cardLeadId ? (
+            <CrmContactCard
+              leadId={cardLeadId}
+              onClose={() => setCardLeadId(null)}
+              onShowDuplicates={(id) => setDupLeadIds([id])}
+            />
+          ) : (
+            <CrmContactsTable onOpen={(id) => setCardLeadId(id)} />
+          )
+        )}
+        {tab === "duplicates" && <CrmDuplicatesView />}
         {tab === "list" && <LeadsListView leads={leadsQ.data ?? []} onOpen={(id) => setOpenLeadId(id)} />}
         {tab === "tasks" && <TasksCenter />}
         {tab === "relances" && <RelancesCenter onOpen={(id) => setOpenLeadId(id)} />}
