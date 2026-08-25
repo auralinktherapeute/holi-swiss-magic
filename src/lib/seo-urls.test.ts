@@ -42,6 +42,37 @@ describe("cityToSlug — slug de ville (source unique)", () => {
       expect(s.endsWith("-")).toBe(false);
     }
   });
+
+  /**
+   * Valeurs de référence partagées avec `public.city_slug()`, défini dans la
+   * migration 20260825140000_cities_slug_foundation.sql. Les deux
+   * implémentations doivent produire exactement la même chose : leur
+   * divergence est ce qui a redirigé des URLs du sitemap vers des URLs
+   * absentes du sitemap le 25/08/2026.
+   *
+   * Accord vérifié sur PostgreSQL 16 en UTF-8, 0 divergence sur ces 12 cas.
+   * Si l'un de ces tests tombe, la migration doit être corrigée en même temps
+   * — sinon la base et le code ne parleront plus de la même URL.
+   */
+  it("reste d'accord avec public.city_slug() côté base", () => {
+    const golden: Array<[string, string]> = [
+      ["Genève", "geneve"],
+      ["Basel", "basel"],
+      ["Le Chenit", "le-chenit"],
+      ["Neuchâtel", "neuchatel"],
+      ["Zürich", "zurich"],
+      ["Coppet", "coppet"],
+      ["Boudevilliers", "boudevilliers"],
+      ["Payerne", "payerne"],
+      ["St. Gallen", "st-gallen"],
+      ["Biel/Bienne", "biel-bienne"],
+      ["Genève, Suisse", "geneve-suisse"],
+      ["  Lausanne  ", "lausanne"],
+    ];
+    for (const [input, expected] of golden) {
+      expect(cityToSlug(input)).toBe(expected);
+    }
+  });
 });
 
 describe("resolveProfileLang — langue indexable d'une fiche (R2)", () => {
