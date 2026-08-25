@@ -66,7 +66,7 @@ const T = {
 } as const;
 
 function tr(lang: string) {
-  return (T as Record<string, (typeof T)["fr"]>)[lang.slice(0, 2)] ?? T.fr;
+  return (T as unknown as Record<string, (typeof T)["fr"]>)[lang.slice(0, 2)] ?? T.fr;
 }
 
 export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
