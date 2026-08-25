@@ -204,6 +204,7 @@ function AdminCrmPage() {
           borderRadius: 12,
         }}>
           {([
+            { id: "contacts", label: "Contacts", icon: ContactIcon },
             { id: "pipeline", label: "Pipeline", icon: LayoutGrid },
             { id: "list",     label: "Liste",    icon: ListIcon },
             { id: "tasks",    label: "Tâches",   icon: CheckSquare },
