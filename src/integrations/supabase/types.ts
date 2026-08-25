@@ -955,6 +955,42 @@ export type Database = {
           },
         ]
       }
+      crm_field_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          origin: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          origin?: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          origin?: string
+        }
+        Relationships: []
+      }
       crm_intake_submissions: {
         Row: {
           allergies: string | null
@@ -1042,17 +1078,24 @@ export type Database = {
       }
       crm_leads: {
         Row: {
+          archived_at: string | null
           assigned_to: string | null
           canton: string | null
           converted_therapist_id: string | null
           created_at: string
+          dedup_status: string
           email: string | null
+          email_norm: string | null
           first_name: string
           id: string
           last_contact_at: string | null
           last_name: string
+          merged_at: string | null
+          merged_into_id: string | null
+          name_norm: string | null
           notes: string | null
           phone: string | null
+          phone_norm: string | null
           priority: string
           source: string
           specialty: string | null
@@ -1060,17 +1103,24 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           assigned_to?: string | null
           canton?: string | null
           converted_therapist_id?: string | null
           created_at?: string
+          dedup_status?: string
           email?: string | null
+          email_norm?: string | null
           first_name: string
           id?: string
           last_contact_at?: string | null
           last_name: string
+          merged_at?: string | null
+          merged_into_id?: string | null
+          name_norm?: string | null
           notes?: string | null
           phone?: string | null
+          phone_norm?: string | null
           priority?: string
           source?: string
           specialty?: string | null
@@ -1078,17 +1128,24 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           assigned_to?: string | null
           canton?: string | null
           converted_therapist_id?: string | null
           created_at?: string
+          dedup_status?: string
           email?: string | null
+          email_norm?: string | null
           first_name?: string
           id?: string
           last_contact_at?: string | null
           last_name?: string
+          merged_at?: string | null
+          merged_into_id?: string | null
+          name_norm?: string | null
           notes?: string | null
           phone?: string | null
+          phone_norm?: string | null
           priority?: string
           source?: string
           specialty?: string | null
@@ -1110,7 +1167,50 @@ export type Database = {
             referencedRelation: "therapists_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "crm_leads_merged_into_id_fkey"
+            columns: ["merged_into_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      crm_merge_log: {
+        Row: {
+          created_at: string
+          id: string
+          merged_lead_ids: string[]
+          performed_by: string | null
+          primary_lead_id: string
+          reassigned: Json
+          reverted_at: string | null
+          reverted_by: string | null
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merged_lead_ids: string[]
+          performed_by?: string | null
+          primary_lead_id: string
+          reassigned?: Json
+          reverted_at?: string | null
+          reverted_by?: string | null
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merged_lead_ids?: string[]
+          performed_by?: string | null
+          primary_lead_id?: string
+          reassigned?: Json
+          reverted_at?: string | null
+          reverted_by?: string | null
+          snapshot?: Json
+        }
+        Relationships: []
       }
       crm_pipelines: {
         Row: {
@@ -4813,6 +4913,12 @@ export type Database = {
         Returns: string
       }
       crm_daily_maintenance: { Args: never; Returns: Json }
+      crm_find_existing_lead: {
+        Args: { _email: string; _phone: string; _therapist_id: string }
+        Returns: string
+      }
+      crm_norm_email: { Args: { _v: string }; Returns: string }
+      crm_norm_phone: { Args: { _v: string }; Returns: string }
       get_my_therapist_contact: {
         Args: never
         Returns: {
