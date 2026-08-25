@@ -24,6 +24,17 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
     famille: typeof s.famille === "string" ? s.famille : undefined,
     canton: typeof s.canton === "string" ? s.canton.toUpperCase().slice(0, 2) : undefined,
   }),
+  // Le filtre canton a désormais sa propre URL indexable : on y redirige
+  // l'ancien paramètre de recherche plutôt que de servir deux fois le contenu.
+  beforeLoad: ({ params, search }) => {
+    if (search.canton && !search.specialite && !search.famille) {
+      throw redirect({
+        to: "/$lang/therapeutes/canton/$canton",
+        params: { lang: params.lang, canton: search.canton },
+        replace: true,
+      });
+    }
+  },
   head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {

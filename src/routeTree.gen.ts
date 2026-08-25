@@ -94,6 +94,7 @@ import { Route as LangSpecialitesSpecialtySlugIndexRouteImport } from './routes/
 import { Route as LangSpecialitesSpecialtySlugCitySlugRouteImport } from './routes/$lang.specialites.$specialtySlug.$citySlug'
 import { Route as LangTherapeutesCantonCantonRouteImport } from './routes/$lang.therapeutes.canton.$canton'
 import { Route as LangTherapeutesFamilleFamilySlugRouteImport } from './routes/$lang.therapeutes.famille.$familySlug'
+import { Route as LangTherapeutesSpecialiteSpecialtySlugRouteImport } from './routes/$lang.therapeutes.specialite.$specialtySlug'
 import { Route as LangTherapeutesVilleCitySlugRouteImport } from './routes/$lang.therapeutes.ville.$citySlug'
 import { Route as ApiPublicAnalyticsEndSessionRouteImport } from './routes/api/public/analytics/end-session'
 import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
@@ -538,6 +539,12 @@ const LangTherapeutesFamilleFamilySlugRoute =
     path: '/therapeutes/famille/$familySlug',
     getParentRoute: () => LangRoute,
   } as any)
+const LangTherapeutesSpecialiteSpecialtySlugRoute =
+  LangTherapeutesSpecialiteSpecialtySlugRouteImport.update({
+    id: '/therapeutes/specialite/$specialtySlug',
+    path: '/therapeutes/specialite/$specialtySlug',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangTherapeutesVilleCitySlugRoute =
   LangTherapeutesVilleCitySlugRouteImport.update({
     id: '/therapeutes/ville/$citySlug',
@@ -660,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/canton/$canton': typeof LangTherapeutesCantonCantonRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
+  '/$lang/therapeutes/specialite/$specialtySlug': typeof LangTherapeutesSpecialiteSpecialtySlugRoute
   '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
@@ -750,6 +758,7 @@ export interface FileRoutesByTo {
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/canton/$canton': typeof LangTherapeutesCantonCantonRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
+  '/$lang/therapeutes/specialite/$specialtySlug': typeof LangTherapeutesSpecialiteSpecialtySlugRoute
   '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
@@ -844,6 +853,7 @@ export interface FileRoutesById {
   '/$lang/specialites/$specialtySlug/$citySlug': typeof LangSpecialitesSpecialtySlugCitySlugRoute
   '/$lang/therapeutes/canton/$canton': typeof LangTherapeutesCantonCantonRoute
   '/$lang/therapeutes/famille/$familySlug': typeof LangTherapeutesFamilleFamilySlugRoute
+  '/$lang/therapeutes/specialite/$specialtySlug': typeof LangTherapeutesSpecialiteSpecialtySlugRoute
   '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
@@ -939,6 +949,7 @@ export interface FileRouteTypes {
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/canton/$canton'
     | '/$lang/therapeutes/famille/$familySlug'
+    | '/$lang/therapeutes/specialite/$specialtySlug'
     | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
@@ -1029,6 +1040,7 @@ export interface FileRouteTypes {
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/canton/$canton'
     | '/$lang/therapeutes/famille/$familySlug'
+    | '/$lang/therapeutes/specialite/$specialtySlug'
     | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
@@ -1122,6 +1134,7 @@ export interface FileRouteTypes {
     | '/$lang/specialites/$specialtySlug/$citySlug'
     | '/$lang/therapeutes/canton/$canton'
     | '/$lang/therapeutes/famille/$familySlug'
+    | '/$lang/therapeutes/specialite/$specialtySlug'
     | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
@@ -1754,6 +1767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTherapeutesFamilleFamilySlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/therapeutes/specialite/$specialtySlug': {
+      id: '/$lang/therapeutes/specialite/$specialtySlug'
+      path: '/therapeutes/specialite/$specialtySlug'
+      fullPath: '/$lang/therapeutes/specialite/$specialtySlug'
+      preLoaderRoute: typeof LangTherapeutesSpecialiteSpecialtySlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/therapeutes/ville/$citySlug': {
       id: '/$lang/therapeutes/ville/$citySlug'
       path: '/therapeutes/ville/$citySlug'
@@ -1826,6 +1846,7 @@ interface LangRouteChildren {
   LangSpecialitesSpecialtySlugCitySlugRoute: typeof LangSpecialitesSpecialtySlugCitySlugRoute
   LangTherapeutesCantonCantonRoute: typeof LangTherapeutesCantonCantonRoute
   LangTherapeutesFamilleFamilySlugRoute: typeof LangTherapeutesFamilleFamilySlugRoute
+  LangTherapeutesSpecialiteSpecialtySlugRoute: typeof LangTherapeutesSpecialiteSpecialtySlugRoute
   LangTherapeutesVilleCitySlugRoute: typeof LangTherapeutesVilleCitySlugRoute
   LangSpecialitesSpecialtySlugIndexRoute: typeof LangSpecialitesSpecialtySlugIndexRoute
 }
@@ -1858,6 +1879,8 @@ const LangRouteChildren: LangRouteChildren = {
     LangSpecialitesSpecialtySlugCitySlugRoute,
   LangTherapeutesCantonCantonRoute: LangTherapeutesCantonCantonRoute,
   LangTherapeutesFamilleFamilySlugRoute: LangTherapeutesFamilleFamilySlugRoute,
+  LangTherapeutesSpecialiteSpecialtySlugRoute:
+    LangTherapeutesSpecialiteSpecialtySlugRoute,
   LangTherapeutesVilleCitySlugRoute: LangTherapeutesVilleCitySlugRoute,
   LangSpecialitesSpecialtySlugIndexRoute:
     LangSpecialitesSpecialtySlugIndexRoute,
