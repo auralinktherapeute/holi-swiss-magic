@@ -109,6 +109,26 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     }>;
     const url = `${SITE}/${params.lang}/therapeute/${params.slug}`;
     const altLinks = hreflangLinks(`/therapeute/${params.slug}`);
+    /**
+     * Langue de RÉDACTION de la fiche, indépendante de l'URL consultée.
+     *
+     * La table `therapists` n'a aucune colonne de traduction : bio, titre et méta
+     * sont uniques. Les quatre URL de langue servaient donc le même texte, chacune
+     * se déclarant canonique et alternative des trois autres — Google a tranché seul
+     * et a consolidé vers le français (variantes DE/EN/IT marquées `canonical_other`).
+     *
+     * On ne redirige pas : l'habillage d'interface est bien traduit, une fiche reste
+     * donc utile dans les quatre langues. Mais une seule est indexable — les autres
+     * pointent leur canonical vers elle, et on n'annonce plus de hreflang, qui
+     * suppose des traductions véritables. Le jour où la fiche sera réellement
+     * traduite, il faudra rétablir `altLinks` et le canonical auto-référent.
+     */
+    const contentLang = resolveProfileLang(null, (t as any)?.canton, (t as any)?.languages ?? null);
+    const canonicalUrl = `${SITE}/${contentLang}/therapeute/${params.slug}`;
+    // Pas de hreflang ici, même sur la version canonique : un cluster hreflang
+    // suppose que chaque membre est canonique de lui-même. Les annoncer tout en
+    // les canonicalisant ailleurs enverrait deux signaux contraires.
+    const seoLinks = [{ rel: "canonical" as const, href: canonicalUrl }];
     if (!t) {
       const c0 = profileCopy(params.lang);
       return {
@@ -335,7 +355,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
-      links: [{ rel: "canonical", href: url }, ...altLinks],
+      links: seoLinks,
       scripts: [
         {
           type: "application/ld+json",

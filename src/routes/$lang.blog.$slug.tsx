@@ -39,7 +39,14 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     if (article) {
       const canonicalSlug = slugForLang(article, (params.lang as Lang) ?? "fr");
       if (canonicalSlug && canonicalSlug !== params.slug) {
-        throw redirect({ to: "/$lang/blog/$slug", params: { lang: params.lang, slug: canonicalSlug } });
+        // 301 et non 302 : le slug localisé est un changement d'adresse définitif.
+        // En temporaire, Google conservait l'ancienne URL française au lieu de
+        // transférer son historique vers la version allemande.
+        throw redirect({
+          to: "/$lang/blog/$slug",
+          params: { lang: params.lang, slug: canonicalSlug },
+          statusCode: 301,
+        });
       }
     }
     return { article };

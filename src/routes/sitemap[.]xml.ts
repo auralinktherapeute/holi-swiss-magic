@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { resolveProfileLang } from "@/lib/seo";
 
 const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
@@ -124,18 +125,30 @@ export const Route = createFileRoute("/sitemap.xml")({
             console.error("sitemap: geo combos failed", err);
           }
 
+          // Une SEULE URL par fiche, dans sa langue de rédaction.
+          //
+          // La table `therapists` n'a pas de colonnes de traduction : publier les
+          // quatre langues revenait à déclarer quatre URL pour un unique texte
+          // français. Google l'avait déjà compris et consolidait vers la version
+          // francophone (`canonical_other` sur les variantes DE/EN/IT). La langue
+          // retenue suit le canton, puis les langues parlées — même règle que le
+          // canonical de la fiche, qu'il ne faut pas laisser diverger.
           const { data: therapists } = await supabaseAdmin
             .from("therapists")
-            .select("slug, updated_at")
+            .select("slug, updated_at, canton, languages")
             .eq("status", "active")
             .not("slug", "is", null);
 
-          for (const t of (therapists ?? []) as Array<{ slug: string | null; updated_at: string | null }>) {
+          for (const t of (therapists ?? []) as Array<{
+            slug: string | null;
+            updated_at: string | null;
+            canton: string | null;
+            languages: string[] | null;
+          }>) {
             if (!t.slug) continue;
             const lastmod = t.updated_at ? t.updated_at.slice(0, 10) : undefined;
-            for (const lang of LANGS) {
-              urls.push(urlBlock(`${BASE_URL}/${lang}/therapeute/${t.slug}`, lastmod, "weekly", "0.8"));
-            }
+            const lang = resolveProfileLang(null, t.canton, t.languages);
+            urls.push(urlBlock(`${BASE_URL}/${lang}/therapeute/${t.slug}`, lastmod, "weekly", "0.8"));
           }
 
           const today = new Date().toISOString().slice(0, 10);
