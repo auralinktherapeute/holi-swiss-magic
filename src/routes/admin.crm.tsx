@@ -14,6 +14,10 @@ import {
   completeCrmTask, createCrmTask, type CrmLead,
 } from "@/lib/crm.functions";
 import { LeadsListView, TasksCenter, RelancesCenter } from "@/components/crm/AdminCrmViews";
+import { CrmContactsTable } from "@/components/crm/CrmContactsTable";
+import { CrmContactCard } from "@/components/crm/CrmContactCard";
+import { CrmDuplicatesView } from "@/components/crm/CrmDuplicatesView";
+import { Contact as ContactIcon, Copy as CopyIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin/crm")({
   component: AdminCrmPage,
@@ -77,7 +81,8 @@ function AdminCrmPage() {
   const [sourceFilter, setSourceFilter] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [showNewLead, setShowNewLead] = useState(false);
-  const [tab, setTab] = useState<"pipeline" | "list" | "tasks" | "relances">("pipeline");
+  const [tab, setTab] = useState<"contacts" | "pipeline" | "list" | "tasks" | "relances" | "duplicates">("contacts");
+  const [cardLeadId, setCardLeadId] = useState<string | null>(null);
 
   const overview = useQuery({
     queryKey: ["crm","overview"],
@@ -198,10 +203,12 @@ function AdminCrmPage() {
           borderRadius: 12,
         }}>
           {([
+            { id: "contacts", label: "Contacts", icon: ContactIcon },
             { id: "pipeline", label: "Pipeline", icon: LayoutGrid },
             { id: "list",     label: "Liste",    icon: ListIcon },
             { id: "tasks",    label: "Tâches",   icon: CheckSquare },
             { id: "relances", label: "Relances", icon: BellRingIcon },
+            { id: "duplicates", label: "Doublons", icon: CopyIcon },
           ] as const).map((t) => {
             const active = tab === t.id;
             const Icon = t.icon;
@@ -300,6 +307,18 @@ function AdminCrmPage() {
             })}
           </div>
         )}
+        {tab === "contacts" && (
+          cardLeadId ? (
+            <CrmContactCard
+              leadId={cardLeadId}
+              onClose={() => setCardLeadId(null)}
+              onShowDuplicates={() => setTab("duplicates")}
+            />
+          ) : (
+            <CrmContactsTable onOpen={(id) => setCardLeadId(id)} />
+          )
+        )}
+        {tab === "duplicates" && <CrmDuplicatesView />}
         {tab === "list" && <LeadsListView leads={leadsQ.data ?? []} onOpen={(id) => setOpenLeadId(id)} />}
         {tab === "tasks" && <TasksCenter />}
         {tab === "relances" && <RelancesCenter onOpen={(id) => setOpenLeadId(id)} />}
