@@ -81,7 +81,9 @@ function AdminCrmPage() {
   const [sourceFilter, setSourceFilter] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [showNewLead, setShowNewLead] = useState(false);
-  const [tab, setTab] = useState<"pipeline" | "list" | "tasks" | "relances">("pipeline");
+  const [tab, setTab] = useState<"contacts" | "pipeline" | "list" | "tasks" | "relances" | "duplicates">("contacts");
+  const [cardLeadId, setCardLeadId] = useState<string | null>(null);
+  const [dupLeadIds, setDupLeadIds] = useState<string[] | null>(null);
 
   const overview = useQuery({
     queryKey: ["crm","overview"],
