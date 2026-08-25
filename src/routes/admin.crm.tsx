@@ -14,6 +14,10 @@ import {
   completeCrmTask, createCrmTask, type CrmLead,
 } from "@/lib/crm.functions";
 import { LeadsListView, TasksCenter, RelancesCenter } from "@/components/crm/AdminCrmViews";
+import { CrmContactsTable } from "@/components/crm/CrmContactsTable";
+import { CrmContactCard } from "@/components/crm/CrmContactCard";
+import { CrmDuplicatesView, MergeDialog } from "@/components/crm/CrmDuplicatesView";
+import { Contact as ContactIcon, Copy as CopyIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin/crm")({
   component: AdminCrmPage,
