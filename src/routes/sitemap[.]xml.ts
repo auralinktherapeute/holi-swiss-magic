@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { resolveProfileLang } from "@/lib/seo";
+import { cityToSlug } from "@/lib/city-slug";
 
 const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
@@ -97,13 +98,6 @@ export const Route = createFileRoute("/sitemap.xml")({
                 .select("specialties!inner(slug,is_active), therapists!inner(city,status)"));
             }
             const seen = new Set<string>();
-            const cityToSlug = (c: string) =>
-              c
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/\p{Diacritic}/gu, "")
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/^-+|-+$/g, "");
             for (const row of (geoPairs ?? []) as any[]) {
               const specSlug = row.specialties?.slug;
               const specSlugDe = row.specialties?.slug_de;
