@@ -473,6 +473,7 @@ export type Database = {
           id: string
           lat: number
           lng: number
+          slug: string | null
         }
         Insert: {
           aliases?: string[]
@@ -483,6 +484,7 @@ export type Database = {
           id?: string
           lat: number
           lng: number
+          slug?: string | null
         }
         Update: {
           aliases?: string[]
@@ -493,6 +495,7 @@ export type Database = {
           id?: string
           lat?: number
           lng?: number
+          slug?: string | null
         }
         Relationships: []
       }
@@ -4779,6 +4782,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      city_slug: { Args: { _input: string }; Returns: string }
       claim_founder_seat: {
         Args: {
           _actor?: string
