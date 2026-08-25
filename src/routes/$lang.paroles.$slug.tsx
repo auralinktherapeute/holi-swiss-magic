@@ -7,18 +7,62 @@ import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/paroles/$slug")({
   component: Page,
-  head: ({ params }) => {
-    const title = "Article — Voix d'experts | Holiswiss";
+  /**
+   * Sans loader, ces pages n'avaient ni H1 ni titre propre : toutes les
+   * « Voix d'experts » partageaient le même title générique, dans les quatre
+   * langues, et le contenu n'arrivait qu'après le JavaScript. Détecté par
+   * npm run seo:check.
+   */
+  loader: async ({ params }) => {
+    try {
+      const article = await getPublishedTherapistArticleBySlug({ data: { slug: params.slug } });
+      return { article: (article as Record<string, unknown> | null) ?? null };
+    } catch {
+      return { article: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const a = (loaderData as any)?.article;
     const url = `https://holiswiss.ch/${params.lang}/paroles/${params.slug}`;
+    const author = a?.therapists
+      ? `${a.therapists.first_name ?? ""} ${a.therapists.last_name ?? ""}`.trim()
+      : "";
+    const title = a?.titre
+      ? `${a.titre}${author ? ` — ${author}` : ""} | Holiswiss`
+      : "Article — Voix d'experts | Holiswiss";
+    const raw = (a?.extrait || a?.contenu || "") as string;
+    const description =
+      (raw ? String(raw).replace(/[#*_>\-\[\]()]/g, " ").replace(/\s+/g, " ").trim() : "").slice(0, 160) ||
+      "Regards et conseils de praticiens holistiques en Suisse, sur Holiswiss.";
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: url },
+      { property: "og:locale", content: ogLocale(params.lang) },
+    ];
+    const ld = a?.titre
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: a.titre,
+          description,
+          mainEntityOfPage: url,
+          url,
+          inLanguage: params.lang,
+          author: author
+            ? { "@type": "Person", name: author }
+            : { "@type": "Organization", name: "Holiswiss" },
+          publisher: { "@type": "Organization", name: "Holiswiss", url: "https://holiswiss.ch" },
+          ...(a.date_publication ? { datePublished: a.date_publication } : {}),
+        }
+      : null;
     return {
-      meta: [
-        { title },
-        { property: "og:title", content: title },
-        { property: "og:type", content: "article" },
-        { property: "og:url", content: url },
-        { property: "og:locale", content: ogLocale(params.lang) },
-      ],
+      meta,
       links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/paroles/${params.slug}`)],
+      ...(ld ? { scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }] } : {}),
     };
   },
 });
@@ -31,8 +75,12 @@ function formatDate(iso: string | null, lang: string) {
 
 function Page() {
   const { lang, slug } = useParams({ from: "/$lang/paroles/$slug" });
+  // `initialData` vient du loader : titre, auteur et corps sont dans le HTML
+  // initial. Requête à clé fixe, ni debouncée ni filtrée.
+  const loaderData = Route.useLoaderData();
   const { data, isLoading } = useQuery({
     queryKey: ["therapist-article", slug],
+    initialData: (loaderData?.article ?? undefined) as any,
     queryFn: () => getPublishedTherapistArticleBySlug({ data: { slug } }),
   });
 

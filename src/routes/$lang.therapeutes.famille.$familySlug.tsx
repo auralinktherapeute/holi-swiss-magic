@@ -8,10 +8,35 @@ import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
 export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
   component: Page,
-  head: ({ params }) => {
+  /**
+   * Sans loader, cette page n'existait pas pour un crawler : aucun H1, 155 mots
+   * de gabarit, et un title bâti sur le SLUG BRUT — « Thérapeutes —
+   * developpement personnel » — identique dans les quatre langues, alors que
+   * `specialty_families` porte name_fr/de/it/en. Détecté par npm run seo:check.
+   */
+  loader: async ({ params }) => {
+    try {
+      const page = await getFamilyPage({ data: { slug: params.familySlug } });
+      return { page };
+    } catch {
+      return { page: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/therapeutes/famille/${params.familySlug}`;
-    const title = `Thérapeutes — ${params.familySlug.replace(/-/g, " ")} | Holiswiss`;
-    const description = `Découvrez les thérapeutes suisses de la famille ${params.familySlug.replace(/-/g, " ")} : spécialités, approches et praticiens vérifiés.`;
+    const family = (loaderData as any)?.page?.family;
+    const famName = family
+      ? pickI18n(family, params.lang, "name")
+      : params.familySlug.replace(/-/g, " ");
+    const T: Record<string, { t: string; d: (n: string) => string }> = {
+      fr: { t: `${famName} — Thérapeutes en Suisse | Holiswiss`, d: (n) => `Praticiens suisses en ${n} : spécialités, approches et profils vérifiés. Trouvez un thérapeute près de chez vous.` },
+      de: { t: `${famName} — Therapeuten in der Schweiz | Holiswiss`, d: (n) => `Schweizer Fachpersonen für ${n}: Spezialgebiete, Ansätze und geprüfte Profile. Finden Sie eine Therapeutin in Ihrer Nähe.` },
+      it: { t: `${famName} — Terapeuti in Svizzera | Holiswiss`, d: (n) => `Professionisti svizzeri in ${n}: specialità, approcci e profili verificati. Trova un terapeuta vicino a te.` },
+      en: { t: `${famName} — Therapists in Switzerland | Holiswiss`, d: (n) => `Swiss practitioners in ${n}: specialties, approaches and verified profiles. Find a therapist near you.` },
+    };
+    const copy = T[params.lang] ?? T.fr;
+    const title = copy.t;
+    const description = copy.d(famName);
     return {
       meta: [
         { title },
@@ -30,8 +55,12 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
 function Page() {
   const { lang, familySlug } = useParams({ from: "/$lang/therapeutes/famille/$familySlug" });
   const fetchFamily = useServerFn(getFamilyPage);
+  // `initialData` vient du loader : le H1 et la liste sont présents dès le HTML
+  // initial. La requête n'est ni debouncée ni filtrée, sa clé est fixe.
+  const loaderData = Route.useLoaderData();
   const query = useQuery({
     queryKey: ["family-page", familySlug],
+    initialData: loaderData?.page ?? undefined,
     queryFn: () => fetchFamily({ data: { slug: familySlug } }),
   });
 
