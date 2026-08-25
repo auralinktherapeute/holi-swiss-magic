@@ -209,6 +209,7 @@ function AdminCrmPage() {
             { id: "list",     label: "Liste",    icon: ListIcon },
             { id: "tasks",    label: "Tâches",   icon: CheckSquare },
             { id: "relances", label: "Relances", icon: BellRingIcon },
+            { id: "duplicates", label: "Doublons", icon: CopyIcon },
           ] as const).map((t) => {
             const active = tab === t.id;
             const Icon = t.icon;
