@@ -1,4 +1,16 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { cantonName } from "@/lib/geo-listings";
+
+const FOOTER_CANTONS = ["GE", "VD", "VS", "FR", "NE", "BE", "ZH", "TI"] as const;
+const FOOTER_CITIES = [
+  { slug: "geneve", name: "Genève" },
+  { slug: "lausanne", name: "Lausanne" },
+  { slug: "sion", name: "Sion" },
+  { slug: "fribourg", name: "Fribourg" },
+  { slug: "neuchatel", name: "Neuchâtel" },
+  { slug: "zurich", name: "Zürich" },
+  { slug: "lugano", name: "Lugano" },
+] as const;
 import { useTranslation } from "react-i18next";
 import { Check, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
