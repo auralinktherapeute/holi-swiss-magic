@@ -5,23 +5,10 @@ import { getSpecialtyCityPage, pickI18n, specialtySlugForLang } from "@/lib/spec
 import { LANGS, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { useEffect } from "react";
 
 function humanCity(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-/**
- * Slug de ville canonique. Doit rester identique à la slugification du sitemap
- * (`cityToSlug` dans sitemap[.]xml.ts), sinon on redirigerait en boucle vers une
- * URL absente du sitemap.
- */
-function cityToSlug(c: string) {
-  return c
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 const T = {
@@ -55,22 +42,6 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         });
       }
     }
-
-    // `resolve_city` est volontairement souple : « ge », « genf » et « geneva »
-    // résolvent tous vers Genève. Sans cette redirection, chaque alias devient une
-    // page auto-canonique de plus servant exactement le même contenu — c'est ce qui
-    // avait laissé les anciennes URL `/ge` vivre en parallèle des `/geneve`.
-    const resolved = (page as any)?.city?.canonical_name as string | undefined;
-    if (resolved) {
-      const canonicalCity = cityToSlug(resolved);
-      if (canonicalCity && canonicalCity !== params.citySlug) {
-        throw redirect({
-          to: "/$lang/specialites/$specialtySlug/$citySlug",
-          params: { lang: params.lang, specialtySlug: params.specialtySlug, citySlug: canonicalCity },
-          statusCode: 301,
-        });
-      }
-    }
     return { page };
   },
   head: ({ params, loaderData }) => {
@@ -98,21 +69,10 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         specialty ? specialty.slug : params.specialtySlug
       }/${params.citySlug}`,
     });
-    // Indexable seulement si la ville est reconnue ET qu'au moins un praticien y
-    // exerce. Cette décision doit être rendue CÔTÉ SERVEUR : elle vivait dans un
-    // useEffect, donc absente du HTML initial — Googlebot au premier passage et les
-    // crawlers IA (qui n'exécutent pas JS) ne voyaient qu'« index, follow ». D'où des
-    // URL comme /specialites/hypnose/gen, au titre vide de sens, laissées indexables.
-    const pageData = (loaderData as any)?.page;
-    const cityResolved = Boolean(pageData?.city);
-    const hasTherapists = ((pageData?.therapists as unknown[]) ?? []).length > 0;
-    const indexable = cityResolved && hasTherapists;
-
     return {
       meta: [
         { title },
         { name: "description", content: description },
-        ...(indexable ? [] : [{ name: "robots", content: "noindex,follow" }]),
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
@@ -171,10 +131,18 @@ function Page() {
   const specName = pickI18n(specialty, lang, "name");
   const specDesc = pickI18n(specialty, lang, "description");
   const cityDisplay = city?.display_name || humanCity(citySlug);
+  const shouldIndex = therapists.length > 0;
 
-  // Le `noindex` des combinaisons vides est désormais émis par `head` (rendu
-  // serveur). L'injection client qui vivait ici arrivait après le HTML initial :
-  // invisible pour Googlebot au premier passage et pour les crawlers IA.
+  // Client-side noindex when the combination has no therapist yet.
+  // (Google honors late-injected robots meta on rerender.)
+  useEffect(() => {
+    if (shouldIndex) return;
+    const el = document.createElement("meta");
+    el.name = "robots";
+    el.content = "noindex,follow";
+    document.head.appendChild(el);
+    return () => { document.head.removeChild(el); };
+  }, [shouldIndex]);
 
   return (
     <>
