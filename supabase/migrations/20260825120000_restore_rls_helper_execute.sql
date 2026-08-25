@@ -51,7 +51,7 @@ declare
   f text;
   helpers text[] := array[
     'has_role(uuid, public.app_role)',
-    'is_admin()',
+    'is_admin(uuid)',
     'is_therapist_owner(uuid)',
     'is_elite_pro(uuid)',
     'is_verified_therapist(uuid)'
