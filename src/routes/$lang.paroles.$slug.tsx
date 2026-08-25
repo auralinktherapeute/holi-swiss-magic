@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getPublishedTherapistArticleBySlug } from "@/lib/therapist-articles.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ArrowLeft, CalendarDays } from "lucide-react";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { ogLocale, resolveProfileLang } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/paroles/$slug")({
   component: Page,
@@ -59,9 +59,16 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
           ...(a.date_publication ? { datePublished: a.date_publication } : {}),
         }
       : null;
+    // Une seule langue indexable : `therapist_articles` n'a qu'une colonne
+    // `titre`, sans traduction. Les quatre URLs servaient le même texte, ce que
+    // npm run seo:check a signalé (« title identique à … »). La langue suit le
+    // canton de l'auteur — même règle que sa fiche et que ses événements. Pas
+    // de hreflang : une grappe hreflang suppose des membres canoniques d'eux-mêmes.
+    const contentLang = resolveProfileLang(null, a?.therapists?.canton, null);
+    const canonicalUrl = `https://holiswiss.ch/${contentLang}/paroles/${params.slug}`;
     return {
       meta,
-      links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/paroles/${params.slug}`)],
+      links: [{ rel: "canonical", href: a?.titre ? canonicalUrl : url }],
       ...(ld ? { scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }] } : {}),
     };
   },

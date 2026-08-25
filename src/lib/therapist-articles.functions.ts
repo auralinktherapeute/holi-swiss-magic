@@ -64,7 +64,7 @@ export const getPublishedTherapistArticleBySlug = createServerFn({ method: "GET"
     const sb = publicClient();
     const { data: row, error } = await sb
       .from("therapist_articles")
-      .select("*, therapists(id,slug,first_name,last_name,photo_url,city,title,short_bio)")
+      .select("*, therapists(id,slug,first_name,last_name,photo_url,city,canton,title,short_bio)")
       .eq("slug", data.slug)
       .eq("statut", "publie")
       .maybeSingle();

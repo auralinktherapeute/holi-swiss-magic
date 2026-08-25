@@ -60,6 +60,12 @@ export const ARTICLE_CATEGORIES: ArticleCategory[] = [
   { slug: "osteopathie", name_fr: "Ostéopathie", name_de: "Osteopathie", name_it: "Osteopatia", name_en: "Osteopathy", parent: "corporelles" },
   { slug: "kinesitherapie", name_fr: "Kinésithérapie", name_de: "Physiotherapie", name_it: "Fisioterapia", name_en: "Physiotherapy", parent: "corporelles" },
   { slug: "chiropraxie", name_fr: "Chiropraxie", name_de: "Chiropraktik", name_it: "Chiropratica", name_en: "Chiropractic", parent: "corporelles" },
+  // Ajoutées le 25/08/2026 : des articles publiés portaient déjà ces catégories,
+  // absentes du catalogue — leur page renvoyait donc 404. Les rattacher à une
+  // discipline voisine aurait été faux : la kinésiologie n'est pas de la
+  // kinésithérapie, la thérapie craniosacrale n'est pas de l'ostéopathie.
+  { slug: "craniosacral", name_fr: "Thérapie craniosacrale", name_de: "Craniosacral-Therapie", name_it: "Terapia craniosacrale", name_en: "Craniosacral therapy", parent: "corporelles" },
+  { slug: "kinesiologie", name_fr: "Kinésiologie", name_de: "Kinesiologie", name_it: "Kinesiologia", name_en: "Kinesiology", parent: "corporelles" },
   { slug: "reflexologie", name_fr: "Réflexologie", name_de: "Reflexologie", name_it: "Riflessologia", name_en: "Reflexology", parent: "corporelles" },
   { slug: "shiatsu", name_fr: "Shiatsu", name_de: "Shiatsu", name_it: "Shiatsu", name_en: "Shiatsu", parent: "corporelles" },
   { slug: "tuina", name_fr: "Tuina", name_de: "Tuina", name_it: "Tuina", name_en: "Tuina", parent: "corporelles" },
@@ -83,6 +89,7 @@ export const ARTICLE_CATEGORIES: ArticleCategory[] = [
   { slug: "coaching", name_fr: "Coaching", name_de: "Coaching", name_it: "Coaching", name_en: "Coaching", parent: "psycho" },
   { slug: "pnl", name_fr: "PNL", name_de: "NLP", name_it: "PNL", name_en: "NLP", parent: "psycho" },
   { slug: "emdr", name_fr: "EMDR", name_de: "EMDR", name_it: "EMDR", name_en: "EMDR", parent: "psycho" },
+  { slug: "eft", name_fr: "EFT", name_de: "EFT (Klopfakupressur)", name_it: "EFT", name_en: "EFT (tapping)", parent: "psycho" },
   { slug: "tcc", name_fr: "TCC", name_de: "KVT", name_it: "TCC", name_en: "CBT", parent: "psycho" },
   { slug: "psychotherapie", name_fr: "Psychothérapie", name_de: "Psychotherapie", name_it: "Psicoterapia", name_en: "Psychotherapy", parent: "psycho" },
   { slug: "art-therapie", name_fr: "Art-thérapie", name_de: "Kunsttherapie", name_it: "Arteterapia", name_en: "Art therapy", parent: "psycho" },

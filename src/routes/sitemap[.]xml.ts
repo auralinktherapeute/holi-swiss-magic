@@ -44,6 +44,11 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const urls: string[] = [];
 
+        // Canton de chaque praticien actif — sert à choisir l'UNIQUE langue
+        // indexable de ses événements et de ses « Voix d'experts ». Déclarée
+        // ici car deux blocs distincts la consomment.
+        const cantonByTherapist = new Map<string, string | null>();
+
         // Static pages × langues
         for (const lang of LANGS) {
           for (const p of STATIC_PATHS) {
@@ -221,7 +226,6 @@ export const Route = createFileRoute("/sitemap.xml")({
           // revenait à déclarer quatre adresses pour un texte unique. La langue
           // suit le canton du praticien organisateur — même règle que le
           // canonical de la page, qu'il ne faut pas laisser diverger.
-          const cantonByTherapist = new Map<string, string | null>();
           try {
             const { data: ths } = await supabaseAdmin
               .from("therapists")
@@ -299,14 +303,18 @@ export const Route = createFileRoute("/sitemap.xml")({
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: parolesArticles } = await supabaseAdmin
             .from("therapist_articles")
-            .select("slug, updated_at, date_publication")
+            .select("slug, updated_at, date_publication, therapist_id")
             .eq("statut", "publie");
-          for (const a of (parolesArticles ?? []) as Array<{ slug: string | null; updated_at: string | null; date_publication: string | null }>) {
+          // Une seule URL par « Voix d'experts », comme pour les fiches et les
+          // événements : `therapist_articles` n'a qu'une colonne `titre`, sans
+          // traduction. Quatre URLs pour un texte unique, c'est le doublon que
+          // npm run seo:check a signalé (« title identique à … »).
+          for (const a of (parolesArticles ?? []) as Array<{ slug: string | null; updated_at: string | null; date_publication: string | null; therapist_id?: string | null }>) {
             if (!a.slug) continue;
             const lastmod = (a.updated_at || a.date_publication)?.slice(0, 10);
-            for (const lang of LANGS) {
-              urls.push(urlBlock(`${BASE_URL}/${lang}/paroles/${a.slug}`, lastmod, "monthly", "0.7"));
-            }
+            const canton = a.therapist_id ? cantonByTherapist.get(a.therapist_id) ?? null : null;
+            const lang = resolveProfileLang(null, canton, null);
+            urls.push(urlBlock(`${BASE_URL}/${lang}/paroles/${a.slug}`, lastmod, "monthly", "0.7"));
           }
         } catch (err) {
           console.error("sitemap: paroles fetch failed", err);
