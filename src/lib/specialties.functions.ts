@@ -314,8 +314,28 @@ export const getSpecialtyCityPage = createServerFn({ method: "GET" })
     if (!specialty) return null;
 
     const { data: cityRow } = await sb.rpc("resolve_city", { _input: data.city });
-    const city = Array.isArray(cityRow) ? cityRow[0] : cityRow;
-    if (!city) return { specialty, family: null, city: null, therapists: [] };
+    const cityBase = Array.isArray(cityRow) ? cityRow[0] : cityRow;
+    if (!cityBase) return { specialty, family: null, city: null, therapists: [] };
+
+    // Slug canonique de la ville — SOURCE UNIQUE (cities.slug, migration
+    // 20260825140000). Ni `canonical_name` (« Geneva », en anglais) ni
+    // `display_name` (« Genève, Suisse ») ne décrivent l'URL publiée : les
+    // slugifier avait fait rediriger /geneve, pourtant au sitemap, vers
+    // /geneva. La colonne peut être absente si la migration n'est pas encore
+    // appliquée — on retombe alors silencieusement sur `slug: null`, qui
+    // désactive simplement la canonicalisation d'alias.
+    let citySlug: string | null = null;
+    try {
+      const { data: slugRow } = await sb
+        .from("cities")
+        .select("slug")
+        .eq("canonical_name", (cityBase as any).canonical_name)
+        .maybeSingle();
+      citySlug = ((slugRow as any)?.slug as string | undefined) ?? null;
+    } catch {
+      citySlug = null;
+    }
+    const city = { ...(cityBase as any), slug: citySlug };
 
     const { data: family } = await sb
       .from("specialty_families")

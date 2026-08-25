@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, redirect, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getSpecialtyCityPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
@@ -39,6 +39,29 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         throw redirect({
           to: "/$lang/specialites/$specialtySlug/$citySlug",
           params: { lang: params.lang, specialtySlug: canonical, citySlug: params.citySlug },
+        });
+      }
+
+      // Ville inconnue : la spécialité a bien été trouvée (donc la base a
+      // répondu), mais aucune ville ne correspond. Ces URLs affichaient un
+      // titre absurde — « Hypnose à Gen » — en index,follow. Un 404 les retire
+      // du crawl pour de bon. Décision prise DANS LE LOADER, jamais dans
+      // `head` : le 25/08, une condition d'indexation placée dans `head` lisait
+      // des données qui n'y sont pas disponibles et avait mis en noindex
+      // TOUTES les pages spécialité × ville, y compris les valides.
+      if (page.city === null) {
+        throw notFound();
+      }
+
+      // Alias de ville → adresse canonique, d'après cities.slug (source unique).
+      // « ge », « genf » et « geneva » servaient chacun une copie de la page
+      // Genève, chacune se déclarant canonique d'elle-même.
+      const citySlug = (page.city as { slug?: string | null } | null)?.slug;
+      if (citySlug && citySlug !== params.citySlug) {
+        throw redirect({
+          to: "/$lang/specialites/$specialtySlug/$citySlug",
+          params: { lang: params.lang, specialtySlug: params.specialtySlug, citySlug },
+          statusCode: 301,
         });
       }
     }
