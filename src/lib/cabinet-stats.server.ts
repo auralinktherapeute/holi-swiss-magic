@@ -26,7 +26,7 @@ export type CabinetStats = {
     avg_basket: number;
   };
   top_services: Array<{ name: string; count: number }>;
-  busiest_slots: Array<{ label: string; count: number }>;
+  busiest_slots: Array<{ name: string; count: number }>;
 };
 
 const MONTH_FMT = new Intl.DateTimeFormat("fr-CH", { month: "short", year: "2-digit" });
