@@ -17,6 +17,7 @@ import {
   type TherapistInvoiceLine, type TherapistInvoicePayment,
 } from "@/lib/therapist-invoices.functions";
 import { listMyCrmContactsMinimal } from "@/lib/service-packages.functions";
+import InvoiceReminders from "@/components/dashboard/InvoiceReminders";
 import {
   computeInvoiceTotals, isValidIban, isQrIban, missingInvoiceSettings,
   VAT_WARNING, round2, type InvoiceLineInput,
