@@ -92,25 +92,37 @@ function Page() {
           <DialogTrigger asChild>
             <Button onClick={openNew} className="bg-primary hover:bg-primary/90"><Plus className="h-4 w-4 mr-2" />Nouvel article</Button>
           </DialogTrigger>
-          <DialogContent className="bg-surface border-border/60 max-w-2xl">
-            <DialogHeader><DialogTitle>{editing ? "Modifier l'article" : "Nouvel article"}</DialogTitle></DialogHeader>
+          <DialogContent className="bg-surface border-border/60 w-[95vw] max-w-2xl max-h-[90dvh] flex flex-col p-0 gap-0">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/60">
+              <DialogTitle>{editing ? "Modifier l'article" : "Nouvel article"}</DialogTitle>
+            </DialogHeader>
             <form
               onSubmit={(e) => { e.preventDefault(); save.mutate(false); }}
-              className="space-y-4"
+              className="flex flex-1 min-h-0 flex-col"
             >
-              <div className="space-y-2"><Label htmlFor="t">Titre</Label>
-                <Input id="t" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Mon titre…" required minLength={3} maxLength={200} />
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+                <div className="space-y-2"><Label htmlFor="t">Titre</Label>
+                  <Input id="t" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Mon titre…" required minLength={3} maxLength={200} />
+                </div>
+                <div className="space-y-2"><Label htmlFor="i">Image de couverture (lien, optionnel)</Label>
+                  <Input id="i" inputMode="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="exemple.ch/photo.jpg" />
+                  <p className="text-xs text-muted-foreground">Laissez vide si vous n'avez pas d'image. Le lien est complété automatiquement en https://.</p>
+                </div>
+                <div className="space-y-2"><Label htmlFor="x">Extrait (optionnel, 400 caractères max)</Label>
+                  <Textarea id="x" value={extrait} onChange={(e) => setExtrait(e.target.value)} rows={2} maxLength={400} placeholder="Résumé court affiché dans la liste…" />
+                </div>
+                <div className="space-y-2"><Label htmlFor="b">Contenu</Label>
+                  <Textarea id="b" value={contenu} onChange={(e) => setContenu(e.target.value)} rows={10} className="min-h-[180px]" placeholder="Rédigez votre article…" required minLength={20} />
+                  <p className="text-xs text-muted-foreground">{contenu.trim().length} caractères — 20 minimum pour soumettre.</p>
+                </div>
+                {save.isError && (
+                  <p role="alert" className="flex items-start gap-2 text-sm text-red-400">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>{(save.error as any)?.message ?? "Une erreur est survenue."}</span>
+                  </p>
+                )}
               </div>
-              <div className="space-y-2"><Label htmlFor="i">Image de couverture (URL, optionnel)</Label>
-                <Input id="i" type="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" />
-              </div>
-              <div className="space-y-2"><Label htmlFor="x">Extrait (optionnel, 400 caractères max)</Label>
-                <Textarea id="x" value={extrait} onChange={(e) => setExtrait(e.target.value)} rows={2} maxLength={400} placeholder="Résumé court affiché dans la liste…" />
-              </div>
-              <div className="space-y-2"><Label htmlFor="b">Contenu</Label>
-                <Textarea id="b" value={contenu} onChange={(e) => setContenu(e.target.value)} rows={12} placeholder="Rédigez votre article…" required minLength={20} />
-              </div>
-              <DialogFooter>
+              <DialogFooter className="shrink-0 gap-2 border-t border-border/60 bg-surface px-6 py-4">
                 <Button type="button" variant="ghost" onClick={() => { setOpen(false); resetForm(); }}>Annuler</Button>
                 <Button type="submit" variant="secondary" disabled={save.isPending}>Enregistrer en brouillon</Button>
                 <Button
@@ -124,6 +136,7 @@ function Page() {
               </DialogFooter>
             </form>
           </DialogContent>
+
         </Dialog>
       </div>
 
