@@ -137,6 +137,9 @@ function Page() {
 
       <CabinetOverviewPanel />
 
+      <CabinetStatsPanel />
+
+
     </div>
   );
 }
