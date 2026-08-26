@@ -6,9 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Send, ExternalLink, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Send, ExternalLink, AlertCircle, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -24,6 +25,12 @@ const STATUS_META: Record<TherapistArticle["statut"], { label: string; className
   publie:                 { label: "Publié",          className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
   refuse:                 { label: "Refusé",          className: "bg-red-500/15 text-red-300 border-red-500/30" },
 };
+
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ARTICLE_IMAGE_BUCKET = "therapist-photos";
+/** ~10 ans : l'image doit rester lisible par les visiteurs anonymes de /paroles. */
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10;
 
 function Page() {
   const qc = useQueryClient();
@@ -42,6 +49,45 @@ function Page() {
   const [contenu, setContenu] = useState("");
   const [extrait, setExtrait] = useState("");
   const [image, setImage] = useState("");
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (fileRef.current) fileRef.current.value = "";
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Format non supporté (JPEG, PNG, WebP, AVIF, HEIC).");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image trop lourde : 5 Mo maximum.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("Session expirée, reconnectez-vous.");
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${uid}/articles/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from(ARTICLE_IMAGE_BUCKET)
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw new Error(upErr.message);
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(ARTICLE_IMAGE_BUCKET)
+        .createSignedUrl(path, SIGNED_URL_TTL);
+      if (signErr || !signed?.signedUrl) throw new Error(signErr?.message ?? "Lien d'image indisponible.");
+      setImage(signed.signedUrl);
+      toast.success("Image importée.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Import impossible.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   const resetForm = () => {
     setEditing(null);
@@ -104,9 +150,38 @@ function Page() {
                 <div className="space-y-2"><Label htmlFor="t">Titre</Label>
                   <Input id="t" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Mon titre…" required minLength={3} maxLength={200} />
                 </div>
-                <div className="space-y-2"><Label htmlFor="i">Image de couverture (lien, optionnel)</Label>
-                  <Input id="i" inputMode="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="exemple.ch/photo.jpg" />
-                  <p className="text-xs text-muted-foreground">Laissez vide si vous n'avez pas d'image. Le lien est complété automatiquement en https://.</p>
+                <div className="space-y-2">
+                  <Label htmlFor="i">Image de couverture (optionnel)</Label>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      className="min-h-11"
+                    >
+                      {uploading
+                        ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Envoi…</>
+                        : <><ImagePlus className="h-4 w-4 mr-2" />Importer une photo</>}
+                    </Button>
+                    {image && (
+                      <Button type="button" variant="ghost" onClick={() => setImage("")} className="min-h-11 text-red-400 hover:text-red-500">
+                        Retirer
+                      </Button>
+                    )}
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                      className="hidden"
+                      onChange={onPickFile}
+                    />
+                  </div>
+                  {image && (
+                    <img src={image} alt="Aperçu de l'image de couverture" className="h-32 w-full max-w-xs rounded-lg object-cover ring-1 ring-border/60" />
+                  )}
+                  <Input id="i" inputMode="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="…ou collez un lien : exemple.ch/photo.jpg" />
+                  <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, AVIF ou HEIC — 5 Mo maximum. Un lien collé est complété automatiquement en https://.</p>
                 </div>
                 <div className="space-y-2"><Label htmlFor="x">Extrait (optionnel, 400 caractères max)</Label>
                   <Textarea id="x" value={extrait} onChange={(e) => setExtrait(e.target.value)} rows={2} maxLength={400} placeholder="Résumé court affiché dans la liste…" />
