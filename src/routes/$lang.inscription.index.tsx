@@ -114,7 +114,14 @@ function SignupPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin + "/dashboard" },
+      options: {
+        emailRedirectTo: window.location.origin + "/dashboard",
+        // Intention d'inscription THÉRAPEUTE persistée sur le compte : sans
+        // elle, une inscription avec confirmation d'e-mail perdait le rôle
+        // (pas de session au moment du signUp) et la connexion suivante
+        // renvoyait vers l'accueil au lieu du tableau de bord.
+        data: { signup_intent: "therapist" },
+      },
     });
     if (error) {
       setLoading(false);
