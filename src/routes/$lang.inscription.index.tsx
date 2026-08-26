@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useSessionState } from "@/hooks/use-session-state";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
+import { reportTherapistSignupBlocked } from "@/lib/signup-alerts.functions";
 import {
   beginOAuthFlow,
   completeOAuthFlow,
@@ -125,6 +126,11 @@ function SignupPage() {
     });
     if (error) {
       setLoading(false);
+      // Alerte admin immédiate : une inscription thérapeute qui échoue ne doit
+      // jamais passer inaperçue.
+      void reportTherapistSignupBlocked({
+        data: { email, stage: "signup_error", detail: error.message.slice(0, 300) },
+      }).catch(() => {});
       return toast.error(error.message);
     }
     toast.success(t("auth.account_created"));
