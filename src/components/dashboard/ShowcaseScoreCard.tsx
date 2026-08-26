@@ -69,11 +69,11 @@ export function ShowcaseScoreCard() {
 
   if (isLoading) {
     return (
-      <Card className="border-[rgba(184,110,249,0.25)] bg-[#2d1248]/70">
+      <Card className="border-border bg-card/70">
         <CardContent className="p-5">
-          <div className="h-4 w-48 animate-pulse rounded bg-white/10" />
-          <div className="mt-4 h-2 animate-pulse rounded bg-white/10" />
-          <div className="mt-3 h-2 animate-pulse rounded bg-white/10" />
+          <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+          <div className="mt-4 h-2 animate-pulse rounded bg-muted" />
+          <div className="mt-3 h-2 animate-pulse rounded bg-muted" />
         </CardContent>
       </Card>
     );
@@ -89,15 +89,15 @@ export function ShowcaseScoreCard() {
   const seatNumber = data.access?.showSeatNumber ? data.access?.seatNumber : null;
 
   return (
-    <Card className="border-[rgba(184,110,249,0.25)] bg-[#2d1248]/70">
+    <Card className="border-border bg-card/70">
       <CardContent className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Gauge className="h-5 w-5 text-[#b86ef9]" aria-hidden="true" />
+            <Gauge className="h-5 w-5 text-primary" aria-hidden="true" />
             <div>
               <h2 className="flex flex-wrap items-center gap-2 text-base font-semibold text-foreground">
                 Qualité de ma vitrine
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/10 px-2 py-0.5 text-[11px] font-medium text-[#d9b4ff]">
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary-xlight px-2 py-0.5 text-[11px] font-medium text-primary-light">
                   {advanced ? <Sparkles className="h-3 w-3" aria-hidden="true" /> : <Lock className="h-3 w-3" aria-hidden="true" />}
                   {advanced ? "Score avancé" : "Score de base"}
                 </span>
@@ -133,9 +133,9 @@ export function ShowcaseScoreCard() {
         </div>
 
         {founder && (
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-[#b86ef9]/35 bg-[#b86ef9]/10 p-3">
-            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#d9b4ff]" aria-hidden="true" />
-            <p className="text-xs leading-relaxed text-[#e7d3ff]">
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-primary/35 bg-primary-xlight p-3">
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary-light" aria-hidden="true" />
+            <p className="text-xs leading-relaxed text-foreground/80">
               Vous bénéficiez de l’accès fondateur au scoring avancé Holiswiss.
               {seatNumber ? ` Accès fondateur — place n°${seatNumber} sur ${data.access?.earlySlots ?? 70}.` : ""}
             </p>
@@ -174,11 +174,11 @@ export function ShowcaseScoreCard() {
                   {basic.essentials.map((e) => {
                     const action = ACTIONS[e.id];
                     return (
-                      <li key={e.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                      <li key={e.id} className="rounded-lg border border-border bg-surface p-3">
                         <p className="text-sm font-medium text-foreground/90">{e.label}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{e.hint}</p>
                         {action && (
-                          <Button asChild variant="link" size="sm" className="mt-1 h-auto min-h-[32px] p-0 text-xs text-[#d9b4ff] hover:text-white">
+                          <Button asChild variant="link" size="sm" className="mt-1 h-auto min-h-[32px] p-0 text-xs text-primary-light hover:text-white">
                             <Link to={action.to} hash={action.hash}>{action.cta}</Link>
                           </Button>
                         )}
@@ -198,7 +198,7 @@ export function ShowcaseScoreCard() {
                 ))}
               </ul>
             )}
-            <p className="flex items-start gap-2 rounded-lg border border-[#b86ef9]/25 bg-[#b86ef9]/10 p-3 text-xs text-[#e6ccff]">
+            <p className="flex items-start gap-2 rounded-lg border border-border bg-primary-xlight p-3 text-xs text-foreground/80">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
                 Le score avancé — visibilité et conversion détaillées, actions prioritaires point par
@@ -207,7 +207,7 @@ export function ShowcaseScoreCard() {
               </span>
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm" className="min-h-[40px] bg-[#b86ef9] text-white hover:bg-[#a458e8]">
+              <Button asChild size="sm" className="min-h-[40px] bg-primary text-primary-foreground hover:bg-primary-dark">
                 <Link to="/dashboard/abonnement">Découvrir Elite Pro</Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="min-h-[40px]">
@@ -233,7 +233,7 @@ export function ShowcaseScoreCard() {
                 return (
                   <li
                     key={c.id}
-                    className="rounded-lg border border-white/10 bg-white/[0.03] p-3"
+                    className="rounded-lg border border-border bg-surface p-3"
                   >
                     <div className="flex items-start gap-2.5">
                       <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${s.cls}`} aria-hidden="true" />
@@ -248,7 +248,7 @@ export function ShowcaseScoreCard() {
                             asChild
                             variant="link"
                             size="sm"
-                            className="mt-1 h-auto min-h-[32px] p-0 text-xs text-[#d9b4ff] hover:text-white"
+                            className="mt-1 h-auto min-h-[32px] p-0 text-xs text-primary-light hover:text-white"
                           >
                             <Link to={action.to} hash={action.hash}>{action.cta}</Link>
                           </Button>
@@ -268,7 +268,7 @@ export function ShowcaseScoreCard() {
               type="button"
               onClick={() => setShowDone((v) => !v)}
               aria-expanded={showDone}
-              className="flex min-h-[44px] items-center gap-1.5 text-sm text-foreground/80 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-[#b86ef9]"
+              className="flex min-h-[44px] items-center gap-1.5 text-sm text-foreground/80 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${showDone ? "rotate-180" : ""}`}
@@ -289,7 +289,7 @@ export function ShowcaseScoreCard() {
           </div>
         )}
 
-        <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-4 border-t border-border pt-3 text-[11px] leading-relaxed text-muted-foreground">
           Indicateur de qualité et de préparation à l'indexation. Il ne garantit ni une position
           dans Google ni une citation par un moteur IA. L'abonnement Pro, la vérification du profil
           et les certifications professionnelles restent des éléments distincts.

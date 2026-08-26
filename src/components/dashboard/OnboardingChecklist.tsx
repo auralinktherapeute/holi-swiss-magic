@@ -30,16 +30,23 @@ export function OnboardingChecklist() {
   if (done === total) return null;
 
   return (
-    <Card className="relative overflow-hidden border-teal-400/20 bg-gradient-to-br from-[#150732]/80 to-[#0b0620]/60 backdrop-blur-sm">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-300/40 to-transparent" />
+    <Card className="relative overflow-hidden border-border bg-card/70 backdrop-blur-sm">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base font-medium text-foreground/90">Checklist de démarrage</CardTitle>
-          <span className="text-xs font-semibold text-teal-300">{done}/{total}</span>
+          <span className="text-xs font-semibold tabular-nums text-accent">{done}/{total}</span>
         </div>
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div
+          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted"
+          role="progressbar"
+          aria-valuenow={done}
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-label={`Progression du démarrage : ${done} sur ${total}`}
+        >
           <div
-            className="h-full bg-gradient-to-r from-purple-400 to-teal-300 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-primary to-accent transition-[width] duration-300 ease-out motion-reduce:transition-none"
             style={{ width: `${(done / total) * 100}%` }}
           />
         </div>
@@ -51,25 +58,27 @@ export function OnboardingChecklist() {
             <Link
               key={item.key}
               to={item.to}
-              className="group flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2.5 transition hover:bg-white/[0.06]"
+              className="group flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2.5 outline-none transition-colors duration-200 ease-out hover:bg-primary-xlight focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                  isDone ? "bg-teal-400/20 text-teal-300" : "bg-white/5 text-white/40"
+                  isDone ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground"
                 }`}
               >
                 {isDone ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
               </div>
               <span
                 className={`flex-1 text-sm ${
-                  isDone ? "text-white/50 line-through" : "text-foreground/90"
+                  isDone ? "text-muted-foreground line-through" : "text-foreground/90"
                 }`}
               >
                 {item.label}
-                {item.optional && !isDone && <span className="ml-1.5 text-[11px] text-white/40">(non bloquant)</span>}
+                {item.optional && !isDone && (
+                  <span className="ml-1.5 text-[11px] text-muted-foreground">(non bloquant)</span>
+                )}
               </span>
               {!isDone && (
-                <ChevronRight className="h-4 w-4 text-white/30 transition group-hover:translate-x-0.5 group-hover:text-white/60" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5 motion-reduce:transition-none" />
               )}
             </Link>
           );
