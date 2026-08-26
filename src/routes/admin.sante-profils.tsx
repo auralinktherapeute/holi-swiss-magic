@@ -457,7 +457,23 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
   const queue = useServerFn(queueSuggestedArticle);
   const invite = useServerFn(sendProfileHealthInvite);
   const recap = useServerFn(sendProfileHealthRecap);
-  const [busy, setBusy] = useState<null | "regen" | "queue" | "invite" | "recap">(null);
+  const citabilityOne = useServerFn(runCitabilityScan);
+  const [busy, setBusy] = useState<null | "regen" | "queue" | "invite" | "recap" | "cit">(null);
+
+  const doCitability = async () => {
+    setBusy("cit");
+    try {
+      const r = await citabilityOne({ data: { therapistId: tid } });
+      if (r.processed === 0) toast.error("Aucune ligne de santé à mettre à jour — lancez d'abord le scan « Santé ».");
+      else toast.success("Citabilité IA mesurée.");
+      await onRefreshDetail();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Mesure impossible");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const specAvg = detail.specialtyAvg as { specialty: string | null; avg: number | null; sample: number } | undefined;
   const lastRecap = s.last_recap_sent_at ? new Date(s.last_recap_sent_at).toLocaleDateString("fr-CH") : null;
 
