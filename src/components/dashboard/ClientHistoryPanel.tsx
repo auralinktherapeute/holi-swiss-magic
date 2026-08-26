@@ -3,10 +3,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { Package, Receipt, Printer, CheckCircle2, Clock, XCircle, Mail, ClipboardList, Send } from "lucide-react";
 import { listMyClientPackages, type ClientPackage } from "@/lib/service-packages.functions";
 import {
-  listMyTherapistInvoices, renderInvoiceHtml, updateInvoicePaymentStatus,
+  listMyTherapistInvoices, renderInvoiceHtml,
   emailInvoiceToClient,
   type TherapistInvoice,
 } from "@/lib/therapist-invoices.functions";
+import { INVOICE_STATUSES } from "@/lib/swiss-invoice";
+
 import {
   listMyQuestionnaires, emailQuestionnaireToClient,
   listResponsesForContact,
@@ -31,7 +33,7 @@ export default function ClientHistoryPanel({ contactId, contactEmail, contactNam
   const listPkgs = useServerFn(listMyClientPackages);
   const listInvs = useServerFn(listMyTherapistInvoices);
   const renderFn = useServerFn(renderInvoiceHtml);
-  const statusFn = useServerFn(updateInvoicePaymentStatus);
+  
   const emailInvFn = useServerFn(emailInvoiceToClient);
   const listQFn = useServerFn(listMyQuestionnaires);
   const emailQFn = useServerFn(emailQuestionnaireToClient);
@@ -211,17 +213,10 @@ export default function ClientHistoryPanel({ contactId, contactEmail, contactNam
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Select value={inv.statut_paiement} onValueChange={async (v: any) => {
-                    await statusFn({ data: { id: inv.id, statut_paiement: v } });
-                    toast.success("Statut mis à jour"); refresh();
-                  }}>
-                    <SelectTrigger className="h-7 w-32 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en_attente"><span className="inline-flex items-center gap-1 text-xs"><Clock className="h-3 w-3" />En attente</span></SelectItem>
-                      <SelectItem value="paye"><span className="inline-flex items-center gap-1 text-xs"><CheckCircle2 className="h-3 w-3 text-green-500" />Payée</span></SelectItem>
-                      <SelectItem value="annule"><span className="inline-flex items-center gap-1 text-xs"><XCircle className="h-3 w-3 text-red-500" />Annulée</span></SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
+                    {INVOICE_STATUSES.find((s) => s.id === (inv.statut ?? "brouillon"))?.label ?? inv.statut}
+                  </span>
+
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openInvoiceDialog(inv)} aria-label="Envoyer par email">
                     <Mail className="h-3.5 w-3.5" />
                   </Button>
