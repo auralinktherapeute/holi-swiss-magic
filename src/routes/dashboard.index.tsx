@@ -17,6 +17,8 @@ import {
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { ShowcaseScoreCard } from "@/components/dashboard/ShowcaseScoreCard";
 import { CabinetOverviewPanel } from "@/components/dashboard/CabinetOverviewPanel";
+import { CabinetStatsPanel } from "@/components/dashboard/CabinetStatsPanel";
+
 
 
 const SHOW_STATS = false;
