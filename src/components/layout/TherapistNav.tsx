@@ -173,8 +173,10 @@ export function TherapistNav() {
                 </span>
               ) : null}
             </Link>
+            </div>
           );
         })}
+
       </nav>
       <div className="border-t border-border p-3 space-y-3">
         <div className="flex items-center gap-3">
