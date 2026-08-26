@@ -198,7 +198,6 @@ export function ReviewForm({
       user.user_metadata?.name ||
       user.email?.split("@")[0] ||
       "Anonyme";
-    const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 
     const payload: any = {
       therapist_id: therapistId,
@@ -206,7 +205,6 @@ export function ReviewForm({
       rating,
       comment: trimmed,
       author_name: name,
-      author_avatar_url: avatar,
       status: "pending",
     };
 

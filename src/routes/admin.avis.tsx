@@ -15,7 +15,6 @@ type Row = {
   rating: number;
   comment: string;
   author_name: string | null;
-  author_avatar_url: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   therapists?: { first_name: string; last_name: string; slug: string } | null;
@@ -47,7 +46,7 @@ function Page() {
     }
     const { data, error } = await sb
       .from("reviews")
-      .select("id,therapist_id,rating,comment,author_name,author_avatar_url,status,created_at,therapists(first_name,last_name,slug)")
+      .select("id,therapist_id,rating,comment,author_name,status,created_at,therapists(first_name,last_name,slug)")
       .eq("status", tab)
       .order("created_at", { ascending: false });
     setLoading(false);
@@ -167,13 +166,9 @@ function Page() {
             <div key={r.id} className="rounded-lg border bg-card p-4">
               <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
                 <div className="flex items-center gap-3">
-                  {r.author_avatar_url ? (
-                    <img src={r.author_avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
-                  ) : (
-                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center font-semibold">
-                      {(r.author_name ?? "?")[0]?.toUpperCase()}
-                    </div>
-                  )}
+                  <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center font-semibold">
+                    {(r.author_name ?? "?")[0]?.toUpperCase()}
+                  </div>
                   <div>
                     <p className="font-semibold text-sm">{r.author_name ?? "Anonyme"}</p>
                     <p className="text-xs text-muted-foreground">

@@ -578,7 +578,7 @@ function Page() {
       // silencieusement sur les avis seuls plutôt que de tout perdre.
       const base = await (supabase as any)
         .from("reviews")
-        .select("id,rating,comment,author_name,author_avatar_url,created_at")
+        .select("id,rating,comment,author_name,created_at")
         .eq("therapist_id", th!.id)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
@@ -586,7 +586,7 @@ function Page() {
 
       const enriched = await (supabase as any)
         .from("reviews")
-        .select("id,rating,comment,author_name,author_avatar_url,created_at,therapist_reply,therapist_reply_at,therapist_reply_status")
+        .select("id,rating,comment,author_name,created_at,therapist_reply,therapist_reply_at,therapist_reply_status")
         .eq("therapist_id", th!.id)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
@@ -1154,13 +1154,9 @@ function Page() {
                     <div key={r.id} className="rounded-xl border border-[rgba(184,110,249,0.12)] bg-[rgba(184,110,249,0.04)] p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          {r.author_avatar_url ? (
-                            <img src={r.author_avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
-                              {(r.author_name?.[0] ?? "C").toUpperCase()}
-                            </div>
-                          )}
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
+                            {(r.author_name?.[0] ?? "C").toUpperCase()}
+                          </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-semibold text-white">{r.author_name || "Client vérifié"}</span>
                             <StarRow rating={r.rating} size={3} />
