@@ -3,7 +3,23 @@
 // renvoyé par le serveur. Aucune donnée de santé n'est ajoutée automatiquement :
 // le thérapeute complète lui-même le corps du texte s'il le souhaite.
 
-import type { DocumentTemplateContext } from "@/lib/cabinet-documents.server";
+export type DocumentTemplateContext = {
+  therapist: {
+    name: string;
+    profession: string | null;
+    address: string | null;
+    email: string | null;
+    phone: string | null;
+    ide: string | null;
+  };
+  client: {
+    full_name: string;
+    email: string | null;
+    date_of_birth: string | null;
+  };
+  sessions: Array<{ date: string; time: string | null; service: string | null }>;
+  currency: string;
+};
 
 export type TemplateId = "attestation" | "consentement" | "recu";
 

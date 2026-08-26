@@ -7,6 +7,9 @@
 // - toute lecture/suppression est journalisée dans `crm_access_log`.
 
 import { logAccess } from "@/lib/cabinet-core.server";
+import type { DocumentTemplateContext } from "@/lib/cabinet-document-templates";
+
+export type { DocumentTemplateContext };
 
 export const DOCUMENTS_BUCKET = "therapist-documents";
 export const PRIVATE_PREFIX = "private:";
@@ -195,24 +198,6 @@ export async function deleteClientDocument(
   });
   return { ok: true };
 }
-
-export type DocumentTemplateContext = {
-  therapist: {
-    name: string;
-    profession: string | null;
-    address: string | null;
-    email: string | null;
-    phone: string | null;
-    ide: string | null;
-  };
-  client: {
-    full_name: string;
-    email: string | null;
-    date_of_birth: string | null;
-  };
-  sessions: Array<{ date: string; time: string | null; service: string | null }>;
-  currency: string;
-};
 
 /** Données d'en-tête pour les modèles de documents (attestation, consentement…). */
 export async function buildTemplateContext(
