@@ -22,7 +22,7 @@ import {
  * « Factures manquantes » : rendez-vous honorés sans facture. Un clic crée un
  * brouillon conforme (ligne pré-remplie, TVA des réglages) et ouvre la facture.
  */
-export function MissingInvoices() {
+export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string) => void }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchList = useServerFn(listUninvoicedAppointments);
@@ -50,7 +50,8 @@ export function MissingInvoices() {
     onSuccess: (res) => {
       refresh();
       toast.success("Brouillon de facture créé");
-      void navigate({ to: "/dashboard/facturation", search: { invoice: res.id } as never });
+      if (onCreated) onCreated(res.id);
+      else void navigate({ to: "/dashboard/facturation" });
     },
     onError: (e: Error) => toast.error(e.message || "Création impossible"),
   });
