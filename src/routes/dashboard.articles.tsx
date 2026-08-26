@@ -104,9 +104,38 @@ function Page() {
                 <div className="space-y-2"><Label htmlFor="t">Titre</Label>
                   <Input id="t" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Mon titre…" required minLength={3} maxLength={200} />
                 </div>
-                <div className="space-y-2"><Label htmlFor="i">Image de couverture (lien, optionnel)</Label>
-                  <Input id="i" inputMode="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="exemple.ch/photo.jpg" />
-                  <p className="text-xs text-muted-foreground">Laissez vide si vous n'avez pas d'image. Le lien est complété automatiquement en https://.</p>
+                <div className="space-y-2">
+                  <Label htmlFor="i">Image de couverture (optionnel)</Label>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      className="min-h-11"
+                    >
+                      {uploading
+                        ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Envoi…</>
+                        : <><ImagePlus className="h-4 w-4 mr-2" />Importer une photo</>}
+                    </Button>
+                    {image && (
+                      <Button type="button" variant="ghost" onClick={() => setImage("")} className="min-h-11 text-red-400 hover:text-red-500">
+                        Retirer
+                      </Button>
+                    )}
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                      className="hidden"
+                      onChange={onPickFile}
+                    />
+                  </div>
+                  {image && (
+                    <img src={image} alt="Aperçu de l'image de couverture" className="h-32 w-full max-w-xs rounded-lg object-cover ring-1 ring-border/60" />
+                  )}
+                  <Input id="i" inputMode="url" value={image} onChange={(e) => setImage(e.target.value)} placeholder="…ou collez un lien : exemple.ch/photo.jpg" />
+                  <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, AVIF ou HEIC — 5 Mo maximum. Un lien collé est complété automatiquement en https://.</p>
                 </div>
                 <div className="space-y-2"><Label htmlFor="x">Extrait (optionnel, 400 caractères max)</Label>
                   <Textarea id="x" value={extrait} onChange={(e) => setExtrait(e.target.value)} rows={2} maxLength={400} placeholder="Résumé court affiché dans la liste…" />
