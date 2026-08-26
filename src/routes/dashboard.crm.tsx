@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,7 +16,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import LogoUploader from "@/components/dashboard/LogoUploader";
 import ImportContactsDialog from "@/components/dashboard/ImportContactsDialog";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import IntakePanel from "@/components/dashboard/IntakePanel";
@@ -26,13 +25,9 @@ import {
   listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask,
 } from "@/lib/crm-therapist.functions";
 import {
-  listMyInvoices, upsertInvoice, deleteInvoice, updateInvoiceStatus,
-  getTherapistBranding, updateTherapistBranding, type Invoice, type InvoiceItem,
+  listMyInvoices, getTherapistBranding, type Invoice,
 } from "@/lib/invoice.functions";
-import {
-  listMyPaymentMethods, type PaymentMethod, type PaymentMethodType,
-} from "@/lib/payment-methods.functions";
-import { Checkbox } from "@/components/ui/checkbox";
+
 
 export const Route = createFileRoute("/dashboard/crm")({ component: CrmPage });
 
@@ -470,415 +465,79 @@ function TasksTab({ contacts }: { contacts: ClientContact[] }) {
   );
 }
 
-// ── Invoice ───────────────────────────────────────────────────────────────────
+// ── Facturation (pont vers le module conforme) ────────────────────────────────
 
-function QRCodeDisplay({ url }: { url: string }) {
-  const size = 140;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=1a0a2e`;
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <img src={qrUrl} alt="QR code paiement" width={size} height={size} className="rounded-lg border border-border/40" />
-      <p className="text-xs text-muted-foreground text-center max-w-[140px] break-all">{url.length > 40 ? url.slice(0, 40) + "…" : url}</p>
-    </div>
-  );
-}
-
-const PM_LABEL: Record<PaymentMethodType, string> = {
-  twint: "TWINT",
-  revolut: "Revolut",
-  paypal: "PayPal",
-  postfinance: "PostFinance",
-  iban: "Virement IBAN",
-  other: "Autre",
-};
-
-function PaymentMethodQR({ method }: { method: PaymentMethod }) {
-  const size = 90;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(method.value)}&bgcolor=ffffff&color=1a0a2e`;
-  return (
-    <div className="flex flex-col items-center gap-1 text-center">
-      <img src={qrUrl} alt={`QR ${PM_LABEL[method.method_type]}`} width={size} height={size} className="rounded border border-gray-200" />
-      <p className="text-[10px] font-semibold text-gray-700">{PM_LABEL[method.method_type]}</p>
-    </div>
-  );
-}
-
-type InvoiceForm = {
-  id?: string; contact_id: string; client_name: string; client_address: string;
-  status: "draft" | "sent" | "paid" | "cancelled";
-  issued_at: string; due_at: string; notes: string; payment_link: string; currency: string;
-  payment_method_ids: string[];
-  items: { description: string; quantity: number; unit_price: number }[];
-};
-
-const EMPTY_INV: InvoiceForm = {
-  client_name: "", client_address: "", contact_id: "", status: "draft",
-  issued_at: new Date().toISOString().slice(0, 10), due_at: "", notes: "", payment_link: "", currency: "CHF",
-  payment_method_ids: [],
-  items: [{ description: "", quantity: 1, unit_price: 0 }],
-};
-
-function InvoiceDialog({ open, onClose, initial, contacts, branding }: {
-  open: boolean; onClose: () => void;
-  initial?: Invoice | null; contacts: ClientContact[];
-  branding: any;
-}) {
-  const qc = useQueryClient();
-  const [form, setForm] = useState<InvoiceForm>(
-    initial
-      ? { ...EMPTY_INV, ...initial, contact_id: initial.contact_id ?? "", due_at: initial.due_at ?? "", client_address: initial.client_address ?? "", notes: initial.notes ?? "", payment_link: initial.payment_link ?? "", payment_method_ids: initial.payment_method_ids ?? [], items: initial.invoice_items?.map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price })) ?? EMPTY_INV.items }
-      : { ...EMPTY_INV, payment_link: branding?.payment_link ?? "" }
-  );
-  const [preview, setPreview] = useState(false);
-
-  const pmQ = useQuery({ queryKey: ["payment-methods"], queryFn: () => listMyPaymentMethods() });
-  const paymentMethods = (pmQ.data ?? []) as PaymentMethod[];
-  const selectedMethods = paymentMethods.filter(m => form.payment_method_ids.includes(m.id));
-
-  const togglePM = (id: string) => setForm(p => ({
-    ...p,
-    payment_method_ids: p.payment_method_ids.includes(id)
-      ? p.payment_method_ids.filter(x => x !== id)
-      : [...p.payment_method_ids, id],
-  }));
-
-  const set = (k: keyof InvoiceForm, v: any) => setForm(p => ({ ...p, [k]: v }));
-  const setItem = (i: number, k: string, v: any) => setForm(p => ({
-    ...p, items: p.items.map((it, idx) => idx === i ? { ...it, [k]: v } : it),
-  }));
-  const addItem = () => setForm(p => ({ ...p, items: [...p.items, { description: "", quantity: 1, unit_price: 0 }] }));
-  const removeItem = (i: number) => setForm(p => ({ ...p, items: p.items.filter((_, idx) => idx !== i) }));
-  const total = form.items.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unit_price) || 0), 0);
-
-  const mut = useMutation({
-    mutationFn: () => {
-      const cleaned = form.items
-        .map(i => ({ ...i, description: (i.description ?? "").trim() }))
-        .filter(i => i.description || Number(i.quantity) > 0 || Number(i.unit_price) > 0);
-      if (cleaned.length === 0) throw new Error("Ajoutez au moins une ligne de facture");
-      const missing = cleaned.find(i => !i.description);
-      if (missing) throw new Error("Chaque ligne doit avoir une description");
-      return upsertInvoice({ data: { ...form, contact_id: form.contact_id || null, due_at: form.due_at || null, items: cleaned as any } as any });
-    },
-    onSuccess: () => { toast.success("Facture sauvegardée"); qc.invalidateQueries({ queryKey: ["invoices"] }); onClose(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="bg-surface border-border/60 max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>{initial ? `Facture ${initial.invoice_number}` : "Nouvelle facture"}</DialogTitle>
-            <Button size="sm" variant="outline" onClick={() => setPreview(p => !p)}>
-              <Eye className="h-4 w-4 mr-1" />{preview ? "Éditer" : "Aperçu"}
-            </Button>
-          </div>
-        </DialogHeader>
-
-        {preview ? (
-          <InvoicePreview form={form} total={total} branding={branding} methods={selectedMethods} />
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Client *</Label>
-                <Select value={form.contact_id || "manual"} onValueChange={v => {
-                  if (v === "manual") { set("contact_id", ""); return; }
-                  const c = contacts.find(x => x.id === v);
-                  if (c) { set("contact_id", v); set("client_name", `${c.first_name} ${c.last_name}`); }
-                }}>
-                  <SelectTrigger className="bg-background border-border/60"><SelectValue placeholder="Sélectionner…" /></SelectTrigger>
-                  <SelectContent className="bg-surface border-border/60">
-                    <SelectItem value="manual">Saisie manuelle</SelectItem>
-                    {contacts.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1"><Label>Nom client *</Label><Input value={form.client_name} onChange={e => set("client_name", e.target.value)} className="bg-background border-border/60" /></div>
-              <div className="space-y-1"><Label>Date d'émission</Label><Input type="date" value={form.issued_at} onChange={e => set("issued_at", e.target.value)} className="bg-background border-border/60" /></div>
-              <div className="space-y-1"><Label>Date d'échéance</Label><Input type="date" value={form.due_at} onChange={e => set("due_at", e.target.value)} className="bg-background border-border/60" /></div>
-              <div className="space-y-1 col-span-2"><Label>Adresse client</Label><Input value={form.client_address} onChange={e => set("client_address", e.target.value)} className="bg-background border-border/60" /></div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Prestations</Label>
-              {form.items.map((item, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <Input value={item.description} onChange={e => setItem(i, "description", e.target.value)} placeholder="Description" className="bg-background border-border/60 flex-1" />
-                  <Input value={item.quantity} onChange={e => setItem(i, "quantity", parseFloat(e.target.value) || 0)} type="number" min={0} step={0.5} className="bg-background border-border/60 w-16" placeholder="Qté" />
-                  <Input value={item.unit_price} onChange={e => setItem(i, "unit_price", parseFloat(e.target.value) || 0)} type="number" min={0} step={5} className="bg-background border-border/60 w-24" placeholder="Prix" />
-                  <span className="text-sm text-muted-foreground w-20 text-right shrink-0">{fmt(item.quantity * item.unit_price, form.currency)}</span>
-                  {form.items.length > 1 && <Button size="sm" variant="ghost" onClick={() => removeItem(i)}><X className="h-3 w-3" /></Button>}
-                </div>
-              ))}
-              <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Ajouter une ligne</Button>
-              <div className="flex justify-end">
-                <p className="text-lg font-bold text-foreground">Total : {fmt(total, form.currency)}</p>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label>Lien de paiement (QR code)</Label>
-              <Input value={form.payment_link} onChange={e => set("payment_link", e.target.value)} placeholder="https://buy.stripe.com/…" className="bg-background border-border/60" />
-              {form.payment_link && (
-                <div className="flex justify-center mt-2 p-3 bg-background rounded-lg border border-border/40">
-                  <QRCodeDisplay url={form.payment_link} />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2 rounded-lg border border-border/40 p-3 bg-background/40">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">Moyens de paiement sur cette facture</Label>
-                <a href="/dashboard/profil" className="text-xs text-primary hover:underline">Configurer</a>
-              </div>
-              {paymentMethods.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  Aucun moyen de paiement configuré. Ajoutez-en depuis votre profil pour les proposer sur vos factures.
-                </p>
-              ) : (
-                <div className="space-y-1.5">
-                  {paymentMethods.map(m => (
-                    <label key={m.id} className="flex items-start gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-background/60">
-                      <Checkbox
-                        checked={form.payment_method_ids.includes(m.id)}
-                        onCheckedChange={() => togglePM(m.id)}
-                        className="mt-0.5"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-foreground">{PM_LABEL[m.method_type]}{m.label ? ` — ${m.label}` : ""}</div>
-                        <div className="text-xs text-muted-foreground truncate">{m.value}{m.bank_name ? ` · ${m.bank_name}` : ""}</div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Statut</Label>
-                <Select value={form.status} onValueChange={v => set("status", v)}>
-                  <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-surface border-border/60">
-                    <SelectItem value="draft">Brouillon</SelectItem>
-                    <SelectItem value="sent">Envoyée</SelectItem>
-                    <SelectItem value="paid">Payée ✓</SelectItem>
-                    <SelectItem value="cancelled">Annulée</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>Devise</Label>
-                <Select value={form.currency} onValueChange={v => set("currency", v)}>
-                  <SelectTrigger className="bg-background border-border/60"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-surface border-border/60">
-                    <SelectItem value="CHF">CHF</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1"><Label>Notes</Label><Textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} className="bg-background border-border/60 resize-none" /></div>
-          </div>
-        )}
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Annuler</Button>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => mut.mutate()} disabled={mut.isPending || !form.client_name.trim()}>
-            {mut.isPending ? "…" : "Sauvegarder"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function InvoicePreview({ form, total, branding, methods }: { form: InvoiceForm; total: number; branding: any; methods: PaymentMethod[] }) {
-  return (
-    <div className="bg-white text-gray-900 rounded-xl p-6 text-sm space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          {branding?.logo_url
-            ? <img src={branding.logo_url} alt="Logo" className="h-14 object-contain mb-2" />
-            : <div className="text-lg font-bold text-purple-700">{branding?.first_name} {branding?.last_name}</div>
-          }
-          <p className="text-gray-500 text-xs">{branding?.email}</p>
-          <p className="text-gray-500 text-xs">{branding?.phone}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-purple-700">FACTURE</p>
-          <p className="text-gray-500 text-xs">Émise le {form.issued_at}</p>
-          {form.due_at && <p className="text-gray-500 text-xs">Échéance : {form.due_at}</p>}
-        </div>
-      </div>
-      <div className="border-t border-gray-200 pt-3">
-        <p className="font-semibold">{form.client_name}</p>
-        {form.client_address && <p className="text-gray-500 text-xs whitespace-pre-line">{form.client_address}</p>}
-      </div>
-      <table className="w-full text-xs">
-        <thead><tr className="bg-purple-50 text-purple-700"><th className="text-left p-2">Description</th><th className="text-center p-2">Qté</th><th className="text-right p-2">Prix unit.</th><th className="text-right p-2">Total</th></tr></thead>
-        <tbody>
-          {form.items.map((it, i) => (
-            <tr key={i} className="border-b border-gray-100">
-              <td className="p-2">{it.description || "—"}</td>
-              <td className="p-2 text-center">{it.quantity}</td>
-              <td className="p-2 text-right">{fmt(it.unit_price, form.currency)}</td>
-              <td className="p-2 text-right font-medium">{fmt(it.quantity * it.unit_price, form.currency)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {methods.length > 0 && (
-        <div className="border-t border-gray-200 pt-3">
-          <p className="text-xs font-semibold text-gray-700 mb-2">Modes de paiement acceptés</p>
-          <div className="space-y-1 mb-3">
-            {methods.map(m => (
-              <div key={m.id} className="text-xs text-gray-700">
-                <span className="font-semibold">{PM_LABEL[m.method_type]}</span>
-                {m.label ? ` (${m.label})` : ""} : <span className="font-mono">{m.value}</span>
-                {m.bank_name && <span className="text-gray-500"> · {m.bank_name}</span>}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {methods.map(m => <PaymentMethodQR key={m.id} method={m} />)}
-          </div>
-        </div>
-      )}
-      <div className="flex justify-between items-end">
-        <div>
-          {form.notes && <p className="text-gray-500 text-xs max-w-xs">{form.notes}</p>}
-          {form.payment_link && <div className="mt-2"><QRCodeDisplay url={form.payment_link} /></div>}
-        </div>
-        <div className="text-right bg-purple-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500">Total à payer</p>
-          <p className="text-xl font-bold text-purple-700">{fmt(total, form.currency)}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const INV_STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+const LEGACY_INV_STATUS: Record<string, { label: string; color: string; bg: string }> = {
   draft:     { label: "Brouillon", color: "#94a3b8", bg: "rgba(148,163,184,0.15)" },
   sent:      { label: "Envoyée",   color: "#5cc8fa", bg: "rgba(92,200,250,0.15)" },
-  paid:      { label: "Payée ✓",  color: "#34d399", bg: "rgba(52,211,153,0.15)" },
+  paid:      { label: "Payée",     color: "#34d399", bg: "rgba(52,211,153,0.15)" },
   cancelled: { label: "Annulée",   color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
 };
 
-function InvoicesTab({ contacts, branding }: { contacts: ClientContact[]; branding: any }) {
-  const qc = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Invoice | null>(null);
-  const [showBranding, setShowBranding] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(branding?.logo_url ?? "");
-  const [paymentLink, setPaymentLink] = useState(branding?.payment_link ?? "");
-
+function InvoicingBridgeTab() {
   const invQ = useQuery({ queryKey: ["invoices"], queryFn: () => listMyInvoices({ data: {} }) });
-  const invoices = (invQ.data ?? []) as Invoice[];
-
-  const delMut = useMutation({
-    mutationFn: (id: string) => deleteInvoice({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const statusMut = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: Invoice["status"] }) => updateInvoiceStatus({ data: { id, status } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["invoices"] }),
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const brandingMut = useMutation({
-    mutationFn: () => updateTherapistBranding({ data: { logo_url: logoUrl || null, payment_link: paymentLink || null } }),
-    onSuccess: () => { toast.success("Paramètres sauvegardés"); setShowBranding(false); qc.invalidateQueries({ queryKey: ["branding"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const totalPaid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + Number(i.total_amount), 0);
-  const totalPending = invoices.filter(i => i.status === "sent").reduce((s, i) => s + Number(i.total_amount), 0);
+  const legacy = (invQ.data ?? []) as Invoice[];
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-surface border-border/60"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Total encaissé</p><p className="text-xl font-bold text-green-400">{fmt(totalPaid)}</p></CardContent></Card>
-        <Card className="bg-surface border-border/60"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">En attente</p><p className="text-xl font-bold text-yellow-400">{fmt(totalPending)}</p></CardContent></Card>
-        <Card className="bg-surface border-border/60"><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Factures</p><p className="text-xl font-bold text-foreground">{invoices.length}</p></CardContent></Card>
-      </div>
-
-      <div className="flex gap-2 justify-between">
-        <Button size="sm" variant="outline" onClick={() => setShowBranding(true)}><Settings className="h-4 w-4 mr-1" />Logo & paiement</Button>
-        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" />Nouvelle facture
-        </Button>
-      </div>
-
-      {showBranding && (
-        <Card className="bg-surface border-primary/30">
-          <CardHeader className="pb-2"><p className="text-sm font-semibold">Paramètres facturation</p></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1">
-              <Label>Logo du cabinet</Label>
-              <LogoUploader userId={branding?.id ?? ""} value={logoUrl} onChange={setLogoUrl} />
+    <div className="space-y-6">
+      <Card className="bg-surface border-primary/40">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-start gap-3">
+            <FileText className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-foreground">La facturation a déménagé</h2>
+              <p className="text-sm text-muted-foreground max-w-2xl">
+                Vos factures se créent désormais dans le module <strong>Facturation</strong>, conforme aux
+                exigences suisses : bulletin QR-facture, numérotation continue, TVA par ligne, verrouillage
+                des factures validées et suivi des encaissements.
+              </p>
             </div>
-            <div className="space-y-1">
-              <Label>Lien de paiement par défaut</Label>
-              <Input value={paymentLink} onChange={e => setPaymentLink(e.target.value)} placeholder="https://buy.stripe.com/…" className="bg-background border-border/60" />
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => setShowBranding(false)}>Annuler</Button>
-              <Button size="sm" className="bg-primary" onClick={() => brandingMut.mutate()} disabled={brandingMut.isPending}>Sauvegarder</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <Button asChild className="bg-primary hover:bg-primary/90 min-h-11">
+            <Link to="/dashboard/facturation">Ouvrir la facturation</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-2">
-        {invoices.map(inv => {
-          const s = INV_STATUS_MAP[inv.status] ?? INV_STATUS_MAP.draft;
-          return (
-            <Card key={inv.id} className="bg-surface border-border/60 hover:border-primary/30 transition-colors">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+      {legacy.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Archives</h3>
+            <p className="text-xs text-muted-foreground">
+              {legacy.length} ancienne{legacy.length > 1 ? "s" : ""} facture{legacy.length > 1 ? "s" : ""},
+              conservée{legacy.length > 1 ? "s" : ""} en lecture seule.
+            </p>
+          </div>
+          {legacy.map((inv) => {
+            const st = LEGACY_INV_STATUS[inv.status] ?? LEGACY_INV_STATUS["draft"]!;
+            return (
+              <Card key={inv.id} className="bg-surface border-border/60">
+                <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <span className="font-mono text-xs text-muted-foreground">{inv.invoice_number}</span>
-                    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.color}40` }} className="text-xs font-semibold px-2 py-0.5 rounded-full">{s.label}</span>
+                    <p className="text-sm text-foreground truncate">{inv.client_name}</p>
                   </div>
-                  <p className="font-semibold text-foreground mt-0.5">{inv.client_name}</p>
-                  <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
-                    <span>{fmtDate(inv.issued_at)}</span>
-                    {inv.due_at && <span>Échéance : {fmtDate(inv.due_at)}</span>}
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="rounded-full px-2.5 py-1 text-xs font-medium"
+                      style={{ color: st.color, backgroundColor: st.bg }}
+                    >
+                      {st.label}
+                    </span>
+                    <span className="text-sm font-semibold text-foreground tabular-nums">
+                      {Number(inv.total_amount).toFixed(2)} CHF
+                    </span>
                   </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-foreground">{fmt(Number(inv.total_amount), inv.currency)}</p>
-                  {inv.status === "sent" && (
-                    <Button size="sm" variant="ghost" className="text-green-400 hover:text-green-300 text-xs mt-1 h-6"
-                      onClick={() => statusMut.mutate({ id: inv.id, status: "paid" })}>
-                      <Check className="h-3 w-3 mr-1" />Marquer payée
-                    </Button>
-                  )}
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button size="sm" variant="ghost" onClick={() => { setEditing(inv); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { if (confirm("Supprimer cette facture ?")) delMut.mutate(inv.id); }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-        {invoices.length === 0 && <p className="text-center text-muted-foreground py-10">Aucune facture. Créez-en une !</p>}
-      </div>
-
-      <InvoiceDialog key={editing?.id ?? "new-invoice"} open={dialogOpen} onClose={() => setDialogOpen(false)} initial={editing} contacts={contacts} branding={branding} />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
@@ -932,7 +591,7 @@ function CrmPage() {
           <TasksTab contacts={contacts} />
         </TabsContent>
         <TabsContent value="invoices" className="mt-4">
-          <InvoicesTab contacts={contacts} branding={branding} />
+          <InvoicingBridgeTab />
         </TabsContent>
         <TabsContent value="intake" className="mt-4">
           <IntakePanel slug={branding?.slug ?? null} />
