@@ -4844,6 +4844,7 @@ export type Database = {
           ide_verified: boolean
           insurance_accepted: boolean | null
           invoice_counter: number
+          is_trainer: boolean
           languages: string[] | null
           last_name: string
           latitude: number | null
@@ -4875,6 +4876,9 @@ export type Database = {
           status: string
           subscription_plan: string
           title: string | null
+          trainer_institution: string | null
+          trainer_since: number | null
+          trainer_subjects: string | null
           updated_at: string
           user_id: string
           verified: boolean
@@ -4903,6 +4907,7 @@ export type Database = {
           ide_verified?: boolean
           insurance_accepted?: boolean | null
           invoice_counter?: number
+          is_trainer?: boolean
           languages?: string[] | null
           last_name: string
           latitude?: number | null
@@ -4934,6 +4939,9 @@ export type Database = {
           status?: string
           subscription_plan?: string
           title?: string | null
+          trainer_institution?: string | null
+          trainer_since?: number | null
+          trainer_subjects?: string | null
           updated_at?: string
           user_id: string
           verified?: boolean
@@ -4962,6 +4970,7 @@ export type Database = {
           ide_verified?: boolean
           insurance_accepted?: boolean | null
           invoice_counter?: number
+          is_trainer?: boolean
           languages?: string[] | null
           last_name?: string
           latitude?: number | null
@@ -4993,6 +5002,9 @@ export type Database = {
           status?: string
           subscription_plan?: string
           title?: string | null
+          trainer_institution?: string | null
+          trainer_since?: number | null
+          trainer_subjects?: string | null
           updated_at?: string
           user_id?: string
           verified?: boolean
