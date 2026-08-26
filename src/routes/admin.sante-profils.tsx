@@ -321,7 +321,7 @@ function Page() {
   const onCitability = async () => {
     setMeasuring(true);
     try {
-      const r = await citability();
+      const r = await citability({ data: {} });
       toast.success(`Citabilité IA mesurée : ${r.processed} fiches (${r.reachable} joignables).`);
       if (selected) await refreshDetail();
     } catch (e: any) {
