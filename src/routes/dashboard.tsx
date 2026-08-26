@@ -16,6 +16,7 @@ import { RequireRole } from "@/components/auth/RequireRole";
 import { NewsletterFooterSection } from "@/components/dashboard/NewsletterFooterSection";
 import { requireCurrentRole } from "@/lib/auth-utils";
 import { ensureTherapistRole } from "@/lib/auth-role.functions";
+import { reportTherapistSignupBlocked } from "@/lib/signup-alerts.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/dashboard")({
@@ -45,6 +46,16 @@ export const Route = createFileRoute("/dashboard")({
       }
       if (healedRole === "therapist") return;
       if (healedRole === "admin") throw redirect({ to: "/admin" });
+      // Session valide mais accès refusé : c'est exactement le blocage vécu par
+      // les nouvelles inscrites. On alerte l'admin avant la redirection.
+      void reportTherapistSignupBlocked({
+        data: {
+          userId: sessionData.session.user.id,
+          email: sessionData.session.user.email ?? null,
+          stage: "dashboard_denied",
+          detail: "Session valide mais rôle thérapeute absent.",
+        },
+      }).catch(() => {});
     }
     throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
   },

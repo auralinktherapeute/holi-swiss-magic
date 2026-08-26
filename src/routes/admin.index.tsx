@@ -10,6 +10,7 @@ import {
   AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, CartesianGrid,
 } from "recharts";
 import { getAdminStats } from "@/lib/admin.functions";
+import { BlockedSignupsPanel } from "@/components/admin/BlockedSignupsPanel";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/")({ component: Page });
@@ -143,6 +144,9 @@ function Page() {
             </button>
           </div>
         </motion.div>
+
+        {/* Inscriptions bloquées */}
+        <BlockedSignupsPanel />
 
         {/* KPI Grid */}
         <div className="adm-kpi-grid">
