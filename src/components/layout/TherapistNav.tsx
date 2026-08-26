@@ -146,8 +146,16 @@ export function TherapistNav() {
         {items.map((it) => {
           const Icon = it.icon;
           const active = it.exact ? pathname === it.to : pathname.startsWith(it.to);
+          const section = (it as { section?: string }).section;
           return (
+            <div key={`${it.to}-wrap`}>
+            {section && (
+              <div className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {section}
+              </div>
+            )}
             <Link
+
               key={it.to}
               to={it.to}
               data-tour-id={(it as { tourId?: string }).tourId}
