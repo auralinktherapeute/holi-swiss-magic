@@ -55,10 +55,11 @@ function ClientsPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   // Debounce de la recherche pour éviter une requête par frappe.
-  useMemo(() => {
+  useEffect(() => {
     const id = window.setTimeout(() => setDebounced(search), 300);
     return () => window.clearTimeout(id);
   }, [search]);
+
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["cabinet-clients", debounced, status, unpaidOnly],

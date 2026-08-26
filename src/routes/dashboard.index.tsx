@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { ShowcaseScoreCard } from "@/components/dashboard/ShowcaseScoreCard";
+import { CabinetOverviewPanel } from "@/components/dashboard/CabinetOverviewPanel";
+
 
 const SHOW_STATS = false;
 
