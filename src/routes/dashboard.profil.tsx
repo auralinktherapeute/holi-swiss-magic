@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
   FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check, BadgeCheck,
-  ArrowUp, ArrowDown, Package as PackageIcon, Mail,
+  ArrowUp, ArrowDown, Package as PackageIcon, Mail, GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +102,7 @@ const THERAPIST_PROFILE_SELECT = [
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations", "meta_title", "meta_description", "consultation_modes",
+  "is_trainer", "trainer_subjects", "trainer_institution", "trainer_since",
 ].join(",");
 
 function profileDraftScore(draft: unknown) {
@@ -215,6 +216,12 @@ function ProfilePage() {
   // Accreditations (ASCA, RME, OrTra TC, ...)
   const [accreditations, setAccreditations] = useSessionState<Accreditation[]>(`${profileStatePrefix}.accreditations`, []);
 
+  // Formateur — déclaratif, comme les accréditations.
+  const [isTrainer, setIsTrainer] = useSessionState<boolean>(`${profileStatePrefix}.isTrainer`, false);
+  const [trainerSubjects, setTrainerSubjects] = useSessionState(`${profileStatePrefix}.trainerSubjects`, "");
+  const [trainerInstitution, setTrainerInstitution] = useSessionState(`${profileStatePrefix}.trainerInstitution`, "");
+  const [trainerSince, setTrainerSince] = useSessionState(`${profileStatePrefix}.trainerSince`, "");
+
   // Documents
   const [documents, setDocuments] = useSessionState<DocRow[]>(`${profileStatePrefix}.documents`, []);
 
@@ -272,9 +279,11 @@ function ProfilePage() {
     firstName, lastName, city, postalCode, address, phone, canton, langs,
     priceMin, priceMax, currency, sessionDuration, yearsExperience, specialties, services,
     shortBio, bio, googleReviewsUrl, website, ide, accreditations,
+    isTrainer, trainerSubjects, trainerInstitution, trainerSince,
   }), [firstName, lastName, city, postalCode, address, phone, canton, langs,
       priceMin, priceMax, currency, sessionDuration, yearsExperience, specialties, services,
-      shortBio, bio, googleReviewsUrl, website, ide, accreditations]);
+      shortBio, bio, googleReviewsUrl, website, ide, accreditations,
+      isTrainer, trainerSubjects, trainerInstitution, trainerSince]);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
     formType: "therapist_profile",
@@ -320,6 +329,10 @@ function ProfilePage() {
     setWebsite(keepText(d.website, website));
     setIde(keepText(d.ide, ide));
     setAccreditations(keepArray(d.accreditations, accreditations));
+    if (typeof d.isTrainer === "boolean") setIsTrainer(d.isTrainer);
+    setTrainerSubjects(keepText(d.trainerSubjects, trainerSubjects));
+    setTrainerInstitution(keepText(d.trainerInstitution, trainerInstitution));
+    setTrainerSince(keepText(d.trainerSince, trainerSince));
     setDirty(true);
   };
 
@@ -379,6 +392,10 @@ function ProfilePage() {
           website: data.website ?? "",
           ide: "",
           accreditations: ((data as any).accreditations as Accreditation[]) ?? [],
+          isTrainer: (data as any).is_trainer ?? false,
+          trainerSubjects: (data as any).trainer_subjects ?? "",
+          trainerInstitution: (data as any).trainer_institution ?? "",
+          trainerSince: (data as any).trainer_since ? String((data as any).trainer_since) : "",
         });
         if (hasProfileSession) {
           setLoading(false);
@@ -416,6 +433,10 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+        setIsTrainer((data as any).is_trainer ?? false);
+        setTrainerSubjects((data as any).trainer_subjects ?? "");
+        setTrainerInstitution((data as any).trainer_institution ?? "");
+        setTrainerSince((data as any).trainer_since ? String((data as any).trainer_since) : "");
         const { data: privateIds } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
@@ -562,6 +583,12 @@ function ProfilePage() {
           meta_description: metaDescription.trim() || null,
           consultation_modes: consultationModes,
           accreditations,
+          // Formateur. L'année vide devient null plutôt que NaN : la contrainte
+          // en base rejetterait NaN, et le champ est facultatif.
+          is_trainer: isTrainer,
+          trainer_subjects: trainerSubjects.trim() || null,
+          trainer_institution: trainerInstitution.trim() || null,
+          trainer_since: trainerSince.trim() === "" ? null : Number(trainerSince),
           ide: ide || null,
         },
       });
@@ -1139,6 +1166,78 @@ function ProfilePage() {
                 );
               })}
             </div>
+          </Field>
+
+          <Divider />
+
+          {/* Formateur — déclaratif, comme les accréditations juste au-dessus. */}
+          <Field label={
+            <span className="inline-flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-[#b86ef9]" />
+              <span className="font-semibold text-white">Formations dispensées</span>
+            </span>
+          }>
+            <div className="flex items-center gap-2.5">
+              <Switch
+                id="is-trainer"
+                checked={isTrainer}
+                onCheckedChange={(v) => { setIsTrainer(v); setDirty(true); }}
+              />
+              <Label htmlFor="is-trainer" className="cursor-pointer text-sm">
+                Je dispense des formations
+              </Label>
+            </div>
+
+            {isTrainer && (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <Label htmlFor="trainer-subjects" className="text-xs">Matières enseignées</Label>
+                  <Input
+                    id="trainer-subjects"
+                    value={trainerSubjects}
+                    maxLength={300}
+                    placeholder="Naturopathie, phytothérapie"
+                    onChange={(e) => { setTrainerSubjects(e.target.value); setDirty(true); }}
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+                  <div>
+                    <Label htmlFor="trainer-institution" className="text-xs">
+                      École ou organisme <span className="text-[#a89bc4]">(facultatif)</span>
+                    </Label>
+                    <Input
+                      id="trainer-institution"
+                      value={trainerInstitution}
+                      maxLength={200}
+                      placeholder="École de Naturopathie de Sion"
+                      onChange={(e) => { setTrainerInstitution(e.target.value); setDirty(true); }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="trainer-since" className="text-xs">
+                      Depuis <span className="text-[#a89bc4]">(facultatif)</span>
+                    </Label>
+                    <Input
+                      id="trainer-since"
+                      type="number"
+                      inputMode="numeric"
+                      min={1950}
+                      max={new Date().getFullYear() + 1}
+                      value={trainerSince}
+                      placeholder="2019"
+                      onChange={(e) => { setTrainerSince(e.target.value); setDirty(true); }}
+                    />
+                  </div>
+                </div>
+
+                {/* L'état réel, dit sans détour : cocher ne suffit pas. */}
+                <p className="text-xs text-[#a89bc4]" role="status">
+                  {trainerSubjects.trim()
+                    ? "Le badge « Formateur » apparaîtra sur votre fiche publique, présenté comme une information que vous déclarez — Holiswiss ne la vérifie pas."
+                    : "Renseignez les matières enseignées pour que le badge apparaisse : un badge « Formateur » seul n'apprendrait rien à un visiteur."}
+                </p>
+              </div>
+            )}
           </Field>
 
           {!dirty && (

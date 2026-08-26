@@ -544,7 +544,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations")
+        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,is_trainer,trainer_subjects,trainer_institution,trainer_since")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
@@ -669,6 +669,12 @@ function Page() {
     subscriptionPlan: th.subscription_plan,
     certifications,
     accreditations,
+    trainer: {
+      isTrainer: th.is_trainer,
+      subjects: th.trainer_subjects,
+      institution: th.trainer_institution,
+      since: th.trainer_since,
+    },
   });
   const bioIsLong = (th.bio ?? "").length > 280;
   const avg = reviews?.length

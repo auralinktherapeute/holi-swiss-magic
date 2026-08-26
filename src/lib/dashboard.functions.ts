@@ -38,6 +38,12 @@ const profileSchema = z.object({
   meta_description: z.string().max(320).nullable().optional(),
   consultation_modes: z.array(z.string().max(40)).max(10).optional(),
   ide: z.string().max(40).nullable(),
+  // Formateur — déclaratif. Optionnels : un appel qui ne les envoie pas laisse
+  // les valeurs en base intactes (voir le motif `!== undefined` plus bas).
+  is_trainer: z.boolean().optional(),
+  trainer_subjects: z.string().max(300).nullable().optional(),
+  trainer_institution: z.string().max(200).nullable().optional(),
+  trainer_since: z.number().int().min(1950).max(new Date().getFullYear() + 1).nullable().optional(),
 });
 
 function sanitizeSlug(raw: string): string {
@@ -287,6 +293,10 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     if (data.title !== undefined) payload.title = data.title;
     if (data.meta_description !== undefined) payload.meta_description = data.meta_description;
     if (data.consultation_modes !== undefined) payload.consultation_modes = data.consultation_modes;
+    if (data.is_trainer !== undefined) payload.is_trainer = data.is_trainer;
+    if (data.trainer_subjects !== undefined) payload.trainer_subjects = data.trainer_subjects;
+    if (data.trainer_institution !== undefined) payload.trainer_institution = data.trainer_institution;
+    if (data.trainer_since !== undefined) payload.trainer_since = data.trainer_since;
     if (geo) {
       payload.latitude = geo.latitude;
       payload.longitude = geo.longitude;

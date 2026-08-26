@@ -25,7 +25,16 @@ export interface AccreditationEntry {
   number?: string;
 }
 
-export type BadgeKind = "pro" | "verified" | "certification" | "accreditation";
+/** Formations dispensées — entièrement déclaratif, jamais vérifié. */
+export interface TrainerInput {
+  isTrainer?: boolean | null;
+  /** Matières enseignées. Sans elles, aucun badge n'est produit. */
+  subjects?: string | null;
+  institution?: string | null;
+  since?: number | null;
+}
+
+export type BadgeKind = "pro" | "verified" | "certification" | "accreditation" | "trainer";
 
 export interface TrustBadge {
   key: string;
@@ -48,6 +57,7 @@ export function isProPlan(plan?: string | null): boolean {
 type BadgeDict = {
   pro: string; proDesc: string; verified: string; verifiedDesc: string;
   declaredSuffix: string; verifiedSuffix: string; certOf: (n: string) => string;
+  trainer: string; trainerSince: (y: number) => string; trainerTeaches: (s: string) => string;
 };
 
 const L: Record<string, BadgeDict> = {
@@ -57,6 +67,9 @@ const L: Record<string, BadgeDict> = {
     declaredSuffix: "Déclaré par le praticien, non vérifié par Holiswiss.",
     verifiedSuffix: "Justificatif validé par Holiswiss",
     certOf: (n: string) => `Certification ${n}.`,
+    trainer: "Formateur",
+    trainerSince: (y: number) => `depuis ${y}`,
+    trainerTeaches: (s: string) => `Dispense des formations : ${s}.`,
   },
   de: {
     pro: "Pro", proDesc: "Praktiker mit einem Holiswiss-Pro-Abonnement.",
@@ -64,6 +77,9 @@ const L: Record<string, BadgeDict> = {
     declaredSuffix: "Vom Praktiker angegeben, nicht von Holiswiss geprüft.",
     verifiedSuffix: "Nachweis von Holiswiss bestätigt",
     certOf: (n: string) => `Zertifizierung ${n}.`,
+    trainer: "Ausbildner",
+    trainerSince: (y: number) => `seit ${y}`,
+    trainerTeaches: (s: string) => `Bietet Ausbildungen an: ${s}.`,
   },
   it: {
     pro: "Pro", proDesc: "Professionista con abbonamento Holiswiss Pro.",
@@ -71,6 +87,9 @@ const L: Record<string, BadgeDict> = {
     declaredSuffix: "Dichiarato dal professionista, non verificato da Holiswiss.",
     verifiedSuffix: "Documento convalidato da Holiswiss",
     certOf: (n: string) => `Certificazione ${n}.`,
+    trainer: "Formatore",
+    trainerSince: (y: number) => `dal ${y}`,
+    trainerTeaches: (s: string) => `Tiene formazioni: ${s}.`,
   },
   en: {
     pro: "Pro", proDesc: "Practitioner on a Holiswiss Pro plan.",
@@ -78,6 +97,9 @@ const L: Record<string, BadgeDict> = {
     declaredSuffix: "Self-declared by the practitioner, not verified by Holiswiss.",
     verifiedSuffix: "Document validated by Holiswiss",
     certOf: (n: string) => `${n} certification.`,
+    trainer: "Trainer",
+    trainerSince: (y: number) => `since ${y}`,
+    trainerTeaches: (s: string) => `Teaches: ${s}.`,
   },
 };
 
@@ -101,6 +123,7 @@ export function buildTrustBadges(input: {
   subscriptionPlan?: string | null;
   certifications?: CertificationRow[] | null;
   accreditations?: AccreditationEntry[] | null;
+  trainer?: TrainerInput | null;
 }): TrustBadge[] {
   const d = dict(input.lang);
   const badges: TrustBadge[] = [];
@@ -142,6 +165,32 @@ export function buildTrustBadges(input: {
       // Déclaratif : jamais présenté comme vérifié.
       label: a.number ? `${org} · ${a.number}` : org,
       description: `${note} ${d.declaredSuffix}`,
+      verified: false,
+    });
+  }
+
+  // Formateur — placé après les badges vérifiés, parmi les déclaratifs.
+  //
+  // Cocher ne suffit pas : sans matières renseignées, le badge n'apparaît pas.
+  // Un badge « Formateur » seul n'apprendrait rien à un visiteur, et Holiswiss
+  // ne contrôlant pas qui forme qui, il ne peut jamais être « vérifié ».
+  //
+  // Le libellé ne s'accorde pas au genre : rien en base ne le renseigne, et le
+  // déduire d'un prénom se tromperait sur de vraies personnes. Un praticien qui
+  // veut « Formatrice » l'écrira dans ses matières.
+  const tr = input.trainer;
+  const subjects = (tr?.subjects ?? "").trim();
+  if (tr?.isTrainer && subjects) {
+    const since = typeof tr.since === "number" && Number.isFinite(tr.since) ? tr.since : null;
+    const institution = (tr.institution ?? "").trim();
+    const parts = [d.trainerTeaches(subjects)];
+    if (institution) parts.push(`${institution}.`);
+    parts.push(d.declaredSuffix);
+    badges.push({
+      key: "trainer",
+      kind: "trainer",
+      label: since ? `${d.trainer} · ${d.trainerSince(since)}` : d.trainer,
+      description: parts.join(" "),
       verified: false,
     });
   }

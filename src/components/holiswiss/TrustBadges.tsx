@@ -1,4 +1,4 @@
-import { BadgeCheck, ShieldCheck, Sparkles, FileText } from "lucide-react";
+import { BadgeCheck, ShieldCheck, Sparkles, FileText, GraduationCap } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { TrustBadge } from "@/lib/therapist-badges";
 
@@ -7,6 +7,10 @@ const ICONS = {
   verified: ShieldCheck,
   certification: BadgeCheck,
   accreditation: FileText,
+  // `verified: false` sur ce badge : la cascade de styles le range d'elle-même
+  // dans le style « déclaré ». Il ne peut donc pas ressembler à une
+  // certification validée, quelle que soit l'évolution du composant.
+  trainer: GraduationCap,
 } as const;
 
 const STYLES: Record<string, string> = {
