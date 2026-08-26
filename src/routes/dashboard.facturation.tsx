@@ -163,7 +163,10 @@ function Page() {
         ))}
       </section>
 
+      {!loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
+
       <section>
+
         <h2 className="text-lg font-semibold mb-3">Factures ({invoices.length})</h2>
         {loading ? (
           <div className="space-y-2" aria-busy="true">
