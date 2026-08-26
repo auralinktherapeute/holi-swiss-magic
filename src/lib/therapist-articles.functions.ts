@@ -91,7 +91,23 @@ const ArticleInput = z.object({
   titre: z.string().trim().min(3, "Titre trop court").max(200),
   contenu: z.string().trim().min(20, "Contenu trop court"),
   extrait: z.string().trim().max(400).optional().nullable(),
-  image_couverture: z.string().trim().url().optional().nullable().or(z.literal("").transform(() => null)),
+  // Tolérant : un lien sans schéma (ex. "exemple.ch/photo.jpg") est complété,
+  // un lien inexploitable est ignoré plutôt que de bloquer la soumission.
+  image_couverture: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((v) => {
+      if (!v) return null;
+      const url = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+      try {
+        return new URL(url).toString();
+      } catch {
+        return null;
+      }
+    }),
+
   submit: z.boolean().default(false),
 });
 
