@@ -14,7 +14,10 @@ import {
   type CabinetClientRow,
 } from "@/lib/cabinet-core.server";
 
-export type { CabinetOverview, CabinetClientRow };
+import type { UninvoicedAppointment } from "@/lib/cabinet-billing.server";
+
+export type { CabinetOverview, CabinetClientRow, UninvoicedAppointment };
+
 
 export const getCabinetOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -94,24 +97,44 @@ export const updateClientConsent = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Rendez-vous terminés non facturés — base de la génération « Factures manquantes ». */
+/** Rendez-vous honorés non facturés, avec prix et TVA suggérés. */
 export const listUninvoicedAppointments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<UninvoicedAppointment[]> => {
     const therapistId = await getTherapistId(context.supabase, context.userId);
-    const { data, error } = await context.supabase
-      .from("appointments")
-      .select(
-        "id,client_id,patient_name,patient_email,appointment_date,appointment_time,service_name,duration_minutes,status",
-      )
-      .eq("therapist_id", therapistId)
-      .eq("status", "completed")
-      .is("invoiced_at", null)
-      .order("appointment_date", { ascending: false })
-      .limit(200);
-    if (error) throw new Error(error.message);
-    return (data ?? []) as any[];
+    const { buildUninvoicedAppointments } = await import("@/lib/cabinet-billing.server");
+    return buildUninvoicedAppointments(context.supabase, therapistId);
   });
+
+/** Crée un brouillon de facture depuis un RDV honoré et marque le RDV facturé. */
+export const invoiceAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        appointment_id: z.string().uuid(),
+        prix_unitaire: z.number().min(0).max(100000),
+        tva_taux: z.number().min(0).max(100).default(0),
+        description: z.string().trim().max(500).optional().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { createDraftFromAppointment } = await import("@/lib/cabinet-billing.server");
+    return createDraftFromAppointment(context.supabase, therapistId, context.userId, data);
+  });
+
+/** Écarte un RDV de la facturation (gratuit, offert, déjà réglé hors app). */
+export const dismissAppointmentInvoicing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ appointment_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { skipAppointmentInvoicing } = await import("@/lib/cabinet-billing.server");
+    return skipAppointmentInvoicing(context.supabase, therapistId, data.appointment_id);
+  });
+
 
 /** Journal d'accès du cabinet (lecture seule, append-only en base). */
 export const listCabinetAccessLog = createServerFn({ method: "GET" })
