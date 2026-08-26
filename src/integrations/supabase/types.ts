@@ -3785,6 +3785,54 @@ export type Database = {
         }
         Relationships: []
       }
+      therapist_faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          is_active: boolean
+          position: number
+          question: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          position?: number
+          question: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          position?: number
+          question?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_faqs_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_faqs_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_health_recommendations: {
         Row: {
           category: string | null
@@ -4787,6 +4835,7 @@ export type Database = {
           created_at: string
           currency: string | null
           email: string | null
+          faq_enabled: boolean
           first_name: string
           gallery_urls: Json
           geom: unknown
@@ -4845,6 +4894,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           email?: string | null
+          faq_enabled?: boolean
           first_name: string
           gallery_urls?: Json
           geom?: unknown
@@ -4903,6 +4953,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           email?: string | null
+          faq_enabled?: boolean
           first_name?: string
           gallery_urls?: Json
           geom?: unknown
