@@ -17,6 +17,7 @@ import {
   type TherapistInvoiceLine, type TherapistInvoicePayment,
 } from "@/lib/therapist-invoices.functions";
 import { listMyCrmContactsMinimal } from "@/lib/service-packages.functions";
+import InvoiceReminders from "@/components/dashboard/InvoiceReminders";
 import {
   computeInvoiceTotals, isValidIban, isQrIban, missingInvoiceSettings,
   VAT_WARNING, round2, type InvoiceLineInput,
@@ -163,7 +164,10 @@ function Page() {
         ))}
       </section>
 
+      {!loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
+
       <section>
+
         <h2 className="text-lg font-semibold mb-3">Factures ({invoices.length})</h2>
         {loading ? (
           <div className="space-y-2" aria-busy="true">
