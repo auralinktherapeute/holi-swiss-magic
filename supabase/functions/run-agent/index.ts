@@ -959,11 +959,52 @@ async function runDelegationPipeline(requestId: string) {
 // ═══════════════════════════════════════════════════════════════
 //  HANDLER HTTP
 // ═══════════════════════════════════════════════════════════════
+// Garde d'accès : soit un secret partagé (appels machine/cron), soit un JWT d'administrateur.
+async function isAuthorized(req: Request): Promise<boolean> {
+  const sharedSecret = Deno.env.get("RUN_AGENT_SECRET") ?? "";
+  const provided = req.headers.get("x-agent-secret") ?? "";
+  if (sharedSecret && provided) {
+    const a = new TextEncoder().encode(sharedSecret);
+    const b = new TextEncoder().encode(provided);
+    if (a.length === b.length) {
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+      if (diff === 0) return true;
+    }
+  }
+
+  const authHeader = req.headers.get("authorization") ?? "";
+  if (!authHeader.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7).trim();
+  if (!token) return false;
+
+  const { data, error } = await db.auth.getUser(token);
+  if (error || !data?.user) return false;
+
+  const { data: roles } = await db
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  return Boolean(roles);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
+
+  if (!(await isAuthorized(req))) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    });
+  }
+
   const startedAt = new Date();
+
 
   try {
     const body = await req.json();
