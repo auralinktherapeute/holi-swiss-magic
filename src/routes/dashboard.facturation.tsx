@@ -19,6 +19,8 @@ import {
 import { listMyCrmContactsMinimal } from "@/lib/service-packages.functions";
 import InvoiceReminders from "@/components/dashboard/InvoiceReminders";
 import InvoiceReports from "@/components/dashboard/InvoiceReports";
+import { MissingInvoices } from "@/components/dashboard/MissingInvoices";
+
 import {
   computeInvoiceTotals, isValidIban, isQrIban, missingInvoiceSettings,
   VAT_WARNING, round2, type InvoiceLineInput,
