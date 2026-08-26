@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar, FileText,
+  Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar,
   Phone, Mail, X, ExternalLink, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
