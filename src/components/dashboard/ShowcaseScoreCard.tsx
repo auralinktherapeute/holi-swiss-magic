@@ -69,7 +69,7 @@ export function ShowcaseScoreCard() {
 
   if (isLoading) {
     return (
-      <Card className="border-border bg-card/70">
+      <Card className="rounded-2xl border-border bg-card/70">
         <CardContent className="p-5">
           <div className="h-4 w-48 animate-pulse rounded bg-muted" />
           <div className="mt-4 h-2 animate-pulse rounded bg-muted" />
@@ -89,7 +89,7 @@ export function ShowcaseScoreCard() {
   const seatNumber = data.access?.showSeatNumber ? data.access?.seatNumber : null;
 
   return (
-    <Card className="border-border bg-card/70">
+    <Card className="rounded-2xl border-border bg-card/70">
       <CardContent className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export function ShowcaseScoreCard() {
         </div>
 
         {founder && (
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-primary/35 bg-primary-xlight p-3">
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-primary/35 bg-primary-xlight p-3">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary-light" aria-hidden="true" />
             <p className="text-xs leading-relaxed text-foreground/80">
               Vous bénéficiez de l’accès fondateur au scoring avancé Holiswiss.
@@ -174,7 +174,7 @@ export function ShowcaseScoreCard() {
                   {basic.essentials.map((e) => {
                     const action = ACTIONS[e.id];
                     return (
-                      <li key={e.id} className="rounded-lg border border-border bg-surface p-3">
+                      <li key={e.id} className="rounded-xl border border-border bg-surface p-3">
                         <p className="text-sm font-medium text-foreground/90">{e.label}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{e.hint}</p>
                         {action && (
@@ -198,7 +198,7 @@ export function ShowcaseScoreCard() {
                 ))}
               </ul>
             )}
-            <p className="flex items-start gap-2 rounded-lg border border-border bg-primary-xlight p-3 text-xs text-foreground/80">
+            <p className="flex items-start gap-2 rounded-xl border border-border bg-primary-xlight p-3 text-xs text-foreground/80">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
                 Le score avancé — visibilité et conversion détaillées, actions prioritaires point par
@@ -207,7 +207,7 @@ export function ShowcaseScoreCard() {
               </span>
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm" className="min-h-[40px] bg-primary text-primary-foreground hover:bg-primary-dark">
+              <Button asChild size="sm" className="holi-cta min-h-[40px] rounded-xl">
                 <Link to="/dashboard/abonnement">Découvrir Elite Pro</Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="min-h-[40px]">
@@ -218,7 +218,7 @@ export function ShowcaseScoreCard() {
         )}
 
         {advanced && (missing.length === 0 ? (
-          <p className="mt-5 flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+          <p className="mt-5 flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-sm text-success">
             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
             Votre vitrine est complète : tous les contrôles sont validés.
           </p>
@@ -233,7 +233,7 @@ export function ShowcaseScoreCard() {
                 return (
                   <li
                     key={c.id}
-                    className="rounded-lg border border-border bg-surface p-3"
+                    className="rounded-xl border border-border bg-surface p-3"
                   >
                     <div className="flex items-start gap-2.5">
                       <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${s.cls}`} aria-hidden="true" />

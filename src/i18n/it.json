@@ -358,6 +358,7 @@
   },
   "dashboard_home": {
     "greeting": "Ciao 👋",
+    "greeting_named": "Ciao {{name}} 👋",
     "overview_subtitle": "Panoramica della tua attività",
     "plan_active": "Piano Pro · attivo",
     "stat_views": "Visite al profilo (30g)",

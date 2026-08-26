@@ -358,6 +358,7 @@
   },
   "dashboard_home": {
     "greeting": "Hallo 👋",
+    "greeting_named": "Hallo {{name}} 👋",
     "overview_subtitle": "Übersicht Ihrer Tätigkeit",
     "plan_active": "Pro-Paket · aktiv",
     "stat_views": "Profilaufrufe (30 T.)",

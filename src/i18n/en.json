@@ -358,6 +358,7 @@
   },
   "dashboard_home": {
     "greeting": "Hello 👋",
+    "greeting_named": "Hello {{name}} 👋",
     "overview_subtitle": "Overview of your activity",
     "plan_active": "Pro plan · active",
     "stat_views": "Profile views (30d)",

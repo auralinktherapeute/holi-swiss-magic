@@ -8,13 +8,14 @@ export const getOnboardingState = createServerFn({ method: "GET" })
 
     const { data: t } = await supabaseAdmin
       .from("therapists")
-      .select("id, bio, short_bio, specialties, address, onboarding_complete, onboarding_completed_at")
+      .select("id, first_name, bio, short_bio, specialties, address, onboarding_complete, onboarding_completed_at")
       .eq("user_id", context.userId)
       .maybeSingle();
 
     if (!t) {
       return {
         onboarding_complete: false,
+        first_name: null as string | null,
         checklist: {
           profileComplete: false,
           availabilitySet: false,
@@ -59,6 +60,7 @@ export const getOnboardingState = createServerFn({ method: "GET" })
 
     return {
       onboarding_complete: !!t.onboarding_complete,
+      first_name: (t.first_name ?? null) as string | null,
       checklist: {
         profileComplete,
         availabilitySet: (availCount ?? 0) > 0,

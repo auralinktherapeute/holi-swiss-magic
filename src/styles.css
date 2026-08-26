@@ -112,6 +112,42 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(184, 110, 249, 0.25);
   --sidebar-ring: #b86ef9;
+
+  /*
+   * Charte Holiswiss — variables ADDITIVES.
+   *
+   * Aucune valeur ci-dessus n'est modifiée : ces trois-là sont nouvelles et
+   * ne sont lues que par les écrans déjà repris. Le réalignement complet de
+   * la charte (1092 occurrences, 118 fichiers) reste un lot distinct ; quand
+   * il changera les valeurs de `--primary` & co., ces variables seront déjà
+   * justes et n'auront pas à être revisitées.
+   */
+  --holi-wash: linear-gradient(145deg, rgba(124, 58, 237, 0.22), rgba(34, 211, 238, 0.08));
+  --holi-gradient-btn: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  --holi-glow: 0 6px 18px rgba(139, 92, 246, 0.32);
+}
+
+/*
+ * Bouton d'action de la direction « Chaleureux ».
+ * Le dégradé et le halo sont portés par une classe et non répétés en
+ * utilitaires arbitraires, pour rester modifiables en un seul endroit.
+ */
+.holi-cta {
+  background: var(--holi-gradient-btn);
+  box-shadow: var(--holi-glow);
+  color: #fff;
+  border: 0;
+}
+.holi-cta:hover {
+  filter: brightness(1.08);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .holi-cta {
+    transition: filter 200ms ease-out, transform 200ms ease-out;
+  }
+  .holi-cta:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .dark {
