@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
+import { getPublicFaqs } from "@/lib/therapist-faq.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
@@ -46,15 +47,24 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       const { therapist, reviews, certifications, articles, events } = await getTherapistBySlug({
         data: { slug: params.slug },
       });
+      // FAQ : lecture séparée et tolérante. La RLS filtre déjà sur l'activation
+      // et le statut du praticien — un échec ici ne doit pas priver le visiteur
+      // de toute la fiche.
+      let faqs: Array<{ question: string; answer: string }> = [];
+      try {
+        const r = await getPublicFaqs({ data: { slug: params.slug } });
+        faqs = r.faqs ?? [];
+      } catch { /* fiche servie sans FAQ */ }
       return {
         therapist,
         reviews: reviews ?? [],
         certifications: certifications ?? [],
         articles: articles ?? [],
         events: events ?? [],
+        faqs,
       };
     } catch {
-      return { therapist: null, reviews: [], certifications: [], articles: [], events: [] };
+      return { therapist: null, reviews: [], certifications: [], articles: [], events: [], faqs: [] };
     }
   },
 
@@ -351,7 +361,20 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       businessNodes.push(business);
     }
 
-    const graph: Array<Record<string, unknown>> = [person, ...businessNodes, ...serviceNodes, breadcrumbs];
+    // FAQPage : bâtie sur les MÊMES questions que celles rendues en HTML —
+    // jamais de balisage sans contrepartie visible sur la page.
+    const faqList = ((loaderData as any)?.faqs ?? []) as Array<{ question: string; answer: string }>;
+    const faqNode = faqList.length > 0 ? [{
+      "@type": "FAQPage",
+      "@id": `${url}#faq`,
+      mainEntity: faqList.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+    }] : [];
+
+    const graph: Array<Record<string, unknown>> = [person, ...businessNodes, ...serviceNodes, ...faqNode, breadcrumbs];
     const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
@@ -512,6 +535,9 @@ function Page() {
   // Le loader serveur a déjà chargé le profil : rendu dès le HTML initial (SEO/GEO),
   // useQuery ne sert plus qu'à revalider côté client.
   const loaderData = Route.useLoaderData();
+  // FAQ : uniquement depuis le loader, jamais re-fetchée côté client — elle
+  // doit être dans le HTML initial pour être lue par les crawlers.
+  const faqs = (loaderData?.faqs ?? []) as Array<{ question: string; answer: string }>;
 
   const { data: th, isLoading } = useQuery({
     queryKey: ["therapist", slug],
@@ -1042,6 +1068,44 @@ function Page() {
               </motion.section>
             </div>
 
+
+            {/* FAQ — entre les prestations et les avis : le visiteur a compris
+                l'offre et lève ses derniers doutes avant de réserver. Rendue
+                côté serveur, donc lisible par les crawlers sans JavaScript. */}
+            {faqs.length > 0 && (
+              <motion.section
+                variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                aria-labelledby="faq-title"
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+              >
+                <h2 id="faq-title" className="mb-1 text-lg font-bold text-white">
+                  {t("therapist_profile.faq_title", { defaultValue: "Questions fréquentes" })}
+                </h2>
+                <p className="mb-5 text-sm text-[#d4c4e0]">
+                  {t("therapist_profile.faq_subtitle", {
+                    defaultValue: "Ce que l'on me demande le plus souvent avant un premier rendez-vous.",
+                  })}
+                </p>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {faqs.map((f, i) => (
+                    <details
+                      key={i}
+                      className="group overflow-hidden rounded-xl border border-[rgba(168,85,247,0.25)] bg-[#2d1b4e] transition-colors hover:border-[rgba(168,85,247,0.5)]"
+                    >
+                      <summary className="flex cursor-pointer list-none items-start gap-3 p-4 text-[0.97rem] font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#22d3ee]">
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-[rgba(168,85,247,0.16)] text-[#a855f7] transition-transform duration-200 ease-out group-open:rotate-45 group-open:bg-[rgba(34,211,238,0.18)] group-open:text-[#22d3ee]"
+                        >+</span>
+                        <span>{f.question}</span>
+                      </summary>
+                      <p className="mx-4 mb-4 whitespace-pre-wrap text-sm text-[#d4c4e0]">{f.answer}</p>
+                    </details>
+                  ))}
+                </div>
+              </motion.section>
+            )}
 
             {/* Avis */}
             <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}

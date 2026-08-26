@@ -36,6 +36,7 @@ import { updateMyNewsletterConsent, getMyNewsletterConsent } from "@/lib/newslet
 import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
+import FaqEditor from "@/components/dashboard/FaqEditor";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { useHashFocus } from "@/hooks/use-hash-focus";
 import { useFormDraft } from "@/hooks/use-form-draft";
@@ -658,6 +659,10 @@ function ProfilePage() {
           <Divider />
           <div id="certifications">
             <CertificationsUploader userId={user!.id} />
+          </div>
+          <Divider />
+          <div id="faq">
+            <FaqEditor />
           </div>
         </Section>
 
