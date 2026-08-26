@@ -223,7 +223,7 @@ export async function buildTemplateContext(
   const [therapistRes, settingsRes, clientRes, apptRes] = await Promise.all([
     supabase
       .from("therapists")
-      .select("full_name,professional_title,email,phone,city")
+      .select("first_name,last_name,title,email,phone,city,address,postal_code")
       .eq("id", therapistId)
       .maybeSingle(),
     supabase
@@ -255,12 +255,15 @@ export async function buildTemplateContext(
 
   const address = s.adresse_rue
     ? `${s.adresse_rue}, ${s.adresse_npa ?? ""} ${s.adresse_ville ?? ""}`.trim()
-    : t.city ?? null;
+    : [t.address, t.postal_code, t.city].filter(Boolean).join(", ") || null;
 
   return {
     therapist: {
-      name: s.raison_sociale || t.full_name || "Cabinet",
-      profession: t.professional_title ?? null,
+      name:
+        s.raison_sociale ||
+        `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim() ||
+        "Cabinet",
+      profession: t.title ?? null,
       address,
       email: s.email_pro || t.email || null,
       phone: s.telephone || t.phone || null,
