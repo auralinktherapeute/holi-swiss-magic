@@ -26,6 +26,12 @@ const STATUS_META: Record<TherapistArticle["statut"], { label: string; className
   refuse:                 { label: "Refusé",          className: "bg-red-500/15 text-red-300 border-red-500/30" },
 };
 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ARTICLE_IMAGE_BUCKET = "therapist-photos";
+/** ~10 ans : l'image doit rester lisible par les visiteurs anonymes de /paroles. */
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10;
+
 function Page() {
   const qc = useQueryClient();
   const list = useServerFn(listMyTherapistArticles);
