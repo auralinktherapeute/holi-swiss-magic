@@ -133,36 +133,8 @@ function Page() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-surface border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t("dashboard_home.upcoming_bookings")}</CardTitle>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard/reservations">{t("dashboard_home.see_all")} <ArrowUpRight className="h-4 w-4 ml-1" /></Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {upcoming.map((u) => (
-              <div key={u.name} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 p-4">
-                <div>
-                  <div className="font-medium text-foreground">{u.name}</div>
-                  <div className="text-sm text-muted-foreground">{u.type}</div>
-                </div>
-                <div className="text-sm text-foreground/80">{u.when}</div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      <CabinetOverviewPanel />
 
-        <Card className="bg-surface border-border/60">
-          <CardHeader><CardTitle>{t("dashboard_home.quick_actions")}</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/profil">{t("dashboard_home.complete_profile")}</Link></Button>
-            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/agenda">{t("dashboard_home.update_agenda")}</Link></Button>
-            <Button asChild className="w-full justify-start" variant="secondary"><Link to="/dashboard/articles">{t("dashboard_home.write_article")}</Link></Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
