@@ -5,10 +5,24 @@ import { BarChart3, Download, Percent } from "lucide-react";
 import {
   getInvoiceReport, exportInvoicesCsv,
 } from "@/lib/therapist-invoices.functions";
-import type { InvoiceReport } from "@/lib/invoice-report.server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+type MonthlyBucket = { month: string; invoices: number; ht: number; tva: number; ttc: number; encaisse: number };
+type VatBucket = { rate: number; base_ht: number; tva: number };
+type InvoiceReport = {
+  period: { from: string; to: string };
+  currency: string;
+  totals: {
+    invoices: number; ht: number; tva: number; ttc: number;
+    encaisse: number; solde: number; en_retard: number; montant_en_retard: number;
+  };
+  monthly: MonthlyBucket[];
+  vat: VatBucket[];
+  vat_mode: "facture" | "encaisse";
+  assujetti_tva: boolean;
+};
 
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
