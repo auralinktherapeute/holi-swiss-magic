@@ -515,14 +515,25 @@ function DetailCard({ therapistId, detail, onChangeStatus, onRefreshDetail }: { 
       )}
 
       {/* Citabilité IA — ADMIN UNIQUEMENT (jamais montrée au thérapeute) */}
-      <div className="mt-4 flex items-center justify-between rounded-lg border border-amber-400/25 bg-amber-400/5 px-3 py-2">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-400/25 bg-amber-400/5 px-3 py-2">
         <span className="text-xs text-amber-200/90">
           🔒 Citabilité IA <span className="text-amber-200/50">(admin uniquement)</span>
         </span>
-        <span className="text-sm font-semibold text-white">
-          {cit == null ? <span className="text-white/40">non mesurée</span> : `${cit}/100`}
+        <span className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-white">
+            {cit == null ? <span className="text-white/40">non mesurée</span> : `${cit}/100`}
+          </span>
+          <button
+            type="button"
+            onClick={doCitability}
+            disabled={busy === "cit"}
+            className="min-h-[36px] rounded-md border border-amber-400/40 px-3 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-400/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-50"
+          >
+            {busy === "cit" ? "Mesure…" : cit == null ? "Mesurer" : "Recalculer"}
+          </button>
         </span>
       </div>
+
 
       <div className="mt-4 grid grid-cols-4 gap-2 text-center text-xs">
         {(["completude", "contenu", "activite", "visibilite"] as const).map((k) => (
