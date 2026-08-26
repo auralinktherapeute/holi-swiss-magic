@@ -16,7 +16,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import LogoUploader from "@/components/dashboard/LogoUploader";
 import ImportContactsDialog from "@/components/dashboard/ImportContactsDialog";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import IntakePanel from "@/components/dashboard/IntakePanel";
@@ -26,13 +25,9 @@ import {
   listMyTasks, upsertTask, deleteTask, type ClientContact, type CrmTask,
 } from "@/lib/crm-therapist.functions";
 import {
-  listMyInvoices, upsertInvoice, deleteInvoice, updateInvoiceStatus,
-  getTherapistBranding, updateTherapistBranding, type Invoice, type InvoiceItem,
+  listMyInvoices, getTherapistBranding, type Invoice,
 } from "@/lib/invoice.functions";
-import {
-  listMyPaymentMethods, type PaymentMethod, type PaymentMethodType,
-} from "@/lib/payment-methods.functions";
-import { Checkbox } from "@/components/ui/checkbox";
+
 
 export const Route = createFileRoute("/dashboard/crm")({ component: CrmPage });
 
