@@ -1,0 +1,87 @@
+# Contrôle SEO de la production, tous les jours, sans avoir à y penser.
+#
+# Pourquoi une tâche planifiée et non un déclenchement sur `push` : un push
+# précède le déploiement Lovable. Un contrôle lancé sur push interrogerait la
+# production PRÉCÉDENTE et validerait l'ancienne version — un faux vert, pire
+# que pas de contrôle du tout.
+#
+# Le script ne lit aucun secret et n'importe aucune dépendance : ni `npm ci`,
+# ni variable d'environnement. Il vise holiswiss.ch et sort en code 1 dès
+# qu'une règle est violée, ce qui fait échouer le job et déclenche l'email
+# d'échec de GitHub vers auralinktherapeute@gmail.com.
+
+name: Contrôle SEO production
+
+on:
+  schedule:
+    # 08:00 UTC — 10:00 à Zurich en été, 09:00 en hiver. Placé après les agents
+    # articles de 06:00 et 06:30, qui modifient le sitemap.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      sample:
+        description: "URLs contrôlées par type de page (0 = toutes, lent)"
+        required: false
+        default: "4"
+      base:
+        description: "Site à contrôler"
+        required: false
+        default: "https://holiswiss.ch"
+
+# Un seul contrôle à la fois : deux exécutions concurrentes ne diraient rien
+# de plus et multiplieraient les requêtes vers la production.
+concurrency:
+  group: seo-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Contrôler la production
+        id: seo
+        run: |
+          set -o pipefail
+          SAMPLE="${{ inputs.sample || '4' }}"
+          BASE="${{ inputs.base || 'https://holiswiss.ch' }}"
+          if [ "$SAMPLE" = "0" ]; then
+            ARGS="--all"
+          else
+            ARGS="--sample=$SAMPLE"
+          fi
+          echo "Contrôle de $BASE ($ARGS)"
+          node scripts/seo-check.mjs --base="$BASE" $ARGS 2>&1 | tee rapport.txt
+
+      - name: Publier le rapport dans le résumé
+        # `always()` : le rapport est surtout utile quand le job échoue.
+        if: always()
+        run: |
+          {
+            echo "## Contrôle SEO — ${{ inputs.base || 'https://holiswiss.ch' }}"
+            echo
+            if [ "${{ steps.seo.outcome }}" = "success" ]; then
+              echo "Aucun problème détecté."
+            else
+              echo "**Des règles sont violées.** Détail ci-dessous."
+            fi
+            echo
+            echo '```'
+            cat rapport.txt 2>/dev/null || echo "(aucune sortie — le script n'a pas démarré)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Conserver le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-seo
+          path: rapport.txt
+          retention-days: 30
+          if-no-files-found: warn
