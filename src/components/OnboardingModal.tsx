@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { sendWaitlistEmails } from "@/lib/waitlist-emails.functions";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 const lotusUrl = lotusAsset.url;
 
 const SESSION_KEY = "holiswiss-onboarding-shown";
@@ -125,13 +126,14 @@ export function OnboardingModal() {
       if (e.key === "ArrowLeft" && index > 0) prev();
     };
     window.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open, index, isLast]);
+
+  useEffect(() => {
+    if (!open) return;
+    return lockBodyScroll();
+  }, [open]);
+
 
   function close() {
     setOpen(false);
