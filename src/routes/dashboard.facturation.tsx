@@ -256,6 +256,18 @@ function Page() {
 
 // ── Paramètres de facturation ───────────────────────────────────────
 
+type FieldProps = { k: string; label: string; type?: string; ph?: string; state: Record<string, any>; set: (k: string, v: any) => void; };
+
+function Field({ k, label, type = "text", ph = "", state, set }: FieldProps) {
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={`set-${k}`}>{label}</Label>
+      <Input id={`set-${k}`} type={type} value={state[k] ?? ""} placeholder={ph}
+        onChange={(e) => set(k, type === "number" ? Number(e.target.value) : e.target.value)} />
+    </div>
+  );
+}
+
 function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   existing: TherapistInvoiceSettings | null;
@@ -334,13 +346,6 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
     finally { setSaving(false); }
   }
 
-  const Field = ({ k, label, type = "text", ph = "" }: { k: string; label: string; type?: string; ph?: string }) => (
-    <div className="space-y-1">
-      <Label htmlFor={`set-${k}`}>{label}</Label>
-      <Input id={`set-${k}`} type={type} value={f[k] ?? ""} placeholder={ph}
-        onChange={(e) => set(k, type === "number" ? Number(e.target.value) : e.target.value)} />
-    </div>
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -356,17 +361,17 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
           <fieldset className="space-y-3">
             <legend className="text-sm font-semibold">Émetteur</legend>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field k="raison_sociale" label="Raison sociale (sinon votre nom)" />
-              <Field k="numero_ide" label="Numéro IDE" ph="CHE-123.456.789" />
-              <Field k="telephone" label="Téléphone" />
-              <Field k="email_pro" label="Email professionnel" type="email" />
-              <Field k="adresse_rue" label="Rue *" />
+              <Field state={f} set={set} k="raison_sociale" label="Raison sociale (sinon votre nom)" />
+              <Field state={f} set={set} k="numero_ide" label="Numéro IDE" ph="CHE-123.456.789" />
+              <Field state={f} set={set} k="telephone" label="Téléphone" />
+              <Field state={f} set={set} k="email_pro" label="Email professionnel" type="email" />
+              <Field state={f} set={set} k="adresse_rue" label="Rue *" />
               <div className="grid grid-cols-3 gap-2">
-                <Field k="adresse_npa" label="NPA *" />
-                <div className="col-span-2"><Field k="adresse_ville" label="Ville *" /></div>
+                <Field state={f} set={set} k="adresse_npa" label="NPA *" />
+                <div className="col-span-2"><Field state={f} set={set} k="adresse_ville" label="Ville *" /></div>
               </div>
-              <Field k="adresse_pays" label="Pays" />
-              <Field k="logo_url" label="URL du logo" ph="https://…" />
+              <Field state={f} set={set} k="adresse_pays" label="Pays" />
+              <Field state={f} set={set} k="logo_url" label="URL du logo" ph="https://…" />
             </div>
           </fieldset>
 
@@ -387,13 +392,13 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
                   ? <p className="text-xs text-destructive">{qrIbanErr}</p>
                   : <p className="text-xs text-muted-foreground">Un QR-IBAN permet la référence QR structurée.</p>}
               </div>
-              <Field k="titulaire_nom" label="Titulaire du compte" />
-              <Field k="titulaire_adresse" label="Adresse du titulaire" />
+              <Field state={f} set={set} k="titulaire_nom" label="Titulaire du compte" />
+              <Field state={f} set={set} k="titulaire_adresse" label="Adresse du titulaire" />
               <div className="grid grid-cols-3 gap-2">
-                <Field k="titulaire_npa" label="NPA" />
-                <div className="col-span-2"><Field k="titulaire_ville" label="Ville" /></div>
+                <Field state={f} set={set} k="titulaire_npa" label="NPA" />
+                <div className="col-span-2"><Field state={f} set={set} k="titulaire_ville" label="Ville" /></div>
               </div>
-              <Field k="titulaire_pays" label="Pays du titulaire" />
+              <Field state={f} set={set} k="titulaire_pays" label="Pays du titulaire" />
             </div>
           </fieldset>
 
@@ -409,8 +414,8 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
             </div>
             {f.assujetti_tva && (
               <div className="grid sm:grid-cols-3 gap-3">
-                <Field k="numero_tva" label="Numéro TVA" ph="CHE-…-TVA" />
-                <Field k="taux_tva" label="Taux par défaut (%)" type="number" />
+                <Field state={f} set={set} k="numero_tva" label="Numéro TVA" ph="CHE-…-TVA" />
+                <Field state={f} set={set} k="taux_tva" label="Taux par défaut (%)" type="number" />
                 <div className="space-y-1">
                   <Label htmlFor="mode-tva">Mode de calcul</Label>
                   <Select value={f.mode_tva} onValueChange={(v) => set("mode_tva", v)}>
@@ -423,7 +428,7 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
                 </div>
               </div>
             )}
-            <Field k="mention_tva" label="Mention TVA personnalisée" ph="Non assujetti à la TVA" />
+            <Field state={f} set={set} k="mention_tva" label="Mention TVA personnalisée" ph="Non assujetti à la TVA" />
           </fieldset>
 
           <fieldset className="space-y-3">
@@ -439,8 +444,8 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
                   </SelectContent>
                 </Select>
               </div>
-              <Field k="delai_paiement_jours" label="Délai de paiement (jours)" type="number" />
-              <Field k="next_invoice_number" label="Prochain numéro" type="number" />
+              <Field state={f} set={set} k="delai_paiement_jours" label="Délai de paiement (jours)" type="number" />
+              <Field state={f} set={set} k="next_invoice_number" label="Prochain numéro" type="number" />
             </div>
             <div className="flex items-center gap-2">
               <Switch id="rz" checked={!!f.remise_a_zero_annuelle}
