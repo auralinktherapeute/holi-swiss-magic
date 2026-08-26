@@ -72,7 +72,13 @@ function DashboardLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // La page « Mon profil » contient déjà sa propre rubrique newsletter :
   // on évite ainsi le doublon de consentement en bas de page.
-  const showNewsletterFooter = !pathname.startsWith("/dashboard/profil");
+  // La newsletter n'apparaît que sur l'accueil du tableau de bord. Elle
+  // s'affichait auparavant sur TOUS les écrans sauf « Mon profil » : un
+  // praticien la croisait à chaque rubrique — agenda, factures, clients — ce qui
+  // la rendait invitante comme un bandeau publicitaire. Une fois, au bon
+  // endroit, suffit. Le composant, l'inscription et les consentements sont
+  // inchangés : seule la condition d'affichage bouge.
+  const showNewsletterFooter = pathname === "/dashboard" || pathname === "/dashboard/";
   useEffect(() => {
     if (loading) return;
     (ensureShell as any)().catch(() => {});

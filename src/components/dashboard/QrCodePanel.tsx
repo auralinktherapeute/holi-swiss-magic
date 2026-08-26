@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, Download, QrCode as QrIcon } from "lucide-react";
+import { Copy, Download, QrCode as QrIcon, Eye, EyeOff } from "lucide-react";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 const lotusLogo = lotusAsset.url;
 
@@ -205,22 +205,75 @@ export default function QrCodePanel({ slug }: { slug: string }) {
     );
   }
 
+  return <QrCodeDisclosure slug={cleanSlug} />;
+}
+
+/**
+ * Le QR code est masqué par défaut : il occupe plus de 320 px de haut sur une
+ * page profil déjà longue, alors qu'on ne le consulte qu'occasionnellement —
+ * pour l'imprimer ou l'afficher en cabinet.
+ *
+ * Une fois révélé, il reste MONTÉ : masquer puis réafficher n'appelle pas de
+ * nouveau rendu du canvas. C'est l'intérêt de `hidden` plutôt qu'un démontage
+ * conditionnel, qui aurait regénéré l'image à chaque bascule.
+ */
+function QrCodeDisclosure({ slug }: { slug: string }) {
+  const [revealed, setRevealed] = useState(false);
+  // Vrai dès la première révélation, et jamais remis à false : il commande le
+  // montage, tandis que `revealed` ne commande que la visibilité.
+  const [mounted, setMounted] = useState(false);
+
+  function toggle() {
+    setRevealed((v) => {
+      if (!v) setMounted(true);
+      return !v;
+    });
+  }
+
   return (
     <div className="rounded-xl border border-[#3a2d5f] bg-[#1a1230]/60 p-5">
-      <div className="mb-4 flex items-center gap-2 font-medium text-white">
-        <QrIcon className="h-4 w-4 text-[#b86ef9]" /> Mon QR Code
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 font-medium text-white">
+          <QrIcon className="h-4 w-4 text-[#b86ef9]" /> Mon QR Code
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant={revealed ? "ghost" : "default"}
+          onClick={toggle}
+          aria-expanded={revealed}
+          aria-controls="qr-panel-content"
+        >
+          {revealed ? (
+            <><EyeOff className="mr-1.5 h-4 w-4" /> Masquer</>
+          ) : (
+            <><Eye className="mr-1.5 h-4 w-4" /> Afficher mon QR code</>
+          )}
+        </Button>
       </div>
-      <Tabs defaultValue="profil" className="w-full">
-        <TabsList className="mb-4 grid w-full grid-cols-2">
-          <TabsTrigger value="profil">Profil public</TabsTrigger>
-          <TabsTrigger value="intake">Prise de RDV</TabsTrigger>
-        </TabsList>
-        {VARIANTS.map((v) => (
-          <TabsContent key={v.key} value={v.key}>
-            <VariantBlock slug={cleanSlug} variant={v} />
-          </TabsContent>
-        ))}
-      </Tabs>
+
+      {!revealed && (
+        <p className="mt-2 text-sm text-[#a89bc4]">
+          À imprimer ou à afficher en cabinet : vos patients accèdent à votre fiche
+          ou à votre prise de rendez-vous en le scannant.
+        </p>
+      )}
+
+      <div id="qr-panel-content" hidden={!revealed} className="mt-4">
+        {mounted && (
+          <Tabs defaultValue="profil" className="w-full">
+            <TabsList className="mb-4 grid w-full grid-cols-2">
+              <TabsTrigger value="profil">Profil public</TabsTrigger>
+              <TabsTrigger value="intake">Prise de RDV</TabsTrigger>
+            </TabsList>
+            {VARIANTS.map((v) => (
+              <TabsContent key={v.key} value={v.key}>
+                <VariantBlock slug={slug} variant={v} />
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
+      </div>
     </div>
   );
 }
