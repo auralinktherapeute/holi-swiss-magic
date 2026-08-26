@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { getWaitingListCount } from "@/lib/public.functions";
 import { sendWaitlistEmails } from "@/lib/waitlist-emails.functions";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 
 const SESSION_KEY = "holiswiss-waitlist-shown";
 const TOTAL_SPOTS = 70;

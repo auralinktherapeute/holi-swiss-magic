@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { sendWaitlistEmails } from "@/lib/waitlist-emails.functions";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 const lotusUrl = lotusAsset.url;
 
 const SESSION_KEY = "holiswiss-onboarding-shown";
