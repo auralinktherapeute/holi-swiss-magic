@@ -685,3 +685,155 @@ export const emailInvoiceToClient = createServerFn({ method: "POST" })
     });
     return { ok: true, sentTo: to, signedUrl: signed?.signedUrl ?? null };
   });
+
+// ── Relances (avant / après échéance) ───────────────────────────────
+// Aucune relance n'est envoyée automatiquement : le thérapeute déclenche
+// chaque envoi. Les factures payées, annulées ou en brouillon sont exclues.
+
+export type InvoiceReminder = {
+  id: string;
+  numero_facture: string;
+  client_nom: string | null;
+  client_email: string | null;
+  montant_total: number;
+  montant_paye: number;
+  solde: number;
+  currency: string;
+  date_echeance: string | null;
+  days_to_due: number | null;
+  bucket: "en_retard" | "echeance_proche" | "a_venir";
+  reminders_sent: number;
+  last_reminder_at: string | null;
+};
+
+const OPEN_STATUSES = ["validee", "envoyee", "partiellement_payee", "en_retard", "erreur_envoi"];
+
+export const listInvoiceReminders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+
+    const { data: rows, error } = await (context.supabase as any)
+      .from("therapist_invoices")
+      .select("id, numero_facture, client_nom, client_email, montant_total, montant_paye, currency, date_echeance, statut")
+      .eq("therapist_id", therapistId)
+      .in("statut", OPEN_STATUSES)
+      .order("date_echeance", { ascending: true, nullsFirst: false });
+    if (error) throw new Error(error.message);
+
+    const invoices = (rows ?? []) as any[];
+    if (invoices.length === 0) return [] as InvoiceReminder[];
+
+    const { data: audit } = await (context.supabase as any)
+      .from("therapist_invoice_audit")
+      .select("invoice_id, created_at")
+      .eq("therapist_id", therapistId)
+      .eq("action", "reminder_sent")
+      .order("created_at", { ascending: false });
+
+    const counts = new Map<string, { n: number; last: string }>();
+    for (const a of (audit ?? []) as any[]) {
+      const prev = counts.get(a.invoice_id);
+      if (prev) prev.n += 1;
+      else counts.set(a.invoice_id, { n: 1, last: a.created_at });
+    }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    return invoices.map((inv) => {
+      const total = Number(inv.montant_total ?? 0);
+      const paid = Number(inv.montant_paye ?? 0);
+      let daysToDue: number | null = null;
+      if (inv.date_echeance) {
+        const due = new Date(`${inv.date_echeance}T00:00:00`);
+        daysToDue = Math.round((due.getTime() - startOfToday.getTime()) / 86_400_000);
+      }
+      const bucket: InvoiceReminder["bucket"] =
+        daysToDue === null ? "a_venir"
+          : daysToDue < 0 ? "en_retard"
+          : daysToDue <= 7 ? "echeance_proche"
+          : "a_venir";
+      const c = counts.get(inv.id);
+      return {
+        id: inv.id,
+        numero_facture: inv.numero_facture,
+        client_nom: inv.client_nom ?? null,
+        client_email: inv.client_email ?? null,
+        montant_total: total,
+        montant_paye: paid,
+        solde: Math.round((total - paid) * 100) / 100,
+        currency: inv.currency,
+        date_echeance: inv.date_echeance ?? null,
+        days_to_due: daysToDue,
+        bucket,
+        reminders_sent: c?.n ?? 0,
+        last_reminder_at: c?.last ?? null,
+      } satisfies InvoiceReminder;
+    });
+  });
+
+export const sendInvoiceReminder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    id: z.string().uuid(),
+    to: z.string().trim().email().optional().nullable(),
+    message: z.string().trim().max(2000).optional().nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const invoice = await loadOwnInvoice(context.supabase, therapistId, data.id);
+
+    if (invoice.statut === "brouillon") {
+      throw new Error("Cette facture n'est pas encore validée : elle ne peut pas faire l'objet d'une relance.");
+    }
+    if (invoice.statut === "payee" || invoice.statut === "annulee") {
+      throw new Error("Cette facture est soldée ou annulée : aucune relance n'est nécessaire.");
+    }
+
+    const { html, therapist, clientEmail } =
+      await buildInvoiceHtml(context.supabase, therapistId, data.id);
+    const to = (data.to ?? invoice.client_email ?? clientEmail ?? "").trim();
+    if (!to) throw new Error("Adresse email du client requise.");
+
+    const path = `${therapistId}/${invoice.id}.html`;
+    await (context.supabase as any).storage
+      .from("invoices")
+      .upload(path, new Blob([html], { type: "text/html" }), { upsert: true, contentType: "text/html" });
+    const { data: signed } = await (context.supabase as any).storage
+      .from("invoices").createSignedUrl(path, 60 * 60 * 24 * 30);
+
+    const solde = Math.round((Number(invoice.montant_total ?? 0) - Number(invoice.montant_paye ?? 0)) * 100) / 100;
+    const defaultMessage = invoice.date_echeance
+      ? `Rappel amical : la facture ${invoice.numero_facture} arrive à échéance le ${new Date(`${invoice.date_echeance}T00:00:00`).toLocaleDateString("fr-CH")}. Solde restant : ${solde.toFixed(2)} ${invoice.currency}.`
+      : `Rappel amical concernant la facture ${invoice.numero_facture}. Solde restant : ${solde.toFixed(2)} ${invoice.currency}.`;
+
+    const attachmentB64 = typeof btoa === "function"
+      ? btoa(unescape(encodeURIComponent(html)))
+      : Buffer.from(html, "utf8").toString("base64");
+
+    const res = await sendInvoiceEmail({
+      to,
+      therapistName: `${therapist?.first_name ?? ""} ${therapist?.last_name ?? ""}`.trim() || "HoliSwiss",
+      invoiceNumber: invoice.numero_facture,
+      amount: solde,
+      currency: invoice.currency,
+      viewUrl: signed?.signedUrl ?? "https://holiswiss.ch",
+      message: data.message?.trim() || defaultMessage,
+      attachmentHtmlBase64: attachmentB64,
+    });
+
+    if (!res.ok) {
+      await logInvoiceAudit(context.supabase, {
+        therapistId, invoiceId: invoice.id, action: "reminder_failed",
+        actorUserId: context.userId, note: `${res.status} ${res.error ?? ""}`,
+      });
+      throw new Error(`Relance impossible (${res.status}) ${res.error ?? ""}`);
+    }
+
+    await logInvoiceAudit(context.supabase, {
+      therapistId, invoiceId: invoice.id, action: "reminder_sent",
+      actorUserId: context.userId, note: to,
+    });
+    return { ok: true, sentTo: to };
+  });
