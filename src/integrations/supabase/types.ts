@@ -84,10 +84,13 @@ export type Database = {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
+          client_id: string | null
           created_at: string
           duration_minutes: number
           end_time: string | null
           id: string
+          invoice_id: string | null
+          invoiced_at: string | null
           notes: string | null
           patient_email: string | null
           patient_name: string
@@ -101,10 +104,13 @@ export type Database = {
         Insert: {
           appointment_date?: string | null
           appointment_time?: string | null
+          client_id?: string | null
           created_at?: string
           duration_minutes?: number
           end_time?: string | null
           id?: string
+          invoice_id?: string | null
+          invoiced_at?: string | null
           notes?: string | null
           patient_email?: string | null
           patient_name: string
@@ -118,10 +124,13 @@ export type Database = {
         Update: {
           appointment_date?: string | null
           appointment_time?: string | null
+          client_id?: string | null
           created_at?: string
           duration_minutes?: number
           end_time?: string | null
           id?: string
+          invoice_id?: string | null
+          invoiced_at?: string | null
           notes?: string | null
           patient_email?: string | null
           patient_name?: string
@@ -133,6 +142,20 @@ export type Database = {
           therapist_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_therapist_id_fkey"
             columns: ["therapist_id"]
@@ -793,6 +816,54 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_access_log: {
+        Row: {
+          action: string
+          actor_user_id: string
+          context: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          occurred_at: string
+          therapist_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          context?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          occurred_at?: string
+          therapist_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          context?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          occurred_at?: string
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_access_log_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_access_log_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_activities: {
         Row: {
           body: string | null
@@ -852,6 +923,8 @@ export type Database = {
       }
       crm_client_contacts: {
         Row: {
+          consent_at: string | null
+          consent_source: string | null
           created_at: string
           date_of_birth: string | null
           email: string | null
@@ -859,17 +932,21 @@ export type Database = {
           id: string
           last_booking_at: string | null
           last_name: string
+          legal_basis: string
           next_booking_at: string | null
           payment_link: string | null
           phone: string | null
           private_notes: string | null
           relation_status: string
+          retention_until: string | null
           session_type: string | null
           tags: string[]
           therapist_id: string
           updated_at: string
         }
         Insert: {
+          consent_at?: string | null
+          consent_source?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
@@ -877,17 +954,21 @@ export type Database = {
           id?: string
           last_booking_at?: string | null
           last_name: string
+          legal_basis?: string
           next_booking_at?: string | null
           payment_link?: string | null
           phone?: string | null
           private_notes?: string | null
           relation_status?: string
+          retention_until?: string | null
           session_type?: string | null
           tags?: string[]
           therapist_id: string
           updated_at?: string
         }
         Update: {
+          consent_at?: string | null
+          consent_source?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
@@ -895,11 +976,13 @@ export type Database = {
           id?: string
           last_booking_at?: string | null
           last_name?: string
+          legal_basis?: string
           next_booking_at?: string | null
           payment_link?: string | null
           phone?: string | null
           private_notes?: string | null
           relation_status?: string
+          retention_until?: string | null
           session_type?: string | null
           tags?: string[]
           therapist_id?: string
@@ -3610,36 +3693,55 @@ export type Database = {
       }
       therapist_documents: {
         Row: {
+          client_id: string | null
           created_at: string
+          created_by: string | null
+          doc_type: string
           file_name: string
           file_url: string
           id: string
+          is_health_data: boolean
           is_public: boolean
           label: string | null
           therapist_id: string
           updated_at: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
+          created_by?: string | null
+          doc_type?: string
           file_name: string
           file_url: string
           id?: string
+          is_health_data?: boolean
           is_public?: boolean
           label?: string | null
           therapist_id: string
           updated_at?: string
         }
         Update: {
+          client_id?: string | null
           created_at?: string
+          created_by?: string | null
+          doc_type?: string
           file_name?: string
           file_url?: string
           id?: string
+          is_health_data?: boolean
           is_public?: boolean
           label?: string | null
           therapist_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "therapist_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "therapist_documents_therapist_id_fkey"
             columns: ["therapist_id"]

@@ -52,6 +52,7 @@ export function TherapistNav() {
     return () => window.clearInterval(id);
   }, [fetchPendingCount, user]);
 
+  // Deux groupes : la gestion du cabinet d'abord, la vitrine publique ensuite.
   const items = [
     {
       to: "/dashboard",
@@ -59,8 +60,8 @@ export function TherapistNav() {
       label: t("dashboard.overview"),
       exact: true,
       tourId: "nav-overview",
+      section: "Cabinet",
     },
-    { to: "/dashboard/profil", icon: User, label: t("dashboard.profile"), tourId: "nav-profil" },
     { to: "/dashboard/agenda", icon: Calendar, label: t("dashboard.agenda"), tourId: "nav-agenda" },
     {
       to: "/dashboard/reservations",
@@ -69,6 +70,14 @@ export function TherapistNav() {
       badge: pendingCount,
       tourId: "nav-reservations",
     },
+    { to: "/dashboard/clients", icon: Users, label: "Clients", tourId: "nav-clients" },
+    {
+      to: "/dashboard/facturation",
+      icon: Receipt,
+      label: "Facturation",
+      tourId: "nav-facturation",
+    },
+    { to: "/dashboard/crm", icon: Crown, label: "Suivi & tâches", tourId: "nav-crm" },
     { to: "/dashboard/forfaits", icon: Package, label: "Forfaits", tourId: "nav-forfaits" },
     {
       to: "/dashboard/questionnaires",
@@ -76,21 +85,16 @@ export function TherapistNav() {
       label: "Questionnaires",
       tourId: "nav-questionnaires",
     },
-    {
-      to: "/dashboard/facturation",
-      icon: Receipt,
-      label: "Facturation",
-      tourId: "nav-facturation",
-    },
+    { to: "/dashboard/profil", icon: User, label: t("dashboard.profile"), tourId: "nav-profil", section: "Vitrine" },
     { to: "/dashboard/visibilite", icon: Gauge, label: "Score de visibilité", tourId: "nav-visibilite" },
     { to: "/dashboard/articles", icon: FileText, label: t("dashboard.articles") },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
-    { to: "/dashboard/crm", icon: Crown, label: "CRM Elite", tourId: "nav-crm" },
     { to: "/dashboard/salons", icon: Users, label: "Salons", tourId: "nav-salons" },
-    { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
+    { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription"), section: "Compte" },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },
   ];
+
   const reset = useServerFnHelp(resetOnboarding);
   const restartTour = async () => {
     try {
@@ -142,8 +146,16 @@ export function TherapistNav() {
         {items.map((it) => {
           const Icon = it.icon;
           const active = it.exact ? pathname === it.to : pathname.startsWith(it.to);
+          const section = (it as { section?: string }).section;
           return (
+            <div key={`${it.to}-wrap`}>
+            {section && (
+              <div className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {section}
+              </div>
+            )}
             <Link
+
               key={it.to}
               to={it.to}
               data-tour-id={(it as { tourId?: string }).tourId}
@@ -161,8 +173,10 @@ export function TherapistNav() {
                 </span>
               ) : null}
             </Link>
+            </div>
           );
         })}
+
       </nav>
       <div className="border-t border-border p-3 space-y-3">
         <div className="flex items-center gap-3">
