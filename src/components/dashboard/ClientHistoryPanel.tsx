@@ -33,7 +33,7 @@ export default function ClientHistoryPanel({ contactId, contactEmail, contactNam
   const listPkgs = useServerFn(listMyClientPackages);
   const listInvs = useServerFn(listMyTherapistInvoices);
   const renderFn = useServerFn(renderInvoiceHtml);
-  const statusFn = useServerFn(updateInvoicePaymentStatus);
+  
   const emailInvFn = useServerFn(emailInvoiceToClient);
   const listQFn = useServerFn(listMyQuestionnaires);
   const emailQFn = useServerFn(emailQuestionnaireToClient);
