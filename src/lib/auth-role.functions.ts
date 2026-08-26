@@ -33,13 +33,34 @@ export const ensureTherapistRole = createServerFn({ method: "POST" })
     if (roles.has("therapist")) return { role: "therapist", granted: false };
 
     // Garde-fou : ne pas transformer un « reviewer » en thérapeute.
+    // Un profil existant, une intention d'inscription thérapeute enregistrée
+    // sur le compte, ou une fiche thérapeute déjà importée avec le même e-mail
+    // valent preuve d'appartenance à l'espace thérapeute.
     if (data.requireProfile) {
       const { data: profile } = await supabaseAdmin
         .from("therapists")
         .select("id")
         .eq("user_id", context.userId)
         .maybeSingle();
-      if (!profile) return { role: "user", granted: false };
+      if (!profile) {
+        const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+        const meta = (userRes?.user?.user_metadata ?? {}) as Record<string, unknown>;
+        let allowed = meta.signup_intent === "therapist";
+
+        if (!allowed) {
+          const email = userRes?.user?.email ?? null;
+          if (email) {
+            const { data: byEmail } = await supabaseAdmin
+              .from("therapists")
+              .select("id")
+              .ilike("email", email)
+              .maybeSingle();
+            allowed = Boolean(byEmail);
+          }
+        }
+
+        if (!allowed) return { role: "user", granted: false };
+      }
     }
 
     const { error: upsertError } = await supabaseAdmin
