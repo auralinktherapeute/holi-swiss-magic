@@ -228,3 +228,27 @@ export const listCabinetAccessLog = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []) as any[];
   });
+
+
+/* ---------- L6 — Statistiques du cabinet & tâches automatiques ---------- */
+
+export const getCabinetStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ months: z.number().int().min(3).max(24).default(12) }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { buildCabinetStats } = await import("@/lib/cabinet-stats.server");
+    return buildCabinetStats(context.supabase, therapistId, data.months);
+  });
+
+/** Crée les tâches de suivi évidentes (idempotent). */
+export const syncCabinetAutoTasks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { generateAutoTasks } = await import("@/lib/cabinet-stats.server");
+    return generateAutoTasks(context.supabase, therapistId, context.userId);
+  });
+
