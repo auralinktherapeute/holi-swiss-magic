@@ -165,7 +165,14 @@ function Page() {
         ))}
       </section>
 
+      {!loading && missing.length === 0 && (
+        <MissingInvoices
+          onCreated={(id) => { setEditorId(id); void refresh(); }}
+        />
+      )}
+
       {!loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
+
 
       {!loading && <InvoiceReports />}
 
