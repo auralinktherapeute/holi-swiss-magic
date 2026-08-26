@@ -1,0 +1,38 @@
+-- ============================================================================
+-- Correctif — la FAQ était illisible faute d'un droit sur UNE colonne
+--
+-- CE QUI S'EST PASSÉ
+--   La migration 20260826100000 ajoute `therapists.faq_enabled` et une policy de
+--   lecture publique sur `therapist_faqs` qui interroge cette colonne :
+--
+--     using (is_active = true and exists (
+--       select 1 from public.therapists t
+--       where t.id = therapist_faqs.therapist_id
+--         and t.status = 'active' and t.faq_enabled = true))
+--
+--   Or `anon` n'a PAS de droit global sur `therapists` : il a des droits
+--   COLONNE PAR COLONNE. La nouvelle colonne n'y figurait pas, donc l'évaluation
+--   de la policy échouait avant même de filtrer :
+--
+--     GET /rest/v1/therapist_faqs
+--     → {"code":"42501","message":"permission denied for table therapists"}
+--
+--   Constaté en production le 26/08/2026. Vérification : toutes les autres
+--   colonnes lues par la fiche publique (id, status, slug, city, canton, bio,
+--   verified) répondent 200 ; seule faq_enabled renvoyait 401.
+--
+-- POURQUOI CE N'EST PAS UN ÉLARGISSEMENT DE SURFACE
+--   `faq_enabled` est un booléen qui dit « ce praticien affiche une FAQ ». Il ne
+--   révèle rien de personnel, et l'information est de toute façon déductible en
+--   regardant la fiche. On l'accorde donc au même titre que `status`, dont la
+--   policy de `availabilities` dépend exactement de la même manière.
+--
+-- Idempotente. À appliquer via Lovable.
+-- ============================================================================
+
+grant select (faq_enabled) on public.therapists to anon, authenticated;
+
+-- Rappel pour la prochaine fois : sur `therapists`, TOUTE nouvelle colonne
+-- référencée par une policy de lecture publique doit être accordée
+-- explicitement. Un GRANT au niveau table n'existe pas ici — c'est délibéré,
+-- c'est ce qui garde `email` et `phone` hors de portée d'anon.
