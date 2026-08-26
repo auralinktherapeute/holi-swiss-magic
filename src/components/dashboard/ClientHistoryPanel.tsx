@@ -3,10 +3,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { Package, Receipt, Printer, CheckCircle2, Clock, XCircle, Mail, ClipboardList, Send } from "lucide-react";
 import { listMyClientPackages, type ClientPackage } from "@/lib/service-packages.functions";
 import {
-  listMyTherapistInvoices, renderInvoiceHtml, updateInvoicePaymentStatus,
+  listMyTherapistInvoices, renderInvoiceHtml,
   emailInvoiceToClient,
   type TherapistInvoice,
 } from "@/lib/therapist-invoices.functions";
+import { INVOICE_STATUSES } from "@/lib/swiss-invoice";
+
 import {
   listMyQuestionnaires, emailQuestionnaireToClient,
   listResponsesForContact,
