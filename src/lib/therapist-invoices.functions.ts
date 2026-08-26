@@ -837,3 +837,33 @@ export const sendInvoiceReminder = createServerFn({ method: "POST" })
     });
     return { ok: true, sentTo: to };
   });
+
+// ── Rapports financiers & exports comptables ────────────────────────
+
+const periodSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+}).refine((p) => p.from <= p.to, { message: "La date de début doit précéder la date de fin." });
+
+export const getInvoiceReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => periodSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { buildInvoiceReport } = await import("@/lib/invoice-report.server");
+    return buildInvoiceReport(context.supabase, therapistId, data);
+  });
+
+export const exportInvoicesCsv = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    periodSchema.and(z.object({ kind: z.enum(["invoices", "payments"]) }).partial()).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const mod = await import("@/lib/invoice-report.server");
+    const csv = data.kind === "payments"
+      ? await mod.exportPaymentsCsvData(context.supabase, therapistId, data)
+      : await mod.exportInvoicesCsvData(context.supabase, therapistId, data);
+    const name = `holiswiss-${data.kind === "payments" ? "encaissements" : "factures"}-${data.from}_${data.to}.csv`;
+    return { filename: name, csv };
+  });
