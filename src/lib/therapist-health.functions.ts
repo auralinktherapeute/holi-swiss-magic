@@ -345,17 +345,20 @@ export const queueSuggestedArticle = createServerFn({ method: "POST" })
 //   - slug défini ........  5
 export const runCitabilityScan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((data: { therapistId?: string } | undefined) => data ?? {})
+  .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const sb = supabaseAdmin as any;
 
-    const { data: ths, error: thErr } = await sb
-      .from("therapists")
-      .select("id, slug, status, services")
-      .eq("status", "active");
+    let q = sb.from("therapists").select("id, slug, status, services");
+    // Mesure ciblée : on accepte tout statut (l'admin doit pouvoir mesurer
+    // une fiche fraîchement inscrite). Sinon : toutes les fiches actives.
+    q = data.therapistId ? q.eq("id", data.therapistId) : q.eq("status", "active");
+    const { data: ths, error: thErr } = await q;
     if (thErr) throw new Error(`Lecture thérapeutes impossible : ${thErr.message}`);
     const list = (ths ?? []) as Array<{ id: string; slug: string | null; services: any }>;
+
 
     let processed = 0;
     let reachable = 0;
