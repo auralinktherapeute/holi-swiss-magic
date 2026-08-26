@@ -3851,6 +3851,207 @@ export type Database = {
           },
         ]
       }
+      therapist_invoice_audit: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          id: string
+          invoice_id: string | null
+          note: string | null
+          therapist_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          note?: string | null
+          therapist_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          note?: string | null
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_invoice_audit_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_audit_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_audit_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_invoice_lines: {
+        Row: {
+          created_at: string
+          date_prestation: string | null
+          description: string
+          id: string
+          invoice_id: string
+          montant_ht: number
+          montant_ttc: number
+          position: number
+          prix_unitaire: number
+          quantite: number
+          remise_pct: number
+          therapist_id: string
+          tva_montant: number
+          tva_taux: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_prestation?: string | null
+          description: string
+          id?: string
+          invoice_id: string
+          montant_ht?: number
+          montant_ttc?: number
+          position?: number
+          prix_unitaire?: number
+          quantite?: number
+          remise_pct?: number
+          therapist_id: string
+          tva_montant?: number
+          tva_taux?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_prestation?: string | null
+          description?: string
+          id?: string
+          invoice_id?: string
+          montant_ht?: number
+          montant_ttc?: number
+          position?: number
+          prix_unitaire?: number
+          quantite?: number
+          remise_pct?: number
+          therapist_id?: string
+          tva_montant?: number
+          tva_taux?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_lines_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_lines_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_invoice_payments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_paiement: string
+          id: string
+          invoice_id: string
+          is_refund: boolean
+          mode_paiement: string
+          montant: number
+          notes: string | null
+          reference_bancaire: string | null
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_paiement?: string
+          id?: string
+          invoice_id: string
+          is_refund?: boolean
+          mode_paiement?: string
+          montant: number
+          notes?: string | null
+          reference_bancaire?: string | null
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_paiement?: string
+          id?: string
+          invoice_id?: string
+          is_refund?: boolean
+          mode_paiement?: string
+          montant?: number
+          notes?: string | null
+          reference_bancaire?: string | null
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_payments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoice_payments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_invoice_settings: {
         Row: {
           adresse_npa: string
@@ -3858,15 +4059,32 @@ export type Database = {
           adresse_rue: string
           adresse_ville: string
           assujetti_tva: boolean
+          conditions_paiement: string | null
           created_at: string
+          delai_paiement_jours: number
+          devise_defaut: string
+          email_pro: string | null
           iban_ou_qr_iban: string
           id: string
           invoice_number_year: number | null
+          logo_url: string | null
+          mention_tva: string | null
+          mode_tva: string
           next_invoice_number: number
+          numero_ide: string | null
           numero_tva: string | null
+          pied_de_page: string | null
+          qr_iban: string | null
+          raison_sociale: string | null
           remise_a_zero_annuelle: boolean
           taux_tva: number | null
+          telephone: string | null
           therapist_id: string
+          titulaire_adresse: string | null
+          titulaire_nom: string | null
+          titulaire_npa: string | null
+          titulaire_pays: string
+          titulaire_ville: string | null
           updated_at: string
         }
         Insert: {
@@ -3875,15 +4093,32 @@ export type Database = {
           adresse_rue: string
           adresse_ville: string
           assujetti_tva?: boolean
+          conditions_paiement?: string | null
           created_at?: string
+          delai_paiement_jours?: number
+          devise_defaut?: string
+          email_pro?: string | null
           iban_ou_qr_iban: string
           id?: string
           invoice_number_year?: number | null
+          logo_url?: string | null
+          mention_tva?: string | null
+          mode_tva?: string
           next_invoice_number?: number
+          numero_ide?: string | null
           numero_tva?: string | null
+          pied_de_page?: string | null
+          qr_iban?: string | null
+          raison_sociale?: string | null
           remise_a_zero_annuelle?: boolean
           taux_tva?: number | null
+          telephone?: string | null
           therapist_id: string
+          titulaire_adresse?: string | null
+          titulaire_nom?: string | null
+          titulaire_npa?: string | null
+          titulaire_pays?: string
+          titulaire_ville?: string | null
           updated_at?: string
         }
         Update: {
@@ -3892,15 +4127,32 @@ export type Database = {
           adresse_rue?: string
           adresse_ville?: string
           assujetti_tva?: boolean
+          conditions_paiement?: string | null
           created_at?: string
+          delai_paiement_jours?: number
+          devise_defaut?: string
+          email_pro?: string | null
           iban_ou_qr_iban?: string
           id?: string
           invoice_number_year?: number | null
+          logo_url?: string | null
+          mention_tva?: string | null
+          mode_tva?: string
           next_invoice_number?: number
+          numero_ide?: string | null
           numero_tva?: string | null
+          pied_de_page?: string | null
+          qr_iban?: string | null
+          raison_sociale?: string | null
           remise_a_zero_annuelle?: boolean
           taux_tva?: number | null
+          telephone?: string | null
           therapist_id?: string
+          titulaire_adresse?: string | null
+          titulaire_nom?: string | null
+          titulaire_npa?: string | null
+          titulaire_pays?: string
+          titulaire_ville?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3924,68 +4176,134 @@ export type Database = {
         Row: {
           annee_facturation: number
           appointment_id: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          client_adresse: string | null
+          client_email: string | null
           client_id: string | null
+          client_nom: string | null
+          client_npa: string | null
           client_package_id: string | null
+          client_pays: string
+          client_ville: string | null
+          communication: string | null
+          conditions_paiement: string | null
+          corrects_invoice_id: string | null
           created_at: string
+          credit_note_of_id: string | null
           currency: string
+          date_echeance: string | null
           date_emission: string
           date_paiement: string | null
+          date_prestation: string | null
           id: string
+          locked_at: string | null
           metadata: Json
           montant_ht: number
+          montant_paye: number
+          montant_remise: number
           montant_total: number
+          notes: string | null
           numero_facture: string
           pdf_url: string | null
           qr_reference: string | null
+          reference_type: string
+          sent_at: string | null
+          statut: string
           statut_paiement: string
           therapist_id: string
           tva_montant: number | null
           tva_taux: number | null
           updated_at: string
+          viewed_at: string | null
         }
         Insert: {
           annee_facturation: number
           appointment_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          client_adresse?: string | null
+          client_email?: string | null
           client_id?: string | null
+          client_nom?: string | null
+          client_npa?: string | null
           client_package_id?: string | null
+          client_pays?: string
+          client_ville?: string | null
+          communication?: string | null
+          conditions_paiement?: string | null
+          corrects_invoice_id?: string | null
           created_at?: string
+          credit_note_of_id?: string | null
           currency?: string
+          date_echeance?: string | null
           date_emission?: string
           date_paiement?: string | null
+          date_prestation?: string | null
           id?: string
+          locked_at?: string | null
           metadata?: Json
           montant_ht: number
+          montant_paye?: number
+          montant_remise?: number
           montant_total: number
+          notes?: string | null
           numero_facture: string
           pdf_url?: string | null
           qr_reference?: string | null
+          reference_type?: string
+          sent_at?: string | null
+          statut?: string
           statut_paiement?: string
           therapist_id: string
           tva_montant?: number | null
           tva_taux?: number | null
           updated_at?: string
+          viewed_at?: string | null
         }
         Update: {
           annee_facturation?: number
           appointment_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          client_adresse?: string | null
+          client_email?: string | null
           client_id?: string | null
+          client_nom?: string | null
+          client_npa?: string | null
           client_package_id?: string | null
+          client_pays?: string
+          client_ville?: string | null
+          communication?: string | null
+          conditions_paiement?: string | null
+          corrects_invoice_id?: string | null
           created_at?: string
+          credit_note_of_id?: string | null
           currency?: string
+          date_echeance?: string | null
           date_emission?: string
           date_paiement?: string | null
+          date_prestation?: string | null
           id?: string
+          locked_at?: string | null
           metadata?: Json
           montant_ht?: number
+          montant_paye?: number
+          montant_remise?: number
           montant_total?: number
+          notes?: string | null
           numero_facture?: string
           pdf_url?: string | null
           qr_reference?: string | null
+          reference_type?: string
+          sent_at?: string | null
+          statut?: string
           statut_paiement?: string
           therapist_id?: string
           tva_montant?: number | null
           tva_taux?: number | null
           updated_at?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
@@ -4007,6 +4325,20 @@ export type Database = {
             columns: ["client_package_id"]
             isOneToOne: false
             referencedRelation: "client_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoices_corrects_invoice_id_fkey"
+            columns: ["corrects_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_invoices_credit_note_of_id_fkey"
+            columns: ["credit_note_of_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
             referencedColumns: ["id"]
           },
           {
@@ -4617,6 +4949,42 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
           user_type?: string
+        }
+        Relationships: []
+      }
+      vat_rates: {
+        Row: {
+          code: string
+          country: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          note: string | null
+          rate: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          note?: string | null
+          rate: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          note?: string | null
+          rate?: number
+          updated_at?: string
         }
         Relationships: []
       }
