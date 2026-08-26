@@ -44,6 +44,7 @@ import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abon
 import { Route as DashboardAgendaRouteImport } from './routes/dashboard.agenda'
 import { Route as DashboardArticlesRouteImport } from './routes/dashboard.articles'
 import { Route as DashboardAvisRouteImport } from './routes/dashboard.avis'
+import { Route as DashboardClientsRouteImport } from './routes/dashboard.clients'
 import { Route as DashboardCrmRouteImport } from './routes/dashboard.crm'
 import { Route as DashboardEvenementsRouteImport } from './routes/dashboard.evenements'
 import { Route as DashboardFacturationRouteImport } from './routes/dashboard.facturation'
@@ -276,6 +277,11 @@ const DashboardArticlesRoute = DashboardArticlesRouteImport.update({
 const DashboardAvisRoute = DashboardAvisRouteImport.update({
   id: '/avis',
   path: '/avis',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardClientsRoute = DashboardClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardCrmRoute = DashboardCrmRouteImport.update({
@@ -614,6 +620,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
   '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/clients': typeof DashboardClientsRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
   '/dashboard/facturation': typeof DashboardFacturationRoute
@@ -705,6 +712,7 @@ export interface FileRoutesByTo {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
   '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/clients': typeof DashboardClientsRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
   '/dashboard/facturation': typeof DashboardFacturationRoute
@@ -800,6 +808,7 @@ export interface FileRoutesById {
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
   '/dashboard/avis': typeof DashboardAvisRoute
+  '/dashboard/clients': typeof DashboardClientsRoute
   '/dashboard/crm': typeof DashboardCrmRoute
   '/dashboard/evenements': typeof DashboardEvenementsRoute
   '/dashboard/facturation': typeof DashboardFacturationRoute
@@ -896,6 +905,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/articles'
     | '/dashboard/avis'
+    | '/dashboard/clients'
     | '/dashboard/crm'
     | '/dashboard/evenements'
     | '/dashboard/facturation'
@@ -987,6 +997,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/articles'
     | '/dashboard/avis'
+    | '/dashboard/clients'
     | '/dashboard/crm'
     | '/dashboard/evenements'
     | '/dashboard/facturation'
@@ -1081,6 +1092,7 @@ export interface FileRouteTypes {
     | '/dashboard/agenda'
     | '/dashboard/articles'
     | '/dashboard/avis'
+    | '/dashboard/clients'
     | '/dashboard/crm'
     | '/dashboard/evenements'
     | '/dashboard/facturation'
@@ -1415,6 +1427,13 @@ declare module '@tanstack/react-router' {
       path: '/avis'
       fullPath: '/dashboard/avis'
       preLoaderRoute: typeof DashboardAvisRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/clients': {
+      id: '/dashboard/clients'
+      path: '/clients'
+      fullPath: '/dashboard/clients'
+      preLoaderRoute: typeof DashboardClientsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/crm': {
@@ -1949,6 +1968,7 @@ interface DashboardRouteChildren {
   DashboardAgendaRoute: typeof DashboardAgendaRoute
   DashboardArticlesRoute: typeof DashboardArticlesRoute
   DashboardAvisRoute: typeof DashboardAvisRoute
+  DashboardClientsRoute: typeof DashboardClientsRoute
   DashboardCrmRoute: typeof DashboardCrmRoute
   DashboardEvenementsRoute: typeof DashboardEvenementsRoute
   DashboardFacturationRoute: typeof DashboardFacturationRoute
@@ -1968,6 +1988,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAgendaRoute: DashboardAgendaRoute,
   DashboardArticlesRoute: DashboardArticlesRoute,
   DashboardAvisRoute: DashboardAvisRoute,
+  DashboardClientsRoute: DashboardClientsRoute,
   DashboardCrmRoute: DashboardCrmRoute,
   DashboardEvenementsRoute: DashboardEvenementsRoute,
   DashboardFacturationRoute: DashboardFacturationRoute,
