@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar, FileText,
+  Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar,
   Phone, Mail, X, ExternalLink, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   getCabinetClient, listCabinetClients, updateClientConsent,
 } from "@/lib/cabinet.functions";
+import ClientDocuments from "@/components/dashboard/ClientDocuments";
 
 export const Route = createFileRoute("/dashboard/clients")({
   component: ClientsPage,
@@ -316,15 +317,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
               ))}
             </Section>
 
-            <Section title="Documents" icon={FileText} empty="Aucun document rattaché.">
-              {data.documents.slice(0, 8).map((d: any) => (
-                <li key={d.id} className="flex items-center justify-between gap-2 py-1.5 text-sm">
-                  <span className="truncate">{d.label || d.file_name}</span>
-                  <Badge variant="secondary">{d.doc_type}</Badge>
-                  {d.is_health_data && <span className="text-xs text-amber-500">donnée de santé</span>}
-                </li>
-              ))}
-            </Section>
+            <ClientDocuments clientId={id} />
 
             <div className="flex flex-wrap gap-2 pt-2">
               <Button asChild variant="outline" size="sm">
