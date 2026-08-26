@@ -14,7 +14,10 @@ import {
   type CabinetClientRow,
 } from "@/lib/cabinet-core.server";
 
-export type { CabinetOverview, CabinetClientRow };
+import type { UninvoicedAppointment } from "@/lib/cabinet-billing.server";
+
+export type { CabinetOverview, CabinetClientRow, UninvoicedAppointment };
+
 
 export const getCabinetOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
