@@ -43,6 +43,45 @@ function Page() {
   const [contenu, setContenu] = useState("");
   const [extrait, setExtrait] = useState("");
   const [image, setImage] = useState("");
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (fileRef.current) fileRef.current.value = "";
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Format non supporté (JPEG, PNG, WebP, AVIF, HEIC).");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image trop lourde : 5 Mo maximum.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("Session expirée, reconnectez-vous.");
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${uid}/articles/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from(ARTICLE_IMAGE_BUCKET)
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw new Error(upErr.message);
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(ARTICLE_IMAGE_BUCKET)
+        .createSignedUrl(path, SIGNED_URL_TTL);
+      if (signErr || !signed?.signedUrl) throw new Error(signErr?.message ?? "Lien d'image indisponible.");
+      setImage(signed.signedUrl);
+      toast.success("Image importée.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Import impossible.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   const resetForm = () => {
     setEditing(null);
