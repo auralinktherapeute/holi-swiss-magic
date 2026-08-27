@@ -177,6 +177,28 @@ describe("lecture iCal — périodes occupées", () => {
     expect(busy).toHaveLength(0);
   });
 
+  it("compte ce qu'il a vu et ce qu'il a écarté", () => {
+    // Sans ces compteurs, un import qui rend zéro créneau est indiscernable
+    // d'une panne. Cas réel du 27/08/2026 : le calendrier des jours fériés
+    // suisses de Google contient 325 événements, TOUS transparents — un jour
+    // férié ne rend pas indisponible. Zéro créneau y est la bonne réponse,
+    // encore faut-il pouvoir l'expliquer au praticien.
+    const r = parseIcsBusy(wrap(
+      "BEGIN:VEVENT\r\nUID:t1\r\nDTSTART;VALUE=DATE:20260801\r\nDTEND;VALUE=DATE:20260802\r\n" +
+      "TRANSP:TRANSPARENT\r\nEND:VEVENT\r\n" +
+      "BEGIN:VEVENT\r\nUID:t2\r\nDTSTART:20260901T070000Z\r\nDTEND:20260901T080000Z\r\nEND:VEVENT",
+    ), WIN);
+    expect(r.seen).toBe(2);
+    expect(r.ignored).toBe(1);
+    expect(r.busy).toHaveLength(1);
+  });
+
+  it("distingue un flux vide d'un flux entièrement transparent", () => {
+    const vide = parseIcsBusy(wrap(""), WIN);
+    expect(vide.seen).toBe(0);
+    expect(vide.ignored).toBe(0);
+  });
+
   it("ne rend rien sur un flux vide ou illisible", () => {
     expect(parseIcsBusy("", WIN).busy).toHaveLength(0);
     expect(parseIcsBusy("ceci n'est pas un agenda", WIN).busy).toHaveLength(0);

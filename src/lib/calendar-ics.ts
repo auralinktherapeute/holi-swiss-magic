@@ -226,6 +226,16 @@ export interface ParseResult {
   busy: BusySlot[];
   /** Événements récurrents dont la règle n'est pas développée ici. */
   skippedRecurring: number;
+  /** Nombre total de VEVENT rencontrés, retenus ou non. */
+  seen: number;
+  /**
+   * Écartés parce que marqués « ne m'occupe pas » (`TRANSP:TRANSPARENT`) ou
+   * annulés. Compté pour pouvoir le DIRE : un import qui rend zéro créneau
+   * sans explication ne se distingue pas d'une panne. Les calendriers de jours
+   * fériés, par exemple, sont intégralement transparents — c'est normal, un
+   * jour férié ne rend pas indisponible.
+   */
+  ignored: number;
 }
 
 const WEEKDAY = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 } as const;
@@ -251,6 +261,8 @@ export function parseIcsBusy(
   const lines = unfoldIcs(text);
   const busy: BusySlot[] = [];
   let skippedRecurring = 0;
+  let seen = 0;
+  let ignored = 0;
   const maxEvents = opts.maxEvents ?? 5000;
 
   let inEvent = false;
@@ -261,7 +273,7 @@ export function parseIcsBusy(
     if (!startRaw) return;
     const transp = cur.TRANSP?.value?.trim().toUpperCase();
     const status = cur.STATUS?.value?.trim().toUpperCase();
-    if (transp === "TRANSPARENT" || status === "CANCELLED") return;
+    if (transp === "TRANSPARENT" || status === "CANCELLED") { ignored++; return; }
 
     const start = parseIcsDate(startRaw.value, startRaw.params);
     if (!start) return;
@@ -349,7 +361,7 @@ export function parseIcsBusy(
   for (const line of lines) {
     const t = line.trim();
     if (t === "BEGIN:VEVENT") { inEvent = true; cur = {}; continue; }
-    if (t === "END:VEVENT") { if (inEvent) flush(); inEvent = false; cur = {}; continue; }
+    if (t === "END:VEVENT") { if (inEvent) { seen++; flush(); } inEvent = false; cur = {}; continue; }
     if (!inEvent) continue;
     const idx = line.indexOf(":");
     if (idx < 0) continue;
@@ -365,5 +377,5 @@ export function parseIcsBusy(
   }
 
   busy.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-  return { busy, skippedRecurring };
+  return { busy, skippedRecurring, seen, ignored };
 }

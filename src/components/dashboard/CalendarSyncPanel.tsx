@@ -67,7 +67,14 @@ export default function CalendarSyncPanel() {
   const runImport = useMutation({
     mutationFn: () => runMyCalendarImport(),
     onSuccess: (r) => {
-      toast.success(`${r.count} créneau${r.count > 1 ? "x" : ""} importé${r.count > 1 ? "s" : ""}`);
+      if (r.count > 0) {
+        toast.success(`${r.count} créneau${r.count > 1 ? "x" : ""} occupé${r.count > 1 ? "s" : ""} importé${r.count > 1 ? "s" : ""}`);
+      } else if (r.ignored > 0) {
+        // Le cas des calendriers de jours fériés : tout est « ne m'occupe pas ».
+        toast.success("Agenda lu — rien qui vous rende indisponible");
+      } else {
+        toast.success("Agenda lu — aucun événement sur la période");
+      }
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -232,9 +239,36 @@ export default function CalendarSyncPanel() {
               <span>
                 {s.import_last_status === "ok" ? (
                   <>
-                    {s.import_last_count} créneau{s.import_last_count > 1 ? "x" : ""} occupé
-                    {s.import_last_count > 1 ? "s" : ""} importé{s.import_last_count > 1 ? "s" : ""}
-                    {lastSync ? ` le ${lastSync}` : ""}.
+                    {/* Zéro créneau doit pouvoir s'expliquer, sinon il ne se
+                        distingue pas d'une panne. */}
+                    {s.import_last_count > 0 ? (
+                      <>
+                        {s.import_last_count} créneau{s.import_last_count > 1 ? "x" : ""} occupé
+                        {s.import_last_count > 1 ? "s" : ""} importé{s.import_last_count > 1 ? "s" : ""}
+                        {lastSync ? ` le ${lastSync}` : ""}.
+                        {s.import_last_ignored > 0 && (
+                          <> {s.import_last_ignored} autre{s.import_last_ignored > 1 ? "s" : ""} événement
+                          {s.import_last_ignored > 1 ? "s" : ""} écarté{s.import_last_ignored > 1 ? "s" : ""} : marqué
+                          {s.import_last_ignored > 1 ? "s" : ""} « ne m'occupe pas », ou annulé
+                          {s.import_last_ignored > 1 ? "s" : ""}.</>
+                        )}
+                      </>
+                    ) : s.import_last_ignored > 0 ? (
+                      <>
+                        Agenda lu{lastSync ? ` le ${lastSync}` : ""} :{" "}
+                        <strong className="font-medium">{s.import_last_seen} événement
+                        {s.import_last_seen > 1 ? "s" : ""}, aucun ne vous rend indisponible.</strong>{" "}
+                        Ils sont marqués « ne m'occupe pas » — c'est le cas de tous les calendriers
+                        de jours fériés, et des invitations que vous avez déclinées. Aucun créneau
+                        n'est bloqué, et c'est le comportement voulu.
+                      </>
+                    ) : (
+                      <>
+                        Agenda lu{lastSync ? ` le ${lastSync}` : ""} : aucun événement sur la période
+                        (un mois en arrière, un an devant). Si vous en attendiez, vérifiez que le lien
+                        est bien celui de l'agenda voulu.
+                      </>
+                    )}
                     {s.import_skipped_recurring > 0 && (
                       <>
                         {" "}

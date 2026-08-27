@@ -27,6 +27,8 @@ export type CalendarSyncSettings = {
   import_last_error: string | null;
   import_last_count: number;
   import_skipped_recurring: number;
+  import_last_seen: number;
+  import_last_ignored: number;
 };
 
 const EMPTY: CalendarSyncSettings = {
@@ -34,6 +36,7 @@ const EMPTY: CalendarSyncSettings = {
   import_enabled: false, import_url: null, import_last_sync_at: null,
   import_last_status: null, import_last_error: null,
   import_last_count: 0, import_skipped_recurring: 0,
+  import_last_seen: 0, import_last_ignored: 0,
 };
 
 async function getTherapistId(supabase: any, userId: string): Promise<string> {
@@ -216,7 +219,7 @@ export const runMyCalendarImport = createServerFn({ method: "POST" })
       return await fail("Ce lien ne renvoie pas un agenda iCal. Cherchez « adresse secrète au format iCal » dans les réglages de votre agenda.");
     }
 
-    const { busy, skippedRecurring } = parseIcsBusy(text, importWindow());
+    const { busy, skippedRecurring, seen, ignored } = parseIcsBusy(text, importWindow());
 
     // Remplacement atomique du point de vue du praticien : on efface puis on
     // réécrit. Sur quelques milliers de lignes au plus, c'est plus simple et
@@ -243,8 +246,10 @@ export const runMyCalendarImport = createServerFn({ method: "POST" })
       import_last_error: null,
       import_last_count: busy.length,
       import_skipped_recurring: skippedRecurring,
+      import_last_seen: seen,
+      import_last_ignored: ignored,
       updated_at: new Date().toISOString(),
     }).eq("therapist_id", therapistId);
 
-    return { count: busy.length, skippedRecurring };
+    return { count: busy.length, skippedRecurring, seen, ignored };
   });
