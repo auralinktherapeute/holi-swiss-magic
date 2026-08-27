@@ -40,6 +40,20 @@ export function formatDateOnly(d: Date): string {
  * Utiliser `storageDow()` pour toute comparaison avec `day_of_week`, et
  * `gridColumnIndex()` uniquement pour positionner les cases.
  */
+/**
+ * Date d'un instant dans le fuseau LOCAL, au format `AAAA-MM-JJ`.
+ *
+ * À utiliser partout où une date accompagne une heure locale. `toISOString()`
+ * rend la date en UTC : associée à `toTimeString()`, qui rend l'heure locale,
+ * elle produit un enregistrement incohérent. Un rendez-vous du 2 septembre à
+ * 00:30 heure suisse était ainsi stocké au 1er septembre — le défaut mordait
+ * entre minuit et le décalage UTC (00:00–02:00 en été, 00:00–01:00 en hiver).
+ */
+export function localDateISO(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 export function storageDow(d: Date): number {
   return d.getDay();
 }

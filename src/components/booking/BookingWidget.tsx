@@ -24,7 +24,7 @@ import { z } from "zod";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
-import { gridColumnIndex, parseDateOnly, storageDow } from "@/lib/dateUtils";
+import { gridColumnIndex, localDateISO, parseDateOnly, storageDow } from "@/lib/dateUtils";
 import { filterAvailableSlots } from "@/lib/booking-slots";
 import {
   AlertDialog,
@@ -44,10 +44,6 @@ type Busy = { startsAt: string; endsAt: string };
 
 export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
 
-function toISODate(d: Date) {
-  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 // Position de colonne dans la grille lundi→dimanche (affichage uniquement).
 // Les comparaisons avec `availabilities.day_of_week` utilisent `storageDow`
 // (convention JS getDay : 0 = dimanche), voir src/lib/dateUtils.ts.
@@ -155,7 +151,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const today = new Date(); today.setHours(0, 0, 0, 0);
     for (let d = 1; d <= last.getDate(); d++) {
       const date = new Date(month.getFullYear(), month.getMonth(), d);
-      const iso = toISODate(date);
+      const iso = localDateISO(date);
       const dow = storageDow(date);
       const hasAvail = avs.some((a) => a.day_of_week === dow);
       const blocked = blocks.some((b) => iso >= b.start_date && iso <= b.end_date);

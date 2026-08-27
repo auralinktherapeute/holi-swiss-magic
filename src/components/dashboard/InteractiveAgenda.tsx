@@ -11,6 +11,7 @@ import type { EventInput, EventClickArg, EventDropArg, DateSelectArg } from "@fu
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { localDateISO } from "@/lib/dateUtils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -307,7 +308,8 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
       duration_minutes: duration,
       start_time: editing.start.toISOString(),
       end_time: editing.end.toISOString(),
-      appointment_date: editing.start.toISOString().slice(0, 10),
+      // Date LOCALE, cohérente avec l'heure locale de la ligne suivante.
+      appointment_date: localDateISO(editing.start),
       appointment_time: editing.start.toTimeString().slice(0, 8),
       status: editing.status,
       source: "holiswiss",
@@ -345,7 +347,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
       notes: raw.notes, status: raw.status, source: raw.source,
       duration_minutes: raw.duration_minutes, service_name: raw.service_name,
       start_time: s.toISOString(), end_time: e.toISOString(),
-      appointment_date: s.toISOString().slice(0, 10), appointment_time: s.toTimeString().slice(0, 8),
+      appointment_date: localDateISO(s), appointment_time: s.toTimeString().slice(0, 8),
     };
     const { data, error } = await supabase.from("appointments").insert(payload).select().single();
     if (error) { toast.error(t("agenda_page.fail_save"), { description: error.message }); return; }
