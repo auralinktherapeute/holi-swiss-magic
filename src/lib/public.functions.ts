@@ -153,8 +153,30 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
       .in("status", ["pending", "confirmed"]);
 
     if (error) throw new Error("Impossible de charger les créneaux.");
-    return { slots: rows ?? [] };
+
+    // Occupations importées de l'agenda personnel du praticien : elles doivent
+    // masquer les créneaux, sinon la promesse faite au thérapeute est fausse.
+    // Marge de ±1 jour : le fuseau du visiteur est inconnu côté serveur, le
+    // recoupement exact est fait par le client.
+    const dayStart = new Date(`${data.appointmentDate}T00:00:00Z`);
+    const from = new Date(dayStart.getTime() - 86400000).toISOString();
+    const to = new Date(dayStart.getTime() + 2 * 86400000).toISOString();
+    const { data: busyRows } = await (supabaseAdmin as any)
+      .from("therapist_external_busy")
+      .select("starts_at, ends_at")
+      .eq("therapist_id", data.therapistId)
+      .lt("starts_at", to)
+      .gt("ends_at", from);
+
+    return {
+      slots: rows ?? [],
+      busy: ((busyRows ?? []) as Array<{ starts_at: string; ends_at: string }>).map((b) => ({
+        startsAt: b.starts_at,
+        endsAt: b.ends_at,
+      })),
+    };
   });
+
 
 export const listPublishedEvents = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
