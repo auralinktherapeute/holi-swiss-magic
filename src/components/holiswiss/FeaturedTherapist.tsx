@@ -109,6 +109,33 @@ export function FeaturedTherapist() {
           shown ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
         }`}
       >
+        {/* Titre premium au-dessus de la carte */}
+        <div className="mb-6 flex justify-center sm:mb-7">
+          <div className="relative group/badge">
+            {/* Aura dorée extérieure */}
+            <div
+              className="pointer-events-none absolute -inset-2 rounded-full bg-gradient-to-r from-amber-600 via-yellow-200 to-amber-600 blur-[10px] opacity-50 motion-safe:animate-pulse"
+              aria-hidden="true"
+            />
+            <div className="relative inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/60 px-7 py-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] backdrop-blur-2xl">
+              <span className="relative flex h-3 w-3">
+                <span
+                  className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75 motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" aria-hidden="true" />
+              </span>
+              <span className="text-sm font-black uppercase tracking-[0.22em] text-amber-200 sm:text-base">
+                Thérapeute à la Une
+              </span>
+              {/* Balayage lumineux diagonal */}
+              <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
+                <span className="block h-full w-full -translate-x-full animate-[shimmer-sweep_4s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent motion-reduce:animate-none" />
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#2d1248] via-[#1a1035] to-[#0f0a1e] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:p-9">
           <div
             className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#b86ef9]/20 blur-[80px] motion-safe:animate-[pulse_6s_ease-in-out_infinite]"
@@ -134,32 +161,7 @@ export function FeaturedTherapist() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="inline-block">
-                <div className="relative group/badge">
-                  {/* Aura dorée extérieure */}
-                  <div
-                    className="pointer-events-none absolute -inset-1 rounded-full bg-gradient-to-r from-amber-600 via-yellow-200 to-amber-600 blur-[6px] opacity-40 motion-safe:animate-pulse"
-                    aria-hidden="true"
-                  />
-                  <div className="relative inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-black/60 px-5 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] backdrop-blur-2xl">
-                    <span className="relative flex h-2 w-2">
-                      <span
-                        className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75 motion-reduce:animate-none"
-                        aria-hidden="true"
-                      />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-200">
-                      Thérapeute à la Une
-                    </span>
-                    {/* Balayage lumineux diagonal */}
-                    <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
-                      <span className="block h-full w-full -translate-x-full animate-[shimmer-sweep_4s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent motion-reduce:animate-none" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <h2 id="featured-therapist-title" className="mt-4 text-2xl font-semibold text-white sm:text-3xl">
+              <h2 id="featured-therapist-title" className="text-2xl font-semibold text-white sm:text-3xl">
                 {fullName}
               </h2>
               {th.title && <p className="mt-1.5 text-sm text-[#d4a5f9]">{th.title}</p>}
