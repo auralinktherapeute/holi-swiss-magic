@@ -26,7 +26,12 @@ function LangLayout() {
   // La fiche publique d'un thérapeute ne porte aucun message de liste d'attente :
   // elle commence directement par le profil.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isTherapistProfile = /\/therapeutes?\/[^/]+$/.test(pathname);
+  // Segments de la fiche : /{lang}/therapeute|therapeutes/{slug}
+  // (on ignore un éventuel slash final et les pages listes/canton/ville).
+  const segments = pathname.split("/").filter(Boolean);
+  const isTherapistProfile =
+    segments.length === 3 &&
+    (segments[1] === "therapeute" || segments[1] === "therapeutes");
 
   useEffect(() => {
     if (i18n.language.split("-")[0] !== resolved) void i18n.changeLanguage(resolved);
