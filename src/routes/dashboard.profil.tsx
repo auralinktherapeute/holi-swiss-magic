@@ -37,6 +37,8 @@ import ProfilePhotoUploader from "@/components/dashboard/ProfilePhotoUploader";
 import CabinetPhotosUploader from "@/components/dashboard/CabinetPhotosUploader";
 import CertificationsUploader from "@/components/dashboard/CertificationsUploader";
 import FaqEditor from "@/components/dashboard/FaqEditor";
+import { SocialLinksEditor, EMPTY_SOCIAL_FORM, type SocialFormState } from "@/components/dashboard/SocialLinksEditor";
+import { normalizeSocialUrl, SOCIAL_NETWORKS, parseSocialLinks } from "@/lib/social-links";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
 import { useHashFocus } from "@/hooks/use-hash-focus";
 import { useFormDraft } from "@/hooks/use-form-draft";
@@ -102,8 +104,30 @@ const THERAPIST_PROFILE_SELECT = [
   "canton", "languages", "price_min", "price_max", "currency", "years_experience",
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations", "meta_title", "meta_description", "consultation_modes",
-  "is_trainer", "trainer_subjects", "trainer_institution", "trainer_since",
+  "is_trainer", "trainer_subjects", "trainer_institution", "trainer_since", "social_links",
 ].join(",");
+
+/** Convertit la valeur en base vers l'état du formulaire (champs toujours présents). */
+function socialFormFromDb(raw: unknown): SocialFormState {
+  const parsed = parseSocialLinks(raw);
+  const next = { ...EMPTY_SOCIAL_FORM };
+  for (const network of SOCIAL_NETWORKS) {
+    const entry = parsed[network];
+    if (entry) next[network] = { url: entry.url, visible: entry.visible };
+  }
+  return next;
+}
+
+/** Ne persiste que les liens valides ; l'affichage suit l'interrupteur. */
+function socialPayload(form: SocialFormState) {
+  const out: Record<string, { url: string; visible: boolean }> = {};
+  for (const network of SOCIAL_NETWORKS) {
+    const entry = form[network];
+    const url = entry ? normalizeSocialUrl(network, entry.url) : null;
+    if (url) out[network] = { url, visible: !!entry.visible };
+  }
+  return out;
+}
 
 function profileDraftScore(draft: unknown) {
   if (!draft || typeof draft !== "object") return 0;
@@ -216,6 +240,9 @@ function ProfilePage() {
   // Accreditations (ASCA, RME, OrTra TC, ...)
   const [accreditations, setAccreditations] = useSessionState<Accreditation[]>(`${profileStatePrefix}.accreditations`, []);
 
+  // Réseaux sociaux — lien conservé même lorsque l'affichage est coupé.
+  const [socialLinks, setSocialLinks] = useSessionState<SocialFormState>(`${profileStatePrefix}.socialLinks`, EMPTY_SOCIAL_FORM);
+
   // Formateur — déclaratif, comme les accréditations.
   const [isTrainer, setIsTrainer] = useSessionState<boolean>(`${profileStatePrefix}.isTrainer`, false);
   const [trainerSubjects, setTrainerSubjects] = useSessionState(`${profileStatePrefix}.trainerSubjects`, "");
@@ -278,11 +305,11 @@ function ProfilePage() {
   const formSnapshot = useMemo(() => ({
     firstName, lastName, city, postalCode, address, phone, canton, langs,
     priceMin, priceMax, currency, sessionDuration, yearsExperience, specialties, services,
-    shortBio, bio, googleReviewsUrl, website, ide, accreditations,
+    shortBio, bio, googleReviewsUrl, website, ide, accreditations, socialLinks,
     isTrainer, trainerSubjects, trainerInstitution, trainerSince,
   }), [firstName, lastName, city, postalCode, address, phone, canton, langs,
       priceMin, priceMax, currency, sessionDuration, yearsExperience, specialties, services,
-      shortBio, bio, googleReviewsUrl, website, ide, accreditations,
+      shortBio, bio, googleReviewsUrl, website, ide, accreditations, socialLinks,
       isTrainer, trainerSubjects, trainerInstitution, trainerSince]);
 
   const { initialDraft, status: draftStatus, savedAt, clearDraft, dismissDraft } = useFormDraft({
@@ -329,6 +356,7 @@ function ProfilePage() {
     setWebsite(keepText(d.website, website));
     setIde(keepText(d.ide, ide));
     setAccreditations(keepArray(d.accreditations, accreditations));
+    if (d.socialLinks && typeof d.socialLinks === "object") setSocialLinks({ ...EMPTY_SOCIAL_FORM, ...d.socialLinks });
     if (typeof d.isTrainer === "boolean") setIsTrainer(d.isTrainer);
     setTrainerSubjects(keepText(d.trainerSubjects, trainerSubjects));
     setTrainerInstitution(keepText(d.trainerInstitution, trainerInstitution));
@@ -392,6 +420,7 @@ function ProfilePage() {
           website: data.website ?? "",
           ide: "",
           accreditations: ((data as any).accreditations as Accreditation[]) ?? [],
+          socialLinks: socialFormFromDb((data as any).social_links),
           isTrainer: (data as any).is_trainer ?? false,
           trainerSubjects: (data as any).trainer_subjects ?? "",
           trainerInstitution: (data as any).trainer_institution ?? "",
@@ -433,6 +462,7 @@ function ProfilePage() {
         setWebsite(data.website ?? "");
         setIdeVerified((data as any).ide_verified ?? false);
         setAccreditations(((data as any).accreditations as Accreditation[]) ?? []);
+        setSocialLinks(socialFormFromDb((data as any).social_links));
         setIsTrainer((data as any).is_trainer ?? false);
         setTrainerSubjects((data as any).trainer_subjects ?? "");
         setTrainerInstitution((data as any).trainer_institution ?? "");
@@ -583,6 +613,7 @@ function ProfilePage() {
           meta_description: metaDescription.trim() || null,
           consultation_modes: consultationModes,
           accreditations,
+          social_links: socialPayload(socialLinks),
           // Formateur. L'année vide devient null plutôt que NaN : la contrainte
           // en base rejetterait NaN, et le champ est facultatif.
           is_trainer: isTrainer,
@@ -1165,6 +1196,23 @@ function ProfilePage() {
                   </div>
                 );
               })}
+            </div>
+          </Field>
+
+          <Divider />
+
+          {/* Réseaux sociaux */}
+          <Field label={
+            <span className="inline-flex items-center gap-2">
+              <span className="font-semibold text-white">Réseaux sociaux</span>
+            </span>
+          }>
+            <div id="reseaux-sociaux">
+              <SocialLinksEditor
+                value={socialLinks}
+                onChange={(next) => { setSocialLinks(next); markDirty(); }}
+                inputClass={inputClass}
+              />
             </div>
           </Field>
 

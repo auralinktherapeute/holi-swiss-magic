@@ -4989,6 +4989,7 @@ export type Database = {
           short_bio: string | null
           siret_verified: boolean
           slug: string
+          social_links: Json
           specialties: string[] | null
           status: string
           subscription_plan: string
@@ -5052,6 +5053,7 @@ export type Database = {
           short_bio?: string | null
           siret_verified?: boolean
           slug: string
+          social_links?: Json
           specialties?: string[] | null
           status?: string
           subscription_plan?: string
@@ -5115,6 +5117,7 @@ export type Database = {
           short_bio?: string | null
           siret_verified?: boolean
           slug?: string
+          social_links?: Json
           specialties?: string[] | null
           status?: string
           subscription_plan?: string

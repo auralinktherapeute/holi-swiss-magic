@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { parseSocialLinks } from "@/lib/social-links";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const slotSchema = z.object({
@@ -40,6 +41,13 @@ const profileSchema = z.object({
   ide: z.string().max(40).nullable(),
   // Formateur — déclaratif. Optionnels : un appel qui ne les envoie pas laisse
   // les valeurs en base intactes (voir le motif `!== undefined` plus bas).
+  // Réseaux sociaux : lien conservé même masqué (visible=false).
+  social_links: z
+    .record(
+      z.enum(["instagram", "facebook", "linkedin"]),
+      z.object({ url: z.string().max(300), visible: z.boolean() }),
+    )
+    .optional(),
   is_trainer: z.boolean().optional(),
   trainer_subjects: z.string().max(300).nullable().optional(),
   trainer_institution: z.string().max(200).nullable().optional(),
@@ -293,6 +301,7 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     if (data.title !== undefined) payload.title = data.title;
     if (data.meta_description !== undefined) payload.meta_description = data.meta_description;
     if (data.consultation_modes !== undefined) payload.consultation_modes = data.consultation_modes;
+    if (data.social_links !== undefined) payload.social_links = parseSocialLinks(data.social_links);
     if (data.is_trainer !== undefined) payload.is_trainer = data.is_trainer;
     if (data.trainer_subjects !== undefined) payload.trainer_subjects = data.trainer_subjects;
     if (data.trainer_institution !== undefined) payload.trainer_institution = data.trainer_institution;
