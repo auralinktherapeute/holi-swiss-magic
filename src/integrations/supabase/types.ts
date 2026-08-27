@@ -3637,6 +3637,69 @@ export type Database = {
           },
         ]
       }
+      therapist_calendar_sync: {
+        Row: {
+          created_at: string
+          export_enabled: boolean
+          export_token: string | null
+          export_token_created_at: string | null
+          import_enabled: boolean
+          import_last_count: number
+          import_last_error: string | null
+          import_last_status: string | null
+          import_last_sync_at: string | null
+          import_skipped_recurring: number
+          import_url: string | null
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          export_enabled?: boolean
+          export_token?: string | null
+          export_token_created_at?: string | null
+          import_enabled?: boolean
+          import_last_count?: number
+          import_last_error?: string | null
+          import_last_status?: string | null
+          import_last_sync_at?: string | null
+          import_skipped_recurring?: number
+          import_url?: string | null
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          export_enabled?: boolean
+          export_token?: string | null
+          export_token_created_at?: string | null
+          import_enabled?: boolean
+          import_last_count?: number
+          import_last_error?: string | null
+          import_last_status?: string | null
+          import_last_sync_at?: string | null
+          import_skipped_recurring?: number
+          import_url?: string | null
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_calendar_sync_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_calendar_sync_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_certifications: {
         Row: {
           created_at: string
@@ -3757,6 +3820,48 @@ export type Database = {
           },
           {
             foreignKeyName: "therapist_documents_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_external_busy: {
+        Row: {
+          ends_at: string
+          id: string
+          starts_at: string
+          synced_at: string
+          therapist_id: string
+          uid: string | null
+        }
+        Insert: {
+          ends_at: string
+          id?: string
+          starts_at: string
+          synced_at?: string
+          therapist_id: string
+          uid?: string | null
+        }
+        Update: {
+          ends_at?: string
+          id?: string
+          starts_at?: string
+          synced_at?: string
+          therapist_id?: string
+          uid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_external_busy_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_external_busy_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
