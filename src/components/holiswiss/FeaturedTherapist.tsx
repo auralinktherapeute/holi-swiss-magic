@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Sparkles, ArrowRight, CalendarDays, FileText, BadgeCheck } from "lucide-react";
+import { MapPin, ArrowRight, CalendarDays, FileText, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
@@ -134,10 +134,31 @@ export function FeaturedTherapist() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/12 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#e2c6ff] backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5 text-[#f5c97a] animate-[pulse_3s_ease-in-out_infinite] motion-reduce:animate-none" aria-hidden="true" />
-                Thérapeute à la Une
-              </span>
+              <div className="inline-block">
+                <div className="relative group/badge">
+                  {/* Aura dorée extérieure */}
+                  <div
+                    className="pointer-events-none absolute -inset-1 rounded-full bg-gradient-to-r from-amber-600 via-yellow-200 to-amber-600 blur-[6px] opacity-40 motion-safe:animate-pulse"
+                    aria-hidden="true"
+                  />
+                  <div className="relative inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-black/60 px-5 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] backdrop-blur-2xl">
+                    <span className="relative flex h-2 w-2">
+                      <span
+                        className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75 motion-reduce:animate-none"
+                        aria-hidden="true"
+                      />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-200">
+                      Thérapeute à la Une
+                    </span>
+                    {/* Balayage lumineux diagonal */}
+                    <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
+                      <span className="block h-full w-full -translate-x-full animate-[shimmer-sweep_4s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent motion-reduce:animate-none" />
+                    </span>
+                  </div>
+                </div>
+              </div>
               <h2 id="featured-therapist-title" className="mt-4 text-2xl font-semibold text-white sm:text-3xl">
                 {fullName}
               </h2>
