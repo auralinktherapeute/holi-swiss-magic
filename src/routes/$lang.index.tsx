@@ -12,7 +12,7 @@ import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSw
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
 import { CantonDirectory } from "@/components/holiswiss/CantonDirectory";
-import { WaitlistReassuranceBlock } from "@/components/holiswiss/WaitlistReassuranceBlock";
+
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 
 import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
