@@ -78,6 +78,8 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [avs, setAvs] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [taken, setTaken] = useState<Appt[]>([]);
+  const [busy, setBusy] = useState<Busy[]>([]);
+
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
   const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "" });
