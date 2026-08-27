@@ -125,6 +125,17 @@ export function NewTherapistsShowcase() {
           );
         })}
       </div>
+
+      <div className="mt-10 flex justify-center">
+        <Link
+          to="/$lang/therapeutes"
+          params={{ lang }}
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.08)] px-6 py-2.5 text-sm font-semibold text-white transition hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)]"
+        >
+          {t("home.newest.viewAll", "Voir tous les thérapeutes")}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </div>
     </section>
   );
 }
