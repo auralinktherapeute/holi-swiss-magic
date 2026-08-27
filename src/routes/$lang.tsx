@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useParams } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useParams, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/layout/PublicNav";
@@ -23,6 +23,10 @@ function LangLayout() {
   const { lang } = useParams({ from: "/$lang" });
   const { i18n } = useTranslation();
   const resolved = isLang(lang) ? lang : DEFAULT_LANG;
+  // La fiche publique d'un thérapeute ne porte aucun message de liste d'attente :
+  // elle commence directement par le profil.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isTherapistProfile = /\/therapeutes?\/[^/]+$/.test(pathname);
 
   useEffect(() => {
     if (i18n.language.split("-")[0] !== resolved) void i18n.changeLanguage(resolved);
@@ -32,7 +36,7 @@ function LangLayout() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background">
       <PublicNav />
-      <WaitlistBanner />
+      {!isTherapistProfile && <WaitlistBanner />}
       <main className="flex-1">
         <Outlet />
       </main>

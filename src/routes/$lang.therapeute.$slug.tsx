@@ -28,6 +28,7 @@ import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale, profileCopy, resolveProfileLang } from "@/lib/seo";
 import { TrustBadges } from "@/components/holiswiss/TrustBadges";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
+import { SocialLinksRow } from "@/components/holiswiss/SocialLinksRow";
 
 const LANG_FLAG: Record<string, string> = {
   fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
@@ -544,7 +545,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,is_trainer,trainer_subjects,trainer_institution,trainer_since")
+        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,is_trainer,trainer_subjects,trainer_institution,trainer_since")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
@@ -762,6 +763,8 @@ function Page() {
                 {trustBadges.length > 0 && (
                   <TrustBadges badges={trustBadges} lang={lang} className="mb-3" />
                 )}
+
+                <SocialLinksRow socialLinks={(th as any).social_links} name={fullName} className="mb-3" />
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
                   {avg && (
