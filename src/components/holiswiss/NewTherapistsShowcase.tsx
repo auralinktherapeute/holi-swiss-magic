@@ -27,6 +27,8 @@ export function NewTherapistsShowcase() {
         .from("therapists")
         .select("id,slug,first_name,last_name,title,photo_url,city,canton,languages,verified,specialties,created_at")
         .eq("status", "active")
+        .not("photo_url", "is", null)
+        .neq("photo_url", "")
         .order("created_at", { ascending: false })
         .limit(4);
       if (error) throw error;
