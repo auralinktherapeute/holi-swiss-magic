@@ -172,8 +172,18 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const dayAvs = avs.filter((a) => a.day_of_week === dow);
     const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin));
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
-    return all.filter((s) => !takenSet.has(s));
-  }, [selectedDate, avs, taken, slotMin]);
+    // Un créneau qui chevauche une occupation importée de l'agenda personnel
+    // du praticien n'est pas réservable.
+    const busyRanges = busy.map((b) => [new Date(b.startsAt).getTime(), new Date(b.endsAt).getTime()] as const);
+    const overlapsBusy = (hhmm: string) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      const start = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), h, m).getTime();
+      const end = start + slotMin * 60000;
+      return busyRanges.some(([bs, be]) => start < be && end > bs);
+    };
+    return all.filter((s) => !takenSet.has(s) && !overlapsBusy(s));
+  }, [selectedDate, avs, taken, busy, slotMin]);
+
 
   const openConfirm = (e: React.FormEvent) => {
     e.preventDefault();
