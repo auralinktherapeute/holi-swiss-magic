@@ -150,6 +150,12 @@
   }
 }
 
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-150%); }
+  50% { transform: translateX(150%); }
+  100% { transform: translateX(150%); }
+}
+
 .dark {
   --background: #07040f;
   --foreground: #e2e8f0;
