@@ -3646,6 +3646,8 @@ export type Database = {
           import_enabled: boolean
           import_last_count: number
           import_last_error: string | null
+          import_last_ignored: number
+          import_last_seen: number
           import_last_status: string | null
           import_last_sync_at: string | null
           import_skipped_recurring: number
@@ -3661,6 +3663,8 @@ export type Database = {
           import_enabled?: boolean
           import_last_count?: number
           import_last_error?: string | null
+          import_last_ignored?: number
+          import_last_seen?: number
           import_last_status?: string | null
           import_last_sync_at?: string | null
           import_skipped_recurring?: number
@@ -3676,6 +3680,8 @@ export type Database = {
           import_enabled?: boolean
           import_last_count?: number
           import_last_error?: string | null
+          import_last_ignored?: number
+          import_last_seen?: number
           import_last_status?: string | null
           import_last_sync_at?: string | null
           import_skipped_recurring?: number
