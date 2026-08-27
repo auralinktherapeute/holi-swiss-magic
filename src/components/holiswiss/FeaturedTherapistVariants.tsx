@@ -99,7 +99,7 @@ function EventCard({ title, date }: { title: string; date: string }) {
 function Scroller({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <div
-      className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 sm:overflow-visible"
+      className="-mx-1 flex min-w-0 gap-4 overflow-x-auto px-1 pb-2"
       role="list"
       aria-label={label}
     >
@@ -199,7 +199,7 @@ function VersionA() {
           </div>
         </div>
 
-        <div className="mt-14 grid gap-10 lg:grid-cols-2">
+        <div className="mt-14 grid gap-10 lg:grid-cols-2 [&>*]:min-w-0">
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#a89bc4]">
               Derniers articles
@@ -408,7 +408,7 @@ function VersionC() {
             <Counter to={FEATURED.specialties.length} label="Approches" />
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="mt-8 grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a89bc4]">Articles</h3>
               <div className="mt-3">
