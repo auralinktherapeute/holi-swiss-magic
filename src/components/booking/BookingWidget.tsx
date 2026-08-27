@@ -129,14 +129,17 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     if (!selectedDate) return;
     let cancelled = false;
     fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } })
-      .then(({ slots }) => {
-        if (!cancelled) setTaken(slots as Appt[]);
+      .then((res) => {
+        if (cancelled) return;
+        setTaken(res.slots as Appt[]);
+        setBusy((res as { busy?: Busy[] }).busy ?? []);
       })
       .catch(() => {
-        if (!cancelled) setTaken([]);
+        if (!cancelled) { setTaken([]); setBusy([]); }
       });
     return () => { cancelled = true; };
   }, [fetchBookedSlots, selectedDate, therapistId]);
+
 
   const days = useMemo(() => {
     const first = new Date(month);
