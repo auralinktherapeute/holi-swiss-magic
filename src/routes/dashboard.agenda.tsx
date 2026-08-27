@@ -10,6 +10,7 @@ import InteractiveAgenda from "@/components/dashboard/InteractiveAgenda";
 import SpecificAvailabilityManager from "@/components/dashboard/SpecificAvailabilityManager";
 import UnavailabilityManager from "@/components/dashboard/UnavailabilityManager";
 import WeeklyScheduleEditor from "@/components/dashboard/WeeklyScheduleEditor";
+import CalendarSyncPanel from "@/components/dashboard/CalendarSyncPanel";
 import { useHashFocus } from "@/hooks/use-hash-focus";
 
 export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
@@ -74,6 +75,12 @@ function Page() {
       )}
 
       {therapistId && <UnavailabilityManager therapistId={therapistId} />}
+
+      {therapistId && (
+        <div id="synchronisation">
+          <CalendarSyncPanel />
+        </div>
+      )}
     </div>
   );
 }
