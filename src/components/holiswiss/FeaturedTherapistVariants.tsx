@@ -75,7 +75,7 @@ function Tags({ items }: { items: string[] }) {
 
 function ArticleCard({ title }: { title: string }) {
   return (
-    <article className="group min-w-[240px] flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#b86ef9]/45 motion-reduce:transform-none">
+    <article className="group w-[240px] shrink-0 sm:w-auto sm:min-w-[220px] sm:flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#b86ef9]/45 motion-reduce:transform-none">
       <FileText className="h-4 w-4 text-[#d4a5f9]" aria-hidden="true" />
       <h4 className="mt-2 text-sm font-medium leading-snug text-white">{title}</h4>
       <span className="mt-3 inline-flex items-center gap-1 text-xs text-[#c0b0d8] transition-colors group-hover:text-white">
@@ -87,7 +87,7 @@ function ArticleCard({ title }: { title: string }) {
 
 function EventCard({ title, date }: { title: string; date: string }) {
   return (
-    <article className="min-w-[240px] flex-1 rounded-2xl border border-white/10 bg-gradient-to-br from-[#3d1a5c]/60 to-[#1a1035]/60 p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#5cc8fa]/40 motion-reduce:transform-none">
+    <article className="w-[240px] shrink-0 sm:w-auto sm:min-w-[220px] sm:flex-1 rounded-2xl border border-white/10 bg-gradient-to-br from-[#3d1a5c]/60 to-[#1a1035]/60 p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#5cc8fa]/40 motion-reduce:transform-none">
       <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#5cc8fa]">
         <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" /> {date}
       </span>
@@ -99,7 +99,7 @@ function EventCard({ title, date }: { title: string; date: string }) {
 function Scroller({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <div
-      className="-mx-1 flex min-w-0 gap-4 overflow-x-auto px-1 pb-2"
+      className="flex w-full min-w-0 max-w-full gap-4 overflow-x-auto pb-2"
       role="list"
       aria-label={label}
     >
