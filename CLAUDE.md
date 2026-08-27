@@ -116,42 +116,18 @@ elle disparaît au build Lovable. Ne pas l'éditer à la main.
 Ne pas déduire du code — regarder. `curl` est bloqué par Cloudflare (erreur 1010) sans User-Agent de
 navigateur ; les outils de navigation intégrés fonctionnent directement.
 
-### 🚨 Vérifier avant d'affirmer — erreurs déjà commises, à ne pas refaire
+### 🚨 Vérifier avant d'affirmer
 
-Ces règles sont ici parce qu'elles ont **déjà** été enfreintes sur ce dépôt, plusieurs fois. Une note
-dans Obsidian n'a pas suffi : ce fichier-ci est le seul relu à chaque session.
+**Compétence `verifier-avant-daffirmer`** (`.claude/skills/`) — à charger avant d'annoncer qu'un
+correctif est déployé, qu'une table est protégée, qu'un changement est visible ou qu'une
+fonctionnalité est terminée, et avant d'écrire toute commande de contrôle.
 
-**Avant de lancer une commande de contrôle, annoncer ce qu'elle devrait renvoyer.** Si le résultat
-est `0` ou `1`, soupçonner la commande avant de soupçonner le code.
+Elle contient les sondes calibrées de la Data API, les commandes qui ont déjà produit de faux
+négatifs sur ce dépôt (`grep -c`, `$?` après pipeline, `200 []` sur table vide, GRANT `anon`
+hérité), la lecture des avertissements de build et la marche à suivre pour une migration.
 
-| Piège | Ce qui se passe | À faire |
-|---|---|---|
-| `grep -c motif f` | Compte les **LIGNES**. HTML servi et CSS minifié tiennent sur **une seule ligne** → renvoie 1 au lieu de 9, ou 0 à tort. *(commis 3×)* | `grep -o motif f \| wc -l` |
-| `cmd \| tail` puis `$?` | Donne le code de `tail`, jamais celui de `cmd`. | `set -o pipefail`, ou tester `cmd` seule |
-| Globs entre guillemets passés à une fonction shell | Le découpage de mots ne re-développe pas les globs → `grep` cherche des chemins inexistants et renvoie 0 partout. | Passer les chemins en `"$@"` |
-| `echo "ok"` après un heredoc | S'affiche même si le heredoc a échoué. | `psql -v ON_ERROR_STOP=1`, tester le code de retour |
-| Stub de test plus permissif que la prod | `anon` a des droits **colonne par colonne**, pas sur la table. Un stub qui accorde la table entière masque l'oubli de `GRANT` qu'il devrait révéler. Idem : stub `SQL_ASCII` vs UTF-8. | Reproduire les droits réels, colonne par colonne |
-
-**Une nouvelle colonne lue publiquement exige `grant select (colonne) … to anon`.** Sans lui :
-`permission denied for table therapists` sur **toute** la fiche. *(commis sur `faq_enabled`)*
-
-**Un changement visuel n'est prouvé que dans le bundle produit.** `tsc` propre + tests verts + build
-réussi ne disent **rien** sur l'apparence. Convertir des hexes en tokens ne change **aucun pixel**
-tant que les tokens portent les anciennes valeurs (`--primary: #b86ef9`). Vérifier :
-`grep -o '<classe|hex>' .output/public/assets/*.css | wc -l`.
-
-**Mesurer un périmètre avant de l'annoncer** — un chiffre tiré d'un sous-dossier a déjà orienté une
-recommandation entière, invalidée dès la mesure complète.
-
-**Ne jamais déduire le genre d'un prénom** (libellés, accords). Rien en base ne le renseigne, et
-l'inférence se trompe sur de vraies personnes. Employer une forme unique ou laisser le praticien
-écrire la sienne.
-
-**Un aperçu validé est un contrat** : livrer la direction choisie *avec* ce qui la distinguait
-(couleurs comprises), pas une version amputée.
-
-**Pousser un fichier `.github/workflows/`** échoue avec le jeton OAuth de `gh` (portée `workflow`
-absente) : passer par SSH — `git push git@github.com:auralinktherapeute/holi-swiss-magic.git main`.
+La règle qui les résume : **énoncer ce que la commande devrait renvoyer avant de la lancer.**
+Si le résultat est `0`, `1` ou vide, soupçonner la commande avant le code.
 
 ## Git
 
