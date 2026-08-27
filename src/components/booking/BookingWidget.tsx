@@ -39,6 +39,8 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
+type Busy = { startsAt: string; endsAt: string };
+
 export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
 
 function toISODate(d: Date) {
@@ -78,6 +80,8 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [avs, setAvs] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [taken, setTaken] = useState<Appt[]>([]);
+  const [busy, setBusy] = useState<Busy[]>([]);
+
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
   const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "" });
@@ -129,14 +133,17 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     if (!selectedDate) return;
     let cancelled = false;
     fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } })
-      .then(({ slots }) => {
-        if (!cancelled) setTaken(slots as Appt[]);
+      .then((res) => {
+        if (cancelled) return;
+        setTaken(res.slots as Appt[]);
+        setBusy((res as { busy?: Busy[] }).busy ?? []);
       })
       .catch(() => {
-        if (!cancelled) setTaken([]);
+        if (!cancelled) { setTaken([]); setBusy([]); }
       });
     return () => { cancelled = true; };
   }, [fetchBookedSlots, selectedDate, therapistId]);
+
 
   const days = useMemo(() => {
     const first = new Date(month);
@@ -165,8 +172,18 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const dayAvs = avs.filter((a) => a.day_of_week === dow);
     const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin));
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
-    return all.filter((s) => !takenSet.has(s));
-  }, [selectedDate, avs, taken, slotMin]);
+    // Un créneau qui chevauche une occupation importée de l'agenda personnel
+    // du praticien n'est pas réservable.
+    const busyRanges = busy.map((b) => [new Date(b.startsAt).getTime(), new Date(b.endsAt).getTime()] as const);
+    const overlapsBusy = (hhmm: string) => {
+      const [h, m] = hhmm.split(":").map(Number);
+      const start = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), h, m).getTime();
+      const end = start + slotMin * 60000;
+      return busyRanges.some(([bs, be]) => start < be && end > bs);
+    };
+    return all.filter((s) => !takenSet.has(s) && !overlapsBusy(s));
+  }, [selectedDate, avs, taken, busy, slotMin]);
+
 
   const openConfirm = (e: React.FormEvent) => {
     e.preventDefault();
