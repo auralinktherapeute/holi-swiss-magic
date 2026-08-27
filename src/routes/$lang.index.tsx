@@ -99,8 +99,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Reassurance block — early access / waiting list */}
-      <WaitlistReassuranceBlock />
 
       {/* Pricing teaser */}
       <section className="eg-reveal eg-reveal--delay bg-[#2d1248]">
