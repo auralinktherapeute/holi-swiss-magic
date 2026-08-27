@@ -3229,6 +3229,8 @@ export type Database = {
           name_it: string | null
           slug: string
           slug_de: string | null
+          slug_en: string | null
+          slug_it: string | null
           sort_order: number
           updated_at: string
         }
@@ -3249,6 +3251,8 @@ export type Database = {
           name_it?: string | null
           slug: string
           slug_de?: string | null
+          slug_en?: string | null
+          slug_it?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -3269,6 +3273,8 @@ export type Database = {
           name_it?: string | null
           slug?: string
           slug_de?: string | null
+          slug_en?: string | null
+          slug_it?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -5620,6 +5626,7 @@ export type Database = {
           verified: boolean
         }[]
       }
+      specialty_slug: { Args: { _input: string }; Returns: string }
       suggest_article_idea: { Args: { _specs: string[] }; Returns: string }
       therapist_health_signals: {
         Args: { _id?: string }
