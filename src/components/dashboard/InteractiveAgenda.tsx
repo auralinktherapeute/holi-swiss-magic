@@ -113,6 +113,27 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
     enabled: !!therapistId,
   });
 
+  // Occupations importées de l'agenda personnel. Lues sous RLS, comme les
+  // rendez-vous : la policy ne rend que les lignes du praticien connecté.
+  //
+  // Sans cet affichage, l'import était invisible : le praticien voyait ses
+  // créneaux disparaître côté public sans jamais savoir ce qui les bloquait.
+  const { data: externalBusy = [] } = useQuery({
+    queryKey: ["interactive-agenda-external", therapistId, range.start],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("therapist_external_busy")
+        .select("id, starts_at, ends_at")
+        .eq("therapist_id", therapistId)
+        .lt("starts_at", range.end)
+        .gt("ends_at", range.start)
+        .order("starts_at");
+      if (error) throw error;
+      return (data ?? []) as Array<{ id: string; starts_at: string; ends_at: string }>;
+    },
+    enabled: !!therapistId,
+  });
+
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["interactive-agenda", therapistId] });
   }, [queryClient, therapistId]);
@@ -188,6 +209,28 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
       extendedProps: { raw: a, isBlocked, source, meta },
     } as EventInput;
   }), [appointments, t]);
+
+  /**
+   * Créneaux venus de l'agenda personnel, en événements de FOND.
+   *
+   * `display: "background"` les rend non cliquables, non déplaçables et non
+   * redimensionnables : ils n'appartiennent pas à Holiswiss, les modifier ici
+   * n'aurait aucun effet — la prochaine synchronisation les réécrirait.
+   *
+   * Aucun titre n'est affiché parce qu'aucun n'est stocké : seules les bornes
+   * horaires sont importées, jamais le motif d'un rendez-vous privé.
+   */
+  const externalEvents: EventInput[] = useMemo(() => externalBusy.map((b) => ({
+    id: `ext-${b.id}`,
+    start: b.starts_at,
+    end: b.ends_at,
+    display: "background",
+    backgroundColor: "rgba(244, 180, 0, 0.18)",
+    classNames: ["agenda-source-other"],
+    extendedProps: { external: true },
+  } as EventInput)), [externalBusy]);
+
+  const allEvents = useMemo(() => [...events, ...externalEvents], [events, externalEvents]);
 
   // Editor
   const [editorOpen, setEditorOpen] = useSessionState(`${statePrefix}.editorOpen`, false);
@@ -396,7 +439,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
               eventStartEditable
               dayMaxEvents
               height="auto"
-              events={events}
+              events={allEvents}
               select={handleSelect}
               eventClick={handleEventClick}
               eventDrop={handleEventDrop}
@@ -442,6 +485,16 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
           );
         })}
       </div>
+
+      {/* Ne s'affiche que si un import a réellement produit quelque chose :
+          une légende qui explique une couleur absente de l'écran est du bruit. */}
+      {externalBusy.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Les plages ombrées viennent de votre agenda personnel importé — {externalBusy.length}{" "}
+          sur la période affichée. Elles ne sont pas modifiables ici : la prochaine synchronisation
+          les réécrirait. Seules leurs heures sont connues de Holiswiss, jamais leur motif.
+        </p>
+      )}
 
       {/* Editor dialog */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
