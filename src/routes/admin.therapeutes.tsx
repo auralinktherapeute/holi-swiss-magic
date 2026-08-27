@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { listTherapistsAdmin, updateTherapistStatus } from "@/lib/admin.functions";
 import { useSessionState } from "@/hooks/use-session-state";
+import { FeaturedTherapistPicker } from "@/components/admin/FeaturedTherapistPicker";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/therapeutes")({ component: Page });
@@ -127,6 +128,8 @@ function Page() {
             </button>
           </div>
         </motion.div>
+
+        <FeaturedTherapistPicker />
 
         {/* Toolbar */}
         <div className="adm-toolbar">
