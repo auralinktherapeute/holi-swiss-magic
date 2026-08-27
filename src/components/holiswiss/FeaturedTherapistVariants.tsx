@@ -39,7 +39,10 @@ function useReveal<T extends HTMLElement>() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       setShown(true);
       return;
     }
@@ -50,10 +53,18 @@ function useReveal<T extends HTMLElement>() {
           io.disconnect();
         }
       },
-      { threshold: 0.15 },
+      // Seuil bas + marge : la section est haute, 15% pouvait ne jamais
+      // être atteint dans certaines hauteurs de viewport (A restait invisible).
+      { threshold: 0.05, rootMargin: "0px 0px 10% 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Filet de sécurité : si l'observer ne se déclenche pas (iframe, Safari,
+    // scroll rapide), on révèle le contenu au bout de 800ms.
+    const fallback = window.setTimeout(() => setShown(true), 800);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
   return { ref, shown };
 }
