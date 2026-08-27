@@ -18,6 +18,9 @@ type Featured = {
   specialties: string[] | null;
 };
 
+type ArticleRow = { id: string; slug: string; titre: string };
+type EventRow = { id: string; title: string; event_date: string | null };
+
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   const [shown, setShown] = useState(false);
@@ -54,7 +57,7 @@ export function FeaturedTherapist() {
         .select("therapist_id")
         .eq("id", 1)
         .maybeSingle();
-      const id = sel?.therapist_id;
+      const id = (sel as { therapist_id: string | null } | null)?.therapist_id;
       if (!id) return null;
 
       const { data: th } = await supabase
@@ -86,8 +89,8 @@ export function FeaturedTherapist() {
 
       return {
         therapist: th as Featured,
-        articles: articles ?? [],
-        events: events ?? [],
+        articles: (articles ?? []) as ArticleRow[],
+        events: (events ?? []) as EventRow[],
       };
     },
     staleTime: 5 * 60 * 1000,
