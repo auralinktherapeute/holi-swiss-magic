@@ -25,6 +25,7 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { gridColumnIndex, parseDateOnly, storageDow } from "@/lib/dateUtils";
+import { filterAvailableSlots } from "@/lib/booking-slots";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -174,14 +175,14 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
     // Un créneau qui chevauche une occupation importée de l'agenda personnel
     // du praticien n'est pas réservable.
-    const busyRanges = busy.map((b) => [new Date(b.startsAt).getTime(), new Date(b.endsAt).getTime()] as const);
-    const overlapsBusy = (hhmm: string) => {
-      const [h, m] = hhmm.split(":").map(Number);
-      const start = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), h, m).getTime();
-      const end = start + slotMin * 60000;
-      return busyRanges.some(([bs, be]) => start < be && end > bs);
-    };
-    return all.filter((s) => !takenSet.has(s) && !overlapsBusy(s));
+    //
+    // Le calcul est ancré sur le fuseau du THÉRAPEUTE, pas sur celui du
+    // navigateur : « 09:00 » est l'heure murale du praticien, telle que la
+    // base la stocke. Construire l'instant avec `new Date(y, m, d, h, min)`
+    // aurait utilisé le fuseau du visiteur — juste depuis la Suisse, faux
+    // d'une heure depuis Londres, de plusieurs depuis un autre continent.
+    const free = all.filter((s) => !takenSet.has(s));
+    return filterAvailableSlots(free, selectedDate, slotMin, busy);
   }, [selectedDate, avs, taken, busy, slotMin]);
 
 
