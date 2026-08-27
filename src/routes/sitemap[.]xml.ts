@@ -71,13 +71,14 @@ export const Route = createFileRoute("/sitemap.xml")({
             }
           }
 
-          // Active specialties (indexable). slug_de peut ne pas encore exister
-          // côté base : on replie sur les colonnes de base plutôt que de perdre
-          // silencieusement les ~200 URL de spécialités du sitemap.
-          // `slug_de` n'est pas encore dans les types générés → cast local.
+          // Active specialties (indexable). Les colonnes de slug localisé
+          // peuvent ne pas exister côté base : on replie sur les colonnes de
+          // base plutôt que de perdre silencieusement les ~200 URL de
+          // spécialités du sitemap.
+          // Pas encore dans les types générés → cast local.
           let { data: specs, error: specsErr } = await (supabaseAdmin as any)
             .from("specialties")
-            .select("slug, slug_de, updated_at")
+            .select("slug, slug_de, slug_it, slug_en, updated_at")
             .eq("is_active", true);
           if (specsErr) {
             ({ data: specs } = await (supabaseAdmin as any)
@@ -85,10 +86,21 @@ export const Route = createFileRoute("/sitemap.xml")({
               .select("slug, updated_at")
               .eq("is_active", true));
           }
-          for (const s of (specs ?? []) as Array<{ slug: string; slug_de?: string | null; updated_at: string | null }>) {
+          type SpecRow = {
+            slug: string;
+            slug_de?: string | null; slug_it?: string | null; slug_en?: string | null;
+            updated_at: string | null;
+          };
+          for (const s of (specs ?? []) as SpecRow[]) {
             const lastmod = s.updated_at ? s.updated_at.slice(0, 10) : undefined;
             for (const lang of LANGS) {
-              const slug = lang === "de" ? (s.slug_de || s.slug) : s.slug;
+              // Même règle que `specialtySlugForLang` : slug localisé, sinon
+              // repli sur `slug` (qui EST le slug français). Le sitemap et la
+              // page doivent nommer la même URL — deux sources qui divergent
+              // publient des URL que le site ne sert pas.
+              const slug =
+                (lang === "de" ? s.slug_de : lang === "it" ? s.slug_it : lang === "en" ? s.slug_en : null)
+                || s.slug;
               urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${slug}`, lastmod, "weekly", "0.7"));
             }
           }
@@ -130,7 +142,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           try {
             let { data: geoPairs, error: geoErr } = await supabaseAdmin
               .from("therapist_specialties")
-              .select("specialties!inner(slug,slug_de,is_active), therapists!inner(city,status)");
+              .select("specialties!inner(slug,slug_de,slug_it,slug_en,is_active), therapists!inner(city,status)");
             if (geoErr) {
               ({ data: geoPairs } = await supabaseAdmin
                 .from("therapist_specialties")
@@ -139,7 +151,11 @@ export const Route = createFileRoute("/sitemap.xml")({
             const seen = new Set<string>();
             for (const row of (geoPairs ?? []) as any[]) {
               const specSlug = row.specialties?.slug;
-              const specSlugDe = row.specialties?.slug_de;
+              const specLocalized: Record<string, string | null | undefined> = {
+                de: row.specialties?.slug_de,
+                it: row.specialties?.slug_it,
+                en: row.specialties?.slug_en,
+              };
               const isActive = row.specialties?.is_active;
               const city = row.therapists?.city;
               const status = row.therapists?.status;
@@ -150,7 +166,10 @@ export const Route = createFileRoute("/sitemap.xml")({
               if (seen.has(key)) continue;
               seen.add(key);
               for (const lang of LANGS) {
-                const slug = lang === "de" ? (specSlugDe || specSlug) : specSlug;
+                // Même règle que `specialtySlugForLang`, et que la section
+                // « spécialités » plus haut : le sitemap doit nommer l'URL que
+                // la page sert réellement.
+                const slug = specLocalized[lang] || specSlug;
                 urls.push(urlBlock(`${BASE_URL}/${lang}/specialites/${slug}/${cSlug}`, undefined, "weekly", "0.6"));
               }
             }

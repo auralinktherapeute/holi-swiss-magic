@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { cityToSlug } from "./city-slug";
 import { hreflangLinks, resolveProfileLang, LANGS, SITE } from "./seo";
 import { slugForLang, titleForLang } from "./articles.functions";
+import { specialtySlugForLang } from "./specialties.functions";
 
 /**
  * Ces tests verrouillent les décisions d'URL et d'indexation qui, si elles
@@ -145,5 +146,48 @@ describe("titleForLang — repli de titre", () => {
 
   it("retombe sur le français plutôt que de rendre vide", () => {
     expect(titleForLang({ title_fr: "Reiki", title_de: "" }, "de")).toBe("Reiki");
+  });
+});
+
+describe("specialtySlugForLang — slug de spécialité par langue", () => {
+  // Constat du 27/08/2026 : seule `slug_de` existait en base. L'anglais et
+  // l'italien retombaient donc sur `slug`, qui EST le slug français — d'où des
+  // URL comme /en/specialites/coaching-de-vie/payerne.
+  const coaching = {
+    slug: "coaching-de-vie",
+    slug_de: "life-coaching",
+    slug_it: "coaching-di-vita",
+    slug_en: "life-coaching",
+  };
+
+  it("sert le slug de la langue demandée", () => {
+    expect(specialtySlugForLang(coaching, "fr")).toBe("coaching-de-vie");
+    expect(specialtySlugForLang(coaching, "de")).toBe("life-coaching");
+    expect(specialtySlugForLang(coaching, "it")).toBe("coaching-di-vita");
+    expect(specialtySlugForLang(coaching, "en")).toBe("life-coaching");
+  });
+
+  it("n'attend jamais de colonne slug_fr", () => {
+    // Le slug de base EST le slug français : une colonne slug_fr serait une
+    // seconde source de vérité. Le français doit donc marcher sans elle.
+    expect(specialtySlugForLang({ slug: "hypnose" }, "fr")).toBe("hypnose");
+  });
+
+  it("replie sur le slug de base quand la langue n'a pas de slug propre", () => {
+    // Yoga, Reiki, Shiatsu… portent le même mot partout : c'est le cas normal,
+    // pas une donnée manquante.
+    const yoga = { slug: "yoga", slug_de: null, slug_it: null, slug_en: null };
+    for (const l of ["fr", "de", "it", "en"]) {
+      expect(specialtySlugForLang(yoga, l)).toBe("yoga");
+    }
+  });
+
+  it("replie aussi si la migration n'est pas encore appliquée", () => {
+    // Colonnes absentes ⇒ undefined. Doit servir le slug de base, jamais "".
+    expect(specialtySlugForLang({ slug: "reiki" }, "en")).toBe("reiki");
+  });
+
+  it("traite une langue inconnue comme du français", () => {
+    expect(specialtySlugForLang(coaching, "es")).toBe("coaching-de-vie");
   });
 });
