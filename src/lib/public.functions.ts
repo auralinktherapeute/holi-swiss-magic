@@ -143,7 +143,7 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (therapistError) throw new Error("Impossible de charger les créneaux.");
-    if (!therapist) return { slots: [] };
+    if (!therapist) return { slots: [], busy: [] };
 
     const { data: rows, error } = await supabaseAdmin
       .from("appointments")
