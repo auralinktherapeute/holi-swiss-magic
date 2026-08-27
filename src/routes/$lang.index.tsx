@@ -11,6 +11,7 @@ import { SpecialtyBubbles } from "@/components/holiswiss/SpecialtyBubbles";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
+import { FeaturedTherapist } from "@/components/holiswiss/FeaturedTherapist";
 import { CantonDirectory } from "@/components/holiswiss/CantonDirectory";
 
 import { FaqSection } from "@/components/holiswiss/FaqSection";
@@ -64,6 +65,9 @@ function HomePage() {
 
       {/* Promesse plateforme : agenda + CRM + visibilité + RDV + avis */}
       <PlatformPromiseBand />
+
+      {/* Thérapeute à la Une — sélection manuelle depuis l'admin */}
+      <FeaturedTherapist />
 
       {/* Nouveaux thérapeutes — de vrais praticiens dès l'arrivée */}
       <NewTherapistsShowcase />
