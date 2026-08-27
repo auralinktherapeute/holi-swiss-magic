@@ -33,6 +33,13 @@ const UA =
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Langue portée par l'URL (`/fr/...`). Hors préfixe connu : "?" — jamais confondu avec une langue. */
+const LANGS = new Set(["fr", "de", "it", "en"]);
+function langOf(url) {
+  const seg = url.slice(BASE.length).split("/")[1] ?? "";
+  return LANGS.has(seg) ? seg : "?";
+}
+
 async function fetchText(url, redirect = "manual") {
   const res = await fetch(url, { headers: { "User-Agent": UA }, redirect });
   const body = res.status >= 200 && res.status < 300 ? await res.text() : "";
@@ -134,7 +141,17 @@ async function main() {
     console.log("✓ aucune route privée au sitemap");
   }
 
-  // Titles dupliqués — détectés sur l'échantillon analysé
+  // Titles dupliqués — détectés sur l'échantillon analysé.
+  //
+  // Indexé par LANGUE + titre, jamais par titre seul. Deux pages de langues
+  // différentes qui partagent un titre ne sont pas un doublon : le `hreflang`
+  // réciproque les déclare comme variantes de la même page, et Google les
+  // traite comme telles. C'est d'ailleurs souvent inévitable — 21 des 31
+  // spécialités portent le même nom dans au moins deux langues (Reiki, Yoga,
+  // Shiatsu, Ayurveda, EMDR… sont identiques dans les quatre).
+  //
+  // La version précédente signalait ces paires : un contrôle quotidien rouge
+  // pour un non-problème apprend surtout à ignorer l'alerte.
   const seenTitles = new Map();
 
   const byType = new Map();
@@ -153,9 +170,10 @@ async function main() {
       if (status === 200) {
         const title = (body.match(RE.title)?.[1] ?? "").replace(/\s+/g, " ").trim();
         if (title) {
-          if (seenTitles.has(title) && seenTitles.get(title) !== url) {
-            fails.push(`title identique à ${seenTitles.get(title).slice(BASE.length)}`);
-          } else seenTitles.set(title, url);
+          const key = `${langOf(url)}|${title}`;
+          if (seenTitles.has(key) && seenTitles.get(key) !== url) {
+            fails.push(`title identique à ${seenTitles.get(key).slice(BASE.length)}`);
+          } else seenTitles.set(key, url);
         }
       }
       if (fails.length) bad.push({ url, fails });
