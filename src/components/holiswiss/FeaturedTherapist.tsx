@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, ArrowRight, CalendarDays, FileText, BadgeCheck } from "lucide-react";
@@ -22,11 +22,13 @@ type ArticleRow = { id: string; slug: string; titre: string };
 type EventRow = { id: string; title: string; event_date: string | null };
 
 function useReveal<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
+  const [node, setNode] = useState<T | null>(null);
   const [shown, setShown] = useState(false);
+  // ref callback : l'élément n'existe qu'après le chargement des données,
+  // un useEffect([]) ne le verrait jamais (section restée à opacity-0).
+  const ref = useCallback((el: T | null) => setNode(el), []);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    if (!node) return;
     if (
       typeof IntersectionObserver === "undefined" ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -38,12 +40,13 @@ function useReveal<T extends HTMLElement>() {
       ([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } },
       { threshold: 0.05, rootMargin: "0px 0px 10% 0px" },
     );
-    io.observe(el);
+    io.observe(node);
     const fallback = window.setTimeout(() => setShown(true), 800);
     return () => { io.disconnect(); window.clearTimeout(fallback); };
-  }, []);
+  }, [node]);
   return { ref, shown };
 }
+
 
 export function FeaturedTherapist() {
   const { lang } = useParams({ from: "/$lang/" });
