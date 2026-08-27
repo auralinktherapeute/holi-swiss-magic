@@ -62,6 +62,7 @@ import { Route as PreviewCarrouselsRouteImport } from './routes/preview.carrouse
 import { Route as PreviewFooterRouteImport } from './routes/preview.footer'
 import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.marketing-topics'
 import { Route as PreviewNouveauxTherapeutesRouteImport } from './routes/preview.nouveaux-therapeutes'
+import { Route as PreviewTherapeuteALaUneRouteImport } from './routes/preview.therapeute-a-la-une'
 import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
@@ -372,6 +373,11 @@ const PreviewNouveauxTherapeutesRoute =
     path: '/preview/nouveaux-therapeutes',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PreviewTherapeuteALaUneRoute = PreviewTherapeuteALaUneRouteImport.update({
+  id: '/preview/therapeute-a-la-une',
+  path: '/preview/therapeute-a-la-une',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
   id: '/questionnaire/$id',
   path: '/questionnaire/$id',
@@ -644,6 +650,7 @@ export interface FileRoutesByFullPath {
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
+  '/preview/therapeute-a-la-une': typeof PreviewTherapeuteALaUneRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -737,6 +744,7 @@ export interface FileRoutesByTo {
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
+  '/preview/therapeute-a-la-une': typeof PreviewTherapeuteALaUneRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -834,6 +842,7 @@ export interface FileRoutesById {
   '/preview/footer': typeof PreviewFooterRoute
   '/preview/marketing-topics': typeof PreviewMarketingTopicsRoute
   '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
+  '/preview/therapeute-a-la-une': typeof PreviewTherapeuteALaUneRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -932,6 +941,7 @@ export interface FileRouteTypes {
     | '/preview/footer'
     | '/preview/marketing-topics'
     | '/preview/nouveaux-therapeutes'
+    | '/preview/therapeute-a-la-une'
     | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
@@ -1025,6 +1035,7 @@ export interface FileRouteTypes {
     | '/preview/footer'
     | '/preview/marketing-topics'
     | '/preview/nouveaux-therapeutes'
+    | '/preview/therapeute-a-la-une'
     | '/questionnaire/$id'
     | '/$lang'
     | '/admin'
@@ -1121,6 +1132,7 @@ export interface FileRouteTypes {
     | '/preview/footer'
     | '/preview/marketing-topics'
     | '/preview/nouveaux-therapeutes'
+    | '/preview/therapeute-a-la-une'
     | '/questionnaire/$id'
     | '/$lang/'
     | '/admin/'
@@ -1183,6 +1195,7 @@ export interface RootRouteChildren {
   PreviewFooterRoute: typeof PreviewFooterRoute
   PreviewMarketingTopicsRoute: typeof PreviewMarketingTopicsRoute
   PreviewNouveauxTherapeutesRoute: typeof PreviewNouveauxTherapeutesRoute
+  PreviewTherapeuteALaUneRoute: typeof PreviewTherapeuteALaUneRoute
   QuestionnaireIdRoute: typeof QuestionnaireIdRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
@@ -1567,6 +1580,13 @@ declare module '@tanstack/react-router' {
       path: '/preview/nouveaux-therapeutes'
       fullPath: '/preview/nouveaux-therapeutes'
       preLoaderRoute: typeof PreviewNouveauxTherapeutesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preview/therapeute-a-la-une': {
+      id: '/preview/therapeute-a-la-une'
+      path: '/preview/therapeute-a-la-une'
+      fullPath: '/preview/therapeute-a-la-une'
+      preLoaderRoute: typeof PreviewTherapeuteALaUneRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/questionnaire/$id': {
@@ -2043,6 +2063,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewFooterRoute: PreviewFooterRoute,
   PreviewMarketingTopicsRoute: PreviewMarketingTopicsRoute,
   PreviewNouveauxTherapeutesRoute: PreviewNouveauxTherapeutesRoute,
+  PreviewTherapeuteALaUneRoute: PreviewTherapeuteALaUneRoute,
   QuestionnaireIdRoute: QuestionnaireIdRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   DesinscriptionIndexRoute: DesinscriptionIndexRoute,
