@@ -46,7 +46,7 @@ function LangLayout() {
         <Outlet />
       </main>
       <Footer />
-      <OnboardingModal />
+      {!isTherapistProfile && <OnboardingModal />}
       <AmbientPlayer />
     </div>
   );
