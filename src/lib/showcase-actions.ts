@@ -52,7 +52,7 @@ export const SHOWCASE_ACTIONS: Record<string, ShowcaseAction> = {
   indexable: { to: "/dashboard/profil", hash: "identite", cta: "Publier ma fiche" },
 
   // ── Contenu expert ────────────────────────────────────────────────────
-  faq: { to: "/dashboard/agenda", hash: "message-accueil", cta: "Rédiger mes questions fréquentes" },
+  faq: { to: "/dashboard/profil", hash: "faq", cta: "Rédiger mes questions fréquentes" },
   booking_note: { to: "/dashboard/agenda", hash: "message-accueil", cta: "Écrire mon message d'accueil" },
   articles: { to: "/dashboard/articles", cta: "Publier un article" },
   author: { to: "/dashboard/profil", hash: "identite", cta: "Compléter mon profil d'auteur" },
