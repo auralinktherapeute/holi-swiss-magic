@@ -22,6 +22,7 @@ import {
   setFounderSeatDisplay,
 } from "@/lib/therapist-health.functions";
 import TherapistScorePanel from "@/components/admin/TherapistScorePanel";
+import CertificationsReviewPanel from "@/components/admin/CertificationsReviewPanel";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
 
@@ -371,6 +372,8 @@ function Page() {
       </header>
 
       <FounderSeatsPanel />
+
+      <CertificationsReviewPanel />
 
       {loading ? (
         <div className="flex items-center gap-2 text-white/60"><Loader2 className="animate-spin" size={16} /> Chargement…</div>

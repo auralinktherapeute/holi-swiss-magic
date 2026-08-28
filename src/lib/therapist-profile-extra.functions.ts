@@ -139,16 +139,61 @@ export const addCertification = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { error } = await sb.from("therapist_certifications").insert({
-      therapist_id: therapistId,
+    const { data: inserted, error } = await sb
+      .from("therapist_certifications")
+      .insert({
+        therapist_id: therapistId,
+        name: data.name,
+        issuer: data.issuer ?? null,
+        year: data.year ?? null,
+        file_url: data.file_path ?? null,
+      })
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    await recompute(sb, therapistId);
+
+    // Pré-vérification automatique puis soumission à la validation de
+    // l'administrateur. Best-effort : un échec ici ne doit jamais empêcher
+    // l'enregistrement du diplôme.
+    const { autoCheckCertification } = await import("@/lib/certification-autocheck");
+    const check = autoCheckCertification({
       name: data.name,
       issuer: data.issuer ?? null,
       year: data.year ?? null,
-      file_url: data.file_path ?? null,
+      hasFile: !!data.file_path,
     });
-    if (error) throw new Error(error.message);
-    await recompute(sb, therapistId);
-    return { ok: true };
+    try {
+      const { data: ther } = await sb
+        .from("therapists")
+        .select("first_name,last_name,slug")
+        .eq("id", therapistId)
+        .maybeSingle();
+      const who = `${ther?.first_name ?? ""} ${ther?.last_name ?? ""}`.trim() || "Thérapeute";
+      await sb.rpc("create_admin_notification", {
+        _kind: "certification_pending",
+        _subject: `Diplôme à valider — ${who}`,
+        _summary: `${data.name}${data.issuer ? ` · ${data.issuer}` : ""} — ${check.summary}`,
+        _link: "/admin/sante-profils",
+        _entity_type: "therapist_certification",
+        _entity_id: inserted?.id ?? null,
+        _data: {
+          therapist_id: therapistId,
+          therapist_name: who,
+          therapist_slug: ther?.slug ?? null,
+          certification_id: inserted?.id ?? null,
+          name: data.name,
+          issuer: data.issuer ?? null,
+          year: data.year ?? null,
+          has_file: !!data.file_path,
+          auto_check: check,
+        },
+      });
+    } catch {
+      /* best-effort */
+    }
+
+    return { ok: true, autoCheck: check };
   });
 
 export const deleteCertification = createServerFn({ method: "POST" })

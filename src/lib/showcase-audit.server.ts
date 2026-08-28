@@ -19,13 +19,15 @@ export async function loadShowcaseAudit(
   totals: { visibilite: number; conversion: number };
   categories: ReturnType<typeof categoryTotals>;
 }> {
-  const [therRes, certRes, revRes, availRes, artRes, packRes] = await Promise.all([
+  const [therRes, certRes, revRes, availRes, artRes, packRes, faqRes] = await Promise.all([
     sb.from("therapists").select(SHOWCASE_COLUMNS).eq("id", therapistId).maybeSingle(),
     sb.from("therapist_certifications").select("verification_status,expires_at").eq("therapist_id", therapistId),
     sb.from("reviews").select("id").eq("therapist_id", therapistId).eq("status", "approved"),
     sb.from("availabilities").select("id,created_at").eq("therapist_id", therapistId).eq("is_active", true),
     sb.from("therapist_articles").select("id").eq("therapist_id", therapistId).eq("statut", "publie"),
     sb.from("service_packages").select("id").eq("therapist_id", therapistId).eq("actif", true),
+    // FAQ du profil : source de vérité du contrôle « Questions fréquentes ».
+    sb.from("therapist_faqs").select("id").eq("therapist_id", therapistId),
   ]);
 
   const t = therRes.data;
@@ -52,6 +54,7 @@ export async function loadShowcaseAudit(
       .pop() ?? null,
     articlesCount: (artRes.data ?? []).length,
     packagesCount: (packRes.data ?? []).length,
+    faqCount: (faqRes?.data ?? []).length,
   };
   const checks = runShowcaseAudit(auditInput);
 

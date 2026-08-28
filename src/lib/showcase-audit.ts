@@ -94,6 +94,8 @@ export type ShowcaseInput = {
   availabilitiesUpdatedAt?: string | null;
   articlesCount?: number;
   packagesCount?: number;
+  /** Nombre de questions/réponses saisies dans « Questions fréquentes ». */
+  faqCount?: number;
 };
 
 const len = (v?: string | null) => (v ?? "").trim().length;
@@ -294,7 +296,9 @@ export function runShowcaseAudit(t: ShowcaseInput): AuditCheck[] {
     // ── 7. Contenu expert et IA ─────────────────────────────────────────
     c("faq", "visibilite", "contenu", "Questions fréquentes renseignées",
       "Une FAQ est la source privilégiée des réponses générées par les IA.",
-      6, len(t.booking_note) >= 120, "info"),
+      // Source de vérité : les entrées de « Questions fréquentes » du profil.
+      // Le message d'accueil de l'agenda reste accepté en solution de repli.
+      6, (t.faqCount ?? 0) >= 3 || len(t.booking_note) >= 120, "info"),
     c("articles", "visibilite", "contenu", "Articles publiés",
       "Publier dans « Voix d'experts » crée des pages qui pointent vers votre fiche.",
       8, (t.articlesCount ?? 0) > 0),
