@@ -1010,7 +1010,7 @@ function Page() {
                       <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
                       {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {sessions.map((s, i) => (
                         <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
                       ))}
@@ -1024,7 +1024,7 @@ function Page() {
                       <PackageIcon className="h-3.5 w-3.5" />
                       {t("therapist_profile.packages_group", { defaultValue: "Forfaits d'accompagnement" })}
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {packages.map((s, i) => (
                         <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
                       ))}
@@ -1179,7 +1179,7 @@ function Page() {
                   })}
                 </p>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   {faqs.map((f, i) => (
                     <details
                       key={i}
