@@ -371,7 +371,12 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
                 <div className="col-span-2"><Field state={f} set={set} k="adresse_ville" label="Ville *" /></div>
               </div>
               <Field state={f} set={set} k="adresse_pays" label="Pays" />
-              <Field state={f} set={set} k="logo_url" label="URL du logo" ph="https://…" />
+              <div className="sm:col-span-2">
+                <InvoiceLogoUploader
+                  value={f.logo_url ?? ""}
+                  onChange={(v) => set("logo_url", v)}
+                />
+              </div>
             </div>
           </fieldset>
 
