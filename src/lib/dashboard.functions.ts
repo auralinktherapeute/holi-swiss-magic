@@ -51,7 +51,15 @@ const profileSchema = z.object({
   is_trainer: z.boolean().optional(),
   trainer_subjects: z.string().max(300).nullable().optional(),
   trainer_institution: z.string().max(200).nullable().optional(),
-  trainer_since: z.number().int().min(1950).max(new Date().getFullYear() + 1).nullable().optional(),
+  // Borne haute calculée à l'appel : en runtime Worker, `Date` évalué au
+  // chargement du module renvoie 1970 — d'où l'ancien « maximum 1971 ».
+  trainer_since: z
+    .number()
+    .int()
+    .min(1950)
+    .refine((v) => v <= new Date().getFullYear() + 1, "Année trop élevée")
+    .nullable()
+    .optional(),
 });
 
 function sanitizeSlug(raw: string): string {
