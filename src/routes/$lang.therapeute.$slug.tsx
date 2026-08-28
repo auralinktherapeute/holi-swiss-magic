@@ -988,46 +988,11 @@ function Page() {
                 </a>
               )}
             </div>
-
-            {(th.city || th.canton) && (
-              <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-                <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1">{t("therapist_profile.zone_label")}</p>
-                <p className="text-sm font-medium text-white flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-[#b86ef9]" />
-                  {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* ── SECTIONS PLEINE LARGEUR ── */}
+        {/* ── SECTIONS BASSES (même conteneur, largeur homogène) ── */}
         <div className="mt-6 w-full min-w-0 space-y-6">
-
-            {/* Langues parlées */}
-            {languages.length > 0 && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.languages_title")}</h2>
-                <div className="flex flex-wrap gap-2">
-                  {languages.map((code) => {
-                    const meta = SPOKEN_LANGUAGES.find((l) => l.code === code);
-                    const label = meta?.label ?? code;
-                    const flag = LANG_FLAG[code] ?? "🌐";
-                    return (
-                      <span
-                        key={code}
-                        className="inline-flex items-center gap-2 rounded-full border border-[rgba(92,200,250,0.25)] bg-[rgba(92,200,250,0.08)] px-3 py-1.5 text-sm text-white"
-                      >
-                        <span aria-hidden className="text-base leading-none">{flag}</span>
-                        {label}
-                      </span>
-                    );
-                  })}
-                </div>
-              </motion.section>
-            )}
 
             {/* Services / tarifs */}
             {services.length > 0 && (
