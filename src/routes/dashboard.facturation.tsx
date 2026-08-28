@@ -316,8 +316,26 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
   const qrIbanErr = f.qr_iban && !isQrIban(f.qr_iban)
     ? "Ce n'est pas un QR-IBAN valide (IID 30000–31999)." : null;
 
+  // Champs obligatoires côté serveur : on les contrôle ici pour afficher un
+  // message lisible plutôt que l'erreur de validation brute.
+  const REQUIRED: Array<[string, string]> = [
+    ["iban_ou_qr_iban", "IBAN"],
+    ["adresse_rue", "Rue"],
+    ["adresse_npa", "NPA"],
+    ["adresse_ville", "Ville"],
+  ];
+  const [showErrors, setShowErrors] = useState(false);
+  const missing = REQUIRED.filter(([k]) => !String(f[k] ?? "").trim());
+  const miss = (k: string) => showErrors && missing.some(([mk]) => mk === k);
+
   async function save() {
+    setShowErrors(true);
+    if (missing.length > 0) {
+      toast.error(`Champs obligatoires manquants : ${missing.map(([, l]) => l).join(", ")}`);
+      return;
+    }
     if (ibanErr || qrIbanErr) { toast.error("Corrigez les informations bancaires."); return; }
+
     setSaving(true);
     try {
       await upsertFn({ data: {
