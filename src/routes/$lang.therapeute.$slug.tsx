@@ -946,7 +946,7 @@ function Page() {
           </div>
 
           {/* ── SIDEBAR DROITE (réservation — partie supérieure uniquement) ── */}
-          <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+          <div className="space-y-4 lg:col-span-4 lg:sticky lg:top-4 lg:self-start">
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
               <BookingWidget
