@@ -2042,6 +2042,9 @@ export type Database = {
           caption_de: string | null
           caption_en: string | null
           caption_it: string | null
+          carousel_generation_version: number
+          carousel_page_count: number | null
+          carousel_presentation: string | null
           correction_note: string | null
           created_at: string
           external_ref: string | null
@@ -2072,6 +2075,9 @@ export type Database = {
           caption_de?: string | null
           caption_en?: string | null
           caption_it?: string | null
+          carousel_generation_version?: number
+          carousel_page_count?: number | null
+          carousel_presentation?: string | null
           correction_note?: string | null
           created_at?: string
           external_ref?: string | null
@@ -2102,6 +2108,9 @@ export type Database = {
           caption_de?: string | null
           caption_en?: string | null
           caption_it?: string | null
+          carousel_generation_version?: number
+          carousel_page_count?: number | null
+          carousel_presentation?: string | null
           correction_note?: string | null
           created_at?: string
           external_ref?: string | null
