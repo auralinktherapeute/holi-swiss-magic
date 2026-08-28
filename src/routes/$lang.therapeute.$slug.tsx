@@ -760,7 +760,7 @@ function Page() {
                 </p>
 
                 {th.short_bio && (
-                  <p className="mb-3 max-w-2xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
+                  <p className="mb-3 max-w-3xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
                     {th.short_bio}
                   </p>
                 )}
