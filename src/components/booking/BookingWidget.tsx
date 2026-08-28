@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
+type Special = { date: string; start_time: string; end_time: string };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
 type Busy = { startsAt: string; endsAt: string };
@@ -75,6 +76,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [selectedServiceIdx, setSelectedServiceIdx] = useSessionState<number | null>(`${statePrefix}.serviceIdx`, null);
   const [month, setMonth] = useSessionState(`${statePrefix}.month`, () => { const d = new Date(); d.setDate(1); return d; });
   const [avs, setAvs] = useState<Avail[]>([]);
+  const [specials, setSpecials] = useState<Special[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [taken, setTaken] = useState<Appt[]>([]);
   const [busy, setBusy] = useState<Busy[]>([]);
@@ -113,11 +115,19 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
 
   useEffect(() => {
     (async () => {
-      const [{ data: a }, { data: b }] = await Promise.all([
-        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("day_of_week", "is", null),
+      const todayISO = localDateISO(new Date());
+      const [{ data: a }, { data: sp }, { data: b }] = await Promise.all([
+        // Horaires HEBDOMADAIRES uniquement : les lignes portant une
+        // `specific_date` ont aussi un `day_of_week`, les inclure ouvrirait
+        // tous les jours de la semaine correspondants (bug constaté).
+        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).is("specific_date", null).not("day_of_week", "is", null),
+        // Disponibilités PONCTUELLES : elles n'ouvrent que leur date exacte.
+        supabase.from("availabilities").select("specific_date,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("specific_date", "is", null).gte("specific_date", todayISO),
         supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day").eq("therapist_id", therapistId),
       ]);
       setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
+      setSpecials(((sp ?? []) as Array<{ specific_date: string; start_time: string; end_time: string }>)
+        .map(({ specific_date, start_time, end_time }) => ({ date: specific_date, start_time, end_time })));
       // Only all-day blocks fully prevent date selection; partial-time blocks remain
       // (the booking widget operates at day granularity for now).
       setBlocks(((b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean }>)
@@ -125,6 +135,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         .map(({ start_date, end_date }) => ({ start_date, end_date })));
     })();
   }, [therapistId]);
+
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -153,13 +164,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       const date = new Date(month.getFullYear(), month.getMonth(), d);
       const iso = localDateISO(date);
       const dow = storageDow(date);
-      const hasAvail = avs.some((a) => a.day_of_week === dow);
+      const hasAvail = avs.some((a) => a.day_of_week === dow) || specials.some((s) => s.date === iso);
       const blocked = blocks.some((b) => iso >= b.start_date && iso <= b.end_date);
       const past = date < today;
       cells.push({ date, iso, available: hasAvail && !blocked && !past, blocked, past });
     }
     return cells;
-  }, [month, avs, blocks]);
+  }, [month, avs, specials, blocks]);
 
   const slotsForDay = useMemo(() => {
     if (!selectedDate) return [];
@@ -167,8 +178,16 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     if (!parsed) return [];
     const dow = storageDow(parsed);
     const dayAvs = avs.filter((a) => a.day_of_week === dow);
-    const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin));
+    const daySpecials = specials.filter((s) => s.date === selectedDate);
+    const ranges = [
+      ...dayAvs.map((a) => ({ start_time: a.start_time, end_time: a.end_time })),
+      ...daySpecials.map((s) => ({ start_time: s.start_time, end_time: s.end_time })),
+    ];
+    const all = Array.from(
+      new Set(ranges.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin))),
+    ).sort();
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
+
     // Un créneau qui chevauche une occupation importée de l'agenda personnel
     // du praticien n'est pas réservable.
     //
@@ -179,7 +198,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     // d'une heure depuis Londres, de plusieurs depuis un autre continent.
     const free = all.filter((s) => !takenSet.has(s));
     return filterAvailableSlots(free, selectedDate, slotMin, busy);
-  }, [selectedDate, avs, taken, busy, slotMin]);
+  }, [selectedDate, avs, specials, taken, busy, slotMin]);
 
 
   const openConfirm = (e: React.FormEvent) => {
