@@ -16,7 +16,9 @@ import { MarketingAgentChat } from "@/components/admin/MarketingAgentChat";
 import { MarketingTopicsPanel, type MarketingTopic } from "@/components/admin/MarketingTopicsPanel";
 import { CarouselViewer } from "@/components/admin/CarouselViewer";
 import { CAROUSELS } from "@/data/marketing-carousels";
-import { proposalToCarousel, isArchived } from "@/lib/proposal-carousel";
+import { proposalToCarousel, isArchived, captionToSlides } from "@/lib/proposal-carousel";
+import { regenerateProposalStructure } from "@/lib/marketing-agent.functions";
+import { CarouselStructure } from "@/components/admin/CarouselStructure";
 
 export const Route = createFileRoute("/admin/marketing")({
   component: MarketingPage,
@@ -44,6 +46,9 @@ type Proposal = {
   status: string;
   correction_note: string | null;
   created_at: string;
+  carousel_page_count?: number | null;
+  carousel_presentation?: string | null;
+  carousel_generation_version?: number | null;
 };
 
 const NETWORK_META: Record<string, { label: string; icon: typeof Instagram }> = {
@@ -346,6 +351,8 @@ function ProposalCard({ p, onAct }: { p: Proposal; onAct: (id: string, status: "
   const NetIcon = net.icon;
   const st = STATUS_META[p.status] ?? { label: p.status, cls: "bg-white/10 text-white/70 border-white/20" };
   const pending = p.status === "en_attente_validation" || p.status === "correction_demandee";
+  const isCarousel =
+    p.network === "instagram" && (!p.format || /carrou|carou/i.test(p.format));
   const hashtags = hashtagsFor(p, lang);
 
   return (
@@ -401,6 +408,22 @@ function ProposalCard({ p, onAct }: { p: Proposal; onAct: (id: string, status: "
           <p className="mt-1 whitespace-pre-wrap text-sm text-white/80">{p.visual_brief}</p>
           {p.visual_prompt && <p className="mt-2 text-xs text-white/40">Prompt : {p.visual_prompt}</p>}
         </div>
+      )}
+
+      {isCarousel && (
+        <CarouselStructure
+          proposalId={p.id}
+          pageCount={p.carousel_page_count ?? null}
+          presentation={p.carousel_presentation ?? null}
+          lang={lang}
+          slides={(pc, _pres) =>
+            captionToSlides(captionFor(p, lang), pc).map((s) => ({
+              title: s.title,
+              body: s.body ?? null,
+            }))
+          }
+          readOnly={!pending}
+        />
       )}
 
       <div className="mt-3 flex items-center gap-3 text-xs text-white/45">
