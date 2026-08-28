@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 
 const PROPOSAL_COLUMNS =
-  "id,proposal_date,network,pillar,angle,format,caption,caption_en,caption_de,caption_it,hashtags,hashtags_en,hashtags_de,hashtags_it,visual_brief,visual_prompt,suggested_time,lang,status,correction_note,validated_at,published_at,external_ref,created_at";
+  "id,proposal_date,network,pillar,angle,format,caption,caption_en,caption_de,caption_it,hashtags,hashtags_en,hashtags_de,hashtags_it,visual_brief,visual_prompt,suggested_time,lang,status,correction_note,validated_at,published_at,external_ref,created_at,carousel_page_count,carousel_presentation,carousel_generation_version";
 
 /** Liste des propositions marketing (admin only), plus récentes d'abord. */
 export const listMarketingProposals = createServerFn({ method: "GET" })
