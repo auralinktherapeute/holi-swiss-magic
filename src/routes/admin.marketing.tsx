@@ -417,7 +417,7 @@ function ProposalCard({ p, onAct }: { p: Proposal; onAct: (id: string, status: "
           lang={lang}
           slides={(pc) =>
             captionToSlides(captionFor(p, lang), pc).map((s) => ({
-              title: s.title,
+              title: s.title ?? "",
               body: s.body ?? null,
             }))
           }
