@@ -7,7 +7,6 @@ import {
 import {
   clearHoliswissAuthSpace,
   clearLegacySupabaseSessions,
-  clearStoredSupabaseSession,
   clearStoredSupabaseSessions,
   getHoliswissAuthSpace,
   LAST_AUTH_SPACE_KEY,
