@@ -525,7 +525,7 @@ function Page() {
   const [phoneVisible, setPhoneVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showTop, setShowTop] = useState(false);
-  const [bioExpanded, setBioExpanded] = useState(false);
+  const [bioExpanded, setBioExpanded] = useState(true);
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1172,6 +1172,9 @@ function Page() {
               >
                 <h2 id="faq-title" className="mb-1 text-lg font-bold text-white">
                   {t("therapist_profile.faq_title", { defaultValue: "Questions fréquentes" })}
+                  <span className="ml-2 text-[#b86ef9]">
+                    {t("therapist_profile.faq_of_therapist", { name: fullName, defaultValue: `— FAQ de ${fullName}` })}
+                  </span>
                 </h2>
                 <p className="mb-5 text-sm text-[#d4c4e0]">
                   {t("therapist_profile.faq_subtitle", {
