@@ -413,8 +413,11 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
               <div className="space-y-1">
                 <Label htmlFor="set-iban">IBAN *</Label>
                 <Input id="set-iban" value={f.iban_ou_qr_iban ?? ""} placeholder="CH93 0076 2011 6238 5295 7"
-                  aria-invalid={!!ibanErr} onChange={(e) => set("iban_ou_qr_iban", e.target.value)} />
-                {ibanErr && <p className="text-xs text-destructive">{ibanErr}</p>}
+                  aria-invalid={!!ibanErr || miss("iban_ou_qr_iban")} onChange={(e) => set("iban_ou_qr_iban", e.target.value)} />
+                {ibanErr
+                  ? <p className="text-xs text-destructive">{ibanErr}</p>
+                  : miss("iban_ou_qr_iban") && <p className="text-xs text-destructive">L'IBAN est obligatoire pour émettre des factures.</p>}
+
               </div>
               <div className="space-y-1">
                 <Label htmlFor="set-qriban">QR-IBAN (si votre banque en fournit un)</Label>
