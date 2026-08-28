@@ -17,7 +17,6 @@ import { MarketingTopicsPanel, type MarketingTopic } from "@/components/admin/Ma
 import { CarouselViewer } from "@/components/admin/CarouselViewer";
 import { CAROUSELS } from "@/data/marketing-carousels";
 import { proposalToCarousel, isArchived, captionToSlides } from "@/lib/proposal-carousel";
-import { regenerateProposalStructure } from "@/lib/marketing-agent.functions";
 import { CarouselStructure } from "@/components/admin/CarouselStructure";
 
 export const Route = createFileRoute("/admin/marketing")({
@@ -416,7 +415,7 @@ function ProposalCard({ p, onAct }: { p: Proposal; onAct: (id: string, status: "
           pageCount={p.carousel_page_count ?? null}
           presentation={p.carousel_presentation ?? null}
           lang={lang}
-          slides={(pc, _pres) =>
+          slides={(pc) =>
             captionToSlides(captionFor(p, lang), pc).map((s) => ({
               title: s.title,
               body: s.body ?? null,
