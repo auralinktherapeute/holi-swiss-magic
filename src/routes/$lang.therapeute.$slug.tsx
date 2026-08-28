@@ -610,9 +610,9 @@ function Page() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0f0a1e] px-4 py-12">
-        <div className="mx-auto max-w-6xl space-y-4">
+        <div className="mx-auto w-full max-w-[1440px] space-y-4">
           <div className="h-64 animate-pulse rounded-3xl bg-[#1a1035]" />
-          <div className="grid grid-cols-[1fr_340px] gap-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
             <div className="h-96 animate-pulse rounded-2xl bg-[#1a1035]" />
             <div className="h-96 animate-pulse rounded-2xl bg-[#1a1035]" />
           </div>
@@ -702,9 +702,9 @@ function Page() {
         className="relative overflow-hidden"
         style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
       >
-        <div className="px-4 pb-8 pt-8 sm:px-8 sm:pt-16 md:min-h-64 md:flex md:items-end">
-          <div className="mx-auto w-full max-w-6xl">
-            <div className="flex flex-col sm:flex-row gap-5 items-center">
+        <div className="px-6 pb-8 pt-8 sm:px-8 sm:pt-16 lg:px-12 2xl:px-16 md:min-h-64 md:flex md:items-end">
+          <div className="mx-auto w-full max-w-[1440px]">
+            <div className="flex flex-col sm:flex-row gap-5 sm:gap-8 items-center sm:items-start">
               {/* Photo */}
               <motion.div
                 initial={{ scale: 0.85, opacity: 0 }}
@@ -760,7 +760,7 @@ function Page() {
                 </p>
 
                 {th.short_bio && (
-                  <p className="mb-3 max-w-2xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
+                  <p className="mb-3 max-w-3xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
                     {th.short_bio}
                   </p>
                 )}
@@ -837,8 +837,8 @@ function Page() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-6">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_340px] gap-6">
+      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-12 2xl:px-16 mt-6">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,340px)] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)]">
 
           {/* ── COLONNE GAUCHE ── */}
           <div className="space-y-6 min-w-0">
@@ -938,7 +938,7 @@ function Page() {
                       <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
                       {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
                     </h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {sessions.map((s, i) => (
                         <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
                       ))}
@@ -952,7 +952,7 @@ function Page() {
                       <PackageIcon className="h-3.5 w-3.5" />
                       {t("therapist_profile.packages_group", { defaultValue: "Forfaits d'accompagnement" })}
                     </h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {packages.map((s, i) => (
                         <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
                       ))}
@@ -1107,7 +1107,7 @@ function Page() {
                   })}
                 </p>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   {faqs.map((f, i) => (
                     <details
                       key={i}
