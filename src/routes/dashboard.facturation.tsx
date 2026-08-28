@@ -312,7 +312,9 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
       next_invoice_number: existing?.next_invoice_number ?? 1,
       remise_a_zero_annuelle: existing?.remise_a_zero_annuelle ?? true,
     });
+    setShowErrors(false);
   }, [open, existing]);
+
 
   const ibanErr = f.iban_ou_qr_iban && !isValidIban(f.iban_ou_qr_iban)
     ? "IBAN invalide (chiffres de contrôle)." : null;
