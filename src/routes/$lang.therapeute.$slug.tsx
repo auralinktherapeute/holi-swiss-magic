@@ -677,7 +677,11 @@ function Page() {
       since: th.trainer_since,
     },
   });
+  const heroBadges = trustBadges.filter(
+    (b) => b.kind !== "certification" && b.kind !== "accreditation",
+  );
   const bioIsLong = (th.bio ?? "").length > 280;
+
   const avg = reviews?.length
     ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
