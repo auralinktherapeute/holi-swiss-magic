@@ -153,7 +153,7 @@ const EXPECTED: Record<string, string> = {
   structured_data: "Nom, ville et au moins 1 spécialité",
   alt_text: "Photo et ville renseignées",
   indexable: "Fiche publiée (statut actif)",
-  faq: "Des questions fréquentes d'au moins 120 caractères",
+  faq: "Au moins 3 questions fréquentes publiées sur la fiche",
   articles: "Au moins 1 article publié",
   author: "Nom, titre professionnel et photo",
   method_explained: "Une présentation d'au moins 600 caractères",
