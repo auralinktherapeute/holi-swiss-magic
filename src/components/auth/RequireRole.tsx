@@ -15,7 +15,13 @@ type RequireRoleProps = {
 const MAX_AUTO_RETRIES = 2;
 
 export function RequireRole({ role, children, redirectTo = "/fr/connexion" }: RequireRoleProps) {
-  const { role: currentRole, loading, refresh } = useRole();
+  const {
+    role: currentRole,
+    loading,
+    refresh,
+    authLoading,
+    isAuthenticated,
+  } = useRole();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [autoRetries, setAutoRetries] = useState(0);
@@ -26,16 +32,27 @@ export function RequireRole({ role, children, redirectTo = "/fr/connexion" }: Re
   // null signifie « rôle non résolu » (réseau/RLS/jeton), pas « accès refusé ».
   // Seul un rôle effectivement résolu et différent déclenche une redirection.
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      navigate({ to: `${redirectTo}?deconnecte=1` as never, replace: true });
+      return;
+    }
     if (loading) return;
     if (currentRole !== null && currentRole !== role) {
       navigate({ to: redirectTo as never, replace: true });
     }
-  }, [currentRole, loading, navigate, redirectTo, role]);
+  }, [authLoading, currentRole, isAuthenticated, loading, navigate, redirectTo, role]);
 
   // Deux tentatives automatiques espacées : une coupure réseau passagère ne
   // doit jamais coûter la session à l'utilisateur.
   useEffect(() => {
-    if (loading || currentRole !== null || autoRetries >= MAX_AUTO_RETRIES) return;
+    if (
+      authLoading ||
+      !isAuthenticated ||
+      loading ||
+      currentRole !== null ||
+      autoRetries >= MAX_AUTO_RETRIES
+    ) return;
     retryTimer.current = window.setTimeout(() => {
       setAutoRetries((n) => n + 1);
       void refresh();
@@ -43,9 +60,13 @@ export function RequireRole({ role, children, redirectTo = "/fr/connexion" }: Re
     return () => {
       if (retryTimer.current) window.clearTimeout(retryTimer.current);
     };
-  }, [loading, currentRole, autoRetries, refresh]);
+  }, [authLoading, isAuthenticated, loading, currentRole, autoRetries, refresh]);
 
   const onRetry = async () => {
+    if (!isAuthenticated) {
+      navigate({ to: `${redirectTo}?deconnecte=1` as never, replace: true });
+      return;
+    }
     setRetrying(true);
     try {
       await refresh();
@@ -63,7 +84,7 @@ export function RequireRole({ role, children, redirectTo = "/fr/connexion" }: Re
     }
   };
 
-  if (loading) return <LoadingScreen />;
+  if (loading || !isAuthenticated) return <LoadingScreen />;
 
   if (currentRole === null) {
     // Tant que les tentatives automatiques tournent, on n'affiche pas d'erreur.

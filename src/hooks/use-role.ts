@@ -64,5 +64,11 @@ export function useRole() {
     };
   }, [authLoading, user?.id]);
 
-  return { role, loading: authLoading || loading, refresh };
+  return {
+    role,
+    loading: authLoading || loading,
+    refresh,
+    authLoading,
+    isAuthenticated: user !== null,
+  };
 }
