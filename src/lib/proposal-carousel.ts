@@ -41,24 +41,60 @@ function firstSentence(text: string): { head: string; rest: string } {
   return { head: m[1]!.trim(), rest: m[2]!.trim() };
 }
 
+function splitLongestBlock(blocks: string[]): string[] {
+  const longestIndex = blocks.reduce(
+    (best, block, index) => (block.length > blocks[best]!.length ? index : best),
+    0,
+  );
+  const block = blocks[longestIndex]!;
+  const sentences = block.match(/[^.!?…]+[.!?…]?/g)?.map((part) => part.trim()).filter(Boolean) ?? [];
+
+  let left = "";
+  let right = "";
+  if (sentences.length > 1) {
+    const middle = Math.ceil(sentences.length / 2);
+    left = sentences.slice(0, middle).join(" ");
+    right = sentences.slice(middle).join(" ");
+  } else {
+    const words = block.split(/\s+/).filter(Boolean);
+    const middle = Math.max(1, Math.ceil(words.length / 2));
+    left = words.slice(0, middle).join(" ");
+    right = words.slice(middle).join(" ");
+  }
+
+  if (!right) right = left;
+  return [...blocks.slice(0, longestIndex), left, right, ...blocks.slice(longestIndex + 1)];
+}
+
+function forceBlockCount(source: string[], pageCount: number): string[] {
+  let blocks = source.length ? source : [""];
+  while (blocks.length < pageCount) blocks = splitLongestBlock(blocks);
+  if (blocks.length === pageCount) return blocks;
+
+  return Array.from({ length: pageCount }, (_, index) => {
+    const start = Math.floor((index * blocks.length) / pageCount);
+    const end = Math.floor(((index + 1) * blocks.length) / pageCount);
+    return blocks.slice(start, Math.max(start + 1, end)).join(" ");
+  });
+}
+
 /**
  * Découpe une caption en slides lisibles (8 max, comme les carrousels produits).
- * Si `pageCount` est fourni (structure choisie par l'admin) et que la caption
- * contient exactement ce nombre de blocs, on respecte ce découpage à la lettre.
+ * Si `pageCount` est fourni, le résultat contient toujours exactement ce nombre
+ * de pages, y compris pour les anciennes captions structurées en davantage de blocs.
  */
 export function captionToSlides(caption: string, pageCount?: number | null): Slide[] {
   if (pageCount && pageCount >= 2) {
-    const blocks = caption
+    const sourceBlocks = caption
       .split(/\n\s*\n/)
       .map((p) => p.replace(/#[^\s#]+/g, "").trim())
       .filter((p) => p.length > 1);
-    if (blocks.length === pageCount) {
-      return blocks.map((b, i) => {
-        const s = firstSentence(b);
-        const kind: Slide["kind"] = i === 0 ? "hook" : i === blocks.length - 1 ? "cta" : "body";
-        return { kind, title: s.head, body: s.rest || undefined };
-      });
-    }
+    const blocks = forceBlockCount(sourceBlocks, pageCount);
+    return blocks.map((b, i) => {
+      const s = firstSentence(b);
+      const kind: Slide["kind"] = i === 0 ? "hook" : i === blocks.length - 1 ? "cta" : "body";
+      return { kind, title: s.head, body: s.rest || undefined };
+    });
   }
 
   const paras = caption

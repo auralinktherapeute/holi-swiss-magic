@@ -381,11 +381,14 @@ export const regenerateProposalStructure = createServerFn({ method: "POST" })
     const { data: p } = await sb
       .from("marketing_proposals")
       .select(
-        "id,network,angle,format,caption,caption_en,caption_de,caption_it,carousel_generation_version",
+        "id,network,angle,format,caption,caption_en,caption_de,caption_it,status,carousel_generation_version",
       )
       .eq("id", data.id)
       .maybeSingle();
     if (!p) throw new Error("Proposition introuvable.");
+    if (p.status === "publie" || p.status === "refuse") {
+      throw new Error("Une proposition publiée ou refusée ne peut plus être régénérée.");
+    }
 
     const plan = PAGE_PLAN[data.pageCount]!;
     const langs: { key: string; code: string; label: string; source: string | null }[] = [

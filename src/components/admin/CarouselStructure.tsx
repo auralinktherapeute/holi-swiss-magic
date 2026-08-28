@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { regenerateProposalStructure } from "@/lib/marketing-agent.functions";
+import { Button } from "@/components/ui/button";
 
 /**
  * Choix de la structure d'un carrousel AVANT validation (additif).
@@ -53,9 +54,10 @@ function Segmented({
       {options.map((o) => {
         const active = o.value === value;
         return (
-          <button
+          <Button
             key={o.value}
             type="button"
+            variant="ghost"
             disabled={disabled}
             aria-pressed={active}
             onClick={() => onChange(o.value)}
@@ -66,7 +68,7 @@ function Segmented({
             }`}
           >
             {o.label}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -169,8 +171,9 @@ export function CarouselStructure({
 
       {!readOnly && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onRegenerate}
             disabled={!dirty || busy}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#b86ef9] px-4 text-sm font-semibold text-[#b86ef9] transition hover:bg-[rgba(184,110,249,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9] disabled:opacity-40"
@@ -181,7 +184,7 @@ export function CarouselStructure({
               <RefreshCw className="h-4 w-4" />
             )}
             Régénérer la proposition
-          </button>
+          </Button>
           {!dirty && (
             <span className="text-xs text-white/40">
               Modifiez le nombre de pages ou la présentation pour régénérer.
