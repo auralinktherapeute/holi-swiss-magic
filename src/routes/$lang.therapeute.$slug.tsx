@@ -837,11 +837,11 @@ function Page() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-12 2xl:px-16 mt-6">
-        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,340px)] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)]">
+      <div className="mx-auto w-full max-w-[1100px] px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
 
           {/* ── COLONNE GAUCHE ── */}
-          <div className="space-y-6 min-w-0">
+          <div className="space-y-6 min-w-0 lg:col-span-8">
 
             {/* À propos */}
             {th.bio && (
@@ -865,6 +865,52 @@ function Page() {
                   </button>
                 )}
               </motion.section>
+            )}
+
+            {/* Métadonnées compactes — comblent le vide sous la bio */}
+            {(languages.length > 0 || th.city || th.canton) && (
+              <motion.div variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+              >
+                {languages.length > 0 && (
+                  <div className="rounded-2xl border border-white/5 bg-[#1a0a2e]/60 p-5">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[rgba(255,255,255,0.45)]">
+                      {t("therapist_profile.languages_title")}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {languages.map((code) => {
+                        const meta = SPOKEN_LANGUAGES.find((l) => l.code === code);
+                        const label = meta?.label ?? code;
+                        const flag = LANG_FLAG[code] ?? "🌐";
+                        return (
+                          <span
+                            key={code}
+                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.1)] px-3 py-1.5 text-sm text-white"
+                          >
+                            <span aria-hidden className="text-base leading-none">{flag}</span>
+                            {label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {(th.city || th.canton) && (
+                  <div className="rounded-2xl border border-white/5 bg-[#1a0a2e]/60 p-5">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[rgba(255,255,255,0.45)]">
+                      {t("therapist_profile.zone_label")}
+                    </h3>
+                    <div className="flex items-center gap-3 text-sm text-[rgba(255,255,255,0.85)]">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(184,110,249,0.1)] text-[#b86ef9]">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <span className="font-medium">
+                        {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
             )}
 
             {/* Galerie photos (Premium) */}
@@ -900,7 +946,7 @@ function Page() {
           </div>
 
           {/* ── SIDEBAR DROITE (réservation — partie supérieure uniquement) ── */}
-          <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+          <div className="space-y-4 lg:col-span-4 lg:sticky lg:top-4 lg:self-start">
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
               <BookingWidget
@@ -942,46 +988,11 @@ function Page() {
                 </a>
               )}
             </div>
-
-            {(th.city || th.canton) && (
-              <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-                <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1">{t("therapist_profile.zone_label")}</p>
-                <p className="text-sm font-medium text-white flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-[#b86ef9]" />
-                  {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* ── SECTIONS PLEINE LARGEUR ── */}
+        {/* ── SECTIONS BASSES (même conteneur, largeur homogène) ── */}
         <div className="mt-6 w-full min-w-0 space-y-6">
-
-            {/* Langues parlées */}
-            {languages.length > 0 && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.languages_title")}</h2>
-                <div className="flex flex-wrap gap-2">
-                  {languages.map((code) => {
-                    const meta = SPOKEN_LANGUAGES.find((l) => l.code === code);
-                    const label = meta?.label ?? code;
-                    const flag = LANG_FLAG[code] ?? "🌐";
-                    return (
-                      <span
-                        key={code}
-                        className="inline-flex items-center gap-2 rounded-full border border-[rgba(92,200,250,0.25)] bg-[rgba(92,200,250,0.08)] px-3 py-1.5 text-sm text-white"
-                      >
-                        <span aria-hidden className="text-base leading-none">{flag}</span>
-                        {label}
-                      </span>
-                    );
-                  })}
-                </div>
-              </motion.section>
-            )}
 
             {/* Services / tarifs */}
             {services.length > 0 && (
@@ -999,7 +1010,7 @@ function Page() {
                       <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
                       {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {sessions.map((s, i) => (
                         <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
                       ))}
@@ -1013,7 +1024,7 @@ function Page() {
                       <PackageIcon className="h-3.5 w-3.5" />
                       {t("therapist_profile.packages_group", { defaultValue: "Forfaits d'accompagnement" })}
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {packages.map((s, i) => (
                         <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
                       ))}
@@ -1168,7 +1179,7 @@ function Page() {
                   })}
                 </p>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   {faqs.map((f, i) => (
                     <details
                       key={i}
