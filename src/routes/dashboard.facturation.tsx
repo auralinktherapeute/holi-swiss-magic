@@ -387,11 +387,12 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
               <Field state={f} set={set} k="numero_ide" label="Numéro IDE" ph="CHE-123.456.789" />
               <Field state={f} set={set} k="telephone" label="Téléphone" />
               <Field state={f} set={set} k="email_pro" label="Email professionnel" type="email" />
-              <Field state={f} set={set} k="adresse_rue" label="Rue *" />
+              <Field state={f} set={set} k="adresse_rue" label="Rue *" error={miss("adresse_rue")} />
               <div className="grid grid-cols-3 gap-2">
-                <Field state={f} set={set} k="adresse_npa" label="NPA *" />
-                <div className="col-span-2"><Field state={f} set={set} k="adresse_ville" label="Ville *" /></div>
+                <Field state={f} set={set} k="adresse_npa" label="NPA *" error={miss("adresse_npa")} />
+                <div className="col-span-2"><Field state={f} set={set} k="adresse_ville" label="Ville *" error={miss("adresse_ville")} /></div>
               </div>
+
               <Field state={f} set={set} k="adresse_pays" label="Pays" />
               <div className="sm:col-span-2">
                 <InvoiceLogoUploader
