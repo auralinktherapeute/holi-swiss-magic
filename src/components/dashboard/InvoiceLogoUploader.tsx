@@ -26,9 +26,8 @@ async function resolvePreview(value: string): Promise<string> {
 }
 
 export default function InvoiceLogoUploader({
-  userId, value, onChange,
+  value, onChange,
 }: {
-  userId: string | null;
   value: string;
   onChange: (next: string) => void;
 }) {
@@ -47,7 +46,6 @@ export default function InvoiceLogoUploader({
     const file = e.target.files?.[0];
     if (inputRef.current) inputRef.current.value = "";
     if (!file) return;
-    if (!userId) { toast.error("Session expirée, reconnectez-vous."); return; }
     if (!ACCEPTED.includes(file.type)) {
       toast.error("Formats acceptés : JPG, PNG, WEBP, GIF, AVIF, BMP, TIFF, SVG.");
       return;
@@ -56,6 +54,9 @@ export default function InvoiceLogoUploader({
 
     setBusy(true);
     try {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth?.user?.id;
+      if (!userId) throw new Error("Session expirée, reconnectez-vous.");
       const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
       const path = `${userId}/logo-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
