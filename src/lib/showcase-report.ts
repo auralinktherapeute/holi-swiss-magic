@@ -108,7 +108,7 @@ const SOURCE_FIELDS: Record<string, string[]> = {
   structured_data: ["first_name", "city", "specialties"],
   alt_text: ["photo_url", "city"],
   indexable: ["status", "verified"],
-  faq: ["booking_note"],
+  faq: ["faqCount", "booking_note"],
   articles: ["articlesCount"],
   author: ["first_name", "title", "photo_url"],
   method_explained: ["bio"],
