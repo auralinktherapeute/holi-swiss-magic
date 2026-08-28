@@ -329,7 +329,7 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
     ["adresse_npa", "NPA"],
     ["adresse_ville", "Ville"],
   ];
-  const [showErrors, setShowErrors] = useState(false);
+  
   const missing = REQUIRED.filter(([k]) => !String(f[k] ?? "").trim());
   const miss = (k: string) => showErrors && missing.some(([mk]) => mk === k);
 
