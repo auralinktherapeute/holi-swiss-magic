@@ -88,6 +88,17 @@ function LoginPage() {
     navigate({ to: "/$lang", params: { lang }, replace: true });
   };
 
+  // Message affiché après une déconnexion (y compris depuis un autre onglet).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("deconnecte") !== "1") return;
+    toast.success("Vous avez été déconnecté. Vous pouvez vous reconnecter pour continuer.");
+    params.delete("deconnecte");
+    const search = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}`);
+  }, []);
+
   useEffect(() => {
     let active = true;
     const returningFromGoogle =

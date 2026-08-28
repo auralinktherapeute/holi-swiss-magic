@@ -17,6 +17,7 @@ import { Toaster } from "../components/ui/sonner";
 import { LanguageSwitcherDevPicker } from "../components/holiswiss/LanguageSwitcher";
 import { PublicNavDevPicker } from "../components/layout/PublicNav";
 import { useSessionTracking } from "../hooks/use-session-tracking";
+import { CrossTabAuthSync } from "@/components/auth/CrossTabAuthSync";
 import { usePageViewTracking } from "../hooks/use-page-view-tracking";
 
 function NotFoundComponent() {
@@ -271,6 +272,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AnalyticsTracking />
+      <CrossTabAuthSync />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster />
