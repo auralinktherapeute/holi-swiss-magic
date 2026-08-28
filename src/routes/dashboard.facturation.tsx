@@ -279,6 +279,8 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
 }) {
   const [f, setF] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
   const set = (k: string, v: any) => setF((s) => ({ ...s, [k]: v }));
 
   useEffect(() => {
