@@ -26,6 +26,8 @@ export async function loadShowcaseAudit(
     sb.from("availabilities").select("id,created_at").eq("therapist_id", therapistId).eq("is_active", true),
     sb.from("therapist_articles").select("id").eq("therapist_id", therapistId).eq("statut", "publie"),
     sb.from("service_packages").select("id").eq("therapist_id", therapistId).eq("actif", true),
+    // FAQ du profil : source de vérité du contrôle « Questions fréquentes ».
+    sb.from("therapist_faqs").select("id").eq("therapist_id", therapistId),
   ]);
 
   const t = therRes.data;
