@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { signOutCompletely } from "@/lib/auth-utils";
 
-const INACTIVITY_MS = 3 * 60 * 60 * 1000; // 3h
+const INACTIVITY_MS = 12 * 60 * 60 * 1000; // 12h
 const STORAGE_KEY = "holiswiss-last-activity";
 
 export function InactivityLogout({ redirectTo = "/fr/connexion" }: { redirectTo?: string }) {
@@ -80,7 +80,7 @@ export function InactivityLogout({ redirectTo = "/fr/connexion" }: { redirectTo?
         <DialogHeader>
           <DialogTitle>Session expirée</DialogTitle>
           <DialogDescription>
-            Pour votre sécurité, vous avez été déconnecté automatiquement après 3 heures d'inactivité.
+            Pour votre sécurité, vous avez été déconnecté automatiquement après 12 heures d'inactivité.
             Merci de vous reconnecter pour continuer.
           </DialogDescription>
         </DialogHeader>

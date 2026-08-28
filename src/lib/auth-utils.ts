@@ -7,7 +7,6 @@ import {
 import {
   clearHoliswissAuthSpace,
   clearLegacySupabaseSessions,
-  clearStoredSupabaseSession,
   clearStoredSupabaseSessions,
   getHoliswissAuthSpace,
   LAST_AUTH_SPACE_KEY,
@@ -15,6 +14,7 @@ import {
   type HoliswissAuthSpace,
 } from "@/integrations/supabase/auth-space";
 import { clearAllSessionState } from "@/hooks/use-session-state";
+import { broadcastLogout } from "@/lib/auth-broadcast";
 
 export { LAST_AUTH_SPACE_KEY } from "@/integrations/supabase/auth-space";
 
@@ -43,23 +43,17 @@ export function setAuthSpaceForRole(role: AppRole) {
   return space;
 }
 
-export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
-  // Arrêter le client source avant le changement d'espace. Appeler signOut
-  // après la copie peut invalider le refresh token partagé avec le nouveau
-  // client, ce qui provoquait les déconnexions aléatoires (notamment Safari).
-  supabase.auth.stopAutoRefresh();
-  const space = setAuthSpaceForRole(role);
-  const { error } = await supabase.auth.setSession({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-  });
-  if (error) throw error;
-
-  // Supprimer uniquement le stockage source : aucun appel réseau, donc aucune
-  // révocation possible de la session qui vient d'être attachée.
-  clearStoredSupabaseSession("login");
-  clearLegacySupabaseSessions();
-  return space;
+/**
+ * Depuis l'unification du client Supabase, la session vit dans une clé de
+ * stockage unique : il n'y a plus AUCUNE recopie de jeton entre espaces (la
+ * cause des révocations par détection de réutilisation). Cette fonction ne
+ * fait donc plus que mémoriser l'espace logique de destination.
+ */
+export async function persistSessionInRoleSpace(
+  _session: { access_token: string; refresh_token: string },
+  role: AppRole,
+) {
+  return setAuthSpaceForRole(role);
 }
 
 export function clearHoliswissSessionState() {
@@ -121,7 +115,7 @@ export function completeOAuthFlow() {
   }
 }
 
-export async function signOutCompletely(queryClient?: QueryClient) {
+export async function signOutCompletely(queryClient?: QueryClient, options?: { broadcast?: boolean }) {
   const currentSpace = getHoliswissAuthSpace();
   try {
     await queryClient?.cancelQueries();
@@ -131,11 +125,8 @@ export async function signOutCompletely(queryClient?: QueryClient) {
   }
 
   try {
-    // On s'assure d'être dans l'espace actuel pour le signOut
-    setHoliswissAuthSpace(currentSpace);
-
-    // scope "local" : ne déconnecte que ce navigateur.
-    // Important pour ne pas invalider les sessions sur les autres appareils.
+    // scope "local" explicite : ne déconnecte que CE navigateur, jamais les
+    // autres appareils de l'utilisateur.
     await supabase.auth.signOut({ scope: "local" });
   } finally {
     // Nettoyage radical de tous les états locaux
@@ -144,13 +135,20 @@ export async function signOutCompletely(queryClient?: QueryClient) {
     clearLegacySupabaseSessions();
     clearHoliswissSessionState();
     clearHoliswissAuthSpace();
+    if (options?.broadcast !== false) {
+      // Prévient les autres onglets Holiswiss du même navigateur.
+      broadcastLogout();
+    }
   }
 }
 
+/**
+ * Prépare la page de connexion. N'efface plus AUCUNE session : la clé de
+ * stockage est désormais unique, et purger ici déconnectait un utilisateur
+ * déjà authentifié qui ouvrait simplement /connexion.
+ */
 export function prepareLoginAuthSpace() {
   setHoliswissAuthSpace("login");
-  clearStoredSupabaseSession("login");
-  clearLegacySupabaseSessions();
 }
 
 export function switchAuthSpace(space: HoliswissAuthSpace) {
