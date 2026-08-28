@@ -71,6 +71,27 @@ export async function buildInvoiceHtml(
     .from("therapists").select("first_name, last_name, email, phone")
     .eq("id", therapistId).maybeSingle();
 
+  // Logo importé dans le bucket privé `invoice-logos` : inliné en data URI pour
+  // rester visible dans le PDF imprimé et dans l'email (pas d'URL expirante).
+  const STORED_LOGO_PREFIX = "storage://invoice-logos/";
+  if (typeof settings.logo_url === "string" && settings.logo_url.startsWith(STORED_LOGO_PREFIX)) {
+    try {
+      const path = settings.logo_url.slice(STORED_LOGO_PREFIX.length);
+      const { data: blob } = await supabaseAdmin.storage.from("invoice-logos").download(path);
+      if (blob) {
+        const buf = new Uint8Array(await blob.arrayBuffer());
+        let bin = "";
+        for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+        const type = blob.type || "image/png";
+        settings.logo_url = `data:${type};base64,${btoa(bin)}`;
+      } else {
+        settings.logo_url = null;
+      }
+    } catch {
+      settings.logo_url = null;
+    }
+  }
+
   const emitterName =
     settings.raison_sociale
     || `${therapist?.first_name ?? ""} ${therapist?.last_name ?? ""}`.trim()
