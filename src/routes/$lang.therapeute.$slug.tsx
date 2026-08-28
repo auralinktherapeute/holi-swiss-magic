@@ -837,8 +837,8 @@ function Page() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-6">
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_340px] gap-6">
+      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-12 2xl:px-16 mt-6">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,340px)] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)]">
 
           {/* ── COLONNE GAUCHE ── */}
           <div className="space-y-6 min-w-0">
