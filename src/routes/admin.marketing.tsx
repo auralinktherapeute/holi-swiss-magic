@@ -350,6 +350,7 @@ function ProposalCard({ p, onAct }: { p: Proposal; onAct: (id: string, status: "
   const NetIcon = net.icon;
   const st = STATUS_META[p.status] ?? { label: p.status, cls: "bg-white/10 text-white/70 border-white/20" };
   const pending = p.status === "en_attente_validation" || p.status === "correction_demandee";
+  const structureLocked = p.status === "publie" || p.status === "refuse";
   const isCarousel =
     p.network === "instagram" && (!p.format || /carrou|carou/i.test(p.format));
   const hashtags = hashtagsFor(p, lang);
@@ -421,7 +422,7 @@ function ProposalCard({ p, onAct }: { p: Proposal; onAct: (id: string, status: "
               body: s.body ?? null,
             }))
           }
-          readOnly={!pending}
+          readOnly={structureLocked}
         />
       )}
 
