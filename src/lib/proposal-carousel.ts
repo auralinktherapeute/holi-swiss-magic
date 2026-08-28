@@ -29,6 +29,8 @@ export type ProposalLike = {
   published_at?: string | null;
   proposal_date?: string | null;
   created_at: string;
+  carousel_page_count?: number | null;
+  carousel_presentation?: string | null;
 };
 
 const LANGS: CarouselLang[] = ["fr", "de", "it", "en"];
@@ -108,11 +110,12 @@ export function proposalToCarousel(p: ProposalLike): Carousel {
   };
 
   const origine = (LANGS.includes(p.lang as CarouselLang) ? p.lang : "fr") as CarouselLang;
-  const baseSlides = captionToSlides(captions[origine] ?? p.caption);
+  const pages = p.carousel_page_count ?? null;
+  const baseSlides = captionToSlides(captions[origine] ?? p.caption, pages);
   const slides = LANGS.reduce(
     (acc, l) => {
       const c = captions[l];
-      acc[l] = c ? captionToSlides(c) : baseSlides;
+      acc[l] = c ? captionToSlides(c, pages) : baseSlides;
       return acc;
     },
     {} as Record<CarouselLang, Slide[]>,
