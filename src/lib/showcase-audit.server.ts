@@ -19,7 +19,7 @@ export async function loadShowcaseAudit(
   totals: { visibilite: number; conversion: number };
   categories: ReturnType<typeof categoryTotals>;
 }> {
-  const [therRes, certRes, revRes, availRes, artRes, packRes] = await Promise.all([
+  const [therRes, certRes, revRes, availRes, artRes, packRes, faqRes] = await Promise.all([
     sb.from("therapists").select(SHOWCASE_COLUMNS).eq("id", therapistId).maybeSingle(),
     sb.from("therapist_certifications").select("verification_status,expires_at").eq("therapist_id", therapistId),
     sb.from("reviews").select("id").eq("therapist_id", therapistId).eq("status", "approved"),
