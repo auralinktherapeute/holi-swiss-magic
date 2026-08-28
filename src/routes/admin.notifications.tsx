@@ -327,6 +327,43 @@ function NotificationsPage() {
               {n.summary && (
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginBottom: 8 }}>{n.summary}</div>
               )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenIds((s) => ({ ...s, [n.id]: !s[n.id] }));
+                }}
+                aria-expanded={!!openIds[n.id]}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.7)",
+                  borderRadius: 6,
+                  padding: "5px 10px",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  marginBottom: 8,
+                }}
+              >
+                {openIds[n.id] ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                {openIds[n.id] ? "Masquer les détails" : "Voir les détails"}
+              </button>
+              {openIds[n.id] && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    background: "rgba(0,0,0,0.25)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 10,
+                    padding: 12,
+                    marginBottom: 10,
+                  }}
+                >
+                  <NotifDetails n={n} />
+                </div>
+              )}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 {n.deliveries.map((d, i) => (
                   <span
