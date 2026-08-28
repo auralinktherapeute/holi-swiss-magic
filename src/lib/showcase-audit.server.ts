@@ -54,6 +54,7 @@ export async function loadShowcaseAudit(
       .pop() ?? null,
     articlesCount: (artRes.data ?? []).length,
     packagesCount: (packRes.data ?? []).length,
+    faqCount: (faqRes?.data ?? []).length,
   };
   const checks = runShowcaseAudit(auditInput);
 
