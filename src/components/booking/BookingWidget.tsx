@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
+type Special = { date: string; start_time: string; end_time: string };
 type Block = { start_date: string; end_date: string };
 type Appt = { appointment_date: string; appointment_time: string };
 type Busy = { startsAt: string; endsAt: string };
@@ -75,6 +76,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [selectedServiceIdx, setSelectedServiceIdx] = useSessionState<number | null>(`${statePrefix}.serviceIdx`, null);
   const [month, setMonth] = useSessionState(`${statePrefix}.month`, () => { const d = new Date(); d.setDate(1); return d; });
   const [avs, setAvs] = useState<Avail[]>([]);
+  const [specials, setSpecials] = useState<Special[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [taken, setTaken] = useState<Appt[]>([]);
   const [busy, setBusy] = useState<Busy[]>([]);
@@ -196,7 +198,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     // d'une heure depuis Londres, de plusieurs depuis un autre continent.
     const free = all.filter((s) => !takenSet.has(s));
     return filterAvailableSlots(free, selectedDate, slotMin, busy);
-  }, [selectedDate, avs, taken, busy, slotMin]);
+  }, [selectedDate, avs, specials, taken, busy, slotMin]);
 
 
   const openConfirm = (e: React.FormEvent) => {
