@@ -1282,61 +1282,6 @@ function Page() {
             )}
           </div>
 
-          {/* ── SIDEBAR DROITE ── */}
-          <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-
-            <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-              <BookingWidget
-                therapistId={th.id}
-                therapistName={fullName}
-                services={services.map((s) => ({
-                  name: s.name,
-                  duration: (s as any).duration_min ?? s.duration,
-                  price: (s as any).price_chf ?? s.price,
-                  format: s.format,
-                  color: s.color,
-                  description: s.description,
-                }))}
-              />
-            </div>
-
-            <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur space-y-3">
-              <h3 className="font-semibold text-white text-sm">{t("therapist_profile.contact_title")}</h3>
-              {th.phone && (
-                <div>
-                  <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1 flex items-center gap-1">
-                    <Shield className="h-3 w-3" /> {t("therapist_profile.phone_protected")}
-                  </p>
-                  {phoneVisible ? (
-                    <p className="text-sm font-semibold text-[#5cc8fa]">{th.phone}</p>
-                  ) : (
-                    <button
-                      onClick={() => setPhoneVisible(true)}
-                      className="text-sm font-semibold text-[#b86ef9] hover:text-white transition"
-                    >
-                      {t("therapist_profile.phone_show")}
-                    </button>
-                  )}
-                </div>
-              )}
-              {th.email && (
-                <a href={`mailto:${th.email}`} className="flex items-center gap-2 text-sm text-[rgba(255,255,255,0.6)] hover:text-[#5cc8fa] transition">
-                  {t("therapist_profile.email_send")}
-                </a>
-              )}
-            </div>
-
-            {(th.city || th.canton) && (
-              <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
-                <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1">{t("therapist_profile.zone_label")}</p>
-                <p className="text-sm font-medium text-white flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-[#b86ef9]" />
-                  {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* ── Disclaimer ── */}
