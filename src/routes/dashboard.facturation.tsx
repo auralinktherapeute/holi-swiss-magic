@@ -257,17 +257,20 @@ function Page() {
 
 // ── Paramètres de facturation ───────────────────────────────────────
 
-type FieldProps = { k: string; label: string; type?: string; ph?: string; state: Record<string, any>; set: (k: string, v: any) => void; };
+type FieldProps = { k: string; label: string; type?: string; ph?: string; state: Record<string, any>; set: (k: string, v: any) => void; error?: boolean; };
 
-function Field({ k, label, type = "text", ph = "", state, set }: FieldProps) {
+function Field({ k, label, type = "text", ph = "", state, set, error }: FieldProps) {
   return (
     <div className="space-y-1">
       <Label htmlFor={`set-${k}`}>{label}</Label>
       <Input id={`set-${k}`} type={type} value={state[k] ?? ""} placeholder={ph}
+        aria-invalid={!!error}
         onChange={(e) => set(k, type === "number" ? Number(e.target.value) : e.target.value)} />
+      {error && <p className="text-xs text-destructive">Ce champ est obligatoire.</p>}
     </div>
   );
 }
+
 
 function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
   open: boolean; onOpenChange: (v: boolean) => void;
