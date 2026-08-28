@@ -27,6 +27,7 @@ import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "luc
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale, profileCopy, resolveProfileLang } from "@/lib/seo";
 import { TrustBadges } from "@/components/holiswiss/TrustBadges";
+import { CertificationsShowcase } from "@/components/holiswiss/CertificationsShowcase";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
 import { SocialLinksRow } from "@/components/holiswiss/SocialLinksRow";
 
