@@ -27,6 +27,7 @@ import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "luc
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import { hreflangLinks, ogLocale, profileCopy, resolveProfileLang } from "@/lib/seo";
 import { TrustBadges } from "@/components/holiswiss/TrustBadges";
+import { CertificationsShowcase } from "@/components/holiswiss/CertificationsShowcase";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
 import { SocialLinksRow } from "@/components/holiswiss/SocialLinksRow";
 
@@ -963,24 +964,26 @@ function Page() {
 
             {/* Accréditations */}
             {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.certifications_title")}</h2>
-                <TrustBadges
+              <motion.div variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}>
+                <CertificationsShowcase
+                  title={t("therapist_profile.certifications_title")}
                   badges={trustBadges.filter((b) => b.kind === "certification" || b.kind === "accreditation")}
-                  lang={lang}
+                  labels={{
+                    expand: t("therapist_profile.certifications_expand", { defaultValue: "Voir tous les diplômes" }),
+                    collapse: t("therapist_profile.certifications_collapse", { defaultValue: "Réduire" }),
+                  }}
+                  notice={
+                    trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified)
+                      ? t("therapist_profile.declared_notice", {
+                          defaultValue:
+                            "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
+                        })
+                      : null
+                  }
                 />
-                {trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified) && (
-                  <p className="mt-3 text-xs text-[rgba(255,255,255,0.5)]">
-                    {t("therapist_profile.declared_notice", {
-                      defaultValue:
-                        "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
-                    })}
-                  </p>
-                )}
-              </motion.section>
+              </motion.div>
             )}
+
 
             {/* Événements & Voix d'experts — côte à côte sur desktop */}
             <div className="grid gap-5 lg:grid-cols-2">
