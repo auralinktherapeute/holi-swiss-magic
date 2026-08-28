@@ -257,17 +257,20 @@ function Page() {
 
 // ── Paramètres de facturation ───────────────────────────────────────
 
-type FieldProps = { k: string; label: string; type?: string; ph?: string; state: Record<string, any>; set: (k: string, v: any) => void; };
+type FieldProps = { k: string; label: string; type?: string; ph?: string; state: Record<string, any>; set: (k: string, v: any) => void; error?: boolean; };
 
-function Field({ k, label, type = "text", ph = "", state, set }: FieldProps) {
+function Field({ k, label, type = "text", ph = "", state, set, error }: FieldProps) {
   return (
     <div className="space-y-1">
       <Label htmlFor={`set-${k}`}>{label}</Label>
       <Input id={`set-${k}`} type={type} value={state[k] ?? ""} placeholder={ph}
+        aria-invalid={!!error}
         onChange={(e) => set(k, type === "number" ? Number(e.target.value) : e.target.value)} />
+      {error && <p className="text-xs text-destructive">Ce champ est obligatoire.</p>}
     </div>
   );
 }
+
 
 function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
   open: boolean; onOpenChange: (v: boolean) => void;
@@ -276,6 +279,8 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
 }) {
   const [f, setF] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
   const set = (k: string, v: any) => setF((s) => ({ ...s, [k]: v }));
 
   useEffect(() => {
@@ -309,15 +314,35 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
       next_invoice_number: existing?.next_invoice_number ?? 1,
       remise_a_zero_annuelle: existing?.remise_a_zero_annuelle ?? true,
     });
+    setShowErrors(false);
   }, [open, existing]);
+
 
   const ibanErr = f.iban_ou_qr_iban && !isValidIban(f.iban_ou_qr_iban)
     ? "IBAN invalide (chiffres de contrôle)." : null;
   const qrIbanErr = f.qr_iban && !isQrIban(f.qr_iban)
     ? "Ce n'est pas un QR-IBAN valide (IID 30000–31999)." : null;
 
+  // Champs obligatoires côté serveur : on les contrôle ici pour afficher un
+  // message lisible plutôt que l'erreur de validation brute.
+  const REQUIRED: Array<[string, string]> = [
+    ["iban_ou_qr_iban", "IBAN"],
+    ["adresse_rue", "Rue"],
+    ["adresse_npa", "NPA"],
+    ["adresse_ville", "Ville"],
+  ];
+  
+  const missing = REQUIRED.filter(([k]) => !String(f[k] ?? "").trim());
+  const miss = (k: string) => showErrors && missing.some(([mk]) => mk === k);
+
   async function save() {
+    setShowErrors(true);
+    if (missing.length > 0) {
+      toast.error(`Champs obligatoires manquants : ${missing.map(([, l]) => l).join(", ")}`);
+      return;
+    }
     if (ibanErr || qrIbanErr) { toast.error("Corrigez les informations bancaires."); return; }
+
     setSaving(true);
     try {
       await upsertFn({ data: {
@@ -366,11 +391,12 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
               <Field state={f} set={set} k="numero_ide" label="Numéro IDE" ph="CHE-123.456.789" />
               <Field state={f} set={set} k="telephone" label="Téléphone" />
               <Field state={f} set={set} k="email_pro" label="Email professionnel" type="email" />
-              <Field state={f} set={set} k="adresse_rue" label="Rue *" />
+              <Field state={f} set={set} k="adresse_rue" label="Rue *" error={miss("adresse_rue")} />
               <div className="grid grid-cols-3 gap-2">
-                <Field state={f} set={set} k="adresse_npa" label="NPA *" />
-                <div className="col-span-2"><Field state={f} set={set} k="adresse_ville" label="Ville *" /></div>
+                <Field state={f} set={set} k="adresse_npa" label="NPA *" error={miss("adresse_npa")} />
+                <div className="col-span-2"><Field state={f} set={set} k="adresse_ville" label="Ville *" error={miss("adresse_ville")} /></div>
               </div>
+
               <Field state={f} set={set} k="adresse_pays" label="Pays" />
               <div className="sm:col-span-2">
                 <InvoiceLogoUploader
@@ -387,8 +413,11 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
               <div className="space-y-1">
                 <Label htmlFor="set-iban">IBAN *</Label>
                 <Input id="set-iban" value={f.iban_ou_qr_iban ?? ""} placeholder="CH93 0076 2011 6238 5295 7"
-                  aria-invalid={!!ibanErr} onChange={(e) => set("iban_ou_qr_iban", e.target.value)} />
-                {ibanErr && <p className="text-xs text-destructive">{ibanErr}</p>}
+                  aria-invalid={!!ibanErr || miss("iban_ou_qr_iban")} onChange={(e) => set("iban_ou_qr_iban", e.target.value)} />
+                {ibanErr
+                  ? <p className="text-xs text-destructive">{ibanErr}</p>
+                  : miss("iban_ou_qr_iban") && <p className="text-xs text-destructive">L'IBAN est obligatoire pour émettre des factures.</p>}
+
               </div>
               <div className="space-y-1">
                 <Label htmlFor="set-qriban">QR-IBAN (si votre banque en fournit un)</Label>
