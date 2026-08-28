@@ -610,9 +610,9 @@ function Page() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0f0a1e] px-4 py-12">
-        <div className="mx-auto max-w-6xl space-y-4">
+        <div className="mx-auto w-full max-w-[1440px] space-y-4">
           <div className="h-64 animate-pulse rounded-3xl bg-[#1a1035]" />
-          <div className="grid grid-cols-[1fr_340px] gap-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
             <div className="h-96 animate-pulse rounded-2xl bg-[#1a1035]" />
             <div className="h-96 animate-pulse rounded-2xl bg-[#1a1035]" />
           </div>
