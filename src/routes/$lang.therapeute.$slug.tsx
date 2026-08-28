@@ -702,9 +702,9 @@ function Page() {
         className="relative overflow-hidden"
         style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
       >
-        <div className="px-4 pb-8 pt-8 sm:px-8 sm:pt-16 md:min-h-64 md:flex md:items-end">
-          <div className="mx-auto w-full max-w-6xl">
-            <div className="flex flex-col sm:flex-row gap-5 items-center">
+        <div className="px-6 pb-8 pt-8 sm:px-8 sm:pt-16 lg:px-12 2xl:px-16 md:min-h-64 md:flex md:items-end">
+          <div className="mx-auto w-full max-w-[1440px]">
+            <div className="flex flex-col sm:flex-row gap-5 sm:gap-8 items-center sm:items-start">
               {/* Photo */}
               <motion.div
                 initial={{ scale: 0.85, opacity: 0 }}
