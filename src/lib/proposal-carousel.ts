@@ -39,8 +39,26 @@ function firstSentence(text: string): { head: string; rest: string } {
   return { head: m[1]!.trim(), rest: m[2]!.trim() };
 }
 
-/** Découpe une caption en slides lisibles (8 max, comme les carrousels produits). */
-export function captionToSlides(caption: string): Slide[] {
+/**
+ * Découpe une caption en slides lisibles (8 max, comme les carrousels produits).
+ * Si `pageCount` est fourni (structure choisie par l'admin) et que la caption
+ * contient exactement ce nombre de blocs, on respecte ce découpage à la lettre.
+ */
+export function captionToSlides(caption: string, pageCount?: number | null): Slide[] {
+  if (pageCount && pageCount >= 2) {
+    const blocks = caption
+      .split(/\n\s*\n/)
+      .map((p) => p.replace(/#[^\s#]+/g, "").trim())
+      .filter((p) => p.length > 1);
+    if (blocks.length === pageCount) {
+      return blocks.map((b, i) => {
+        const s = firstSentence(b);
+        const kind: Slide["kind"] = i === 0 ? "hook" : i === blocks.length - 1 ? "cta" : "body";
+        return { kind, title: s.head, body: s.rest || undefined };
+      });
+    }
+  }
+
   const paras = caption
     .split(/\n{2,}|\n/)
     .map((p) => p.replace(/#[^\s#]+/g, "").trim())
