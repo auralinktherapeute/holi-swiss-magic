@@ -760,9 +760,13 @@ function Page() {
                   </p>
                 )}
 
-                {trustBadges.length > 0 && (
-                  <TrustBadges badges={trustBadges} lang={lang} className="mb-3" />
+                {/* En-tête : uniquement les repères de confiance synthétiques
+                    (Pro, Vérifié, Formateur). La liste des diplômes reste dans
+                    sa section dédiée pour ne pas surcharger la présentation. */}
+                {heroBadges.length > 0 && (
+                  <TrustBadges badges={heroBadges} lang={lang} className="mb-3" />
                 )}
+
 
                 <SocialLinksRow socialLinks={(th as any).social_links} name={fullName} className="mb-3" />
 
