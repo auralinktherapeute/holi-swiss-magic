@@ -115,7 +115,7 @@ export function completeOAuthFlow() {
   }
 }
 
-export async function signOutCompletely(queryClient?: QueryClient) {
+export async function signOutCompletely(queryClient?: QueryClient, options?: { broadcast?: boolean }) {
   const currentSpace = getHoliswissAuthSpace();
   try {
     await queryClient?.cancelQueries();
@@ -125,11 +125,8 @@ export async function signOutCompletely(queryClient?: QueryClient) {
   }
 
   try {
-    // On s'assure d'être dans l'espace actuel pour le signOut
-    setHoliswissAuthSpace(currentSpace);
-
-    // scope "local" : ne déconnecte que ce navigateur.
-    // Important pour ne pas invalider les sessions sur les autres appareils.
+    // scope "local" explicite : ne déconnecte que CE navigateur, jamais les
+    // autres appareils de l'utilisateur.
     await supabase.auth.signOut({ scope: "local" });
   } finally {
     // Nettoyage radical de tous les états locaux
@@ -138,13 +135,20 @@ export async function signOutCompletely(queryClient?: QueryClient) {
     clearLegacySupabaseSessions();
     clearHoliswissSessionState();
     clearHoliswissAuthSpace();
+    if (options?.broadcast !== false) {
+      // Prévient les autres onglets Holiswiss du même navigateur.
+      broadcastLogout();
+    }
   }
 }
 
+/**
+ * Prépare la page de connexion. N'efface plus AUCUNE session : la clé de
+ * stockage est désormais unique, et purger ici déconnectait un utilisateur
+ * déjà authentifié qui ouvrait simplement /connexion.
+ */
 export function prepareLoginAuthSpace() {
   setHoliswissAuthSpace("login");
-  clearStoredSupabaseSession("login");
-  clearLegacySupabaseSessions();
 }
 
 export function switchAuthSpace(space: HoliswissAuthSpace) {
