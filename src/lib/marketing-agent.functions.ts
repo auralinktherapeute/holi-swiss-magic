@@ -320,3 +320,129 @@ N'invente aucun chiffre. Si une langue manque dans la source, produis-la en adap
     if (error || !created) throw new Error("Enregistrement de la proposition impossible.");
     return { id: created.id as string };
   });
+
+/* ------------------------------------------- restructuration d'un carrousel */
+
+/** Trames imposées par le nombre de pages (cf. demande du 28/08/2026). */
+const PAGE_PLAN: Record<number, string[]> = {
+  2: ["Accroche forte + message essentiel", "Bénéfice principal + appel à l'action"],
+  3: [
+    "Problème, accroche ou situation vécue",
+    "Solution et bénéfices principaux",
+    "Conclusion et appel à l'action",
+  ],
+  4: [
+    "Accroche",
+    "Problème ou contexte",
+    "Solution et bénéfices",
+    "Conclusion et appel à l'action",
+  ],
+  5: [
+    "Accroche",
+    "Problème ou situation",
+    "Explication",
+    "Bénéfices ou solution",
+    "Appel à l'action",
+  ],
+};
+
+const PRESENTATION_RULES: Record<string, string> = {
+  classic: "Classique : une idée principale par page, texte court, structure claire et pédagogique.",
+  condensed:
+    "Condensée : regroupe intelligemment les idées, formulation très synthétique, aucune page presque vide.",
+  storytelling:
+    "Storytelling : accroche forte page 1, développement progressif, conclusion et appel à l'action en dernière page.",
+  conversion:
+    "Conversion : problème/besoin du thérapeute, solution Holiswiss, bénéfices concrets, appel à l'action net.",
+};
+
+/**
+ * Réécrit UNIQUEMENT la structure d'une proposition existante : même sujet,
+ * même réseau, même ton, mêmes informations — seuls la longueur, le découpage
+ * et le nombre de pages changent. Le statut, les hashtags, le brief visuel et
+ * la date ne sont pas touchés. Rien n'est publié.
+ */
+export const regenerateProposalStructure = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        pageCount: z.union([z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+        presentation: z.enum(["classic", "condensed", "storytelling", "conversion"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin as any;
+
+    const { data: p } = await sb
+      .from("marketing_proposals")
+      .select(
+        "id,network,angle,format,caption,caption_en,caption_de,caption_it,carousel_generation_version",
+      )
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!p) throw new Error("Proposition introuvable.");
+
+    const plan = PAGE_PLAN[data.pageCount]!;
+    const langs: { key: string; code: string; label: string; source: string | null }[] = [
+      { key: "caption", code: "fr", label: "français", source: p.caption ?? null },
+      { key: "caption_en", code: "en", label: "anglais", source: p.caption_en ?? null },
+      { key: "caption_de", code: "de", label: "allemand", source: p.caption_de ?? null },
+      { key: "caption_it", code: "it", label: "italien", source: p.caption_it ?? null },
+    ];
+
+    const patch: Record<string, unknown> = {
+      carousel_page_count: data.pageCount,
+      carousel_presentation: data.presentation,
+      carousel_generation_version: Number(p.carousel_generation_version ?? 1) + 1,
+      updated_at: new Date().toISOString(),
+    };
+
+    for (const l of langs) {
+      if (!l.source || !l.source.trim()) continue; // une langue absente le reste
+
+      const system = [
+        "Tu restructures un carrousel Instagram déjà rédigé pour Holiswiss.",
+        "",
+        GUARDRAILS,
+        "",
+        `Tu écris en ${l.label}. Tu conserves strictement le sujet, le réseau, le ton de marque`,
+        "et toutes les informations importantes du texte source. Tu n'ajoutes aucune information nouvelle.",
+        `Tu produis EXACTEMENT ${data.pageCount} pages, ni plus ni moins.`,
+        "Trame imposée, une page par ligne du plan :",
+        plan.map((s, i) => `Page ${i + 1} : ${s}`).join("\n"),
+        PRESENTATION_RULES[data.presentation]!,
+        "",
+        "Contraintes : phrases courtes, aucune page presque vide, aucune répétition,",
+        "la page 1 doit se comprendre seule et accrocher immédiatement,",
+        "la dernière page contient toujours une conclusion ou un appel à l'action.",
+        "",
+        `FORMAT DE SORTIE : uniquement le texte des ${data.pageCount} pages, séparées par une ligne vide.`,
+        "Aucun numéro de page, aucun titre, aucun hashtag, aucun commentaire.",
+      ].join("\n");
+
+      const raw = await callGateway(system, `TEXTE SOURCE :\n\n${l.source}`);
+      const pages = raw
+        .split(/\n\s*\n/)
+        .map((s) => s.replace(/^\s*(?:page\s*\d+\s*[:.)-]\s*)/i, "").trim())
+        .filter(Boolean);
+      if (pages.length !== data.pageCount) {
+        // On ne remplace jamais par un découpage faux : on signale plutôt.
+        if (l.code === "fr") {
+          throw new Error(
+            `L'agent a renvoyé ${pages.length} page(s) au lieu de ${data.pageCount}. Réessayez.`,
+          );
+        }
+        continue; // langue secondaire : on garde l'ancienne version
+      }
+      patch[l.key] = pages.join("\n\n");
+    }
+
+    const { error } = await sb.from("marketing_proposals").update(patch).eq("id", data.id);
+    if (error) throw new Error("Impossible d'enregistrer la nouvelle structure.");
+    return { ok: true, pageCount: data.pageCount, presentation: data.presentation };
+  });
