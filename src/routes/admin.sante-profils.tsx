@@ -22,6 +22,7 @@ import {
   setFounderSeatDisplay,
 } from "@/lib/therapist-health.functions";
 import TherapistScorePanel from "@/components/admin/TherapistScorePanel";
+import CertificationsReviewPanel from "@/components/admin/CertificationsReviewPanel";
 
 export const Route = createFileRoute("/admin/sante-profils")({ component: Page });
 
