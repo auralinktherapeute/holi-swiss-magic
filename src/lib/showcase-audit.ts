@@ -94,6 +94,8 @@ export type ShowcaseInput = {
   availabilitiesUpdatedAt?: string | null;
   articlesCount?: number;
   packagesCount?: number;
+  /** Nombre de questions/réponses saisies dans « Questions fréquentes ». */
+  faqCount?: number;
 };
 
 const len = (v?: string | null) => (v ?? "").trim().length;
