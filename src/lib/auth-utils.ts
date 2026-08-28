@@ -15,6 +15,7 @@ import {
   type HoliswissAuthSpace,
 } from "@/integrations/supabase/auth-space";
 import { clearAllSessionState } from "@/hooks/use-session-state";
+import { broadcastLogout } from "@/lib/auth-broadcast";
 
 export { LAST_AUTH_SPACE_KEY } from "@/integrations/supabase/auth-space";
 
