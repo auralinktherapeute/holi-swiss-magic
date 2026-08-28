@@ -677,7 +677,11 @@ function Page() {
       since: th.trainer_since,
     },
   });
+  const heroBadges = trustBadges.filter(
+    (b) => b.kind !== "certification" && b.kind !== "accreditation",
+  );
   const bioIsLong = (th.bio ?? "").length > 280;
+
   const avg = reviews?.length
     ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
@@ -760,9 +764,13 @@ function Page() {
                   </p>
                 )}
 
-                {trustBadges.length > 0 && (
-                  <TrustBadges badges={trustBadges} lang={lang} className="mb-3" />
+                {/* En-tête : uniquement les repères de confiance synthétiques
+                    (Pro, Vérifié, Formateur). La liste des diplômes reste dans
+                    sa section dédiée pour ne pas surcharger la présentation. */}
+                {heroBadges.length > 0 && (
+                  <TrustBadges badges={heroBadges} lang={lang} className="mb-3" />
                 )}
+
 
                 <SocialLinksRow socialLinks={(th as any).social_links} name={fullName} className="mb-3" />
 
