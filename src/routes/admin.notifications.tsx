@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Check, CheckCheck, Mail, MessageCircle, ExternalLink, Filter } from "lucide-react";
+import { Bell, Check, CheckCheck, Mail, MessageCircle, ExternalLink, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import {
   listNotifications,
   markNotificationRead,
@@ -129,6 +129,7 @@ function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [kind, setKind] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
 
   const refresh = useCallback(async () => {
     setLoading(true);
