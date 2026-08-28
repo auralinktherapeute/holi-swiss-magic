@@ -610,7 +610,7 @@ function Page() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0f0a1e] px-4 py-12">
-        <div className="mx-auto max-w-5xl space-y-4">
+        <div className="mx-auto max-w-6xl space-y-4">
           <div className="h-64 animate-pulse rounded-3xl bg-[#1a1035]" />
           <div className="grid grid-cols-[1fr_340px] gap-6">
             <div className="h-96 animate-pulse rounded-2xl bg-[#1a1035]" />
@@ -703,7 +703,7 @@ function Page() {
         style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
       >
         <div className="px-4 pb-8 pt-8 sm:px-8 sm:pt-16 md:min-h-64 md:flex md:items-end">
-          <div className="mx-auto w-full max-w-5xl">
+          <div className="mx-auto w-full max-w-6xl">
             <div className="flex flex-col sm:flex-row gap-5 items-center">
               {/* Photo */}
               <motion.div
@@ -837,7 +837,7 @@ function Page() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-6">
         <div className="flex flex-col lg:grid lg:grid-cols-[1fr_340px] gap-6">
 
           {/* ── COLONNE GAUCHE ── */}
