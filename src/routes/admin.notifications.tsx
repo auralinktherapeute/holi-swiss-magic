@@ -22,11 +22,84 @@ type Notif = {
   summary: string | null;
   link: string | null;
   entity_type: string | null;
+  entity_id?: string | null;
   is_read: boolean;
   read_at: string | null;
   created_at: string;
+  data?: Record<string, unknown> | null;
   deliveries: Delivery[];
 };
+
+// Libellés lisibles pour le détail des notifications (aucune donnée n'est masquée :
+// les clés inconnues restent affichées telles quelles).
+const FIELD_LABEL: Record<string, string> = {
+  patient_name: "Visiteur",
+  patient_email: "Email",
+  patient_phone: "Téléphone",
+  appointment_date: "Date du rendez-vous",
+  appointment_time: "Heure",
+  status: "Statut",
+  notes: "Notes",
+  therapist_name: "Thérapeute",
+  therapist_email: "Email thérapeute",
+  therapist_slug: "Profil",
+  source: "Source",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "En attente",
+  confirmed: "Confirmée",
+  cancelled: "Annulée",
+  completed: "Terminée",
+};
+
+function formatValue(key: string, value: unknown): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (key === "status") return STATUS_LABEL[String(value)] ?? String(value);
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function NotifDetails({ n }: { n: Notif }) {
+  const entries = Object.entries(n.data ?? {}).filter(([, v]) => v !== null && v !== "");
+  if (entries.length === 0) {
+    return (
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+        Aucun détail enregistré pour cette notification (créée avant l'ajout des détails).
+      </div>
+    );
+  }
+  return (
+    <dl
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(120px, max-content) 1fr",
+        gap: "6px 14px",
+        margin: 0,
+        fontSize: 13,
+      }}
+    >
+      {entries.map(([k, v]) => (
+        <div key={k} style={{ display: "contents" }}>
+          <dt style={{ color: "rgba(255,255,255,0.5)" }}>{FIELD_LABEL[k] ?? k}</dt>
+          <dd style={{ margin: 0, color: "#fff", wordBreak: "break-word" }}>
+            {k === "patient_email" || k === "therapist_email" ? (
+              <a href={`mailto:${String(v)}`} style={{ color: "#5cc8fa" }}>{String(v)}</a>
+            ) : k === "patient_phone" ? (
+              <a href={`tel:${String(v).replace(/\s/g, "")}`} style={{ color: "#5cc8fa" }}>{String(v)}</a>
+            ) : k === "therapist_slug" ? (
+              <a href={`/fr/therapeute/${String(v)}`} target="_blank" rel="noreferrer" style={{ color: "#5cc8fa" }}>
+                /fr/therapeute/{String(v)}
+              </a>
+            ) : (
+              formatValue(k, v)
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 const KIND_LABEL: Record<string, string> = {
   therapist_pending: "Thérapeute",
