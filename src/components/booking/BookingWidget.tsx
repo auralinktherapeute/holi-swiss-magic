@@ -113,11 +113,19 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
 
   useEffect(() => {
     (async () => {
-      const [{ data: a }, { data: b }] = await Promise.all([
-        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("day_of_week", "is", null),
+      const todayISO = localDateISO(new Date());
+      const [{ data: a }, { data: sp }, { data: b }] = await Promise.all([
+        // Horaires HEBDOMADAIRES uniquement : les lignes portant une
+        // `specific_date` ont aussi un `day_of_week`, les inclure ouvrirait
+        // tous les jours de la semaine correspondants (bug constaté).
+        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).is("specific_date", null).not("day_of_week", "is", null),
+        // Disponibilités PONCTUELLES : elles n'ouvrent que leur date exacte.
+        supabase.from("availabilities").select("specific_date,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("specific_date", "is", null).gte("specific_date", todayISO),
         supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day").eq("therapist_id", therapistId),
       ]);
       setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
+      setSpecials(((sp ?? []) as Array<{ specific_date: string; start_time: string; end_time: string }>)
+        .map(({ specific_date, start_time, end_time }) => ({ date: specific_date, start_time, end_time })));
       // Only all-day blocks fully prevent date selection; partial-time blocks remain
       // (the booking widget operates at day granularity for now).
       setBlocks(((b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean }>)
@@ -125,6 +133,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         .map(({ start_date, end_date }) => ({ start_date, end_date })));
     })();
   }, [therapistId]);
+
 
   useEffect(() => {
     if (!selectedDate) return;
