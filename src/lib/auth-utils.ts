@@ -43,23 +43,17 @@ export function setAuthSpaceForRole(role: AppRole) {
   return space;
 }
 
-export async function persistSessionInRoleSpace(session: { access_token: string; refresh_token: string }, role: AppRole) {
-  // Arrêter le client source avant le changement d'espace. Appeler signOut
-  // après la copie peut invalider le refresh token partagé avec le nouveau
-  // client, ce qui provoquait les déconnexions aléatoires (notamment Safari).
-  supabase.auth.stopAutoRefresh();
-  const space = setAuthSpaceForRole(role);
-  const { error } = await supabase.auth.setSession({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-  });
-  if (error) throw error;
-
-  // Supprimer uniquement le stockage source : aucun appel réseau, donc aucune
-  // révocation possible de la session qui vient d'être attachée.
-  clearStoredSupabaseSession("login");
-  clearLegacySupabaseSessions();
-  return space;
+/**
+ * Depuis l'unification du client Supabase, la session vit dans une clé de
+ * stockage unique : il n'y a plus AUCUNE recopie de jeton entre espaces (la
+ * cause des révocations par détection de réutilisation). Cette fonction ne
+ * fait donc plus que mémoriser l'espace logique de destination.
+ */
+export async function persistSessionInRoleSpace(
+  _session: { access_token: string; refresh_token: string },
+  role: AppRole,
+) {
+  return setAuthSpaceForRole(role);
 }
 
 export function clearHoliswissSessionState() {
