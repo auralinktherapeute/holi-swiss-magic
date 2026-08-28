@@ -867,6 +867,52 @@ function Page() {
               </motion.section>
             )}
 
+            {/* Métadonnées compactes — comblent le vide sous la bio */}
+            {(languages.length > 0 || th.city || th.canton) && (
+              <motion.div variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+              >
+                {languages.length > 0 && (
+                  <div className="rounded-2xl border border-white/5 bg-[#1a0a2e]/60 p-5">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[rgba(255,255,255,0.45)]">
+                      {t("therapist_profile.languages_title")}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {languages.map((code) => {
+                        const meta = SPOKEN_LANGUAGES.find((l) => l.code === code);
+                        const label = meta?.label ?? code;
+                        const flag = LANG_FLAG[code] ?? "🌐";
+                        return (
+                          <span
+                            key={code}
+                            className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.1)] px-3 py-1.5 text-sm text-white"
+                          >
+                            <span aria-hidden className="text-base leading-none">{flag}</span>
+                            {label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {(th.city || th.canton) && (
+                  <div className="rounded-2xl border border-white/5 bg-[#1a0a2e]/60 p-5">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[rgba(255,255,255,0.45)]">
+                      {t("therapist_profile.zone_label")}
+                    </h3>
+                    <div className="flex items-center gap-3 text-sm text-[rgba(255,255,255,0.85)]">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(184,110,249,0.1)] text-[#b86ef9]">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <span className="font-medium">
+                        {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Galerie photos (Premium) */}
             {showGallery && (
               <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
