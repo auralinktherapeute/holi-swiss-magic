@@ -837,11 +837,11 @@ function Page() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-12 2xl:px-16 mt-6">
-        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,340px)] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)]">
+      <div className="mx-auto w-full max-w-[1100px] px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
 
           {/* ── COLONNE GAUCHE ── */}
-          <div className="space-y-6 min-w-0">
+          <div className="space-y-6 min-w-0 lg:col-span-8">
 
             {/* À propos */}
             {th.bio && (
