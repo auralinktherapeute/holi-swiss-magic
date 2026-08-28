@@ -162,13 +162,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       const date = new Date(month.getFullYear(), month.getMonth(), d);
       const iso = localDateISO(date);
       const dow = storageDow(date);
-      const hasAvail = avs.some((a) => a.day_of_week === dow);
+      const hasAvail = avs.some((a) => a.day_of_week === dow) || specials.some((s) => s.date === iso);
       const blocked = blocks.some((b) => iso >= b.start_date && iso <= b.end_date);
       const past = date < today;
       cells.push({ date, iso, available: hasAvail && !blocked && !past, blocked, past });
     }
     return cells;
-  }, [month, avs, blocks]);
+  }, [month, avs, specials, blocks]);
 
   const slotsForDay = useMemo(() => {
     if (!selectedDate) return [];
@@ -176,8 +176,16 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     if (!parsed) return [];
     const dow = storageDow(parsed);
     const dayAvs = avs.filter((a) => a.day_of_week === dow);
-    const all = dayAvs.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin));
+    const daySpecials = specials.filter((s) => s.date === selectedDate);
+    const ranges = [
+      ...dayAvs.map((a) => ({ start_time: a.start_time, end_time: a.end_time })),
+      ...daySpecials.map((s) => ({ start_time: s.start_time, end_time: s.end_time })),
+    ];
+    const all = Array.from(
+      new Set(ranges.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin))),
+    ).sort();
     const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
+
     // Un créneau qui chevauche une occupation importée de l'agenda personnel
     // du praticien n'est pas réservable.
     //
