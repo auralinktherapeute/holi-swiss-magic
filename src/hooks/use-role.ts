@@ -4,20 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
 /**
- * Vérification complète des droits : on réhydrate d'abord la session (et on
- * force un rafraîchissement du jeton s'il est expiré) AVANT de relire le rôle.
- * Sans cela, un « Réessayer » relançait la même lecture avec le même jeton mort
- * et renvoyait éternellement le même écran d'erreur.
+ * Vérification complète des droits après hydratation de la session.
+ * Le client gère déjà automatiquement la rotation du jeton : ne jamais lancer
+ * ici un second refresh concurrent, qui pourrait révoquer la session.
  */
 async function verifyRole(): Promise<AppRole | null> {
   try {
     const { data } = await supabase.auth.getSession();
-    const session = data.session;
-    if (!session) return null;
-    const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
-    if (expiresAt && expiresAt - Date.now() < 30_000) {
-      await supabase.auth.refreshSession();
-    }
+    if (!data.session) return null;
   } catch {
     // On tente quand même la résolution du rôle (repli serveur inclus).
   }
