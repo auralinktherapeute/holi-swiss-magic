@@ -408,7 +408,10 @@ export const validateInvoice = createServerFn({ method: "POST" })
     await logInvoiceAudit(context.supabase, {
       therapistId, invoiceId: data.id, action: "invoice_validated",
       actorUserId: context.userId,
-      after: { numero: row0.numero_facture, reference, referenceType },
+      after: {
+        numero: row0.numero_facture, reference, referenceType,
+        ...(missingDebtor.length ? { adresse_incomplete_confirmee: missingDebtor } : {}),
+      },
     });
     return { numero_facture: row0.numero_facture as string, reference, warnings: errors };
   });
