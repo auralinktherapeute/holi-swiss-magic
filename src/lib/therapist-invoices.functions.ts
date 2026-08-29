@@ -85,7 +85,7 @@ export type TherapistInvoice = {
   montant_total: number;
   montant_paye: number;
   currency: string;
-  statut_paiement: "en_attente" | "paye" | "annule";
+  statut_paiement: "en_attente" | "payee" | "en_retard" | "annulee";
   reference_type: "qrr" | "scor" | "none";
   qr_reference: string | null;
   communication: string | null;
@@ -465,7 +465,7 @@ export const cancelInvoice = createServerFn({ method: "POST" })
     const invoice = await loadOwnInvoice(context.supabase, therapistId, data.id);
     if (invoice.statut === "annulee") throw new Error("Facture déjà annulée.");
     const { error } = await (context.supabase as any).from("therapist_invoices").update({
-      statut: "annulee", statut_paiement: "annule",
+      statut: "annulee", statut_paiement: "annulee",
       cancelled_at: new Date().toISOString(), cancel_reason: data.reason,
     }).eq("id", data.id).eq("therapist_id", therapistId);
     if (error) throw new Error(error.message);
@@ -604,7 +604,88 @@ export const deleteInvoicePayment = createServerFn({ method: "POST" })
     return state;
   });
 
+// ── Statut manuel (payée / litige / en retard / en cours) ───────────
+
+/**
+ * Permet au thérapeute de piloter le statut d'une facture validée.
+ * - `payee`   : enregistre automatiquement l'encaissement du solde restant.
+ * - `en_litige` : met la facture en attente (gel du recalcul automatique).
+ * - `en_retard` : marque manuellement le retard de paiement.
+ * - `en_cours`  : lève le litige et recalcule le statut depuis les encaissements.
+ */
+export const setInvoiceStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    id: z.string().uuid(),
+    target: z.enum(["payee", "en_litige", "en_retard", "en_cours"]),
+    mode_paiement: z.enum(["virement", "especes", "carte", "twint", "autre"]).default("virement"),
+    note: z.string().trim().max(500).optional().nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const invoice = await loadOwnInvoice(context.supabase, therapistId, data.id);
+    if (!invoice.locked_at) throw new Error("Validez d'abord la facture pour changer son statut.");
+    if (invoice.statut === "annulee" || invoice.statut === "avoir") {
+      throw new Error("Cette facture est annulée : son statut ne peut plus changer.");
+    }
+
+    if (data.target === "payee") {
+      const solde = Math.round((Number(invoice.montant_total) - Number(invoice.montant_paye ?? 0)) * 100) / 100;
+      if (solde > 0.009) {
+        const { error } = await (context.supabase as any).from("therapist_invoice_payments").insert({
+          invoice_id: data.id, therapist_id: therapistId,
+          montant: solde,
+          date_paiement: new Date().toISOString().slice(0, 10),
+          mode_paiement: data.mode_paiement,
+          is_refund: false,
+          notes: data.note ?? "Solde marqué comme payé",
+          created_by: context.userId,
+        });
+        if (error) throw new Error(error.message);
+      }
+      // sort du litige avant recalcul
+      if (invoice.statut === "en_litige") {
+        await (context.supabase as any).from("therapist_invoices")
+          .update({ statut: "validee" }).eq("id", data.id).eq("therapist_id", therapistId);
+      }
+      const state = await refreshPaymentState(context.supabase, therapistId, data.id);
+      await logInvoiceAudit(context.supabase, {
+        therapistId, invoiceId: data.id, action: "status_payee",
+        actorUserId: context.userId, after: state, note: data.note ?? null,
+      });
+      return state;
+    }
+
+    if (data.target === "en_cours") {
+      await (context.supabase as any).from("therapist_invoices")
+        .update({ statut: invoice.sent_at ? "envoyee" : "validee" })
+        .eq("id", data.id).eq("therapist_id", therapistId);
+      const state = await refreshPaymentState(context.supabase, therapistId, data.id);
+      await logInvoiceAudit(context.supabase, {
+        therapistId, invoiceId: data.id, action: "status_en_cours",
+        actorUserId: context.userId, after: state, note: data.note ?? null,
+      });
+      return state;
+    }
+
+    const statut = data.target; // en_litige | en_retard
+    const { error } = await (context.supabase as any).from("therapist_invoices").update({
+      statut,
+      statut_paiement: statut === "en_retard" ? "en_retard" : "en_attente",
+      date_paiement: null,
+    }).eq("id", data.id).eq("therapist_id", therapistId);
+    if (error) throw new Error(error.message);
+    await logInvoiceAudit(context.supabase, {
+      therapistId, invoiceId: data.id, action: `status_${statut}`,
+      actorUserId: context.userId, after: { statut }, note: data.note ?? null,
+    });
+    const total = Number(invoice.montant_total);
+    const paid = Number(invoice.montant_paye ?? 0);
+    return { paid, solde: Math.round((total - paid) * 100) / 100, statut };
+  });
+
 // ── Journal d'audit ─────────────────────────────────────────────────
+
 
 export const listInvoiceAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

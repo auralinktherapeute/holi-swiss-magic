@@ -136,22 +136,29 @@ export async function refreshPaymentState(supabase: any, therapistId: string, in
   const total = round2(Number(invoice.montant_total));
 
   let statut: string = invoice.statut;
-  if (!["annulee", "avoir"].includes(invoice.statut)) {
+  // Statuts « figés » : ils ne sont pas recalculés depuis les encaissements,
+  // sauf si la facture est intégralement payée (le paiement clôt le litige).
+  const frozen = ["annulee", "avoir", "en_litige"];
+  const fullyPaid = total > 0 && paid + 0.01 >= total;
+  if (!frozen.includes(invoice.statut) || (invoice.statut === "en_litige" && fullyPaid)) {
     if (paid <= 0) {
       const overdue = invoice.date_echeance && new Date(invoice.date_echeance) < new Date();
       statut = invoice.locked_at ? (overdue ? "en_retard" : (invoice.sent_at ? "envoyee" : "validee")) : "brouillon";
-    } else if (paid + 0.01 < total) statut = "partiellement_payee";
+    } else if (!fullyPaid) statut = "partiellement_payee";
     else statut = "payee";
   }
 
   const patch: Record<string, unknown> = {
     montant_paye: paid,
     statut,
-    statut_paiement: statut === "payee" ? "paye" : statut === "annulee" ? "annule" : "en_attente",
+    statut_paiement: statut === "payee" ? "payee"
+      : statut === "annulee" ? "annulee"
+      : statut === "en_retard" ? "en_retard" : "en_attente",
     date_paiement: statut === "payee"
       ? (payments ?? []).map((p: any) => p.date_paiement).sort().slice(-1)[0] ?? new Date().toISOString()
       : null,
   };
+
   await supabase.from("therapist_invoices").update(patch)
     .eq("id", invoiceId).eq("therapist_id", therapistId);
   return { paid, solde: round2(total - paid), statut };
