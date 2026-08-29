@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   listUninvoicedAppointments, invoiceAppointment, dismissAppointmentInvoicing,
+  settleAppointment,
 } from "@/lib/cabinet.functions";
 
 /**
@@ -28,6 +29,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
   const fetchList = useServerFn(listUninvoicedAppointments);
   const createInvoice = useServerFn(invoiceAppointment);
   const dismiss = useServerFn(dismissAppointmentInvoicing);
+  const settle = useServerFn(settleAppointment);
 
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [pendingSkip, setPendingSkip] = useState<string | null>(null);
@@ -54,6 +56,20 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
       else void navigate({ to: "/dashboard/facturation" });
     },
     onError: (e: Error) => toast.error(e.message || "Création impossible"),
+  });
+
+  const settleMut = useMutation({
+    mutationFn: (vars: { appointment_id: string; prix_unitaire: number; tva_taux: number }) =>
+      settle({ data: { ...vars, mode_paiement: "especes" as const } }),
+    onSuccess: (res) => {
+      refresh();
+      toast.success(
+        res.numero_facture
+          ? `Séance encaissée — facture ${res.numero_facture}`
+          : "Séance encaissée",
+      );
+    },
+    onError: (e: Error) => toast.error(e.message || "Encaissement impossible"),
   });
 
   const skipMut = useMutation({
@@ -95,6 +111,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
             const parsed = Number(priceValue.replace(",", "."));
             const valid = Number.isFinite(parsed) && parsed > 0;
             const busy = createMut.isPending && createMut.variables?.appointment_id === a.id;
+            const settleBusy = settleMut.isPending && settleMut.variables?.appointment_id === a.id;
             return (
               <div
                 key={a.id}
@@ -137,6 +154,24 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
                     }
                   >
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Facturer"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-11"
+                    disabled={!valid || settleBusy}
+                    title="La séance a été réglée : crée la facture et enregistre l'encaissement"
+                    onClick={() =>
+                      settleMut.mutate({
+                        appointment_id: a.id,
+                        prix_unitaire: parsed,
+                        tva_taux: a.suggested_vat,
+                      })
+                    }
+                  >
+                    {settleBusy
+                      ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      : "Déjà payé"}
                   </Button>
                   <Button
                     size="sm"
