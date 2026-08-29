@@ -1129,6 +1129,47 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
           )}
         </section>
 
+        {locked && invoice.statut !== "annulee" && invoice.statut !== "avoir" && (
+          <section className="rounded-lg border p-3">
+            <h3 className="text-sm font-medium mb-1">Statut de la facture</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Solde restant : <strong>{solde.toFixed(2)} {invoice.currency}</strong>
+              {invoice.date_echeance
+                ? ` · Échéance ${new Date(invoice.date_echeance).toLocaleDateString("fr-CH")}`
+                : ""}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="min-h-11"
+                disabled={busy || invoice.statut === "payee"}
+                onClick={() => {
+                  if (solde > 0.009 && !confirm(
+                    `Marquer cette facture comme payée ?\nUn encaissement de ${solde.toFixed(2)} ${invoice.currency} sera enregistré.`,
+                  )) return;
+                  run("Facture marquée payée", () => statusFn({ data: { id: invoice.id, target: "payee", mode_paiement: "virement" } }));
+                }}>
+                <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" /> Payée
+              </Button>
+              <Button variant="outline" className="min-h-11"
+                disabled={busy || invoice.statut === "en_litige"}
+                onClick={() => run("Facture mise en attente", () => statusFn({ data: { id: invoice.id, target: "en_litige" } }))}>
+                <AlertTriangle className="h-4 w-4 mr-2" aria-hidden="true" /> En attente / litige
+              </Button>
+              <Button variant="outline" className="min-h-11"
+                disabled={busy || invoice.statut === "en_retard"}
+                onClick={() => run("Facture marquée en retard", () => statusFn({ data: { id: invoice.id, target: "en_retard" } }))}>
+                <Ban className="h-4 w-4 mr-2" aria-hidden="true" /> En retard
+              </Button>
+              <Button variant="outline" className="min-h-11"
+                disabled={busy || ["validee", "envoyee", "partiellement_payee"].includes(invoice.statut)}
+                onClick={() => run("Facture remise en cours", () => statusFn({ data: { id: invoice.id, target: "en_cours" } }))}>
+                <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" /> En cours
+              </Button>
+            </div>
+          </section>
+        )}
+
+
+
         <DialogFooter className="flex-wrap gap-2">
           <Button variant="outline" className="min-h-11" disabled={busy}
             onClick={async () => {
