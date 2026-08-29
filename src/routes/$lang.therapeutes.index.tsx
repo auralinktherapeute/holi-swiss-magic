@@ -211,10 +211,19 @@ function Page() {
   const [debounced, setDebounced] = useState(search);
   const isSmallViewport = useSmallViewport();
 
+  // Recherche transmise depuis la barre d'accueil (?q=…) : on l'applique une
+  // fois au champ existant, sans toucher au comportement de la page.
+  const incomingQuery = searchParams.q;
+  useEffect(() => {
+    if (incomingQuery && incomingQuery !== search) setSearch(incomingQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingQuery]);
+
   useEffect(() => {
     const id = setTimeout(() => setDebounced(search.trim()), 250);
     return () => clearTimeout(id);
   }, [search]);
+
 
   const hasSpecFilter = !!(specFilter || famFilter);
 
