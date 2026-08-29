@@ -58,6 +58,20 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
     onError: (e: Error) => toast.error(e.message || "Création impossible"),
   });
 
+  const settleMut = useMutation({
+    mutationFn: (vars: { appointment_id: string; prix_unitaire: number; tva_taux: number }) =>
+      settle({ data: { ...vars, mode_paiement: "especes" as const } }),
+    onSuccess: (res) => {
+      refresh();
+      toast.success(
+        res.numero_facture
+          ? `Séance encaissée — facture ${res.numero_facture}`
+          : "Séance encaissée",
+      );
+    },
+    onError: (e: Error) => toast.error(e.message || "Encaissement impossible"),
+  });
+
   const skipMut = useMutation({
     mutationFn: (id: string) => dismiss({ data: { appointment_id: id } }),
     onSuccess: () => {
