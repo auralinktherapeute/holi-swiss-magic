@@ -105,12 +105,14 @@ function Page() {
   const missing = missingInvoiceSettings(settings);
 
   async function print(inv: TherapistInvoice) {
+    // Ouvrir la fenêtre de façon synchrone (geste utilisateur) sinon le navigateur bloque le popup
+    const w = window.open("", "_blank");
+    if (!w) { toast.error("Le navigateur a bloqué la fenêtre"); return; }
+    w.document.write("<p style=\"font-family:sans-serif;padding:2rem\">Génération de la facture…</p>");
     try {
       const { html } = await renderFn({ data: { id: inv.id } });
-      const w = window.open("", "_blank");
-      if (!w) { toast.error("Le navigateur a bloqué la fenêtre"); return; }
-      w.document.write(html); w.document.close();
-    } catch (e: any) { toast.error(e.message ?? "Erreur"); }
+      w.document.open(); w.document.write(html); w.document.close();
+    } catch (e: any) { w.close(); toast.error(e.message ?? "Erreur"); }
   }
 
   const [fStatut, setFStatut] = useState<string>("tous");
@@ -1130,10 +1132,14 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
         <DialogFooter className="flex-wrap gap-2">
           <Button variant="outline" className="min-h-11" disabled={busy}
             onClick={async () => {
-              const { html } = await renderFn({ data: { id: invoice.id } });
+              // Ouvrir la fenêtre de façon synchrone (geste utilisateur) sinon le navigateur bloque le popup
               const w = window.open("", "_blank");
               if (!w) { toast.error("Fenêtre bloquée"); return; }
-              w.document.write(html); w.document.close();
+              w.document.write("<p style=\"font-family:sans-serif;padding:2rem\">Génération de la facture…</p>");
+              try {
+                const { html } = await renderFn({ data: { id: invoice.id } });
+                w.document.open(); w.document.write(html); w.document.close();
+              } catch (e: any) { w.close(); toast.error(e.message ?? "Erreur"); }
             }}>
             <Printer className="h-4 w-4 mr-2" aria-hidden="true" /> Aperçu / PDF
           </Button>
