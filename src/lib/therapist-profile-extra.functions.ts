@@ -121,7 +121,21 @@ export const listMyCertifications = createServerFn({ method: "GET" })
           const { data: s } = await sb.storage.from("therapist-docs").createSignedUrl(ce.file_url, 3600);
           fileUrl = s?.signedUrl ?? null;
         }
-        return { id: ce.id as string, name: ce.name as string, issuer: ce.issuer as string | null, year: ce.year as number | null, fileUrl };
+        return {
+          id: ce.id as string,
+          name: ce.name as string,
+          issuer: ce.issuer as string | null,
+          year: ce.year as number | null,
+          fileUrl,
+          status: ((ce.verification_status ?? "declared") as string) as
+            | "declared"
+            | "verified"
+            | "rejected"
+            | "needs_information",
+          verifiedAt: (ce.verified_at ?? null) as string | null,
+          rejectedAt: (ce.rejected_at ?? null) as string | null,
+          rejectionReason: (ce.rejection_reason ?? null) as string | null,
+        };
       }),
     );
     return { rows, supported: true };
