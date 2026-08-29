@@ -122,12 +122,35 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
         <ul className="mb-4 space-y-2">
           {rows.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-3 rounded-lg bg-white/5 px-3 py-2 text-sm">
-              <span className="flex min-w-0 items-center gap-2 text-white/85">
-                <FileText className="h-4 w-4 shrink-0 text-[#5cc8fa]" />
-                <span className="truncate">
-                  {r.name}
-                  {r.issuer ? <span className="text-white/45"> · {r.issuer}</span> : null}
-                  {r.year ? <span className="text-white/45"> · {r.year}</span> : null}
+              <span className="flex min-w-0 flex-col gap-1 text-white/85">
+                <span className="flex min-w-0 items-center gap-2">
+                  <FileText className="h-4 w-4 shrink-0 text-[#5cc8fa]" />
+                  <span className="truncate">
+                    {r.name}
+                    {r.issuer ? <span className="text-white/45"> · {r.issuer}</span> : null}
+                    {r.year ? <span className="text-white/45"> · {r.year}</span> : null}
+                  </span>
+                </span>
+                <span className="flex flex-wrap items-center gap-2 pl-6 text-xs">
+                  {r.status === "verified" && (
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-300">
+                      Diplôme vérifié
+                    </span>
+                  )}
+                  {(!r.status || r.status === "declared") && (
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">En attente de vérification</span>
+                  )}
+                  {r.status === "needs_information" && (
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-300">
+                      Informations complémentaires demandées
+                    </span>
+                  )}
+                  {r.status === "rejected" && (
+                    <>
+                      <span className="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-300">Refusé</span>
+                      {r.rejectionReason && <span className="text-white/50">{r.rejectionReason}</span>}
+                    </>
+                  )}
                 </span>
               </span>
               <span className="flex shrink-0 items-center gap-2">
