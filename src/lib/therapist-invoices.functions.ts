@@ -357,7 +357,10 @@ export const checkInvoiceReadiness = createServerFn({ method: "GET" })
  */
 export const validateInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => z.object({
+    id: z.string().uuid(),
+    allow_incomplete: z.boolean().optional(),
+  }).parse(input))
   .handler(async ({ data, context }) => {
     const therapistId = await getTherapistId(context.supabase, context.userId);
     const invoice = await loadOwnInvoice(context.supabase, therapistId, data.id);
@@ -365,14 +368,12 @@ export const validateInvoice = createServerFn({ method: "POST" })
     const settings = await loadSettings(context.supabase, therapistId);
     if (!settings) throw new Error("Réglages de facturation manquants.");
 
-    // Les coordonnées de facturation doivent être complètes AVANT de consommer
-    // un numéro séquentiel : elles sont figées par la validation.
+    // Coordonnées figées à la validation : si elles sont incomplètes on ne
+    // bloque pas, mais le thérapeute doit confirmer explicitement (double
+    // validation côté interface via le marqueur INCOMPLETE_BILLING).
     const missingDebtor = missingDebtorFields(invoice);
-    if (missingDebtor.length) {
-      throw new Error(
-        "L'adresse de facturation du patient est incomplète (" + missingDebtor.join(", ")
-        + "). Complétez-la dans la fiche CRM puis utilisez « Actualiser depuis la fiche patient ».",
-      );
+    if (missingDebtor.length && !data.allow_incomplete) {
+      throw new Error("INCOMPLETE_BILLING:" + missingDebtor.join(", "));
     }
 
     const { data: reserved, error: eNum } = await (context.supabase as any)
@@ -407,7 +408,10 @@ export const validateInvoice = createServerFn({ method: "POST" })
     await logInvoiceAudit(context.supabase, {
       therapistId, invoiceId: data.id, action: "invoice_validated",
       actorUserId: context.userId,
-      after: { numero: row0.numero_facture, reference, referenceType },
+      after: {
+        numero: row0.numero_facture, reference, referenceType,
+        ...(missingDebtor.length ? { adresse_incomplete_confirmee: missingDebtor } : {}),
+      },
     });
     return { numero_facture: row0.numero_facture as string, reference, warnings: errors };
   });
