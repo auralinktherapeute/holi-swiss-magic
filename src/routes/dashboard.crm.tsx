@@ -198,6 +198,65 @@ function ContactDialog({ open, onClose, initial, contacts }: {
               </p>
             )}
           </div>
+
+          <fieldset className="rounded-lg border border-border/60 p-4 space-y-3">
+            <legend className="px-2 text-sm font-semibold text-foreground">Adresse de facturation</legend>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Nécessaire pour émettre une facture. Facultative pour un simple prospect.
+            </p>
+            <div className="space-y-1">
+              <Label htmlFor="addr1">Rue et numéro</Label>
+              <Input id="addr1" value={form.address_line1} onChange={e => set("address_line1", e.target.value)}
+                placeholder="Ex : Rue du Rhône 12" className="bg-background border-border/60" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="addr2">Complément d'adresse (facultatif)</Label>
+              <Input id="addr2" value={form.address_line2} onChange={e => set("address_line2", e.target.value)}
+                placeholder="Ex : c/o, étage, boîte postale" className="bg-background border-border/60" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="npa">Code postal</Label>
+                <Input id="npa" value={form.postal_code} onChange={e => set("postal_code", e.target.value)}
+                  inputMode="numeric" placeholder="1204" className="bg-background border-border/60" />
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="ville">Ville</Label>
+                <Input id="ville" value={form.city} onChange={e => set("city", e.target.value)}
+                  placeholder="Genève" className="bg-background border-border/60" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="canton">Canton (facultatif)</Label>
+                <Select value={form.canton || "none"} onValueChange={v => set("canton", v === "none" ? "" : v)}>
+                  <SelectTrigger id="canton" className="bg-background border-border/60"><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60 max-h-64">
+                    <SelectItem value="none">—</SelectItem>
+                    {CANTONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="pays">Pays *</Label>
+                <Select value={form.country || "CH"} onValueChange={v => set("country", v)}>
+                  <SelectTrigger id="pays" className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60">
+                    <SelectItem value="CH">Suisse</SelectItem>
+                    <SelectItem value="FR">France</SelectItem>
+                    <SelectItem value="DE">Allemagne</SelectItem>
+                    <SelectItem value="IT">Italie</SelectItem>
+                    <SelectItem value="AT">Autriche</SelectItem>
+                    <SelectItem value="LI">Liechtenstein</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {validateBillingAddress(form) && (
+              <p role="alert" className="text-xs text-amber-400/90">{validateBillingAddress(form)}</p>
+            )}
+          </fieldset>
+
           <div className="space-y-1">
             <Label>Notes privées</Label>
             <Textarea value={form.private_notes} onChange={e => set("private_notes", e.target.value)} rows={3} className="bg-background border-border/60 resize-none" />
