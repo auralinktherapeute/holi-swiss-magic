@@ -156,6 +156,24 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
                   </Button>
                   <Button
                     size="sm"
+                    variant="outline"
+                    className="min-h-11"
+                    disabled={!valid || settleBusy}
+                    title="La séance a été réglée : crée la facture et enregistre l'encaissement"
+                    onClick={() =>
+                      settleMut.mutate({
+                        appointment_id: a.id,
+                        prix_unitaire: parsed,
+                        tva_taux: a.suggested_vat,
+                      })
+                    }
+                  >
+                    {settleBusy
+                      ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      : "Déjà payé"}
+                  </Button>
+                  <Button
+                    size="sm"
                     variant="ghost"
                     className="min-h-11"
                     onClick={() => setPendingSkip(a.id)}
