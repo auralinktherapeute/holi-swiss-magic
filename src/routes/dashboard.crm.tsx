@@ -84,11 +84,28 @@ type ContactForm = {
   id?: string; first_name: string; last_name: string; email: string; phone: string;
   session_type: string; relation_status: StatusId; tags: string[];
   private_notes: string; payment_link: string;
+  address_line1: string; address_line2: string; postal_code: string;
+  city: string; canton: string; country: string;
 };
 const EMPTY_CONTACT: ContactForm = {
   first_name: "", last_name: "", email: "", phone: "", session_type: "",
   relation_status: "prospect", tags: [], private_notes: "", payment_link: "",
+  address_line1: "", address_line2: "", postal_code: "", city: "", canton: "", country: "CH",
 };
+
+/** Cantons suisses (code officiel) pour la fiche de facturation. */
+const CANTONS = [
+  "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL", "GR", "JU", "LU", "NE",
+  "NW", "OW", "SG", "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH",
+];
+
+/** Validation minimale de l'adresse : cohérence NPA/ville et pays obligatoire. */
+function validateBillingAddress(f: ContactForm): string | null {
+  if (!f.country.trim()) return "Le pays est obligatoire.";
+  if (f.city.trim() && !f.postal_code.trim()) return "Le code postal est requis lorsque la ville est renseignée.";
+  if (f.postal_code.trim() && !f.city.trim()) return "La ville est requise lorsque le code postal est renseigné.";
+  return null;
+}
 
 function ContactDialog({ open, onClose, initial, contacts }: {
   open: boolean; onClose: () => void;
@@ -98,7 +115,10 @@ function ContactDialog({ open, onClose, initial, contacts }: {
   const [form, setForm] = useState<ContactForm>(
     initial ? { ...EMPTY_CONTACT, ...initial, email: initial.email ?? "", phone: initial.phone ?? "",
       session_type: initial.session_type ?? "", private_notes: initial.private_notes ?? "",
-      payment_link: initial.payment_link ?? "" } : EMPTY_CONTACT
+      payment_link: initial.payment_link ?? "",
+      address_line1: initial.address_line1 ?? "", address_line2: initial.address_line2 ?? "",
+      postal_code: initial.postal_code ?? "", city: initial.city ?? "",
+      canton: initial.canton ?? "", country: initial.country ?? "CH" } : EMPTY_CONTACT
   );
   const [tagInput, setTagInput] = useState("");
 
