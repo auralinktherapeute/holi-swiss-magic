@@ -123,7 +123,21 @@ function ContactDialog({ open, onClose, initial, contacts }: {
   const [tagInput, setTagInput] = useState("");
 
   const saveMut = useMutation({
-    mutationFn: () => upsertContact({ data: { ...form, email: form.email || null, phone: form.phone || null } as any }),
+    mutationFn: () => {
+      const err = validateBillingAddress(form);
+      if (err) return Promise.reject(new Error(err));
+      return upsertContact({ data: {
+        ...form,
+        email: form.email || null,
+        phone: form.phone || null,
+        address_line1: form.address_line1.trim() || null,
+        address_line2: form.address_line2.trim() || null,
+        postal_code: form.postal_code.trim() || null,
+        city: form.city.trim() || null,
+        canton: form.canton.trim() || null,
+        country: form.country.trim() || "CH",
+      } as any });
+    },
     onSuccess: () => { toast.success("Contact sauvegardé"); qc.invalidateQueries({ queryKey: ["crm-contacts"] }); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
