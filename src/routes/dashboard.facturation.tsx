@@ -12,7 +12,7 @@ import {
   getTherapistInvoice, checkInvoiceReadiness, validateInvoice,
   duplicateInvoice, cancelInvoice, createCreditNote,
   deleteTherapistInvoice, renderInvoiceHtml, emailInvoiceToClient,
-  addInvoicePayment, deleteInvoicePayment, listVatRates,
+  addInvoicePayment, deleteInvoicePayment, listVatRates, setInvoiceStatus,
   type TherapistInvoice, type TherapistInvoiceSettings,
   type TherapistInvoiceLine, type TherapistInvoicePayment,
 } from "@/lib/therapist-invoices.functions";
@@ -66,6 +66,7 @@ const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
   partiellement_payee: { label: "Partiellement payée", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400" },
   payee: { label: "Payée", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" },
   en_retard: { label: "En retard", cls: "bg-destructive/15 text-destructive" },
+  en_litige: { label: "En attente / litige", cls: "bg-orange-500/15 text-orange-700 dark:text-orange-400" },
   annulee: { label: "Annulée", cls: "bg-muted text-muted-foreground line-through" },
   avoir: { label: "Avoir", cls: "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-400" },
   erreur_envoi: { label: "Erreur d'envoi", cls: "bg-destructive/15 text-destructive" },
@@ -943,6 +944,7 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
   const emailFn = useServerFn(emailInvoiceToClient);
   const payFn = useServerFn(addInvoicePayment);
   const delPayFn = useServerFn(deleteInvoicePayment);
+  const statusFn = useServerFn(setInvoiceStatus);
 
   const [invoice, setInvoice] = useState<TherapistInvoice | null>(null);
   const [lines, setLines] = useState<TherapistInvoiceLine[]>([]);
