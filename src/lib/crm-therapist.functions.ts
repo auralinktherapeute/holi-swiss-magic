@@ -16,6 +16,12 @@ export type ClientContact = {
   next_booking_at: string | null;
   private_notes: string | null;
   payment_link: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  postal_code: string | null;
+  city: string | null;
+  canton: string | null;
+  country: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -105,6 +111,12 @@ const ContactSchema = z.object({
   tags: z.array(z.string()).default([]),
   private_notes: z.string().optional().nullable(),
   payment_link: z.string().optional().nullable(),
+  address_line1: z.string().trim().max(200).optional().nullable(),
+  address_line2: z.string().trim().max(200).optional().nullable(),
+  postal_code: z.string().trim().max(20).optional().nullable(),
+  city: z.string().trim().max(120).optional().nullable(),
+  canton: z.string().trim().max(60).optional().nullable(),
+  country: z.string().trim().max(60).optional().nullable(),
   last_booking_at: z.string().optional().nullable(),
   next_booking_at: z.string().optional().nullable(),
 });
