@@ -104,7 +104,10 @@ export async function createDraftFromAppointment(
   if (error) throw new Error(error.message);
   if (!appt) throw new Error("Rendez-vous introuvable.");
   if (appt.invoiced_at) throw new Error("Ce rendez-vous est déjà facturé.");
-  if (appt.status !== "completed") throw new Error("Seuls les rendez-vous honorés peuvent être facturés.");
+  const apptPast = String(appt.appointment_date ?? "") <= new Date().toISOString().slice(0, 10);
+  if (appt.status !== "completed" && !(appt.status === "confirmed" && apptPast)) {
+    throw new Error("Seuls les rendez-vous honorés peuvent être facturés.");
+  }
 
   const settings = await loadSettings(supabase, therapistId);
   if (!settings) throw new Error("Configurez d'abord vos réglages de facturation.");
