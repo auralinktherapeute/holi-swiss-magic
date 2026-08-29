@@ -113,6 +113,28 @@ function Page() {
     } catch (e: any) { toast.error(e.message ?? "Erreur"); }
   }
 
+  const [fStatut, setFStatut] = useState<string>("tous");
+  const [fSearch, setFSearch] = useState("");
+  const [fFrom, setFFrom] = useState("");
+  const [fTo, setFTo] = useState("");
+
+  const visibleInvoices = useMemo(() => {
+    const q = fSearch.trim().toLowerCase();
+    return invoices.filter((i) => {
+      if (fStatut === "impayees") {
+        if (["brouillon", "annulee", "payee", "avoir"].includes(i.statut)) return false;
+        if (round2(Number(i.montant_total) - Number(i.montant_paye ?? 0)) <= 0) return false;
+      } else if (fStatut !== "tous" && i.statut !== fStatut) return false;
+      if (fFrom && i.date_emission < fFrom) return false;
+      if (fTo && i.date_emission > fTo) return false;
+      if (q) {
+        const hay = `${i.numero_facture} ${i.client_nom ?? ""} ${(i.metadata as any)?.client_name ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [invoices, fStatut, fSearch, fFrom, fTo]);
+
   const stats = useMemo(() => {
     const active = invoices.filter((i) => !["brouillon", "annulee"].includes(i.statut));
     const facture = round2(active.reduce((s, i) => s + Number(i.montant_total), 0));
@@ -122,6 +144,7 @@ function Page() {
       retard: active.filter((i) => i.statut === "en_retard").length,
     };
   }, [invoices]);
+
 
   return (
     <div className="space-y-8">
@@ -186,7 +209,40 @@ function Page() {
 
       <section>
 
-        <h2 className="text-lg font-semibold mb-3">Factures ({invoices.length})</h2>
+        <h2 className="text-lg font-semibold mb-3">
+          Factures ({visibleInvoices.length}
+          {visibleInvoices.length !== invoices.length ? ` sur ${invoices.length}` : ""})
+        </h2>
+
+        {!loading && invoices.length > 0 && (
+          <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 items-end">
+            <div className="space-y-1 lg:col-span-2">
+              <Label htmlFor="f-search" className="text-xs">Rechercher</Label>
+              <Input id="f-search" value={fSearch} onChange={(e) => setFSearch(e.target.value)}
+                placeholder="N° de facture ou nom du patient" className="min-h-11" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="f-statut" className="text-xs">Statut</Label>
+              <select id="f-statut" value={fStatut} onChange={(e) => setFStatut(e.target.value)}
+                className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="tous">Tous</option>
+                <option value="impayees">Impayées</option>
+                {Object.entries(STATUS_STYLE).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="f-from" className="text-xs">Du</Label>
+              <Input id="f-from" type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="min-h-11" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="f-to" className="text-xs">Au</Label>
+              <Input id="f-to" type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="min-h-11" />
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="space-y-2" aria-busy="true">
             {[0, 1, 2].map((i) => <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />)}
@@ -194,6 +250,14 @@ function Page() {
         ) : invoices.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aucune facture pour le moment. Créez votre première facture depuis le bouton ci-dessus.
+          </p>
+        ) : visibleInvoices.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Aucune facture ne correspond à ces filtres.{" "}
+            <button type="button" className="underline"
+              onClick={() => { setFStatut("tous"); setFSearch(""); setFFrom(""); setFTo(""); }}>
+              Réinitialiser les filtres
+            </button>
           </p>
         ) : (
           <div className="overflow-x-auto border border-border/60 rounded-lg">
@@ -211,7 +275,7 @@ function Page() {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((inv) => (
+                {visibleInvoices.map((inv) => (
                   <tr key={inv.id} className="border-t border-border/60">
                     <td className="p-3 font-mono text-xs">{inv.numero_facture}</td>
                     <td className="p-3">{new Date(inv.date_emission).toLocaleDateString("fr-CH")}</td>
@@ -943,7 +1007,28 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
           </div>
         )}
 
+        <section className="rounded-lg border border-border/60 p-3">
+          <h3 className="text-sm font-semibold mb-1">Coordonnées de facturation</h3>
+          <address className="not-italic text-sm text-muted-foreground leading-relaxed">
+            {invoice.client_nom || "—"}<br />
+            {invoice.client_adresse ? <>{invoice.client_adresse}<br /></> : null}
+            {(invoice as any).client_adresse2 ? <>{(invoice as any).client_adresse2}<br /></> : null}
+            {[invoice.client_npa, invoice.client_ville].filter(Boolean).join(" ") || (
+              <span className="text-amber-600 dark:text-amber-400">NPA et localité manquants</span>
+            )}
+            {(invoice as any).client_canton ? <><br />{(invoice as any).client_canton}</> : null}
+            {invoice.client_pays ? <><br />{invoice.client_pays}</> : null}
+          </address>
+          {(invoice as any).billing_snapshot_at && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Coordonnées figées à la validation, le{" "}
+              {new Date((invoice as any).billing_snapshot_at).toLocaleString("fr-CH")}.
+            </p>
+          )}
+        </section>
+
         <section>
+
           <h3 className="text-sm font-semibold mb-2">Prestations</h3>
           <div className="overflow-x-auto rounded-lg border border-border/60">
             <table className="w-full text-sm">
