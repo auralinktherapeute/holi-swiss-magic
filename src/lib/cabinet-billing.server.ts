@@ -220,3 +220,107 @@ export async function skipAppointmentInvoicing(
   if (error) throw new Error(error.message);
   return { ok: true };
 }
+
+/**
+ * « Séance réglée » : crée la facture depuis le RDV, la valide (numéro
+ * séquentiel + référence de paiement) puis enregistre l'encaissement complet.
+ * Permet au thérapeute de tracer un paiement reçu en cabinet en un clic.
+ */
+export async function settleAppointmentPaid(
+  supabase: any,
+  therapistId: string,
+  actorUserId: string,
+  input: {
+    appointment_id: string;
+    prix_unitaire: number;
+    tva_taux: number;
+    mode_paiement: "virement" | "especes" | "carte" | "twint" | "autre";
+    date_paiement?: string | null;
+  },
+): Promise<{ invoice_id: string; numero_facture: string | null; paid: number; solde: number }> {
+  const { buildQrReference, buildScorReference, isQrIban, creditorAccount } = await import(
+    "@/lib/swiss-invoice"
+  );
+  const { loadOwnInvoice, refreshPaymentState } = await import("@/lib/invoice-core.server");
+
+  const { id } = await createDraftFromAppointment(supabase, therapistId, actorUserId, {
+    appointment_id: input.appointment_id,
+    prix_unitaire: input.prix_unitaire,
+    tva_taux: input.tva_taux,
+  });
+
+  const settings = await loadSettings(supabase, therapistId);
+  const invoice = await loadOwnInvoice(supabase, therapistId, id);
+
+  let numero: string | null = invoice.numero_facture ?? null;
+  if (!invoice.locked_at && settings) {
+    const { data: reserved, error: eNum } = await supabase.rpc("reserve_next_invoice_number", {
+      _therapist_id: therapistId,
+    });
+    if (eNum) throw new Error(eNum.message);
+    const row0 = Array.isArray(reserved) ? reserved[0] : reserved;
+    if (!row0) throw new Error("Impossible de réserver un numéro de facture.");
+
+    const account = creditorAccount(settings);
+    let referenceType = (invoice.reference_type ?? "none") as "qrr" | "scor" | "none";
+    if (isQrIban(account)) referenceType = "qrr";
+    else if (referenceType === "qrr") referenceType = "scor";
+    const digits = String(row0.numero_facture).replace(/\D/g, "") || String(row0.seq);
+    const reference =
+      referenceType === "qrr"
+        ? buildQrReference(digits)
+        : referenceType === "scor"
+          ? buildScorReference(String(row0.numero_facture))
+          : null;
+
+    const { error: upErr } = await supabase
+      .from("therapist_invoices")
+      .update({
+        numero_facture: row0.numero_facture,
+        annee_facturation: row0.annee,
+        reference_type: referenceType,
+        qr_reference: reference,
+        statut: "validee",
+        locked_at: new Date().toISOString(),
+        billing_snapshot_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("therapist_id", therapistId);
+    if (upErr) throw new Error(upErr.message);
+    numero = row0.numero_facture as string;
+
+    await logInvoiceAudit(supabase, {
+      therapistId,
+      invoiceId: id,
+      action: "invoice_validated",
+      actorUserId,
+      after: { numero, reference, referenceType, encaissement_direct: true },
+    });
+  }
+
+  const fresh = await loadOwnInvoice(supabase, therapistId, id);
+  const montant = Number(fresh.montant_total ?? 0);
+  if (montant > 0) {
+    const { error: payErr } = await supabase.from("therapist_invoice_payments").insert({
+      invoice_id: id,
+      therapist_id: therapistId,
+      montant,
+      date_paiement: input.date_paiement || new Date().toISOString().slice(0, 10),
+      mode_paiement: input.mode_paiement,
+      is_refund: false,
+      notes: "Encaissement enregistré depuis le rendez-vous",
+      created_by: actorUserId,
+    });
+    if (payErr) throw new Error(payErr.message);
+    await logInvoiceAudit(supabase, {
+      therapistId,
+      invoiceId: id,
+      action: "payment_recorded",
+      actorUserId,
+      after: { montant, mode: input.mode_paiement },
+    });
+  }
+
+  const state = await refreshPaymentState(supabase, therapistId, id);
+  return { invoice_id: id, numero_facture: numero, paid: state.paid, solde: state.solde };
+}
