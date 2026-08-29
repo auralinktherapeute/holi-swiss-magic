@@ -334,8 +334,10 @@ function Page() {
       </div>
 
       {/* ── Header barre ── */}
-      <div className="flex items-center gap-3 border-b border-[rgba(184,110,249,0.15)] bg-[#0f0a1e] px-4 py-3">
-        <h1 className="sr-only">{t("therapists_directory.h1", "Trouver un thérapeute en Suisse")}</h1>
+      <div className="flex flex-wrap items-center gap-3 border-b border-[rgba(184,110,249,0.15)] bg-[#0f0a1e] px-4 py-3">
+        <h1 className="w-full text-base font-semibold text-white sm:w-auto sm:text-lg">
+          {t("therapists_directory.h1", "Trouver un thérapeute en Suisse")}
+        </h1>
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgba(255,255,255,0.35)]" />
           <input
