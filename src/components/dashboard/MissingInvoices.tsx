@@ -111,6 +111,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
             const parsed = Number(priceValue.replace(",", "."));
             const valid = Number.isFinite(parsed) && parsed > 0;
             const busy = createMut.isPending && createMut.variables?.appointment_id === a.id;
+            const settleBusy = settleMut.isPending && settleMut.variables?.appointment_id === a.id;
             return (
               <div
                 key={a.id}
