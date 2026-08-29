@@ -224,9 +224,9 @@ export const listMyCrmContactsMinimal = createServerFn({ method: "GET" })
     const therapistId = await getTherapistId(context.supabase, context.userId);
     const { data, error } = await (context.supabase as any)
       .from("crm_client_contacts")
-      .select("id, first_name, last_name, email")
+      .select("id, first_name, last_name, email, phone, address_line1, address_line2, postal_code, city, canton, country")
       .eq("therapist_id", therapistId)
       .order("first_name", { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; email: string | null }>;
+    return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; email: string | null; phone: string | null; address_line1: string | null; address_line2: string | null; postal_code: string | null; city: string | null; canton: string | null; country: string | null }>;
   });
