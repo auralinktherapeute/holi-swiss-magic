@@ -50,7 +50,12 @@ export const Route = createFileRoute("/dashboard/facturation")({
   }),
 });
 
-type Contact = { id: string; first_name: string; last_name: string; email: string | null };
+type Contact = {
+  id: string; first_name: string; last_name: string; email: string | null;
+  address_line1?: string | null; address_line2?: string | null;
+  postal_code?: string | null; city?: string | null;
+  canton?: string | null; country?: string | null;
+};
 type VatRate = { code: string; label: string; rate: number; note: string | null };
 
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
