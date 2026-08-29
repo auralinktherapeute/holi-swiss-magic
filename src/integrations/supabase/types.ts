@@ -923,8 +923,13 @@ export type Database = {
       }
       crm_client_contacts: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          canton: string | null
+          city: string | null
           consent_at: string | null
           consent_source: string | null
+          country: string
           created_at: string
           date_of_birth: string | null
           email: string | null
@@ -936,6 +941,7 @@ export type Database = {
           next_booking_at: string | null
           payment_link: string | null
           phone: string | null
+          postal_code: string | null
           private_notes: string | null
           relation_status: string
           retention_until: string | null
@@ -945,8 +951,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          canton?: string | null
+          city?: string | null
           consent_at?: string | null
           consent_source?: string | null
+          country?: string
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
@@ -958,6 +969,7 @@ export type Database = {
           next_booking_at?: string | null
           payment_link?: string | null
           phone?: string | null
+          postal_code?: string | null
           private_notes?: string | null
           relation_status?: string
           retention_until?: string | null
@@ -967,8 +979,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          canton?: string | null
+          city?: string | null
           consent_at?: string | null
           consent_source?: string | null
+          country?: string
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
@@ -980,6 +997,7 @@ export type Database = {
           next_booking_at?: string | null
           payment_link?: string | null
           phone?: string | null
+          postal_code?: string | null
           private_notes?: string | null
           relation_status?: string
           retention_until?: string | null
@@ -4488,9 +4506,12 @@ export type Database = {
         Row: {
           annee_facturation: number
           appointment_id: string | null
+          billing_snapshot_at: string | null
           cancel_reason: string | null
           cancelled_at: string | null
           client_adresse: string | null
+          client_adresse2: string | null
+          client_canton: string | null
           client_email: string | null
           client_id: string | null
           client_nom: string | null
@@ -4532,9 +4553,12 @@ export type Database = {
         Insert: {
           annee_facturation: number
           appointment_id?: string | null
+          billing_snapshot_at?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
           client_adresse?: string | null
+          client_adresse2?: string | null
+          client_canton?: string | null
           client_email?: string | null
           client_id?: string | null
           client_nom?: string | null
@@ -4576,9 +4600,12 @@ export type Database = {
         Update: {
           annee_facturation?: number
           appointment_id?: string | null
+          billing_snapshot_at?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
           client_adresse?: string | null
+          client_adresse2?: string | null
+          client_canton?: string | null
           client_email?: string | null
           client_id?: string | null
           client_nom?: string | null

@@ -84,11 +84,28 @@ type ContactForm = {
   id?: string; first_name: string; last_name: string; email: string; phone: string;
   session_type: string; relation_status: StatusId; tags: string[];
   private_notes: string; payment_link: string;
+  address_line1: string; address_line2: string; postal_code: string;
+  city: string; canton: string; country: string;
 };
 const EMPTY_CONTACT: ContactForm = {
   first_name: "", last_name: "", email: "", phone: "", session_type: "",
   relation_status: "prospect", tags: [], private_notes: "", payment_link: "",
+  address_line1: "", address_line2: "", postal_code: "", city: "", canton: "", country: "CH",
 };
+
+/** Cantons suisses (code officiel) pour la fiche de facturation. */
+const CANTONS = [
+  "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL", "GR", "JU", "LU", "NE",
+  "NW", "OW", "SG", "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH",
+];
+
+/** Validation minimale de l'adresse : cohérence NPA/ville et pays obligatoire. */
+function validateBillingAddress(f: ContactForm): string | null {
+  if (!f.country.trim()) return "Le pays est obligatoire.";
+  if (f.city.trim() && !f.postal_code.trim()) return "Le code postal est requis lorsque la ville est renseignée.";
+  if (f.postal_code.trim() && !f.city.trim()) return "La ville est requise lorsque le code postal est renseigné.";
+  return null;
+}
 
 function ContactDialog({ open, onClose, initial, contacts }: {
   open: boolean; onClose: () => void;
@@ -98,12 +115,29 @@ function ContactDialog({ open, onClose, initial, contacts }: {
   const [form, setForm] = useState<ContactForm>(
     initial ? { ...EMPTY_CONTACT, ...initial, email: initial.email ?? "", phone: initial.phone ?? "",
       session_type: initial.session_type ?? "", private_notes: initial.private_notes ?? "",
-      payment_link: initial.payment_link ?? "" } : EMPTY_CONTACT
+      payment_link: initial.payment_link ?? "",
+      address_line1: initial.address_line1 ?? "", address_line2: initial.address_line2 ?? "",
+      postal_code: initial.postal_code ?? "", city: initial.city ?? "",
+      canton: initial.canton ?? "", country: initial.country ?? "CH" } : EMPTY_CONTACT
   );
   const [tagInput, setTagInput] = useState("");
 
   const saveMut = useMutation({
-    mutationFn: () => upsertContact({ data: { ...form, email: form.email || null, phone: form.phone || null } as any }),
+    mutationFn: () => {
+      const err = validateBillingAddress(form);
+      if (err) return Promise.reject(new Error(err));
+      return upsertContact({ data: {
+        ...form,
+        email: form.email || null,
+        phone: form.phone || null,
+        address_line1: form.address_line1.trim() || null,
+        address_line2: form.address_line2.trim() || null,
+        postal_code: form.postal_code.trim() || null,
+        city: form.city.trim() || null,
+        canton: form.canton.trim() || null,
+        country: form.country.trim() || "CH",
+      } as any });
+    },
     onSuccess: () => { toast.success("Contact sauvegardé"); qc.invalidateQueries({ queryKey: ["crm-contacts"] }); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -164,6 +198,65 @@ function ContactDialog({ open, onClose, initial, contacts }: {
               </p>
             )}
           </div>
+
+          <fieldset className="rounded-lg border border-border/60 p-4 space-y-3">
+            <legend className="px-2 text-sm font-semibold text-foreground">Adresse de facturation</legend>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Nécessaire pour émettre une facture. Facultative pour un simple prospect.
+            </p>
+            <div className="space-y-1">
+              <Label htmlFor="addr1">Rue et numéro</Label>
+              <Input id="addr1" value={form.address_line1} onChange={e => set("address_line1", e.target.value)}
+                placeholder="Ex : Rue du Rhône 12" className="bg-background border-border/60" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="addr2">Complément d'adresse (facultatif)</Label>
+              <Input id="addr2" value={form.address_line2} onChange={e => set("address_line2", e.target.value)}
+                placeholder="Ex : c/o, étage, boîte postale" className="bg-background border-border/60" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="npa">Code postal</Label>
+                <Input id="npa" value={form.postal_code} onChange={e => set("postal_code", e.target.value)}
+                  inputMode="numeric" placeholder="1204" className="bg-background border-border/60" />
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="ville">Ville</Label>
+                <Input id="ville" value={form.city} onChange={e => set("city", e.target.value)}
+                  placeholder="Genève" className="bg-background border-border/60" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="canton">Canton (facultatif)</Label>
+                <Select value={form.canton || "none"} onValueChange={v => set("canton", v === "none" ? "" : v)}>
+                  <SelectTrigger id="canton" className="bg-background border-border/60"><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60 max-h-64">
+                    <SelectItem value="none">—</SelectItem>
+                    {CANTONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="pays">Pays *</Label>
+                <Select value={form.country || "CH"} onValueChange={v => set("country", v)}>
+                  <SelectTrigger id="pays" className="bg-background border-border/60"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-surface border-border/60">
+                    <SelectItem value="CH">Suisse</SelectItem>
+                    <SelectItem value="FR">France</SelectItem>
+                    <SelectItem value="DE">Allemagne</SelectItem>
+                    <SelectItem value="IT">Italie</SelectItem>
+                    <SelectItem value="AT">Autriche</SelectItem>
+                    <SelectItem value="LI">Liechtenstein</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {validateBillingAddress(form) && (
+              <p role="alert" className="text-xs text-amber-400/90">{validateBillingAddress(form)}</p>
+            )}
+          </fieldset>
+
           <div className="space-y-1">
             <Label>Notes privées</Label>
             <Textarea value={form.private_notes} onChange={e => set("private_notes", e.target.value)} rows={3} className="bg-background border-border/60 resize-none" />
