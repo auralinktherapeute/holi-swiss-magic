@@ -29,6 +29,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
   const fetchList = useServerFn(listUninvoicedAppointments);
   const createInvoice = useServerFn(invoiceAppointment);
   const dismiss = useServerFn(dismissAppointmentInvoicing);
+  const settle = useServerFn(settleAppointment);
 
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [pendingSkip, setPendingSkip] = useState<string | null>(null);
