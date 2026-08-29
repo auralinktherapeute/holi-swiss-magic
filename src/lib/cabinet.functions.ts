@@ -125,6 +125,32 @@ export const invoiceAppointment = createServerFn({ method: "POST" })
     return createDraftFromAppointment(context.supabase, therapistId, context.userId, data);
   });
 
+/** Séance réglée : facture le RDV, la valide et enregistre l'encaissement. */
+export const settleAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        appointment_id: z.string().uuid(),
+        prix_unitaire: z.number().min(0.05).max(100000),
+        tva_taux: z.number().min(0).max(100).default(0),
+        mode_paiement: z.enum(["virement", "especes", "carte", "twint", "autre"]).default("especes"),
+        date_paiement: z.string().trim().max(10).optional().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { settleAppointmentPaid } = await import("@/lib/cabinet-billing.server");
+    return settleAppointmentPaid(context.supabase, therapistId, context.userId, {
+      appointment_id: data.appointment_id,
+      prix_unitaire: data.prix_unitaire,
+      tva_taux: data.tva_taux,
+      mode_paiement: data.mode_paiement,
+      date_paiement: data.date_paiement ?? null,
+    });
+  });
+
 /** Écarte un RDV de la facturation (gratuit, offert, déjà réglé hors app). */
 export const dismissAppointmentInvoicing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
