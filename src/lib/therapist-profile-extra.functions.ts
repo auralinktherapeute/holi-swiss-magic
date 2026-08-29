@@ -107,7 +107,7 @@ export const listMyCertifications = createServerFn({ method: "GET" })
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
     const { data, error } = await sb
       .from("therapist_certifications")
-      .select("id,name,issuer,year,file_url,created_at")
+      .select("id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason")
       .eq("therapist_id", therapistId)
       .order("created_at", { ascending: false });
     if (error) {
