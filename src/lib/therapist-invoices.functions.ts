@@ -85,7 +85,7 @@ export type TherapistInvoice = {
   montant_total: number;
   montant_paye: number;
   currency: string;
-  statut_paiement: "en_attente" | "paye" | "annule";
+  statut_paiement: "en_attente" | "payee" | "en_retard" | "annulee";
   reference_type: "qrr" | "scor" | "none";
   qr_reference: string | null;
   communication: string | null;
@@ -465,7 +465,7 @@ export const cancelInvoice = createServerFn({ method: "POST" })
     const invoice = await loadOwnInvoice(context.supabase, therapistId, data.id);
     if (invoice.statut === "annulee") throw new Error("Facture déjà annulée.");
     const { error } = await (context.supabase as any).from("therapist_invoices").update({
-      statut: "annulee", statut_paiement: "annule",
+      statut: "annulee", statut_paiement: "annulee",
       cancelled_at: new Date().toISOString(), cancel_reason: data.reason,
     }).eq("id", data.id).eq("therapist_id", therapistId);
     if (error) throw new Error(error.message);
