@@ -549,8 +549,12 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
     getFn({ data: { id: invoiceId } }).then(({ invoice, lines: ls }) => {
       setF({
         client_id: invoice.client_id ?? "", client_nom: invoice.client_nom ?? "",
-        client_adresse: invoice.client_adresse ?? "", client_npa: invoice.client_npa ?? "",
-        client_ville: invoice.client_ville ?? "", client_pays: invoice.client_pays ?? "CH",
+        client_adresse: invoice.client_adresse ?? "",
+        client_adresse2: (invoice as any).client_adresse2 ?? "",
+        client_npa: invoice.client_npa ?? "",
+        client_ville: invoice.client_ville ?? "",
+        client_canton: (invoice as any).client_canton ?? "",
+        client_pays: invoice.client_pays ?? "CH",
         client_email: invoice.client_email ?? "", currency: invoice.currency,
         date_emission: invoice.date_emission?.slice(0, 10) ?? "",
         date_prestation: invoice.date_prestation ?? "",
@@ -567,15 +571,47 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
     }).catch((e) => toast.error(e.message));
   }, [invoiceId, getFn]);
 
+  /** Coordonnées de facturation issues de la fiche patient CRM. */
+  const contactBilling = (c: Contact) => ({
+    client_nom: `${c.first_name} ${c.last_name}`.trim(),
+    client_email: c.email ?? "",
+    client_adresse: c.address_line1 ?? "",
+    client_adresse2: c.address_line2 ?? "",
+    client_npa: c.postal_code ?? "",
+    client_ville: c.city ?? "",
+    client_canton: c.canton ?? "",
+    client_pays: c.country ?? "CH",
+  });
+
+  // Préremplissage non destructif : ne remplace jamais une valeur déjà saisie.
   useEffect(() => {
     if (!f.client_id) return;
     const c = contacts.find((x) => x.id === f.client_id);
-    if (c) setF((s) => ({
-      ...s,
-      client_nom: s.client_nom || `${c.first_name} ${c.last_name}`.trim(),
-      client_email: s.client_email || c.email || "",
-    }));
+    if (!c) return;
+    const src = contactBilling(c);
+    setF((s) => {
+      const next = { ...s };
+      for (const [k, v] of Object.entries(src)) {
+        if (v && !String(next[k] ?? "").trim()) next[k] = v;
+      }
+      return next;
+    });
   }, [f.client_id, contacts]);
+
+  /** Écrase les coordonnées avec celles de la fiche patient (action explicite). */
+  function refreshFromContact() {
+    const c = contacts.find((x) => x.id === f.client_id);
+    if (!c) { toast.error("Sélectionnez d'abord un patient du CRM."); return; }
+    setF((s) => ({ ...s, ...contactBilling(c) }));
+    toast.success("Coordonnées actualisées depuis la fiche patient.");
+  }
+
+  const missingBilling = [
+    !String(f.client_nom ?? "").trim() && "nom",
+    !String(f.client_adresse ?? "").trim() && "adresse",
+    !String(f.client_npa ?? "").trim() && "NPA",
+    !String(f.client_ville ?? "").trim() && "ville",
+  ].filter(Boolean) as string[];
 
   const totals = useMemo(
     () => computeInvoiceTotals(lines, settings?.mode_tva ?? "exclusive"),
@@ -596,8 +632,10 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
         client_id: f.client_id || null,
         client_nom: f.client_nom.trim(),
         client_adresse: f.client_adresse || null,
+        client_adresse2: f.client_adresse2 || null,
         client_npa: f.client_npa || null,
         client_ville: f.client_ville || null,
+        client_canton: f.client_canton || null,
         client_pays: f.client_pays || "CH",
         client_email: f.client_email || null,
         date_emission: f.date_emission || null,
@@ -655,8 +693,12 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
                 <Input id="cn" value={f.client_nom} onChange={(e) => set("client_nom", e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="ca">Adresse</Label>
+                <Label htmlFor="ca">Adresse (rue et numéro)</Label>
                 <Input id="ca" value={f.client_adresse} onChange={(e) => set("client_adresse", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ca2">Complément d'adresse</Label>
+                <Input id="ca2" value={f.client_adresse2} onChange={(e) => set("client_adresse2", e.target.value)} />
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
@@ -672,10 +714,29 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
                 <Label htmlFor="ce">Email</Label>
                 <Input id="ce" type="email" value={f.client_email} onChange={(e) => set("client_email", e.target.value)} />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="cp">Pays</Label>
-                <Input id="cp" value={f.client_pays} onChange={(e) => set("client_pays", e.target.value)} />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="ccant">Canton</Label>
+                  <Input id="ccant" value={f.client_canton} onChange={(e) => set("client_canton", e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <Label htmlFor="cp">Pays</Label>
+                  <Input id="cp" value={f.client_pays} onChange={(e) => set("client_pays", e.target.value)} />
+                </div>
               </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="button" variant="outline" size="sm"
+                onClick={refreshFromContact} disabled={!f.client_id}
+                className="min-h-11">
+                Actualiser depuis la fiche patient
+              </Button>
+              {missingBilling.length > 0 && (
+                <p className="text-sm text-destructive" role="status">
+                  Adresse de facturation incomplète ({missingBilling.join(", ")}) : la validation
+                  de la facture sera refusée.
+                </p>
+              )}
             </div>
           </fieldset>
 
