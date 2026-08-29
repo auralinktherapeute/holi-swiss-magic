@@ -532,7 +532,8 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
 
   const defaultRate = settings?.assujetti_tva ? Number(settings.taux_tva ?? 0) : 0;
   const [f, setF] = useState<Record<string, any>>({
-    client_id: "", client_nom: "", client_adresse: "", client_npa: "", client_ville: "",
+    client_id: "", client_nom: "", client_adresse: "", client_adresse2: "",
+    client_npa: "", client_ville: "", client_canton: "",
     client_pays: "CH", client_email: "", currency: settings?.devise_defaut ?? "CHF",
     date_emission: new Date().toISOString().slice(0, 10),
     date_prestation: "", date_echeance: "", communication: "", notes: "",
