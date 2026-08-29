@@ -1,4 +1,5 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,25 +33,45 @@ function Wordmark() {
 function HeroSearchBar() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
+
+  const go = () => {
+    const term = q.trim();
+    navigate({
+      to: "/$lang/therapeutes",
+      params: { lang },
+      search: term ? { q: term } : {},
+    });
+  };
+
   return (
     <div className="relative max-w-xl rounded-2xl border border-[rgba(184,110,249,0.35)] bg-[rgba(20,8,40,0.65)] p-2 shadow-[0_20px_80px_-20px_rgba(184,110,249,0.55)] backdrop-blur-xl">
-      <div className="flex items-center">
-        <Search className="ml-4 h-5 w-5 shrink-0 text-[#b9a4d4]" />
+      <form
+        className="flex items-center"
+        onSubmit={(e) => {
+          e.preventDefault();
+          go();
+        }}
+        role="search"
+      >
+        <Search className="ml-4 h-5 w-5 shrink-0 text-[#b9a4d4]" aria-hidden="true" />
         <input
           type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
           aria-label={t("hero.search_placeholder")}
           className="h-12 min-w-0 flex-1 bg-transparent px-3 text-white placeholder:text-[#c4b5dd] focus:outline-none"
           placeholder={t("hero.search_placeholder")}
         />
-        <Link to="/$lang/therapeutes" params={{ lang }}>
-          <Button className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">
-            {t("hero.search_btn")}
-          </Button>
-        </Link>
-      </div>
+        <Button type="submit" className="m-1 h-10 bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white">
+          {t("hero.search_btn")}
+        </Button>
+      </form>
     </div>
   );
 }
+
 
 function TrustBadges() {
   const { t } = useTranslation();
