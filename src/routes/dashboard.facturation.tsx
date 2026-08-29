@@ -1065,9 +1065,34 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
                 <Trash2 className="h-4 w-4 mr-2 text-destructive" aria-hidden="true" /> Supprimer
               </Button>
               <Button className="min-h-11" disabled={busy || errors.length > 0}
-                onClick={() => {
+                onClick={async () => {
                   if (!confirm("Valider cette facture ? Le numéro sera attribué et la facture ne pourra plus être modifiée.")) return;
-                  run("Facture validée", () => validateFn({ data: { id: invoice.id } }));
+                  setBusy(true);
+                  try {
+                    await validateFn({ data: { id: invoice.id } });
+                    toast.success("Facture validée");
+                    await onChanged(); await load();
+                  } catch (e: any) {
+                    const msg: string = e?.message ?? "Erreur";
+                    if (msg.startsWith("INCOMPLETE_BILLING:")) {
+                      const missing = msg.slice("INCOMPLETE_BILLING:".length);
+                      const ok = confirm(
+                        "⚠️ Adresse de facturation incomplète (" + missing + ").\n\n"
+                        + "La QR-facture suisse exige normalement ces informations. "
+                        + "Vous pouvez les compléter via « Actualiser depuis la fiche patient » avant de valider.\n\n"
+                        + "Valider quand même avec une adresse incomplète ?",
+                      );
+                      if (ok) {
+                        try {
+                          await validateFn({ data: { id: invoice.id, allow_incomplete: true } });
+                          toast.success("Facture validée (adresse incomplète signalée)");
+                          await onChanged(); await load();
+                        } catch (e2: any) { toast.error(e2?.message ?? "Erreur"); }
+                      }
+                    } else {
+                      toast.error(msg);
+                    }
+                  } finally { setBusy(false); }
                 }}>
                 <Lock className="h-4 w-4 mr-2" aria-hidden="true" /> Valider
               </Button>
