@@ -7,7 +7,7 @@ import {
   getTherapistId, logInvoiceAudit, loadOwnInvoice, loadSettings, loadLines,
   replaceLines, invoiceReadiness, refreshPaymentState,
 } from "@/lib/invoice-core.server";
-import { buildQrReference, buildScorReference, isQrIban, creditorAccount } from "@/lib/swiss-invoice";
+import { buildQrReference, buildScorReference, isQrIban, creditorAccount, missingDebtorFields } from "@/lib/swiss-invoice";
 
 export type TherapistInvoiceSettings = {
   id: string;
@@ -93,7 +93,10 @@ export type TherapistInvoice = {
   client_adresse: string | null;
   client_npa: string | null;
   client_ville: string | null;
+  client_adresse2: string | null;
+  client_canton: string | null;
   client_pays: string;
+  billing_snapshot_at: string | null;
   client_email: string | null;
   conditions_paiement: string | null;
   notes: string | null;
@@ -240,6 +243,8 @@ const DraftInput = z.object({
   client_adresse: z.string().trim().max(200).optional().nullable(),
   client_npa: z.string().trim().max(20).optional().nullable(),
   client_ville: z.string().trim().max(120).optional().nullable(),
+  client_adresse2: z.string().trim().max(200).optional().nullable(),
+  client_canton: z.string().trim().max(60).optional().nullable(),
   client_pays: z.string().trim().default("CH"),
   client_email: z.string().trim().email().optional().nullable().or(z.literal("")),
   date_emission: z.string().trim().optional().nullable(),
@@ -284,6 +289,8 @@ export const createInvoiceDraft = createServerFn({ method: "POST" })
         client_adresse: data.client_adresse ?? null,
         client_npa: data.client_npa ?? null,
         client_ville: data.client_ville ?? null,
+        client_adresse2: data.client_adresse2 ?? null,
+        client_canton: data.client_canton ?? null,
         client_pays: data.client_pays || "CH",
         client_email: data.client_email || null,
         conditions_paiement: data.conditions_paiement ?? settings.conditions_paiement ?? null,
@@ -358,6 +365,16 @@ export const validateInvoice = createServerFn({ method: "POST" })
     const settings = await loadSettings(context.supabase, therapistId);
     if (!settings) throw new Error("Réglages de facturation manquants.");
 
+    // Les coordonnées de facturation doivent être complètes AVANT de consommer
+    // un numéro séquentiel : elles sont figées par la validation.
+    const missingDebtor = missingDebtorFields(invoice);
+    if (missingDebtor.length) {
+      throw new Error(
+        "L'adresse de facturation du patient est incomplète (" + missingDebtor.join(", ")
+        + "). Complétez-la dans la fiche CRM puis utilisez « Actualiser depuis la fiche patient ».",
+      );
+    }
+
     const { data: reserved, error: eNum } = await (context.supabase as any)
       .rpc("reserve_next_invoice_number", { _therapist_id: therapistId });
     if (eNum) throw new Error(eNum.message);
@@ -380,6 +397,7 @@ export const validateInvoice = createServerFn({ method: "POST" })
       qr_reference: reference,
       statut: "validee",
       locked_at: new Date().toISOString(),
+      billing_snapshot_at: new Date().toISOString(),
     }).eq("id", data.id).eq("therapist_id", therapistId);
     if (error) throw new Error(error.message);
 
