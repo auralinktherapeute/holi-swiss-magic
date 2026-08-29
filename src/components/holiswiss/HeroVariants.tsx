@@ -1,4 +1,5 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, ShieldCheck, Sparkles, Star, MapPin, Users, ChevronRight, Brain, Leaf, HeartPulse, Flower2, Moon, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
