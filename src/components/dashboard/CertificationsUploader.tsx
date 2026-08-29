@@ -19,7 +19,18 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
   const del = useServerFn(deleteCertification);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [rows, setRows] = useState<{ id: string; name: string; issuer: string | null; year: number | null; fileUrl: string | null }[]>([]);
+  const [rows, setRows] = useState<
+    {
+      id: string;
+      name: string;
+      issuer: string | null;
+      year: number | null;
+      fileUrl: string | null;
+      status?: "declared" | "verified" | "rejected" | "needs_information";
+      verifiedAt?: string | null;
+      rejectionReason?: string | null;
+    }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
