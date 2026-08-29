@@ -209,7 +209,40 @@ function Page() {
 
       <section>
 
-        <h2 className="text-lg font-semibold mb-3">Factures ({invoices.length})</h2>
+        <h2 className="text-lg font-semibold mb-3">
+          Factures ({visibleInvoices.length}
+          {visibleInvoices.length !== invoices.length ? ` sur ${invoices.length}` : ""})
+        </h2>
+
+        {!loading && invoices.length > 0 && (
+          <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 items-end">
+            <div className="space-y-1 lg:col-span-2">
+              <Label htmlFor="f-search" className="text-xs">Rechercher</Label>
+              <Input id="f-search" value={fSearch} onChange={(e) => setFSearch(e.target.value)}
+                placeholder="N° de facture ou nom du patient" className="min-h-11" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="f-statut" className="text-xs">Statut</Label>
+              <select id="f-statut" value={fStatut} onChange={(e) => setFStatut(e.target.value)}
+                className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="tous">Tous</option>
+                <option value="impayees">Impayées</option>
+                {Object.entries(STATUS_STYLE).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="f-from" className="text-xs">Du</Label>
+              <Input id="f-from" type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="min-h-11" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="f-to" className="text-xs">Au</Label>
+              <Input id="f-to" type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="min-h-11" />
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="space-y-2" aria-busy="true">
             {[0, 1, 2].map((i) => <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />)}
@@ -217,6 +250,14 @@ function Page() {
         ) : invoices.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aucune facture pour le moment. Créez votre première facture depuis le bouton ci-dessus.
+          </p>
+        ) : visibleInvoices.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Aucune facture ne correspond à ces filtres.{" "}
+            <button type="button" className="underline"
+              onClick={() => { setFStatut("tous"); setFSearch(""); setFFrom(""); setFTo(""); }}>
+              Réinitialiser les filtres
+            </button>
           </p>
         ) : (
           <div className="overflow-x-auto border border-border/60 rounded-lg">
@@ -234,7 +275,7 @@ function Page() {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((inv) => (
+                {visibleInvoices.map((inv) => (
                   <tr key={inv.id} className="border-t border-border/60">
                     <td className="p-3 font-mono text-xs">{inv.numero_facture}</td>
                     <td className="p-3">{new Date(inv.date_emission).toLocaleDateString("fr-CH")}</td>
