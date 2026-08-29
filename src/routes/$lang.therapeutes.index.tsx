@@ -20,10 +20,11 @@ const TherapistMap = lazy(() =>
 
 export const Route = createFileRoute("/$lang/therapeutes/")({
   component: Page,
-  validateSearch: (s: Record<string, unknown>): { specialite?: string; famille?: string; canton?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { specialite?: string; famille?: string; canton?: string; q?: string } => ({
     specialite: typeof s.specialite === "string" ? s.specialite : undefined,
     famille: typeof s.famille === "string" ? s.famille : undefined,
     canton: typeof s.canton === "string" ? s.canton.toUpperCase().slice(0, 2) : undefined,
+    q: typeof s.q === "string" && s.q.trim() ? s.q.trim().slice(0, 80) : undefined,
   }),
   // Le filtre canton a désormais sa propre URL indexable : on y redirige
   // l'ancien paramètre de recherche plutôt que de servir deux fois le contenu.
