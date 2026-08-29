@@ -1,0 +1,2 @@
+ALTER TABLE public.therapist_invoices DROP CONSTRAINT IF EXISTS ti_statut_chk;
+ALTER TABLE public.therapist_invoices ADD CONSTRAINT ti_statut_chk CHECK (statut = ANY (ARRAY['brouillon','validee','envoyee','consultee','partiellement_payee','payee','en_retard','en_litige','annulee','avoir','erreur_envoi']));
