@@ -113,6 +113,28 @@ function Page() {
     } catch (e: any) { toast.error(e.message ?? "Erreur"); }
   }
 
+  const [fStatut, setFStatut] = useState<string>("tous");
+  const [fSearch, setFSearch] = useState("");
+  const [fFrom, setFFrom] = useState("");
+  const [fTo, setFTo] = useState("");
+
+  const visibleInvoices = useMemo(() => {
+    const q = fSearch.trim().toLowerCase();
+    return invoices.filter((i) => {
+      if (fStatut === "impayees") {
+        if (["brouillon", "annulee", "payee", "avoir"].includes(i.statut)) return false;
+        if (round2(Number(i.montant_total) - Number(i.montant_paye ?? 0)) <= 0) return false;
+      } else if (fStatut !== "tous" && i.statut !== fStatut) return false;
+      if (fFrom && i.date_emission < fFrom) return false;
+      if (fTo && i.date_emission > fTo) return false;
+      if (q) {
+        const hay = `${i.numero_facture} ${i.client_nom ?? ""} ${(i.metadata as any)?.client_name ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [invoices, fStatut, fSearch, fFrom, fTo]);
+
   const stats = useMemo(() => {
     const active = invoices.filter((i) => !["brouillon", "annulee"].includes(i.statut));
     const facture = round2(active.reduce((s, i) => s + Number(i.montant_total), 0));
@@ -122,6 +144,7 @@ function Page() {
       retard: active.filter((i) => i.statut === "en_retard").length,
     };
   }, [invoices]);
+
 
   return (
     <div className="space-y-8">
