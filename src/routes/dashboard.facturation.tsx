@@ -1007,7 +1007,28 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
           </div>
         )}
 
+        <section className="rounded-lg border border-border/60 p-3">
+          <h3 className="text-sm font-semibold mb-1">Coordonnées de facturation</h3>
+          <address className="not-italic text-sm text-muted-foreground leading-relaxed">
+            {invoice.client_nom || "—"}<br />
+            {invoice.client_adresse ? <>{invoice.client_adresse}<br /></> : null}
+            {(invoice as any).client_adresse2 ? <>{(invoice as any).client_adresse2}<br /></> : null}
+            {[invoice.client_npa, invoice.client_ville].filter(Boolean).join(" ") || (
+              <span className="text-amber-600 dark:text-amber-400">NPA et localité manquants</span>
+            )}
+            {(invoice as any).client_canton ? <><br />{(invoice as any).client_canton}</> : null}
+            {invoice.client_pays ? <><br />{invoice.client_pays}</> : null}
+          </address>
+          {(invoice as any).billing_snapshot_at && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Coordonnées figées à la validation, le{" "}
+              {new Date((invoice as any).billing_snapshot_at).toLocaleString("fr-CH")}.
+            </p>
+          )}
+        </section>
+
         <section>
+
           <h3 className="text-sm font-semibold mb-2">Prestations</h3>
           <div className="overflow-x-auto rounded-lg border border-border/60">
             <table className="w-full text-sm">
