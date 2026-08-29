@@ -61,6 +61,8 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
         .from("therapist_certifications")
         .select("id,name,issuer,year,verification_status,verified_at,expires_at,source_label")
         .eq("therapist_id", therapist.id)
+        // Visibilité publique : uniquement les diplômes validés par un administrateur.
+        .eq("verification_status", "verified")
         .order("year", { ascending: false });
       certifications = (certs ?? []) as any;
     }

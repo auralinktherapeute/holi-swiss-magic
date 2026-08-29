@@ -1548,6 +1548,53 @@ export type Database = {
           },
         ]
       }
+      diploma_verification_history: {
+        Row: {
+          action_type: string
+          diploma_id: string
+          id: string
+          new_status: string
+          note: string | null
+          performed_at: string
+          performed_by: string | null
+          previous_status: string | null
+          reason: string | null
+          therapist_id: string | null
+        }
+        Insert: {
+          action_type: string
+          diploma_id: string
+          id?: string
+          new_status: string
+          note?: string | null
+          performed_at?: string
+          performed_by?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          therapist_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          diploma_id?: string
+          id?: string
+          new_status?: string
+          note?: string | null
+          performed_at?: string
+          performed_by?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          therapist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diploma_verification_history_diploma_id_fkey"
+            columns: ["diploma_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_certifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drafts: {
         Row: {
           created_at: string
@@ -3777,8 +3824,13 @@ export type Database = {
           id: string
           issuer: string | null
           name: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           source_label: string | null
           therapist_id: string
+          updated_at: string
+          verification_note: string | null
           verification_status: string
           verified_at: string | null
           verified_by: string | null
@@ -3791,8 +3843,13 @@ export type Database = {
           id?: string
           issuer?: string | null
           name: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           source_label?: string | null
           therapist_id: string
+          updated_at?: string
+          verification_note?: string | null
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
@@ -3805,8 +3862,13 @@ export type Database = {
           id?: string
           issuer?: string | null
           name?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           source_label?: string | null
           therapist_id?: string
+          updated_at?: string
+          verification_note?: string | null
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
