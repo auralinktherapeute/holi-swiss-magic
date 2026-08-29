@@ -28,12 +28,17 @@ export async function buildUninvoicedAppointments(
   supabase: any,
   therapistId: string,
 ): Promise<UninvoicedAppointment[]> {
+  // Les séances confirmées déjà passées (ou du jour) comptent aussi : le
+  // thérapeute oublie souvent de cliquer « Terminée », la séance a pourtant eu
+  // lieu et doit pouvoir être facturée / encaissée.
+  const todayIso = new Date().toISOString().slice(0, 10);
   const [apptRes, settings, therapistRes] = await Promise.all([
     supabase
       .from("appointments")
       .select(APPT_COLUMNS)
       .eq("therapist_id", therapistId)
-      .eq("status", "completed")
+      .in("status", ["completed", "confirmed"])
+      .lte("appointment_date", todayIso)
       .is("invoiced_at", null)
       .order("appointment_date", { ascending: false })
       .limit(200),
