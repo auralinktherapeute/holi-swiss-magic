@@ -147,7 +147,7 @@ export const reviewCertification = createServerFn({ method: "POST" })
     }
     if (!STATUSES.includes(target as CertificationStatus)) throw new Error("Statut invalide.");
 
-    const patch: Record<string, unknown> = {
+    const patch = {
       verification_status: target,
       rejection_reason: target === "rejected" ? data.reason : null,
       verification_note: data.note ?? null,
