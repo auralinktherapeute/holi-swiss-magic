@@ -185,7 +185,11 @@ export async function createDraftFromAppointment(
 
   const { error: upErr } = await supabase
     .from("appointments")
-    .update({ invoiced_at: new Date().toISOString(), invoice_id: inv.id })
+    .update({
+      invoiced_at: new Date().toISOString(),
+      invoice_id: inv.id,
+      ...(appt.status === "completed" ? {} : { status: "completed" }),
+    })
     .eq("id", appt.id)
     .eq("therapist_id", therapistId);
   if (upErr) throw new Error(upErr.message);
