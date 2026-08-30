@@ -236,6 +236,7 @@ export async function settleAppointmentPaid(
     tva_taux: number;
     mode_paiement: "virement" | "especes" | "carte" | "twint" | "autre";
     date_paiement?: string | null;
+    description?: string | null;
   },
 ): Promise<{ invoice_id: string; numero_facture: string | null; paid: number; solde: number }> {
   const { buildQrReference, buildScorReference, isQrIban, creditorAccount } = await import(
