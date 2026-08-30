@@ -237,6 +237,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
   });
 
   const client: any = data?.client;
+  const [wizard, setWizard] = useState<QuickInvoiceTarget | null>(null);
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
