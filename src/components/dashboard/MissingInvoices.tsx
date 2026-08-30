@@ -15,8 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  listUninvoicedAppointments, invoiceAppointment, dismissAppointmentInvoicing,
-  settleAppointment,
+  listUninvoicedAppointments, dismissAppointmentInvoicing, settleAppointment,
 } from "@/lib/cabinet.functions";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
@@ -28,7 +27,6 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchList = useServerFn(listUninvoicedAppointments);
-  const createInvoice = useServerFn(invoiceAppointment);
   const dismiss = useServerFn(dismissAppointmentInvoicing);
   const settle = useServerFn(settleAppointment);
 
@@ -47,18 +45,6 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
     void queryClient.invalidateQueries({ queryKey: ["cabinet-overview"] });
     void queryClient.invalidateQueries({ queryKey: ["therapist-invoices"] });
   };
-
-  const createMut = useMutation({
-    mutationFn: (vars: { appointment_id: string; prix_unitaire: number; tva_taux: number }) =>
-      createInvoice({ data: vars }),
-    onSuccess: (res) => {
-      refresh();
-      toast.success("Brouillon de facture créé");
-      if (onCreated) onCreated(res.id);
-      else void navigate({ to: "/dashboard/facturation" });
-    },
-    onError: (e: Error) => toast.error(e.message || "Création impossible"),
-  });
 
   const settleMut = useMutation({
     mutationFn: (vars: { appointment_id: string; prix_unitaire: number; tva_taux: number }) =>
