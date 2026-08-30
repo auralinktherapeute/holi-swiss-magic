@@ -895,15 +895,42 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
           </fieldset>
 
           <fieldset className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <legend className="text-sm font-semibold">Prestations</legend>
-              <Button size="sm" variant="outline" className="min-h-11"
-                onClick={() => setLines((s) => [...s, {
-                  description: "", quantite: 1, prix_unitaire: 0, remise_pct: 0, tva_taux: defaultRate,
-                }])}>
-                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" /> Ajouter une ligne
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                {services.length > 0 && (
+                  <select aria-label="Insérer une prestation du catalogue"
+                    className="min-h-11 rounded-md border border-input bg-background px-3 text-sm"
+                    value="" onChange={(e) => {
+                      const s = services.find((x) => x.id === e.target.value);
+                      if (!s) return;
+                      const tp = s.tariff_position_id
+                        ? tariffs.find((t) => t.id === s.tariff_position_id) : undefined;
+                      setLines((ls) => [...ls, {
+                        description: tp
+                          ? `${tp.code} — ${s.name}${s.duration_min ? ` (${s.duration_min} min)` : ""}`
+                          : `${s.name}${s.duration_min ? ` (${s.duration_min} min)` : ""}`,
+                        quantite: 1, prix_unitaire: Number(s.price),
+                        remise_pct: 0, tva_taux: Number(s.vat_rate ?? defaultRate),
+                      }]);
+                    }}>
+                    <option value="">Insérer une prestation…</option>
+                    {services.filter((s) => s.is_active).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} — {Number(s.price).toFixed(2)} CHF
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <Button size="sm" variant="outline" className="min-h-11"
+                  onClick={() => setLines((s) => [...s, {
+                    description: "", quantite: 1, prix_unitaire: 0, remise_pct: 0, tva_taux: defaultRate,
+                  }])}>
+                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" /> Ajouter une ligne
+                </Button>
+              </div>
             </div>
+
             <div className="space-y-2">
               {lines.map((l, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 items-end">
