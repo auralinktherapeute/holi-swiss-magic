@@ -15,9 +15,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  listUninvoicedAppointments, invoiceAppointment, dismissAppointmentInvoicing,
-  settleAppointment,
+  listUninvoicedAppointments, dismissAppointmentInvoicing, settleAppointment,
 } from "@/lib/cabinet.functions";
+import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
 /**
  * « Factures manquantes » : rendez-vous honorés sans facture. Un clic crée un
@@ -27,12 +27,12 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchList = useServerFn(listUninvoicedAppointments);
-  const createInvoice = useServerFn(invoiceAppointment);
   const dismiss = useServerFn(dismissAppointmentInvoicing);
   const settle = useServerFn(settleAppointment);
 
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [pendingSkip, setPendingSkip] = useState<string | null>(null);
+  const [wizard, setWizard] = useState<QuickInvoiceTarget | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["uninvoiced-appointments"],
@@ -45,18 +45,6 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
     void queryClient.invalidateQueries({ queryKey: ["cabinet-overview"] });
     void queryClient.invalidateQueries({ queryKey: ["therapist-invoices"] });
   };
-
-  const createMut = useMutation({
-    mutationFn: (vars: { appointment_id: string; prix_unitaire: number; tva_taux: number }) =>
-      createInvoice({ data: vars }),
-    onSuccess: (res) => {
-      refresh();
-      toast.success("Brouillon de facture créé");
-      if (onCreated) onCreated(res.id);
-      else void navigate({ to: "/dashboard/facturation" });
-    },
-    onError: (e: Error) => toast.error(e.message || "Création impossible"),
-  });
 
   const settleMut = useMutation({
     mutationFn: (vars: { appointment_id: string; prix_unitaire: number; tva_taux: number }) =>
@@ -110,7 +98,6 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
             const priceValue = prices[a.id] ?? (a.suggested_price ? String(a.suggested_price) : "");
             const parsed = Number(priceValue.replace(",", "."));
             const valid = Number.isFinite(parsed) && parsed > 0;
-            const busy = createMut.isPending && createMut.variables?.appointment_id === a.id;
             const settleBusy = settleMut.isPending && settleMut.variables?.appointment_id === a.id;
             return (
               <div
@@ -144,16 +131,9 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
                   <Button
                     size="sm"
                     className="min-h-11"
-                    disabled={!valid || busy}
-                    onClick={() =>
-                      createMut.mutate({
-                        appointment_id: a.id,
-                        prix_unitaire: parsed,
-                        tva_taux: a.suggested_vat,
-                      })
-                    }
+                    onClick={() => setWizard(a)}
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Facturer"}
+                    Facturer…
                   </Button>
                   <Button
                     size="sm"
@@ -187,6 +167,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
             );
           })}
 
+
           {rows.length > 0 && !rows.some((r) => r.suggested_price > 0) && (
             <p className="text-xs text-muted-foreground">
               Renseignez un tarif dans votre profil pour pré-remplir automatiquement les montants.
@@ -194,6 +175,17 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
           )}
         </CardContent>
       </Card>
+
+      <QuickInvoiceDialog
+        appointment={wizard}
+        open={wizard !== null}
+        onOpenChange={(o) => !o && setWizard(null)}
+        onCreated={(id) => {
+          refresh();
+          if (onCreated) onCreated(id);
+          else void navigate({ to: "/dashboard/facturation" });
+        }}
+      />
 
       <AlertDialog open={pendingSkip !== null} onOpenChange={(o) => !o && setPendingSkip(null)}>
         <AlertDialogContent>

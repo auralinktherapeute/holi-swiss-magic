@@ -136,6 +136,7 @@ export const settleAppointment = createServerFn({ method: "POST" })
         tva_taux: z.number().min(0).max(100).default(0),
         mode_paiement: z.enum(["virement", "especes", "carte", "twint", "autre"]).default("especes"),
         date_paiement: z.string().trim().max(10).optional().nullable(),
+        description: z.string().trim().max(500).optional().nullable(),
       })
       .parse(input),
   )
@@ -148,6 +149,7 @@ export const settleAppointment = createServerFn({ method: "POST" })
       tva_taux: data.tva_taux,
       mode_paiement: data.mode_paiement,
       date_paiement: data.date_paiement ?? null,
+      description: data.description ?? null,
     });
   });
 
