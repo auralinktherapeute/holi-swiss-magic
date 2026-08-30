@@ -55,6 +55,7 @@ import { Route as DashboardQuestionnairesRouteImport } from './routes/dashboard.
 import { Route as DashboardReservationsRouteImport } from './routes/dashboard.reservations'
 import { Route as DashboardVisibiliteRouteImport } from './routes/dashboard.visibilite'
 import { Route as DesinscriptionIndexRouteImport } from './routes/desinscription.index'
+import { Route as FactureTokenRouteImport } from './routes/facture.$token'
 import { Route as IntakeSlugRouteImport } from './routes/intake.$slug'
 import { Route as PreviewAmbianceRouteImport } from './routes/preview.ambiance'
 import { Route as PreviewAnimationsTherapeutesRouteImport } from './routes/preview.animations-therapeutes'
@@ -334,6 +335,11 @@ const DashboardVisibiliteRoute = DashboardVisibiliteRouteImport.update({
 const DesinscriptionIndexRoute = DesinscriptionIndexRouteImport.update({
   id: '/desinscription/',
   path: '/desinscription/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FactureTokenRoute = FactureTokenRouteImport.update({
+  id: '/facture/$token',
+  path: '/facture/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntakeSlugRoute = IntakeSlugRouteImport.update({
@@ -643,6 +649,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/dashboard/visibilite': typeof DashboardVisibiliteRoute
+  '/facture/$token': typeof FactureTokenRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/ambiance': typeof PreviewAmbianceRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
@@ -737,6 +744,7 @@ export interface FileRoutesByTo {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/dashboard/visibilite': typeof DashboardVisibiliteRoute
+  '/facture/$token': typeof FactureTokenRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/ambiance': typeof PreviewAmbianceRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
@@ -835,6 +843,7 @@ export interface FileRoutesById {
   '/dashboard/questionnaires': typeof DashboardQuestionnairesRoute
   '/dashboard/reservations': typeof DashboardReservationsRoute
   '/dashboard/visibilite': typeof DashboardVisibiliteRoute
+  '/facture/$token': typeof FactureTokenRoute
   '/intake/$slug': typeof IntakeSlugRoute
   '/preview/ambiance': typeof PreviewAmbianceRoute
   '/preview/animations-therapeutes': typeof PreviewAnimationsTherapeutesRoute
@@ -934,6 +943,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/dashboard/visibilite'
+    | '/facture/$token'
     | '/intake/$slug'
     | '/preview/ambiance'
     | '/preview/animations-therapeutes'
@@ -1028,6 +1038,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/dashboard/visibilite'
+    | '/facture/$token'
     | '/intake/$slug'
     | '/preview/ambiance'
     | '/preview/animations-therapeutes'
@@ -1125,6 +1136,7 @@ export interface FileRouteTypes {
     | '/dashboard/questionnaires'
     | '/dashboard/reservations'
     | '/dashboard/visibilite'
+    | '/facture/$token'
     | '/intake/$slug'
     | '/preview/ambiance'
     | '/preview/animations-therapeutes'
@@ -1188,6 +1200,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  FactureTokenRoute: typeof FactureTokenRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
   PreviewAmbianceRoute: typeof PreviewAmbianceRoute
   PreviewAnimationsTherapeutesRoute: typeof PreviewAnimationsTherapeutesRoute
@@ -1531,6 +1544,13 @@ declare module '@tanstack/react-router' {
       path: '/desinscription'
       fullPath: '/desinscription/'
       preLoaderRoute: typeof DesinscriptionIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/facture/$token': {
+      id: '/facture/$token'
+      path: '/facture/$token'
+      fullPath: '/facture/$token'
+      preLoaderRoute: typeof FactureTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/intake/$slug': {
@@ -2056,6 +2076,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  FactureTokenRoute: FactureTokenRoute,
   IntakeSlugRoute: IntakeSlugRoute,
   PreviewAmbianceRoute: PreviewAmbianceRoute,
   PreviewAnimationsTherapeutesRoute: PreviewAnimationsTherapeutesRoute,

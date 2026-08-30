@@ -2000,6 +2000,70 @@ export type Database = {
           },
         ]
       }
+      invoice_access_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          invoice_id: string
+          last_viewed_at: string | null
+          revoked_at: string | null
+          therapist_id: string
+          token_hash: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          invoice_id: string
+          last_viewed_at?: string | null
+          revoked_at?: string | null
+          therapist_id: string
+          token_hash: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          invoice_id?: string
+          last_viewed_at?: string | null
+          revoked_at?: string | null
+          therapist_id?: string
+          token_hash?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_access_tokens_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_access_tokens_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_access_tokens_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           created_at: string

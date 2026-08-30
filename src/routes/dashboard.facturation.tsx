@@ -23,6 +23,7 @@ import { MissingInvoices } from "@/components/dashboard/MissingInvoices";
 import InvoiceLogoUploader from "@/components/dashboard/InvoiceLogoUploader";
 import BillingServices from "@/components/dashboard/BillingServices";
 import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
+import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
 import {
   listMyBillingServices, listTariffPositions,
   type BillingService, type TariffPosition,
@@ -1280,6 +1281,13 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
           </section>
         )}
 
+        {locked && invoice.statut !== "annulee" && (
+          <InvoicePortalLinks
+            invoiceId={invoice.id}
+            clientEmail={invoice.client_email ?? null}
+            onSent={async () => { await onChanged(); await load(); }}
+          />
+        )}
 
 
         <DialogFooter className="flex-wrap gap-2">
