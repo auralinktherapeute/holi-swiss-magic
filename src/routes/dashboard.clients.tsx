@@ -366,6 +366,12 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </p>
           </div>
         )}
+
+        <QuickInvoiceDialog
+          appointment={wizard}
+          open={!!wizard}
+          onOpenChange={(o) => { if (!o) setWizard(null); }}
+        />
       </DialogContent>
     </Dialog>
   );
