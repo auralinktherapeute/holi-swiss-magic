@@ -353,6 +353,8 @@ function Page() {
           </div>
         )}
       </section>
+      )}
+
 
       <SettingsDialog open={openSet} onOpenChange={setOpenSet} existing={settings}
         upsertFn={upsertSettingsFn} onSaved={async () => { setOpenSet(false); await refresh(); }} />
