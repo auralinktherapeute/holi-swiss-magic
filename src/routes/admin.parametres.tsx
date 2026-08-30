@@ -5,6 +5,7 @@ import { Save, RotateCcw, Globe, CreditCard, Shield, Bell, Tag } from "lucide-re
 import { toast } from "sonner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { AdminSpecialtiesPanel } from "@/components/admin/AdminSpecialtiesPanel";
+import Tariff590Import from "@/components/admin/Tariff590Import";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/parametres")({ component: Page });
@@ -70,7 +71,7 @@ function Section({ icon: Icon, title, children }: { icon: any; title: string; ch
 function Page() {
   const [s, setS] = useSessionState<Settings>("admin.settings.form", DEFAULTS);
   const [dirty, setDirty] = useState(false);
-  const [tab, setTab] = useSessionState<"general" | "taxonomy">("admin.settings.tab", "general");
+  const [tab, setTab] = useSessionState<"general" | "taxonomy" | "tarif590">("admin.settings.tab", "general");
 
   const update = (patch: Partial<Settings>) => { setS((prev) => ({ ...prev, ...patch })); setDirty(true); };
 
