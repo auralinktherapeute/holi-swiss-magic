@@ -6,6 +6,9 @@ import {
   creditorAccount, validateQrBill, normalizeIban, round2,
   type ReferenceType,
 } from "@/lib/swiss-invoice";
+import {
+  invoiceDict, normalizeInvoiceLang, INVOICE_LOCALE, QR_LANGUAGE,
+} from "@/lib/invoice-i18n";
 
 function escapeHtml(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
@@ -13,18 +16,6 @@ function escapeHtml(s: unknown): string {
   }[c] as string));
 }
 
-function fmtDate(d: unknown): string {
-  if (!d) return "—";
-  const dt = new Date(String(d));
-  return Number.isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("fr-CH");
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  brouillon: "Brouillon", validee: "Validée", envoyee: "Envoyée",
-  consultee: "Consultée", partiellement_payee: "Partiellement payée",
-  payee: "Payée", en_retard: "En retard", annulee: "Annulée",
-  avoir: "Avoir", erreur_envoi: "Erreur d'envoi",
-};
 
 export type InvoiceBuildResult = {
   html: string;
