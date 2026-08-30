@@ -1280,6 +1280,13 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
           </section>
         )}
 
+        {locked && invoice.statut !== "annulee" && (
+          <InvoicePortalLinks
+            invoiceId={invoice.id}
+            clientEmail={invoice.client_email ?? null}
+            onSent={async () => { await onChanged(); await load(); }}
+          />
+        )}
 
 
         <DialogFooter className="flex-wrap gap-2">
