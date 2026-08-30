@@ -21,6 +21,12 @@ import InvoiceReminders from "@/components/dashboard/InvoiceReminders";
 import InvoiceReports from "@/components/dashboard/InvoiceReports";
 import { MissingInvoices } from "@/components/dashboard/MissingInvoices";
 import InvoiceLogoUploader from "@/components/dashboard/InvoiceLogoUploader";
+import BillingServices from "@/components/dashboard/BillingServices";
+import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
+import {
+  listMyBillingServices, listTariffPositions,
+  type BillingService, type TariffPosition,
+} from "@/lib/billing-services.functions";
 
 import {
   computeInvoiceTotals, isValidIban, isQrIban, missingInvoiceSettings,
@@ -39,11 +45,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type Vue = "tableau" | "factures" | "paiements" | "rappels" | "rapports" | "parametres";
+type Vue = "tableau" | "factures" | "paiements" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
 const VUES: { key: Vue; label: string }[] = [
   { key: "tableau", label: "Tableau de bord" },
   { key: "factures", label: "Factures" },
   { key: "paiements", label: "Paiements" },
+  { key: "prestations", label: "Prestations" },
+  { key: "tarif590", label: "Tarif 590" },
   { key: "rappels", label: "Rappels" },
   { key: "rapports", label: "Rapports" },
   { key: "parametres", label: "Paramètres" },
@@ -248,6 +256,10 @@ function Page() {
           onCreated={(id) => { setEditorId(id); void refresh(); }}
         />
       )}
+
+      {vue === "prestations" && <BillingServices />}
+
+      {vue === "tarif590" && <Tariff590Panel />}
 
       {vue === "rappels" && !loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
 
