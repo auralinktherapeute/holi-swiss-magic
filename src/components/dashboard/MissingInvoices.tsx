@@ -110,7 +110,6 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
             const priceValue = prices[a.id] ?? (a.suggested_price ? String(a.suggested_price) : "");
             const parsed = Number(priceValue.replace(",", "."));
             const valid = Number.isFinite(parsed) && parsed > 0;
-            const busy = createMut.isPending && createMut.variables?.appointment_id === a.id;
             const settleBusy = settleMut.isPending && settleMut.variables?.appointment_id === a.id;
             return (
               <div
@@ -144,16 +143,9 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
                   <Button
                     size="sm"
                     className="min-h-11"
-                    disabled={!valid || busy}
-                    onClick={() =>
-                      createMut.mutate({
-                        appointment_id: a.id,
-                        prix_unitaire: parsed,
-                        tva_taux: a.suggested_vat,
-                      })
-                    }
+                    onClick={() => setWizard(a)}
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Facturer"}
+                    Facturer…
                   </Button>
                   <Button
                     size="sm"
@@ -186,6 +178,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
               </div>
             );
           })}
+
 
           {rows.length > 0 && !rows.some((r) => r.suggested_price > 0) && (
             <p className="text-xs text-muted-foreground">
