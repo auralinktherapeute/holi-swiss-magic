@@ -45,7 +45,7 @@ export async function buildInvoiceHtml(
   if (!settings) throw new Error("Configurez d'abord vos réglages de facturation.");
 
   const lang = normalizeInvoiceLang(inv.langue ?? settings.langue_facture);
-  const t = invoiceDict(lang);
+  const T = invoiceDict(lang);
   const locale = INVOICE_LOCALE[lang];
   const fmtDate = (d: unknown): string => {
     if (!d) return "—";
@@ -122,7 +122,7 @@ export async function buildInvoiceHtml(
   let qrSection: string;
   if (qrErrors.length) {
     qrSection = `<div class="qr-missing">
-      <strong>QR-facture non générée — informations de paiement incomplètes :</strong>
+      <strong>${escapeHtml(T.qrMissing)}</strong>
       <ul>${qrErrors.map((e) => `<li>${escapeHtml(e)}</li>`).join("")}</ul>
     </div>`;
   } else {
@@ -134,7 +134,7 @@ export async function buildInvoiceHtml(
         amount: Number(inv.montant_total),
         reference: inv.qr_reference ?? undefined,
         message: inv.communication ?? undefined,
-        additionalInformation: `Facture ${inv.numero_facture}`,
+        additionalInformation: `${T.invoice} ${inv.numero_facture}`,
         creditor: {
           name: creditorName,
           address: settings.titulaire_adresse || settings.adresse_rue,
@@ -150,10 +150,10 @@ export async function buildInvoiceHtml(
           city: inv.client_ville,
           country: inv.client_pays || "CH",
         },
-      }, { language: "FR" });
+      }, { language: QR_LANGUAGE[lang] });
       qrSection = bill.toString();
     } catch (e: any) {
-      qrSection = `<div class="qr-missing">QR-facture indisponible : ${escapeHtml(e?.message ?? "erreur")}</div>`;
+      qrSection = `<div class="qr-missing">${escapeHtml(T.qrUnavailable)} : ${escapeHtml(e?.message ?? "erreur")}</div>`;
     }
   }
 
@@ -179,19 +179,19 @@ export async function buildInvoiceHtml(
   }
   const vatRows = [...vatGroups.entries()]
     .filter(([t]) => t > 0)
-    .map(([t, g]) => `<tr><td colspan="5" class="r">TVA ${t.toFixed(1)} % sur ${g.base.toFixed(2)}</td><td class="r">${g.tva.toFixed(2)}</td></tr>`)
+    .map(([t, g]) => `<tr><td colspan="5" class="r">${escapeHtml(T.vatOn(t.toFixed(1), g.base.toFixed(2)))}</td><td class="r">${g.tva.toFixed(2)}</td></tr>`)
     .join("");
 
   const mentionTva = settings.assujetti_tva
-    ? (settings.mention_tva || (settings.mode_tva === "inclusive" ? "TVA incluse" : "TVA en sus"))
-    : (settings.mention_tva || "Non assujetti à la TVA");
+    ? (settings.mention_tva || (settings.mode_tva === "inclusive" ? T.vatIncluded : T.vatExtra))
+    : (settings.mention_tva || T.notVatLiable);
 
   const solde = round2(Number(inv.montant_total) - Number(inv.montant_paye ?? 0));
 
   const html = `<!doctype html>
-<html lang="fr"><head><meta charset="utf-8"/>
+<html lang="${lang}"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Facture ${escapeHtml(inv.numero_facture)}</title>
+<title>${escapeHtml(T.invoice)} ${escapeHtml(inv.numero_facture)}</title>
 <style>
   :root { --ink:#1c1c1e; --muted:#6b7280; --line:#e5e7eb; --accent:#7c3aed; }
   *{box-sizing:border-box}
@@ -218,7 +218,7 @@ export async function buildInvoiceHtml(
 <body>
   <div class="noprint" style="margin-bottom:16px">
     <button onclick="window.print()" style="padding:8px 16px;border-radius:8px;border:1px solid #7c3aed;background:#7c3aed;color:#fff;font-size:14px;cursor:pointer;min-height:44px">
-      Imprimer / Enregistrer en PDF
+      ${escapeHtml(T.print)}
     </button>
   </div>
 
@@ -227,27 +227,27 @@ export async function buildInvoiceHtml(
       ${settings.logo_url ? `<img class="logo" src="${escapeHtml(settings.logo_url)}" alt="Logo ${escapeHtml(emitterName)}"/>` : `<div style="font-size:18px;font-weight:700">${escapeHtml(emitterName)}</div>`}
     </div>
     <div style="text-align:right">
-      <h1>Facture ${escapeHtml(inv.numero_facture)}</h1>
-      <div class="muted">Émise le ${fmtDate(inv.date_emission)}${inv.date_prestation ? ` · Prestation le ${fmtDate(inv.date_prestation)}` : ""}</div>
-      <div class="muted">Échéance : ${fmtDate(inv.date_echeance)}</div>
-      <div style="margin-top:6px"><span class="status">${escapeHtml(STATUS_LABELS[inv.statut] ?? inv.statut ?? "")}</span></div>
+      <h1>${escapeHtml(T.invoice)} ${escapeHtml(inv.numero_facture)}</h1>
+      <div class="muted">${escapeHtml(T.issuedOn)} ${fmtDate(inv.date_emission)}${inv.date_prestation ? ` · ${escapeHtml(T.serviceOn)} ${fmtDate(inv.date_prestation)}` : ""}</div>
+      <div class="muted">${escapeHtml(T.dueDate)} : ${fmtDate(inv.date_echeance)}</div>
+      <div style="margin-top:6px"><span class="status">${escapeHtml(T.statuses[inv.statut] ?? inv.statut ?? "")}</span></div>
     </div>
   </header>
 
   <div class="grid">
     <div class="card">
-      <strong>Émetteur</strong>
+      <strong>${escapeHtml(T.emitter)}</strong>
       ${escapeHtml(emitterName)}<br/>
       ${escapeHtml(settings.adresse_rue)}<br/>
       ${escapeHtml(settings.adresse_npa)} ${escapeHtml(settings.adresse_ville)}<br/>
       ${escapeHtml(settings.adresse_pays || "CH")}<br/>
       ${settings.telephone ? `${escapeHtml(settings.telephone)}<br/>` : ""}
       ${settings.email_pro || therapist?.email ? `${escapeHtml(settings.email_pro || therapist?.email)}<br/>` : ""}
-      ${settings.numero_ide ? `IDE : ${escapeHtml(settings.numero_ide)}<br/>` : ""}
-      ${settings.assujetti_tva && settings.numero_tva ? `TVA : ${escapeHtml(settings.numero_tva)}<br/>` : ""}
+      ${settings.numero_ide ? `${escapeHtml(T.ide)} : ${escapeHtml(settings.numero_ide)}<br/>` : ""}
+      ${settings.assujetti_tva && settings.numero_tva ? `${escapeHtml(T.vatNo)} : ${escapeHtml(settings.numero_tva)}<br/>` : ""}
     </div>
     <div class="card">
-      <strong>Destinataire</strong>
+      <strong>${escapeHtml(T.recipient)}</strong>
       ${escapeHtml(clientName)}<br/>
       ${escapeHtml(inv.client_adresse ?? "")}<br/>
       ${escapeHtml(inv.client_npa ?? "")} ${escapeHtml(inv.client_ville ?? "")}<br/>
@@ -259,17 +259,17 @@ export async function buildInvoiceHtml(
 
   <table>
     <thead><tr>
-      <th>Prestation</th><th class="r">Qté</th><th class="r">P.U.</th>
-      <th class="r">Remise</th><th class="r">TVA</th><th class="r">Montant HT</th>
+      <th>${escapeHtml(T.service)}</th><th class="r">${escapeHtml(T.qty)}</th><th class="r">${escapeHtml(T.unitPrice)}</th>
+      <th class="r">${escapeHtml(T.discount)}</th><th class="r">${escapeHtml(T.vat)}</th><th class="r">${escapeHtml(T.amountExcl)}</th>
     </tr></thead>
-    <tbody>${rows || `<tr><td colspan="6" class="muted">Aucune ligne</td></tr>`}</tbody>
+    <tbody>${rows || `<tr><td colspan="6" class="muted">${escapeHtml(T.noLines)}</td></tr>`}</tbody>
     <tfoot>
-      ${Number(inv.montant_remise) > 0 ? `<tr><td colspan="5" class="r">Remise totale</td><td class="r">− ${Number(inv.montant_remise).toFixed(2)}</td></tr>` : ""}
-      <tr><td colspan="5" class="r">Sous-total HT</td><td class="r">${Number(inv.montant_ht).toFixed(2)} ${escapeHtml(inv.currency)}</td></tr>
+      ${Number(inv.montant_remise) > 0 ? `<tr><td colspan="5" class="r">${escapeHtml(T.totalDiscount)}</td><td class="r">− ${Number(inv.montant_remise).toFixed(2)}</td></tr>` : ""}
+      <tr><td colspan="5" class="r">${escapeHtml(T.subtotal)}</td><td class="r">${Number(inv.montant_ht).toFixed(2)} ${escapeHtml(inv.currency)}</td></tr>
       ${vatRows}
-      <tr class="tot"><td colspan="5" class="r">Total ${settings.assujetti_tva ? "TTC" : ""} à payer</td><td class="r">${Number(inv.montant_total).toFixed(2)} ${escapeHtml(inv.currency)}</td></tr>
-      ${Number(inv.montant_paye ?? 0) > 0 ? `<tr><td colspan="5" class="r">Déjà payé</td><td class="r">${Number(inv.montant_paye).toFixed(2)}</td></tr>
-      <tr><td colspan="5" class="r">Solde restant</td><td class="r">${solde.toFixed(2)} ${escapeHtml(inv.currency)}</td></tr>` : ""}
+      <tr class="tot"><td colspan="5" class="r">${escapeHtml(settings.assujetti_tva ? T.totalToPayIncl : T.totalToPay)}</td><td class="r">${Number(inv.montant_total).toFixed(2)} ${escapeHtml(inv.currency)}</td></tr>
+      ${Number(inv.montant_paye ?? 0) > 0 ? `<tr><td colspan="5" class="r">${escapeHtml(T.alreadyPaid)}</td><td class="r">${Number(inv.montant_paye).toFixed(2)}</td></tr>
+      <tr><td colspan="5" class="r">${escapeHtml(T.balance)}</td><td class="r">${solde.toFixed(2)} ${escapeHtml(inv.currency)}</td></tr>` : ""}
     </tfoot>
   </table>
 
@@ -277,16 +277,16 @@ export async function buildInvoiceHtml(
   ${inv.conditions_paiement || settings.conditions_paiement
     ? `<p style="font-size:12px">${escapeHtml(inv.conditions_paiement || settings.conditions_paiement)}</p>` : ""}
   <div class="muted">
-    Paiement à ${escapeHtml(String(settings.delai_paiement_jours ?? 30))} jours ·
+    ${escapeHtml(T.paymentTerms(String(settings.delai_paiement_jours ?? 30)))} ·
     ${escapeHtml(normalizeIban(account).replace(/(.{4})/g, "$1 ").trim())}
-    ${inv.qr_reference ? ` · Référence : ${escapeHtml(inv.qr_reference)}` : ""}
+    ${inv.qr_reference ? ` · ${escapeHtml(T.reference)} : ${escapeHtml(inv.qr_reference)}` : ""}
   </div>
 
   <div class="qr">${qrSection}</div>
 
   <footer>
     ${settings.pied_de_page ? `${escapeHtml(settings.pied_de_page)}<br/>` : ""}
-    Document établi via HoliSwiss.
+    ${escapeHtml(T.footer)}
   </footer>
 </body></html>`;
 
