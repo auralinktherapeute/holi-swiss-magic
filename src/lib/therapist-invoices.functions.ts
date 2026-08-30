@@ -38,6 +38,7 @@ export type TherapistInvoiceSettings = {
   assujetti_tva: boolean;
   taux_tva: number | null;
   next_invoice_number: number;
+  langue_facture: "fr" | "de" | "it" | "en";
   remise_a_zero_annuelle: boolean;
   invoice_number_year: number | null;
 };
@@ -112,6 +113,7 @@ export type TherapistInvoice = {
   credit_note_of_id: string | null;
   corrects_invoice_id: string | null;
   metadata: any;
+  langue?: "fr" | "de" | "it" | "en";
   crm_client_contacts?: { first_name: string; last_name: string; email: string | null };
 };
 
@@ -163,6 +165,7 @@ const SettingsInput = z.object({
   assujetti_tva: z.boolean().default(false),
   taux_tva: z.number().min(0).max(100).optional().nullable(),
   next_invoice_number: z.number().int().min(1).default(1),
+  langue_facture: z.enum(["fr", "de", "it", "en"]).default("fr"),
   remise_a_zero_annuelle: z.boolean().default(true),
 });
 
@@ -255,6 +258,7 @@ const DraftInput = z.object({
   communication: z.string().trim().max(140).optional().nullable(),
   conditions_paiement: z.string().trim().max(500).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  langue: z.enum(["fr", "de", "it", "en"]).optional(),
   lines: z.array(LineInput).min(1, "Au moins une ligne de prestation"),
 });
 
@@ -295,6 +299,7 @@ export const createInvoiceDraft = createServerFn({ method: "POST" })
         client_email: data.client_email || null,
         conditions_paiement: data.conditions_paiement ?? settings.conditions_paiement ?? null,
         notes: data.notes ?? null,
+        langue: data.langue ?? settings.langue_facture ?? "fr",
         date_emission: emission,
         date_prestation: data.date_prestation || null,
         date_echeance: echeance,

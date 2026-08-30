@@ -4685,6 +4685,7 @@ export type Database = {
           iban_ou_qr_iban: string
           id: string
           invoice_number_year: number | null
+          langue_facture: string
           logo_url: string | null
           mention_tva: string | null
           mode_tva: string
@@ -4719,6 +4720,7 @@ export type Database = {
           iban_ou_qr_iban: string
           id?: string
           invoice_number_year?: number | null
+          langue_facture?: string
           logo_url?: string | null
           mention_tva?: string | null
           mode_tva?: string
@@ -4753,6 +4755,7 @@ export type Database = {
           iban_ou_qr_iban?: string
           id?: string
           invoice_number_year?: number | null
+          langue_facture?: string
           logo_url?: string | null
           mention_tva?: string | null
           mode_tva?: string
@@ -4818,6 +4821,7 @@ export type Database = {
           date_paiement: string | null
           date_prestation: string | null
           id: string
+          langue: string
           locked_at: string | null
           metadata: Json
           montant_ht: number
@@ -4865,6 +4869,7 @@ export type Database = {
           date_paiement?: string | null
           date_prestation?: string | null
           id?: string
+          langue?: string
           locked_at?: string | null
           metadata?: Json
           montant_ht: number
@@ -4912,6 +4917,7 @@ export type Database = {
           date_paiement?: string | null
           date_prestation?: string | null
           id?: string
+          langue?: string
           locked_at?: string | null
           metadata?: Json
           montant_ht?: number
