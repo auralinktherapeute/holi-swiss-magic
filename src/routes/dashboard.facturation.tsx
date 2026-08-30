@@ -258,15 +258,14 @@ function Page() {
           </Button>
         </section>
       )}
-
-
-
+      {(vue === "factures" || vue === "paiements") && (
       <section>
 
         <h2 className="text-lg font-semibold mb-3">
-          Factures ({visibleInvoices.length}
+          {vue === "paiements" ? "Paiements en attente" : "Factures"} ({visibleInvoices.length}
           {visibleInvoices.length !== invoices.length ? ` sur ${invoices.length}` : ""})
         </h2>
+
 
         {!loading && invoices.length > 0 && (
           <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 items-end">
