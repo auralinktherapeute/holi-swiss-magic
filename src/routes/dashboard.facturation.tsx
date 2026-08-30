@@ -141,6 +141,13 @@ function Page() {
   const [fFrom, setFFrom] = useState("");
   const [fTo, setFTo] = useState("");
 
+  // L'onglet Paiements est la liste des factures dont il reste un solde à encaisser.
+  useEffect(() => {
+    if (vue === "paiements") setFStatut("impayees");
+    else if (vue === "factures") setFStatut((s) => (s === "impayees" ? "tous" : s));
+  }, [vue]);
+
+
   const visibleInvoices = useMemo(() => {
     const q = fSearch.trim().toLowerCase();
     return invoices.filter((i) => {
