@@ -190,6 +190,21 @@ function Page() {
         </div>
       </header>
 
+      <nav aria-label="Sections de la facturation"
+        className="flex gap-1 overflow-x-auto border-b border-border/60 pb-px">
+        {VUES.map((v) => (
+          <button key={v.key} type="button" onClick={() => setVue(v.key)}
+            aria-current={vue === v.key ? "page" : undefined}
+            className={`min-h-11 whitespace-nowrap rounded-t-md px-4 text-sm font-medium transition-colors ${
+              vue === v.key
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}>
+            {v.label}
+          </button>
+        ))}
+      </nav>
+
       {!loading && missing.length > 0 && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
           <p className="font-medium flex items-center gap-2">
@@ -205,30 +220,46 @@ function Page() {
         </div>
       )}
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "Chiffre d'affaires facturé", value: `${stats.facture.toFixed(2)} CHF` },
-          { label: "Encaissé", value: `${stats.encaisse.toFixed(2)} CHF` },
-          { label: "Solde restant", value: `${stats.solde.toFixed(2)} CHF` },
-          { label: "Factures en retard", value: String(stats.retard) },
-        ].map((s) => (
-          <div key={s.label} className="rounded-lg border border-border/60 bg-card p-4">
-            <p className="text-xs text-muted-foreground">{s.label}</p>
-            <p className="text-lg font-semibold mt-1">{s.value}</p>
-          </div>
-        ))}
-      </section>
+      {vue === "tableau" && (
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "Chiffre d'affaires facturé", value: `${stats.facture.toFixed(2)} CHF` },
+            { label: "Encaissé", value: `${stats.encaisse.toFixed(2)} CHF` },
+            { label: "Solde restant", value: `${stats.solde.toFixed(2)} CHF` },
+            { label: "Factures en retard", value: String(stats.retard) },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-border/60 bg-card p-4">
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+              <p className="text-lg font-semibold mt-1">{s.value}</p>
+            </div>
+          ))}
+        </section>
+      )}
 
-      {!loading && missing.length === 0 && (
+      {vue === "tableau" && !loading && missing.length === 0 && (
         <MissingInvoices
           onCreated={(id) => { setEditorId(id); void refresh(); }}
         />
       )}
 
-      {!loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
+      {vue === "rappels" && !loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
+
+      {vue === "rapports" && !loading && <InvoiceReports />}
+
+      {vue === "parametres" && (
+        <section className="rounded-lg border border-border/60 bg-card p-5 space-y-3">
+          <h2 className="text-lg font-semibold">Paramètres de facturation</h2>
+          <p className="text-sm text-muted-foreground">
+            Identité de l'émetteur, logo, IBAN ou QR-IBAN, TVA, délai de paiement et
+            conditions. Ces informations alimentent la QR-facture et le PDF.
+          </p>
+          <Button className="min-h-11" onClick={() => setOpenSet(true)}>
+            <Settings2 className="h-4 w-4 mr-2" aria-hidden="true" /> Ouvrir les paramètres
+          </Button>
+        </section>
+      )}
 
 
-      {!loading && <InvoiceReports />}
 
       <section>
 
