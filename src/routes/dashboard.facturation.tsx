@@ -25,6 +25,7 @@ import BillingServices from "@/components/dashboard/BillingServices";
 import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
 import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
 import BankReconciliation from "@/components/dashboard/BankReconciliation";
+import { INVOICE_LANGS, INVOICE_LANG_LABELS } from "@/lib/invoice-i18n";
 
 import {
   listMyBillingServices, listTariffPositions,
@@ -460,6 +461,7 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
       assujetti_tva: existing?.assujetti_tva ?? false,
       taux_tva: existing?.taux_tva ?? "",
       next_invoice_number: existing?.next_invoice_number ?? 1,
+      langue_facture: existing?.langue_facture ?? "fr",
       remise_a_zero_annuelle: existing?.remise_a_zero_annuelle ?? true,
     });
     setShowErrors(false);
@@ -629,6 +631,17 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
               </div>
               <Field state={f} set={set} k="delai_paiement_jours" label="Délai de paiement (jours)" type="number" />
               <Field state={f} set={set} k="next_invoice_number" label="Prochain numéro" type="number" />
+              <div className="space-y-1">
+                <Label htmlFor="langue-def">Langue des factures</Label>
+                <Select value={f.langue_facture} onValueChange={(v) => set("langue_facture", v)}>
+                  <SelectTrigger id="langue-def"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {INVOICE_LANGS.map((l) => (
+                      <SelectItem key={l} value={l}>{INVOICE_LANG_LABELS[l]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Switch id="rz" checked={!!f.remise_a_zero_annuelle}
@@ -680,6 +693,7 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
     client_pays: "CH", client_email: "", currency: settings?.devise_defaut ?? "CHF",
     date_emission: new Date().toISOString().slice(0, 10),
     date_prestation: "", date_echeance: "", communication: "", notes: "",
+    langue: settings?.langue_facture ?? "fr",
   });
   const [lines, setLines] = useState<EditLine[]>([
     { description: "Séance", quantite: 1, prix_unitaire: 0, remise_pct: 0, tva_taux: defaultRate },
@@ -715,6 +729,7 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
         date_prestation: invoice.date_prestation ?? "",
         date_echeance: invoice.date_echeance ?? "",
         communication: invoice.communication ?? "", notes: invoice.notes ?? "",
+        langue: (invoice as any).langue ?? settings?.langue_facture ?? "fr",
       });
       if (ls.length) {
         setLines(ls.map((l: TherapistInvoiceLine) => ({
@@ -800,6 +815,7 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
         reference_type: "none" as const,
         communication: f.communication || null,
         notes: f.notes || null,
+        langue: (f.langue ?? "fr") as "fr" | "de" | "it" | "en",
         lines: lines.map((l) => ({
           description: l.description.trim(),
           quantite: Number(l.quantite) || 1,
@@ -917,6 +933,17 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
                   <SelectContent>
                     <SelectItem value="CHF">CHF</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="langue">Langue de la facture</Label>
+                <Select value={f.langue ?? "fr"} onValueChange={(v) => set("langue", v)}>
+                  <SelectTrigger id="langue"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {INVOICE_LANGS.map((l) => (
+                      <SelectItem key={l} value={l}>{INVOICE_LANG_LABELS[l]}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
