@@ -108,6 +108,11 @@ function Page() {
   const [editorId, setEditorId] = useState<string | null | "new">(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const vue: Vue = search.vue ?? "tableau";
+  const setVue = (v: Vue) => { void navigate({ search: { vue: v }, replace: true }); };
+
 
   const refresh = useCallback(async () => {
     const [s, l, c, v] = await Promise.all([
