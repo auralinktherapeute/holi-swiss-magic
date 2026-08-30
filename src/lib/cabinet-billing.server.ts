@@ -248,6 +248,7 @@ export async function settleAppointmentPaid(
     appointment_id: input.appointment_id,
     prix_unitaire: input.prix_unitaire,
     tva_taux: input.tva_taux,
+    description: input.description ?? null,
   });
 
   const settings = await loadSettings(supabase, therapistId);
