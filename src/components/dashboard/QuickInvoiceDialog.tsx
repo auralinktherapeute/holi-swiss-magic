@@ -126,6 +126,10 @@ export function QuickInvoiceDialog({
     void queryClient.invalidateQueries({ queryKey: ["uninvoiced-appointments"] });
     void queryClient.invalidateQueries({ queryKey: ["cabinet-overview"] });
     void queryClient.invalidateQueries({ queryKey: ["therapist-invoices"] });
+    // Fiche client + liste clients : soldes, factures et RDV facturés doivent suivre.
+    void queryClient.invalidateQueries({ queryKey: ["cabinet-client"] });
+    void queryClient.invalidateQueries({ queryKey: ["cabinet-clients"] });
+    void queryClient.invalidateQueries({ queryKey: ["cabinet-stats"] });
   };
 
   const mutation = useMutation({
