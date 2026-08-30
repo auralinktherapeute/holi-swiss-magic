@@ -403,6 +403,82 @@ export type Database = {
           },
         ]
       }
+      billing_services: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          duration_min: number
+          id: string
+          internal_code: string | null
+          is_active: boolean
+          name: string
+          position: number
+          price: number
+          tariff_position_id: string | null
+          therapist_id: string
+          updated_at: string
+          vat_rate: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          internal_code?: string | null
+          is_active?: boolean
+          name: string
+          position?: number
+          price?: number
+          tariff_position_id?: string | null
+          therapist_id: string
+          updated_at?: string
+          vat_rate?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          internal_code?: string | null
+          is_active?: boolean
+          name?: string
+          position?: number
+          price?: number
+          tariff_position_id?: string | null
+          therapist_id?: string
+          updated_at?: string
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_services_tariff_position_id_fkey"
+            columns: ["tariff_position_id"]
+            isOneToOne: false
+            referencedRelation: "tariff_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_services_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_services_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_periods: {
         Row: {
           created_at: string
@@ -3580,6 +3656,92 @@ export type Database = {
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tariff_catalogs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          source: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          source?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          source?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      tariff_positions: {
+        Row: {
+          catalog_id: string
+          code: string
+          created_at: string
+          description: string | null
+          designation: string
+          id: string
+          is_active: boolean
+          unit: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          catalog_id: string
+          code: string
+          created_at?: string
+          description?: string | null
+          designation: string
+          id?: string
+          is_active?: boolean
+          unit?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          catalog_id?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          designation?: string
+          id?: string
+          is_active?: boolean
+          unit?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tariff_positions_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "tariff_catalogs"
             referencedColumns: ["id"]
           },
         ]

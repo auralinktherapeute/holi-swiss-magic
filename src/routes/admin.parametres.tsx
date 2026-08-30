@@ -5,6 +5,7 @@ import { Save, RotateCcw, Globe, CreditCard, Shield, Bell, Tag } from "lucide-re
 import { toast } from "sonner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { AdminSpecialtiesPanel } from "@/components/admin/AdminSpecialtiesPanel";
+import Tariff590Import from "@/components/admin/Tariff590Import";
 import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin/parametres")({ component: Page });
@@ -70,7 +71,7 @@ function Section({ icon: Icon, title, children }: { icon: any; title: string; ch
 function Page() {
   const [s, setS] = useSessionState<Settings>("admin.settings.form", DEFAULTS);
   const [dirty, setDirty] = useState(false);
-  const [tab, setTab] = useSessionState<"general" | "taxonomy">("admin.settings.tab", "general");
+  const [tab, setTab] = useSessionState<"general" | "taxonomy" | "tarif590">("admin.settings.tab", "general");
 
   const update = (patch: Partial<Settings>) => { setS((prev) => ({ ...prev, ...patch })); setDirty(true); };
 
@@ -103,7 +104,7 @@ function Page() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 16, borderBottom: "1px solid rgba(184,110,249,0.15)" }}>
-          {[{ k: "general", label: "Général" }, { k: "taxonomy", label: "Taxonomie spécialités" }].map((t) => (
+          {[{ k: "general", label: "Général" }, { k: "taxonomy", label: "Taxonomie spécialités" }, { k: "tarif590", label: "Tarif 590" }].map((t) => (
             <button key={t.k} onClick={() => setTab(t.k as any)}
               style={{
                 padding: "10px 16px", background: "none", border: "none", cursor: "pointer",
@@ -121,6 +122,16 @@ function Page() {
               <span style={{ fontSize: 15, fontWeight: 600 }}>Familles, spécialités & imports en attente</span>
             </div>
             <AdminSpecialtiesPanel />
+          </div>
+        )}
+
+        {tab === "tarif590" && (
+          <div className="adm-card" style={{ padding: 20, marginBottom: 40 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <Tag size={16} style={{ color: "#b86ef9" }} />
+              <span style={{ fontSize: 15, fontWeight: 600 }}>Catalogue Tarif 590</span>
+            </div>
+            <Tariff590Import />
           </div>
         )}
 

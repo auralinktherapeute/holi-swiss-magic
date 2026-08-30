@@ -21,6 +21,12 @@ import InvoiceReminders from "@/components/dashboard/InvoiceReminders";
 import InvoiceReports from "@/components/dashboard/InvoiceReports";
 import { MissingInvoices } from "@/components/dashboard/MissingInvoices";
 import InvoiceLogoUploader from "@/components/dashboard/InvoiceLogoUploader";
+import BillingServices from "@/components/dashboard/BillingServices";
+import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
+import {
+  listMyBillingServices, listTariffPositions,
+  type BillingService, type TariffPosition,
+} from "@/lib/billing-services.functions";
 
 import {
   computeInvoiceTotals, isValidIban, isQrIban, missingInvoiceSettings,
@@ -39,8 +45,24 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+type Vue = "tableau" | "factures" | "paiements" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
+const VUES: { key: Vue; label: string }[] = [
+  { key: "tableau", label: "Tableau de bord" },
+  { key: "factures", label: "Factures" },
+  { key: "paiements", label: "Paiements" },
+  { key: "prestations", label: "Prestations" },
+  { key: "tarif590", label: "Tarif 590" },
+  { key: "rappels", label: "Rappels" },
+  { key: "rapports", label: "Rapports" },
+  { key: "parametres", label: "Paramètres" },
+];
+
 export const Route = createFileRoute("/dashboard/facturation")({
   component: Page,
+  validateSearch: (s: Record<string, unknown>): { vue?: Vue } => {
+    const v = String(s['vue'] ?? "");
+    return VUES.some((x) => x.key === v) ? { vue: v as Vue } : {};
+  },
   head: () => ({
     meta: [
       { title: "Facturation suisse — Espace thérapeute HoliSwiss" },
@@ -49,6 +71,7 @@ export const Route = createFileRoute("/dashboard/facturation")({
     ],
   }),
 });
+
 
 type Contact = {
   id: string; first_name: string; last_name: string; email: string | null;
@@ -93,6 +116,11 @@ function Page() {
   const [editorId, setEditorId] = useState<string | null | "new">(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const vue: Vue = search.vue ?? "tableau";
+  const setVue = (v: Vue) => { void navigate({ search: { vue: v }, replace: true }); };
+
 
   const refresh = useCallback(async () => {
     const [s, l, c, v] = await Promise.all([
@@ -120,6 +148,13 @@ function Page() {
   const [fSearch, setFSearch] = useState("");
   const [fFrom, setFFrom] = useState("");
   const [fTo, setFTo] = useState("");
+
+  // L'onglet Paiements est la liste des factures dont il reste un solde à encaisser.
+  useEffect(() => {
+    if (vue === "paiements") setFStatut("impayees");
+    else if (vue === "factures") setFStatut((s) => (s === "impayees" ? "tous" : s));
+  }, [vue]);
+
 
   const visibleInvoices = useMemo(() => {
     const q = fSearch.trim().toLowerCase();
@@ -170,6 +205,21 @@ function Page() {
         </div>
       </header>
 
+      <nav aria-label="Sections de la facturation"
+        className="flex gap-1 overflow-x-auto border-b border-border/60 pb-px">
+        {VUES.map((v) => (
+          <button key={v.key} type="button" onClick={() => setVue(v.key)}
+            aria-current={vue === v.key ? "page" : undefined}
+            className={`min-h-11 whitespace-nowrap rounded-t-md px-4 text-sm font-medium transition-colors ${
+              vue === v.key
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}>
+            {v.label}
+          </button>
+        ))}
+      </nav>
+
       {!loading && missing.length > 0 && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
           <p className="font-medium flex items-center gap-2">
@@ -185,37 +235,56 @@ function Page() {
         </div>
       )}
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "Chiffre d'affaires facturé", value: `${stats.facture.toFixed(2)} CHF` },
-          { label: "Encaissé", value: `${stats.encaisse.toFixed(2)} CHF` },
-          { label: "Solde restant", value: `${stats.solde.toFixed(2)} CHF` },
-          { label: "Factures en retard", value: String(stats.retard) },
-        ].map((s) => (
-          <div key={s.label} className="rounded-lg border border-border/60 bg-card p-4">
-            <p className="text-xs text-muted-foreground">{s.label}</p>
-            <p className="text-lg font-semibold mt-1">{s.value}</p>
-          </div>
-        ))}
-      </section>
+      {vue === "tableau" && (
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "Chiffre d'affaires facturé", value: `${stats.facture.toFixed(2)} CHF` },
+            { label: "Encaissé", value: `${stats.encaisse.toFixed(2)} CHF` },
+            { label: "Solde restant", value: `${stats.solde.toFixed(2)} CHF` },
+            { label: "Factures en retard", value: String(stats.retard) },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-border/60 bg-card p-4">
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+              <p className="text-lg font-semibold mt-1">{s.value}</p>
+            </div>
+          ))}
+        </section>
+      )}
 
-      {!loading && missing.length === 0 && (
+      {vue === "tableau" && !loading && missing.length === 0 && (
         <MissingInvoices
           onCreated={(id) => { setEditorId(id); void refresh(); }}
         />
       )}
 
-      {!loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
+      {vue === "prestations" && <BillingServices />}
 
+      {vue === "tarif590" && <Tariff590Panel />}
 
-      {!loading && <InvoiceReports />}
+      {vue === "rappels" && !loading && <InvoiceReminders onSent={() => { void refresh(); }} />}
 
+      {vue === "rapports" && !loading && <InvoiceReports />}
+
+      {vue === "parametres" && (
+        <section className="rounded-lg border border-border/60 bg-card p-5 space-y-3">
+          <h2 className="text-lg font-semibold">Paramètres de facturation</h2>
+          <p className="text-sm text-muted-foreground">
+            Identité de l'émetteur, logo, IBAN ou QR-IBAN, TVA, délai de paiement et
+            conditions. Ces informations alimentent la QR-facture et le PDF.
+          </p>
+          <Button className="min-h-11" onClick={() => setOpenSet(true)}>
+            <Settings2 className="h-4 w-4 mr-2" aria-hidden="true" /> Ouvrir les paramètres
+          </Button>
+        </section>
+      )}
+      {(vue === "factures" || vue === "paiements") && (
       <section>
 
         <h2 className="text-lg font-semibold mb-3">
-          Factures ({visibleInvoices.length}
+          {vue === "paiements" ? "Paiements en attente" : "Factures"} ({visibleInvoices.length}
           {visibleInvoices.length !== invoices.length ? ` sur ${invoices.length}` : ""})
         </h2>
+
 
         {!loading && invoices.length > 0 && (
           <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 items-end">
@@ -303,6 +372,8 @@ function Page() {
           </div>
         )}
       </section>
+      )}
+
 
       <SettingsDialog open={openSet} onOpenChange={setOpenSet} existing={settings}
         upsertFn={upsertSettingsFn} onSaved={async () => { setOpenSet(false); await refresh(); }} />
@@ -611,6 +682,18 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: any) => setF((s) => ({ ...s, [k]: v }));
 
+  // Catalogue de prestations (+ positions Tarif 590) pour insérer une ligne en un clic.
+  const servicesFn = useServerFn(listMyBillingServices);
+  const tariffsFn = useServerFn(listTariffPositions);
+  const [services, setServices] = useState<BillingService[]>([]);
+  const [tariffs, setTariffs] = useState<TariffPosition[]>([]);
+  useEffect(() => {
+    void Promise.all([servicesFn(), tariffsFn({ data: {} })])
+      .then(([s, t]) => { setServices(s); setTariffs(t); })
+      .catch(() => { /* le catalogue est optionnel */ });
+  }, [servicesFn, tariffsFn]);
+
+
   useEffect(() => {
     if (!invoiceId) return;
     getFn({ data: { id: invoiceId } }).then(({ invoice, lines: ls }) => {
@@ -836,15 +919,42 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
           </fieldset>
 
           <fieldset className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <legend className="text-sm font-semibold">Prestations</legend>
-              <Button size="sm" variant="outline" className="min-h-11"
-                onClick={() => setLines((s) => [...s, {
-                  description: "", quantite: 1, prix_unitaire: 0, remise_pct: 0, tva_taux: defaultRate,
-                }])}>
-                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" /> Ajouter une ligne
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                {services.length > 0 && (
+                  <select aria-label="Insérer une prestation du catalogue"
+                    className="min-h-11 rounded-md border border-input bg-background px-3 text-sm"
+                    value="" onChange={(e) => {
+                      const s = services.find((x) => x.id === e.target.value);
+                      if (!s) return;
+                      const tp = s.tariff_position_id
+                        ? tariffs.find((t) => t.id === s.tariff_position_id) : undefined;
+                      setLines((ls) => [...ls, {
+                        description: tp
+                          ? `${tp.code} — ${s.name}${s.duration_min ? ` (${s.duration_min} min)` : ""}`
+                          : `${s.name}${s.duration_min ? ` (${s.duration_min} min)` : ""}`,
+                        quantite: 1, prix_unitaire: Number(s.price),
+                        remise_pct: 0, tva_taux: Number(s.vat_rate ?? defaultRate),
+                      }]);
+                    }}>
+                    <option value="">Insérer une prestation…</option>
+                    {services.filter((s) => s.is_active).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} — {Number(s.price).toFixed(2)} CHF
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <Button size="sm" variant="outline" className="min-h-11"
+                  onClick={() => setLines((s) => [...s, {
+                    description: "", quantite: 1, prix_unitaire: 0, remise_pct: 0, tva_taux: defaultRate,
+                  }])}>
+                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" /> Ajouter une ligne
+                </Button>
+              </div>
             </div>
+
             <div className="space-y-2">
               {lines.map((l, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 items-end">
