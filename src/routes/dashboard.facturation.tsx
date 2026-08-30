@@ -39,8 +39,22 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+type Vue = "tableau" | "factures" | "paiements" | "rappels" | "rapports" | "parametres";
+const VUES: { key: Vue; label: string }[] = [
+  { key: "tableau", label: "Tableau de bord" },
+  { key: "factures", label: "Factures" },
+  { key: "paiements", label: "Paiements" },
+  { key: "rappels", label: "Rappels" },
+  { key: "rapports", label: "Rapports" },
+  { key: "parametres", label: "Paramètres" },
+];
+
 export const Route = createFileRoute("/dashboard/facturation")({
   component: Page,
+  validateSearch: (s: Record<string, unknown>): { vue?: Vue } => {
+    const v = String(s['vue'] ?? "");
+    return VUES.some((x) => x.key === v) ? { vue: v as Vue } : {};
+  },
   head: () => ({
     meta: [
       { title: "Facturation suisse — Espace thérapeute HoliSwiss" },
@@ -49,6 +63,7 @@ export const Route = createFileRoute("/dashboard/facturation")({
     ],
   }),
 });
+
 
 type Contact = {
   id: string; first_name: string; last_name: string; email: string | null;
