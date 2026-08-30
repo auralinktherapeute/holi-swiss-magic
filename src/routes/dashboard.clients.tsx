@@ -19,6 +19,7 @@ import {
   getCabinetClient, listCabinetClients, updateClientConsent,
 } from "@/lib/cabinet.functions";
 import ClientDocuments from "@/components/dashboard/ClientDocuments";
+import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
 export const Route = createFileRoute("/dashboard/clients")({
   component: ClientsPage,
