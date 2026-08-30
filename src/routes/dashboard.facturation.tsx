@@ -278,8 +278,10 @@ function Page() {
           </Button>
         </section>
       )}
+      {vue === "paiements" && <BankReconciliation onApplied={() => { void refresh(); }} />}
       {(vue === "factures" || vue === "paiements") && (
       <section>
+
 
         <h2 className="text-lg font-semibold mb-3">
           {vue === "paiements" ? "Paiements en attente" : "Factures"} ({visibleInvoices.length}
