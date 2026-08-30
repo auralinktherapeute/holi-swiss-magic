@@ -24,6 +24,8 @@ import InvoiceLogoUploader from "@/components/dashboard/InvoiceLogoUploader";
 import BillingServices from "@/components/dashboard/BillingServices";
 import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
 import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
+import BankReconciliation from "@/components/dashboard/BankReconciliation";
+
 import {
   listMyBillingServices, listTariffPositions,
   type BillingService, type TariffPosition,
@@ -278,8 +280,10 @@ function Page() {
           </Button>
         </section>
       )}
+      {vue === "paiements" && <BankReconciliation onApplied={() => { void refresh(); }} />}
       {(vue === "factures" || vue === "paiements") && (
       <section>
+
 
         <h2 className="text-lg font-semibold mb-3">
           {vue === "paiements" ? "Paiements en attente" : "Factures"} ({visibleInvoices.length}
