@@ -24,6 +24,8 @@ import InvoiceLogoUploader from "@/components/dashboard/InvoiceLogoUploader";
 import BillingServices from "@/components/dashboard/BillingServices";
 import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
 import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
+import BankReconciliation from "@/components/dashboard/BankReconciliation";
+
 import {
   listMyBillingServices, listTariffPositions,
   type BillingService, type TariffPosition,
