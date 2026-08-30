@@ -44,6 +44,17 @@ export async function buildInvoiceHtml(
     .eq("therapist_id", therapistId).maybeSingle();
   if (!settings) throw new Error("Configurez d'abord vos réglages de facturation.");
 
+  const lang = normalizeInvoiceLang(inv.langue ?? settings.langue_facture);
+  const t = invoiceDict(lang);
+  const locale = INVOICE_LOCALE[lang];
+  const fmtDate = (d: unknown): string => {
+    if (!d) return "—";
+    const dt = new Date(String(d));
+    return Number.isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString(locale);
+  };
+
+
+
   const { data: lineRows } = await supabase
     .from("therapist_invoice_lines").select("*")
     .eq("invoice_id", invoiceId).order("position", { ascending: true });
