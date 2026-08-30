@@ -18,6 +18,7 @@ import {
   listUninvoicedAppointments, invoiceAppointment, dismissAppointmentInvoicing,
   settleAppointment,
 } from "@/lib/cabinet.functions";
+import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
 /**
  * « Factures manquantes » : rendez-vous honorés sans facture. Un clic crée un
@@ -33,6 +34,7 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
 
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [pendingSkip, setPendingSkip] = useState<string | null>(null);
+  const [wizard, setWizard] = useState<QuickInvoiceTarget | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["uninvoiced-appointments"],
@@ -187,6 +189,17 @@ export function MissingInvoices({ onCreated }: { onCreated?: (invoiceId: string)
           )}
         </CardContent>
       </Card>
+
+      <QuickInvoiceDialog
+        appointment={wizard}
+        open={wizard !== null}
+        onOpenChange={(o) => !o && setWizard(null)}
+        onCreated={(id) => {
+          refresh();
+          if (onCreated) onCreated(id);
+          else void navigate({ to: "/dashboard/facturation" });
+        }}
+      />
 
       <AlertDialog open={pendingSkip !== null} onOpenChange={(o) => !o && setPendingSkip(null)}>
         <AlertDialogContent>
