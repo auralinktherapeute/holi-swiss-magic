@@ -19,6 +19,7 @@ import {
   getCabinetClient, listCabinetClients, updateClientConsent,
 } from "@/lib/cabinet.functions";
 import ClientDocuments from "@/components/dashboard/ClientDocuments";
+import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
 export const Route = createFileRoute("/dashboard/clients")({
   component: ClientsPage,
@@ -237,6 +238,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
   });
 
   const client: any = data?.client;
+  const [wizard, setWizard] = useState<QuickInvoiceTarget | null>(null);
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -292,18 +294,42 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </section>
 
             <Section title="Rendez-vous" icon={Calendar} empty="Aucun rendez-vous enregistré.">
-              {data.appointments.slice(0, 8).map((a: any) => (
-                <li key={a.id} className="flex items-center justify-between gap-2 py-1.5 text-sm">
-                  <span>{shortDate(a.appointment_date)} {a.appointment_time ? String(a.appointment_time).slice(0, 5) : ""}</span>
-                  <span className="text-muted-foreground truncate">{a.service_name ?? "Séance"}</span>
-                  <Badge variant={a.status === "confirmed" ? "default" : "secondary"}>{a.status}</Badge>
-                  {a.invoiced_at ? (
-                    <span className="text-xs text-emerald-500">facturé</span>
-                  ) : (
-                    <span className="text-xs text-amber-500">non facturé</span>
-                  )}
-                </li>
-              ))}
+              {data.appointments.slice(0, 8).map((a: any) => {
+                const billable =
+                  !a.invoiced_at && (a.status === "completed" || a.status === "confirmed");
+                return (
+                  <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm">
+                    <span>{shortDate(a.appointment_date)} {a.appointment_time ? String(a.appointment_time).slice(0, 5) : ""}</span>
+                    <span className="text-muted-foreground truncate">{a.service_name ?? "Séance"}</span>
+                    <Badge variant={a.status === "confirmed" ? "default" : "secondary"}>{a.status}</Badge>
+                    {a.invoiced_at ? (
+                      <span className="text-xs text-emerald-500">facturé</span>
+                    ) : (
+                      <span className="text-xs text-amber-500">non facturé</span>
+                    )}
+                    {billable && (
+                      <Button
+                        size="sm"
+                        className="min-h-9"
+                        onClick={() =>
+                          setWizard({
+                            id: a.id,
+                            client_name: `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim() || (a.patient_name ?? "Client"),
+                            date: a.appointment_date ?? null,
+                            time: a.appointment_time ? String(a.appointment_time).slice(0, 5) : null,
+                            service: a.service_name ?? null,
+                            duration_minutes: Number(a.duration_minutes ?? 0),
+                            suggested_price: 0,
+                            suggested_vat: 0,
+                          })
+                        }
+                      >
+                        Facturer…
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
             </Section>
 
             <Section title="Factures" icon={Receipt} empty="Aucune facture pour ce client.">
@@ -341,6 +367,12 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </p>
           </div>
         )}
+
+        <QuickInvoiceDialog
+          appointment={wizard}
+          open={!!wizard}
+          onOpenChange={(o) => { if (!o) setWizard(null); }}
+        />
       </DialogContent>
     </Dialog>
   );
