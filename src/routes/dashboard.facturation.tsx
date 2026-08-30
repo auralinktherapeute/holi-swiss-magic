@@ -670,6 +670,18 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: any) => setF((s) => ({ ...s, [k]: v }));
 
+  // Catalogue de prestations (+ positions Tarif 590) pour insérer une ligne en un clic.
+  const servicesFn = useServerFn(listMyBillingServices);
+  const tariffsFn = useServerFn(listTariffPositions);
+  const [services, setServices] = useState<BillingService[]>([]);
+  const [tariffs, setTariffs] = useState<TariffPosition[]>([]);
+  useEffect(() => {
+    void Promise.all([servicesFn(), tariffsFn({ data: {} })])
+      .then(([s, t]) => { setServices(s); setTariffs(t); })
+      .catch(() => { /* le catalogue est optionnel */ });
+  }, [servicesFn, tariffsFn]);
+
+
   useEffect(() => {
     if (!invoiceId) return;
     getFn({ data: { id: invoiceId } }).then(({ invoice, lines: ls }) => {
