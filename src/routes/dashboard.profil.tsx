@@ -503,15 +503,33 @@ function ProfilePage() {
     const v = customSpec.trim();
     if (!v || specialties.includes(v)) return;
     setSpecialties((prev) => (prev.includes(v) ? prev : [...prev, v]));
-    setCustomSpecs((prev) => (prev.includes(v) ? prev : [...prev, v]));
     setCustomSpec("");
     markDirty();
   };
   const removeSpec = (s: string) => {
     setSpecialties((prev) => prev.filter((x) => x !== s));
-    setCustomSpecs((prev) => prev.filter((x) => x !== s));
+    setEditingSpec((cur) => (cur && cur.original === s ? null : cur));
     markDirty();
   };
+  const renameCustomSpec = (original: string, next: string) => {
+    const v = next.trim();
+    setEditingSpec(null);
+    if (!v || v === original) return;
+    setSpecialties((prev) => {
+      const out: string[] = [];
+      const seen = new Set<string>();
+      for (const s of prev) {
+        const label = s === original ? v : s;
+        const k = label.toLowerCase();
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(label);
+      }
+      return out;
+    });
+    markDirty();
+  };
+
 
   const toggleLang = (code: string) => {
     setLangs((prev) => (prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]));
