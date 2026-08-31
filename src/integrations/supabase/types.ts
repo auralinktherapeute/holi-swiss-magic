@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_exports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          export_type: string
+          file_names: Json
+          id: string
+          invoice_count: number
+          payment_count: number
+          period_end: string
+          period_start: string
+          therapist_id: string
+          total_size_bytes: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          export_type: string
+          file_names?: Json
+          id?: string
+          invoice_count?: number
+          payment_count?: number
+          period_end: string
+          period_start: string
+          therapist_id: string
+          total_size_bytes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          export_type?: string
+          file_names?: Json
+          id?: string
+          invoice_count?: number
+          payment_count?: number
+          period_end?: string
+          period_start?: string
+          therapist_id?: string
+          total_size_bytes?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_exports_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_exports_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_pulse: {
         Row: {
           created_at: string
@@ -1018,6 +1078,7 @@ export type Database = {
           payment_link: string | null
           phone: string | null
           postal_code: string | null
+          preferred_document_language: string
           private_notes: string | null
           relation_status: string
           retention_until: string | null
@@ -1046,6 +1107,7 @@ export type Database = {
           payment_link?: string | null
           phone?: string | null
           postal_code?: string | null
+          preferred_document_language?: string
           private_notes?: string | null
           relation_status?: string
           retention_until?: string | null
@@ -1074,6 +1136,7 @@ export type Database = {
           payment_link?: string | null
           phone?: string | null
           postal_code?: string | null
+          preferred_document_language?: string
           private_notes?: string | null
           relation_status?: string
           retention_until?: string | null
@@ -1742,6 +1805,117 @@ export type Database = {
           },
         ]
       }
+      email_send_history: {
+        Row: {
+          accounting_export_id: string | null
+          attachment_names: Json
+          bounced_at: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          delivered_at: string | null
+          email_type: string
+          error_message: string | null
+          from_email: string | null
+          from_name: string | null
+          id: string
+          invoice_id: string | null
+          language: string | null
+          reply_to: string | null
+          resend_email_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          therapist_id: string | null
+          to_email: string
+          updated_at: string
+        }
+        Insert: {
+          accounting_export_id?: string | null
+          attachment_names?: Json
+          bounced_at?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          email_type: string
+          error_message?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          invoice_id?: string | null
+          language?: string | null
+          reply_to?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          therapist_id?: string | null
+          to_email: string
+          updated_at?: string
+        }
+        Update: {
+          accounting_export_id?: string | null
+          attachment_names?: Json
+          bounced_at?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          email_type?: string
+          error_message?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          invoice_id?: string | null
+          language?: string | null
+          reply_to?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          therapist_id?: string | null
+          to_email?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_send_history_accounting_export_id_fkey"
+            columns: ["accounting_export_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_exports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_send_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_send_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_send_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_send_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           category: Database["public"]["Enums"]["event_category"]
@@ -2098,6 +2272,67 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          invoice_id: string
+          new_status: string
+          note: string | null
+          previous_status: string | null
+          reason: string | null
+          therapist_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          invoice_id: string
+          new_status: string
+          note?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          therapist_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          new_status?: string
+          note?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_status_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_status_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_status_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
             referencedColumns: ["id"]
           },
         ]
@@ -4529,9 +4764,12 @@ export type Database = {
       }
       therapist_invoice_lines: {
         Row: {
+          appointment_id: string | null
+          commentaire: string | null
           created_at: string
           date_prestation: string | null
           description: string
+          duree_min: number | null
           id: string
           invoice_id: string
           montant_ht: number
@@ -4540,15 +4778,23 @@ export type Database = {
           prix_unitaire: number
           quantite: number
           remise_pct: number
+          tariff_code: string | null
+          tariff_label: string | null
+          tariff_system: string | null
+          tariff_version: string | null
           therapist_id: string
           tva_montant: number
           tva_taux: number
+          unite: string | null
           updated_at: string
         }
         Insert: {
+          appointment_id?: string | null
+          commentaire?: string | null
           created_at?: string
           date_prestation?: string | null
           description: string
+          duree_min?: number | null
           id?: string
           invoice_id: string
           montant_ht?: number
@@ -4557,15 +4803,23 @@ export type Database = {
           prix_unitaire?: number
           quantite?: number
           remise_pct?: number
+          tariff_code?: string | null
+          tariff_label?: string | null
+          tariff_system?: string | null
+          tariff_version?: string | null
           therapist_id: string
           tva_montant?: number
           tva_taux?: number
+          unite?: string | null
           updated_at?: string
         }
         Update: {
+          appointment_id?: string | null
+          commentaire?: string | null
           created_at?: string
           date_prestation?: string | null
           description?: string
+          duree_min?: number | null
           id?: string
           invoice_id?: string
           montant_ht?: number
@@ -4574,12 +4828,24 @@ export type Database = {
           prix_unitaire?: number
           quantite?: number
           remise_pct?: number
+          tariff_code?: string | null
+          tariff_label?: string | null
+          tariff_system?: string | null
+          tariff_version?: string | null
           therapist_id?: string
           tva_montant?: number
           tva_taux?: number
+          unite?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "therapist_invoice_lines_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "therapist_invoice_lines_invoice_id_fkey"
             columns: ["invoice_id"]
@@ -4677,6 +4943,9 @@ export type Database = {
           adresse_rue: string
           adresse_ville: string
           assujetti_tva: boolean
+          autoriser_taux_personnalise: boolean
+          comptable_email: string | null
+          comptable_nom: string | null
           conditions_paiement: string | null
           created_at: string
           delai_paiement_jours: number
@@ -4697,6 +4966,7 @@ export type Database = {
           raison_sociale: string | null
           remise_a_zero_annuelle: boolean
           taux_tva: number | null
+          taux_tva_autorises: number[]
           telephone: string | null
           therapist_id: string
           titulaire_adresse: string | null
@@ -4705,6 +4975,7 @@ export type Database = {
           titulaire_pays: string
           titulaire_ville: string | null
           updated_at: string
+          use_tarif_590: boolean
         }
         Insert: {
           adresse_npa: string
@@ -4712,6 +4983,9 @@ export type Database = {
           adresse_rue: string
           adresse_ville: string
           assujetti_tva?: boolean
+          autoriser_taux_personnalise?: boolean
+          comptable_email?: string | null
+          comptable_nom?: string | null
           conditions_paiement?: string | null
           created_at?: string
           delai_paiement_jours?: number
@@ -4732,6 +5006,7 @@ export type Database = {
           raison_sociale?: string | null
           remise_a_zero_annuelle?: boolean
           taux_tva?: number | null
+          taux_tva_autorises?: number[]
           telephone?: string | null
           therapist_id: string
           titulaire_adresse?: string | null
@@ -4740,6 +5015,7 @@ export type Database = {
           titulaire_pays?: string
           titulaire_ville?: string | null
           updated_at?: string
+          use_tarif_590?: boolean
         }
         Update: {
           adresse_npa?: string
@@ -4747,6 +5023,9 @@ export type Database = {
           adresse_rue?: string
           adresse_ville?: string
           assujetti_tva?: boolean
+          autoriser_taux_personnalise?: boolean
+          comptable_email?: string | null
+          comptable_nom?: string | null
           conditions_paiement?: string | null
           created_at?: string
           delai_paiement_jours?: number
@@ -4767,6 +5046,7 @@ export type Database = {
           raison_sociale?: string | null
           remise_a_zero_annuelle?: boolean
           taux_tva?: number | null
+          taux_tva_autorises?: number[]
           telephone?: string | null
           therapist_id?: string
           titulaire_adresse?: string | null
@@ -4775,6 +5055,7 @@ export type Database = {
           titulaire_pays?: string
           titulaire_ville?: string | null
           updated_at?: string
+          use_tarif_590?: boolean
         }
         Relationships: [
           {
