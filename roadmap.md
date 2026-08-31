@@ -6,4 +6,4 @@
 - [x] Reconstruire le détail Agenda avec statuts, client et facturation
 - [x] Compléter Réservations avec annulation motivée, absent et accès client
 - [ ] Vérifier Agenda, Clients et facturation avec la session réelle
-- [ ] Contrôler build, sécurité et rapport final
+- [x] Contrôler build, sécurité et rapport final
