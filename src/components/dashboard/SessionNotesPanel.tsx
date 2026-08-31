@@ -133,7 +133,7 @@ export default function SessionNotesPanel({ contactId, contactName }: { contactI
             <Download className="h-3.5 w-3.5 mr-1" /> PDF
           </Button>
           <Button type="button" size="sm" variant="secondary" onClick={() => setEditing(empty())}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Nouvelle séance
+            <Plus className="h-3.5 w-3.5 mr-1" /> Nouvelle Note
           </Button>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function SessionNotesPanel({ contactId, contactName }: { contactI
       {editing && (
         <div className="rounded-lg border border-primary/40 bg-background p-3 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-primary">{editing.id ? "Modifier la séance" : "Nouvelle séance"}</span>
+            <span className="text-xs font-semibold text-primary">{editing.id ? "Modifier la séance" : "Nouvelle Note"}</span>
             <button type="button" onClick={() => setEditing(null)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
           </div>
           <div className="grid grid-cols-2 gap-2">
