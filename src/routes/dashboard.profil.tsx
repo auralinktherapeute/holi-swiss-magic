@@ -953,16 +953,42 @@ function ProfilePage() {
             </div>
             {customSpecs.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {customSpecs.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs text-white">
-                    {s}
-                    <button type="button" onClick={() => removeSpec(s)} className="opacity-60 hover:opacity-100" aria-label={`Retirer ${s}`}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
+                {customSpecs.map((s) =>
+                  editingSpec?.original === s ? (
+                    <span key={s} className="inline-flex items-center gap-1.5">
+                      <Input
+                        autoFocus
+                        value={editingSpec.value}
+                        onChange={(e) => setEditingSpec({ original: s, value: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.preventDefault(); renameCustomSpec(s, editingSpec.value); }
+                          if (e.key === "Escape") { e.preventDefault(); setEditingSpec(null); }
+                        }}
+                        onBlur={() => renameCustomSpec(s, editingSpec.value)}
+                        className={`${inputClass} h-9 w-56`}
+                        aria-label={`Modifier ${s}`}
+                      />
+                    </span>
+                  ) : (
+                    <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs text-white">
+                      {s}
+                      <button
+                        type="button"
+                        onClick={() => setEditingSpec({ original: s, value: s })}
+                        className="opacity-60 hover:opacity-100"
+                        aria-label={`Modifier ${s}`}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button type="button" onClick={() => removeSpec(s)} className="opacity-60 hover:opacity-100" aria-label={`Retirer ${s}`}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ),
+                )}
               </div>
             )}
+
           </div>
         </Section>
 
