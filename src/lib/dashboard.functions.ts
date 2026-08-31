@@ -157,7 +157,7 @@ export const listMyReservations = createServerFn({ method: "GET" })
     const { supabaseAdmin, therapistId } = await getOwnedTherapist(context.userId);
     const { data, error } = await supabaseAdmin
       .from("appointments")
-      .select("id,patient_name,patient_email,patient_phone,appointment_date,appointment_time,status,notes")
+      .select("id,patient_name,patient_email,patient_phone,appointment_date,appointment_time,status,notes,service_name,duration_minutes,client_id")
       .eq("therapist_id", therapistId)
       .order("appointment_date", { ascending: false })
       .order("appointment_time", { ascending: false });
