@@ -11,6 +11,30 @@ import { BLOG_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 
 export const Route = createFileRoute("/$lang/blog/")({
   component: Page,
+  /**
+   * Rendu serveur de la liste d'articles.
+   *
+   * Avant : les articles n'étaient chargés que par `useQuery`, donc côté
+   * client. Le HTML servi à un crawler ne contenait que le gabarit — 55 liens
+   * de navigation et **zéro lien d'article**. Les 248 articles (62 × 4 langues)
+   * n'étaient atteignables par aucun lien interne : orphelins. Le loader les
+   * injecte dans la réponse initiale (même correctif que
+   * `$lang.blog.categorie.$slug`).
+   */
+  loader: async ({ params }) => {
+    const lang = (params.lang as Lang) ?? "fr";
+    try {
+      let res = await getPublishedArticles({ data: { lang } });
+      // Les articles portent tous lang='fr' : sans ce repli, les listings
+      // DE/IT/EN seraient vides. Même logique que le composant.
+      if (!res?.articles?.length && lang !== "fr") {
+        res = await getPublishedArticles({ data: { lang: "fr" } });
+      }
+      return { articles: (res?.articles ?? []) as Array<Record<string, unknown>> };
+    } catch {
+      return { articles: [] as Array<Record<string, unknown>> };
+    }
+  },
   head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
@@ -70,8 +94,14 @@ function Page() {
   const l = (lang as Lang) ?? "fr";
   const copy = blogCopy(l);
 
+  // `initialData` vient du loader : la liste est présente dès le HTML initial,
+  // donc chaque article reçoit un lien interne crawlable. La clé est fixe et la
+  // requête n'est ni filtrée ni debouncée : l'alimenter ne change rien au
+  // comportement client.
+  const loaderData = Route.useLoaderData();
   const { data, isLoading } = useQuery({
     queryKey: ["articles", l],
+    initialData: loaderData?.articles ? { articles: loaderData.articles } : undefined,
     queryFn: async () => {
       const res = await getPublishedArticles({ data: { lang: l } });
       // Fallback FR si aucun article dans la langue sélectionnée

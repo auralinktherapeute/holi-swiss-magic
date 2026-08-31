@@ -11,6 +11,21 @@ const SITE = "https://holiswiss.ch";
 
 export const Route = createFileRoute("/$lang/evenements/")({
   component: Page,
+  /**
+   * Rendu serveur du listing : sans loader, `useQuery` ne s'exécute que côté
+   * client et le HTML servi aux crawlers ne contenait aucun lien vers les
+   * fiches d'événement — elles étaient orphelines. Même correctif que le
+   * listing du blog.
+   */
+  loader: async () => {
+    type Events = Awaited<ReturnType<typeof listPublishedEvents>>["events"];
+    try {
+      const res = await listPublishedEvents();
+      return { events: (res?.events ?? []) as Events };
+    } catch {
+      return { events: [] as unknown as Events };
+    }
+  },
   head: ({ params }) => {
     const url = `${SITE}/${params.lang}/evenements`;
     const titles: Record<string, string> = {
@@ -60,8 +75,11 @@ function Page() {
   const { lang } = Route.useParams();
   const { t, i18n } = useTranslation();
   if (i18n.language !== lang) i18n.changeLanguage(lang);
+  // `initialData` vient du loader : les liens sont dans le HTML initial.
+  const loaderData = Route.useLoaderData();
   const { data, isLoading } = useQuery({
     queryKey: ["public-events"],
+    initialData: loaderData?.events ? { events: loaderData.events } : undefined,
     queryFn: () => listPublishedEvents(),
   });
 
