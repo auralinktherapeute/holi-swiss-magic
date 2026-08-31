@@ -22,6 +22,7 @@ import {
 } from "@/lib/cabinet.functions";
 import { upsertTask } from "@/lib/crm-therapist.functions";
 import ClientDocuments from "@/components/dashboard/ClientDocuments";
+import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
 
