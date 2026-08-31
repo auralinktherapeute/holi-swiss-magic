@@ -263,7 +263,7 @@ function Actions({ row, onAction }: { row: Row; onAction: (a: "confirmed" | "can
       )}
       {row.client_id && (
         <Button aria-label="Ouvrir la fiche client" title="Fiche client" asChild size="sm" variant="ghost">
-          <Link to="/dashboard/clients" search={{ client: row.client_id } as never}><Users className="h-4 w-4" /></Link>
+          <Link to="/dashboard/clients"><Users className="h-4 w-4" /></Link>
         </Button>
       )}
       <Button aria-label="Contacter par e-mail" title="Contacter" asChild size="sm" variant="ghost">
