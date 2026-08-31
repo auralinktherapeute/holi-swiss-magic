@@ -15,11 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getCabinetClient, listCabinetClients, updateClientConsent,
 } from "@/lib/cabinet.functions";
+import { upsertTask } from "@/lib/crm-therapist.functions";
 import ClientDocuments from "@/components/dashboard/ClientDocuments";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
+
 
 export const Route = createFileRoute("/dashboard/clients")({
   component: ClientsPage,
