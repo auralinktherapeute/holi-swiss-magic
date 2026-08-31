@@ -236,7 +236,16 @@ const LineInput = z.object({
   prix_unitaire: z.number().min(0),
   remise_pct: z.number().min(0).max(100).default(0),
   tva_taux: z.number().min(0).max(100).default(0),
+  appointment_id: z.string().uuid().optional().nullable(),
+  tariff_system: z.string().trim().max(40).optional().nullable(),
+  tariff_code: z.string().trim().max(40).optional().nullable(),
+  tariff_label: z.string().trim().max(500).optional().nullable(),
+  tariff_version: z.string().trim().max(60).optional().nullable(),
+  unite: z.string().trim().max(40).optional().nullable(),
+  duree_min: z.number().int().min(0).max(1440).optional().nullable(),
+  commentaire: z.string().trim().max(500).optional().nullable(),
 });
+
 
 const DraftInput = z.object({
   client_id: z.string().uuid().optional().nullable(),
