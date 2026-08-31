@@ -265,7 +265,20 @@ function Page() {
         />
       )}
 
+      {vue === "a_facturer" && (
+        <AppointmentsToBill
+          onInvoiceCreated={(id) => { setEditorId(id); void refresh(); }}
+        />
+      )}
+
+      {vue === "clients" && (
+        <ClientsToBill onSelect={() => setVue("a_facturer")} />
+      )}
+
+      {vue === "comptabilite" && <AccountingPanel />}
+
       {vue === "prestations" && <BillingServices />}
+
 
       {vue === "tarif590" && <Tariff590Panel />}
 
