@@ -49,17 +49,21 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type Vue = "tableau" | "factures" | "paiements" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
+type Vue = "tableau" | "a_facturer" | "clients" | "factures" | "paiements" | "comptabilite" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
 const VUES: { key: Vue; label: string }[] = [
   { key: "tableau", label: "Tableau de bord" },
+  { key: "a_facturer", label: "Rendez-vous à facturer" },
+  { key: "clients", label: "Clients à facturer" },
   { key: "factures", label: "Factures" },
   { key: "paiements", label: "Paiements" },
+  { key: "comptabilite", label: "Comptabilité" },
   { key: "prestations", label: "Prestations" },
   { key: "tarif590", label: "Tarif 590" },
   { key: "rappels", label: "Rappels" },
   { key: "rapports", label: "Rapports" },
   { key: "parametres", label: "Paramètres" },
 ];
+
 
 export const Route = createFileRoute("/dashboard/facturation")({
   component: Page,
