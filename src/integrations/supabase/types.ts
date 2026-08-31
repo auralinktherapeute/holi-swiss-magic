@@ -144,10 +144,13 @@ export type Database = {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
+          billing_excluded_at: string | null
+          billing_exclusion_reason: string | null
           client_id: string | null
           created_at: string
           duration_minutes: number
           end_time: string | null
+          expected_price: number | null
           id: string
           invoice_id: string | null
           invoiced_at: string | null
@@ -164,10 +167,13 @@ export type Database = {
         Insert: {
           appointment_date?: string | null
           appointment_time?: string | null
+          billing_excluded_at?: string | null
+          billing_exclusion_reason?: string | null
           client_id?: string | null
           created_at?: string
           duration_minutes?: number
           end_time?: string | null
+          expected_price?: number | null
           id?: string
           invoice_id?: string | null
           invoiced_at?: string | null
@@ -184,10 +190,13 @@ export type Database = {
         Update: {
           appointment_date?: string | null
           appointment_time?: string | null
+          billing_excluded_at?: string | null
+          billing_exclusion_reason?: string | null
           client_id?: string | null
           created_at?: string
           duration_minutes?: number
           end_time?: string | null
+          expected_price?: number | null
           id?: string
           invoice_id?: string | null
           invoiced_at?: string | null
