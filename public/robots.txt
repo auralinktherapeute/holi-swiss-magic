@@ -1,9 +1,9 @@
 # Holiswiss — https://holiswiss.ch
 # Annuaire suisse de thérapeutes holistiques (FR / DE / IT / EN)
 #
-# Un seul groupe « * » régit TOUS les robots, y compris les assistants IA
-# (GPTBot, ClaudeBot, PerplexityBot, Google-Extended…). Les pages publiques
-# sont ouvertes ; seules les zones privées/authentifiées sont exclues.
+# Le groupe « * » régit tous les robots qui ne sont pas nommés plus bas. Les
+# pages publiques sont ouvertes ; seules les zones privées/authentifiées sont
+# exclues.
 # (Avant : les Disallow étaient placés après une ligne vide dans un groupe sans
 # user-agent valide, donc ignorés — les zones privées restaient crawlables.)
 
@@ -24,39 +24,81 @@ Disallow: /*/mot-de-passe-oublie
 Disallow: /*/reinitialiser-mot-de-passe
 
 # Assistants IA explicitement bienvenus (recherche générative + entraînement).
+#
+# ATTENTION — un groupe nommé PRÉVAUT sur « * » : un robot qui trouve son propre
+# nom n'applique QUE ce groupe. Ces groupes ne reprenaient que /admin/ et
+# /dashboard/, si bien que /creer-profil et les pages d'authentification
+# restaient ouvertes aux assistants IA alors qu'elles sont fermées à tous les
+# autres robots. Chaque groupe répète maintenant la liste complète de « * ».
+# Toute règle ajoutée à « * » doit l'être ici aussi.
 User-agent: GPTBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: Applebot-Extended
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
 
 Sitemap: https://holiswiss.ch/sitemap.xml

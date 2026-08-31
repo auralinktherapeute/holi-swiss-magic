@@ -4,6 +4,7 @@ import { getPublishedTherapistArticleBySlug } from "@/lib/therapist-articles.fun
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { ogLocale, resolveProfileLang } from "@/lib/seo";
+import { organizationRef, publisherNode } from "@/lib/organization-schema";
 
 export const Route = createFileRoute("/$lang/paroles/$slug")({
   component: Page,
@@ -49,13 +50,13 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
           "@type": "Article",
           headline: a.titre,
           description,
-          mainEntityOfPage: url,
+          mainEntityOfPage: { "@type": "WebPage", "@id": url },
           url,
           inLanguage: params.lang,
-          author: author
-            ? { "@type": "Person", name: author }
-            : { "@type": "Organization", name: "Holiswiss" },
-          publisher: { "@type": "Organization", name: "Holiswiss", url: "https://holiswiss.ch" },
+          author: author ? { "@type": "Person", name: author } : organizationRef,
+          // Le publisher n'avait pas de `logo` : champ requis du résultat
+          // enrichi Article. Il vient maintenant du nœud partagé.
+          publisher: publisherNode,
           ...(a.date_publication ? { datePublished: a.date_publication } : {}),
         }
       : null;

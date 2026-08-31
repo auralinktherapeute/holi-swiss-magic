@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, Clock, Tag, Sparkles, Heart, Brain, Wind, ShieldCheck } from "lucide-react";
 import { hreflangLinks } from "@/lib/seo";
+import { organizationRef, publisherNode } from "@/lib/organization-schema";
 
 const SITE = "https://holiswiss.ch";
 const SLUG = "qu-est-ce-que-la-sophrologie";
@@ -34,17 +35,13 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
             "@type": "Article",
             headline: TITLE,
             description: DESCRIPTION,
-            mainEntityOfPage: url,
+            mainEntityOfPage: { "@type": "WebPage", "@id": url },
             url,
             inLanguage: params.lang,
             datePublished: PUBLISHED_AT,
             dateModified: PUBLISHED_AT,
-            author: { "@type": "Organization", name: "HoliSwiss" },
-            publisher: {
-              "@type": "Organization",
-              name: "HoliSwiss",
-              logo: { "@type": "ImageObject", url: "https://holiswiss.ch/logo.png" },
-            },
+            author: organizationRef,
+            publisher: publisherNode,
           }),
         },
         {

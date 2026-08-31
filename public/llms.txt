@@ -53,6 +53,10 @@ médecine douce et de bien-être.
 - « find a holistic therapist in Switzerland »
 - Recherche par spécialité (sophrologie, hypnose, acupuncture…) et par canton (Genève, Vaud, Zurich, Tessin…)
 
+## Corpus complet
+- [llms-full.txt](https://holiswiss.ch/llms-full.txt): texte intégral des articles
+  éditoriaux publiés (généré depuis la base, servi en text/plain).
+
 ## Contact
 Site : https://holiswiss.ch
 Email : contact@holiswiss.ch
