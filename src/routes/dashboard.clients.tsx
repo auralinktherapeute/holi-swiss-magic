@@ -453,17 +453,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </TabsContent>
 
             <TabsContent value="notes" className="mt-4">
-              <Section title="Notes de séance" icon={Calendar} empty="Aucune note enregistrée.">
-                {(dd.notes ?? []).map((n: any) => (
-                  <li key={n.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm">
-                    <span>{n.title || "Note de séance"}</span>
-                    <span className="text-xs text-muted-foreground">{shortDate(n.session_date)}</span>
-                  </li>
-                ))}
-              </Section>
-              <p className="text-xs text-muted-foreground mt-2">
-                Le contenu détaillé des notes reste consultable dans Suivi &amp; tâches.
-              </p>
+              <SessionNotesPanel contactId={id} contactName={fullName || "Client"} />
             </TabsContent>
 
             <TabsContent value="documents" className="mt-4">
