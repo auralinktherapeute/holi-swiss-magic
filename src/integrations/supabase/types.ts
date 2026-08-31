@@ -140,12 +140,68 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_status_history: {
+        Row: {
+          appointment_id: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_status: string
+          previous_status: string | null
+          reason: string | null
+          therapist_id: string
+        }
+        Insert: {
+          appointment_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_status: string
+          previous_status?: string | null
+          reason?: string | null
+          therapist_id: string
+        }
+        Update: {
+          appointment_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_status?: string
+          previous_status?: string | null
+          reason?: string | null
+          therapist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_status_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_status_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_status_history_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
           billing_excluded_at: string | null
           billing_exclusion_reason: string | null
+          cancellation_reason: string | null
           client_id: string | null
           created_at: string
           duration_minutes: number
@@ -163,12 +219,14 @@ export type Database = {
           start_time: string | null
           status: string
           therapist_id: string
+          updated_at: string
         }
         Insert: {
           appointment_date?: string | null
           appointment_time?: string | null
           billing_excluded_at?: string | null
           billing_exclusion_reason?: string | null
+          cancellation_reason?: string | null
           client_id?: string | null
           created_at?: string
           duration_minutes?: number
@@ -186,12 +244,14 @@ export type Database = {
           start_time?: string | null
           status?: string
           therapist_id: string
+          updated_at?: string
         }
         Update: {
           appointment_date?: string | null
           appointment_time?: string | null
           billing_excluded_at?: string | null
           billing_exclusion_reason?: string | null
+          cancellation_reason?: string | null
           client_id?: string | null
           created_at?: string
           duration_minutes?: number
@@ -209,6 +269,7 @@ export type Database = {
           start_time?: string | null
           status?: string
           therapist_id?: string
+          updated_at?: string
         }
         Relationships: [
           {

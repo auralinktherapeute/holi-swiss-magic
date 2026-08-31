@@ -19,19 +19,20 @@ import { listMyReservations, updateMyAppointmentStatus } from "@/lib/dashboard.f
 
 export const Route = createFileRoute("/dashboard/reservations")({ component: Page });
 
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+type Status = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 type Row = {
   id: string; patient_name: string; patient_email: string; patient_phone: string | null;
   appointment_date: string; appointment_time: string; status: Status; notes: string | null;
   service_name: string | null; duration_minutes: number | null; client_id: string | null;
 };
 
-const LABEL: Record<Status, string> = { pending: "En attente", confirmed: "Confirmée", cancelled: "Annulée", completed: "Terminée" };
+const LABEL: Record<Status, string> = { pending: "En attente", confirmed: "Confirmée", cancelled: "Annulée", completed: "Terminée", no_show: "Absente" };
 const CLASSES: Record<Status, string> = {
   pending: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
   confirmed: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   cancelled: "bg-red-500/15 text-red-300 border-red-500/30",
   completed: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+  no_show: "bg-violet-500/15 text-violet-300 border-violet-500/30",
 };
 
 function formatWhen(date: string, time: string) {
@@ -47,7 +48,8 @@ function Page() {
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<Status | "all">("all");
   const [search, setSearch] = useState("");
-  const [pending, setPending] = useState<{ id: string; action: "confirmed" | "cancelled" | "completed" } | null>(null);
+  const [pending, setPending] = useState<{ id: string; action: "confirmed" | "cancelled" | "completed" | "no_show" } | null>(null);
+  const [cancellationReason, setCancellationReason] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,6 +72,7 @@ function Page() {
     confirmed: rows.filter((r) => r.status === "confirmed").length,
     completed: rows.filter((r) => r.status === "completed").length,
     cancelled: rows.filter((r) => r.status === "cancelled").length,
+    no_show: rows.filter((r) => r.status === "no_show").length,
   }), [rows]);
 
   const list = useMemo(() => {
@@ -83,7 +86,11 @@ function Page() {
   const apply = async () => {
     if (!pending) return;
     try {
-      const result = await updateStatus({ data: { id: pending.id, status: pending.action } });
+      const result = await updateStatus({ data: {
+        id: pending.id,
+        status: pending.action,
+        reason: pending.action === "cancelled" ? cancellationReason : null,
+      } });
       const { rows: fresh } = await fetchReservations();
       setRows((fresh ?? []) as Row[]);
       // La confirmation change ce que l'agenda et la fiche client doivent
@@ -110,6 +117,7 @@ function Page() {
       toast.error(error instanceof Error ? error.message : "Erreur de mise à jour");
     }
     setPending(null);
+    setCancellationReason("");
   };
 
   if (loading) return <div className="p-10 text-muted-foreground">Chargement…</div>;
@@ -134,6 +142,7 @@ function Page() {
             <TabsTrigger value="confirmed">Confirmées ({counts.confirmed})</TabsTrigger>
             <TabsTrigger value="completed">Terminées ({counts.completed})</TabsTrigger>
             <TabsTrigger value="cancelled">Annulées ({counts.cancelled})</TabsTrigger>
+            <TabsTrigger value="no_show">Absentes ({counts.no_show})</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="relative min-w-[240px] flex-1 max-w-sm">
@@ -229,10 +238,21 @@ function Page() {
                 ? "Une demande d'avis sera envoyée au patient, et la séance deviendra facturable."
                 : "Cette action notifiera le patient. Le rendez-vous reste dans l'historique mais n'occupe plus de créneau actif."}
             </AlertDialogDescription>
+            {pending?.action === "cancelled" && (
+              <div className="space-y-2">
+                <label htmlFor="reservation-cancellation-reason" className="text-sm font-medium">Motif d’annulation</label>
+                <Input
+                  id="reservation-cancellation-reason"
+                  value={cancellationReason}
+                  onChange={(event) => setCancellationReason(event.target.value)}
+                  placeholder="Indiquez le motif conservé dans l’historique"
+                />
+              </div>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Retour</AlertDialogCancel>
-            <AlertDialogAction onClick={apply}>Confirmer</AlertDialogAction>
+            <AlertDialogAction disabled={pending?.action === "cancelled" && cancellationReason.trim().length < 2} onClick={apply}>Confirmer</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -240,7 +260,7 @@ function Page() {
   );
 }
 
-function Actions({ row, onAction }: { row: Row; onAction: (a: "confirmed" | "cancelled" | "completed") => void }) {
+function Actions({ row, onAction }: { row: Row; onAction: (a: "confirmed" | "cancelled" | "completed" | "no_show") => void }) {
   return (
     <>
       {row.status === "pending" && (
@@ -250,6 +270,7 @@ function Actions({ row, onAction }: { row: Row; onAction: (a: "confirmed" | "can
           <Button aria-label="Annuler" title="Annuler" size="sm" variant="ghost" onClick={() => onAction("cancelled")}>
             <X className="h-4 w-4" />
           </Button>
+          <Button aria-label="Marquer absente" title="Marquer absente" size="sm" variant="ghost" onClick={() => onAction("no_show")}>Abs.</Button>
         </>
       )}
       {row.status === "confirmed" && (

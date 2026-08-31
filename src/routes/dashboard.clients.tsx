@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -26,6 +27,7 @@ import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashbo
 
 export const Route = createFileRoute("/dashboard/clients")({
   component: ClientsPage,
+  validateSearch: z.object({ client: z.string().uuid().optional() }),
   head: () => ({
     meta: [
       { title: "Clients du cabinet — HoliSwiss" },
@@ -52,12 +54,17 @@ function shortDate(d: string | null) {
 }
 
 function ClientsPage() {
+  const { client: requestedClient } = Route.useSearch();
   const listFn = useServerFn(listCabinetClients);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [unpaidOnly, setUnpaidOnly] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(requestedClient ?? null);
+
+  useEffect(() => {
+    setOpenId(requestedClient ?? null);
+  }, [requestedClient]);
 
   // Debounce de la recherche pour éviter une requête par frappe.
   useEffect(() => {
