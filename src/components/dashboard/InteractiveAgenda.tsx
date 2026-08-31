@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef, useCallback, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -25,8 +27,10 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Trash2, Copy, Pencil, Ban, Undo2, Redo2, StickyNote } from "lucide-react";
+import { Trash2, Copy, Pencil, Ban, Undo2, Redo2, StickyNote, Receipt, UserRound, CheckCircle2, UserX, XCircle } from "lucide-react";
 import { useSessionState } from "@/hooks/use-session-state";
+import { updateMyAppointmentStatus } from "@/lib/dashboard.functions";
+import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 
 type AppointmentRow = {
   id: string;
@@ -41,6 +45,11 @@ type AppointmentRow = {
   service_name: string | null;
   source: string;
   duration_minutes: number;
+  client_id: string | null;
+  appointment_date: string | null;
+  appointment_time: string | null;
+  invoiced_at: string | null;
+  cancellation_reason: string | null;
 };
 
 type AppointmentSource = "holiswiss" | "google" | "outlook" | "apple" | "other";
@@ -65,6 +74,7 @@ type Editing = {
   start: Date;
   end: Date;
   status: string;
+  cancellation_reason: string;
 };
 
 type UndoAction =
@@ -80,6 +90,7 @@ const toLocalInput = (d: Date) => {
 export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }: { therapistId: string; defaultDuration?: number }) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
+  const updateStatus = useServerFn(updateMyAppointmentStatus);
   const calendarRef = useRef<FullCalendar | null>(null);
   const statePrefix = `dashboard.interactive-agenda.${therapistId}`;
 
@@ -90,6 +101,8 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
 
   const [slotDuration, setSlotDuration] = useSessionState<"00:30:00" | "01:00:00">(`${statePrefix}.slotDuration`, "01:00:00");
   const [view, setView] = useSessionState<"timeGridDay" | "timeGridWeek" | "dayGridMonth">(`${statePrefix}.view`, "timeGridWeek");
+  const [invoiceTarget, setInvoiceTarget] = useState<QuickInvoiceTarget | null>(null);
+  const [statusPending, setStatusPending] = useState(false);
 
   const range = useMemo(() => {
     const s = new Date(); s.setDate(s.getDate() - 21); s.setHours(0, 0, 0, 0);
@@ -262,7 +275,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
     const e = end ?? new Date(start.getTime() + defaultDuration * 60000);
     setEditing({
       patient_name: "", patient_email: "", patient_phone: "", notes: "",
-      start, end: e, status: "confirmed",
+      start, end: e, status: "confirmed", cancellation_reason: "",
     });
     setEditorOpen(true);
   };
@@ -276,6 +289,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
       start: new Date(a.start_time!),
       end: new Date(a.end_time!),
       status: a.status,
+      cancellation_reason: a.cancellation_reason ?? "",
     });
     setEditorOpen(true);
   };
@@ -333,6 +347,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
       appointment_date: localDateISO(editing.start),
       appointment_time: editing.start.toTimeString().slice(0, 8),
       status: editing.status,
+      cancellation_reason: editing.status === "cancelled" ? editing.cancellation_reason.trim() || null : null,
       source: "holiswiss",
     };
     if (editing.id) {
@@ -348,6 +363,38 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
       toast.success(t("agenda_page.created"));
     }
     setEditorOpen(false); setEditing(null); refresh();
+  };
+
+  const changeStatus = async (status: "confirmed" | "completed" | "cancelled" | "no_show") => {
+    if (!editing?.id || statusPending) return;
+    if (status === "cancelled" && editing.cancellation_reason.trim().length < 2) {
+      setEditing({ ...editing, status: "cancelled" });
+      toast.error("Indiquez le motif d’annulation avant de confirmer.");
+      return;
+    }
+    setStatusPending(true);
+    try {
+      await updateStatus({ data: {
+        id: editing.id,
+        status,
+        reason: status === "cancelled" ? editing.cancellation_reason : null,
+      } });
+      setEditing({ ...editing, status });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["interactive-agenda"] }),
+        queryClient.invalidateQueries({ queryKey: ["cabinet-clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["cabinet-client"] }),
+        queryClient.invalidateQueries({ queryKey: ["uninvoiced-appointments"] }),
+      ]);
+      toast.success(status === "completed" ? "Séance marquée comme effectuée" : status === "no_show" ? "Absence enregistrée" : status === "cancelled" ? "Rendez-vous annulé" : "Rendez-vous confirmé");
+      setEditorOpen(false);
+      setEditing(null);
+      refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Mise à jour impossible");
+    } finally {
+      setStatusPending(false);
+    }
   };
 
   const deleteAppointment = async (raw: AppointmentRow) => {
@@ -433,7 +480,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
             onClick={() => {
               const api = calendarRef.current?.getApi(); if (!api) return;
               const s = api.getDate(); const e = new Date(s); e.setHours(s.getHours() + 1);
-              setEditing({ patient_name: t("agenda_page.blocked_label"), patient_email: "", patient_phone: "", notes: "", start: s, end: e, status: "blocked" });
+              setEditing({ patient_name: t("agenda_page.blocked_label"), patient_email: "", patient_phone: "", notes: "", start: s, end: e, status: "blocked", cancellation_reason: "" });
               setEditorOpen(true);
             }}
           >
@@ -576,6 +623,46 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
                         onChange={(e) => setEditing({ ...editing, patient_phone: e.target.value })} />
                     </div>
                   </div>
+                  {editing.id && (
+                    <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {editing.status === "pending" && (
+                          <Button disabled={statusPending} size="sm" onClick={() => void changeStatus("confirmed")}>
+                            <CheckCircle2 className="h-4 w-4 mr-1.5" /> Confirmer
+                          </Button>
+                        )}
+                        {editing.status === "confirmed" && (
+                          <Button disabled={statusPending} size="sm" onClick={() => void changeStatus("completed")}>
+                            <CheckCircle2 className="h-4 w-4 mr-1.5" /> Marquer effectué
+                          </Button>
+                        )}
+                        {(editing.status === "pending" || editing.status === "confirmed") && (
+                          <Button disabled={statusPending} size="sm" variant="outline" onClick={() => void changeStatus("no_show")}>
+                            <UserX className="h-4 w-4 mr-1.5" /> Marquer absent
+                          </Button>
+                        )}
+                        {editing.status !== "cancelled" && (
+                          <Button disabled={statusPending} size="sm" variant="outline" onClick={() => setEditing({ ...editing, status: "cancelled" })}>
+                            <XCircle className="h-4 w-4 mr-1.5" /> Annuler
+                          </Button>
+                        )}
+                      </div>
+                      {editing.status === "cancelled" && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="agenda-cancellation-reason">Motif d’annulation</Label>
+                          <Input
+                            id="agenda-cancellation-reason"
+                            value={editing.cancellation_reason}
+                            onChange={(event) => setEditing({ ...editing, cancellation_reason: event.target.value })}
+                            placeholder="Motif conservé dans l’historique"
+                          />
+                          <Button disabled={statusPending || editing.cancellation_reason.trim().length < 2} size="sm" variant="destructive" onClick={() => void changeStatus("cancelled")}>
+                            Confirmer l’annulation
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
               <div className="space-y-1">
@@ -587,6 +674,43 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
             </div>
           )}
           <DialogFooter className="gap-2">
+            {editing?.id && editing.status !== "blocked" && (() => {
+              const raw = appointments.find((appointment) => appointment.id === editing.id);
+              if (!raw) return null;
+              const isPast = !raw.appointment_date || raw.appointment_date <= localDateISO(new Date());
+              const canInvoice = !raw.invoiced_at && isPast && (raw.status === "confirmed" || raw.status === "completed");
+              return (
+                <div className="mr-auto flex flex-wrap gap-2">
+                  {raw.client_id && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/dashboard/clients" search={{ client: raw.client_id }}>
+                        <UserRound className="h-4 w-4 mr-1.5" /> Fiche client
+                      </Link>
+                    </Button>
+                  )}
+                  {canInvoice && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setInvoiceTarget({
+                          id: raw.id,
+                          client_name: raw.patient_name || "Client",
+                          date: raw.appointment_date,
+                          time: raw.appointment_time ? String(raw.appointment_time).slice(0, 5) : null,
+                          service: raw.service_name,
+                          duration_minutes: Number(raw.duration_minutes ?? 60),
+                          suggested_price: 0,
+                          suggested_vat: 0,
+                        });
+                        setEditorOpen(false);
+                      }}
+                    >
+                      <Receipt className="h-4 w-4 mr-1.5" /> Facturer
+                    </Button>
+                  )}
+                </div>
+              );
+            })()}
             {editing?.id && (
               <Button
                 variant="destructive" className="mr-auto"
@@ -607,6 +731,11 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <QuickInvoiceDialog
+        appointment={invoiceTarget}
+        open={!!invoiceTarget}
+        onOpenChange={(open) => { if (!open) setInvoiceTarget(null); }}
+      />
     </div>
   );
 }

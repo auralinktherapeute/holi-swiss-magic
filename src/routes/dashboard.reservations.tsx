@@ -229,6 +229,7 @@ function Page() {
             <AlertDialogTitle>
               {pending?.action === "confirmed" ? "Confirmer la réservation ?"
                 : pending?.action === "completed" ? "Marquer la séance comme terminée ?"
+                : pending?.action === "no_show" ? "Marquer le patient comme absent ?"
                 : "Annuler la réservation ?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -236,6 +237,8 @@ function Page() {
                 ? "Le patient sera notifié et le rendez-vous apparaîtra dans votre agenda."
                 : pending?.action === "completed"
                 ? "Une demande d'avis sera envoyée au patient, et la séance deviendra facturable."
+                : pending?.action === "no_show"
+                ? "L’absence sera conservée dans l’historique et le rendez-vous ne sera pas facturable."
                 : "Cette action notifiera le patient. Le rendez-vous reste dans l'historique mais n'occupe plus de créneau actif."}
             </AlertDialogDescription>
             {pending?.action === "cancelled" && (
@@ -284,7 +287,7 @@ function Actions({ row, onAction }: { row: Row; onAction: (a: "confirmed" | "can
       )}
       {row.client_id && (
         <Button aria-label="Ouvrir la fiche client" title="Fiche client" asChild size="sm" variant="ghost">
-          <Link to="/dashboard/clients"><Users className="h-4 w-4" /></Link>
+          <Link to="/dashboard/clients" search={{ client: row.client_id ?? undefined }}><Users className="h-4 w-4" /></Link>
         </Button>
       )}
       <Button aria-label="Contacter par e-mail" title="Contacter" asChild size="sm" variant="ghost">
