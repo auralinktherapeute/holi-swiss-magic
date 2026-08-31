@@ -48,14 +48,20 @@ export async function sendRawEmail(args: {
   subject: string;
   html: string;
   headers?: Record<string, string>;
+  replyTo?: string | null;
+  /** Pièces jointes : contenu encodé en base64. */
+  attachments?: { filename: string; content: string }[];
 }) {
   return send({
     to: args.to,
     subject: args.subject,
     html: args.html,
     ...(args.headers ? { headers: args.headers } : {}),
+    ...(args.replyTo ? { reply_to: args.replyTo } : {}),
+    ...(args.attachments?.length ? { attachments: args.attachments } : {}),
   });
 }
+
 
 export type BatchEmail = { to: string; subject: string; html: string; headers?: Record<string, string> };
 export type BatchResult = { ok: boolean; ids: (string | null)[]; error?: string; status: number };
