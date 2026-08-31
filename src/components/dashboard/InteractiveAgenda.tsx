@@ -192,24 +192,45 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
   }, [undo, redo]);
 
   // Build events
+  //
+  // Statut = information la plus utile dans la grille : un rendez-vous annulé
+  // ne doit jamais se lire comme un créneau actif. On le conserve affiché mais
+  // barré et estompé, parce que l'effacer ferait croire à une perte de donnée.
+  const STATUS_META: Record<string, { label: string; color: string }> = {
+    pending:   { label: t("agenda_page.status_pending", "En attente"), color: "#f4b400" },
+    confirmed: { label: t("agenda_page.status_confirmed", "Confirmé"),  color: "#34d399" },
+    completed: { label: t("agenda_page.status_completed", "Effectué"),  color: "#60a5fa" },
+    cancelled: { label: t("agenda_page.status_cancelled", "Annulé"),    color: "#f87171" },
+    no_show:   { label: t("agenda_page.status_no_show", "Absent"),      color: "#a78bfa" },
+  };
+
   const events: EventInput[] = useMemo(() => appointments.map((a) => {
     const source = normalizeSource(a.source);
     const meta = SOURCE_META[source];
     const isBlocked = a.status === "blocked";
+    const st = STATUS_META[a.status];
+    const isCancelled = a.status === "cancelled";
     return {
       id: a.id,
       title: isBlocked
         ? `🚫 ${a.patient_name || t("agenda_page.blocked_label")}`
-        : `${meta.icon} ${a.patient_name}${a.service_name ? " · " + a.service_name : ""}`,
+        : `${a.patient_name}${a.service_name ? " · " + a.service_name : ""}${st ? " · " + st.label : ""}`,
       start: a.start_time!,
       end: a.end_time!,
-      backgroundColor: isBlocked ? "rgba(59, 31, 82, 0.55)" : "rgba(184, 110, 249, 0.22)",
-      borderColor: isBlocked ? "#3b1f52" : meta.color,
-      textColor: isBlocked ? "#c4b5d0" : "#ffffff",
-      classNames: isBlocked ? ["agenda-blocked"] : [`agenda-source-${source}`],
-      extendedProps: { raw: a, isBlocked, source, meta },
+      backgroundColor: isBlocked
+        ? "rgba(59, 31, 82, 0.55)"
+        : isCancelled
+          ? "rgba(248, 113, 113, 0.12)"
+          : "rgba(184, 110, 249, 0.22)",
+      borderColor: isBlocked ? "#3b1f52" : (st?.color ?? meta.color),
+      textColor: isBlocked ? "#c4b5d0" : isCancelled ? "#f3b4b4" : "#ffffff",
+      classNames: isBlocked
+        ? ["agenda-blocked"]
+        : [`agenda-source-${source}`, ...(isCancelled ? ["agenda-cancelled"] : [])],
+      extendedProps: { raw: a, isBlocked, source, meta, statusMeta: st },
     } as EventInput;
   }), [appointments, t]);
+
 
   /**
    * Créneaux venus de l'agenda personnel, en événements de FOND.
@@ -368,10 +389,12 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
   const eventDidMount = (info: any) => {
     info.el.setAttribute("data-event-id", info.event.id);
     const meta = info.event.extendedProps?.meta as { label: string; color: string } | undefined;
+    const st = info.event.extendedProps?.statusMeta as { label: string; color: string } | undefined;
     if (!meta) return;
-    info.el.style.borderLeft = `4px solid ${meta.color}`;
-    info.el.setAttribute("title", `Source: ${meta.label}`);
+    info.el.style.borderLeft = `4px solid ${st?.color ?? meta.color}`;
+    info.el.setAttribute("title", `${st ? st.label + " — " : ""}Source: ${meta.label}`);
   };
+
 
   return (
     <div className="space-y-4">
@@ -487,6 +510,18 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
           );
         })}
       </div>
+
+      {/* Légende des statuts : la couleur seule ne suffit pas, le libellé est toujours écrit. */}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="font-medium">Statuts :</span>
+        {Object.entries(STATUS_META).map(([k, m]) => (
+          <span key={k} className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: m.color }} />
+            {m.label}
+          </span>
+        ))}
+      </div>
+
 
       {/* Ne s'affiche que si un import a réellement produit quelque chose :
           une légende qui explique une couleur absente de l'écran est du bruit. */}
