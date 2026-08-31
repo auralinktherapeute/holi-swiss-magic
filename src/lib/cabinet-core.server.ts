@@ -380,10 +380,40 @@ export async function buildClientDetail(
     solde: invoiceBalance(i),
   }));
 
+  // Encaissements et tâches liés au client (ajout non destructif).
+  const invoiceIds = invoices.map((i) => i.id);
+  const [payRes, taskRes] = await Promise.all([
+    invoiceIds.length
+      ? supabase
+          .from("therapist_invoice_payments")
+          .select("id,invoice_id,montant,date_paiement,mode_paiement,reference_bancaire,notes,is_refund")
+          .eq("therapist_id", therapistId)
+          .in("invoice_id", invoiceIds)
+          .order("date_paiement", { ascending: false })
+          .limit(200)
+      : Promise.resolve({ data: [] }),
+    supabase
+      .from("crm_tasks")
+      .select("id,title,description,due_at,done,done_at,priority,created_at")
+      .eq("therapist_id", therapistId)
+      .eq("contact_id", clientId)
+      .order("due_at", { ascending: true, nullsFirst: false })
+      .limit(100),
+  ]);
+
+  const numbers = new Map(invoices.map((i) => [i.id, i.numero_facture ?? "Brouillon"]));
+  const payments = ((payRes.data ?? []) as any[]).map((p) => ({
+    ...p,
+    montant: Number(p.montant ?? 0) * (p.is_refund ? -1 : 1),
+    numero_facture: numbers.get(p.invoice_id) ?? "—",
+  }));
+
   return {
     client,
     appointments: (apptRes.data ?? []) as any[],
     invoices,
+    payments,
+    tasks: (taskRes.data ?? []) as any[],
     documents: (docRes.data ?? []) as any[],
     notes: (noteRes.data ?? []) as any[],
     balance_due: round2(
@@ -393,3 +423,4 @@ export async function buildClientDetail(
     ),
   };
 }
+
