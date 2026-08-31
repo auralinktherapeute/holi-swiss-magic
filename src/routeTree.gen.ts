@@ -14,6 +14,7 @@ import { Route as LangRouteImport } from './routes/$lang'
 import { Route as R41c3cce6c762af43d78a7895dfc0afe3DottxtRouteImport } from './routes/41c3cce6c762af43d78a7895dfc0afe3[.]txt'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -130,6 +131,11 @@ const AdminRoute = AdminRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -613,6 +619,7 @@ export interface FileRoutesByFullPath {
   '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
@@ -708,6 +715,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
@@ -807,6 +815,7 @@ export interface FileRoutesById {
   '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
@@ -907,6 +916,7 @@ export interface FileRouteTypes {
     | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
     | '/admin'
     | '/dashboard'
+    | '/llms-full.txt'
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
@@ -1002,6 +1012,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
+    | '/llms-full.txt'
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
@@ -1100,6 +1111,7 @@ export interface FileRouteTypes {
     | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
     | '/admin'
     | '/dashboard'
+    | '/llms-full.txt'
     | '/sitemap.xml'
     | '/admin/abonnements'
     | '/admin/agents'
@@ -1199,6 +1211,7 @@ export interface RootRouteChildren {
   R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute: typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
+  LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   FactureTokenRoute: typeof FactureTokenRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
@@ -1257,6 +1270,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -2075,6 +2095,7 @@ const rootRouteChildren: RootRouteChildren = {
     R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute,
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
+  LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   FactureTokenRoute: FactureTokenRoute,
   IntakeSlugRoute: IntakeSlugRoute,
