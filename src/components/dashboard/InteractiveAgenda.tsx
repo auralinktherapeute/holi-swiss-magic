@@ -389,10 +389,12 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
   const eventDidMount = (info: any) => {
     info.el.setAttribute("data-event-id", info.event.id);
     const meta = info.event.extendedProps?.meta as { label: string; color: string } | undefined;
+    const st = info.event.extendedProps?.statusMeta as { label: string; color: string } | undefined;
     if (!meta) return;
-    info.el.style.borderLeft = `4px solid ${meta.color}`;
-    info.el.setAttribute("title", `Source: ${meta.label}`);
+    info.el.style.borderLeft = `4px solid ${st?.color ?? meta.color}`;
+    info.el.setAttribute("title", `${st ? st.label + " — " : ""}Source: ${meta.label}`);
   };
+
 
   return (
     <div className="space-y-4">
