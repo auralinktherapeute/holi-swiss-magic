@@ -183,7 +183,7 @@ function ProfilePage() {
   const [specialtyIds, setSpecialtyIds] = useSessionState<string[]>(`${profileStatePrefix}.specialtyIds`, []);
   const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
   const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
-  const [customSpecs, setCustomSpecs] = useSessionState<string[]>(`${profileStatePrefix}.customSpecs`, []);
+  const [editingSpec, setEditingSpec] = useState<{ original: string; value: string } | null>(null);
 
   // Load taxonomy in parent (reuses same cache key as the picker) so we can
   // distinguish predefined vs custom (free-text) specialties in the DB.
@@ -193,15 +193,13 @@ function ProfilePage() {
     const list = ((taxQuery.data as any)?.specialties ?? []) as Array<{ name_fr: string }>;
     return new Set(list.map((s) => (s.name_fr || "").toLowerCase()));
   }, [taxQuery.data]);
-  const customSpecsInitRef = useRef(false);
-  useEffect(() => {
-    if (customSpecsInitRef.current) return;
-    if (taxLabelSet.size === 0) return;
-    customSpecsInitRef.current = true;
-    const detected = specialties.filter((s) => !taxLabelSet.has((s || "").toLowerCase()));
-    if (detected.length > 0) setCustomSpecs((prev) => (prev.length > 0 ? prev : detected));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxLabelSet]);
+  // Derived from the saved labels: everything that is not part of the taxonomy
+  // is a custom specialty, so it always stays editable/removable here.
+  const customSpecs = useMemo(() => {
+    if (taxLabelSet.size === 0) return [] as string[];
+    return specialties.filter((s) => s && !taxLabelSet.has(s.toLowerCase()));
+  }, [specialties, taxLabelSet]);
+
 
   // Services
   const [services, setServices] = useSessionState<TherapistService[]>(`${profileStatePrefix}.services`, []);
@@ -505,15 +503,33 @@ function ProfilePage() {
     const v = customSpec.trim();
     if (!v || specialties.includes(v)) return;
     setSpecialties((prev) => (prev.includes(v) ? prev : [...prev, v]));
-    setCustomSpecs((prev) => (prev.includes(v) ? prev : [...prev, v]));
     setCustomSpec("");
     markDirty();
   };
   const removeSpec = (s: string) => {
     setSpecialties((prev) => prev.filter((x) => x !== s));
-    setCustomSpecs((prev) => prev.filter((x) => x !== s));
+    setEditingSpec((cur) => (cur && cur.original === s ? null : cur));
     markDirty();
   };
+  const renameCustomSpec = (original: string, next: string) => {
+    const v = next.trim();
+    setEditingSpec(null);
+    if (!v || v === original) return;
+    setSpecialties((prev) => {
+      const out: string[] = [];
+      const seen = new Set<string>();
+      for (const s of prev) {
+        const label = s === original ? v : s;
+        const k = label.toLowerCase();
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(label);
+      }
+      return out;
+    });
+    markDirty();
+  };
+
 
   const toggleLang = (code: string) => {
     setLangs((prev) => (prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]));
@@ -937,16 +953,42 @@ function ProfilePage() {
             </div>
             {customSpecs.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {customSpecs.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs text-white">
-                    {s}
-                    <button type="button" onClick={() => removeSpec(s)} className="opacity-60 hover:opacity-100" aria-label={`Retirer ${s}`}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
+                {customSpecs.map((s) =>
+                  editingSpec?.original === s ? (
+                    <span key={s} className="inline-flex items-center gap-1.5">
+                      <Input
+                        autoFocus
+                        value={editingSpec.value}
+                        onChange={(e) => setEditingSpec({ original: s, value: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.preventDefault(); renameCustomSpec(s, editingSpec.value); }
+                          if (e.key === "Escape") { e.preventDefault(); setEditingSpec(null); }
+                        }}
+                        onBlur={() => renameCustomSpec(s, editingSpec.value)}
+                        className={`${inputClass} h-9 w-56`}
+                        aria-label={`Modifier ${s}`}
+                      />
+                    </span>
+                  ) : (
+                    <span key={s} className="inline-flex items-center gap-1.5 rounded-full border border-[#b86ef9]/40 bg-[#b86ef9]/15 px-3 py-1 text-xs text-white">
+                      {s}
+                      <button
+                        type="button"
+                        onClick={() => setEditingSpec({ original: s, value: s })}
+                        className="opacity-60 hover:opacity-100"
+                        aria-label={`Modifier ${s}`}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button type="button" onClick={() => removeSpec(s)} className="opacity-60 hover:opacity-100" aria-label={`Retirer ${s}`}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ),
+                )}
               </div>
             )}
+
           </div>
         </Section>
 
