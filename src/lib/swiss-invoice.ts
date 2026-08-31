@@ -123,7 +123,18 @@ export type InvoiceLineInput = {
   prix_unitaire: number;
   remise_pct?: number;
   tva_taux?: number;
+  /** Champs de traçabilité conservés en snapshot sur la ligne émise. */
+  date_prestation?: string | null;
+  appointment_id?: string | null;
+  tariff_system?: string | null;
+  tariff_code?: string | null;
+  tariff_label?: string | null;
+  tariff_version?: string | null;
+  unite?: string | null;
+  duree_min?: number | null;
+  commentaire?: string | null;
 };
+
 
 export type ComputedLine = InvoiceLineInput & {
   remise_pct: number;

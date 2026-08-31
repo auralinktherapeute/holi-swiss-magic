@@ -91,7 +91,17 @@ export async function replaceLines(
       description: l.description, quantite: l.quantite, prix_unitaire: l.prix_unitaire,
       remise_pct: l.remise_pct, tva_taux: l.tva_taux,
       montant_ht: l.montant_ht, tva_montant: l.tva_montant, montant_ttc: l.montant_ttc,
+      date_prestation: l.date_prestation ?? null,
+      appointment_id: l.appointment_id ?? null,
+      tariff_system: l.tariff_system ?? null,
+      tariff_code: l.tariff_code ?? null,
+      tariff_label: l.tariff_label ?? null,
+      tariff_version: l.tariff_version ?? null,
+      unite: l.unite ?? null,
+      duree_min: l.duree_min ?? null,
+      commentaire: l.commentaire ?? null,
     }));
+
     const { error } = await supabase.from("therapist_invoice_lines").insert(rows);
     if (error) throw new Error(error.message);
   }

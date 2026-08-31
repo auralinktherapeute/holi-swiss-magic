@@ -25,6 +25,10 @@ import BillingServices from "@/components/dashboard/BillingServices";
 import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
 import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
 import BankReconciliation from "@/components/dashboard/BankReconciliation";
+import AppointmentsToBill from "@/components/dashboard/AppointmentsToBill";
+import ClientsToBill from "@/components/dashboard/ClientsToBill";
+import AccountingPanel from "@/components/dashboard/AccountingPanel";
+
 import { INVOICE_LANGS, INVOICE_LANG_LABELS } from "@/lib/invoice-i18n";
 
 import {
@@ -49,17 +53,21 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type Vue = "tableau" | "factures" | "paiements" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
+type Vue = "tableau" | "a_facturer" | "clients" | "factures" | "paiements" | "comptabilite" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
 const VUES: { key: Vue; label: string }[] = [
   { key: "tableau", label: "Tableau de bord" },
+  { key: "a_facturer", label: "Rendez-vous à facturer" },
+  { key: "clients", label: "Clients à facturer" },
   { key: "factures", label: "Factures" },
   { key: "paiements", label: "Paiements" },
+  { key: "comptabilite", label: "Comptabilité" },
   { key: "prestations", label: "Prestations" },
   { key: "tarif590", label: "Tarif 590" },
   { key: "rappels", label: "Rappels" },
   { key: "rapports", label: "Rapports" },
   { key: "parametres", label: "Paramètres" },
 ];
+
 
 export const Route = createFileRoute("/dashboard/facturation")({
   component: Page,
@@ -261,7 +269,20 @@ function Page() {
         />
       )}
 
+      {vue === "a_facturer" && (
+        <AppointmentsToBill
+          onInvoiceCreated={(id) => { setEditorId(id); void refresh(); }}
+        />
+      )}
+
+      {vue === "clients" && (
+        <ClientsToBill onSelect={() => setVue("a_facturer")} />
+      )}
+
+      {vue === "comptabilite" && <AccountingPanel />}
+
       {vue === "prestations" && <BillingServices />}
+
 
       {vue === "tarif590" && <Tariff590Panel />}
 
