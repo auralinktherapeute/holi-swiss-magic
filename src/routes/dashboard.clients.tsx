@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar,
-  Phone, Mail, X, ExternalLink, Plus,
+  Phone, Mail, X, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,12 +90,6 @@ function ClientsPage() {
             Vos clients, leur historique de rendez-vous, leurs factures et leur consentement.
           </p>
         </div>
-        <Button asChild>
-          <Link to="/dashboard/crm">
-            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-            Nouveau client
-          </Link>
-        </Button>
       </header>
 
       <Card>
@@ -161,9 +155,6 @@ function ClientsPage() {
             <p className="text-sm text-muted-foreground">
               Aucun client ne correspond à votre recherche.
             </p>
-            <Button asChild variant="outline">
-              <Link to="/dashboard/crm">Ajouter un client</Link>
-            </Button>
           </CardContent>
         </Card>
       )}
@@ -332,11 +323,6 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
               </section>
 
               <div className="flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/dashboard/crm">
-                    Notes de séance <ExternalLink className="h-3.5 w-3.5 ml-1.5" aria-hidden="true" />
-                  </Link>
-                </Button>
                 <Button asChild variant="outline" size="sm">
                   <Link to="/dashboard/facturation" search={{ vue: "a_facturer" }}>
                     Facturer une séance <ExternalLink className="h-3.5 w-3.5 ml-1.5" aria-hidden="true" />

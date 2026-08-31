@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  CalendarDays, Users, Receipt, AlertTriangle, CheckSquare, ArrowUpRight,
+  CalendarDays, Users, Receipt, AlertTriangle, ArrowUpRight,
   Plus, FileText, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +49,7 @@ export function CabinetOverviewPanel() {
     );
   }
 
-  const { kpi, today, invoices, tasks, alerts } = data;
+  const { kpi, today, invoices, alerts } = data;
 
   const cards = [
     { label: "RDV aujourd'hui", value: String(kpi.appointments_today), sub: `${kpi.appointments_week} cette semaine`, icon: CalendarDays, to: "/dashboard/agenda" as const },

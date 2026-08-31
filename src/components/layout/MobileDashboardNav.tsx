@@ -17,7 +17,6 @@ import {
   CalendarDays,
   CreditCard,
   Gift,
-  Crown,
   Users,
   Package,
   ClipboardList,
