@@ -9,9 +9,21 @@ import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { categoryLabel } from "@/lib/article-categories";
 import { blogCopy } from "@/lib/blog-copy";
 import { redirectTargetForSlug } from "@/lib/blog-redirects";
+import { publisherNode, organizationRef, LOGO_URL, ORGANIZATION_NAME } from "@/lib/organization-schema";
 
 
 const SITE = "https://holiswiss.ch";
+
+// Libellés du fil d'Ariane (`BreadcrumbList`), absent des articles jusqu'ici
+// alors que les pages spécialité, canton et ville en ont un. Chaque page
+// localisée porte son propre libellé : un fil d'Ariane français sur /de est un
+// écart à la règle « le balisage décrit le visible ».
+const BREADCRUMB_LABELS: Record<string, { home: string; blog: string }> = {
+  fr: { home: "Accueil", blog: "Blog" },
+  de: { home: "Startseite", blog: "Blog" },
+  it: { home: "Home", blog: "Blog" },
+  en: { home: "Home", blog: "Blog" },
+};
 
 export const Route = createFileRoute("/$lang/blog/$slug")({
   component: Page,
@@ -87,24 +99,45 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     const publishedAt = (article["published_at"] as string | undefined) ?? undefined;
     const updatedAt = (article["updated_at"] as string | undefined) ?? publishedAt;
     const authorName = (article["author_name"] as string | undefined) ?? "Holiswiss";
+    const crumbs = BREADCRUMB_LABELS[lang] ?? BREADCRUMB_LABELS.fr;
     const ldArticle: Record<string, unknown> = {
-      "@context": "https://schema.org",
       "@type": "Article",
+      "@id": `${url}#article`,
       headline: rawTitle,
       description,
-      mainEntityOfPage: url,
+      // `mainEntityOfPage` attend un nœud, pas une chaîne : en chaîne, le Rich
+      // Results Test signale « Invalid object type for field mainEntityOfPage ».
+      mainEntityOfPage: { "@type": "WebPage", "@id": url },
       url,
       inLanguage: lang,
-      author: { "@type": "Organization", name: authorName },
-      publisher: {
-        "@type": "Organization",
-        name: "Holiswiss",
-        logo: { "@type": "ImageObject", url: "https://holiswiss.ch/logo.png" },
-      },
+      // Aucune colonne `author_name` n'existe en production : l'auteur est
+      // toujours la marque. On pointe l'Organization par son `@id` plutôt que
+      // d'en redéclarer une deuxième, divergente. Le jour où un article porte un
+      // auteur nommé, c'est ici qu'un nœud Person prend le relais (E-E-A-T).
+      author: authorName && authorName !== ORGANIZATION_NAME ? { "@type": "Person", name: authorName } : organizationRef,
+      publisher: publisherNode,
+      // `image` est un champ requis du résultat enrichi Article. Sans visuel de
+      // couverture, on retombe sur le lotus Holiswiss — qui est réellement
+      // affiché sur la page (règle « le balisage décrit le visible »).
+      image: image ?? LOGO_URL,
     };
-    if (image) ldArticle.image = image;
     if (publishedAt) ldArticle.datePublished = publishedAt;
     if (updatedAt) ldArticle.dateModified = updatedAt;
+    const ldGraph = {
+      "@context": "https://schema.org",
+      "@graph": [
+        ldArticle,
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${url}#breadcrumb`,
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: crumbs.home, item: `${SITE}/${lang}` },
+            { "@type": "ListItem", position: 2, name: crumbs.blog, item: `${SITE}/${lang}/blog` },
+            { "@type": "ListItem", position: 3, name: rawTitle, item: url },
+          ],
+        },
+      ],
+    };
     // Chaque langue a potentiellement son propre slug (slug_de aujourd'hui) : on
     // ne peut pas réutiliser le hreflangLinks générique qui suppose un chemin
     // partagé par toutes les langues.
@@ -124,7 +157,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify(ldArticle),
+          children: JSON.stringify(ldGraph),
         },
       ],
     };
