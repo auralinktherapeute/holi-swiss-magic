@@ -17,7 +17,6 @@ import {
   CalendarDays,
   CreditCard,
   Gift,
-  Crown,
   Users,
   Package,
   ClipboardList,
@@ -41,7 +40,7 @@ function usePageTitle(): string {
     ["/dashboard/articles", t("dashboard.articles")],
     ["/dashboard/avis", t("dashboard.reviews")],
     ["/dashboard/evenements", t("dashboard.events")],
-    ["/dashboard/crm", "CRM Elite"],
+    
     ["/dashboard/salons", "Salons"],
     ["/dashboard/forfaits", "Forfaits"],
     ["/dashboard/questionnaires", "Questionnaires"],
@@ -134,7 +133,7 @@ export function MobileDashboardBottomNav() {
     { to: "/dashboard/visibilite", icon: Gauge, label: "Score de visibilité" },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
-    { to: "/dashboard/crm", icon: Crown, label: "CRM Elite" },
+    
     { to: "/dashboard/salons", icon: Users, label: "Salons" },
     { to: "/dashboard/abonnement", icon: CreditCard, label: t("dashboard.subscription") },
     { to: "/dashboard/parrainage", icon: Gift, label: t("dashboard.referral") },

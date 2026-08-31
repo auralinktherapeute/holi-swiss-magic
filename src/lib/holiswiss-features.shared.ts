@@ -99,19 +99,6 @@ export const HOLISWISS_FEATURES: readonly HoliswissFeature[] = [
     status: "disponible",
   },
   {
-    key: "crm",
-    label: "CRM",
-    description:
-      "Suivi des contacts et des demandes reçues : fiches clients, historique, notes de séance et tâches.",
-    limits:
-      "Les données clients restent privées : elles ne sont jamais utilisées dans les contenus Holiswiss.",
-    route: "/dashboard/crm",
-    publicRoute: null,
-    ctaLabel: "Ouvrir mon CRM",
-    pillar: "Gestion du cabinet",
-    status: "disponible",
-  },
-  {
     key: "facturation",
     label: "Facturation",
     description:

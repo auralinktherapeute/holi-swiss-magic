@@ -48,12 +48,6 @@ const STEPS: TourStep[] = [
       "Consultez les demandes de rendez-vous entrantes, confirmez-les ou annulez-les. Un compteur en haut du menu indique les demandes en attente.",
   },
   {
-    target: "nav-crm",
-    title: "CRM Elite",
-    body:
-      "Retrouvez l'historique complet de chaque client : rendez-vous, réponses aux questionnaires, forfaits en cours, notes de séance et relances.",
-  },
-  {
     target: "nav-facturation",
     title: "Facturation",
     body:
