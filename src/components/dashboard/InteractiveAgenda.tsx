@@ -511,6 +511,18 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
         })}
       </div>
 
+      {/* Légende des statuts : la couleur seule ne suffit pas, le libellé est toujours écrit. */}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="font-medium">Statuts :</span>
+        {Object.entries(STATUS_META).map(([k, m]) => (
+          <span key={k} className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: m.color }} />
+            {m.label}
+          </span>
+        ))}
+      </div>
+
+
       {/* Ne s'affiche que si un import a réellement produit quelque chose :
           une légende qui explique une couleur absente de l'écran est du bruit. */}
       {externalBusy.length > 0 && (
