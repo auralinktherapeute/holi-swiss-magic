@@ -182,17 +182,29 @@ export const getMyPendingReservationCount = createServerFn({ method: "GET" })
 
 export const updateMyAppointmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(["confirmed", "cancelled", "completed"]) }))
+  .inputValidator(z.object({
+    id: z.string().uuid(),
+    status: z.enum(["confirmed", "cancelled", "completed", "no_show"]),
+    reason: z.string().trim().min(2).max(500).optional().nullable(),
+  }).superRefine((value, ctx) => {
+    if (value.status === "cancelled" && !value.reason) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["reason"], message: "Le motif d’annulation est obligatoire." });
+    }
+  }))
   .handler(async ({ context, data }) => {
     const { supabaseAdmin, therapistId } = await getOwnedTherapist(context.userId);
     const { data: appt, error } = await supabaseAdmin
       .from("appointments")
-      .update({ status: data.status })
+      .update({
+        status: data.status,
+        cancellation_reason: data.status === "cancelled" ? data.reason : null,
+      })
       .eq("id", data.id)
       .eq("therapist_id", therapistId)
-      .select("patient_name,patient_email,appointment_date")
+      .select("id,client_id,patient_name,patient_email,appointment_date,appointment_time,start_time,end_time,status,cancellation_reason")
       .maybeSingle();
     if (error) throw new Error("Impossible de mettre à jour la réservation.");
+    if (!appt) throw new Error("Rendez-vous introuvable ou non autorisé.");
 
     // RDV terminé → demande d'avis automatique au patient (best-effort :
     // un échec d'email ne doit jamais bloquer la clôture du rendez-vous).
@@ -220,7 +232,7 @@ export const updateMyAppointmentStatus = createServerFn({ method: "POST" })
         // journalisé dans email_logs par sendReviewRequestEmail
       }
     }
-    return { ok: true, reviewRequestSent };
+    return { ok: true, reviewRequestSent, appointment: appt };
   });
 
 export const listMyAgenda = createServerFn({ method: "GET" })

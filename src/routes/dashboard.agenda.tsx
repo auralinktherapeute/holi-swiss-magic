@@ -40,7 +40,7 @@ function Page() {
   if (loading) return <div className="p-10 text-muted-foreground">{t("agenda_page.loading")}</div>;
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground">{t("agenda_page.title")}</h1>
         <p className="text-muted-foreground mt-1">{t("agenda_page.subtitle")}</p>
@@ -53,14 +53,14 @@ function Page() {
       )}
 
       {therapistId && (
-        <div id="disponibilites" className="space-y-6">
-          <WeeklyScheduleEditor therapistId={therapistId} />
-        </div>
+        <InteractiveAgenda therapistId={therapistId} />
       )}
 
+      {therapistId && <UnavailabilityManager therapistId={therapistId} />}
+
       {therapistId && (
-        <div id="message-accueil">
-          <BookingNoteEditor therapistId={therapistId} />
+        <div id="disponibilites" className="space-y-6">
+          <WeeklyScheduleEditor therapistId={therapistId} />
         </div>
       )}
 
@@ -71,10 +71,10 @@ function Page() {
       )}
 
       {therapistId && (
-        <InteractiveAgenda therapistId={therapistId} />
+        <div id="message-accueil">
+          <BookingNoteEditor therapistId={therapistId} />
+        </div>
       )}
-
-      {therapistId && <UnavailabilityManager therapistId={therapistId} />}
 
       {therapistId && (
         <div id="synchronisation">
