@@ -168,7 +168,7 @@ export default function SessionNotesPanel({ contactId, contactName }: { contactI
           {editing.template === "free" ? (
             <div className="space-y-1">
               <Label className="text-xs">Contenu</Label>
-              <Textarea value={editing.content} onChange={(e) => set("content", e.target.value)} rows={5} className="bg-surface border-border/60 resize-none" placeholder="Observations, ressenti, exercices…" />
+              <Textarea value={editing.content} onChange={(e) => set("content", e.target.value)} rows={8} className="bg-surface border-border/60 resize-y min-h-32" placeholder="Observations, ressenti, exercices…" />
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-2">
@@ -180,7 +180,7 @@ export default function SessionNotesPanel({ contactId, contactName }: { contactI
               ] as const).map(([k, lab, ph]) => (
                 <div key={k} className="space-y-1">
                   <Label className="text-xs">{lab}</Label>
-                  <Textarea value={editing[k]} onChange={(e) => set(k, e.target.value)} rows={2} className="bg-surface border-border/60 resize-none text-sm" placeholder={ph} />
+                  <Textarea value={editing[k]} onChange={(e) => set(k, e.target.value)} rows={3} className="bg-surface border-border/60 resize-y text-sm" placeholder={ph} />
                 </div>
               ))}
             </div>
