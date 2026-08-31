@@ -183,7 +183,7 @@ function ProfilePage() {
   const [specialtyIds, setSpecialtyIds] = useSessionState<string[]>(`${profileStatePrefix}.specialtyIds`, []);
   const [specSearch, setSpecSearch] = useSessionState(`${profileStatePrefix}.specSearch`, "");
   const [customSpec, setCustomSpec] = useSessionState(`${profileStatePrefix}.customSpec`, "");
-  const [customSpecs, setCustomSpecs] = useSessionState<string[]>(`${profileStatePrefix}.customSpecs`, []);
+  const [editingSpec, setEditingSpec] = useState<{ original: string; value: string } | null>(null);
 
   // Load taxonomy in parent (reuses same cache key as the picker) so we can
   // distinguish predefined vs custom (free-text) specialties in the DB.
@@ -193,15 +193,13 @@ function ProfilePage() {
     const list = ((taxQuery.data as any)?.specialties ?? []) as Array<{ name_fr: string }>;
     return new Set(list.map((s) => (s.name_fr || "").toLowerCase()));
   }, [taxQuery.data]);
-  const customSpecsInitRef = useRef(false);
-  useEffect(() => {
-    if (customSpecsInitRef.current) return;
-    if (taxLabelSet.size === 0) return;
-    customSpecsInitRef.current = true;
-    const detected = specialties.filter((s) => !taxLabelSet.has((s || "").toLowerCase()));
-    if (detected.length > 0) setCustomSpecs((prev) => (prev.length > 0 ? prev : detected));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxLabelSet]);
+  // Derived from the saved labels: everything that is not part of the taxonomy
+  // is a custom specialty, so it always stays editable/removable here.
+  const customSpecs = useMemo(() => {
+    if (taxLabelSet.size === 0) return [] as string[];
+    return specialties.filter((s) => s && !taxLabelSet.has(s.toLowerCase()));
+  }, [specialties, taxLabelSet]);
+
 
   // Services
   const [services, setServices] = useSessionState<TherapistService[]>(`${profileStatePrefix}.services`, []);
