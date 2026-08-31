@@ -105,7 +105,7 @@ export function CabinetOverviewPanel() {
         <Button asChild size="sm"><Link to="/dashboard/agenda"><Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />Nouveau RDV</Link></Button>
         <Button asChild size="sm" variant="outline"><Link to="/dashboard/clients"><Users className="h-4 w-4 mr-1.5" aria-hidden="true" />Clients</Link></Button>
         <Button asChild size="sm" variant="outline"><Link to="/dashboard/facturation"><Receipt className="h-4 w-4 mr-1.5" aria-hidden="true" />Créer une facture</Link></Button>
-        <Button asChild size="sm" variant="outline"><Link to="/dashboard/crm"><CheckSquare className="h-4 w-4 mr-1.5" aria-hidden="true" />Tâches</Link></Button>
+        
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -162,26 +162,6 @@ export function CabinetOverviewPanel() {
             </CardContent>
           </Card>
 
-          <Card className="bg-surface border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Tâches prioritaires</CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/dashboard/crm"><CheckSquare className="h-4 w-4" aria-hidden="true" /><span className="sr-only">Ouvrir les tâches</span></Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {tasks.length === 0 && (
-                <p className="text-sm text-muted-foreground">Rien à faire — tout est à jour.</p>
-              )}
-              {tasks.map((tk) => (
-                <div key={tk.id} className="flex items-center gap-2 text-sm">
-                  <CheckSquare className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                  <span className="flex-1 truncate">{tk.title}</span>
-                  {tk.overdue && <Badge variant="destructive">en retard</Badge>}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

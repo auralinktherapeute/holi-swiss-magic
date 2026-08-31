@@ -77,7 +77,7 @@ export function TherapistNav() {
       label: "Facturation",
       tourId: "nav-facturation",
     },
-    { to: "/dashboard/crm", icon: Crown, label: "Suivi & tâches", tourId: "nav-crm" },
+    
     { to: "/dashboard/forfaits", icon: Package, label: "Forfaits", tourId: "nav-forfaits" },
     {
       to: "/dashboard/questionnaires",
