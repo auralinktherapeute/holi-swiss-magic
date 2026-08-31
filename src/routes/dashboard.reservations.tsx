@@ -17,7 +17,20 @@ import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyReservations, updateMyAppointmentStatus } from "@/lib/dashboard.functions";
 
-export const Route = createFileRoute("/dashboard/reservations")({ component: Page });
+export const Route = createFileRoute("/dashboard/reservations")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "Réservations du cabinet — HoliSwiss" },
+      { name: "description", content: "Confirmez et suivez les demandes de rendez-vous de votre cabinet HoliSwiss." },
+      { property: "og:title", content: "Réservations du cabinet — HoliSwiss" },
+      { property: "og:description", content: "Confirmez et suivez les demandes de rendez-vous de votre cabinet HoliSwiss." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+});
 
 type Status = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 type Row = {

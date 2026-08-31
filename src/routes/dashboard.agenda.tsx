@@ -13,7 +13,20 @@ import WeeklyScheduleEditor from "@/components/dashboard/WeeklyScheduleEditor";
 import CalendarSyncPanel from "@/components/dashboard/CalendarSyncPanel";
 import { useHashFocus } from "@/hooks/use-hash-focus";
 
-export const Route = createFileRoute("/dashboard/agenda")({ component: Page });
+export const Route = createFileRoute("/dashboard/agenda")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "Agenda du cabinet — HoliSwiss" },
+      { name: "description", content: "Gérez les rendez-vous, indisponibilités et horaires de votre cabinet HoliSwiss." },
+      { property: "og:title", content: "Agenda du cabinet — HoliSwiss" },
+      { property: "og:description", content: "Gérez les rendez-vous, indisponibilités et horaires de votre cabinet HoliSwiss." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+});
 
 function Page() {
   const { t } = useTranslation();
