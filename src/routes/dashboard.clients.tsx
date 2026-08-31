@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -502,7 +502,7 @@ function Section({
   title: string;
   icon: any;
   empty: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const items = Array.isArray(children) ? children : [children];
   const isEmpty = items.flat().filter(Boolean).length === 0;
