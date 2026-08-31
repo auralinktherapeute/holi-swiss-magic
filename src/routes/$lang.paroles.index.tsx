@@ -7,6 +7,20 @@ import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/paroles/")({
   component: Page,
+  /**
+   * Rendu serveur du listing : sans loader, `useQuery` ne s'exécute que côté
+   * client et le HTML servi aux crawlers ne contenait aucun lien vers les
+   * paroles de thérapeutes — elles étaient orphelines. Même correctif que le
+   * listing du blog.
+   */
+  loader: async () => {
+    type Items = Awaited<ReturnType<typeof listPublishedTherapistArticles>>;
+    try {
+      return { items: ((await listPublishedTherapistArticles()) ?? []) as Items };
+    } catch {
+      return { items: [] as unknown as Items };
+    }
+  },
   head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
@@ -47,8 +61,11 @@ function formatDate(iso: string | null, lang: string) {
 
 function Page() {
   const { lang } = useParams({ from: "/$lang/paroles/" });
+  // `initialData` vient du loader : les liens sont dans le HTML initial.
+  const loaderData = Route.useLoaderData();
   const { data, isLoading } = useQuery({
     queryKey: ["therapist-articles-public"],
+    initialData: loaderData?.items,
     queryFn: () => listPublishedTherapistArticles(),
   });
 
