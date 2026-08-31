@@ -287,3 +287,11 @@
     height: 22px !important;
   }
 }
+/* Rendez-vous annulé : conservé visible (l'historique compte) mais jamais
+   lisible comme un créneau actif. */
+.holiswiss-agenda .fc .agenda-cancelled {
+  opacity: 0.6;
+}
+.holiswiss-agenda .fc .agenda-cancelled .fc-event-title {
+  text-decoration: line-through;
+}
