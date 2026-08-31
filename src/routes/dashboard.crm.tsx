@@ -481,10 +481,16 @@ function TaskDialog({ open, onClose, contacts }: { open: boolean; onClose: () =>
   );
 }
 
+type TaskView = "late" | "today" | "upcoming" | "nodate" | "done";
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
 function TasksTab({ contacts }: { contacts: ClientContact[] }) {
   const qc = useQueryClient();
-  const [showDone, setShowDone] = useState(false);
+  const [view, setView] = useState<TaskView>("late");
   const [newTask, setNewTask] = useState(false);
+  const showDone = view === "done";
   const tasksQ = useQuery({ queryKey: ["crm-tasks", showDone], queryFn: () => listMyTasks({ data: { done: showDone } }) });
 
   const toggleMut = useMutation({
@@ -498,15 +504,50 @@ function TasksTab({ contacts }: { contacts: ClientContact[] }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const tasks = (tasksQ.data ?? []) as any[];
-  const overdue = tasks.filter(t => !t.done && t.due_at && new Date(t.due_at) < new Date());
+  const all = (tasksQ.data ?? []) as any[];
+  const now = new Date();
+  const isLate = (t: any) => !t.done && t.due_at && new Date(t.due_at) < now && !isSameDay(new Date(t.due_at), now);
+  const isToday = (t: any) => !t.done && t.due_at && isSameDay(new Date(t.due_at), now);
+  const isUpcoming = (t: any) => !t.done && t.due_at && new Date(t.due_at) > now && !isSameDay(new Date(t.due_at), now);
+  const isNoDate = (t: any) => !t.done && !t.due_at;
+
+  const counts: Record<TaskView, number> = {
+    late: all.filter(isLate).length,
+    today: all.filter(isToday).length,
+    upcoming: all.filter(isUpcoming).length,
+    nodate: all.filter(isNoDate).length,
+    done: showDone ? all.length : 0,
+  };
+  const tasks = showDone ? all
+    : view === "late" ? all.filter(isLate)
+    : view === "today" ? all.filter(isToday)
+    : view === "upcoming" ? all.filter(isUpcoming)
+    : all.filter(isNoDate);
+  const overdue = all.filter(isLate);
+
+  const VIEWS: { key: TaskView; label: string }[] = [
+    { key: "late", label: "En retard" },
+    { key: "today", label: "Aujourd'hui" },
+    { key: "upcoming", label: "À venir" },
+    { key: "nodate", label: "Sans échéance" },
+    { key: "done", label: "Terminées" },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          <Button size="sm" variant={!showDone ? "default" : "outline"} className={!showDone ? "bg-primary" : ""} onClick={() => setShowDone(false)}>En cours</Button>
-          <Button size="sm" variant={showDone ? "default" : "outline"} className={showDone ? "bg-primary" : ""} onClick={() => setShowDone(true)}>Terminées</Button>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {VIEWS.map(v => (
+            <Button key={v.key} size="sm" variant={view === v.key ? "default" : "outline"}
+              className={view === v.key ? "bg-primary" : ""} onClick={() => setView(v.key)}>
+              {v.label}
+              {v.key !== "done" && counts[v.key] > 0 && (
+                <span className={`ml-1.5 text-[10px] rounded-full px-1.5 py-0.5 ${v.key === "late" ? "bg-destructive/20 text-destructive" : "bg-background text-muted-foreground"}`}>
+                  {counts[v.key]}
+                </span>
+              )}
+            </Button>
+          ))}
         </div>
         <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => setNewTask(true)}>
           <Plus className="h-4 w-4 mr-1" />Tâche
