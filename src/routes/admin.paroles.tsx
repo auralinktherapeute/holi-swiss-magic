@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Eye, Mic } from "lucide-react";
+import ArticleContent from "@/components/articles/ArticleContent";
 
 export const Route = createFileRoute("/admin/paroles")({ component: Page });
 
