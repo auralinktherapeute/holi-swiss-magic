@@ -45,6 +45,14 @@ export const listMyBillingServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const therapistId = await getTherapistId(context.supabase, context.userId);
+    // Les prestations proposées à la réservation alimentent automatiquement
+    // le catalogue facturable (non destructif, idempotent).
+    try {
+      const { syncProfileServicesToBilling } = await import("@/lib/billing-sync.server");
+      await syncProfileServicesToBilling(context.supabase, therapistId);
+    } catch (e) {
+      console.error("[listMyBillingServices] sync prestations profil échouée", e);
+    }
     const { data, error } = await (context.supabase as any)
       .from("billing_services")
       .select("*")
@@ -54,6 +62,7 @@ export const listMyBillingServices = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []) as BillingService[];
   });
+
 
 const ServiceSchema = z.object({
   id: z.string().uuid().optional().nullable(),
