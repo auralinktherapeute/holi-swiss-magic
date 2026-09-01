@@ -42,7 +42,9 @@ async function fetchQueue(supabase: any, therapistId: string) {
       "duration_minutes,service_name,status,expected_price",
     )
     .eq("therapist_id", therapistId)
-    .eq("status", "completed")
+    // Séances déjà effectuées ET rendez-vous confirmés à venir : le thérapeute
+    // peut préparer la facture avant la séance. Annulés / absents restent exclus.
+    .in("status", ["completed", "confirmed"])
     .is("invoiced_at", null)
     .is("billing_excluded_at", null)
     .order("appointment_date", { ascending: false })
