@@ -2,6 +2,8 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedTherapistArticleBySlug } from "@/lib/therapist-articles.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { ArticleContent } from "@/components/articles/ArticleContent";
+
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { ogLocale, resolveProfileLang } from "@/lib/seo";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
