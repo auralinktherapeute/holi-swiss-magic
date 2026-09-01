@@ -12,13 +12,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2, Info, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Image, X, ChevronDown, ChevronUp, Sparkles, Globe2, Filter, Languages, Loader2, Info, Upload, Eraser, ShieldCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { getAllArticlesAdmin, createArticle, updateArticle, deleteArticle, setArticleStatus, titleForLang } from "@/lib/articles.functions";
 import { translateArticle, translateAllMissingArticles, importAgentArticlesAdmin, optimizeArticleSeoGeo } from "@/lib/article-agent.functions";
 import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
+import { cleanArticleAiMarks } from "@/lib/article-clean.functions";
+import { computeAiMarks } from "@/lib/ai-watermarks";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
 import { groupedCategories } from "@/lib/article-categories";
 import { useAdminSectionRead } from "@/hooks/use-admin-section-read";
@@ -410,7 +412,7 @@ function ScorePill({ value, kind }: { value: number; kind: "seo" | "geo" }) {
 }
 
 function ArticleCard({
-  a, onEdit, onDelete, onTogglePublish, onImprove, onTranslate, translating,
+  a, onEdit, onDelete, onTogglePublish, onImprove, onTranslate, translating, onClean, cleaning,
 }: {
   a: ScoredArticle;
   onEdit: () => void;
@@ -419,10 +421,17 @@ function ArticleCard({
   onImprove: () => void;
   onTranslate: () => void;
   translating: boolean;
+  onClean: () => void;
+  cleaning: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const isPublished = a.status === "validated";
   const missingLangs = (["de","it","en"] as const).filter(l => !(a as any)[`body_${l}`]);
+
+  // Détection locale : la liste porte déjà les corps de texte, inutile
+  // d'interroger le serveur pour savoir s'il y a quelque chose à nettoyer.
+  const marks = useMemo(() => computeAiMarks(a as any), [a]);
+  const marksTotal = marks.invisibleCount + marks.styleCount;
 
   return (
     <Card className="bg-surface border-border/60 overflow-hidden">
@@ -442,6 +451,23 @@ function ArticleCard({
               {missingLangs.length > 0 && (
                 <Badge variant="outline" className="border-amber-500/50 text-amber-400 text-xs">
                   Manque : {missingLangs.join(", ").toUpperCase()}
+                </Badge>
+              )}
+              {marks.dirty ? (
+                <Badge variant="outline" className="border-orange-500/50 text-orange-400 text-xs"
+                  title={[
+                    marks.invisibleCount > 0
+                      ? `${marks.invisibleCount} caractère(s) invisible(s) : ${marks.invisibleHits.map(h => `${h.label} ×${h.count}`).join(", ")}`
+                      : null,
+                    marks.styleTells.length > 0
+                      ? `Tics d'écriture : ${marks.styleTells.map(t => `${t.label} ×${t.count}`).join(", ")}`
+                      : null,
+                  ].filter(Boolean).join("\n")}>
+                  Traces IA : {marksTotal}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-xs" title="Aucun porteur invisible ni tic d'écriture détecté">
+                  <ShieldCheck className="h-3 w-3 mr-1" />Propre
                 </Badge>
               )}
             </div>
@@ -469,6 +495,17 @@ function ArticleCard({
             <Button size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10" onClick={onImprove}>
               <Sparkles className="h-3.5 w-3.5 mr-1" />Améliorer le SEO
             </Button>
+            <Button size="sm" variant="outline"
+              className="border-orange-500/40 text-orange-400 hover:bg-orange-500/10 disabled:opacity-40"
+              onClick={onClean} disabled={cleaning || !marks.dirty}
+              title={marks.dirty
+                ? "Retire les caractères invisibles (toutes langues) puis réécrit le corps français pour effacer les tics d'écriture LLM"
+                : "Rien à nettoyer sur cet article"}>
+              {cleaning
+                ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                : <Eraser className="h-3.5 w-3.5 mr-1" />}
+              Nettoyer l'IA{marks.dirty ? ` (${marksTotal})` : ""}
+            </Button>
             {missingLangs.length > 0 && (
               <Button size="sm" variant="outline"
                 className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
@@ -488,6 +525,23 @@ function ArticleCard({
           {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           Checklist SEO ({a._seo.checklist.filter(c => c.ok).length}/{a._seo.checklist.length})
         </button>
+        {open && marks.dirty && (
+          <div className="mt-3 rounded-lg border border-orange-500/25 bg-orange-500/5 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-orange-400">Traces d'IA détectées</div>
+            {marks.invisibleCount > 0 && (
+              <div className="text-xs text-muted-foreground">
+                <span className="text-foreground/80">Caractères invisibles</span> ({marks.invisibleCount}) dans{" "}
+                {marks.invisibleFields.join(", ")} — {marks.invisibleHits.map(h => `${h.label} ×${h.count}`).join(" · ")}
+              </div>
+            )}
+            {marks.styleTells.map(t => (
+              <div key={t.key} className="text-xs text-muted-foreground">
+                <span className="text-foreground/80">{t.label}</span> ×{t.count}
+                {t.samples.length > 0 && <> — <span className="italic">{t.samples.join(" · ")}</span></>}
+              </div>
+            ))}
+          </div>
+        )}
         {open && (
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-1.5 rounded-lg border border-border/40 bg-background/40 p-3">
             {a._seo.checklist.map(item => (
@@ -562,6 +616,33 @@ function Page() {
     mutationFn: () => translateAllMissingArticles(),
     onSuccess: (r: any) => {
       toast.success(`Traductions : ${r.success}/${r.total} OK${r.failed ? `, ${r.failed} échouées` : ""}.`);
+      qc.invalidateQueries({ queryKey: ["admin-articles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // Nettoyage des traces d'IA. Passe 1 (Unicode, toutes langues) toujours
+  // appliquée ; passe 2 (réécriture du corps FR) seulement si des tics
+  // d'écriture sont détectés, et rejetée d'office si elle ferait baisser
+  // le SEO, le GEO, le volume de texte, ou réintroduirait du vocabulaire LPMéd.
+  const cleanMutation = useMutation({
+    mutationFn: (id: string) => cleanArticleAiMarks({ data: { id, mode: "full" } }),
+    onSuccess: (r: any) => {
+      if (!r.updated) {
+        toast.info(r.style?.rejectedReason ?? "Rien à nettoyer — l'article est déjà propre.");
+      } else {
+        const bits: string[] = [];
+        const inv = r.invisible.removed + r.invisible.replaced;
+        if (inv > 0) bits.push(`${inv} caractère(s) invisible(s)`);
+        if (r.style?.rewritten) {
+          const gone = (r.style.before?.length ?? 0) - (r.style.after?.length ?? 0);
+          bits.push(`${gone > 0 ? gone : r.style.before.length} tic(s) d'écriture`);
+        }
+        toast.success(
+          `Nettoyé : ${bits.join(" et ")} — SEO ${r.seoBefore} → ${r.seoAfter} · GEO ${r.geoBefore} → ${r.geoAfter}`,
+        );
+        if (r.style?.rejectedReason) toast.warning(r.style.rejectedReason);
+      }
       qc.invalidateQueries({ queryKey: ["admin-articles"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -889,6 +970,8 @@ function Page() {
             onImprove={() => setImproving(a)}
             onTranslate={() => translateMutation.mutate(a.id)}
             translating={translateMutation.isPending && translateMutation.variables === a.id}
+            onClean={() => cleanMutation.mutate(a.id)}
+            cleaning={cleanMutation.isPending && cleanMutation.variables === a.id}
           />
         ))}
       </div>
