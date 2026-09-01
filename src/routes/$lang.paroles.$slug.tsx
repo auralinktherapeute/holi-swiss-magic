@@ -149,9 +149,11 @@ function Page() {
               </div>
             )}
 
-            <div className="mt-8 prose prose-invert prose-lg max-w-none text-white/90 whitespace-pre-wrap leading-relaxed">
-              {article.contenu}
-            </div>
+            <ArticleContent
+              source={article.contenu}
+              className="mt-8 max-w-none text-lg text-white/90"
+            />
+
 
             {t && (
               <aside className="mt-12 rounded-2xl border border-[rgba(184,110,249,0.3)] bg-[#1d0d3d] p-6 flex items-center gap-4">

@@ -16,6 +16,8 @@ import {
   listMyTherapistArticles, upsertMyTherapistArticle, deleteMyTherapistArticle,
   type TherapistArticle,
 } from "@/lib/therapist-articles.functions";
+import { ArticleEditor } from "@/components/dashboard/ArticleEditor";
+
 
 export const Route = createFileRoute("/dashboard/articles")({ component: Page });
 
@@ -187,9 +189,10 @@ function Page() {
                   <Textarea id="x" value={extrait} onChange={(e) => setExtrait(e.target.value)} rows={2} maxLength={400} placeholder="Résumé court affiché dans la liste…" />
                 </div>
                 <div className="space-y-2"><Label htmlFor="b">Contenu</Label>
-                  <Textarea id="b" value={contenu} onChange={(e) => setContenu(e.target.value)} rows={10} className="min-h-[180px]" placeholder="Rédigez votre article…" required minLength={20} />
+                  <ArticleEditor id="b" value={contenu} onChange={setContenu} />
                   <p className="text-xs text-muted-foreground">{contenu.trim().length} caractères — 20 minimum pour soumettre.</p>
                 </div>
+
                 {save.isError && (
                   <p role="alert" className="flex items-start gap-2 text-sm text-red-400">
                     <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
