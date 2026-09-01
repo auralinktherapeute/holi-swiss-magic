@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Eye, Mic } from "lucide-react";
+import ArticleContent from "@/components/articles/ArticleContent";
 
 export const Route = createFileRoute("/admin/paroles")({ component: Page });
 
@@ -127,7 +128,7 @@ function Page() {
             <img src={preview.image_couverture} alt="" className="w-full rounded-lg mb-4" />
           )}
           {preview?.extrait && <p className="italic text-white/70 mb-4">{preview.extrait}</p>}
-          <div className="whitespace-pre-wrap text-white/90 leading-relaxed">{preview?.contenu}</div>
+          <ArticleContent source={preview?.contenu ?? ""} className="text-white/90" />
         </DialogContent>
       </Dialog>
 

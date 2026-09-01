@@ -167,7 +167,7 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
   let paragraph: string[] = [];
 
   const flush = () => {
-    const text = paragraph.join(" ").trim();
+    const text = paragraph.join("\n").trim();
     paragraph = [];
     if (text) blocks.push({ type: "paragraph", tokens: parseInline(text) });
   };
@@ -193,7 +193,7 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
       continue;
     }
 
-    const bullet = /^[-*•]\s+(.*)$/.exec(trimmed);
+    const bullet = /^[-*•–—]\s+(.*)$/.exec(trimmed);
     const numbered = /^(\d+)[.)]\s+(.*)$/.exec(trimmed);
     if (bullet || numbered) {
       flush();
@@ -202,7 +202,7 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
       let j = i;
       while (j < lines.length) {
         const t = lines[j].trim();
-        const b = /^[-*•]\s+(.*)$/.exec(t);
+        const b = /^[-*•–—]\s+(.*)$/.exec(t);
         const n = /^(\d+)[.)]\s+(.*)$/.exec(t);
         if (ordered && n) items.push(parseInline(n[2]));
         else if (!ordered && b) items.push(parseInline(b[1]));

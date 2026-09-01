@@ -56,7 +56,7 @@ function Block({ block }: { block: ArticleBlock }) {
         </ul>
       );
     default:
-      return <p className="my-4 leading-relaxed"><Inline tokens={block.tokens} /></p>;
+      return <p className="my-4 leading-relaxed whitespace-pre-line"><Inline tokens={block.tokens} /></p>;
   }
 }
 
