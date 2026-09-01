@@ -27,6 +27,7 @@ import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
 import BankReconciliation from "@/components/dashboard/BankReconciliation";
 import AppointmentsToBill from "@/components/dashboard/AppointmentsToBill";
 import ClientsToBill from "@/components/dashboard/ClientsToBill";
+import InvoicePreviewDialog from "@/components/dashboard/InvoicePreviewDialog";
 import AccountingPanel from "@/components/dashboard/AccountingPanel";
 
 import { INVOICE_LANGS, INVOICE_LANG_LABELS } from "@/lib/invoice-i18n";
