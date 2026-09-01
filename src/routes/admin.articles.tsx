@@ -525,7 +525,7 @@ function ArticleCard({
           {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           Checklist SEO ({a._seo.checklist.filter(c => c.ok).length}/{a._seo.checklist.length})
         </button>
-        {open && marks.dirty && (
+        {open && (marks.invisibleCount > 0 || marks.styleTells.length > 0) && (
           <div className="mt-3 rounded-lg border border-orange-500/25 bg-orange-500/5 p-3 space-y-1.5">
             <div className="text-xs font-semibold text-orange-400">Traces d'IA détectées</div>
             {marks.invisibleCount > 0 && (
@@ -540,6 +540,21 @@ function ArticleCard({
                 {t.samples.length > 0 && <> — <span className="italic">{t.samples.join(" · ")}</span></>}
               </div>
             ))}
+          </div>
+        )}
+        {open && marks.citabilityAssets.length > 0 && (
+          <div className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-3 space-y-1.5">
+            <div className="text-xs font-semibold text-emerald-400">Conservé — atouts de citabilité IA</div>
+            {marks.citabilityAssets.map(t => (
+              <div key={t.key} className="text-xs text-muted-foreground">
+                <span className="text-foreground/80">{t.label}</span> ×{t.count}
+                {t.samples.length > 0 && <> — <span className="italic">{t.samples.join(" · ")}</span></>}
+              </div>
+            ))}
+            <div className="text-xs text-muted-foreground/80 pt-1">
+              Ces formes ressemblent à de l'écriture machine, mais ce sont elles qui rendent
+              un passage citable par ChatGPT, AI Overviews et Perplexity. Le nettoyage n'y touche pas.
+            </div>
           </div>
         )}
         {open && (
@@ -629,7 +644,11 @@ function Page() {
     mutationFn: (id: string) => cleanArticleAiMarks({ data: { id, mode: "full" } }),
     onSuccess: (r: any) => {
       if (!r.updated) {
-        toast.info(r.style?.rejectedReason ?? "Rien à nettoyer — l'article est déjà propre.");
+        // Distinguer « rien à faire » d'un échec : le premier est un succès,
+        // le second demande une action. Les confondre dans un toast neutre
+        // laissait croire que l'article était propre alors qu'il ne l'était pas.
+        if (r.style?.rejectedReason) toast.warning(r.style.rejectedReason, { duration: 12000 });
+        else toast.info("Rien à nettoyer — l'article est déjà propre.");
       } else {
         const bits: string[] = [];
         const inv = r.invisible.removed + r.invisible.replaced;

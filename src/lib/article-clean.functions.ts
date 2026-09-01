@@ -59,13 +59,19 @@ function wordCount(s: string): number {
 
 /** Champs que la passe 2 a le droit de réécrire. Garantie serveur : quoi que
  *  réponde le modèle, rien d'autre n'est appliqué. */
-const REWRITABLE = [
-  "title_fr",
-  "excerpt_fr",
-  "body_fr",
-  "meta_title_fr",
-  "meta_description_fr",
-] as const;
+/**
+ * Champs que la passe 2 a le droit de réécrire — le corps, et rien d'autre.
+ *
+ * Le titre (50–60 caractères) et la meta description (150–160) sont notés sur
+ * des fourchettes exactes au caractère près. Le score SEO se déplace par pas
+ * de 10 (dix critères à dix points), donc un titre qui sort de sa fourchette
+ * coûte 10 points d'un coup et fait rejeter toute la réécriture par la garde.
+ * Sur un article à 100/100 cela rendait la passe 2 quasi inopérante.
+ *
+ * Les tics d'écriture vivent de toute façon dans le corps ; le titre et la
+ * meta n'en portent presque jamais.
+ */
+const REWRITABLE = ["body_fr"] as const;
 
 export const inspectArticleAiMarks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -116,7 +122,12 @@ export const cleanArticleAiMarks = createServerFn({ method: "POST" })
     let current: Record<string, any> = { ...row, ...pass1.patch };
 
     // ── Passe 2 : style, français ───────────────────────────────────────────
-    const tellsBefore = detectStyleTells(current.body_fr ?? "");
+    // Seuls les motifs corrigeables déclenchent et guident la passe 2. Les
+    // atouts de citabilité (H2 interrogatifs, listes) sont détectés ailleurs,
+    // affichés à l'admin, et jamais soumis au modèle.
+    const allTellsBefore = detectStyleTells(current.body_fr ?? "");
+    const tellsBefore = allTellsBefore.filter((t) => !t.servesCitability);
+    const citabilityAssets = allTellsBefore.filter((t) => t.servesCitability);
     let tellsAfter = tellsBefore;
     let rewritten = false;
     let rejectedReason: string | null = null;
@@ -133,16 +144,12 @@ export const cleanArticleAiMarks = createServerFn({ method: "POST" })
         headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
       });
 
-      const schema = z.object({
-        title_fr: z.string(),
-        excerpt_fr: z.string(),
-        body_fr: z.string(),
-        meta_title_fr: z.string(),
-        meta_description_fr: z.string(),
-      });
+      const schema = z.object({ body_fr: z.string() });
 
-      const system = `Vous êtes relecteur pour HoliSwiss (annuaire suisse de thérapeutes holistiques).
-Votre travail : faire disparaître les tics d'écriture des modèles de langage d'un article rédigé en français, sans en changer le fond.
+      const system = `Vous êtes secrétaire de rédaction pour HoliSwiss (annuaire suisse de thérapeutes holistiques).
+Votre travail : resserrer le style d'un article rédigé en français, sans en changer le fond. Vous chassez les tournures formulaires, les transitions toutes faites et les emphases creuses — le travail ordinaire d'une relecture éditoriale.
+
+À PRÉSERVER ABSOLUMENT, même si cela vous paraît répétitif : les intertitres formulés en question, les listes à puces, les tableaux, les phrases définitionnelles « X est Y », et la réponse directe placée juste sous chaque intertitre. Ces formes sont ce qui rend un passage citable par les moteurs de réponse (ChatGPT, AI Overviews, Perplexity) : les effacer coûterait de la visibilité. Vous ne touchez ni au titre, ni au chapô, ni aux métadonnées.
 
 CE QUI NE DOIT PAS BOUGER : les faits, les chiffres, les noms de villes et de cantons suisses, les liens Markdown (URL comprises), la structure des titres (##, ###), la longueur globale du texte, le sujet et l'angle.
 
@@ -159,25 +166,24 @@ Répondre en français. Ne jamais produire de HTML. Ne jamais ajouter de note ni
         )
         .join("\n");
 
-      const prompt = `Réécris cet article en corrigeant les points ci-dessous, et uniquement ceux-là.
+      const nbListes = citabilityAssets.reduce((n, t) => n + t.count, 0);
 
-TITRE : ${current.title_fr ?? ""}
-CHAPÔ : ${current.excerpt_fr ?? ""}
-META TITLE : ${current.meta_title_fr ?? ""}
-META DESCRIPTION : ${current.meta_description_fr ?? ""}
+      const prompt = `Reprends le style du CORPS de cet article sur les points ci-dessous, et uniquement ceux-là. Tu ne renvoies que le corps.
+
+TITRE (pour contexte, ne pas modifier) : ${current.title_fr ?? ""}
 
 CORPS (Markdown) :
 ${current.body_fr ?? ""}
 
-POINTS À CORRIGER :
+POINTS DE STYLE À REPRENDRE :
 ${instructions}
 
-CONTRAINTES DE FORME À RESPECTER (elles sont mesurées par un programme, au caractère près) :
-1. title_fr : entre 50 et 60 caractères inclus.
-2. meta_description_fr : entre 150 et 160 caractères inclus.
-3. body_fr : au moins ${Math.max(320, Math.round(wordCount(current.body_fr ?? "") * 0.95))} mots, au moins 2 titres « ## » et 1 titre « ### », et tous les liens internes déjà présents conservés à l'identique.
-4. body_fr : conserver au moins 4 villes suisses distinctes, 3 cantons distincts, et les mots « suisse » et « romande ».
-5. excerpt_fr : 1 à 2 phrases, 300 caractères maximum.`;
+CONTRAINTES DE FORME (mesurées par un programme, au mot près) :
+1. Au moins ${Math.max(320, Math.round(wordCount(current.body_fr ?? "") * 0.95))} mots.
+2. Au moins 2 titres « ## » et 1 titre « ### ». Tous les liens internes conservés à l'identique.
+3. Conserver au moins 4 villes suisses distinctes, 3 cantons distincts, et les mots « suisse » et « romande ».
+4. Longueur moyenne des phrases entre 10 et 25 mots. C'est mesuré : sortir de cette fourchette fait rejeter tout le travail.
+5. Conserver les ${nbListes || "éventuelles"} structures énumératives et les intertitres formulés en question. Ce sont des atouts de référencement, pas des maladresses.`;
 
       let candidate: z.infer<typeof schema> | null = null;
       try {
@@ -187,14 +193,27 @@ CONTRAINTES DE FORME À RESPECTER (elles sont mesurées par un programme, au car
           prompt,
           experimental_output: Output.object({ schema }),
         });
-        candidate = (result as any).experimental_output;
+        candidate = (result as any).experimental_output ?? null;
+        if (!candidate) {
+          // Pas d'exception, mais rien d'exploitable : refus du modèle, coupure
+          // sur la limite de jetons, ou JSON tronqué. `finishReason` distingue
+          // les trois — sans lui, la panne n'est pas diagnosticable.
+          const fr = (result as any)?.finishReason ?? "inconnu";
+          const txt = String((result as any)?.text ?? "")
+            .trim()
+            .slice(0, 160);
+          rejectedReason = `Le modèle a répondu sans contenu exploitable (finishReason : ${fr}${txt ? `, début : « ${txt} »` : ""}). Seule la passe Unicode a été appliquée.`;
+        }
       } catch (e: any) {
         const msg = String(e?.message ?? e);
         if (msg.includes("429"))
           throw new Error("Limite de requêtes IA atteinte. Réessayez dans une minute.");
         if (msg.includes("402"))
           throw new Error("Crédits IA épuisés. Rechargez votre workspace Lovable.");
-        rejectedReason = "Le modèle n'a pas répondu ; seule la passe Unicode a été appliquée.";
+        // Le message brut est la seule information exploitable côté admin.
+        // Le masquer, comme le faisait la première version, rendait toute
+        // panne du modèle indiscernable d'une autre.
+        rejectedReason = `Appel au modèle en échec : ${msg.slice(0, 300)}`;
       }
 
       if (candidate) {
@@ -227,7 +246,7 @@ CONTRAINTES DE FORME À RESPECTER (elles sont mesurées par un programme, au car
           }
           current = proposed;
           rewritten = true;
-          tellsAfter = detectStyleTells(current.body_fr ?? "");
+          tellsAfter = detectStyleTells(current.body_fr ?? "").filter((t) => !t.servesCitability);
         }
       }
     }
