@@ -141,8 +141,8 @@ export const cleanArticleAiMarks = createServerFn({ method: "POST" })
         meta_description_fr: z.string(),
       });
 
-      const system = `Vous êtes relecteur pour HoliSwiss (annuaire suisse de thérapeutes holistiques).
-Votre travail : faire disparaître les tics d'écriture des modèles de langage d'un article rédigé en français, sans en changer le fond.
+      const system = `Vous êtes secrétaire de rédaction pour HoliSwiss (annuaire suisse de thérapeutes holistiques).
+Votre travail : resserrer le style d'un article rédigé en français, sans en changer le fond. Vous chassez les tournures formulaires, les transitions toutes faites et les emphases creuses — le travail ordinaire d'une relecture éditoriale.
 
 CE QUI NE DOIT PAS BOUGER : les faits, les chiffres, les noms de villes et de cantons suisses, les liens Markdown (URL comprises), la structure des titres (##, ###), la longueur globale du texte, le sujet et l'angle.
 
@@ -159,7 +159,7 @@ Répondre en français. Ne jamais produire de HTML. Ne jamais ajouter de note ni
         )
         .join("\n");
 
-      const prompt = `Réécris cet article en corrigeant les points ci-dessous, et uniquement ceux-là.
+      const prompt = `Reprends le style de cet article sur les points ci-dessous, et uniquement ceux-là.
 
 TITRE : ${current.title_fr ?? ""}
 CHAPÔ : ${current.excerpt_fr ?? ""}
@@ -169,7 +169,7 @@ META DESCRIPTION : ${current.meta_description_fr ?? ""}
 CORPS (Markdown) :
 ${current.body_fr ?? ""}
 
-POINTS À CORRIGER :
+POINTS DE STYLE À REPRENDRE :
 ${instructions}
 
 CONTRAINTES DE FORME À RESPECTER (elles sont mesurées par un programme, au caractère près) :
@@ -187,14 +187,27 @@ CONTRAINTES DE FORME À RESPECTER (elles sont mesurées par un programme, au car
           prompt,
           experimental_output: Output.object({ schema }),
         });
-        candidate = (result as any).experimental_output;
+        candidate = (result as any).experimental_output ?? null;
+        if (!candidate) {
+          // Pas d'exception, mais rien d'exploitable : refus du modèle, coupure
+          // sur la limite de jetons, ou JSON tronqué. `finishReason` distingue
+          // les trois — sans lui, la panne n'est pas diagnosticable.
+          const fr = (result as any)?.finishReason ?? "inconnu";
+          const txt = String((result as any)?.text ?? "")
+            .trim()
+            .slice(0, 160);
+          rejectedReason = `Le modèle a répondu sans contenu exploitable (finishReason : ${fr}${txt ? `, début : « ${txt} »` : ""}). Seule la passe Unicode a été appliquée.`;
+        }
       } catch (e: any) {
         const msg = String(e?.message ?? e);
         if (msg.includes("429"))
           throw new Error("Limite de requêtes IA atteinte. Réessayez dans une minute.");
         if (msg.includes("402"))
           throw new Error("Crédits IA épuisés. Rechargez votre workspace Lovable.");
-        rejectedReason = "Le modèle n'a pas répondu ; seule la passe Unicode a été appliquée.";
+        // Le message brut est la seule information exploitable côté admin.
+        // Le masquer, comme le faisait la première version, rendait toute
+        // panne du modèle indiscernable d'une autre.
+        rejectedReason = `Appel au modèle en échec : ${msg.slice(0, 300)}`;
       }
 
       if (candidate) {

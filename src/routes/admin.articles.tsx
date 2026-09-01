@@ -629,7 +629,11 @@ function Page() {
     mutationFn: (id: string) => cleanArticleAiMarks({ data: { id, mode: "full" } }),
     onSuccess: (r: any) => {
       if (!r.updated) {
-        toast.info(r.style?.rejectedReason ?? "Rien à nettoyer — l'article est déjà propre.");
+        // Distinguer « rien à faire » d'un échec : le premier est un succès,
+        // le second demande une action. Les confondre dans un toast neutre
+        // laissait croire que l'article était propre alors qu'il ne l'était pas.
+        if (r.style?.rejectedReason) toast.warning(r.style.rejectedReason, { duration: 12000 });
+        else toast.info("Rien à nettoyer — l'article est déjà propre.");
       } else {
         const bits: string[] = [];
         const inv = r.invisible.removed + r.invisible.replaced;
