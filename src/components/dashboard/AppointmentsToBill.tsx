@@ -149,6 +149,11 @@ export default function AppointmentsToBill({ onInvoiceCreated }: { onInvoiceCrea
                   <td className="p-3 whitespace-nowrap">
                     {shortDate(r.appointment_date)}
                     {r.appointment_time && <span className="text-muted-foreground"> · {r.appointment_time.slice(0, 5)}</span>}
+                    {r.status !== "completed" && (
+                      <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground align-middle">
+                        À venir
+                      </span>
+                    )}
                   </td>
                   <td className="p-3 font-medium">{r.client_name}</td>
                   <td className="p-3 hidden md:table-cell text-muted-foreground">{r.service_name ?? "—"}</td>
