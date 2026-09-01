@@ -110,7 +110,7 @@ export default function AppointmentsToBill({ onInvoiceCreated }: { onInvoiceCrea
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {rows.length} rendez-vous effectué{rows.length > 1 ? "s" : ""} à facturer
+          {rows.length} rendez-vous à facturer
           {selected.length > 0 && ` — ${selected.length} sélectionné${selected.length > 1 ? "s" : ""}`}
         </p>
         <Button
