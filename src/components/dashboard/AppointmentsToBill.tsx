@@ -100,7 +100,7 @@ export default function AppointmentsToBill({ onInvoiceCreated }: { onInvoiceCrea
       <Card>
         <CardContent className="p-8 text-center text-sm text-muted-foreground">
           <CalendarClock className="h-8 w-8 mx-auto mb-3 opacity-50" aria-hidden="true" />
-          Aucun rendez-vous effectué en attente de facturation.
+          Aucun rendez-vous confirmé ou effectué en attente de facturation.
         </CardContent>
       </Card>
     );
@@ -110,7 +110,7 @@ export default function AppointmentsToBill({ onInvoiceCreated }: { onInvoiceCrea
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {rows.length} rendez-vous effectué{rows.length > 1 ? "s" : ""} à facturer
+          {rows.length} rendez-vous à facturer
           {selected.length > 0 && ` — ${selected.length} sélectionné${selected.length > 1 ? "s" : ""}`}
         </p>
         <Button
@@ -149,6 +149,11 @@ export default function AppointmentsToBill({ onInvoiceCreated }: { onInvoiceCrea
                   <td className="p-3 whitespace-nowrap">
                     {shortDate(r.appointment_date)}
                     {r.appointment_time && <span className="text-muted-foreground"> · {r.appointment_time.slice(0, 5)}</span>}
+                    {r.status !== "completed" && (
+                      <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground align-middle">
+                        À venir
+                      </span>
+                    )}
                   </td>
                   <td className="p-3 font-medium">{r.client_name}</td>
                   <td className="p-3 hidden md:table-cell text-muted-foreground">{r.service_name ?? "—"}</td>
