@@ -265,13 +265,13 @@ function Page() {
 
       {vue === "tableau" && !loading && missing.length === 0 && (
         <MissingInvoices
-          onCreated={(id) => { setEditorId(id); void refresh(); }}
+          onCreated={(id) => { setPreviewId(id); void refresh(); }}
         />
       )}
 
       {vue === "a_facturer" && (
         <AppointmentsToBill
-          onInvoiceCreated={(id) => { setEditorId(id); void refresh(); }}
+          onInvoiceCreated={(id) => { setPreviewId(id); void refresh(); }}
         />
       )}
 
