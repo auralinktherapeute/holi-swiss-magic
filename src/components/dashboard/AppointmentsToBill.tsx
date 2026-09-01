@@ -100,7 +100,7 @@ export default function AppointmentsToBill({ onInvoiceCreated }: { onInvoiceCrea
       <Card>
         <CardContent className="p-8 text-center text-sm text-muted-foreground">
           <CalendarClock className="h-8 w-8 mx-auto mb-3 opacity-50" aria-hidden="true" />
-          Aucun rendez-vous effectué en attente de facturation.
+          Aucun rendez-vous confirmé ou effectué en attente de facturation.
         </CardContent>
       </Card>
     );
