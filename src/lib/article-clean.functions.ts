@@ -57,6 +57,13 @@ function wordCount(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
 }
 
+/** Même calcul que le critère « lisibilité » de computeSeo — le modèle doit
+ *  connaître la valeur mesurée, pas seulement la fourchette à respecter. */
+function avgSentenceLength(body: string): number {
+  const sentences = body.split(/[.!?]+/).filter((x) => x.trim().length > 0);
+  return sentences.length ? wordCount(body) / sentences.length : 0;
+}
+
 /** Champs que la passe 2 a le droit de réécrire. Garantie serveur : quoi que
  *  réponde le modèle, rien d'autre n'est appliqué. */
 /**
@@ -137,14 +144,12 @@ export const cleanArticleAiMarks = createServerFn({ method: "POST" })
       if (!lovableKey) throw new Error("LOVABLE_API_KEY manquant côté serveur.");
 
       const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-      const { generateText, Output } = await import("ai");
+      const { generateText } = await import("ai");
       const provider = createOpenAICompatible({
         name: "lovable",
         baseURL: "https://ai.gateway.lovable.dev/v1",
         headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
       });
-
-      const schema = z.object({ body_fr: z.string() });
 
       const system = `Vous êtes secrétaire de rédaction pour HoliSwiss (annuaire suisse de thérapeutes holistiques).
 Votre travail : resserrer le style d'un article rédigé en français, sans en changer le fond. Vous chassez les tournures formulaires, les transitions toutes faites et les emphases creuses — le travail ordinaire d'une relecture éditoriale.
@@ -182,27 +187,45 @@ CONTRAINTES DE FORME (mesurées par un programme, au mot près) :
 1. Au moins ${Math.max(320, Math.round(wordCount(current.body_fr ?? "") * 0.95))} mots.
 2. Au moins 2 titres « ## » et 1 titre « ### ». Tous les liens internes conservés à l'identique.
 3. Conserver au moins 4 villes suisses distinctes, 3 cantons distincts, et les mots « suisse » et « romande ».
-4. Longueur moyenne des phrases entre 10 et 25 mots. C'est mesuré : sortir de cette fourchette fait rejeter tout le travail.
+4. Longueur moyenne des phrases : entre 10 et 25 mots. Elle est actuellement de ${avgSentenceLength(current.body_fr ?? "").toFixed(1)} mots — reste dans cet ordre de grandeur. C'est mesuré, et sortir de la fourchette fait rejeter tout le travail.
 5. Conserver les ${nbListes || "éventuelles"} structures énumératives et les intertitres formulés en question. Ce sont des atouts de référencement, pas des maladresses.`;
 
-      let candidate: z.infer<typeof schema> | null = null;
+      // Sortie en TEXTE BRUT, pas en JSON structuré.
+      //
+      // La première version demandait un objet `{ body_fr: string }` et
+      // échouait systématiquement sur « response did not match schema » :
+      // faire emballer 6 à 9 Ko de Markdown dans une chaîne JSON oblige le
+      // modèle à échapper chaque saut de ligne, double la sortie et la
+      // rapproche de la troncature — pour un unique champ texte, le JSON
+      // n'apportait rien et ne coûtait que des échecs.
+      //
+      // Les gardes en aval (SEO, GEO, volume, LPMéd) valident le résultat de
+      // toute façon : c'est là qu'est la sécurité, pas dans la forme du
+      // transport.
+      let candidate: { body_fr: string } | null = null;
       try {
         const result = await generateText({
           model: provider("google/gemini-3-flash-preview"),
           system,
           prompt,
-          experimental_output: Output.object({ schema }),
+          // Le corps le plus long du blog fait ~9 Ko ; large de quoi le rendre
+          // en entier sans coupure au milieu d'une phrase.
+          maxOutputTokens: 8000,
         });
-        candidate = (result as any).experimental_output ?? null;
-        if (!candidate) {
-          // Pas d'exception, mais rien d'exploitable : refus du modèle, coupure
-          // sur la limite de jetons, ou JSON tronqué. `finishReason` distingue
-          // les trois — sans lui, la panne n'est pas diagnosticable.
+
+        // Un modèle encadre volontiers un document Markdown dans un bloc de
+        // code. On le retire avant toute évaluation.
+        const raw = String(result.text ?? "")
+          .trim()
+          .replace(/^```(?:markdown|md)?\s*\n/i, "")
+          .replace(/\n```\s*$/i, "")
+          .trim();
+
+        if (raw.length > 200) {
+          candidate = { body_fr: raw };
+        } else {
           const fr = (result as any)?.finishReason ?? "inconnu";
-          const txt = String((result as any)?.text ?? "")
-            .trim()
-            .slice(0, 160);
-          rejectedReason = `Le modèle a répondu sans contenu exploitable (finishReason : ${fr}${txt ? `, début : « ${txt} »` : ""}). Seule la passe Unicode a été appliquée.`;
+          rejectedReason = `Le modèle a répondu sans contenu exploitable (finishReason : ${fr}, ${raw.length} caractères${raw ? `, début : « ${raw.slice(0, 120)} »` : ""}). Seule la passe Unicode a été appliquée.`;
         }
       } catch (e: any) {
         const msg = String(e?.message ?? e);
