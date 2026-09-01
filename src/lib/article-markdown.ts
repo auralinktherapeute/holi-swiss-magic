@@ -193,7 +193,7 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
       continue;
     }
 
-    const bullet = /^[-*•]\s+(.*)$/.exec(trimmed);
+    const bullet = /^[-*•–—]\s+(.*)$/.exec(trimmed);
     const numbered = /^(\d+)[.)]\s+(.*)$/.exec(trimmed);
     if (bullet || numbered) {
       flush();
