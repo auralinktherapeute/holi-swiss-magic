@@ -127,7 +127,7 @@ function Page() {
             <img src={preview.image_couverture} alt="" className="w-full rounded-lg mb-4" />
           )}
           {preview?.extrait && <p className="italic text-white/70 mb-4">{preview.extrait}</p>}
-          <div className="whitespace-pre-wrap text-white/90 leading-relaxed">{preview?.contenu}</div>
+          <ArticleContent source={preview?.contenu ?? ""} className="text-white/90" />
         </DialogContent>
       </Dialog>
 
