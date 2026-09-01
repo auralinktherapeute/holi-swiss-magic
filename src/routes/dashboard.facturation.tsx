@@ -127,6 +127,7 @@ function Page() {
   const [openSet, setOpenSet] = useState(false);
   const [editorId, setEditorId] = useState<string | null | "new">(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -387,6 +388,8 @@ function Page() {
                     <td className="p-3 text-right whitespace-nowrap">
                       <Button size="sm" variant="ghost" className="min-h-11"
                         onClick={() => setDetailId(inv.id)}>Ouvrir</Button>
+                      <Button size="sm" variant="ghost" className="min-h-11"
+                        onClick={() => setPreviewId(inv.id)}>Aperçu</Button>
                       <Button size="icon" variant="ghost" className="min-h-11 min-w-11"
                         aria-label={`Imprimer la facture ${inv.numero_facture}`} onClick={() => print(inv)}>
                         <Printer className="h-4 w-4" aria-hidden="true" />
@@ -417,10 +420,17 @@ function Page() {
       {detailId && (
         <InvoiceDetail
           id={detailId} onClose={() => setDetailId(null)}
-          onEdit={(id) => { setDetailId(null); setEditorId(id); }}
+          onEdit={(id) => { setDetailId(null); setPreviewId(id); }}
           onChanged={refresh}
         />
       )}
+
+      <InvoicePreviewDialog
+        invoiceId={previewId}
+        open={!!previewId}
+        onOpenChange={(o) => !o && setPreviewId(null)}
+        onEdit={(id) => { setPreviewId(null); setEditorId(id); }}
+      />)
     </div>
   );
 }
