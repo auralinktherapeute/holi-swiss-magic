@@ -430,7 +430,7 @@ function Page() {
         open={!!previewId}
         onOpenChange={(o) => !o && setPreviewId(null)}
         onEdit={(id) => { setPreviewId(null); setEditorId(id); }}
-      />)
+      />
     </div>
   );
 }
