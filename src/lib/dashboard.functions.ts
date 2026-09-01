@@ -361,6 +361,56 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       .upsert({ therapist_id: result.data.id, user_id: context.userId, ide: data.ide }, { onConflict: "therapist_id" });
     if (privateError) throw new Error("Impossible d'enregistrer l'IDE.");
 
+    // ── Sync des prestations du profil vers le catalogue de facturation.
+    //    Non destructif : on crée ou met à jour, jamais de suppression, et on
+    //    conserve la TVA / position Tarif 590 déjà réglées côté facturation.
+    try {
+      const therapistId = result.data.id as string;
+      const profileServices = (Array.isArray(data.services) ? data.services : []) as any[];
+      if (profileServices.length > 0) {
+        const { data: existing } = await supabaseAdmin
+          .from("billing_services")
+          .select("id, name, internal_code")
+          .eq("therapist_id", therapistId);
+        const rows = (existing ?? []) as any[];
+        const byCode = new Map(
+          rows.filter((r) => r.internal_code).map((r) => [String(r.internal_code), r]),
+        );
+        const byName = new Map(rows.map((r) => [String(r.name ?? "").trim().toLowerCase(), r]));
+
+        for (let i = 0; i < profileServices.length; i++) {
+          const s = profileServices[i] ?? {};
+          const name = String(s.name ?? "").trim();
+          if (!name) continue;
+          const code = s.id ? `profil:${s.id}` : null;
+          const base = {
+            name,
+            description: s.short_description || s.description || null,
+            duration_min: Number(s.duration_min) || 60,
+            price: Number(s.price_chf) || 0,
+            position: i,
+            is_active: s.visible !== false,
+          };
+          const match =
+            (code ? byCode.get(code) : undefined) ?? byName.get(name.toLowerCase());
+          if (match) {
+            await supabaseAdmin
+              .from("billing_services")
+              .update({ ...base, internal_code: match.internal_code ?? code })
+              .eq("id", match.id);
+          } else {
+            await supabaseAdmin
+              .from("billing_services")
+              .insert({ ...base, therapist_id: therapistId, internal_code: code, currency: data.currency ?? "CHF" });
+          }
+        }
+      }
+    } catch (e) {
+      // Non bloquant : un échec de synchronisation ne doit pas casser la sauvegarde.
+      console.error("[saveMyTherapistProfile] billing services sync failed", e);
+    }
+
+
     // ── Sync taxonomy pivot (therapist_specialties) from the free-text labels
     //    stored in therapists.specialties. Match by normalized name_fr + aliases.
     try {

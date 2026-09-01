@@ -414,7 +414,7 @@
     "add_custom_specialty": "Aggiungi una specialità personalizzata",
     "custom_placeholder": "Es. Shiatsu, Ayurveda, Arteterapia…",
     "add_btn": "Aggiungi",
-    "section_services": "I miei servizi & durate",
+    "section_services": "Prestazioni",
     "services_help": "Definisci la durata per ogni tipo di seduta. Il calendario di prenotazione la userà automaticamente.",
     "service_name": "Nome del servizio",
     "service_duration": "Durata (min)",
