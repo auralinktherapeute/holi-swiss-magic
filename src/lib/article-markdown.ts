@@ -167,7 +167,7 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
   let paragraph: string[] = [];
 
   const flush = () => {
-    const text = paragraph.join(" ").trim();
+    const text = paragraph.join("\n").trim();
     paragraph = [];
     if (text) blocks.push({ type: "paragraph", tokens: parseInline(text) });
   };
