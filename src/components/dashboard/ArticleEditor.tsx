@@ -43,7 +43,7 @@ export function ArticleEditor({ id = "article-body", value, onChange, placeholde
       const chunk = value.slice(lineStart, lineEnd) || "Votre texte";
       const updated = chunk
         .split("\n")
-        .map((l, i) => l.replace(/^(#{1,6}\s+|[-*]\s+|\d+[.)]\s+|>\s?)/, "").trim())
+        .map((l) => l.replace(/^(#{1,6}\s+|[-*]\s+|\d+[.)]\s+|>\s?)/, "").trim())
         .map((l, i) => prefix(i) + (l || "Votre texte"))
         .join("\n");
       const next = value.slice(0, lineStart) + updated + value.slice(lineEnd);
