@@ -371,6 +371,14 @@ export interface StyleTell {
   instruction: string;
   /** Premiers extraits trouvés, pour l'affichage. */
   samples: string[];
+  /**
+   * Vrai quand le motif SERT la citabilité par les moteurs IA, même s'il
+   * « sent la machine ». Ces motifs sont signalés mais JAMAIS réécrits : le
+   * barème GEO maison les compte en points (H2 interrogatifs 4/20, listes
+   * énumératives 2/20). Les effacer coûterait de la visibilité — l'objectif
+   * premier — pour gagner en élégance. Mauvais arbitrage.
+   */
+  servesCitability: boolean;
 }
 
 interface TellSpec {
@@ -380,6 +388,8 @@ interface TellSpec {
   /** Nombre d'occurrences à partir duquel c'est un tic et non un usage normal. */
   threshold: number;
   instruction: string;
+  /** Voir StyleTell.servesCitability. Défaut : false (motif corrigeable). */
+  servesCitability?: boolean;
 }
 
 /** Ces motifs sont calibrés pour du français de blog bien-être, pas de l'anglais.
@@ -487,16 +497,18 @@ const TELL_SPECS: TellSpec[] = [
     label: "Puces « **Terme** : définition »",
     pattern: /^[ \t]*[-*][ \t]+\*\*[^*\n]{2,60}\*\*[ \t]*(?::|—|–)/gm,
     threshold: 4,
+    servesCitability: true,
     instruction:
-      "Convertir la majorité des listes « **Terme** : définition » en paragraphes rédigés ; garder au plus une liste par article.",
+      "NE PAS TOUCHER : les listes énumératives comptent dans le barème de citabilité IA (2 points sur 20). Signalé pour information seulement.",
   },
   {
     key: "question_heading",
     label: "Intertitres sous forme de question",
     pattern: /^#{2,4}[ \t]+[^\n?]{5,90}\?[ \t]*$/gm,
     threshold: 3,
+    servesCitability: true,
     instruction:
-      "Reformuler la plupart des intertitres interrogatifs en titres affirmatifs (les questions restantes doivent viser une requête réelle des internautes).",
+      "NE PAS TOUCHER : un H2 formulé en question, environ un tous les 150 à 300 mots, vaut 4 points sur 20 au barème de citabilité IA. Signalé pour information seulement.",
   },
   {
     key: "emoji_heading",
@@ -536,6 +548,7 @@ export function detectStyleTells(text: string): StyleTell[] {
       label: spec.label,
       count: matches.length,
       instruction: spec.instruction,
+      servesCitability: spec.servesCitability ?? false,
       samples: matches.slice(0, 3).map((m) => m[0].trim().replace(/\s+/g, " ").slice(0, 80)),
     });
   }
@@ -547,6 +560,7 @@ export function detectStyleTells(text: string): StyleTell[] {
       label: "Apostrophes droites et courbes mélangées",
       count: mixed,
       instruction: "Uniformiser les apostrophes en apostrophe courbe (’) sur tout le texte.",
+      servesCitability: false,
       samples: [],
     });
   }
@@ -587,9 +601,16 @@ export interface AiMarksReport {
   invisibleHits: InvisibleHit[];
   /** Champs concernés par la couche A. */
   invisibleFields: ArticleTextField[];
-  /** Tics d'écriture détectés dans le corps français. */
+  /** Tics d'écriture corrigeables, dans le corps français. */
   styleTells: StyleTell[];
   styleCount: number;
+  /**
+   * Motifs qui « sentent la machine » mais SERVENT la citabilité IA — H2
+   * interrogatifs, listes énumératives. Affichés pour information, jamais
+   * réécrits, jamais comptés dans le badge : proposer de les effacer
+   * reviendrait à proposer de perdre en visibilité.
+   */
+  citabilityAssets: StyleTell[];
   /** Vrai si un nettoyage a quelque chose à faire. */
   dirty: boolean;
 }
@@ -615,7 +636,12 @@ export function computeAiMarks(a: ArticleTextRecord): AiMarksReport {
     }
   }
 
-  const styleTells = detectStyleTells(a.body_fr ?? "");
+  const allTells = detectStyleTells(a.body_fr ?? "");
+  // Le badge ne compte que ce qu'on propose réellement de corriger. Compter
+  // les atouts de citabilité gonflerait le chiffre avec des motifs qu'on
+  // refuse de toucher — un compteur qu'aucune action ne fait descendre.
+  const styleTells = allTells.filter((t) => !t.servesCitability);
+  const citabilityAssets = allTells.filter((t) => t.servesCitability);
   const styleCount = styleTells.reduce((s, t) => s + t.count, 0);
 
   return {
@@ -624,6 +650,7 @@ export function computeAiMarks(a: ArticleTextRecord): AiMarksReport {
     invisibleFields,
     styleTells,
     styleCount,
+    citabilityAssets,
     dirty: invisibleCount > 0 || styleTells.length > 0,
   };
 }

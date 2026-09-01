@@ -85,6 +85,25 @@ describe("detectStyleTells — tics d'écriture français", () => {
     expect(keys).not.toContain("em_dash");
   });
 
+  it("classe les listes et les H2 interrogatifs comme atouts de citabilité, pas comme tics", () => {
+    const md = [
+      "## Pour qui ?",
+      "## Combien de séances ?",
+      "## Où en Suisse ?",
+      "- **Détente** : relâchement profond",
+      "- **Équilibre** : harmonie retrouvée",
+      "- **Énergie** : vitalité",
+      "- **Sommeil** : nuits calmes",
+    ].join("\n");
+    const tells = detectStyleTells(md);
+    const assets = tells
+      .filter((t) => t.servesCitability)
+      .map((t) => t.key)
+      .sort();
+    expect(assets).toEqual(["bold_bullet", "question_heading"]);
+    expect(tells.filter((t) => !t.servesCitability)).toHaveLength(0);
+  });
+
   it("ne signale rien sur une prose humaine ordinaire", () => {
     expect(
       detectStyleTells(
@@ -114,6 +133,25 @@ describe("computeAiMarks / stripInvisibleFromArticle — au niveau article", () 
     expect(Object.keys(patch).sort()).toEqual(["body_de", "title_fr"]);
     expect(patch.title_fr).toBe("Reiki et sommeil");
     expect(removed).toBe(2);
+  });
+
+  it("exclut les atouts de citabilité du compteur du badge", () => {
+    const md = [
+      "## Pour qui ?",
+      "## Combien de séances ?",
+      "## Où en Suisse ?",
+      "- **Détente** : un",
+      "- **Équilibre** : deux",
+      "- **Énergie** : trois",
+      "- **Sommeil** : quatre",
+      "Dans un monde où tout s'accélère, il est important de noter que rien ne presse.",
+    ].join("\n");
+    const r = computeAiMarks({ body_fr: md });
+    // 3 H2 interrogatifs + 4 puces = 7 motifs conservés, hors compteur
+    expect(r.citabilityAssets.reduce((n, t) => n + t.count, 0)).toBe(7);
+    // seules les 2 tournures formulaires sont comptées
+    expect(r.styleCount).toBe(2);
+    expect(r.styleTells.every((t) => !t.servesCitability)).toBe(true);
   });
 
   it("déclare propre un article sans trace", () => {
