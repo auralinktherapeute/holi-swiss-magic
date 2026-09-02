@@ -289,6 +289,7 @@ export async function exporterSlides(
   lotusUrl: string,
   base: string,
   seulementLaPremiere = false,
+  reglages: Record<number, SlideAdjust> = {},
 ): Promise<number> {
   const lotus = await chargerLotus(lotusUrl);
   const aExporter = seulementLaPremiere ? slides.slice(0, 1) : slides;
@@ -298,7 +299,7 @@ export async function exporterSlides(
   for (let i = 0; i < slides.length; i++) {
     if (!SANS_FILIGRANE.includes(slides[i].kind)) filigrane += 1;
     if (seulementLaPremiere && i > 0) break;
-    const canvas = dessinerSlide(slides[i], i, slides.length, lotus, filigrane);
+    const canvas = dessinerSlide(slides[i], i, slides.length, lotus, filigrane, reglages[i] ?? {});
     const suffixe = seulementLaPremiere ? "post" : String(i + 1).padStart(2, "0");
     await telecharger(canvas, `${base}-${suffixe}.png`);
     n += 1;
