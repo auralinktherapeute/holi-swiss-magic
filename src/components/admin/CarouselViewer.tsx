@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, SlidersHorizontal } from "lucide-react";
 import { exporterSlides, slug } from "@/lib/carousel-export";
+import { SlideAdjuster } from "@/components/admin/SlideAdjuster";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 
 /**
@@ -82,17 +83,19 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
   const [lang, setLang] = useState<CarouselLang>(carousel.langueOrigine);
   const [vue, setVue] = useState<Vue>("carrousel");
   const [exporte, setExporte] = useState(false);
+  const [ajuste, setAjuste] = useState(false);
+
+  const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
+  const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
 
   const telecharger = async () => {
     setExporte(true);
     try {
-      const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
       await exporterSlides(slides, lotusAsset.url, base, vue === "post");
     } finally {
       setExporte(false);
     }
   };
-  const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
   const total = slides.length;
   let bodyIndex = -1;
 
@@ -125,7 +128,25 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
           )}
           {exporte ? "Export…" : vue === "post" ? "PNG" : `PNG ×${total}`}
         </button>
+        <button
+          onClick={() => setAjuste(true)}
+          title="Ajuster le texte, la taille et la position avant de télécharger"
+          className="flex items-center gap-1.5 rounded-lg border border-[#b86ef9]/40 px-2.5 py-1 text-xs font-semibold text-white/80 transition hover:border-[#b86ef9] hover:text-white"
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Ajuster
+        </button>
       </header>
+
+      {ajuste && (
+        <SlideAdjuster
+          slides={slides}
+          base={base}
+          seulementLaPremiere={vue === "post"}
+          onClose={() => setAjuste(false)}
+        />
+      )}
+
 
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         <div className="mr-2 flex rounded-lg border border-white/15 p-0.5" role="group" aria-label="Format d'affichage">
