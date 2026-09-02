@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, SlidersHorizontal } from "lucide-react";
 import { exporterSlides, slug } from "@/lib/carousel-export";
+import { SlideAdjuster } from "@/components/admin/SlideAdjuster";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 
 /**
