@@ -76,19 +76,36 @@ function ecrire(
   ctx: CanvasRenderingContext2D,
   texte: string,
   y: number,
-  opts: { police: string; taille: number; couleur: string; interligne: number; espacement?: number },
+  opts: {
+    police: string;
+    taille: number;
+    couleur: string;
+    interligne: number;
+    espacement?: number;
+    dessine?: boolean;
+  },
 ): number {
   ctx.font = `${opts.taille}px ${opts.police}`;
   ctx.fillStyle = opts.couleur;
   if (opts.espacement) (ctx as any).letterSpacing = `${opts.espacement}px`;
   let curseur = y;
   for (const l of lignes(ctx, texte, W - PAD * 2)) {
-    ctx.fillText(l, PAD, curseur);
+    if (opts.dessine !== false) ctx.fillText(l, PAD, curseur);
     curseur += opts.taille * opts.interligne;
   }
   if (opts.espacement) (ctx as any).letterSpacing = "0px";
   return curseur;
 }
+
+/** Réglages manuels appliqués à une slide avant export. */
+export type SlideAdjust = {
+  /** Facteur d'échelle du texte (1 = taille de référence). */
+  scale?: number;
+  /** Décalage vertical du bloc de contenu, en pixels 1080 × 1350. */
+  offsetY?: number;
+  /** Réduit automatiquement le texte qui déborderait de la zone sûre. */
+  autofit?: boolean;
+};
 
 /** Dessine une slide et rend le PNG. `lotus` est l'image déjà chargée. */
 export function dessinerSlide(
@@ -97,6 +114,7 @@ export function dessinerSlide(
   total: number,
   lotus: HTMLImageElement | null,
   indexFiligrane: number,
+  adjust: SlideAdjust = {},
 ): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = W;
@@ -121,69 +139,88 @@ export function dessinerSlide(
     ctx.globalAlpha = 1;
   }
 
-  // ---- contenu ----
+  const yPied = H - SAFE_BOTTOM - 70;
   const centre = slide.kind === "rupture" || slide.kind === "cta";
-  let y = centre ? H * 0.34 : PAD + 40;
+  const decalage = adjust.offsetY ?? 0;
 
-  if (slide.kind === "cta" && lotus) {
-    ctx.drawImage(lotus, PAD, y - 70, 215, 215);
-    y += 175;
-  }
+  /** Dessine (ou mesure seulement) le bloc de contenu à l'échelle donnée. */
+  const contenu = (f: number, dessine: boolean): number => {
+    let y = (centre ? H * 0.34 : PAD + 40) + decalage;
 
-  if (slide.label) {
-    y = ecrire(ctx, slide.label.toUpperCase(), y, {
-      police: `700 ${SANS}`,
-      taille: 34,
-      couleur: slide.kind === "rupture" ? CORAIL : CYAN,
-      interligne: 1.35,
-      espacement: 4,
-    });
-    y += 22;
-  }
-  if (slide.title) {
-    y = ecrire(ctx, slide.title, y, {
-      police: SERIF,
-      taille: slide.kind === "hook" ? 92 : 68,
-      couleur: "#ffffff",
-      interligne: 1.24,
-    });
-    y += 26;
-  }
-  if (slide.body) {
-    y = ecrire(ctx, slide.body, y, {
-      police: SANS,
-      taille: 48,
-      couleur: slide.kind === "cta" ? CYAN : "rgba(255,255,255,0.72)",
-      interligne: 1.5,
-    });
-    y += 20;
-  }
-  if (slide.warn) {
-    y = ecrire(ctx, slide.warn, y, {
-      police: `500 ${SANS}`,
-      taille: 46,
-      couleur: CORAIL,
-      interligne: 1.45,
-    });
-    y += 20;
-  }
-  if (slide.items) {
-    for (const item of slide.items) {
-      ctx.font = `44px ${SANS}`;
-      ctx.fillStyle = slide.kind === "save" ? CORAIL : CYAN;
-      ctx.fillText("·", PAD, y);
-      ctx.fillStyle = "rgba(255,255,255,0.86)";
-      let cy = y;
-      for (const l of lignes(ctx, item, W - PAD * 2 - 40)) {
-        ctx.fillText(l, PAD + 34, cy);
-        cy += 44 * 1.34;
-      }
-      y = cy + 14;
+    if (slide.kind === "cta" && lotus) {
+      if (dessine) ctx.drawImage(lotus, PAD, y - 70, 215 * f, 215 * f);
+      y += 175 * f;
     }
+
+    if (slide.label) {
+      y = ecrire(ctx, slide.label.toUpperCase(), y, {
+        police: `700 ${SANS}`,
+        taille: 34 * f,
+        couleur: slide.kind === "rupture" ? CORAIL : CYAN,
+        interligne: 1.35,
+        espacement: 4,
+        dessine,
+      });
+      y += 22 * f;
+    }
+    if (slide.title) {
+      y = ecrire(ctx, slide.title, y, {
+        police: SERIF,
+        taille: (slide.kind === "hook" ? 92 : 68) * f,
+        couleur: "#ffffff",
+        interligne: 1.24,
+        dessine,
+      });
+      y += 26 * f;
+    }
+    if (slide.body) {
+      y = ecrire(ctx, slide.body, y, {
+        police: SANS,
+        taille: 48 * f,
+        couleur: slide.kind === "cta" ? CYAN : "rgba(255,255,255,0.72)",
+        interligne: 1.5,
+        dessine,
+      });
+      y += 20 * f;
+    }
+    if (slide.warn) {
+      y = ecrire(ctx, slide.warn, y, {
+        police: `500 ${SANS}`,
+        taille: 46 * f,
+        couleur: CORAIL,
+        interligne: 1.45,
+        dessine,
+      });
+      y += 20 * f;
+    }
+    if (slide.items) {
+      for (const item of slide.items) {
+        ctx.font = `${44 * f}px ${SANS}`;
+        if (dessine) {
+          ctx.fillStyle = slide.kind === "save" ? CORAIL : CYAN;
+          ctx.fillText("·", PAD, y);
+        }
+        ctx.fillStyle = "rgba(255,255,255,0.86)";
+        let cy = y;
+        for (const l of lignes(ctx, item, W - PAD * 2 - 40 * f)) {
+          if (dessine) ctx.fillText(l, PAD + 34 * f, cy);
+          cy += 44 * f * 1.34;
+        }
+        y = cy + 14 * f;
+      }
+    }
+    return y;
+  };
+
+  // ---- échelle : réglage manuel, puis réduction auto si ça déborde ----
+  let f = adjust.scale ?? 1;
+  if (adjust.autofit !== false) {
+    const limite = yPied - 24;
+    while (f > 0.45 && contenu(f, false) > limite) f -= 0.04;
   }
+  contenu(f, true);
 
   // ---- pied de slide, au-dessus de la zone de sécurité ----
-  const yPied = H - SAFE_BOTTOM - 70;
   if (slide.kind === "cta") {
     ctx.font = `28px ${SANS}`;
     ctx.fillStyle = "rgba(255,255,255,0.45)";
