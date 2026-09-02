@@ -83,17 +83,19 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
   const [lang, setLang] = useState<CarouselLang>(carousel.langueOrigine);
   const [vue, setVue] = useState<Vue>("carrousel");
   const [exporte, setExporte] = useState(false);
+  const [ajuste, setAjuste] = useState(false);
+
+  const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
+  const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
 
   const telecharger = async () => {
     setExporte(true);
     try {
-      const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
       await exporterSlides(slides, lotusAsset.url, base, vue === "post");
     } finally {
       setExporte(false);
     }
   };
-  const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
   const total = slides.length;
   let bodyIndex = -1;
 
