@@ -190,7 +190,37 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const nukeTherapistAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), confirm: z.literal("SUPPRIMER") }))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: th, error: readErr } = await supabaseAdmin
+      .from("therapists")
+      .select("id,user_id,email,first_name,last_name")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr) throwAdminOperationError(readErr, "nuke: read therapist failed");
+    if (!th) throw new Error("Thérapeute introuvable.");
+    if (th.user_id && th.user_id === context.userId) throw new Error("Vous ne pouvez pas supprimer votre propre compte.");
+
+    // Remove the therapist row first (FKs cascade on dependent records)
+    const { error: delErr } = await supabaseAdmin.from("therapists").delete().eq("id", data.id);
+    if (delErr) throwAdminOperationError(delErr, "nuke: delete therapist failed");
+
+    // Then the auth account, if any
+    if (th.user_id) {
+      const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(th.user_id);
+      if (authErr) console.error("[admin] nuke: delete auth user failed", authErr);
+    }
+
+    return { ok: true, email: th.email ?? null };
+  });
+
 export const listUsersAdmin = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ page: z.number().int().min(1).default(1), perPage: z.number().int().min(1).max(200).default(50) }))
   .handler(async ({ context, data }) => {
