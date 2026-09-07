@@ -126,10 +126,16 @@ export async function inspect(
   siteUrl: string,
   url: string,
 ): Promise<Inspection | null> {
+  // PAS de `languageCode` : `coverageState` est de la prose LOCALISÉE, et c'est
+  // la seule chose qui distingue « Discovered » de « Crawled » (les deux ont le
+  // verdict NEUTRAL). Avec `languageCode: "fr"`, l'API renvoyait « Détectée,
+  // actuellement non indexée » — que `toStatus()` ne reconnaissait pas, d'où
+  // 13 URLs silencieusement rétrogradées en `discovered` le 07/09. Sans le
+  // paramètre, l'API répond en anglais, langue de référence du mapping.
   const r = await fetch(GSC_API, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ inspectionUrl: url, siteUrl, languageCode: "fr" }),
+    body: JSON.stringify({ inspectionUrl: url, siteUrl }),
   });
   if (!r.ok) return null;
   const d = (await r.json()) as {
@@ -173,9 +179,16 @@ export function toStatus(i: Inspection, url: string): string {
   if (i.verdict === "PASS") return "indexed";
   if (i.googleCanonical && i.googleCanonical !== url) return "canonical_other";
 
+  // `coverageState` est de la PROSE LOCALISÉE — la seule information qui sépare
+  // « Discovered » de « Crawled », les deux portant le verdict NEUTRAL. On
+  // n'envoie plus de `languageCode` (donc anglais), mais on reconnaît aussi le
+  // français : si Google se met un jour à suivre la locale du compte, le
+  // mapping ne doit pas retomber silencieusement sur `discovered`.
   const c = (i.coverageState ?? "").toLowerCase();
-  if (c.includes("unknown")) return "discovered";
-  if (c.includes("discovered")) return "discovered_not_crawled";
-  if (c.includes("crawled") || c.includes("soft 404")) return "crawled_not_indexed";
+  if (c.includes("unknown") || c.includes("ne reconnaît pas")) return "discovered";
+  if (c.includes("discovered") || c.includes("détectée")) return "discovered_not_crawled";
+  if (c.includes("crawled") || c.includes("explorée") || c.includes("soft 404")) {
+    return "crawled_not_indexed";
+  }
   return "discovered";
 }

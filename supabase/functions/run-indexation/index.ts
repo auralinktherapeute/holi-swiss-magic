@@ -233,37 +233,46 @@ Deno.serve(async (req) => {
           .map((r) => ({ ...r, wasArchived: true })),
       ];
 
-      for (const t of targets) {
-        const res = await inspect(token, GSC_SITE, t.url);
-        if (!res) continue;
-        inspected++;
-        const status = toStatus(res, t.url);
-        const patch: Record<string, unknown> = {
-          status,
-          coverage_state: res.coverageState,
-          google_verdict: res.verdict,
-          google_canonical: res.googleCanonical,
-          last_crawl_at: res.lastCrawlTime ?? null,
-          last_checked_at: now,
-          updated_at: now,
-        };
-        if (status === "indexed" && t.status !== "indexed") {
-          patch.indexed_at = now;
-          newlyIndexed++;
-        }
-        // Une archivée qui n'est plus indexée retourne en file — le seul
-        // désarchivage automatique, et la raison d'être du re-contrôle.
-        if (t.wasArchived && status !== "indexed") {
-          patch.archived_at = null;
-          patch.archive_reason = null;
-          unarchived++;
-        }
-        const up = await gpld(`/rest/v1/indexed_urls?id=eq.${t.id}`, {
-          method: "PATCH",
-          headers: { Prefer: "return=minimal" },
-          body: JSON.stringify(patch),
-        });
-        if (!up.ok) errors.push(`MAJ inspection HTTP ${up.status}`);
+      // PAR PAQUETS PARALLÈLES, pas en série. En série, 30 inspections à ~2 s
+      // dépassaient le budget de temps de l'edge function : le run du 07/09
+      // s'est fait couper après 19 URLs. Cinq à la fois tient largement, tout
+      // en restant très loin du plafond de ~600 requêtes/minute de l'API.
+      const CONCURRENCY = 5;
+      for (let i = 0; i < targets.length; i += CONCURRENCY) {
+        await Promise.all(
+          targets.slice(i, i + CONCURRENCY).map(async (t) => {
+            const res = await inspect(token, GSC_SITE, t.url);
+            if (!res) return;
+            inspected++;
+            const status = toStatus(res, t.url);
+            const patch: Record<string, unknown> = {
+              status,
+              coverage_state: res.coverageState,
+              google_verdict: res.verdict,
+              google_canonical: res.googleCanonical,
+              last_crawl_at: res.lastCrawlTime ?? null,
+              last_checked_at: now,
+              updated_at: now,
+            };
+            if (status === "indexed" && t.status !== "indexed") {
+              patch.indexed_at = now;
+              newlyIndexed++;
+            }
+            // Une archivée qui n'est plus indexée retourne en file — le seul
+            // désarchivage automatique, et la raison d'être du re-contrôle.
+            if (t.wasArchived && status !== "indexed") {
+              patch.archived_at = null;
+              patch.archive_reason = null;
+              unarchived++;
+            }
+            const up = await gpld(`/rest/v1/indexed_urls?id=eq.${t.id}`, {
+              method: "PATCH",
+              headers: { Prefer: "return=minimal" },
+              body: JSON.stringify(patch),
+            });
+            if (!up.ok) errors.push(`MAJ inspection HTTP ${up.status}`);
+          }),
+        );
       }
     } catch (e) {
       errors.push(`Inspection GSC : ${(e as Error).message}`);
