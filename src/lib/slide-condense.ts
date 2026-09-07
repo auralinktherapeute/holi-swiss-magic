@@ -55,8 +55,11 @@ export function condenseSlides(slides: Slide[], pageCount: number): Slide[] {
   const milieu = slides.slice(1, -1);
 
   if (pageCount === 2) {
-    return [fusionner([premiere, ...milieu.slice(0, Math.ceil(milieu.length / 2))]),
-      fusionner([...milieu.slice(Math.ceil(milieu.length / 2)), derniere])];
+    const coupe = Math.ceil(milieu.length / 2);
+    return [
+      fusionner([premiere, ...milieu.slice(0, coupe)]),
+      { ...fusionner([...milieu.slice(coupe), derniere]), kind: derniere.kind },
+    ];
   }
 
   const groupes = grouper(milieu, pageCount - 2).map(fusionner);
