@@ -84,9 +84,21 @@ const OUT_OF_SITEMAP_GRACE_DAYS = 14;
 /** Taille du lot poussé à IndexNow par exécution. */
 const BATCH = 40;
 /** URLs actives inspectées par exécution (quota Google : 2 000/j). */
-const INSPECT_ACTIVE = 25;
+const INSPECT_ACTIVE = 85;
 /** Archivées re-contrôlées par exécution, pour rattraper une désindexation. */
-const INSPECT_ARCHIVED = 5;
+const INSPECT_ARCHIVED = 15;
+/** Inspections simultanées. L'API plafonne à ~600 req/min : on en est loin. */
+const INSPECT_CONCURRENCY = 10;
+/**
+ * Au-delà de ce temps passé en inspection, on arrête d'en lancer.
+ *
+ * Une edge function tuée en cours de route ne produit NI rapport NI
+ * notification : le cycle disparaît en silence, exactement le mode de panne
+ * qu'on passe cette refonte à supprimer. Mieux vaut inspecter 70 URLs et finir
+ * proprement que d'en viser 100 et perdre le run. Les URLs non traitées
+ * gardent leur `last_checked_at`, donc elles repassent en tête au run suivant.
+ */
+const INSPECT_DEADLINE_MS = 90_000;
 /** Propriété Search Console. */
 const GSC_SITE = "sc-domain:holiswiss.ch";
 
@@ -208,6 +220,7 @@ Deno.serve(async (req) => {
   let inspected = 0;
   let newlyIndexed = 0;
   let unarchived = 0;
+  let deadlineHit = 0; // URLs laissées de côté par l'échéance de temps
   const saJson = Deno.env.get("GSC_SERVICE_ACCOUNT_JSON");
   if (saJson) {
     try {
@@ -235,12 +248,18 @@ Deno.serve(async (req) => {
 
       // PAR PAQUETS PARALLÈLES, pas en série. En série, 30 inspections à ~2 s
       // dépassaient le budget de temps de l'edge function : le run du 07/09
-      // s'est fait couper après 19 URLs. Cinq à la fois tient largement, tout
+      // s'est fait couper après 19 URLs. Dix à la fois tient largement, tout
       // en restant très loin du plafond de ~600 requêtes/minute de l'API.
-      const CONCURRENCY = 5;
-      for (let i = 0; i < targets.length; i += CONCURRENCY) {
+      const startedAt = Date.now();
+      for (let i = 0; i < targets.length; i += INSPECT_CONCURRENCY) {
+        // On ne lance JAMAIS une vague qui ferait dépasser l'échéance : un run
+        // tué ne produit ni rapport ni notification.
+        if (Date.now() - startedAt > INSPECT_DEADLINE_MS) {
+          deadlineHit = targets.length - i;
+          break;
+        }
         await Promise.all(
-          targets.slice(i, i + CONCURRENCY).map(async (t) => {
+          targets.slice(i, i + INSPECT_CONCURRENCY).map(async (t) => {
             const res = await inspect(token, GSC_SITE, t.url);
             if (!res) return;
             inspected++;
@@ -477,7 +496,7 @@ Deno.serve(async (req) => {
 - Composition du lot : ${Object.entries(byType).map(([t, n]) => `${n} ${t}`).join(" · ") || "—"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
 - Archivées ce run : ${archivedLine}
-- Inspection GSC : ${saJson ? `${inspected} URLs contrôlées · ${newlyIndexed} nouvellement indexées${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
+- Inspection GSC : ${saJson ? `${inspected} URLs contrôlées · ${newlyIndexed} nouvellement indexées${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}${deadlineHit > 0 ? ` · ⏱ ${deadlineHit} reportées (échéance de temps)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
 ${errors.length > 0 ? `- ⚠️ Erreurs : ${errors.join(", ")}` : ""}
 
 ### Lot poussé (par priorité — thérapeutes d'abord)
@@ -615,6 +634,7 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
     inspected,
     newlyIndexed,
     unarchived,
+    deadlineHit,
     newUrlsAdded,
     archived,
     activeTotal,
