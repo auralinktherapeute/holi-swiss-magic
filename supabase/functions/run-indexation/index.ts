@@ -8,12 +8,18 @@
  *
  *   1. Validation PIN (seo_admin_secrets)
  *   2. Lecture du sitemap en ligne — SOURCE DE VÉRITÉ du périmètre
- *   3. Réconciliation : ajout des nouvelles URLs, ARCHIVAGE de ce qui est acquis
+ *   3. Inspection Search Console : CONSTATER l'état réel (voir `gsc.ts`)
+ *   4. Réconciliation : ajout des nouvelles URLs, ARCHIVAGE de ce qui est acquis
  *      ou sorti du périmètre
- *   4. Sélection de la file active par PRIORITÉ, avec refroidissement
- *   5. Ping IndexNow + horodatage de la soumission
- *   6. Rapport dans indexing_reports
- *   7. Notification admin (façade gardée, repli e-mail Resend)
+ *   5. Sélection de la file active par PRIORITÉ, avec refroidissement
+ *   6. Ping IndexNow + horodatage de la soumission
+ *   7. Rapport dans indexing_reports
+ *   8. Notification admin (façade gardée, repli e-mail Resend)
+ *
+ * L'inspection passe AVANT la réconciliation : l'archivage doit trancher sur des
+ * états qu'on vient de constater, pas sur ceux d'il y a trois semaines. Elle se
+ * désactive proprement si `GSC_SERVICE_ACCOUNT_JSON` est absent — le reste du
+ * cycle tourne alors comme avant, en poussant sans savoir constater.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * REFONTE DU 07/09/2026 — audit `docs/audit-indexation-2026-09-07.md`
@@ -50,6 +56,8 @@
  * `agent_notify_secret` (seo_admin_secrets, gpld).
  */
 
+import { accessToken, inspect, toStatus } from "./gsc.ts";
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -75,6 +83,12 @@ const INDEXED_STABLE_DAYS = 21;
 const OUT_OF_SITEMAP_GRACE_DAYS = 14;
 /** Taille du lot poussé à IndexNow par exécution. */
 const BATCH = 40;
+/** URLs actives inspectées par exécution (quota Google : 2 000/j). */
+const INSPECT_ACTIVE = 25;
+/** Archivées re-contrôlées par exécution, pour rattraper une désindexation. */
+const INSPECT_ARCHIVED = 5;
+/** Propriété Search Console. */
+const GSC_SITE = "sc-domain:holiswiss.ch";
 
 type UrlRow = {
   id: string;
@@ -186,7 +200,77 @@ Deno.serve(async (req) => {
     errors.push(`Sitemap: ${(e as Error).message}`);
   }
 
-  // ── 3. Réconciliation ─────────────────────────────────────────────────────
+  // ── 3. Inspection Search Console ──────────────────────────────────────────
+  //
+  // AVANT la réconciliation, délibérément : l'archivage doit trancher sur des
+  // états qu'on vient de constater, pas sur ceux d'il y a trois semaines.
+  // Se désactive proprement si le secret est absent — le reste du cycle tourne.
+  let inspected = 0;
+  let newlyIndexed = 0;
+  let unarchived = 0;
+  const saJson = Deno.env.get("GSC_SERVICE_ACCOUNT_JSON");
+  if (saJson) {
+    try {
+      const token = await accessToken(saJson);
+      if (!token) throw new Error("jeton Google vide");
+
+      // Actives d'abord, par priorité, jamais contrôlées en tête. Puis quelques
+      // archivées « indexées stables » : si Google en a désindexé une, elle doit
+      // revenir en file — c'est le SEUL cas de désarchivage.
+      const [actResp, arcResp] = await Promise.all([
+        gpld(
+          `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status` +
+            `&order=priority.asc,last_checked_at.asc.nullsfirst&limit=${INSPECT_ACTIVE}`,
+        ),
+        gpld(
+          `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
+            `&select=id,url,status&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
+        ),
+      ]);
+      const targets: { id: string; url: string; status: string; wasArchived?: boolean }[] = [
+        ...(actResp.ok ? await actResp.json() : []),
+        ...((arcResp.ok ? await arcResp.json() : []) as { id: string; url: string; status: string }[])
+          .map((r) => ({ ...r, wasArchived: true })),
+      ];
+
+      for (const t of targets) {
+        const res = await inspect(token, GSC_SITE, t.url);
+        if (!res) continue;
+        inspected++;
+        const status = toStatus(res, t.url);
+        const patch: Record<string, unknown> = {
+          status,
+          coverage_state: res.coverageState,
+          google_verdict: res.verdict,
+          google_canonical: res.googleCanonical,
+          last_crawl_at: res.lastCrawlTime ?? null,
+          last_checked_at: now,
+          updated_at: now,
+        };
+        if (status === "indexed" && t.status !== "indexed") {
+          patch.indexed_at = now;
+          newlyIndexed++;
+        }
+        // Une archivée qui n'est plus indexée retourne en file — le seul
+        // désarchivage automatique, et la raison d'être du re-contrôle.
+        if (t.wasArchived && status !== "indexed") {
+          patch.archived_at = null;
+          patch.archive_reason = null;
+          unarchived++;
+        }
+        const up = await gpld(`/rest/v1/indexed_urls?id=eq.${t.id}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify(patch),
+        });
+        if (!up.ok) errors.push(`MAJ inspection HTTP ${up.status}`);
+      }
+    } catch (e) {
+      errors.push(`Inspection GSC : ${(e as Error).message}`);
+    }
+  }
+
+  // ── 4. Réconciliation ─────────────────────────────────────────────────────
   //
   // Les deux helpers d'archivage sont déclarés ici, avant leurs appels : le
   // hoisting les rendrait utilisables plus bas de toute façon, mais on ne lit
@@ -234,7 +318,7 @@ Deno.serve(async (req) => {
   const trackedByUrl = new Map(tracked.map((r) => [r.url, r]));
 
   if (sitemapUrls) {
-    // 3a. Nouvelles URLs du sitemap → suivi, avec la bonne priorité d'emblée.
+    // 4a. Nouvelles URLs du sitemap → suivi, avec la bonne priorité d'emblée.
     const missing = [...sitemapUrls].filter((u) => !trackedByUrl.has(u));
     if (missing.length > 0) {
       const toInsert = missing.map((url) => ({
@@ -252,7 +336,7 @@ Deno.serve(async (req) => {
       else errors.push(`Ajout nouvelles URLs HTTP ${ins.status}`);
     }
 
-    // 3b. Sorties du périmètre : le sitemap ne les déclare plus.
+    // 4b. Sorties du périmètre : le sitemap ne les déclare plus.
     //     C'est ce qui archive tout seul les variantes de langue orphelines et
     //     les profils désactivés dans qqwud — sans liste à maintenir ici.
     //
@@ -276,7 +360,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 3c. Acquises : indexées et stables → on ne les repousse plus.
+  // 4c. Acquises : indexées et stables → on ne les repousse plus.
   archived.indexed_stable =
     (await archivePatch(
       `status=eq.indexed&archived_at=is.null&indexed_at=lt.${daysAgo(INDEXED_STABLE_DAYS)}`,
@@ -284,11 +368,11 @@ Deno.serve(async (req) => {
       now,
     )) ?? 0;
 
-  // 3d. Google a choisi une autre URL canonique : la pousser ne sert à rien.
+  // 4d. Google a choisi une autre URL canonique : la pousser ne sert à rien.
   archived.canonical_autre =
     (await archivePatch("status=eq.canonical_other&archived_at=is.null", "canonical_autre", now)) ?? 0;
 
-  // 3e. Hors périmètre d'indexation par nature.
+  // 4e. Hors périmètre d'indexation par nature.
   archived.noindex =
     (await archivePatch(
       "status=in.(noindex,blocked_robots,excluded)&archived_at=is.null",
@@ -296,7 +380,7 @@ Deno.serve(async (req) => {
       now,
     )) ?? 0;
 
-  // ── 4. File active, par priorité, hors refroidissement ────────────────────
+  // ── 5. File active, par priorité, hors refroidissement ────────────────────
   //
   //  `archived_at is null`        → jamais ce qui est acquis ou hors périmètre
   //  `last_submitted_at` ancien   → jamais deux fois en moins de COOLDOWN_DAYS
@@ -326,7 +410,7 @@ Deno.serve(async (req) => {
   const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
   const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
 
-  // ── 5. IndexNow ───────────────────────────────────────────────────────────
+  // ── 6. IndexNow ───────────────────────────────────────────────────────────
   if (queue.length > 0) {
     try {
       const inow = await fetch("https://api.indexnow.org/indexnow", {
@@ -358,7 +442,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── 6. Rapport ────────────────────────────────────────────────────────────
+  // ── 7. Rapport ────────────────────────────────────────────────────────────
   const byType = queue.reduce<Record<string, number>>((acc, u) => {
     acc[u.page_type] = (acc[u.page_type] ?? 0) + 1;
     return acc;
@@ -384,7 +468,7 @@ Deno.serve(async (req) => {
 - Composition du lot : ${Object.entries(byType).map(([t, n]) => `${n} ${t}`).join(" · ") || "—"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
 - Archivées ce run : ${archivedLine}
-- Inspection GSC : non disponible côté serveur (secret GSC_SERVICE_ACCOUNT_JSON absent)
+- Inspection GSC : ${saJson ? `${inspected} URLs contrôlées · ${newlyIndexed} nouvellement indexées${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
 ${errors.length > 0 ? `- ⚠️ Erreurs : ${errors.join(", ")}` : ""}
 
 ### Lot poussé (par priorité — thérapeutes d'abord)
@@ -403,13 +487,13 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
         run_at: now,
         trigger,
         urls_total: totalUrls,
-        urls_checked: 0,
-        newly_indexed: 0,
+        urls_checked: inspected,
+        newly_indexed: newlyIndexed,
         newly_discovered: newUrlsAdded,
         not_indexed: activeTotal,
         blocked: archivedTotal,
         errors: errors.length,
-        quota_used: 0,
+        quota_used: inspected,
         summary_md: summaryMd,
       }),
     });
@@ -423,13 +507,14 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
     errors.push(`Rapport: ${(e as Error).message}`);
   }
 
-  // ── 7. Notification ───────────────────────────────────────────────────────
+  // ── 8. Notification ───────────────────────────────────────────────────────
   //
   // Façade gardée d'abord (`request_admin_notification`, secret partagé), repli
   // e-mail Resend. Le statut HTTP est VÉRIFIÉ dans les deux cas : c'est son
   // absence de contrôle qui a laissé la notification muette huit jours en août.
   const notifParts = [
     `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus}`,
+    inspected > 0 ? `${inspected} inspectées, ${newlyIndexed} nouvellement indexées` : null,
     newUrlsAdded > 0 ? `+${newUrlsAdded} nouvelles` : null,
     archivedTotal > 0 ? `${archivedTotal} archivées` : null,
     `${activeTotal} actives`,
@@ -518,6 +603,9 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
   return json({
     submitted: indexNowSubmitted,
     indexNowStatus,
+    inspected,
+    newlyIndexed,
+    unarchived,
     newUrlsAdded,
     archived,
     activeTotal,
