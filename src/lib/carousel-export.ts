@@ -6,6 +6,9 @@ import type { Slide, SlideKind } from "@/components/admin/CarouselViewer";
  * Dessin natif en Canvas, sans dépendance. C'est aussi ce qui permet d'appliquer
  * les VRAIES cotes du socle (§ 7) plutôt que la version réduite affichée à
  * l'écran : marque de pied 70 px, filigrane 690 px à 7 %, signature 215 px.
+ *
+ * Le MÊME code sert à l'aperçu de l'éditeur et au fichier téléchargé : ce qui
+ * est vu est donc exactement ce qui est exporté.
  */
 
 export const W = 1080;
@@ -31,6 +34,87 @@ const WATERMARK_POS: { x: number; y: number }[] = [
 /** Slides où le vide EST le propos — pas de filigrane (socle § 7). */
 const SANS_FILIGRANE: SlideKind[] = ["hook", "save", "rupture", "cta"];
 
+export type Align = "left" | "center" | "right";
+export type BlockKey = "label" | "title" | "body";
+
+/** Style d'un bloc de texte. Toute clé absente reprend la valeur du gabarit. */
+export type BlockStyle = {
+  /** Taille en pixels du canvas 1080 × 1350. */
+  size?: number;
+  bold?: boolean;
+  color?: string;
+  align?: Align;
+};
+
+/** Réglages manuels appliqués à une slide avant export. */
+export type SlideAdjust = {
+  /** Facteur d'échelle globale du texte (1 = taille de référence). */
+  scale?: number;
+  /** Décalage vertical du bloc de contenu, en pixels 1080 × 1350. */
+  offsetY?: number;
+  /** Réduit automatiquement le texte qui déborderait de la zone sûre. */
+  autofit?: boolean;
+  label?: BlockStyle;
+  title?: BlockStyle;
+  body?: BlockStyle;
+};
+
+/** Couleur de fond dominante d'une slide — sert au contrôle de contraste. */
+export function fondSlide(kind: SlideKind): string {
+  return kind === "rupture" ? "#120620" : kind === "save" ? "#33205a" : "#3d2460";
+}
+
+/** Style de référence du gabarit, par type de slide et par bloc. */
+export function styleParDefaut(kind: SlideKind, bloc: BlockKey): Required<BlockStyle> {
+  if (bloc === "label") {
+    return {
+      size: 34,
+      bold: true,
+      color: kind === "rupture" ? CORAIL : CYAN,
+      align: "left",
+    };
+  }
+  if (bloc === "title") {
+    return { size: kind === "hook" ? 92 : 68, bold: false, color: "#ffffff", align: "left" };
+  }
+  return {
+    size: 48,
+    bold: false,
+    color: kind === "cta" ? CYAN : "rgba(255,255,255,0.72)",
+    align: "left",
+  };
+}
+
+function styleBloc(kind: SlideKind, bloc: BlockKey, adjust: SlideAdjust): Required<BlockStyle> {
+  return { ...styleParDefaut(kind, bloc), ...(adjust[bloc] ?? {}) };
+}
+
+/** Découpe un texte en lignes qui tiennent dans la largeur donnée. */
+function lignes(ctx: CanvasRenderingContext2D, texte: string, largeur: number): string[] {
+  const out: string[] = [];
+  for (const paragraphe of texte.split("\n")) {
+    let ligne = "";
+    for (const mot of paragraphe.split(" ")) {
+      const essai = ligne ? `${ligne} ${mot}` : mot;
+      if (ctx.measureText(essai).width > largeur && ligne) {
+        out.push(ligne);
+        ligne = mot;
+      } else {
+        ligne = essai;
+      }
+    }
+    out.push(ligne);
+  }
+  return out;
+}
+
+/** Abscisse d'une ligne selon l'alignement demandé, dans la colonne utile. */
+function abscisse(ctx: CanvasRenderingContext2D, ligne: string, align: Align, gauche = PAD, largeur = W - PAD * 2): number {
+  if (align === "left") return gauche;
+  const l = ctx.measureText(ligne).width;
+  return align === "center" ? gauche + (largeur - l) / 2 : gauche + largeur - l;
+}
+
 function fond(ctx: CanvasRenderingContext2D, kind: SlideKind) {
   if (kind === "rupture") {
     ctx.fillStyle = "#120620";
@@ -53,69 +137,52 @@ function fond(ctx: CanvasRenderingContext2D, kind: SlideKind) {
   ctx.fillRect(0, 0, W, H);
 }
 
-/** Découpe un texte en lignes qui tiennent dans la largeur donnée. */
-function lignes(ctx: CanvasRenderingContext2D, texte: string, largeur: number): string[] {
-  const out: string[] = [];
-  for (const paragraphe of texte.split("\n")) {
-    let ligne = "";
-    for (const mot of paragraphe.split(" ")) {
-      const essai = ligne ? `${ligne} ${mot}` : mot;
-      if (ctx.measureText(essai).width > largeur && ligne) {
-        out.push(ligne);
-        ligne = mot;
-      } else {
-        ligne = essai;
-      }
-    }
-    out.push(ligne);
-  }
-  return out;
-}
-
 function ecrire(
   ctx: CanvasRenderingContext2D,
   texte: string,
   y: number,
   opts: {
     police: string;
+    poids?: string;
     taille: number;
     couleur: string;
+    align: Align;
     interligne: number;
     espacement?: number;
     dessine?: boolean;
   },
 ): number {
-  ctx.font = `${opts.taille}px ${opts.police}`;
+  ctx.font = `${opts.poids ? `${opts.poids} ` : ""}${opts.taille}px ${opts.police}`;
   ctx.fillStyle = opts.couleur;
   if (opts.espacement) (ctx as any).letterSpacing = `${opts.espacement}px`;
   let curseur = y;
   for (const l of lignes(ctx, texte, W - PAD * 2)) {
-    if (opts.dessine !== false) ctx.fillText(l, PAD, curseur);
+    if (opts.dessine !== false) ctx.fillText(l, abscisse(ctx, l, opts.align), curseur);
     curseur += opts.taille * opts.interligne;
   }
   if (opts.espacement) (ctx as any).letterSpacing = "0px";
   return curseur;
 }
 
-/** Réglages manuels appliqués à une slide avant export. */
-export type SlideAdjust = {
-  /** Facteur d'échelle du texte (1 = taille de référence). */
-  scale?: number;
-  /** Décalage vertical du bloc de contenu, en pixels 1080 × 1350. */
-  offsetY?: number;
-  /** Réduit automatiquement le texte qui déborderait de la zone sûre. */
-  autofit?: boolean;
+export type RenduSlide = {
+  canvas: HTMLCanvasElement;
+  /** Facteur réellement appliqué après réduction automatique. */
+  facteur: number;
+  /** Vrai si le contenu dépasse encore la zone sûre au facteur appliqué. */
+  deborde: boolean;
+  /** Vrai si la réduction automatique a dû intervenir. */
+  reduit: boolean;
 };
 
-/** Dessine une slide et rend le PNG. `lotus` est l'image déjà chargée. */
-export function dessinerSlide(
+/** Dessine une slide au rendu réel et rend le canvas + l'état de débordement. */
+export function rendreSlide(
   slide: Slide,
   index: number,
   total: number,
   lotus: HTMLImageElement | null,
   indexFiligrane: number,
   adjust: SlideAdjust = {},
-): HTMLCanvasElement {
+): RenduSlide {
   const c = document.createElement("canvas");
   c.width = W;
   c.height = H;
@@ -143,6 +210,10 @@ export function dessinerSlide(
   const centre = slide.kind === "rupture" || slide.kind === "cta";
   const decalage = adjust.offsetY ?? 0;
 
+  const sLabel = styleBloc(slide.kind, "label", adjust);
+  const sTitre = styleBloc(slide.kind, "title", adjust);
+  const sTexte = styleBloc(slide.kind, "body", adjust);
+
   /** Dessine (ou mesure seulement) le bloc de contenu à l'échelle donnée. */
   const contenu = (f: number, dessine: boolean): number => {
     let y = (centre ? H * 0.34 : PAD + 40) + decalage;
@@ -154,9 +225,11 @@ export function dessinerSlide(
 
     if (slide.label) {
       y = ecrire(ctx, slide.label.toUpperCase(), y, {
-        police: `700 ${SANS}`,
-        taille: 34 * f,
-        couleur: slide.kind === "rupture" ? CORAIL : CYAN,
+        police: SANS,
+        poids: sLabel.bold ? "700" : "400",
+        taille: sLabel.size * f,
+        couleur: sLabel.color,
+        align: sLabel.align,
         interligne: 1.35,
         espacement: 4,
         dessine,
@@ -166,8 +239,10 @@ export function dessinerSlide(
     if (slide.title) {
       y = ecrire(ctx, slide.title, y, {
         police: SERIF,
-        taille: (slide.kind === "hook" ? 92 : 68) * f,
-        couleur: "#ffffff",
+        poids: sTitre.bold ? "700" : undefined,
+        taille: sTitre.size * f,
+        couleur: sTitre.color,
+        align: sTitre.align,
         interligne: 1.24,
         dessine,
       });
@@ -176,8 +251,10 @@ export function dessinerSlide(
     if (slide.body) {
       y = ecrire(ctx, slide.body, y, {
         police: SANS,
-        taille: 48 * f,
-        couleur: slide.kind === "cta" ? CYAN : "rgba(255,255,255,0.72)",
+        poids: sTexte.bold ? "700" : undefined,
+        taille: sTexte.size * f,
+        couleur: sTexte.color,
+        align: sTexte.align,
         interligne: 1.5,
         dessine,
       });
@@ -185,26 +262,31 @@ export function dessinerSlide(
     }
     if (slide.warn) {
       y = ecrire(ctx, slide.warn, y, {
-        police: `500 ${SANS}`,
+        police: SANS,
+        poids: "500",
         taille: 46 * f,
         couleur: CORAIL,
+        align: sTexte.align,
         interligne: 1.45,
         dessine,
       });
       y += 20 * f;
     }
     if (slide.items) {
+      const tailleItem = Math.min(sTexte.size, 44) * f;
       for (const item of slide.items) {
-        ctx.font = `${44 * f}px ${SANS}`;
+        ctx.font = `${sTexte.bold ? "700 " : ""}${tailleItem}px ${SANS}`;
         if (dessine) {
           ctx.fillStyle = slide.kind === "save" ? CORAIL : CYAN;
           ctx.fillText("·", PAD, y);
         }
-        ctx.fillStyle = "rgba(255,255,255,0.86)";
+        ctx.fillStyle = sTexte.color;
         let cy = y;
         for (const l of lignes(ctx, item, W - PAD * 2 - 40 * f)) {
-          if (dessine) ctx.fillText(l, PAD + 34 * f, cy);
-          cy += 44 * f * 1.34;
+          if (dessine) {
+            ctx.fillText(l, abscisse(ctx, l, sTexte.align, PAD + 34 * f, W - PAD * 2 - 34 * f), cy);
+          }
+          cy += tailleItem * 1.34;
         }
         y = cy + 14 * f;
       }
@@ -213,11 +295,13 @@ export function dessinerSlide(
   };
 
   // ---- échelle : réglage manuel, puis réduction auto si ça déborde ----
-  let f = adjust.scale ?? 1;
+  const demande = adjust.scale ?? 1;
+  let f = demande;
+  const limite = yPied - 24;
   if (adjust.autofit !== false) {
-    const limite = yPied - 24;
     while (f > 0.45 && contenu(f, false) > limite) f -= 0.04;
   }
+  const deborde = contenu(f, false) > limite;
   contenu(f, true);
 
   // ---- pied de slide, au-dessus de la zone de sécurité ----
@@ -238,7 +322,19 @@ export function dessinerSlide(
   const num = `${index + 1}/${total}`;
   ctx.fillText(num, W - PAD - ctx.measureText(num).width, yPied + 24);
 
-  return c;
+  return { canvas: c, facteur: f, deborde, reduit: f < demande - 0.001 };
+}
+
+/** Compatibilité : rend uniquement le canvas. */
+export function dessinerSlide(
+  slide: Slide,
+  index: number,
+  total: number,
+  lotus: HTMLImageElement | null,
+  indexFiligrane: number,
+  adjust: SlideAdjust = {},
+): HTMLCanvasElement {
+  return rendreSlide(slide, index, total, lotus, indexFiligrane, adjust).canvas;
 }
 
 export function chargerLotus(url: string): Promise<HTMLImageElement | null> {
@@ -251,10 +347,19 @@ export function chargerLotus(url: string): Promise<HTMLImageElement | null> {
   });
 }
 
+/** Attend que les polices du document soient prêtes avant de mesurer/dessiner. */
+export async function policesPretes(): Promise<void> {
+  try {
+    await (document as any).fonts?.ready;
+  } catch {
+    /* rendu possible avec les polices système */
+  }
+}
+
 function telecharger(canvas: HTMLCanvasElement, nom: string): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
-      if (!blob) return resolve();
+      if (!blob) return reject(new Error("Le fichier image n'a pas pu être généré."));
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -272,7 +377,7 @@ function telecharger(canvas: HTMLCanvasElement, nom: string): Promise<void> {
 export function slug(s: string): string {
   return s
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -291,6 +396,7 @@ export async function exporterSlides(
   seulementLaPremiere = false,
   reglages: Record<number, SlideAdjust> = {},
 ): Promise<number> {
+  await policesPretes();
   const lotus = await chargerLotus(lotusUrl);
   const aExporter = seulementLaPremiere ? slides.slice(0, 1) : slides;
   let filigrane = -1;
@@ -299,7 +405,7 @@ export async function exporterSlides(
   for (let i = 0; i < slides.length; i++) {
     if (!SANS_FILIGRANE.includes(slides[i].kind)) filigrane += 1;
     if (seulementLaPremiere && i > 0) break;
-    const canvas = dessinerSlide(slides[i], i, slides.length, lotus, filigrane, reglages[i] ?? {});
+    const { canvas } = rendreSlide(slides[i], i, slides.length, lotus, filigrane, reglages[i] ?? {});
     const suffixe = seulementLaPremiere ? "post" : String(i + 1).padStart(2, "0");
     await telecharger(canvas, `${base}-${suffixe}.png`);
     n += 1;
