@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getSpecialtyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
 import { LANGS, ogLocale } from "@/lib/seo";
+import { isSpecialtyIndexable } from "@/lib/seo-thresholds";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
@@ -45,7 +46,14 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
         });
       }
     }
-    return { page };
+    // La décision d'indexabilité se prend ICI, jamais dans `head` : le 25/08/2026,
+    // une condition posée dans `head` lisait des données absentes à ce niveau et
+    // a basculé en noindex TOUTES les pages spécialité × ville, y compris les
+    // valides. `head` ne fait plus que relire ce booléen.
+    // Seuil unique et partagé avec le sitemap (`seo-thresholds.ts`) : le sitemap
+    // ne doit jamais déclarer une page qui émet un noindex.
+    const indexable = isSpecialtyIndexable(page?.therapists?.length ?? 0);
+    return { page, indexable };
   },
   head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`;
@@ -72,10 +80,17 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
       hreflang: "x-default",
       href: `https://holiswiss.ch/fr/specialites/${specialty ? specialty.slug : params.specialtySlug}`,
     });
+    // `noindex,follow` : la page reste utile au maillage (elle pointe vers les
+    // listings et les spécialités sœurs) mais ne prétend plus mériter l'index
+    // tant qu'elle n'a personne à montrer. `follow` — pas `none` — pour que le
+    // jus de lien continue de circuler. Émis dans le HTML initial, donc lu par
+    // les crawlers IA qui ne rendent pas le JavaScript.
+    const indexable = (loaderData as any)?.indexable !== false;
     return {
       meta: [
         { title },
         { name: "description", content: description },
+        ...(indexable ? [] : [{ name: "robots", content: "noindex,follow" }]),
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },

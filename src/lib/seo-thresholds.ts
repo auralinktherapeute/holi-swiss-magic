@@ -37,18 +37,23 @@
  * Nombre minimum de praticiens actifs pour qu'une page `/specialites/{spec}`
  * soit indexable et déclarée au sitemap.
  *
- * `0` = comportement actuel : toute spécialité active est publiée, y compris
- * les 14 qui n'ont personne à montrer.
+ * `1` depuis le 07/09/2026 — arbitrage rendu par Gérald sur l'audit
+ * d'indexation. Retire les 14 spécialités sans praticien (14 × 4 = 56 URLs)
+ * qui servaient « 0 thérapeute en Sophrologie » sur ~160 mots, en
+ * `index, follow`. Repasser à `0` republie tout, sans autre changement.
  */
-export const SPECIALTY_MIN_THERAPISTS = 0;
+export const SPECIALTY_MIN_THERAPISTS: number = 1;
 
 /**
  * Idem pour `/specialites/{spec}/{ville}`.
  *
- * `1` = comportement actuel : le sitemap ne déclare une paire que si au moins
- * un praticien actif l'occupe.
+ * `2` depuis le 07/09/2026. Une page spécialité × ville à un seul praticien est
+ * un sous-ensemble strict de sa fiche décliné sur ~160 mots : elle concurrence
+ * la fiche sans rien apporter. Retire les 23 paires actuelles (23 × 4 = 92 URLs)
+ * et les laissera revenir d'elles-mêmes dès qu'une ville comptera deux
+ * praticiens de la même spécialité.
  */
-export const SPECIALTY_CITY_MIN_THERAPISTS = 1;
+export const SPECIALTY_CITY_MIN_THERAPISTS: number = 2;
 
 /** Une page spécialité mérite-t-elle d'être indexée avec `count` praticiens ? */
 export function isSpecialtyIndexable(count: number): boolean {

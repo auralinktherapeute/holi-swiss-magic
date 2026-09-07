@@ -3,9 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getSpecialtyCityPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
 import { LANGS, ogLocale } from "@/lib/seo";
+import { isSpecialtyCityIndexable } from "@/lib/seo-thresholds";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
-import { useEffect } from "react";
 
 function humanCity(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -65,7 +65,12 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         });
       }
     }
-    return { page };
+    // Indexabilité décidée ICI, jamais dans `head` (incident du 25/08 : une
+    // condition posée dans `head` lisait des données absentes à ce niveau et a
+    // basculé en noindex TOUTES ces pages, y compris les valides). Seuil unique
+    // partagé avec le sitemap : les deux doivent dire la même chose.
+    const indexable = isSpecialtyCityIndexable(page?.therapists?.length ?? 0);
+    return { page, indexable };
   },
   head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}/${params.citySlug}`;
@@ -92,10 +97,16 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         specialty ? specialty.slug : params.specialtySlug
       }/${params.citySlug}`,
     });
+    // Émis dans le HTML INITIAL, contrairement au `useEffect` qu'il remplace :
+    // un noindex injecté au rerender n'existe pas pour un crawler qui ne rend
+    // pas le JavaScript — c'est-à-dire GPTBot, PerplexityBot et ClaudeBot, que
+    // le robots.txt invite explicitement.
+    const indexable = (loaderData as any)?.indexable !== false;
     return {
       meta: [
         { title },
         { name: "description", content: description },
+        ...(indexable ? [] : [{ name: "robots", content: "noindex,follow" }]),
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
@@ -154,18 +165,10 @@ function Page() {
   const specName = pickI18n(specialty, lang, "name");
   const specDesc = pickI18n(specialty, lang, "description");
   const cityDisplay = city?.display_name || humanCity(citySlug);
-  const shouldIndex = therapists.length > 0;
 
-  // Client-side noindex when the combination has no therapist yet.
-  // (Google honors late-injected robots meta on rerender.)
-  useEffect(() => {
-    if (shouldIndex) return;
-    const el = document.createElement("meta");
-    el.name = "robots";
-    el.content = "noindex,follow";
-    document.head.appendChild(el);
-    return () => { document.head.removeChild(el); };
-  }, [shouldIndex]);
+  // Le noindex vit désormais dans `head`, donc dans le HTML initial (voir la
+  // route ci-dessus). Le `useEffect` qui l'injectait au rerender a été retiré :
+  // il était invisible pour tout crawler qui ne rend pas le JavaScript.
 
   return (
     <>

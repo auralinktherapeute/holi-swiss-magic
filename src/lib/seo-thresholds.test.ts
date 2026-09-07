@@ -8,43 +8,55 @@ import {
 } from "./seo-thresholds";
 
 /**
- * Ces tests VERROUILLENT le fait que les seuils sont encore neutres.
+ * Ces tests VERROUILLENT l'arbitrage rendu le 07/09/2026.
  *
- * Ils ne sont pas là pour empêcher l'activation : ils sont là pour qu'elle soit
- * délibérée. Le jour où l'arbitrage produit est rendu, ces tests tombent — et
- * celui qui relève les seuils doit venir écrire ici l'effet attendu, chiffré.
- * C'est la même discipline que `seo-urls.test.ts` : aucune décision
- * d'indexation ne doit pouvoir changer par accident.
+ * Ils remplacent les tests de position neutre, qui existaient pour que
+ * l'activation soit délibérée plutôt qu'accidentelle. Elle l'a été : Gérald a
+ * tranché sur l'audit d'indexation (`docs/audit-indexation-2026-09-07.md`, §2.3
+ * et étage C). Comme le prévoyait la consigne laissée par le lot précédent,
+ * celui qui relève les seuils vient écrire ici l'effet attendu, chiffré.
+ *
+ * Toute modification ultérieure des seuils doit à son tour mettre ces chiffres
+ * à jour : aucune décision d'indexation ne doit pouvoir changer par accident.
  */
 describe("seo-thresholds — seuils d'indexabilité des pages spécialité", () => {
-  it("est encore en position neutre (aucun arbitrage humain rendu)", () => {
-    expect(THRESHOLDS_ARE_NEUTRAL).toBe(true);
-    expect(SPECIALTY_MIN_THERAPISTS).toBe(0);
-    expect(SPECIALTY_CITY_MIN_THERAPISTS).toBe(1);
+  it("porte l'arbitrage du 07/09/2026, plus la position neutre", () => {
+    expect(THRESHOLDS_ARE_NEUTRAL).toBe(false);
+    expect(SPECIALTY_MIN_THERAPISTS).toBe(1);
+    expect(SPECIALTY_CITY_MIN_THERAPISTS).toBe(2);
   });
 
-  it("reproduit exactement le comportement du site au 30/08/2026", () => {
-    // 14 spécialités n'ont aucun praticien. En position neutre, elles restent
-    // publiées — c'est ce que fait le site aujourd'hui, et ce lot n'y touche pas.
-    expect(isSpecialtyIndexable(0)).toBe(true);
+  it("retire les pages spécialité sans praticien, garde celles qui en ont", () => {
+    // 14 spécialités actives sur 31 n'ont aucun praticien (relevé du 30/08,
+    // inchangé au 07/09). Elles servaient « 0 thérapeute en Sophrologie » sur
+    // ~160 mots en index,follow : 14 × 4 langues = 56 URLs retirées du sitemap
+    // et passées en noindex,follow.
+    expect(isSpecialtyIndexable(0)).toBe(false);
+    // Les 17 spécialités pourvues restent : la page garde sa valeur de
+    // définition et de maillage dès un praticien.
     expect(isSpecialtyIndexable(1)).toBe(true);
     expect(isSpecialtyIndexable(2)).toBe(true);
-
-    // Les paires spécialité × ville n'étaient déjà déclarées qu'à partir d'un
-    // praticien : le seuil neutre à 1 redit cette règle, il ne la change pas.
-    expect(isSpecialtyCityIndexable(0)).toBe(false);
-    expect(isSpecialtyCityIndexable(1)).toBe(true);
   });
 
-  it("appliquerait bien l'arbitrage recommandé si les seuils étaient relevés", () => {
-    // Vérifie la LOGIQUE, pas les constantes : le jour de l'activation, seules
-    // les valeurs changent, la comparaison est déjà juste.
-    const wouldIndexSpecialty = (n: number) => n >= 1;
-    const wouldIndexPair = (n: number) => n >= 2;
+  it("exige deux praticiens pour une paire spécialité × ville", () => {
+    // Les 23 paires distinctes portent aujourd'hui exactement 1 praticien
+    // chacune : à un seul, la page est un sous-ensemble strict de sa fiche.
+    // 23 × 4 langues = 92 URLs retirées. Elles reviendront d'elles-mêmes dès
+    // qu'une ville comptera deux praticiens de la même spécialité — le seuil
+    // n'a alors rien à changer.
+    expect(isSpecialtyCityIndexable(0)).toBe(false);
+    expect(isSpecialtyCityIndexable(1)).toBe(false);
+    expect(isSpecialtyCityIndexable(2)).toBe(true);
+  });
 
-    expect(wouldIndexSpecialty(0)).toBe(false); // les 14 pages vides sortent
-    expect(wouldIndexSpecialty(1)).toBe(true); // les 17 pourvues restent
-    expect(wouldIndexPair(1)).toBe(false); // les 23 combos à 1 praticien sortent
-    expect(wouldIndexPair(2)).toBe(true); // et reviennent seuls au 2e praticien
+  it("retire 148 URLs au total, soit un quart du sitemap", () => {
+    const SPECIALTIES_WITHOUT_THERAPIST = 14;
+    const PAIRS_WITH_ONE_THERAPIST = 23;
+    const LANGS = 4;
+    const removed =
+      SPECIALTIES_WITHOUT_THERAPIST * LANGS + PAIRS_WITH_ONE_THERAPIST * LANGS;
+    expect(removed).toBe(148);
+    // Sitemap relevé à 600 URLs le 07/09 → ~452 après application.
+    expect(600 - removed).toBe(452);
   });
 });
