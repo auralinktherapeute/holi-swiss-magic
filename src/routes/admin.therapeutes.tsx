@@ -5,10 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Check, X, Pause, ExternalLink, Loader2,
-  Download, ChevronUp, ChevronDown, Users,
+  Download, ChevronUp, ChevronDown, Users, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { listTherapistsAdmin, updateTherapistStatus } from "@/lib/admin.functions";
+import { listTherapistsAdmin, updateTherapistStatus, nukeTherapistAdmin } from "@/lib/admin.functions";
 import { useSessionState } from "@/hooks/use-session-state";
 import { FeaturedTherapistPicker } from "@/components/admin/FeaturedTherapistPicker";
 import "@/styles/admin-design-system.css";
@@ -23,7 +23,7 @@ const PAGE_SIZE = 20;
 
 type SortKey = "name" | "canton" | "status" | "created_at";
 type SortDir = "asc" | "desc";
-type Action = { id: string; name: string; type: "active" | "rejected" | "suspended" } | null;
+type Action = { id: string; name: string; type: "active" | "rejected" | "suspended" | "nuke" } | null;
 
 function StatusBadge({ status }: { status: string }) {
   const cls = status === "active" ? "active" : status === "pending" ? "pending" : status === "suspended" ? "suspended" : "rejected";
@@ -58,6 +58,7 @@ function Page() {
 
   const fetchList = useServerFn(listTherapistsAdmin);
   const updateStatus = useServerFn(updateTherapistStatus);
+  const nukeTherapist = useServerFn(nukeTherapistAdmin);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -84,6 +85,14 @@ function Page() {
     if (action.type === "rejected" && reason.trim().length === 0) return;
     setBusy(true);
     try {
+      if (action.type === "nuke") {
+        await nukeTherapist({ data: { id: action.id, confirm: "SUPPRIMER" } });
+        toast.success(`${action.name} : compte supprimé définitivement`);
+        await qc.invalidateQueries({ queryKey: ["admin-therapists"] });
+        qc.invalidateQueries({ queryKey: ["admin-stats"] });
+        setAction(null); setReason(""); setConfirmText("");
+        return;
+      }
       await updateStatus({ data: { id: action.id, status: action.type, reason: reason || undefined } });
       toast.success(`${action.name} : statut mis à jour`);
       await qc.invalidateQueries({ queryKey: ["admin-therapists"] });
@@ -275,6 +284,14 @@ function Page() {
                               <Pause size={13} /> Suspendre
                             </button>
                           )}
+                          <button
+                            className="adm-btn adm-btn-danger"
+                            title="Supprimer définitivement"
+                            aria-label={`Supprimer définitivement ${r.first_name} ${r.last_name}`}
+                            onClick={() => { setConfirmText(""); setAction({ id: r.id, name: `${r.first_name} ${r.last_name}`, type: "nuke" }); }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -342,12 +359,14 @@ function Page() {
                 {action.type === "active"    && "✅ Valider ce thérapeute ?"}
                 {action.type === "rejected"  && "❌ Rejeter ce thérapeute ?"}
                 {action.type === "suspended" && "⏸ Suspendre ce thérapeute ?"}
+                {action.type === "nuke" && "🗑 Suppression définitive"}
               </div>
               <div className="adm-modal-desc">
                 <strong style={{ color: "#fff" }}>{action.name}</strong>
                 {action.type === "active" && " sera visible sur l'annuaire public."}
                 {action.type === "rejected" && " recevra une notification de rejet."}
                 {action.type === "suspended" && " sera masqué de l'annuaire."}
+                {action.type === "nuke" && " et toutes ses données (profil, rendez-vous, avis, articles, factures, compte de connexion) seront effacés définitivement. Cette action est irréversible."}
               </div>
 
               {action.type === "rejected" && (
@@ -359,6 +378,20 @@ function Page() {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     maxLength={500}
+                  />
+                </div>
+              )}
+
+              {action.type === "nuke" && (
+                <div className="adm-field">
+                  <label className="adm-label" htmlFor="nuke-confirm">Tapez SUPPRIMER pour confirmer</label>
+                  <input
+                    id="nuke-confirm"
+                    className="adm-modal-input"
+                    placeholder="SUPPRIMER"
+                    autoFocus
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
                   />
                 </div>
               )}
@@ -388,12 +421,14 @@ function Page() {
                   disabled={
                     busy ||
                     (action.type === "rejected" && reason.trim().length === 0) ||
-                    (action.type === "suspended" && confirmText !== "CONFIRMER")
+                    (action.type === "suspended" && confirmText !== "CONFIRMER") ||
+                    (action.type === "nuke" && confirmText !== "SUPPRIMER")
                   }
                   style={{ opacity: (
                     busy ||
                     (action.type === "rejected" && reason.trim().length === 0) ||
-                    (action.type === "suspended" && confirmText !== "CONFIRMER")
+                    (action.type === "suspended" && confirmText !== "CONFIRMER") ||
+                    (action.type === "nuke" && confirmText !== "SUPPRIMER")
                   ) ? 0.4 : 1 }}
                 >
                   {busy ? "Traitement…" : "Confirmer"}
