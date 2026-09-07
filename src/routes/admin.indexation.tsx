@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Globe, Check, Clock, AlertTriangle, RefreshCw, ExternalLink, FileText, Search, Rocket, Loader2,
+  Globe, Check, Clock, AlertTriangle, RefreshCw, ExternalLink, FileText, Search, Rocket, Loader2, Archive,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -31,6 +31,29 @@ type IndexedUrl = {
   last_checked_at: string | null;
   priority: number;
   check_count: number;
+  /** Non nul = acquise ou hors périmètre : plus jamais poussée (refonte 07/09). */
+  archived_at: string | null;
+  archive_reason: string | null;
+  /** Dernier ping IndexNow réel — gouverne le refroidissement de 10 jours. */
+  last_submitted_at: string | null;
+};
+
+const ARCHIVE_REASON_LABELS: Record<string, string> = {
+  indexed_stable: "Indexée et stable",
+  hors_sitemap: "Sortie du sitemap",
+  canonical_autre: "Canonical ailleurs",
+  langue_non_canonique: "Langue non canonique",
+  profil_factice: "Profil factice",
+  noindex: "Noindex / bloquée",
+};
+
+/** Étage de priorité — thérapeutes d'abord (audit du 07/09, §4). */
+const PRIORITY_LABELS: Record<number, string> = {
+  1: "Thérapeute",
+  2: "Accueil / listing",
+  3: "Spécialité",
+  4: "Blog",
+  5: "Statique",
 };
 
 type Report = {
@@ -81,14 +104,14 @@ function Page() {
   const [urls, setUrls] = useState<IndexedUrl[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"all" | "indexed" | "waiting" | "problems" | "reports">("all");
+  const [tab, setTab] = useState<"all" | "indexed" | "waiting" | "problems" | "archived" | "reports">("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const [u, r] = await Promise.all([
-        fetch(`${AGENTS_SUPABASE_URL}/rest/v1/indexed_urls?select=id,url,lang,page_type,status,coverage_state,last_crawl_at,last_checked_at,priority,check_count&order=priority.asc,url.asc&limit=1000`, { headers: HEADERS }),
+        fetch(`${AGENTS_SUPABASE_URL}/rest/v1/indexed_urls?select=id,url,lang,page_type,status,coverage_state,last_crawl_at,last_checked_at,priority,check_count,archived_at,archive_reason,last_submitted_at&order=priority.asc,last_submitted_at.asc.nullsfirst,url.asc&limit=2000`, { headers: HEADERS }),
         fetch(`${AGENTS_SUPABASE_URL}/rest/v1/indexing_reports?select=*&order=run_at.desc&limit=20`, { headers: HEADERS }),
       ]);
       if (!u.ok || !r.ok) throw new Error(`HTTP ${u.status}/${r.status}`);
@@ -166,17 +189,25 @@ function Page() {
     }
   };
 
+  // Depuis la refonte du 07/09, une URL archivée n'est plus poussée : elle ne
+  // compte donc pas dans « en attente », sinon le tableau annonce une file de
+  // 830 URLs quand il n'en reste que 595 à traiter.
+  const active = urls.filter((u) => !u.archived_at);
   const counts = {
     total: urls.length,
+    active: active.length,
+    archived: urls.length - active.length,
     indexed: urls.filter((u) => u.status === "indexed").length,
-    waiting: urls.filter((u) => ["discovered_not_crawled", "submitted", "discovered", "pending_check"].includes(u.status)).length,
-    problems: urls.filter((u) => PROBLEM_STATUSES.includes(u.status)).length,
-    unchecked: urls.filter((u) => !u.last_checked_at).length,
+    waiting: active.filter((u) => ["discovered_not_crawled", "submitted", "discovered", "pending_check"].includes(u.status)).length,
+    problems: active.filter((u) => PROBLEM_STATUSES.includes(u.status)).length,
+    unchecked: active.filter((u) => !u.last_checked_at).length,
   };
   const pct = counts.total ? Math.round((counts.indexed / counts.total) * 100) : 0;
 
   const visible = urls.filter((u) => {
     if (typeFilter !== "all" && u.page_type !== typeFilter) return false;
+    if (tab === "archived") return !!u.archived_at;
+    if (u.archived_at) return false; // les autres onglets ne montrent que la file active
     if (tab === "indexed") return u.status === "indexed";
     if (tab === "waiting") return ["discovered_not_crawled", "submitted", "discovered", "pending_check"].includes(u.status);
     if (tab === "problems") return PROBLEM_STATUSES.includes(u.status);
@@ -197,10 +228,11 @@ function Page() {
         </div>
         <div className="flex gap-3 flex-wrap">
           {[
-            { v: counts.total, label: "Suivies", icon: Search, tone: "text-foreground" },
+            { v: counts.active, label: "File active", icon: Search, tone: "text-foreground" },
             { v: counts.indexed, label: "Indexées", icon: Check, tone: "text-cyan-300" },
             { v: counts.waiting, label: "En attente", icon: Clock, tone: "text-amber-400" },
             { v: counts.problems, label: "Problèmes", icon: AlertTriangle, tone: "text-red-400" },
+            { v: counts.archived, label: "Archivées", icon: Archive, tone: "text-muted-foreground" },
           ].map(({ v, label, icon: Icon, tone }) => (
             <div key={label} className="rounded-lg border bg-card px-4 py-2 text-center min-w-20">
               <div className={`text-xl font-bold ${tone}`}>{v}</div>
@@ -214,7 +246,7 @@ function Page() {
 
       <div>
         <div className="flex justify-between text-xs text-muted-foreground mb-1">
-          <span>{counts.indexed} / {counts.total} pages indexées</span>
+          <span>{counts.indexed} / {counts.total} pages indexées · {counts.archived} archivées (jamais repoussées)</span>
           <span>{pct} %{counts.unchecked > 0 ? ` · ${counts.unchecked} pas encore contrôlées` : ""}</span>
         </div>
         <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
@@ -255,10 +287,11 @@ function Page() {
 
       <div className="flex items-center gap-2 border-b overflow-x-auto">
         {([
-          { k: "all", label: `Toutes (${counts.total})` },
+          { k: "all", label: `File active (${counts.active})` },
           { k: "indexed", label: `Indexées (${counts.indexed})` },
           { k: "waiting", label: `En attente (${counts.waiting})` },
           { k: "problems", label: `Problèmes (${counts.problems})` },
+          { k: "archived", label: `Archivées (${counts.archived})` },
           { k: "reports", label: `Comptes rendus (${reports.length})` },
         ] as const).map(({ k, label }) => (
           <button
@@ -321,15 +354,29 @@ function Page() {
                 <a href={u.url} target="_blank" rel="noreferrer" className="text-sm font-mono truncate flex-1 min-w-40 hover:text-cyan-300 transition" title={u.url}>
                   {path}
                 </a>
-                <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0 ${meta.cls}`}>
-                  {meta.label}
+                <span
+                  className="rounded-full border border-violet-500/25 bg-violet-500/10 text-[10px] font-semibold text-violet-300 px-2 py-0.5 shrink-0"
+                  title={`Priorité ${u.priority} — ${PRIORITY_LABELS[u.priority] ?? "non classée"}`}
+                >
+                  P{u.priority}
                 </span>
+                {u.archived_at ? (
+                  <span className="rounded-full border border-transparent bg-muted/40 px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground shrink-0">
+                    Archivée · {ARCHIVE_REASON_LABELS[u.archive_reason ?? ""] ?? u.archive_reason ?? "—"}
+                  </span>
+                ) : (
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0 ${meta.cls}`}>
+                    {meta.label}
+                  </span>
+                )}
                 <span className="text-[11px] text-muted-foreground w-32 shrink-0">
-                  {u.last_crawl_at
+                  {u.last_submitted_at
+                    ? `Poussée ${new Date(u.last_submitted_at).toLocaleDateString("fr-CH")}`
+                    : u.last_crawl_at
                     ? `Crawl ${new Date(u.last_crawl_at).toLocaleDateString("fr-CH")}`
                     : u.last_checked_at
                     ? `Vérifiée ${new Date(u.last_checked_at).toLocaleDateString("fr-CH")}`
-                    : "Jamais contrôlée"}
+                    : "Jamais poussée"}
                 </span>
                 <div className="flex gap-1 shrink-0">
                   <button

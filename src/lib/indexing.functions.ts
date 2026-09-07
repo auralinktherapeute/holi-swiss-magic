@@ -64,25 +64,50 @@ const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
 const AGENTS_URL = "https://gpldaaqwvwopttachrma.supabase.co";
 const AGENTS_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbGRhYXF3dndvcHR0YWNocm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODIyOTAsImV4cCI6MjA5NjU1ODI5MH0.BKuw_l2YrTZXTDHFlMcTC0yoH003_naKeoJXYs61fQg";
 
-async function fetchTrackedUrls(scope: "therapists" | "unindexed" | "all"): Promise<string[]> {
-  const filters =
-    scope === "therapists"
-      ? "&page_type=eq.therapist"
-      : scope === "unindexed"
-        ? "&status=neq.indexed"
-        : "";
+/** Une URL poussée il y a moins de N jours n'est pas resoumise. */
+const COOLDOWN_DAYS = 10;
+/** Taille du lot, alignée sur celle de l'edge function `run-indexation`. */
+const BATCH = 40;
+
+/**
+ * La file active, dans l'ordre de priorité — mêmes règles que l'edge function.
+ *
+ * TROIS FILTRES, et les deux premiers manquaient.
+ *   1. `archived_at is null` — une URL acquise (indexée et stable) ou sortie du
+ *      sitemap ne se repousse jamais. Sans ce filtre, `scope: "therapists"` ne
+ *      regardait QUE `page_type`, donc repoussait aussi les fiches déjà
+ *      indexées, et `scope: "all"` repoussait le site entier.
+ *   2. Refroidissement — une URL inchangée resoumise en boucle finit ignorée
+ *      par Bing. L'ancien commentaire de ce fichier affirmait l'inverse
+ *      (« idempotent et sans quota pénalisant ») : c'était faux, et c'est ce
+ *      qui a produit le re-ping des mêmes 24 URLs chaque jour jusqu'au 07/09.
+ *   3. `priority asc` puis jamais-poussée d'abord — thérapeutes en tête.
+ *
+ * Le guillemet autour du timestamp est nécessaire : dans un `or=(…)`, le point
+ * sépare colonne, opérateur et valeur, et un ISO 8601 nu casse l'analyse sur
+ * son propre point de milliseconde.
+ */
+async function fetchQueue(scope: "therapists" | "unindexed" | "all"): Promise<string[]> {
+  const cooldown = new Date(Date.now() - COOLDOWN_DAYS * 86400_000).toISOString();
+  const scoped =
+    scope === "therapists" ? "&page_type=eq.therapist" : scope === "unindexed" ? "&status=neq.indexed" : "";
   const res = await fetch(
-    `${AGENTS_URL}/rest/v1/indexed_urls?select=url${filters}&order=priority.asc&limit=1000`,
+    `${AGENTS_URL}/rest/v1/indexed_urls?select=url&archived_at=is.null${scoped}` +
+      `&or=(last_submitted_at.is.null,last_submitted_at.lt."${cooldown}")` +
+      `&order=priority.asc,last_submitted_at.asc.nullsfirst&limit=${BATCH}`,
     { headers: { apikey: AGENTS_ANON, Authorization: `Bearer ${AGENTS_ANON}` } },
   );
-  if (!res.ok) throw new Error("Impossible de lire la liste des URLs suivies.");
+  if (!res.ok) throw new Error("Impossible de lire la file d'indexation.");
   const rows = (await res.json()) as { url: string }[];
   return rows.map((r) => r.url).filter((u) => u.startsWith(SITE));
 }
 
 /**
- * Ping IndexNow avec les URLs du scope choisi. Idempotent et sans quota
- * pénalisant : Bing accepte les re-soumissions.
+ * Ping IndexNow du lot prioritaire courant.
+ *
+ * ⚠️ Ne met PAS `last_submitted_at` à jour : la clé anon n'écrit pas sur
+ * `indexed_urls`. Ce bouton reste donc un dépannage ; le cycle qui horodate,
+ * archive et rend des comptes est `runFullIndexation` (edge function).
  */
 export const pingIndexNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -90,7 +115,7 @@ export const pingIndexNow = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
 
-    const urls = await fetchTrackedUrls(data.scope);
+    const urls = await fetchQueue(data.scope);
     if (urls.length === 0) return { submitted: 0, status: 0 };
 
     const res = await fetch(INDEXNOW_ENDPOINT, {

@@ -3,29 +3,51 @@
  * Projet : gpldaaqwvwopttachrma
  * Déploiement : supabase functions deploy run-indexation --project-ref gpldaaqwvwopttachrma
  *
- * Exécute le cycle d'indexation complet depuis le dashboard admin :
+ * Cycle d'indexation serveur, appelé par pg_cron (`holiswiss-indexation-daily`,
+ * 05:00 UTC) et par le bouton de /admin/indexation.
+ *
  *   1. Validation PIN (seo_admin_secrets)
- *   2. Récupération des URLs non indexées (thérapeutes en priorité)
- *   3. Ping IndexNow (Bing/IA — ChatGPT s'appuie sur l'index Bing)
- *   4. Comparaison sitemap → ajout des nouvelles URLs au suivi
- *   5. Insertion d'un rapport dans indexing_reports
- *   6. Notification admin : RPC qqwud, avec repli e-mail Resend
+ *   2. Lecture du sitemap en ligne — SOURCE DE VÉRITÉ du périmètre
+ *   3. Réconciliation : ajout des nouvelles URLs, ARCHIVAGE de ce qui est acquis
+ *      ou sorti du périmètre
+ *   4. Sélection de la file active par PRIORITÉ, avec refroidissement
+ *   5. Ping IndexNow + horodatage de la soumission
+ *   6. Rapport dans indexing_reports
+ *   7. Notification admin (façade gardée, repli e-mail Resend)
  *
- * Auth : PIN 4 chiffres dans le body (même PIN que les autres actions admin gpld).
- * GSC URL Inspection : non disponible depuis le dashboard (nécessite un compte de service
- *   Google — à ajouter via le secret GSC_SERVICE_ACCOUNT_JSON).
+ * ─────────────────────────────────────────────────────────────────────────────
+ * REFONTE DU 07/09/2026 — audit `docs/audit-indexation-2026-09-07.md`
  *
- * Appelée aussi par pg_cron (job `holiswiss-indexation-daily`, voir cron.job) : c'est
- * ce qui garantit un cycle quotidien même Mac éteint. La tâche Claude locale ne tournant
- * que si l'app est ouverte, elle n'avait produit que 12 runs en 50 jours (trou de 15
- * jours du 09/08 au 24/08) — d'où ce doublon serveur, qui porte `trigger: 'cron'`.
+ * CE QUI N'ALLAIT PAS
+ *   La sélection ne regardait que `status <> 'indexed'`. Or RIEN ne faisait
+ *   jamais avancer `status` : l'inspection Search Console n'existe que dans la
+ *   tâche Claude locale, qui ne tourne que si le Mac est ouvert. La file ne
+ *   diminuait donc jamais et le cron re-pingait IndexNow avec LES MÊMES 24 URLs
+ *   tous les jours — les e-mails des 05/09 et 06/09 étaient identiques à
+ *   l'URL près. Bing finit par ignorer une URL resoumise inchangée en boucle.
  *
- * ⚠️ `create_admin_notification` (qqwud) n'est PLUS appelable avec la clé anon depuis la
- * migration de durcissement 20260816215809 (EXECUTE révoqué à anon — délibéré : la
- * fonction écrit et déclenche un http_post sortant sans garde). L'échec était jusqu'ici
- * SILENCIEUX car la réponse n'était pas vérifiée. On vérifie désormais, et on retombe
- * sur un e-mail Resend direct. Rétablissement du canal in-app : appliquer via Lovable la
- * migration `20260824_request_admin_notification.sql` (RPC gardée par secret partagé).
+ * LE PRINCIPE QUI REMPLACE ÇA
+ *   Le sitemap tranche. Une URL qu'il ne déclare plus n'a rien à faire dans la
+ *   file : elle est archivée. Une URL acquise depuis 21 jours est archivée. Une
+ *   URL poussée il y a moins de 10 jours attend son tour. Ce qui reste est
+ *   servi dans l'ordre de priorité — thérapeutes d'abord.
+ *
+ *   Conséquence utile : désactiver un profil dans qqwud le sort du sitemap, donc
+ *   de la file, tout seul. Il n'y a aucune liste de slugs à maintenir ici.
+ *
+ * GARDE-FOU
+ *   L'archivage « hors sitemap » n'est appliqué QUE si le sitemap a été lu ET
+ *   qu'il contient au moins SITEMAP_FLOOR URLs. Un sitemap en échec ou amputé
+ *   archiverait sinon le site entier en une exécution.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠️ NOTIFICATION — `create_admin_notification` (qqwud) n'est PLUS appelable
+ * avec la clé anon depuis le durcissement du 16/08 (EXECUTE révoqué : la
+ * fonction écrit et déclenche un http_post sortant sans garde). Cette fonction
+ * l'appelait encore : d'où un `errors:1` sur CHAQUE rapport `cron` depuis le
+ * 24/08. On passe désormais par la façade gardée `request_admin_notification`
+ * (migration 20260824174143), dont le sésame est le secret partagé
+ * `agent_notify_secret` (seo_admin_secrets, gpld).
  */
 
 const CORS_HEADERS = {
@@ -36,12 +58,32 @@ const CORS_HEADERS = {
 
 const INDEXNOW_KEY = "41c3cce6c762af43d78a7895dfc0afe3";
 const SITE = "https://holiswiss.ch";
-// Clé anon qqwud — publique par nature (dans le repo GitHub public)
+const UA = "holiswiss-indexation-agent/3.0";
+
+// Clé anon qqwud — publique par nature (dépôt GitHub public).
 const QQWUD_URL = "https://qqwudmnfavvaukuldulr.supabase.co";
 const QQWUD_ANON =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd3VkbW5mYXZ2YXVrdWxkdWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg2MjUsImV4cCI6MjA5NjU3NDYyNX0.P-8PAwboYoul28Iqx_UMGH0c9_NPwBTsJPCkRMXKEpY";
 
-type IndexedUrlRow = { id: string; url: string; page_type: string; status: string };
+/** Nombre d'URLs sous lequel le sitemap est jugé non fiable (cf. garde-fou). */
+const SITEMAP_FLOOR = 200;
+/** Une URL poussée il y a moins de N jours n'est pas resoumise. */
+const COOLDOWN_DAYS = 10;
+/** Une URL indexée depuis N jours est considérée acquise. */
+const INDEXED_STABLE_DAYS = 21;
+/** Délai de grâce avant d'archiver une URL absente du sitemap. */
+const OUT_OF_SITEMAP_GRACE_DAYS = 14;
+/** Taille du lot poussé à IndexNow par exécution. */
+const BATCH = 40;
+
+type UrlRow = {
+  id: string;
+  url: string;
+  page_type: string;
+  status: string;
+  priority: number;
+  last_submitted_at: string | null;
+};
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -64,77 +106,250 @@ async function gpld(path: string, opts: RequestInit = {}): Promise<Response> {
   });
 }
 
+async function secret(k: string): Promise<string | null> {
+  const r = await gpld(`/rest/v1/seo_admin_secrets?k=eq.${k}&select=v`);
+  if (!r.ok) return null;
+  const rows: { v: string }[] = await r.json();
+  return rows?.[0]?.v ?? null;
+}
+
+function daysAgo(n: number): string {
+  return new Date(Date.now() - n * 86400_000).toISOString();
+}
+
+/**
+ * Échelle de priorité — UNE seule, partagée par le sitemap, ce run et le
+ * dashboard. « D'abord les thérapeutes, ensuite les autres pages. »
+ *
+ *   1 fiche thérapeute · 2 accueil + listings · 3 spécialité
+ *   4 blog · 5 statiques, paroles, événements
+ */
+function classify(url: string): { page_type: string; priority: number } {
+  const p = url.replace(SITE, "");
+  if (/^\/[a-z]{2}\/therapeute\//.test(p)) return { page_type: "therapist", priority: 1 };
+  if (/^\/[a-z]{2}\/?$/.test(p)) return { page_type: "home", priority: 2 };
+  if (/^\/[a-z]{2}\/therapeutes(\/|$)/.test(p)) return { page_type: "listing", priority: 2 };
+  if (/^\/[a-z]{2}\/specialites\//.test(p)) return { page_type: "specialty", priority: 3 };
+  if (/^\/[a-z]{2}\/blog(\/|$)/.test(p)) return { page_type: "article", priority: 4 };
+  if (/^\/[a-z]{2}\/evenements\//.test(p)) return { page_type: "event", priority: 5 };
+  return { page_type: "static", priority: 5 };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  // Parse body
   let body: { scope?: string; pin?: string; trigger?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: "Invalid JSON" }, 400);
   }
-  const { scope = "therapists", pin, trigger: rawTrigger = "manual" } = body;
-  // La contrainte indexing_reports_trigger_check n'accepte que ces valeurs.
+  const { scope = "all", pin, trigger: rawTrigger = "manual" } = body;
   const ALLOWED_TRIGGERS = ["manual", "cron", "daily", "weekly", "initial"];
   const trigger = ALLOWED_TRIGGERS.includes(rawTrigger) ? rawTrigger : "manual";
 
-  // 1. Validate PIN
-  const pinResp = await gpld("/rest/v1/seo_admin_secrets?k=eq.validation_pin&select=v");
-  if (!pinResp.ok) return json({ error: "Impossible de vérifier le PIN" }, 500);
-  const pinRows: { v: string }[] = await pinResp.json();
-  if (!pinRows?.[0]?.v || pinRows[0].v !== String(pin)) {
-    return json({ error: "PIN invalide" }, 401);
-  }
+  // ── 1. PIN ────────────────────────────────────────────────────────────────
+  const expectedPin = await secret("validation_pin");
+  if (!expectedPin) return json({ error: "Impossible de vérifier le PIN" }, 500);
+  if (expectedPin !== String(pin)) return json({ error: "PIN invalide" }, 401);
 
   const now = new Date().toISOString();
   const errors: string[] = [];
+  const archived: Record<string, number> = {};
+  let newUrlsAdded = 0;
   let indexNowSubmitted = 0;
   let indexNowStatus = 0;
-  let newUrlsAdded = 0;
 
-  // 2. Total URLs suivies
-  const totalResp = await gpld("/rest/v1/indexed_urls?select=id", {
-    headers: { Prefer: "count=exact" },
-  });
-  const contentRange = totalResp.headers.get("content-range") ?? "";
-  const totalUrls = parseInt(contentRange.split("/")[1] ?? "0") || 0;
+  // ── 2. Sitemap : le périmètre fait autorité ───────────────────────────────
+  let sitemapUrls: Set<string> | null = null;
+  try {
+    const resp = await fetch(`${SITE}/sitemap.xml`, {
+      headers: { "User-Agent": UA },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!resp.ok) {
+      errors.push(`Sitemap HTTP ${resp.status}`);
+    } else {
+      const xml = await resp.text();
+      const locs = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)]
+        .map((m) => m[1].trim())
+        .filter((u) => u.startsWith(SITE));
+      if (locs.length < SITEMAP_FLOOR) {
+        // Un sitemap amputé archiverait le site entier : on refuse de s'en servir.
+        errors.push(`Sitemap suspect (${locs.length} URLs < ${SITEMAP_FLOOR}) — réconciliation ignorée`);
+      } else {
+        sitemapUrls = new Set(locs);
+      }
+    }
+  } catch (e) {
+    errors.push(`Sitemap: ${(e as Error).message}`);
+  }
 
-  // 3. URLs non indexées selon le scope (max 40)
-  const filter =
-    scope === "therapists"
-      ? "page_type=eq.therapist&status=neq.indexed"
-      : "status=neq.indexed";
-  const urlsResp = await gpld(
-    `/rest/v1/indexed_urls?${filter}&select=id,url,page_type,status&order=priority.asc&limit=40`,
+  // ── 3. Réconciliation ─────────────────────────────────────────────────────
+  //
+  // Les deux helpers d'archivage sont déclarés ici, avant leurs appels : le
+  // hoisting les rendrait utilisables plus bas de toute façon, mais on ne lit
+  // pas un cycle d'archivage en remontant le fichier.
+  async function archivePatch(filter: string, reason: string, at: string): Promise<number | null> {
+    const r = await gpld(`/rest/v1/indexed_urls?${filter}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ archived_at: at, archive_reason: reason, updated_at: at }),
+    });
+    if (!r.ok) {
+      errors.push(`Archivage ${reason} HTTP ${r.status}`);
+      return null;
+    }
+    return ((await r.json()) as unknown[]).length;
+  }
+
+  async function archiveByIds(ids: string[], reason: string, at: string): Promise<number | null> {
+    let total = 0;
+    for (let i = 0; i < ids.length; i += 100) {
+      const chunk = ids.slice(i, i + 100);
+      const r = await gpld(`/rest/v1/indexed_urls?id=in.(${chunk.join(",")})`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ archived_at: at, archive_reason: reason, updated_at: at }),
+      });
+      if (!r.ok) {
+        errors.push(`Archivage ${reason} HTTP ${r.status}`);
+        return null;
+      }
+      total += chunk.length;
+    }
+    return total;
+  }
+
+  const trackedResp = await gpld(
+    "/rest/v1/indexed_urls?select=id,url,archived_at,first_seen_at&limit=5000",
   );
-  const urlRows: IndexedUrlRow[] = urlsResp.ok ? await urlsResp.json() : [];
+  const tracked: {
+    id: string;
+    url: string;
+    archived_at: string | null;
+    first_seen_at: string | null;
+  }[] = trackedResp.ok ? await trackedResp.json() : [];
+  const trackedByUrl = new Map(tracked.map((r) => [r.url, r]));
 
-  const therapistUrls = urlRows
-    .filter((u) => u.page_type === "therapist")
-    .map((u) => u.url);
-  const notIndexedCount = therapistUrls.length;
+  if (sitemapUrls) {
+    // 3a. Nouvelles URLs du sitemap → suivi, avec la bonne priorité d'emblée.
+    const missing = [...sitemapUrls].filter((u) => !trackedByUrl.has(u));
+    if (missing.length > 0) {
+      const toInsert = missing.map((url) => ({
+        url,
+        lang: url.replace(SITE, "").match(/^\/([a-z]{2})\//)?.[1] ?? null,
+        status: "discovered",
+        ...classify(url),
+      }));
+      const ins = await gpld("/rest/v1/indexed_urls", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify(toInsert),
+      });
+      if (ins.ok) newUrlsAdded = missing.length;
+      else errors.push(`Ajout nouvelles URLs HTTP ${ins.status}`);
+    }
 
-  // 4. Ping IndexNow pour les thérapeutes non indexés
-  if (therapistUrls.length > 0) {
+    // 3b. Sorties du périmètre : le sitemap ne les déclare plus.
+    //     C'est ce qui archive tout seul les variantes de langue orphelines et
+    //     les profils désactivés dans qqwud — sans liste à maintenir ici.
+    //
+    //     Délai de grâce : une URL vue pour la première fois il y a moins de
+    //     OUT_OF_SITEMAP_GRACE_DAYS n'est PAS archivée. Le sitemap est
+    //     reconstruit à chaque requête à partir de plusieurs tables ; une URL
+    //     fraîche qui en disparaît une journée est plus probablement le
+    //     symptôme d'un repli de lecture que d'une dépublication.
+    const graceCutoff = daysAgo(OUT_OF_SITEMAP_GRACE_DAYS);
+    const gone = tracked
+      .filter(
+        (r) =>
+          r.archived_at === null &&
+          !sitemapUrls!.has(r.url) &&
+          (r.first_seen_at === null || r.first_seen_at < graceCutoff),
+      )
+      .map((r) => r.id);
+    if (gone.length > 0) {
+      const n = await archiveByIds(gone, "hors_sitemap", now);
+      if (n !== null) archived.hors_sitemap = n;
+    }
+  }
+
+  // 3c. Acquises : indexées et stables → on ne les repousse plus.
+  archived.indexed_stable =
+    (await archivePatch(
+      `status=eq.indexed&archived_at=is.null&indexed_at=lt.${daysAgo(INDEXED_STABLE_DAYS)}`,
+      "indexed_stable",
+      now,
+    )) ?? 0;
+
+  // 3d. Google a choisi une autre URL canonique : la pousser ne sert à rien.
+  archived.canonical_autre =
+    (await archivePatch("status=eq.canonical_other&archived_at=is.null", "canonical_autre", now)) ?? 0;
+
+  // 3e. Hors périmètre d'indexation par nature.
+  archived.noindex =
+    (await archivePatch(
+      "status=in.(noindex,blocked_robots,excluded)&archived_at=is.null",
+      "noindex",
+      now,
+    )) ?? 0;
+
+  // ── 4. File active, par priorité, hors refroidissement ────────────────────
+  //
+  //  `archived_at is null`        → jamais ce qui est acquis ou hors périmètre
+  //  `last_submitted_at` ancien   → jamais deux fois en moins de COOLDOWN_DAYS
+  //  `order=priority.asc`         → thérapeutes d'abord, statiques en dernier
+  //  `last_submitted_at nullsfirst` → jamais poussée avant déjà poussée
+  // Le timestamp est ENTRE GUILLEMETS : dans un `or=(…)`, le point sépare
+  // colonne, opérateur et valeur — un ISO 8601 nu (`2026-08-28T05:00:00.000Z`)
+  // ferait échouer l'analyse de PostgREST sur son propre point de milliseconde.
+  const cooldown = daysAgo(COOLDOWN_DAYS);
+  const scopeFilter = scope === "therapists" ? "&page_type=eq.therapist" : "";
+  const queueResp = await gpld(
+    `/rest/v1/indexed_urls?archived_at=is.null${scopeFilter}` +
+      `&or=(last_submitted_at.is.null,last_submitted_at.lt."${cooldown}")` +
+      `&select=id,url,page_type,status,priority,last_submitted_at` +
+      `&order=priority.asc,last_submitted_at.asc.nullsfirst&limit=${BATCH}`,
+  );
+  const queue: UrlRow[] = queueResp.ok ? await queueResp.json() : [];
+  if (!queueResp.ok) errors.push(`Lecture file HTTP ${queueResp.status}`);
+
+  // Compteurs : `limit=1` suffit, seul l'en-tête content-range est lu.
+  async function countOf(filter: string): Promise<number> {
+    const r = await gpld(`/rest/v1/indexed_urls?${filter}&select=id&limit=1`, {
+      headers: { Prefer: "count=exact" },
+    });
+    return parseInt((r.headers.get("content-range") ?? "").split("/")[1] ?? "0") || 0;
+  }
+  const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
+  const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
+
+  // ── 5. IndexNow ───────────────────────────────────────────────────────────
+  if (queue.length > 0) {
     try {
       const inow = await fetch("https://api.indexnow.org/indexnow", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "holiswiss-indexation-agent/2.0",
-        },
+        headers: { "Content-Type": "application/json", "User-Agent": UA },
         body: JSON.stringify({
           host: "holiswiss.ch",
           key: INDEXNOW_KEY,
           keyLocation: `${SITE}/${INDEXNOW_KEY}.txt`,
-          urlList: therapistUrls,
+          urlList: queue.map((u) => u.url),
         }),
       });
       indexNowStatus = inow.status;
       if (inow.status === 200 || inow.status === 202) {
-        indexNowSubmitted = therapistUrls.length;
+        indexNowSubmitted = queue.length;
+        // Horodater : c'est CE champ qui empêche la resoumission en boucle.
+        const ids = queue.map((u) => u.id);
+        const mark = await gpld(`/rest/v1/indexed_urls?id=in.(${ids.join(",")})`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ last_submitted_at: now, updated_at: now }),
+        });
+        if (!mark.ok) errors.push(`Horodatage soumission HTTP ${mark.status}`);
       } else {
         errors.push(`IndexNow HTTP ${inow.status}`);
       }
@@ -143,82 +358,42 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 5. Comparaison sitemap → nouvelles URLs
-  try {
-    const sitemapResp = await fetch(`${SITE}/sitemap.xml`, {
-      headers: { "User-Agent": "holiswiss-indexation-agent/2.0" },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (sitemapResp.ok) {
-      const xml = await sitemapResp.text();
-      const sitemapUrls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
+  // ── 6. Rapport ────────────────────────────────────────────────────────────
+  const byType = queue.reduce<Record<string, number>>((acc, u) => {
+    acc[u.page_type] = (acc[u.page_type] ?? 0) + 1;
+    return acc;
+  }, {});
+  const archivedTotal = Object.values(archived).reduce((a, b) => a + b, 0);
+  const archivedLine =
+    archivedTotal > 0
+      ? Object.entries(archived)
+          .filter(([, n]) => n > 0)
+          .map(([r, n]) => `${n} ${r}`)
+          .join(" · ")
+      : "aucune";
 
-      const trackedResp = await gpld("/rest/v1/indexed_urls?select=url");
-      const tracked: { url: string }[] = trackedResp.ok ? await trackedResp.json() : [];
-      const trackedSet = new Set(tracked.map((r) => r.url));
+  const pushed = queue.length
+    ? queue.slice(0, 10).map((u) => `- P${u.priority} ${u.url.replace(SITE, "")}`).join("\n") +
+      (queue.length > 10 ? `\n- … et ${queue.length - 10} autres` : "")
+    : "_Rien à pousser : tout est archivé ou en refroidissement._";
 
-      const missing = sitemapUrls.filter((u) => u.startsWith(SITE) && !trackedSet.has(u));
-      if (missing.length > 0) {
-        const toInsert = missing.map((url) => {
-          const isTherapist = url.includes("/therapeute/");
-          const isArticle = url.includes("/blog/") || url.includes("/article/");
-          const isSpecialty = url.includes("/specialites/");
-          const isListing =
-            /\/therapeutes\/?$/.test(url) || /\/therapeutes\/[^/]+\/?$/.test(url);
-          const lang = url.match(/\/([a-z]{2})\//)?.[1] ?? null;
-          const page_type = isTherapist
-            ? "therapist"
-            : isArticle
-              ? "article"
-              : isSpecialty
-                ? "specialty"
-                : isListing
-                  ? "listing"
-                  : "static";
-          const priority = isTherapist ? 1 : isArticle ? 2 : isSpecialty ? 3 : 4;
-          return { url, lang, page_type, status: "discovered", priority };
-        });
-        const ins = await gpld("/rest/v1/indexed_urls", {
-          method: "POST",
-          headers: { Prefer: "return=minimal" },
-          body: JSON.stringify(toInsert),
-        });
-        if (ins.ok) {
-          newUrlsAdded = missing.length;
-        } else {
-          errors.push(`Ajout nouvelles URLs HTTP ${ins.status}`);
-        }
-      }
-    } else {
-      errors.push(`Sitemap HTTP ${sitemapResp.status}`);
-    }
-  } catch (e) {
-    errors.push(`Sitemap: ${(e as Error).message}`);
-  }
-
-  // 6. Rapport Markdown
-  const therapistList = therapistUrls
-    .slice(0, 10)
-    .map((u) => `- ${u.replace(SITE, "")}`)
-    .join("\n");
-  const moreTherapists =
-    therapistUrls.length > 10 ? `\n- … et ${therapistUrls.length - 10} autres` : "";
-
-  const summaryMd = `## Run dashboard — ${now.substring(0, 16).replace("T", " ")}
+  const summaryMd = `## Run ${trigger} — ${now.substring(0, 16).replace("T", " ")}
 
 ### Actions
-- IndexNow : ${indexNowSubmitted > 0 ? `${indexNowSubmitted} URLs thérapeutes pingées → HTTP ${indexNowStatus}` : "0 URL pingée (aucune thérapeute non indexée dans ce scope)"}
-- Nouvelles URLs sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded} ajoutées au suivi` : "0 nouvelle"}
-- Inspection GSC : non disponible depuis le dashboard (nécessite GSC_SERVICE_ACCOUNT_JSON)
-${errors.length > 0 ? `- Erreurs : ${errors.join(", ")}` : ""}
+- IndexNow : ${indexNowSubmitted > 0 ? `${indexNowSubmitted} URLs poussées → HTTP ${indexNowStatus}` : "0 URL poussée"}
+- Composition du lot : ${Object.entries(byType).map(([t, n]) => `${n} ${t}`).join(" · ") || "—"}
+- Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
+- Archivées ce run : ${archivedLine}
+- Inspection GSC : non disponible côté serveur (secret GSC_SERVICE_ACCOUNT_JSON absent)
+${errors.length > 0 ? `- ⚠️ Erreurs : ${errors.join(", ")}` : ""}
 
-### Thérapeutes non indexées (${notIndexedCount})
-${therapistList}${moreTherapists}
+### Lot poussé (par priorité — thérapeutes d'abord)
+${pushed}
 
-### État total
-${totalUrls + newUrlsAdded} URLs suivies.`;
+### État
+${activeTotal} URLs actives (non archivées)${scope === "therapists" ? " sur le périmètre thérapeutes" : ""} · ${totalUrls} suivies au total.
+Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DAYS} j, ou sortie du sitemap.`;
 
-  // 7. Insertion rapport
   let reportId: string | null = null;
   try {
     const rResp = await gpld("/rest/v1/indexing_reports", {
@@ -227,20 +402,20 @@ ${totalUrls + newUrlsAdded} URLs suivies.`;
       body: JSON.stringify({
         run_at: now,
         trigger,
-        urls_total: totalUrls + newUrlsAdded,
+        urls_total: totalUrls,
         urls_checked: 0,
         newly_indexed: 0,
         newly_discovered: newUrlsAdded,
-        not_indexed: notIndexedCount,
-        blocked: 0,
+        not_indexed: activeTotal,
+        blocked: archivedTotal,
         errors: errors.length,
         quota_used: 0,
         summary_md: summaryMd,
       }),
     });
     if (rResp.ok) {
-      const rData = await rResp.json();
-      reportId = Array.isArray(rData) ? rData[0]?.id : rData?.id;
+      const d = await rResp.json();
+      reportId = Array.isArray(d) ? d[0]?.id : d?.id;
     } else {
       errors.push(`Rapport HTTP ${rResp.status}`);
     }
@@ -248,50 +423,58 @@ ${totalUrls + newUrlsAdded} URLs suivies.`;
     errors.push(`Rapport: ${(e as Error).message}`);
   }
 
-  // 8. Notification admin — in-app d'abord, e-mail Resend en repli.
-  //    Le statut HTTP est VÉRIFIÉ : c'est son absence de contrôle qui a laissé la
-  //    notification muette pendant huit jours après le durcissement du 16/08.
+  // ── 7. Notification ───────────────────────────────────────────────────────
+  //
+  // Façade gardée d'abord (`request_admin_notification`, secret partagé), repli
+  // e-mail Resend. Le statut HTTP est VÉRIFIÉ dans les deux cas : c'est son
+  // absence de contrôle qui a laissé la notification muette huit jours en août.
   const notifParts = [
-    `IndexNow: ${indexNowSubmitted} URLs → HTTP ${indexNowStatus}`,
-    newUrlsAdded > 0 ? `+${newUrlsAdded} nouvelles URLs` : null,
+    `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus}`,
+    newUrlsAdded > 0 ? `+${newUrlsAdded} nouvelles` : null,
+    archivedTotal > 0 ? `${archivedTotal} archivées` : null,
+    `${activeTotal} actives`,
     errors.length > 0 ? `${errors.length} erreur(s)` : null,
   ]
     .filter(Boolean)
     .join(" · ");
-  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} thérapeutes → IndexNow`;
+  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${activeTotal} en file`;
 
   let notified = false;
-  try {
-    const nResp = await fetch(`${QQWUD_URL}/rest/v1/rpc/create_admin_notification`, {
-      method: "POST",
-      headers: {
-        apikey: QQWUD_ANON,
-        Authorization: `Bearer ${QQWUD_ANON}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        _kind: "indexing_report",
-        _subject: subject,
-        _summary: notifParts,
-        _link: "https://www.holiswiss.ch/admin/indexation",
-      }),
-    });
-    notified = nResp.ok;
-    if (!nResp.ok) {
-      errors.push(`Notification in-app HTTP ${nResp.status} (EXECUTE anon révoqué le 16/08)`);
+  const notifySecret = await secret("agent_notify_secret");
+  if (!notifySecret) {
+    errors.push("agent_notify_secret absent de seo_admin_secrets");
+  } else {
+    try {
+      const nResp = await fetch(`${QQWUD_URL}/rest/v1/rpc/request_admin_notification`, {
+        method: "POST",
+        headers: {
+          apikey: QQWUD_ANON,
+          Authorization: `Bearer ${QQWUD_ANON}`,
+          "Content-Type": "application/json",
+          "User-Agent": UA,
+        },
+        body: JSON.stringify({
+          _secret: notifySecret,
+          _kind: "indexing_report",
+          _subject: subject,
+          _summary: notifParts,
+          _link: "https://www.holiswiss.ch/admin/indexation",
+        }),
+      });
+      notified = nResp.ok;
+      if (!nResp.ok) {
+        errors.push(`Notification in-app HTTP ${nResp.status}`);
+      }
+    } catch (e) {
+      errors.push(`Notification in-app: ${(e as Error).message}`);
     }
-  } catch (e) {
-    errors.push(`Notification in-app: ${(e as Error).message}`);
   }
 
-  // Repli : e-mail direct via Resend (clé dans seo_admin_secrets, RLS deny-all).
   if (!notified) {
     try {
-      const kResp = await gpld("/rest/v1/seo_admin_secrets?k=eq.resend_api_key&select=v");
-      const kRows: { v: string }[] = kResp.ok ? await kResp.json() : [];
-      const resendKey = kRows?.[0]?.v;
+      const resendKey = await secret("resend_api_key");
       if (!resendKey) {
-        errors.push("Repli e-mail impossible : resend_api_key absente de seo_admin_secrets");
+        errors.push("Repli e-mail impossible : resend_api_key absente");
       } else {
         const mResp = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -299,7 +482,7 @@ ${totalUrls + newUrlsAdded} URLs suivies.`;
             Authorization: `Bearer ${resendKey}`,
             "Content-Type": "application/json",
             // Cloudflare rejette l'User-Agent par défaut (erreur 1010) — leçon du 11/07.
-            "User-Agent": "holiswiss-indexation-agent/2.0",
+            "User-Agent": UA,
           },
           body: JSON.stringify({
             from: "Holiswiss Indexation <noreply@holiswiss.ch>",
@@ -323,7 +506,7 @@ ${totalUrls + newUrlsAdded} URLs suivies.`;
     }
   }
 
-  // Le compteur d'erreurs du rapport est figé avant ces étapes : on le réaligne.
+  // Le compteur d'erreurs du rapport est figé avant la notification : on réaligne.
   if (reportId && errors.length > 0) {
     await gpld(`/rest/v1/indexing_reports?id=eq.${reportId}`, {
       method: "PATCH",
@@ -336,7 +519,10 @@ ${totalUrls + newUrlsAdded} URLs suivies.`;
     submitted: indexNowSubmitted,
     indexNowStatus,
     newUrlsAdded,
-    notIndexedCount,
+    archived,
+    activeTotal,
+    notIndexedCount: activeTotal,
+    queue: queue.map((u) => ({ url: u.url, priority: u.priority, page_type: u.page_type })),
     reportId,
     errors,
   });
