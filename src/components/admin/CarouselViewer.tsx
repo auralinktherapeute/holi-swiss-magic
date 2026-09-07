@@ -84,8 +84,10 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
   const [vue, setVue] = useState<Vue>("carrousel");
   const [exporte, setExporte] = useState(false);
   const [ajuste, setAjuste] = useState(false);
+  const [pages, setPages] = useState<number | null>(null);
 
-  const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
+  const slidesSource = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
+  const slides = pages ? condenseSlides(slidesSource, pages) : slidesSource;
   const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
 
   const telecharger = async () => {
