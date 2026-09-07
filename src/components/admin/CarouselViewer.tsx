@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Download, Loader2, SlidersHorizontal } from "lucide-react";
 import { exporterSlides, slug } from "@/lib/carousel-export";
+import { condenseSlides } from "@/lib/slide-condense";
 import { SlideAdjuster } from "@/components/admin/SlideAdjuster";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 
@@ -84,8 +85,10 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
   const [vue, setVue] = useState<Vue>("carrousel");
   const [exporte, setExporte] = useState(false);
   const [ajuste, setAjuste] = useState(false);
+  const [pages, setPages] = useState<number | null>(null);
 
-  const slides = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
+  const slidesSource = carousel.slides[lang] ?? carousel.slides[carousel.langueOrigine];
+  const slides = pages ? condenseSlides(slidesSource, pages) : slidesSource;
   const base = `holiswiss-${slug(carousel.titre)}-${lang}`;
 
   const telecharger = async () => {
@@ -163,6 +166,45 @@ export function CarouselViewer({ carousel }: { carousel: Carousel }) {
             </button>
           ))}
         </div>
+        {vue === "carrousel" && (
+          <div
+            className="mr-2 flex items-center gap-1 rounded-lg border border-white/15 p-0.5"
+            role="group"
+            aria-label="Nombre de pages du carrousel"
+          >
+            <span className="px-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/40">
+              Pages
+            </span>
+            {([null, 2, 3, 4, 5] as (number | null)[]).map((n) => {
+              const actif = pages === n;
+              const indispo = n !== null && n >= slidesSource.length;
+              return (
+                <button
+                  key={String(n)}
+                  onClick={() => setPages(n)}
+                  aria-pressed={actif}
+                  disabled={indispo}
+                  title={
+                    n === null
+                      ? `Toutes les pages (${slidesSource.length})`
+                      : indispo
+                        ? "Déjà moins de pages que cela"
+                        : `Condenser en ${n} pages`
+                  }
+                  className={`min-w-[30px] rounded-md px-2 py-1 text-xs font-semibold transition ${
+                    actif
+                      ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white"
+                      : indispo
+                        ? "text-white/25"
+                        : "text-white/55 hover:text-white"
+                  }`}
+                >
+                  {n === null ? "Auto" : n}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {LANGS.map((l) => {
           const dispo = !!carousel.slides[l.code]?.length;
           const actif = lang === l.code;
