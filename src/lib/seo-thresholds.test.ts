@@ -49,14 +49,23 @@ describe("seo-thresholds — seuils d'indexabilité des pages spécialité", () 
     expect(isSpecialtyCityIndexable(2)).toBe(true);
   });
 
-  it("retire 148 URLs au total, soit un quart du sitemap", () => {
-    const SPECIALTIES_WITHOUT_THERAPIST = 14;
-    const PAIRS_WITH_ONE_THERAPIST = 23;
+  it("retire 152 URLs, soit un quart du sitemap — chiffres MESURÉS après publication", () => {
+    // Ces nombres ne sont pas une estimation : ils viennent du sitemap en ligne
+    // relevé avant et après la publication du 07/09/2026.
+    //   avant : 600 URLs dont 220 spécialité
+    //   après : 448 URLs dont  68 spécialité
+    // Le diagnostic du 30/08 tablait sur 148 (14 spécialités vides + 23 paires).
+    // Il y avait en réalité 24 paires au 07/09 — une de plus qu'une semaine plus
+    // tôt. D'où 152, et non 148 : on garde la mesure, pas la prévision.
+    const SPECIALTIES_WITHOUT_THERAPIST = 14; // 31 actives − 17 pourvues
+    const PAIRS_BELOW_TWO_THERAPISTS = 24; // toutes les paires portent 1 praticien
     const LANGS = 4;
     const removed =
-      SPECIALTIES_WITHOUT_THERAPIST * LANGS + PAIRS_WITH_ONE_THERAPIST * LANGS;
-    expect(removed).toBe(148);
-    // Sitemap relevé à 600 URLs le 07/09 → ~452 après application.
-    expect(600 - removed).toBe(452);
+      SPECIALTIES_WITHOUT_THERAPIST * LANGS + PAIRS_BELOW_TWO_THERAPISTS * LANGS;
+    expect(removed).toBe(152);
+    expect(600 - removed).toBe(448);
+
+    // Ce qui reste côté spécialité : les 17 pourvues, en 4 langues, et zéro paire.
+    expect(17 * LANGS).toBe(68);
   });
 });
