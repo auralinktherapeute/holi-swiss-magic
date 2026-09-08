@@ -12,9 +12,15 @@
  *   4. Réconciliation : ajout des nouvelles URLs, ARCHIVAGE de ce qui est acquis
  *      ou sorti du périmètre
  *   5. Sélection de la file active par PRIORITÉ, avec refroidissement
+ *   5bis. PRÉ-CONTRÔLE d'indexabilité du lot (voir `preflight.ts`)
  *   6. Ping IndexNow + horodatage de la soumission
  *   7. Rapport dans indexing_reports
  *   8. Notification admin (façade gardée, repli e-mail Resend)
+ *
+ * Le pré-contrôle est la garde d'entrée : on ne notifie IndexNow que d'URLs qui
+ * répondent 200, ne redirigent pas, ne portent pas de `noindex` et se déclarent
+ * canoniques d'elles-mêmes. Sans lui, 77 des 280 premières URLs poussées
+ * n'auraient pas dû l'être (relevé du 08/09).
  *
  * L'inspection passe AVANT la réconciliation : l'archivage doit trancher sur des
  * états qu'on vient de constater, pas sur ceux d'il y a trois semaines. Elle se
@@ -57,6 +63,7 @@
  */
 
 import { accessToken, inspect, toStatus } from "./gsc.ts";
+import { preflightAll } from "./preflight.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -438,8 +445,48 @@ Deno.serve(async (req) => {
   const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
   const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
 
-  // ── 6. IndexNow ───────────────────────────────────────────────────────────
+  // ── 5bis. Pré-contrôle d'indexabilité — la garde d'entrée ─────────────────
+  //
+  // La sélection ne regardait que l'état du SUIVI ; elle ne regardait jamais ce
+  // que l'URL RÉPOND. Relevé du 08/09 sur les 280 URLs déjà poussées : 77
+  // n'auraient pas dû l'être (14 en 404, 59 en noindex, 4 qui redirigent, 4 à
+  // canonical divergente). Notifier IndexNow d'une URL morte ou noindex n'est
+  // pas seulement inutile — c'est se signaler à Bing comme une source peu fiable.
+  const rejected: Record<string, number> = {};
+  let pushable: UrlRow[] = queue;
   if (queue.length > 0) {
+    const checks = await preflightAll(queue.map((u) => u.url), 10);
+    const byUrl = new Map(checks.map((c) => [c.url, c]));
+    const keep: UrlRow[] = [];
+    const toArchive: { id: string; reason: string }[] = [];
+
+    for (const u of queue) {
+      const c = byUrl.get(u.url);
+      if (!c || c.indexable) {
+        keep.push(u);
+        continue;
+      }
+      rejected[c.archiveReason ?? "injoignable"] =
+        (rejected[c.archiveReason ?? "injoignable"] ?? 0) + 1;
+      // `archiveReason: null` = défaillance jugée passagère (réseau, 5xx) :
+      // l'URL est écartée de CE run mais reste en file.
+      if (c.archiveReason) toArchive.push({ id: u.id, reason: c.archiveReason });
+    }
+
+    for (const [reason, ids] of Object.entries(
+      toArchive.reduce<Record<string, string[]>>((acc, t) => {
+        (acc[t.reason] ??= []).push(t.id);
+        return acc;
+      }, {}),
+    )) {
+      const n = await archiveByIds(ids, reason, now);
+      if (n !== null) archived[reason] = (archived[reason] ?? 0) + n;
+    }
+    pushable = keep;
+  }
+
+  // ── 6. IndexNow ───────────────────────────────────────────────────────────
+  if (pushable.length > 0) {
     try {
       const inow = await fetch("https://api.indexnow.org/indexnow", {
         method: "POST",
@@ -448,14 +495,14 @@ Deno.serve(async (req) => {
           host: "holiswiss.ch",
           key: INDEXNOW_KEY,
           keyLocation: `${SITE}/${INDEXNOW_KEY}.txt`,
-          urlList: queue.map((u) => u.url),
+          urlList: pushable.map((u) => u.url),
         }),
       });
       indexNowStatus = inow.status;
       if (inow.status === 200 || inow.status === 202) {
-        indexNowSubmitted = queue.length;
+        indexNowSubmitted = pushable.length;
         // Horodater : c'est CE champ qui empêche la resoumission en boucle.
-        const ids = queue.map((u) => u.id);
+        const ids = pushable.map((u) => u.id);
         const mark = await gpld(`/rest/v1/indexed_urls?id=in.(${ids.join(",")})`, {
           method: "PATCH",
           headers: { Prefer: "return=minimal" },
@@ -471,7 +518,7 @@ Deno.serve(async (req) => {
   }
 
   // ── 7. Rapport ────────────────────────────────────────────────────────────
-  const byType = queue.reduce<Record<string, number>>((acc, u) => {
+  const byType = pushable.reduce<Record<string, number>>((acc, u) => {
     acc[u.page_type] = (acc[u.page_type] ?? 0) + 1;
     return acc;
   }, {});
@@ -484,9 +531,9 @@ Deno.serve(async (req) => {
           .join(" · ")
       : "aucune";
 
-  const pushed = queue.length
-    ? queue.slice(0, 10).map((u) => `- P${u.priority} ${u.url.replace(SITE, "")}`).join("\n") +
-      (queue.length > 10 ? `\n- … et ${queue.length - 10} autres` : "")
+  const pushed = pushable.length
+    ? pushable.slice(0, 10).map((u) => `- P${u.priority} ${u.url.replace(SITE, "")}`).join("\n") +
+      (pushable.length > 10 ? `\n- … et ${pushable.length - 10} autres` : "")
     : "_Rien à pousser : tout est archivé ou en refroidissement._";
 
   const summaryMd = `## Run ${trigger} — ${now.substring(0, 16).replace("T", " ")}
@@ -494,6 +541,7 @@ Deno.serve(async (req) => {
 ### Actions
 - IndexNow : ${indexNowSubmitted > 0 ? `${indexNowSubmitted} URLs poussées → HTTP ${indexNowStatus}` : "0 URL poussée"}
 - Composition du lot : ${Object.entries(byType).map(([t, n]) => `${n} ${t}`).join(" · ") || "—"}
+- Écartées au pré-contrôle : ${Object.keys(rejected).length > 0 ? Object.entries(rejected).map(([r, n]) => `${n} ${r}`).join(" · ") : "aucune"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
 - Archivées ce run : ${archivedLine}
 - Inspection GSC : ${saJson ? `${inspected} URLs contrôlées · ${newlyIndexed} nouvellement indexées${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}${deadlineHit > 0 ? ` · ⏱ ${deadlineHit} reportées (échéance de temps)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
@@ -635,6 +683,8 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
     newlyIndexed,
     unarchived,
     deadlineHit,
+    rejected,
+    selected: queue.length,
     newUrlsAdded,
     archived,
     activeTotal,
