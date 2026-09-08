@@ -677,8 +677,9 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
             {editing?.id && editing.status !== "blocked" && (() => {
               const raw = appointments.find((appointment) => appointment.id === editing.id);
               if (!raw) return null;
-              const isPast = !raw.appointment_date || raw.appointment_date <= localDateISO(new Date());
-              const canInvoice = !raw.invoiced_at && isPast && (raw.status === "confirmed" || raw.status === "completed");
+              // Séances effectuées ET rendez-vous confirmés à venir : la facture
+              // peut être préparée avant la séance (même règle que l'onglet Facturation).
+              const canInvoice = !raw.invoiced_at && (raw.status === "confirmed" || raw.status === "completed");
               return (
                 <div className="mr-auto flex flex-wrap gap-2">
                   {raw.client_id && (
