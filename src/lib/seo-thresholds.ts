@@ -55,6 +55,23 @@ export const SPECIALTY_MIN_THERAPISTS: number = 1;
  */
 export const SPECIALTY_CITY_MIN_THERAPISTS: number = 2;
 
+/**
+ * Nombre minimum d'articles pour qu'une page `/blog/categorie/{slug}` soit
+ * indexable, déclarée au sitemap — et LIÉE depuis le blog et les articles.
+ *
+ * La valeur `3` existait déjà, mais écrite EN DUR à deux endroits :
+ * `$lang.blog.categorie.$slug.tsx` et `sitemap[.]xml.ts`. Le maillage interne
+ * ajouté le 08/09 en aurait fait un troisième. Or deux seuils qui divergent,
+ * c'est un sitemap qui annonce une page noindex — ou, ici, un lien interne qui
+ * pointe vers une page noindex. Une seule définition, trois lecteurs.
+ */
+export const ARTICLE_CATEGORY_MIN_ARTICLES = 3;
+
+/** Une catégorie de blog mérite-t-elle d'être indexée et liée avec `count` articles ? */
+export function isCategoryIndexable(count: number): boolean {
+  return count >= ARTICLE_CATEGORY_MIN_ARTICLES;
+}
+
 /** Une page spécialité mérite-t-elle d'être indexée avec `count` praticiens ? */
 export function isSpecialtyIndexable(count: number): boolean {
   return count >= SPECIALTY_MIN_THERAPISTS;

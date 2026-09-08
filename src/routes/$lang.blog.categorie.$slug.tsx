@@ -3,6 +3,7 @@ import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-rout
 import { useQuery } from "@tanstack/react-query";
 import { getArticlesByCategory, titleForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
 import { categoryLabel, getCategory, GROUP_LABELS, type GroupKey } from "@/lib/article-categories";
+import { isCategoryIndexable } from "@/lib/seo-thresholds";
 import { CalendarDays, ArrowRight, BookOpen, ArrowLeft } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { blogCopy } from "@/lib/blog-copy";
@@ -67,7 +68,7 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
 
     const articles = (loaderData as { articles?: Array<Record<string, unknown>> } | undefined)?.articles;
     /**
-     * Une catégorie n'est indexable qu'à partir de MIN_ARTICLES_INDEXABLE
+     * Une catégorie n'est indexable qu'à partir de ARTICLE_CATEGORY_MIN_ARTICLES
      * articles — 18 des 28 catégories n'en comptent qu'un, et la taxonomie se
      * chevauche (yoga ↔ yoga-therapeutique, coaching ↔ coaching-holistique) :
      * les indexer toutes reviendrait à faire se concurrencer des pages minces
@@ -79,7 +80,7 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
      * pages spécialité × ville. Une donnée manquante ne doit jamais retirer une
      * page de l'index.
      */
-    const thin = Array.isArray(articles) && articles.length < MIN_ARTICLES_INDEXABLE;
+    const thin = Array.isArray(articles) && !isCategoryIndexable(articles.length);
 
     const listed = (articles ?? []).filter((a) => a && typeof a["slug"] === "string");
 
@@ -128,7 +129,6 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
  * une page de regroupement n'a d'intérêt qu'à partir de quelques éléments.
  * Une catégorie franchit le seuil d'elle-même à mesure que le blog s'étoffe.
  */
-const MIN_ARTICLES_INDEXABLE = 3;
 
 function formatDate(iso: string | null, lang: string) {
   if (!iso) return "";

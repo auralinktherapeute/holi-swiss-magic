@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getPublishedArticles, titleForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
 import { CalendarDays, ArrowRight, BookOpen } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
-import { categoryLabel } from "@/lib/article-categories";
+import { categoryLabel, getCategory } from "@/lib/article-categories";
+import { isCategoryIndexable } from "@/lib/seo-thresholds";
 import { blogCopy } from "@/lib/blog-copy";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { BLOG_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
@@ -115,6 +116,35 @@ function Page() {
   const articles = data?.articles ?? [];
   const [featured, ...rest] = articles;
 
+  /**
+   * Catégories réellement liables, comptées exactement comme le fait le
+   * sitemap : catégorie principale ET `secondary_tags`, puis seuil partagé.
+   *
+   * Cette navigation ne liste QUE les catégories au-dessus du seuil : c'est une
+   * surface éditoriale, elle doit présenter des pages qui valent la visite.
+   *
+   * La fiche article, elle, lie SA catégorie sans condition — et c'est
+   * délibérément une règle différente, pas un oubli. Un article qui renvoie
+   * vers sa propre catégorie est la navigation la plus naturelle qui soit ; et
+   * une catégorie à deux articles deviendra indexable au troisième, avec des
+   * liens entrants déjà en place. Une page `noindex, follow` transmet d'ailleurs
+   * le signal qu'elle reçoit, elle ne l'absorbe pas.
+   */
+  const linkableCategories = (() => {
+    const counts = new Map<string, number>();
+    for (const article of articles) {
+      const a = article as Record<string, unknown>;
+      const keys = new Set<string>();
+      if (typeof a.category === "string" && a.category) keys.add(a.category);
+      for (const t of (a.secondary_tags as string[] | null) ?? []) if (t) keys.add(t);
+      for (const k of keys) counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .filter(([slug, n]) => isCategoryIndexable(n) && getCategory(slug))
+      .sort((a, b) => b[1] - a[1])
+      .map(([slug, n]) => ({ slug, n }));
+  })();
+
   return (
     <div className="min-h-screen bg-[#2d1248]">
 
@@ -166,6 +196,34 @@ function Page() {
             <p className="text-lg font-semibold text-white">{copy.emptyTitle}</p>
             <p className="text-[#d4c4e0] text-sm mt-1">{copy.emptySubtitle}</p>
           </div>
+        )}
+
+        {/* ── Parcourir par catégorie ──
+            Ces liens sont la RAISON D'ÊTRE de ce bloc, pas une commodité de
+            navigation. Les 13 pages `/blog/categorie/*` (× 4 langues = 52 URLs)
+            étaient orphelines : au sitemap, mais sans un seul lien entrant.
+            Pour un moteur, un lien interne est un vote ; zéro lien, c'est le
+            signal le plus faible qui soit. Audit du 08/09. */}
+        {!isLoading && linkableCategories.length > 0 && (
+          <nav aria-label={copy.browseByCategory} className="mb-10">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#d4c4e0]/70 mb-3">
+              {copy.browseByCategory}
+            </h2>
+            <ul className="flex flex-wrap gap-2">
+              {linkableCategories.map(({ slug, n }) => (
+                <li key={slug}>
+                  <Link
+                    to="/$lang/blog/categorie/$slug"
+                    params={{ lang: l, slug }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] px-3.5 py-1.5 text-sm text-[#d4a5f9] hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.18)] transition-colors"
+                  >
+                    {categoryLabel(slug, l)}
+                    <span className="text-[11px] text-[#d4c4e0]/50">{n}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         )}
 
         {/* Article vedette */}

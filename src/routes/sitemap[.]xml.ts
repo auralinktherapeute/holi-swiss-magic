@@ -3,7 +3,11 @@ import type {} from "@tanstack/react-start";
 import { resolveProfileLang } from "@/lib/seo";
 import { cityToSlug } from "@/lib/city-slug";
 import { getCategory } from "@/lib/article-categories";
-import { isSpecialtyIndexable, isSpecialtyCityIndexable } from "@/lib/seo-thresholds";
+import {
+  isSpecialtyIndexable,
+  isSpecialtyCityIndexable,
+  isCategoryIndexable,
+} from "@/lib/seo-thresholds";
 
 const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
@@ -575,11 +579,10 @@ async function buildSitemap(): Promise<string> {
 
   // Catégories du blog : seulement celles qui portent assez d'articles. Elles
   // étaient indexables mais jamais déclarées — 112 URLs dans un entre-deux. Le
-  // seuil doit rester aligné sur MIN_ARTICLES_INDEXABLE dans
-  // `$lang.blog.categorie.$slug.tsx` : au-dessous, la page émet un noindex, et
-  // le sitemap ne doit jamais annoncer une page noindex.
+  // seuil vient de `seo-thresholds.ts`, lu aussi par la route catégorie et par
+  // le maillage interne du blog : au-dessous, la page émet un noindex, et ni le
+  // sitemap ni un lien interne ne doivent désigner une page noindex.
   {
-    const MIN_ARTICLES_INDEXABLE = 3;
     const perCategory = new Map<string, number>();
     const categoryFreshness = new Map<string, string | undefined>();
     for (const a of articles) {
@@ -592,7 +595,7 @@ async function buildSitemap(): Promise<string> {
       }
     }
     for (const [slug, count] of perCategory) {
-      if (count < MIN_ARTICLES_INDEXABLE) continue;
+      if (!isCategoryIndexable(count)) continue;
       if (!getCategory(slug)) continue; // catégorie inconnue de la route → 404
       for (const lang of LANGS) {
         urls.push(

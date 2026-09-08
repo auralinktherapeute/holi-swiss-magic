@@ -268,11 +268,20 @@ function Page() {
 
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-3 mb-5">
+          {/* La catégorie est un LIEN, pas une étiquette morte.
+              Les 13 pages `/blog/categorie/*` (× 4 langues = 52 URLs) étaient
+              orphelines : déclarées au sitemap, mais aucune page du site n'y
+              menait — donc inatteignables en navigation, et sans le moindre
+              signal d'importance pour un moteur. Audit du 08/09. */}
           {article.category && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-medium text-[#d4a5f9]">
+            <Link
+              to="/$lang/blog/categorie/$slug"
+              params={{ lang: l, slug: article.category as string }}
+              className="inline-flex items-center gap-1 rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-medium text-[#d4a5f9] hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)] transition-colors"
+            >
               <Tag className="h-3 w-3" />
               {categoryLabel(article.category, l)}
-            </span>
+            </Link>
           )}
           {article.published_at && (
             <span className="text-sm text-[#d4c4e0]/60 flex items-center gap-1">
