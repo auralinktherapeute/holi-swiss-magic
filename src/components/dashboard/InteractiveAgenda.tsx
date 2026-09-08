@@ -700,7 +700,7 @@ export default function InteractiveAgenda({ therapistId, defaultDuration = 60 }:
                           time: raw.appointment_time ? String(raw.appointment_time).slice(0, 5) : null,
                           service: raw.service_name,
                           duration_minutes: Number(raw.duration_minutes ?? 60),
-                          suggested_price: 0,
+                          suggested_price: Number((raw as any).expected_price ?? 0),
                           suggested_vat: 0,
                         });
                         setEditorOpen(false);
