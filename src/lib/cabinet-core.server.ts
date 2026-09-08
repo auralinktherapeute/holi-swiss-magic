@@ -16,7 +16,7 @@ export const CLIENT_LIST_COLUMNS =
 
 export const APPOINTMENT_COLUMNS =
   "id,client_id,patient_name,patient_email,patient_phone,appointment_date,appointment_time," +
-  "duration_minutes,status,service_name,start_time,end_time,invoiced_at,invoice_id,source";
+  "duration_minutes,status,service_name,start_time,end_time,invoiced_at,invoice_id,source,expected_price";
 
 export const INVOICE_COLUMNS =
   "id,numero_facture,client_id,appointment_id,statut,montant_total,montant_paye," +
