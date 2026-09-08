@@ -104,9 +104,11 @@ export async function createDraftFromAppointment(
   if (error) throw new Error(error.message);
   if (!appt) throw new Error("Rendez-vous introuvable.");
   if (appt.invoiced_at) throw new Error("Ce rendez-vous est déjà facturé.");
+  // Les séances effectuées et les rendez-vous confirmés (y compris à venir)
+  // peuvent être facturés : le thérapeute prépare parfois la facture en amont.
   const apptPast = String(appt.appointment_date ?? "") <= new Date().toISOString().slice(0, 10);
-  if (appt.status !== "completed" && !(appt.status === "confirmed" && apptPast)) {
-    throw new Error("Seuls les rendez-vous honorés peuvent être facturés.");
+  if (appt.status !== "completed" && appt.status !== "confirmed") {
+    throw new Error("Seuls les rendez-vous honorés ou confirmés peuvent être facturés.");
   }
 
   const settings = await loadSettings(supabase, therapistId);
@@ -188,7 +190,8 @@ export async function createDraftFromAppointment(
     .update({
       invoiced_at: new Date().toISOString(),
       invoice_id: inv.id,
-      ...(appt.status === "completed" ? {} : { status: "completed" }),
+      // Un rendez-vous encore à venir garde son statut « confirmé ».
+      ...(appt.status === "completed" || !apptPast ? {} : { status: "completed" }),
     })
     .eq("id", appt.id)
     .eq("therapist_id", therapistId);

@@ -369,7 +369,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
                               time: a.appointment_time ? String(a.appointment_time).slice(0, 5) : null,
                               service: a.service_name ?? null,
                               duration_minutes: Number(a.duration_minutes ?? 0),
-                              suggested_price: 0,
+                              suggested_price: Number(a.expected_price ?? 0),
                               suggested_vat: 0,
                             })
                           }

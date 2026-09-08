@@ -8,8 +8,12 @@ import type { Slide } from "@/components/admin/CarouselViewer";
  * Purement présentationnel : n'écrit rien en base, la source reste intacte.
  */
 
+/**
+ * Texte d'une page fusionnée, hors puces et hors avertissement : ceux-ci sont
+ * regroupés séparément pour ne jamais apparaître deux fois.
+ */
 function texteDe(s: Slide): string {
-  return [s.label, s.title, s.body, ...(s.items ?? []), s.warn]
+  return [s.label, s.title, s.body]
     .filter((v): v is string => !!v && v.trim().length > 0)
     .map((v) => v.trim())
     .join("\n");
@@ -25,15 +29,16 @@ function fusionner(groupe: Slide[]): Slide {
     .filter(Boolean)
     .join("\n\n");
 
+  const puces = groupe.flatMap((s) => s.items ?? []).filter((v) => !!v && v.trim().length > 0);
+  const avertissements = [...new Set(groupe.map((s) => s.warn).filter((v): v is string => !!v))];
+
   return {
     kind: premiere.kind,
     label: premiere.label,
     title: premiere.title,
     body: [premiere.body?.trim(), suite].filter(Boolean).join("\n\n") || undefined,
-    items: groupe.flatMap((s) => s.items ?? []).length
-      ? groupe.flatMap((s) => s.items ?? [])
-      : undefined,
-    warn: groupe.find((s) => s.warn)?.warn,
+    items: puces.length ? puces : undefined,
+    warn: avertissements.length ? avertissements.join(" · ") : undefined,
   };
 }
 
