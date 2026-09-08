@@ -9,6 +9,8 @@ type BlogCopy = {
   emptyTitle: string;
   emptySubtitle: string;
   featured: string;
+  /** Titre de la navigation par catégories sur /blog (maillage interne, 08/09). */
+  browseByCategory: string;
   readArticle: string;
   read: string;
   categoryComingSoon: string;
@@ -36,6 +38,7 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
     emptyTitle: "Aucun article pour l'instant",
     emptySubtitle: "Revenez bientôt !",
     featured: "À la une",
+    browseByCategory: "Parcourir par catégorie",
     readArticle: "Lire l'article",
     read: "Lire",
     categoryComingSoon: "Bientôt des articles dans cette catégorie.",
@@ -61,6 +64,7 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
     emptyTitle: "Noch keine Artikel",
     emptySubtitle: "Schauen Sie bald wieder vorbei!",
     featured: "Im Fokus",
+    browseByCategory: "Nach Kategorie stöbern",
     readArticle: "Artikel lesen",
     read: "Lesen",
     categoryComingSoon: "Bald erscheinen Artikel in dieser Kategorie.",
@@ -86,6 +90,7 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
     emptyTitle: "Ancora nessun articolo",
     emptySubtitle: "Torna presto a trovarci!",
     featured: "In evidenza",
+    browseByCategory: "Sfoglia per categoria",
     readArticle: "Leggi l'articolo",
     read: "Leggi",
     categoryComingSoon: "Presto arriveranno articoli in questa categoria.",
@@ -111,6 +116,7 @@ export const BLOG_COPY: Record<BlogLang, BlogCopy> = {
     emptyTitle: "No articles yet",
     emptySubtitle: "Please check back soon!",
     featured: "Featured",
+    browseByCategory: "Browse by category",
     readArticle: "Read article",
     read: "Read",
     categoryComingSoon: "Articles in this category are coming soon.",
