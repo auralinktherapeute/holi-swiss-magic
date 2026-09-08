@@ -48,9 +48,19 @@ const STATIC_PATHS: {
   { path: "/tarifs", priority: "0.7", changefreq: "monthly", lastmod: "2026-07-04" },
   { path: "/faq", priority: "0.6", changefreq: "monthly", lastmod: "2026-08-17" },
   { path: "/contact", priority: "0.5", changefreq: "yearly", lastmod: "2026-07-19" },
-  { path: "/impressum", priority: "0.3", changefreq: "yearly", lastmod: "2026-06-24" },
-  { path: "/conditions", priority: "0.3", changefreq: "yearly", lastmod: "2026-06-24" },
-  { path: "/confidentialite", priority: "0.3", changefreq: "yearly", lastmod: "2026-08-03" },
+  // ⚠️ `/impressum`, `/conditions` et `/confidentialite` ont été RETIRÉS le
+  // 08/09/2026. Leurs routes émettent délibérément `noindex, follow`
+  // (`$lang.impressum.index.tsx` & co., ligne 10) — c'est le bon choix : des
+  // mentions légales n'ont aucune valeur de recherche. Mais le sitemap les
+  // déclarait quand même : 3 pages × 4 langues = 12 URLs qui disaient à Google
+  // « viens voir » et « ne m'indexe pas » dans la même réponse.
+  //
+  // C'est la règle inscrite plus bas dans ce fichier — « le sitemap ne doit
+  // jamais annoncer une page noindex » — qui était enfreinte ici, et par ce
+  // fichier lui-même. Relevé par `scripts/seo/audit-indexability.mjs`.
+  //
+  // Les pages restent servies, liées depuis le pied de page, et crawlables :
+  // seule leur DÉCLARATION au sitemap disparaît.
 ];
 
 function xmlEscape(s: string) {
