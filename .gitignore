@@ -32,3 +32,6 @@ dist-ssr
 *.sw?
 .env
 .env.local
+
+# Chantiers en cours, hors du routage et hors du dépôt.
+.wip/
