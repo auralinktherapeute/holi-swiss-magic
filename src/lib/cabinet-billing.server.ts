@@ -190,7 +190,8 @@ export async function createDraftFromAppointment(
     .update({
       invoiced_at: new Date().toISOString(),
       invoice_id: inv.id,
-      ...(appt.status === "completed" ? {} : { status: "completed" }),
+      // Un rendez-vous encore à venir garde son statut « confirmé ».
+      ...(appt.status === "completed" || !apptPast ? {} : { status: "completed" }),
     })
     .eq("id", appt.id)
     .eq("therapist_id", therapistId);
