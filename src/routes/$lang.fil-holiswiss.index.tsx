@@ -4,17 +4,25 @@ import { ArrowRight, CalendarDays, Sparkles } from "lucide-react";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import {
+  FIL_CATEGORIES,
   FIL_COPY,
   asFilLang,
-  featuredFilPost,
   filCategoryLabel,
   formatFilDate,
-  publishedFilPosts,
-  usedFilCategories,
+  type FilPost,
 } from "@/data/fil-holiswiss";
+import { getFilPosts } from "@/lib/fil.functions";
 
 export const Route = createFileRoute("/$lang/fil-holiswiss/")({
   component: Page,
+  loader: async ({ params }) => {
+    try {
+      const res = await getFilPosts({ data: { lang: asFilLang(params.lang) } });
+      return { posts: (res?.posts ?? []) as FilPost[] };
+    } catch {
+      return { posts: [] as FilPost[] };
+    }
+  },
   head: ({ params }) => {
     const l = asFilLang(params.lang);
     const copy = FIL_COPY[l];
@@ -40,9 +48,18 @@ function Page() {
   const l = asFilLang(lang);
   const copy = FIL_COPY[l];
 
-  const posts = useMemo(() => publishedFilPosts(), []);
-  const categories = useMemo(() => usedFilCategories(), []);
-  const featured = useMemo(() => featuredFilPost(), []);
+  const { posts } = Route.useLoaderData();
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of posts) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
+    return FIL_CATEGORIES.filter((c) => counts.has(c.slug)).map((c) => ({
+      slug: c.slug,
+      count: counts.get(c.slug)!,
+    }));
+  }, [posts]);
+  // Le contenu mis en avant vient de la case « mis en avant » de l'admin ;
+  // à défaut, la publication la plus récente.
+  const featured = useMemo(() => posts.find((p) => p.featured) ?? posts[0] ?? null, [posts]);
   const [active, setActive] = useState<string | null>(null);
 
   const list = useMemo(

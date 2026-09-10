@@ -8,17 +8,16 @@ import {
   FIL_COPY,
   asFilLang,
   filCategoryLabel,
-  filPostBySlug,
   formatFilDate,
-  relatedFilPosts,
 } from "@/data/fil-holiswiss";
+import { getFilPost } from "@/lib/fil.functions";
 
 export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
   component: Page,
-  loader: ({ params }) => {
-    const post = filPostBySlug(params.slug);
-    if (!post) throw notFound();
-    return { post };
+  loader: async ({ params }) => {
+    const res = await getFilPost({ data: { slug: params.slug, lang: asFilLang(params.lang) } });
+    if (!res?.post) throw notFound();
+    return { post: res.post, related: res.related ?? [] };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -74,8 +73,7 @@ function Page() {
   const { lang } = useParams({ from: "/$lang/fil-holiswiss/$slug" });
   const l = asFilLang(lang);
   const copy = FIL_COPY[l];
-  const { post } = Route.useLoaderData();
-  const related = relatedFilPosts(post);
+  const { post, related } = Route.useLoaderData();
 
   return (
     <div className="min-h-screen bg-[#2d1248]">

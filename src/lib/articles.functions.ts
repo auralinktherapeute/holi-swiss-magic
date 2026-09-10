@@ -2,6 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
+import { FIL_CATEGORY_SLUGS } from "@/data/fil-holiswiss";
+
+// Les publications du « fil Holiswiss » vivent dans la même table que les
+// articles de blog ; elles sont exclues des listings blog pour éviter les
+// doublons entre les deux rubriques.
+const FIL_EXCLUDE = `category.is.null,category.not.in.(${FIL_CATEGORY_SLUGS.join(",")})`;
 
 type Lang = "fr" | "de" | "it" | "en";
 
@@ -61,6 +67,7 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
         .from("articles")
         .select(columns)
         .eq("status", "validated")
+        .or(FIL_EXCLUDE)
         .order("published_at", { ascending: false });
       if (data.lang) q = q.eq("lang", data.lang as "fr" | "de" | "it" | "en");
       if (data.limit) q = q.limit(data.limit);
@@ -137,8 +144,8 @@ export const getAllArticlesAdmin = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     // Use admin client to avoid RLS / has_role permission issues at runtime
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const COLUMNS_BASE = "id,slug,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,image_alt_text,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr";
-    const COLUMNS_FULL = "id,slug,slug_de,status,lang,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,image_alt_text,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr";
+    const COLUMNS_BASE = "id,slug,status,lang,is_featured,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,image_alt_text,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr";
+    const COLUMNS_FULL = "id,slug,slug_de,status,lang,is_featured,category,secondary_tags,published_at,created_at,updated_at,cover_image_url,image_alt_text,author_id,title_fr,title_de,title_it,title_en,excerpt_fr,body_fr,body_de,body_it,body_en,meta_title_fr,meta_description_fr";
     const enriched = await (supabaseAdmin as any)
       .from("articles")
       .select(COLUMNS_FULL)
@@ -177,7 +184,16 @@ const ArticleInputSchema = z.object({
   meta_title_fr: z.string().optional().default(""),
   meta_description_fr: z.string().optional().default(""),
   secondary_tags: z.array(z.string()).optional().default([]),
+  is_featured: z.boolean().optional().default(false),
 });
+
+/**
+ * Un seul contenu « mis en avant » à la fois pour le fil Holiswiss :
+ * marquer un article retire la mise en avant des autres.
+ */
+async function enforceSingleFeatured(admin: any, keepId: string) {
+  await admin.from("articles").update({ is_featured: false }).neq("id", keepId).eq("is_featured", true);
+}
 
 export const createArticle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -207,6 +223,7 @@ export const createArticle = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("Un article avec ce slug (ou ce slug allemand) existe déjà.");
       throw new Error("Impossible de créer l'article.");
     }
+    if (data.is_featured && article?.id) await enforceSingleFeatured(supabaseAdmin, article.id);
     return { article };
   });
 
@@ -235,6 +252,7 @@ export const updateArticle = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("Un article avec ce slug (ou ce slug allemand) existe déjà.");
       throw new Error("Impossible de mettre à jour l'article.");
     }
+    if (fields.is_featured) await enforceSingleFeatured(supabaseAdmin, id);
     return { ok: true };
   });
 

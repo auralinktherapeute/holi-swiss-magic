@@ -22,6 +22,7 @@ import { computeSeo, computeGeo, scoreColor } from "@/lib/article-scoring";
 import { cleanArticleAiMarks } from "@/lib/article-clean.functions";
 import { computeAiMarks } from "@/lib/ai-watermarks";
 import { hasSessionState, useSessionState } from "@/hooks/use-session-state";
+import { FIL_CATEGORIES } from "@/data/fil-holiswiss";
 import { groupedCategories } from "@/lib/article-categories";
 import { useAdminSectionRead } from "@/hooks/use-admin-section-read";
 
@@ -97,6 +98,7 @@ type ArticleRow = {
   excerpt_fr?: string | null; body_fr?: string | null;
   body_de?: string | null; body_it?: string | null; body_en?: string | null;
   meta_title_fr?: string | null; meta_description_fr?: string | null;
+  is_featured?: boolean | null;
 };
 
 type FormData = {
@@ -108,6 +110,7 @@ type FormData = {
   image_alt_text: string;
   lang: Lang; status: Status;
   meta_title_fr: string; meta_description_fr: string;
+  is_featured: boolean;
 };
 
 const EMPTY: FormData = {
@@ -117,6 +120,7 @@ const EMPTY: FormData = {
   slug: "", slug_de: "", cover_image_url: "", category: "", secondary_tags: [], lang: "fr", status: "draft",
   image_alt_text: "",
   meta_title_fr: "", meta_description_fr: "",
+  is_featured: false,
 };
 
 function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () => void; initial?: ArticleRow | null }) {
@@ -130,7 +134,7 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
   useEffect(() => {
     if (!open || hasSessionState(formKey)) return;
     setForm(initial
-      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", slug_de: initial.slug_de ?? "", cover_image_url: initial.cover_image_url ?? "", image_alt_text: initial.image_alt_text ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
+      ? { ...EMPTY, id: initial.id, slug: initial.slug ?? "", slug_de: initial.slug_de ?? "", cover_image_url: initial.cover_image_url ?? "", image_alt_text: initial.image_alt_text ?? "", category: initial.category ?? "", secondary_tags: initial.secondary_tags ?? [], lang: (initial.lang as Lang) ?? "fr", status: (initial.status as Status) ?? "draft", is_featured: initial.is_featured ?? false, title_fr: initial.title_fr ?? "", title_de: initial.title_de ?? "", title_it: initial.title_it ?? "", title_en: initial.title_en ?? "" }
       : EMPTY
     );
   }, [formKey, initial, open, setForm]);
@@ -299,6 +303,15 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
                       ))}
                     </div>
                   ))}
+                  {/* Rubrique éditoriale « Le fil Holiswiss » (page publique /fil-holiswiss) */}
+                  <div>
+                    <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Le fil Holiswiss
+                    </div>
+                    {FIL_CATEGORIES.map(c => (
+                      <SelectItem key={c.slug} value={c.slug}>{c.label.fr}</SelectItem>
+                    ))}
+                  </div>
                 </SelectContent>
               </Select>
             </div>
@@ -325,6 +338,24 @@ function ArticleDialog({ open, onClose, initial }: { open: boolean; onClose: () 
                   <SelectItem value="rejected">Rejeté</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="article-featured">Mise en avant</Label>
+              <label
+                htmlFor="article-featured"
+                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-background px-3 text-sm"
+              >
+                <input
+                  id="article-featured"
+                  type="checkbox"
+                  checked={form.is_featured}
+                  onChange={e => set("is_featured", e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span className="text-muted-foreground">
+                  Contenu mis en avant (Le fil Holiswiss)
+                </span>
+              </label>
             </div>
           </div>
 
