@@ -95,6 +95,7 @@ function useReveal<T extends HTMLElement>() {
 export function FeaturedTherapist() {
   const { lang } = useParams({ from: "/$lang/" });
   const { ref, shown } = useReveal<HTMLElement>();
+  const t = FEATURED_COPY[(lang as keyof typeof FEATURED_COPY)] ?? FEATURED_COPY.fr;
 
   const { data } = useQuery({
     queryKey: ["home-featured-therapist"],
@@ -173,7 +174,7 @@ export function FeaturedTherapist() {
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" aria-hidden="true" />
               </span>
               <span className="text-sm font-black uppercase tracking-[0.22em] text-amber-200 sm:text-base">
-                Thérapeute à la Une
+                {t.badge}
               </span>
               {/* Balayage lumineux diagonal */}
               <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
@@ -194,12 +195,12 @@ export function FeaturedTherapist() {
                 to="/$lang/therapeute/$slug"
                 params={{ lang, slug: th.slug }}
                 className="block overflow-hidden rounded-3xl border border-white/12 shadow-[0_18px_45px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]"
-                aria-label={`Voir le profil de ${fullName}`}
+                aria-label={t.viewProfile(fullName)}
               >
                 <div className="aspect-[4/5] w-full bg-gradient-to-br from-[#3d1a5c] to-[#1a1035]">
                   <TherapistAvatar
                     photoUrl={th.photo_url ?? undefined}
-                    alt={`Portrait de ${fullName}`}
+                    alt={t.portrait(fullName)}
                     fallback={initials || "?"}
                     fallbackClassName="flex h-full w-full items-center justify-center text-4xl font-bold text-[#b86ef9]"
                   />
@@ -221,7 +222,7 @@ export function FeaturedTherapist() {
                 )}
                 {th.verified && (
                   <span className="inline-flex items-center gap-1.5 text-[#7de3b8]">
-                    <BadgeCheck className="h-4 w-4" aria-hidden="true" /> Profil vérifié
+                    <BadgeCheck className="h-4 w-4" aria-hidden="true" /> {t.verified}
                   </span>
                 )}
               </div>
@@ -246,7 +247,7 @@ export function FeaturedTherapist() {
           {(data.articles.length > 0 || data.events.length > 0) && (
             <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
               {data.articles.length > 0 && (
-                <ul className="space-y-2" aria-label="Derniers articles">
+                <ul className="space-y-2" aria-label={t.articles}>
                   {data.articles.map((a) => (
                     <li key={a.id}>
                       <Link
@@ -262,7 +263,7 @@ export function FeaturedTherapist() {
                 </ul>
               )}
               {data.events.length > 0 && (
-                <ul className="space-y-2" aria-label="Événements à venir">
+                <ul className="space-y-2" aria-label={t.events}>
                   {data.events.map((e) => (
                     <li key={e.id}>
                       <Link
@@ -275,7 +276,7 @@ export function FeaturedTherapist() {
                           {e.title}
                           {e.event_date && (
                             <> — <span className="text-[#c0b0d8]">
-                              {new Date(e.event_date).toLocaleDateString("fr-CH", { day: "numeric", month: "long" })}
+                              {new Date(e.event_date).toLocaleDateString(t.locale, { day: "numeric", month: "long" })}
                             </span></>
                           )}
                         </span>
@@ -293,7 +294,7 @@ export function FeaturedTherapist() {
               params={{ lang, slug: th.slug }}
               className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#b86ef9] to-[#8b5cf6] px-7 text-sm font-semibold text-white shadow-[0_8px_30px_rgba(184,110,249,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_38px_rgba(184,110,249,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a5f9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0716] motion-reduce:transform-none"
             >
-              Découvrir le profil de {th.first_name}
+              {t.cta(th.first_name)}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
