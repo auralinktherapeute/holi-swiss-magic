@@ -251,5 +251,5 @@ export function asFilLang(lang: string | undefined): FilLang {
 
 export function formatFilDate(iso: string, lang: FilLang): string {
   const locale: Record<FilLang, string> = { fr: "fr-CH", de: "de-CH", it: "it-CH", en: "en-GB" };
-  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  return new Date(iso).toLocaleDateString(locale[lang], { day: "numeric", month: "long", year: "numeric" });
 }
