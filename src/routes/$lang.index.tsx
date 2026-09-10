@@ -8,6 +8,7 @@ import {
 import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { TherapistFinderBlocks } from "@/components/holiswiss/TherapistFinderBlocks";
+import { getDailySpecialtyChips } from "@/lib/specialties.functions";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
@@ -21,6 +22,9 @@ import { hreflangLinks, ogLocale } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
+  // Sélection du jour calculée côté serveur : le HTML servi aux crawlers
+  // contient déjà les pastilles, identiques pour tous pendant 24 h.
+  loader: () => getDailySpecialtyChips(),
   head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {

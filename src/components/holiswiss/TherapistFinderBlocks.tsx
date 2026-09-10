@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useLoaderData, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -122,6 +122,9 @@ export function TherapistFinderBlocks() {
 
   const specialties = (data?.specialties ?? []) as any[];
 
+  // Sélection du jour rendue côté serveur (stable 24 h, identique pour tous).
+  const daily = useLoaderData({ from: "/$lang/", structuralSharing: false as any }) as any;
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <h2 className="text-center text-2xl font-bold tracking-tight text-white">{c.heading}</h2>
@@ -133,6 +136,7 @@ export function TherapistFinderBlocks() {
           icon={HeartPulse}
           gradient="from-[#10b981] to-[#5cc8fa]"
           specialties={specialties}
+          daily={daily?.blocks?.["bien-etre"]}
           isLoading={isLoading}
           uiLang={uiLang}
           lang={lang}
@@ -144,6 +148,7 @@ export function TherapistFinderBlocks() {
           icon={Sparkles}
           gradient="from-[#7c3aed] to-[#b86ef9]"
           specialties={specialties}
+          daily={daily?.blocks?.["holistique"]}
           isLoading={isLoading}
           uiLang={uiLang}
           lang={lang}
@@ -154,7 +159,7 @@ export function TherapistFinderBlocks() {
 }
 
 function FinderBlock({
-  category, copy, text, icon: Icon, gradient, specialties, isLoading, uiLang, lang,
+  category, copy, text, icon: Icon, gradient, specialties, daily, isLoading, uiLang, lang,
 }: {
   category: "bien-etre" | "holistique";
   copy: Copy;
@@ -162,6 +167,7 @@ function FinderBlock({
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   gradient: string;
   specialties: any[];
+  daily?: { chips: any[]; total: number };
   isLoading: boolean;
   uiLang: string;
   lang: string;
@@ -184,8 +190,14 @@ function FinderBlock({
     );
   }, [specialties, category, q, uiLang]);
 
-  const visible = showAll || q.trim() ? items : items.slice(0, CHIP_LIMIT);
-  const hidden = items.length - visible.length;
+  // Par défaut : les pastilles du jour calculées côté serveur (nombre fixe,
+  // donc hauteur de bloc constante quel que soit le nombre de spécialités).
+  const searching = Boolean(q.trim());
+  const dailyChips = daily?.chips ?? [];
+  const dailyTotal = daily?.total ?? items.length;
+  const visible = searching || showAll ? items : dailyChips.length > 0 ? dailyChips : items.slice(0, CHIP_LIMIT);
+  const hidden = searching || showAll ? items.length - visible.length : Math.max(0, dailyTotal - visible.length);
+  const showing = searching || showAll || dailyChips.length > 0 ? visible : visible;
 
   return (
     <div className="flex flex-col rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[#3d1a5c] p-6">
@@ -224,17 +236,17 @@ function FinderBlock({
       </div>
 
       <div className="mt-5 min-h-[96px] flex-1">
-        {isLoading ? (
+        {isLoading && dailyChips.length === 0 ? (
           <div className="flex flex-wrap gap-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-8 w-24 animate-pulse rounded-full bg-white/5" />
             ))}
           </div>
-        ) : items.length === 0 ? (
+        ) : showing.length === 0 ? (
           <p className="py-6 text-sm text-white/60">{copy.none}</p>
         ) : (
           <ul className="flex flex-wrap gap-2">
-            {visible.map((s: any) => (
+            {showing.map((s: any) => (
               <li key={s.id}>
                 <Link
                   to="/$lang/therapeutes"
@@ -246,7 +258,7 @@ function FinderBlock({
                 </Link>
               </li>
             ))}
-            {!q.trim() && hidden > 0 && (
+            {!searching && hidden > 0 && (
               <li>
                 <button
                   type="button"

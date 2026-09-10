@@ -429,3 +429,71 @@ export const getCategoryPage = createServerFn({ method: "GET" })
 
     return { category: data.category, specialties: specs ?? [], therapists };
   });
+
+// ─── Pastilles du jour (page d'accueil) ───
+// Rotation déterministe, stable 24 h, calculée côté serveur pour que le HTML
+// servi aux crawlers contienne déjà la sélection du jour (pas de random client).
+
+/** Nombre fixe de pastilles par bloc — la hauteur des blocs ne bouge jamais. */
+export const DAILY_CHIP_COUNT = 10;
+
+function hashSeed(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** PRNG déterministe (mulberry32) : même seed ⇒ même tirage. */
+function rng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type DailyChips = {
+  day: string;
+  blocks: Record<string, { chips: any[]; total: number }>;
+};
+
+let dailyCache: DailyChips | null = null;
+
+export const getDailySpecialtyChips = createServerFn({ method: "GET" }).handler(async () => {
+  const day = new Date().toISOString().slice(0, 10);
+  if (dailyCache && dailyCache.day === day) return dailyCache;
+
+  const sb = serverClient();
+  const specs = await selectSpecialties(
+    (cols) => sb.from("specialties").select(cols).eq("is_active", true),
+    LIST_COLUMNS_BASE,
+    LIST_COLUMNS_FULL,
+  );
+  const { data: pivot } = await sb.from("therapist_specialties").select("specialty_id");
+  const withTherapists = new Set(
+    ((pivot ?? []) as Array<{ specialty_id: string }>).map((p) => p.specialty_id),
+  );
+
+  const blocks: DailyChips["blocks"] = {};
+  for (const category of ["bien-etre", "holistique"] as const) {
+    const pool = (specs as any[]).filter(
+      (s) => Array.isArray(s.categories) && s.categories.includes(category),
+    );
+    const random = rng(hashSeed(`${day}:${category}`));
+    // Poids : les spécialités ayant au moins un thérapeute actif passent devant,
+    // sans figer l'ordre — le tirage varie d'un jour à l'autre.
+    const scored = pool
+      .map((s) => ({ s, k: random() + (withTherapists.has(s.id) ? 1 : 0) }))
+      .sort((a, b) => b.k - a.k)
+      .map((x) => x.s);
+    blocks[category] = { chips: scored.slice(0, DAILY_CHIP_COUNT), total: pool.length };
+  }
+
+  dailyCache = { day, blocks };
+  return dailyCache;
+});
