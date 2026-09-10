@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
-import { SpecialtyBubbles } from "@/components/holiswiss/SpecialtyBubbles";
+import { TherapistFinderBlocks } from "@/components/holiswiss/TherapistFinderBlocks";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
@@ -73,12 +73,8 @@ function HomePage() {
       <NewTherapistsShowcase />
 
       {/* Specialty explorer — taxonomie familles / recherche libre */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold tracking-tight text-white">{t("home.specialties")}</h2>
-        <div className="mt-8">
-          <SpecialtyBubbles />
-        </div>
-      </section>
+      {/* Trouver un thérapeute : deux univers de recherche (bien-être / holistique) */}
+      <TherapistFinderBlocks />
 
       {/* How it works */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">

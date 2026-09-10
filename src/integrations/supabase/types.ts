@@ -3769,6 +3769,7 @@ export type Database = {
       specialties: {
         Row: {
           aliases: string[]
+          categories: string[]
           created_at: string
           description_de: string | null
           description_en: string | null
@@ -3791,6 +3792,7 @@ export type Database = {
         }
         Insert: {
           aliases?: string[]
+          categories?: string[]
           created_at?: string
           description_de?: string | null
           description_en?: string | null
@@ -3813,6 +3815,7 @@ export type Database = {
         }
         Update: {
           aliases?: string[]
+          categories?: string[]
           created_at?: string
           description_de?: string | null
           description_en?: string | null
