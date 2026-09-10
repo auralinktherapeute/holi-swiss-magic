@@ -178,13 +178,7 @@ export const getBrainState = createServerFn({ method: "GET" })
         1,
         8,
       ),
-      routes_admin_delegation_tsx: node(
-        delegationsOpen,
-        `${delegationsOpen.n} délégation(s) en cours`,
-        "/admin/delegation",
-        1,
-        3,
-      ),
+      // Page /admin/delegation supprimée : plus de nœud cliquable (lien mort).
       routes_admin_crm_tsx: node(
         crmLeadsNew,
         `${crmLeadsNew.n} lead(s) à traiter`,
