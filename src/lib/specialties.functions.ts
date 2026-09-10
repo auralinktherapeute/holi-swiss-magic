@@ -373,3 +373,59 @@ export const getSpecialtyCityPage = createServerFn({ method: "GET" })
     const therapists = ((near ?? []) as any[]).filter((t) => set.has(t.id));
     return { specialty, family, city, therapists };
   });
+// ─── Univers de recherche : bien-être / holistique ────────────────────────────
+//
+// La catégorie est portée par CHAQUE spécialité (`specialties.categories`), pas
+// par le thérapeute : un praticien qui pratique le massage bien-être ET le
+// magnétisme apparaît légitimement dans les deux univers, sans duplication de
+// fiche puisque la liste est dédupliquée par identifiant de thérapeute.
+export type FinderCategory = "bien-etre" | "holistique";
+
+export function asFinderCategory(value: string): FinderCategory {
+  return value === "holistique" ? "holistique" : "bien-etre";
+}
+
+export const getCategoryPage = createServerFn({ method: "GET" })
+  .inputValidator((data: { category: string }) => ({
+    category: asFinderCategory(String(data?.category ?? "")),
+  }))
+  .handler(async ({ data }) => {
+    const sb = serverClient();
+
+    const specs = await selectSpecialties(
+      (cols) =>
+        sb
+          .from("specialties")
+          .select(cols)
+          .eq("is_active", true)
+          .contains("categories", [data.category]),
+      LIST_COLUMNS_BASE,
+      LIST_COLUMNS_FULL,
+    );
+
+    const specIds = (specs ?? []).map((s: { id: string }) => s.id);
+    let therapists: any[] = [];
+    if (specIds.length > 0) {
+      const { data: pivot } = await sb
+        .from("therapist_specialties")
+        .select("therapist_id")
+        .in("specialty_id", specIds);
+      const ids = Array.from(
+        new Set(((pivot ?? []) as Array<{ therapist_id: string }>).map((p) => p.therapist_id)),
+      );
+      if (ids.length > 0) {
+        const { data: ts } = await sb
+          .from("therapists")
+          .select(
+            "id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties,languages",
+          )
+          .in("id", ids)
+          .eq("status", "active")
+          .order("verified", { ascending: false })
+          .limit(60);
+        therapists = ts ?? [];
+      }
+    }
+
+    return { category: data.category, specialties: specs ?? [], therapists };
+  });
