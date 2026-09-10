@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
-import { SpecialtyBubbles } from "@/components/holiswiss/SpecialtyBubbles";
+import { TherapistFinderBlocks } from "@/components/holiswiss/TherapistFinderBlocks";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
