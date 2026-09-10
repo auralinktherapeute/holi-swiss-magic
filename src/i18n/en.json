@@ -8,6 +8,7 @@
     "blog": "Blog",
     "events": "Events",
     "experts": "Expert voices",
+    "feed": "Holiswiss feed",
     "pricing": "Pricing",
     "login": "Log in",
     "signup": "Sign up",
@@ -565,7 +566,7 @@
     "therapist_plural": "therapists",
     "read_more": "Read more",
     "read_less": "Show less",
-    "faq_of_therapist": "\u00A0— FAQ by {{name}}",
+    "faq_of_therapist": " — FAQ by {{name}}",
     "gallery_title": "Photo gallery",
     "gallery_open": "Open image",
     "languages_title": "Languages spoken"
