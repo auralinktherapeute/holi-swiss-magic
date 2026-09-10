@@ -46,6 +46,8 @@ const STATIC_PATHS: {
 }[] = [
   { path: "", priority: "1.0", changefreq: "weekly", lastmodFrom: "all" },
   { path: "/therapeutes", priority: "0.9", changefreq: "daily", lastmodFrom: "therapists" },
+  { path: "/therapeutes/bien-etre", priority: "0.8", changefreq: "daily", lastmodFrom: "therapists" },
+  { path: "/therapeutes/holistique", priority: "0.8", changefreq: "daily", lastmodFrom: "therapists" },
   { path: "/blog", priority: "0.8", changefreq: "weekly", lastmodFrom: "articles" },
   { path: "/paroles", priority: "0.8", changefreq: "weekly", lastmodFrom: "paroles" },
   { path: "/evenements", priority: "0.8", changefreq: "daily", lastmodFrom: "events" },
