@@ -75,6 +75,8 @@ import { Route as LangContactIndexRouteImport } from './routes/$lang.contact.ind
 import { Route as LangEvenementsIndexRouteImport } from './routes/$lang.evenements.index'
 import { Route as LangEvenementsIdRouteImport } from './routes/$lang.evenements.$id'
 import { Route as LangFaqIndexRouteImport } from './routes/$lang.faq.index'
+import { Route as LangFilHoliswissIndexRouteImport } from './routes/$lang.fil-holiswiss.index'
+import { Route as LangFilHoliswissSlugRouteImport } from './routes/$lang.fil-holiswiss.$slug'
 import { Route as LangImpressumIndexRouteImport } from './routes/$lang.impressum.index'
 import { Route as LangInscriptionIndexRouteImport } from './routes/$lang.inscription.index'
 import { Route as LangLettreSlugRouteImport } from './routes/$lang.lettre.$slug'
@@ -443,6 +445,16 @@ const LangFaqIndexRoute = LangFaqIndexRouteImport.update({
   path: '/faq/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangFilHoliswissIndexRoute = LangFilHoliswissIndexRouteImport.update({
+  id: '/fil-holiswiss/',
+  path: '/fil-holiswiss/',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangFilHoliswissSlugRoute = LangFilHoliswissSlugRouteImport.update({
+  id: '/fil-holiswiss/$slug',
+  path: '/fil-holiswiss/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangImpressumIndexRoute = LangImpressumIndexRouteImport.update({
   id: '/impressum/',
   path: '/impressum/',
@@ -680,6 +692,7 @@ export interface FileRoutesByFullPath {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/fil-holiswiss/$slug': typeof LangFilHoliswissSlugRoute
   '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
@@ -698,6 +711,7 @@ export interface FileRoutesByFullPath {
   '/$lang/contact/': typeof LangContactIndexRoute
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
   '/$lang/faq/': typeof LangFaqIndexRoute
+  '/$lang/fil-holiswiss/': typeof LangFilHoliswissIndexRoute
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
@@ -777,6 +791,7 @@ export interface FileRoutesByTo {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/fil-holiswiss/$slug': typeof LangFilHoliswissSlugRoute
   '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
@@ -795,6 +810,7 @@ export interface FileRoutesByTo {
   '/$lang/contact': typeof LangContactIndexRoute
   '/$lang/evenements': typeof LangEvenementsIndexRoute
   '/$lang/faq': typeof LangFaqIndexRoute
+  '/$lang/fil-holiswiss': typeof LangFilHoliswissIndexRoute
   '/$lang/impressum': typeof LangImpressumIndexRoute
   '/$lang/inscription': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie': typeof LangMotDePasseOublieIndexRoute
@@ -878,6 +894,7 @@ export interface FileRoutesById {
   '/$lang/blog/$slug': typeof LangBlogSlugRoute
   '/$lang/blog/qu-est-ce-que-la-sophrologie': typeof LangBlogQuEstCeQueLaSophrologieRoute
   '/$lang/evenements/$id': typeof LangEvenementsIdRoute
+  '/$lang/fil-holiswiss/$slug': typeof LangFilHoliswissSlugRoute
   '/$lang/lettre/$slug': typeof LangLettreSlugRoute
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
@@ -896,6 +913,7 @@ export interface FileRoutesById {
   '/$lang/contact/': typeof LangContactIndexRoute
   '/$lang/evenements/': typeof LangEvenementsIndexRoute
   '/$lang/faq/': typeof LangFaqIndexRoute
+  '/$lang/fil-holiswiss/': typeof LangFilHoliswissIndexRoute
   '/$lang/impressum/': typeof LangImpressumIndexRoute
   '/$lang/inscription/': typeof LangInscriptionIndexRoute
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
@@ -980,6 +998,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/fil-holiswiss/$slug'
     | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/therapeute/$slug'
@@ -998,6 +1017,7 @@ export interface FileRouteTypes {
     | '/$lang/contact/'
     | '/$lang/evenements/'
     | '/$lang/faq/'
+    | '/$lang/fil-holiswiss/'
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
@@ -1077,6 +1097,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/fil-holiswiss/$slug'
     | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/therapeute/$slug'
@@ -1095,6 +1116,7 @@ export interface FileRouteTypes {
     | '/$lang/contact'
     | '/$lang/evenements'
     | '/$lang/faq'
+    | '/$lang/fil-holiswiss'
     | '/$lang/impressum'
     | '/$lang/inscription'
     | '/$lang/mot-de-passe-oublie'
@@ -1177,6 +1199,7 @@ export interface FileRouteTypes {
     | '/$lang/blog/$slug'
     | '/$lang/blog/qu-est-ce-que-la-sophrologie'
     | '/$lang/evenements/$id'
+    | '/$lang/fil-holiswiss/$slug'
     | '/$lang/lettre/$slug'
     | '/$lang/paroles/$slug'
     | '/$lang/therapeute/$slug'
@@ -1195,6 +1218,7 @@ export interface FileRouteTypes {
     | '/$lang/contact/'
     | '/$lang/evenements/'
     | '/$lang/faq/'
+    | '/$lang/fil-holiswiss/'
     | '/$lang/impressum/'
     | '/$lang/inscription/'
     | '/$lang/mot-de-passe-oublie/'
@@ -1712,6 +1736,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangFaqIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/fil-holiswiss/': {
+      id: '/$lang/fil-holiswiss/'
+      path: '/fil-holiswiss'
+      fullPath: '/$lang/fil-holiswiss/'
+      preLoaderRoute: typeof LangFilHoliswissIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/fil-holiswiss/$slug': {
+      id: '/$lang/fil-holiswiss/$slug'
+      path: '/fil-holiswiss/$slug'
+      fullPath: '/$lang/fil-holiswiss/$slug'
+      preLoaderRoute: typeof LangFilHoliswissSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/impressum/': {
       id: '/$lang/impressum/'
       path: '/impressum'
@@ -1944,6 +1982,7 @@ interface LangRouteChildren {
   LangBlogSlugRoute: typeof LangBlogSlugRoute
   LangBlogQuEstCeQueLaSophrologieRoute: typeof LangBlogQuEstCeQueLaSophrologieRoute
   LangEvenementsIdRoute: typeof LangEvenementsIdRoute
+  LangFilHoliswissSlugRoute: typeof LangFilHoliswissSlugRoute
   LangLettreSlugRoute: typeof LangLettreSlugRoute
   LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
@@ -1957,6 +1996,7 @@ interface LangRouteChildren {
   LangContactIndexRoute: typeof LangContactIndexRoute
   LangEvenementsIndexRoute: typeof LangEvenementsIndexRoute
   LangFaqIndexRoute: typeof LangFaqIndexRoute
+  LangFilHoliswissIndexRoute: typeof LangFilHoliswissIndexRoute
   LangImpressumIndexRoute: typeof LangImpressumIndexRoute
   LangInscriptionIndexRoute: typeof LangInscriptionIndexRoute
   LangMotDePasseOublieIndexRoute: typeof LangMotDePasseOublieIndexRoute
@@ -1978,6 +2018,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangBlogSlugRoute: LangBlogSlugRoute,
   LangBlogQuEstCeQueLaSophrologieRoute: LangBlogQuEstCeQueLaSophrologieRoute,
   LangEvenementsIdRoute: LangEvenementsIdRoute,
+  LangFilHoliswissSlugRoute: LangFilHoliswissSlugRoute,
   LangLettreSlugRoute: LangLettreSlugRoute,
   LangParolesSlugRoute: LangParolesSlugRoute,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
@@ -1991,6 +2032,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangContactIndexRoute: LangContactIndexRoute,
   LangEvenementsIndexRoute: LangEvenementsIndexRoute,
   LangFaqIndexRoute: LangFaqIndexRoute,
+  LangFilHoliswissIndexRoute: LangFilHoliswissIndexRoute,
   LangImpressumIndexRoute: LangImpressumIndexRoute,
   LangInscriptionIndexRoute: LangInscriptionIndexRoute,
   LangMotDePasseOublieIndexRoute: LangMotDePasseOublieIndexRoute,
