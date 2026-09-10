@@ -21,6 +21,50 @@ type Featured = {
 type ArticleRow = { id: string; slug: string; titre: string };
 type EventRow = { id: string; title: string; event_date: string | null };
 
+/** Libellés localisés de la section (fr par défaut). */
+const FEATURED_COPY = {
+  fr: {
+    badge: "Thérapeute à la Une",
+    verified: "Profil vérifié",
+    viewProfile: (n: string) => `Voir le profil de ${n}`,
+    portrait: (n: string) => `Portrait de ${n}`,
+    articles: "Derniers articles",
+    events: "Événements à venir",
+    cta: (n: string) => `Découvrir le profil de ${n}`,
+    locale: "fr-CH",
+  },
+  de: {
+    badge: "Therapeut im Fokus",
+    verified: "Verifiziertes Profil",
+    viewProfile: (n: string) => `Profil von ${n} ansehen`,
+    portrait: (n: string) => `Porträt von ${n}`,
+    articles: "Neueste Artikel",
+    events: "Kommende Veranstaltungen",
+    cta: (n: string) => `Profil von ${n} entdecken`,
+    locale: "de-CH",
+  },
+  it: {
+    badge: "Terapeuta in evidenza",
+    verified: "Profilo verificato",
+    viewProfile: (n: string) => `Vedi il profilo di ${n}`,
+    portrait: (n: string) => `Ritratto di ${n}`,
+    articles: "Ultimi articoli",
+    events: "Prossimi eventi",
+    cta: (n: string) => `Scopri il profilo di ${n}`,
+    locale: "it-CH",
+  },
+  en: {
+    badge: "Featured therapist",
+    verified: "Verified profile",
+    viewProfile: (n: string) => `View ${n}'s profile`,
+    portrait: (n: string) => `Portrait of ${n}`,
+    articles: "Latest articles",
+    events: "Upcoming events",
+    cta: (n: string) => `Discover ${n}'s profile`,
+    locale: "en-CH",
+  },
+} as const;
+
 function useReveal<T extends HTMLElement>() {
   const [node, setNode] = useState<T | null>(null);
   const [shown, setShown] = useState(false);
