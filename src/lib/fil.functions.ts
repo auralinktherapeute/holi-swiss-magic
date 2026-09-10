@@ -41,8 +41,6 @@ function toPost(row: Record<string, any>, lang: FilLang, withBody = false): FilP
   };
 }
 
-const inList = `(${FIL_CATEGORY_SLUGS.join(",")})`;
-
 export const getFilPosts = createServerFn({ method: "GET" })
   .inputValidator(z.object({ lang: z.string().optional() }))
   .handler(async ({ data }) => {
@@ -90,5 +88,3 @@ export const getFilPost = createServerFn({ method: "GET" })
     const rest = list.filter((p) => p.category !== post.category);
     return { post, related: [...same, ...rest].slice(0, 3) };
   });
-
-export { inList };
