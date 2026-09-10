@@ -29,6 +29,7 @@ function useNavLinks() {
     { to: "/$lang/blog", label: t("nav.blog") },
     { to: "/$lang/evenements", label: t("nav.events") },
     { to: "/$lang/paroles", label: t("nav.experts") },
+    { to: "/$lang/fil-holiswiss", label: t("nav.feed") },
     { to: "/$lang/tarifs", label: t("nav.pricing") },
   ] as const;
 }
