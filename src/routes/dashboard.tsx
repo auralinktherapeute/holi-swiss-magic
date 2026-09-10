@@ -63,7 +63,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardLayout() {
-  const { loading } = useAuth();
+  const { loading, session } = useAuth();
   const { i18n } = useTranslation();
   const ensureShell = useServerFn(ensureMyTherapistShell);
   const fetchState = useServerFn(getOnboardingState);
@@ -80,13 +80,15 @@ function DashboardLayout() {
   // inchangés : seule la condition d'affichage bouge.
   const showNewsletterFooter = pathname === "/dashboard" || pathname === "/dashboard/";
   useEffect(() => {
-    if (loading) return;
+    // Sans session active, l'appel serveur partirait sans jeton (401).
+    if (loading || !session) return;
     (ensureShell as any)().catch(() => {});
-  }, [loading, ensureShell]);
+  }, [loading, session, ensureShell]);
   const { data: onboarding } = useQuery({
     queryKey: ["onboarding-state"],
     queryFn: () => fetchState(),
-    enabled: !loading,
+    enabled: !loading && !!session,
+    retry: false,
     staleTime: 30_000,
   });
   useEffect(() => {
