@@ -71,8 +71,8 @@ async function selectSpecialties(
   return base.data ?? [];
 }
 
-const LIST_COLUMNS_BASE = "id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured";
-const LIST_COLUMNS_FULL = "id,slug,slug_de,slug_it,slug_en,name_fr,name_de,name_it,name_en,family_id,is_featured";
+const LIST_COLUMNS_BASE = "id,slug,name_fr,name_de,name_it,name_en,family_id,is_featured,categories";
+const LIST_COLUMNS_FULL = "id,slug,slug_de,slug_it,slug_en,name_fr,name_de,name_it,name_en,family_id,is_featured,categories";
 const SIBLING_COLUMNS_BASE = "id,slug,name_fr,name_de,name_it,name_en";
 const SIBLING_COLUMNS_FULL = "id,slug,slug_de,slug_it,slug_en,name_fr,name_de,name_it,name_en";
 const FAMILY_SPEC_COLUMNS_BASE =
