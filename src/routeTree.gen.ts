@@ -86,6 +86,8 @@ import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeutes.$slug'
+import { Route as LangTherapeutesBienEtreRouteImport } from './routes/$lang.therapeutes.bien-etre'
+import { Route as LangTherapeutesHolistiqueRouteImport } from './routes/$lang.therapeutes.holistique'
 import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newsletter.index'
 import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as AgendaTokenHoliswissDoticsRouteImport } from './routes/agenda.$token.holiswiss[.]ics'
@@ -498,6 +500,17 @@ const LangTherapeutesSlugRoute = LangTherapeutesSlugRouteImport.update({
   path: '/therapeutes/$slug',
   getParentRoute: () => LangRoute,
 } as any)
+const LangTherapeutesBienEtreRoute = LangTherapeutesBienEtreRouteImport.update({
+  id: '/therapeutes/bien-etre',
+  path: '/therapeutes/bien-etre',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangTherapeutesHolistiqueRoute =
+  LangTherapeutesHolistiqueRouteImport.update({
+    id: '/therapeutes/holistique',
+    path: '/therapeutes/holistique',
+    getParentRoute: () => LangRoute,
+  } as any)
 const AdminNewsletterIndexRoute = AdminNewsletterIndexRouteImport.update({
   id: '/newsletter/',
   path: '/newsletter/',
@@ -671,6 +684,8 @@ export interface FileRoutesByFullPath {
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/$lang/therapeutes/bien-etre': typeof LangTherapeutesBienEtreRoute
+  '/$lang/therapeutes/holistique': typeof LangTherapeutesHolistiqueRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/agenda/$token/holiswiss.ics': typeof AgendaTokenHoliswissDoticsRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -766,6 +781,8 @@ export interface FileRoutesByTo {
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/$lang/therapeutes/bien-etre': typeof LangTherapeutesBienEtreRoute
+  '/$lang/therapeutes/holistique': typeof LangTherapeutesHolistiqueRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/agenda/$token/holiswiss.ics': typeof AgendaTokenHoliswissDoticsRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -865,6 +882,8 @@ export interface FileRoutesById {
   '/$lang/paroles/$slug': typeof LangParolesSlugRoute
   '/$lang/therapeute/$slug': typeof LangTherapeuteSlugRoute
   '/$lang/therapeutes/$slug': typeof LangTherapeutesSlugRoute
+  '/$lang/therapeutes/bien-etre': typeof LangTherapeutesBienEtreRoute
+  '/$lang/therapeutes/holistique': typeof LangTherapeutesHolistiqueRoute
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/agenda/$token/holiswiss.ics': typeof AgendaTokenHoliswissDoticsRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
@@ -965,6 +984,8 @@ export interface FileRouteTypes {
     | '/$lang/paroles/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/$lang/therapeutes/bien-etre'
+    | '/$lang/therapeutes/holistique'
     | '/admin/newsletter/$id'
     | '/agenda/$token/holiswiss.ics'
     | '/api/public/admin-notify'
@@ -1060,6 +1081,8 @@ export interface FileRouteTypes {
     | '/$lang/paroles/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/$lang/therapeutes/bien-etre'
+    | '/$lang/therapeutes/holistique'
     | '/admin/newsletter/$id'
     | '/agenda/$token/holiswiss.ics'
     | '/api/public/admin-notify'
@@ -1158,6 +1181,8 @@ export interface FileRouteTypes {
     | '/$lang/paroles/$slug'
     | '/$lang/therapeute/$slug'
     | '/$lang/therapeutes/$slug'
+    | '/$lang/therapeutes/bien-etre'
+    | '/$lang/therapeutes/holistique'
     | '/admin/newsletter/$id'
     | '/agenda/$token/holiswiss.ics'
     | '/api/public/admin-notify'
@@ -1764,6 +1789,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangTherapeutesSlugRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/therapeutes/bien-etre': {
+      id: '/$lang/therapeutes/bien-etre'
+      path: '/therapeutes/bien-etre'
+      fullPath: '/$lang/therapeutes/bien-etre'
+      preLoaderRoute: typeof LangTherapeutesBienEtreRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/therapeutes/holistique': {
+      id: '/$lang/therapeutes/holistique'
+      path: '/therapeutes/holistique'
+      fullPath: '/$lang/therapeutes/holistique'
+      preLoaderRoute: typeof LangTherapeutesHolistiqueRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/admin/newsletter/': {
       id: '/admin/newsletter/'
       path: '/newsletter'
@@ -1909,6 +1948,8 @@ interface LangRouteChildren {
   LangParolesSlugRoute: typeof LangParolesSlugRoute
   LangTherapeuteSlugRoute: typeof LangTherapeuteSlugRoute
   LangTherapeutesSlugRoute: typeof LangTherapeutesSlugRoute
+  LangTherapeutesBienEtreRoute: typeof LangTherapeutesBienEtreRoute
+  LangTherapeutesHolistiqueRoute: typeof LangTherapeutesHolistiqueRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
   LangConditionsIndexRoute: typeof LangConditionsIndexRoute
   LangConfidentialiteIndexRoute: typeof LangConfidentialiteIndexRoute
@@ -1941,6 +1982,8 @@ const LangRouteChildren: LangRouteChildren = {
   LangParolesSlugRoute: LangParolesSlugRoute,
   LangTherapeuteSlugRoute: LangTherapeuteSlugRoute,
   LangTherapeutesSlugRoute: LangTherapeutesSlugRoute,
+  LangTherapeutesBienEtreRoute: LangTherapeutesBienEtreRoute,
+  LangTherapeutesHolistiqueRoute: LangTherapeutesHolistiqueRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
   LangConditionsIndexRoute: LangConditionsIndexRoute,
   LangConfidentialiteIndexRoute: LangConfidentialiteIndexRoute,
