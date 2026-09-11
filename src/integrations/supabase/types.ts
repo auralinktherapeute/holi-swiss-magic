@@ -663,6 +663,39 @@ export type Database = {
           },
         ]
       }
+      certification_organizations: {
+        Row: {
+          badge_color: string | null
+          code: string
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          badge_color?: string | null
+          code: string
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          badge_color?: string | null
+          code?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       charter_acceptances: {
         Row: {
           accepted_at: string
@@ -5386,6 +5419,61 @@ export type Database = {
           },
         ]
       }
+      therapist_org_certifications: {
+        Row: {
+          certified_since: string | null
+          created_at: string
+          external_reference: string | null
+          id: string
+          organization_id: string
+          status: Database["public"]["Enums"]["org_certification_status"]
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          certified_since?: string | null
+          created_at?: string
+          external_reference?: string | null
+          id?: string
+          organization_id: string
+          status?: Database["public"]["Enums"]["org_certification_status"]
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          certified_since?: string | null
+          created_at?: string
+          external_reference?: string | null
+          id?: string
+          organization_id?: string
+          status?: Database["public"]["Enums"]["org_certification_status"]
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_org_certifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "certification_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_org_certifications_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_org_certifications_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_payment_methods: {
         Row: {
           bank_name: string | null
@@ -6543,6 +6631,12 @@ export type Database = {
         | "autre"
       event_format: "in_person" | "online" | "hybrid"
       event_status: "draft" | "pending_review" | "published" | "rejected"
+      org_certification_status:
+        | "pending"
+        | "active"
+        | "suspended"
+        | "expired"
+        | "revoked"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6681,6 +6775,13 @@ export const Constants = {
       ],
       event_format: ["in_person", "online", "hybrid"],
       event_status: ["draft", "pending_review", "published", "rejected"],
+      org_certification_status: [
+        "pending",
+        "active",
+        "suspended",
+        "expired",
+        "revoked",
+      ],
     },
   },
 } as const
