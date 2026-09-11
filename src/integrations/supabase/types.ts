@@ -5419,6 +5419,47 @@ export type Database = {
           },
         ]
       }
+      therapist_org_certification_history: {
+        Row: {
+          certification_id: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_status: Database["public"]["Enums"]["org_certification_status"]
+          old_status:
+            | Database["public"]["Enums"]["org_certification_status"]
+            | null
+        }
+        Insert: {
+          certification_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_status: Database["public"]["Enums"]["org_certification_status"]
+          old_status?:
+            | Database["public"]["Enums"]["org_certification_status"]
+            | null
+        }
+        Update: {
+          certification_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["org_certification_status"]
+          old_status?:
+            | Database["public"]["Enums"]["org_certification_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_org_certification_history_certification_id_fkey"
+            columns: ["certification_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_org_certifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_org_certifications: {
         Row: {
           certified_since: string | null
