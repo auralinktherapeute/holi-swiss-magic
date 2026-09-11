@@ -48,7 +48,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist, reviews, certifications, articles, events } = await getTherapistBySlug({
+      const { therapist, reviews, certifications, articles, events, orgCertifications } = await getTherapistBySlug({
         data: { slug: params.slug },
       });
       // FAQ : lecture séparée et tolérante. La RLS filtre déjà sur l'activation
@@ -65,10 +65,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
         certifications: certifications ?? [],
         articles: articles ?? [],
         events: events ?? [],
+        orgCertifications: orgCertifications ?? [],
         faqs,
       };
     } catch {
-      return { therapist: null, reviews: [], certifications: [], articles: [], events: [], faqs: [] };
+      return { therapist: null, reviews: [], certifications: [], articles: [], events: [], orgCertifications: [], faqs: [] };
+
     }
   },
 
