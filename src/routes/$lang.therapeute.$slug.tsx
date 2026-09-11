@@ -740,6 +740,12 @@ function Page() {
                 )}
               </motion.div>
 
+              {/* Certifications par organisme (SVHH…) — masqué si aucune active */}
+              <div className="sm:hidden">
+                <OrgCertificationBadges items={orgCertifications} />
+              </div>
+
+
               {/* Infos */}
               <motion.div
                 variants={FADE_UP} initial="hidden" animate="show"
