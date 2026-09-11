@@ -267,12 +267,10 @@ function OrganizationsScreen() {
                 />
               </div>
               <div>
-                <Label htmlFor="org-logo">URL du logo (optionnel)</Label>
-                <Input
-                  id="org-logo"
+                <Label>Logo (optionnel)</Label>
+                <OrganizationLogoUploader
                   value={form.logo_url}
-                  onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-                  placeholder="https://…"
+                  onChange={(url) => setForm((f) => (f ? { ...f, logo_url: url } : f))}
                 />
               </div>
               <div>

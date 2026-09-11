@@ -52,7 +52,7 @@ export const upsertCertificationOrganization = createServerFn({ method: "POST" }
       id: z.string().uuid().optional().nullable(),
       code: z.string().trim().min(2).max(40).regex(/^[A-Za-z0-9_-]+$/, "Code alphanumérique uniquement."),
       display_name: z.string().trim().min(2).max(120),
-      logo_url: z.string().trim().url().max(500).optional().nullable().or(z.literal("")),
+      logo_url: z.string().trim().url().max(2000).optional().nullable().or(z.literal("")),
       badge_color: z
         .string()
         .trim()
