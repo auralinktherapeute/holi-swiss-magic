@@ -18,6 +18,8 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
 import { getPublicFaqs } from "@/lib/therapist-faq.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { OrgCertificationBadges, type OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
+
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
@@ -655,6 +657,8 @@ function Page() {
   const isPro = isProPlan(th.subscription_plan);
   const showGallery = isPro && gallery.length > 0;
   const certifications = ((loaderData as any)?.certifications ?? []) as any[];
+  const orgCertifications = ((loaderData as any)?.orgCertifications ?? []) as OrgCertificationBadge[];
+
   const therapistArticles = ((loaderData as any)?.articles ?? []) as Array<{
     id: string; slug: string; titre: string; extrait: string | null;
     image_couverture: string | null; date_publication: string | null;
