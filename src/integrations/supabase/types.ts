@@ -666,6 +666,7 @@ export type Database = {
       certification_organizations: {
         Row: {
           badge_color: string | null
+          certification_label: string | null
           code: string
           created_at: string
           display_name: string
@@ -673,9 +674,11 @@ export type Database = {
           is_active: boolean
           logo_url: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           badge_color?: string | null
+          certification_label?: string | null
           code: string
           created_at?: string
           display_name: string
@@ -683,9 +686,11 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           badge_color?: string | null
+          certification_label?: string | null
           code?: string
           created_at?: string
           display_name?: string
@@ -693,6 +698,7 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }

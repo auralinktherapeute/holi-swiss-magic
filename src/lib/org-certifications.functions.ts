@@ -23,7 +23,7 @@ export const listCertificationOrganizations = createServerFn({ method: "POST" })
 
     const { data, error } = await supabaseAdmin
       .from("certification_organizations")
-      .select("id,code,display_name,logo_url,badge_color,is_active,created_at")
+      .select("id,code,display_name,logo_url,badge_color,certification_label,website_url,is_active,created_at")
       .order("display_name");
     if (error) throw new Error(error.message);
 
@@ -60,6 +60,8 @@ export const upsertCertificationOrganization = createServerFn({ method: "POST" }
         .optional()
         .nullable()
         .or(z.literal("")),
+      certification_label: z.string().trim().max(160).optional().nullable(),
+      website_url: z.string().trim().url().max(500).optional().nullable().or(z.literal("")),
       is_active: z.boolean(),
     }),
   )
@@ -72,8 +74,11 @@ export const upsertCertificationOrganization = createServerFn({ method: "POST" }
       display_name: data.display_name,
       logo_url: data.logo_url ? data.logo_url : null,
       badge_color: data.badge_color ? data.badge_color : null,
+      certification_label: data.certification_label ? data.certification_label : null,
+      website_url: data.website_url ? data.website_url : null,
       is_active: data.is_active,
     };
+
 
     if (data.id) {
       const { error } = await supabaseAdmin.from("certification_organizations").update(payload).eq("id", data.id);

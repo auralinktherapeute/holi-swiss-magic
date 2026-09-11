@@ -18,6 +18,8 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
 import { getPublicFaqs } from "@/lib/therapist-faq.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { OrgCertificationBadges, type OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
+
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
 import { ItineraryButton } from "@/components/holiswiss/ItineraryButton";
@@ -46,7 +48,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
     try {
-      const { therapist, reviews, certifications, articles, events } = await getTherapistBySlug({
+      const { therapist, reviews, certifications, articles, events, orgCertifications } = await getTherapistBySlug({
         data: { slug: params.slug },
       });
       // FAQ : lecture séparée et tolérante. La RLS filtre déjà sur l'activation
@@ -63,10 +65,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
         certifications: certifications ?? [],
         articles: articles ?? [],
         events: events ?? [],
+        orgCertifications: orgCertifications ?? [],
         faqs,
       };
     } catch {
-      return { therapist: null, reviews: [], certifications: [], articles: [], events: [], faqs: [] };
+      return { therapist: null, reviews: [], certifications: [], articles: [], events: [], orgCertifications: [], faqs: [] };
+
     }
   },
 
@@ -655,6 +659,8 @@ function Page() {
   const isPro = isProPlan(th.subscription_plan);
   const showGallery = isPro && gallery.length > 0;
   const certifications = ((loaderData as any)?.certifications ?? []) as any[];
+  const orgCertifications = ((loaderData as any)?.orgCertifications ?? []) as OrgCertificationBadge[];
+
   const therapistArticles = ((loaderData as any)?.articles ?? []) as Array<{
     id: string; slug: string; titre: string; extrait: string | null;
     image_couverture: string | null; date_publication: string | null;
@@ -738,7 +744,16 @@ function Page() {
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
                 )}
+                {/* Desktop : sous la photo, format plus petit que celle-ci */}
+                <OrgCertificationBadges items={orgCertifications} className="mt-3 hidden max-w-32 sm:flex" />
               </motion.div>
+
+
+              {/* Certifications par organisme (SVHH…) — masqué si aucune active */}
+              <div className="sm:hidden">
+                <OrgCertificationBadges items={orgCertifications} />
+              </div>
+
 
               {/* Infos */}
               <motion.div
