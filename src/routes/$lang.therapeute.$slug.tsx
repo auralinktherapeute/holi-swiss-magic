@@ -738,7 +738,10 @@ function Page() {
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
                 )}
+                {/* Desktop : sous la photo, format plus petit que celle-ci */}
+                <OrgCertificationBadges items={orgCertifications} className="mt-3 hidden max-w-32 sm:flex" />
               </motion.div>
+
 
               {/* Certifications par organisme (SVHH…) — masqué si aucune active */}
               <div className="sm:hidden">
