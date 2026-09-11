@@ -109,9 +109,21 @@ type OrgForm = {
   display_name: string;
   logo_url: string;
   badge_color: string;
+  certification_label: string;
+  website_url: string;
   is_active: boolean;
 };
-const emptyOrg: OrgForm = { id: null, code: "", display_name: "", logo_url: "", badge_color: "#b86ef9", is_active: true };
+const emptyOrg: OrgForm = {
+  id: null,
+  code: "",
+  display_name: "",
+  logo_url: "",
+  badge_color: "#b86ef9",
+  certification_label: "",
+  website_url: "",
+  is_active: true,
+};
+
 
 function OrganizationsScreen() {
   const qc = useQueryClient();
@@ -134,9 +146,12 @@ function OrganizationsScreen() {
           display_name: f.display_name,
           logo_url: f.logo_url,
           badge_color: f.badge_color,
+          certification_label: f.certification_label,
+          website_url: f.website_url,
           is_active: f.is_active,
         },
       }),
+
     onSuccess: () => {
       toast.success("Organisme enregistré");
       setForm(null);
@@ -230,9 +245,12 @@ function OrganizationsScreen() {
                         display_name: o.display_name,
                         logo_url: o.logo_url ?? "",
                         badge_color: o.badge_color ?? "#b86ef9",
+                        certification_label: (o as any).certification_label ?? "",
+                        website_url: (o as any).website_url ?? "",
                         is_active: o.is_active,
                       })
                     }
+
                   >
                     Modifier
                   </Button>
@@ -274,6 +292,29 @@ function OrganizationsScreen() {
                   onChange={(url) => setForm((f) => (f ? { ...f, logo_url: url } : f))}
                 />
               </div>
+              <div>
+                <Label htmlFor="org-label">Texte du badge (fiche publique)</Label>
+                <Input
+                  id="org-label"
+                  value={form.certification_label}
+                  onChange={(e) => setForm({ ...form, certification_label: e.target.value })}
+                  placeholder="Certifié {organization}"
+                />
+                <p className="mt-1 text-xs text-white/50">
+                  {"{organization}"} est remplacé par le nom affiché de l&apos;organisme.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="org-site">Site de l&apos;organisme (optionnel)</Label>
+                <Input
+                  id="org-site"
+                  type="url"
+                  value={form.website_url}
+                  onChange={(e) => setForm({ ...form, website_url: e.target.value })}
+                  placeholder="https://…"
+                />
+              </div>
+
               <div>
                 <Label htmlFor="org-color">Couleur du badge</Label>
                 <div className="flex items-center gap-2">
