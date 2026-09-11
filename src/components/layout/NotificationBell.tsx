@@ -37,7 +37,7 @@ export function NotificationBell() {
       window.removeEventListener("focus", onFocus);
       offBus();
     };
-  }, [fetchCount]);
+  }, [fetchCount, loading, session]);
 
   return (
     <Link
