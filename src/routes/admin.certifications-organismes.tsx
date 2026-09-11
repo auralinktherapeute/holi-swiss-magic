@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import OrganizationLogoUploader from "@/components/admin/OrganizationLogoUploader";
 import {
   Dialog,
   DialogContent,
@@ -267,12 +268,10 @@ function OrganizationsScreen() {
                 />
               </div>
               <div>
-                <Label htmlFor="org-logo">URL du logo (optionnel)</Label>
-                <Input
-                  id="org-logo"
+                <Label>Logo (optionnel)</Label>
+                <OrganizationLogoUploader
                   value={form.logo_url}
-                  onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-                  placeholder="https://…"
+                  onChange={(url) => setForm((f) => (f ? { ...f, logo_url: url } : f))}
                 />
               </div>
               <div>
