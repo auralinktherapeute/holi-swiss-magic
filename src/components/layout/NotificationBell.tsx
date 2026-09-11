@@ -4,12 +4,19 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getUnreadNotificationCount } from "@/lib/notifications.functions";
 import { onNotificationsChanged } from "@/lib/notification-bus";
+import { useAuth } from "@/hooks/use-auth";
 
 export function NotificationBell() {
   const fetchCount = useServerFn(getUnreadNotificationCount);
+  const { session, loading } = useAuth();
   const [count, setCount] = useState(0);
 
   useEffect(() => {
+    // Sans session active, l'appel serveur partirait sans jeton (401).
+    if (loading || !session) {
+      setCount(0);
+      return;
+    }
     let alive = true;
     const load = async () => {
       try {
@@ -30,7 +37,7 @@ export function NotificationBell() {
       window.removeEventListener("focus", onFocus);
       offBus();
     };
-  }, [fetchCount]);
+  }, [fetchCount, loading, session]);
 
   return (
     <Link
