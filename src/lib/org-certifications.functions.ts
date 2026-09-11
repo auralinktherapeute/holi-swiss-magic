@@ -323,11 +323,18 @@ export const getOrgCertificationHistory = createServerFn({ method: "POST" })
       }
     }
 
-    return (rows ?? []).map((r: any) => ({
+    const history: Array<{
+      id: string;
+      oldStatus: OrgCertificationStatus | null;
+      newStatus: OrgCertificationStatus;
+      changedAt: string;
+      changedByLabel: string | null;
+    }> = (rows ?? []).map((r: any) => ({
       id: r.id as string,
       oldStatus: (r.old_status ?? null) as OrgCertificationStatus | null,
       newStatus: r.new_status as OrgCertificationStatus,
       changedAt: r.changed_at as string,
       changedByLabel: r.changed_by ? (labels.get(r.changed_by) ?? null) : null,
     }));
+    return history;
   });
