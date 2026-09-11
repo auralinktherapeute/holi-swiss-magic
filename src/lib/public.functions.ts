@@ -124,8 +124,51 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
         }),
       );
     }
-    return { therapist, reviews, certifications, articles, events };
+
+    // Certifications délivrées par des organismes externes (SVHH, SoulSense…).
+    // Uniquement les associations actives d'organismes actifs. Aucune donnée
+    // privée (external_reference) n'est renvoyée au public.
+    let orgCertifications: Array<{
+      id: string;
+      organization_id: string;
+      code: string;
+      display_name: string;
+      logo_url: string | null;
+      badge_color: string | null;
+      certification_label: string | null;
+      website_url: string | null;
+    }> = [];
+    if (therapist?.id) {
+      const { data: rows } = await supabase
+        .from("therapist_org_certifications")
+        .select(
+          "id,organization_id,certification_organizations!inner(id,code,display_name,logo_url,badge_color,certification_label,website_url,is_active)",
+        )
+        .eq("therapist_id", therapist.id)
+        .eq("status", "active");
+      orgCertifications = ((rows ?? []) as any[])
+        .map((r) => {
+          const o = Array.isArray(r.certification_organizations)
+            ? r.certification_organizations[0]
+            : r.certification_organizations;
+          if (!o || o.is_active === false) return null;
+          return {
+            id: r.id as string,
+            organization_id: r.organization_id as string,
+            code: o.code as string,
+            display_name: o.display_name as string,
+            logo_url: (o.logo_url ?? null) as string | null,
+            badge_color: (o.badge_color ?? null) as string | null,
+            certification_label: (o.certification_label ?? null) as string | null,
+            website_url: (o.website_url ?? null) as string | null,
+          };
+        })
+        .filter(Boolean) as typeof orgCertifications;
+    }
+
+    return { therapist, reviews, certifications, articles, events, orgCertifications };
   });
+
 
 
 export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
