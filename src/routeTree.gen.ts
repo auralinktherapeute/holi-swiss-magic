@@ -94,6 +94,7 @@ import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newslet
 import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as AgendaTokenHoliswissDoticsRouteImport } from './routes/agenda.$token.holiswiss[.]ics'
 import { Route as ApiPublicAdminNotifyRouteImport } from './routes/api/public/admin-notify'
+import { Route as ApiPublicCertifiedTherapistsRouteImport } from './routes/api/public/certified-therapists'
 import { Route as ApiPublicModerateMessageRouteImport } from './routes/api/public/moderate-message'
 import { Route as DashboardSalonsIndexRouteImport } from './routes/dashboard.salons.index'
 import { Route as DashboardSalonsSlugRouteImport } from './routes/dashboard.salons.$slug'
@@ -544,6 +545,12 @@ const ApiPublicAdminNotifyRoute = ApiPublicAdminNotifyRouteImport.update({
   path: '/api/public/admin-notify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCertifiedTherapistsRoute =
+  ApiPublicCertifiedTherapistsRouteImport.update({
+    id: '/api/public/certified-therapists',
+    path: '/api/public/certified-therapists',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicModerateMessageRoute =
   ApiPublicModerateMessageRouteImport.update({
     id: '/api/public/moderate-message',
@@ -702,6 +709,7 @@ export interface FileRoutesByFullPath {
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/agenda/$token/holiswiss.ics': typeof AgendaTokenHoliswissDoticsRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/certified-therapists': typeof ApiPublicCertifiedTherapistsRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
@@ -801,6 +809,7 @@ export interface FileRoutesByTo {
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/agenda/$token/holiswiss.ics': typeof AgendaTokenHoliswissDoticsRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/certified-therapists': typeof ApiPublicCertifiedTherapistsRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog': typeof LangBlogIndexRoute
@@ -904,6 +913,7 @@ export interface FileRoutesById {
   '/admin/newsletter/$id': typeof AdminNewsletterIdRoute
   '/agenda/$token/holiswiss.ics': typeof AgendaTokenHoliswissDoticsRoute
   '/api/public/admin-notify': typeof ApiPublicAdminNotifyRoute
+  '/api/public/certified-therapists': typeof ApiPublicCertifiedTherapistsRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
@@ -1008,6 +1018,7 @@ export interface FileRouteTypes {
     | '/admin/newsletter/$id'
     | '/agenda/$token/holiswiss.ics'
     | '/api/public/admin-notify'
+    | '/api/public/certified-therapists'
     | '/api/public/moderate-message'
     | '/dashboard/salons/$slug'
     | '/$lang/blog/'
@@ -1107,6 +1118,7 @@ export interface FileRouteTypes {
     | '/admin/newsletter/$id'
     | '/agenda/$token/holiswiss.ics'
     | '/api/public/admin-notify'
+    | '/api/public/certified-therapists'
     | '/api/public/moderate-message'
     | '/dashboard/salons/$slug'
     | '/$lang/blog'
@@ -1209,6 +1221,7 @@ export interface FileRouteTypes {
     | '/admin/newsletter/$id'
     | '/agenda/$token/holiswiss.ics'
     | '/api/public/admin-notify'
+    | '/api/public/certified-therapists'
     | '/api/public/moderate-message'
     | '/dashboard/salons/$slug'
     | '/$lang/blog/'
@@ -1264,6 +1277,7 @@ export interface RootRouteChildren {
   DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
   AgendaTokenHoliswissDoticsRoute: typeof AgendaTokenHoliswissDoticsRoute
   ApiPublicAdminNotifyRoute: typeof ApiPublicAdminNotifyRoute
+  ApiPublicCertifiedTherapistsRoute: typeof ApiPublicCertifiedTherapistsRoute
   ApiPublicModerateMessageRoute: typeof ApiPublicModerateMessageRoute
   ApiPublicAnalyticsEndSessionRoute: typeof ApiPublicAnalyticsEndSessionRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
@@ -1869,6 +1883,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdminNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/certified-therapists': {
+      id: '/api/public/certified-therapists'
+      path: '/api/public/certified-therapists'
+      fullPath: '/api/public/certified-therapists'
+      preLoaderRoute: typeof ApiPublicCertifiedTherapistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/moderate-message': {
       id: '/api/public/moderate-message'
       path: '/api/public/moderate-message'
@@ -2175,6 +2196,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesinscriptionIndexRoute: DesinscriptionIndexRoute,
   AgendaTokenHoliswissDoticsRoute: AgendaTokenHoliswissDoticsRoute,
   ApiPublicAdminNotifyRoute: ApiPublicAdminNotifyRoute,
+  ApiPublicCertifiedTherapistsRoute: ApiPublicCertifiedTherapistsRoute,
   ApiPublicModerateMessageRoute: ApiPublicModerateMessageRoute,
   ApiPublicAnalyticsEndSessionRoute: ApiPublicAnalyticsEndSessionRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
