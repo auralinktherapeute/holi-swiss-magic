@@ -1,6 +1,7 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
 import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
+import { CERTIFICATION_RESPONSIBILITY_NOTICE } from "@/lib/certification-labels";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
