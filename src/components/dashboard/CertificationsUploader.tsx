@@ -267,13 +267,25 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
                 <span className="flex flex-wrap items-center gap-2 pl-6 text-xs">
                   {r.status === "verified" && (
                     <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-300">
-                      Diplôme vérifié
+                      {certificationStateLabel(
+                        certificationTrustState({
+                          verification_status: r.status,
+                          registry_check_result: r.registryCheckResult ?? null,
+                          registry_checked_at: r.registryCheckedAt ?? null,
+                        }),
+                        { registryCheckedAt: r.registryCheckedAt ?? null, lang: "fr" },
+                      )}
                     </span>
                   )}
                   {(!r.status || r.status === "declared") && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">
-                      En attente de validation Holiswiss
-                    </span>
+                    <>
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">
+                        En attente de validation Holiswiss
+                      </span>
+                      <span className="rounded-full bg-white/5 px-2 py-0.5 text-white/50">
+                        {certificationStateLabel("declared", { lang: "fr" })}
+                      </span>
+                    </>
                   )}
                   {r.status === "needs_information" && (
                     <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-300">
