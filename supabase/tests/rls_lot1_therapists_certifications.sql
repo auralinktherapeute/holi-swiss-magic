@@ -164,7 +164,7 @@ BEGIN
   -- ---------- Admin ----------
   PERFORM pg_temp.act_as(v_uid_admin);
 
-  -- 9. L'admin conserve ses droits (statut fiche + vérification certif).
+  -- 12. L'admin conserve ses droits (statut fiche + vérification certif).
   WITH u AS (UPDATE public.therapists SET verified = true WHERE id = v_b RETURNING 1)
   SELECT count(*) INTO n FROM u;
   PERFORM pg_temp.check('admin update fiche B', 1, n);
