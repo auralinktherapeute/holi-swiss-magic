@@ -1,6 +1,7 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { LANGS } from "@/lib/constants";
+import { mapPillarPath } from "@/lib/pillar-slugs";
 import { useEffect, useRef, useState } from "react";
 import { Globe, ChevronDown } from "lucide-react";
 
