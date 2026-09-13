@@ -53,6 +53,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       registrationNumber?: string | null;
       holderName?: string | null;
       expiresAt?: string | null;
+      officialProfileUrl?: string | null;
+      registryCheckResult?: string | null;
+      registryCheckedAt?: string | null;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +68,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [holderName, setHolderName] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [officialUrl, setOfficialUrl] = useState("");
+  // Case JAMAIS précochée : la déclaration doit être un geste explicite.
+  const [declaration, setDeclaration] = useState(false);
   const [submitted, setSubmitted] = useState<AutoCheckResult | null>(null);
 
   // Masque la section tant que la table n'existe pas côté base.
