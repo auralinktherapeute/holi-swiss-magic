@@ -179,3 +179,55 @@ export const reviewCertification = createServerFn({ method: "POST" })
     }
     return { ok: true, status: target };
   });
+
+/**
+ * Enregistrement du contrôle de registre RÉELLEMENT effectué par un administrateur.
+ *
+ * Aucun appel réseau, aucune API de registre : l'administrateur ouvre lui-même
+ * la fiche officielle (ou l'annuaire de l'organisme), puis note ce qu'il a vu.
+ * La date et l'auteur du contrôle sont posés par la base — ils ne peuvent pas
+ * être envoyés par un navigateur. Un contrôle n'est possible que sur un
+ * justificatif déjà examiné (statut « verified »).
+ */
+export const recordRegistryCheck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      id: z.string().uuid(),
+      result: z.enum(["confirmed", "not_found", "inconclusive", "reset"]),
+      /** Source consultée (annuaire, fiche officielle…) — obligatoire pour une confirmation. */
+      source: z.string().trim().max(300).optional().nullable(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: current, error: readErr } = await context.supabase
+      .from("therapist_certifications")
+      .select("id,verification_status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+    if (!current) throw new Error("Diplôme introuvable.");
+
+    const reset = data.result === "reset";
+    if (!reset && (current as any).verification_status !== "verified") {
+      throw new Error("Examinez d'abord le justificatif : le contrôle de registre s'ajoute ensuite.");
+    }
+    if (data.result === "confirmed" && !(data.source ?? "").trim()) {
+      throw new Error("Indiquez la source consultée pour confirmer une inscription.");
+    }
+
+    const { error } = await context.supabase
+      .from("therapist_certifications")
+      .update({
+        registry_check_result: reset ? null : data.result,
+        registry_check_source: reset ? null : (data.source ?? "").trim() || null,
+      })
+      .eq("id", data.id);
+    if (error) {
+      console.error("[recordRegistryCheck] échec", { id: data.id, result: data.result, error: error.message });
+      throw new Error("Impossible d'enregistrer le contrôle. Veuillez réessayer.");
+    }
+    return { ok: true, result: reset ? null : data.result };
+  });
