@@ -110,10 +110,16 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
 
   const touched = !!(name || issuer || year || file || credentialType || registrationNumber || holderName || expiresAt);
 
+  // Validation locale du lien officiel : miroir exact du contrôle serveur.
+  const urlCheck = officialUrl.trim() ? validateRegistryUrl(officialUrl) : null;
+  const urlError = urlCheck && !urlCheck.ok ? urlCheck.error : null;
+
   const submit = async () => {
     if (!name.trim()) return toast.error("Indiquez l'intitulé du diplôme.");
     if (!credentialType) return toast.error("Sélectionnez le type / l'organisme.");
     if (!holderName.trim()) return toast.error("Indiquez le nom exact figurant sur le document.");
+    if (urlError) return toast.error(urlError);
+    if (!declaration) return toast.error("Cochez la déclaration d'exactitude pour soumettre votre dossier.");
     setBusy(true);
     try {
       let filePath: string | null = null;
