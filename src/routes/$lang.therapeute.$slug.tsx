@@ -1059,14 +1059,19 @@ function Page() {
                     expand: t("therapist_profile.certifications_expand", { defaultValue: "Voir tous les diplômes" }),
                     collapse: t("therapist_profile.certifications_collapse", { defaultValue: "Réduire" }),
                   }}
-                  notice={
+                  notice={[
                     trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified)
                       ? t("therapist_profile.declared_notice", {
                           defaultValue:
                             "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
                         })
-                      : null
-                  }
+                      : null,
+                    t("therapist_profile.certifications_disclaimer", {
+                      defaultValue: CERTIFICATION_RESPONSIBILITY_NOTICE.fr,
+                    }),
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 />
               </motion.div>
             )}
