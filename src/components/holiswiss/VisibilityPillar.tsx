@@ -82,7 +82,7 @@ export function VisibilityPillar({ lang }: { lang: PillarLang }) {
             <Button
               asChild
               size="lg"
-              className="min-h-[44px] gap-2 bg-[#b86ef9] text-white shadow-lg shadow-[#b86ef9]/40 hover:bg-[#a855f7]"
+              className="min-h-[44px] gap-2 bg-[#b86ef9] font-semibold text-[#1a0a2e] shadow-lg shadow-[#b86ef9]/40 hover:bg-[#a855f7] hover:text-[#1a0a2e]"
             >
               <Link to="/$lang/inscription" params={{ lang }}>
                 {c.cta.primary}
