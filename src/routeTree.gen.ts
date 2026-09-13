@@ -85,12 +85,15 @@ import { Route as LangMotDePasseOublieIndexRouteImport } from './routes/$lang.mo
 import { Route as LangParolesIndexRouteImport } from './routes/$lang.paroles.index'
 import { Route as LangParolesSlugRouteImport } from './routes/$lang.paroles.$slug'
 import { Route as LangReinitialiserMotDePasseIndexRouteImport } from './routes/$lang.reinitialiser-mot-de-passe.index'
+import { Route as LangSichtbarkeitTherapeutenSchweizIndexRouteImport } from './routes/$lang.sichtbarkeit-therapeuten-schweiz.index'
 import { Route as LangTarifsIndexRouteImport } from './routes/$lang.tarifs.index'
 import { Route as LangTherapeuteSlugRouteImport } from './routes/$lang.therapeute.$slug'
 import { Route as LangTherapeutesIndexRouteImport } from './routes/$lang.therapeutes.index'
 import { Route as LangTherapeutesSlugRouteImport } from './routes/$lang.therapeutes.$slug'
 import { Route as LangTherapeutesBienEtreRouteImport } from './routes/$lang.therapeutes.bien-etre'
 import { Route as LangTherapeutesHolistiqueRouteImport } from './routes/$lang.therapeutes.holistique'
+import { Route as LangVisibilitaTerapeutiSvizzeraIndexRouteImport } from './routes/$lang.visibilita-terapeuti-svizzera.index'
+import { Route as LangVisibiliteTherapeuteSuisseIndexRouteImport } from './routes/$lang.visibilite-therapeute-suisse.index'
 import { Route as AdminNewsletterIndexRouteImport } from './routes/admin.newsletter.index'
 import { Route as AdminNewsletterIdRouteImport } from './routes/admin.newsletter.$id'
 import { Route as AgendaTokenHoliswissDoticsRouteImport } from './routes/agenda.$token.holiswiss[.]ics'
@@ -500,6 +503,12 @@ const LangReinitialiserMotDePasseIndexRoute =
     path: '/reinitialiser-mot-de-passe/',
     getParentRoute: () => LangRoute,
   } as any)
+const LangSichtbarkeitTherapeutenSchweizIndexRoute =
+  LangSichtbarkeitTherapeutenSchweizIndexRouteImport.update({
+    id: '/sichtbarkeit-therapeuten-schweiz/',
+    path: '/sichtbarkeit-therapeuten-schweiz/',
+    getParentRoute: () => LangRoute,
+  } as any)
 const LangTarifsIndexRoute = LangTarifsIndexRouteImport.update({
   id: '/tarifs/',
   path: '/tarifs/',
@@ -529,6 +538,18 @@ const LangTherapeutesHolistiqueRoute =
   LangTherapeutesHolistiqueRouteImport.update({
     id: '/therapeutes/holistique',
     path: '/therapeutes/holistique',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangVisibilitaTerapeutiSvizzeraIndexRoute =
+  LangVisibilitaTerapeutiSvizzeraIndexRouteImport.update({
+    id: '/visibilita-terapeuti-svizzera/',
+    path: '/visibilita-terapeuti-svizzera/',
+    getParentRoute: () => LangRoute,
+  } as any)
+const LangVisibiliteTherapeuteSuisseIndexRoute =
+  LangVisibiliteTherapeuteSuisseIndexRouteImport.update({
+    id: '/visibilite-therapeute-suisse/',
+    path: '/visibilite-therapeute-suisse/',
     getParentRoute: () => LangRoute,
   } as any)
 const AdminNewsletterIndexRoute = AdminNewsletterIndexRouteImport.update({
@@ -733,8 +754,11 @@ export interface FileRoutesByFullPath {
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
   '/$lang/paroles/': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
+  '/$lang/sichtbarkeit-therapeuten-schweiz/': typeof LangSichtbarkeitTherapeutenSchweizIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/$lang/visibilita-terapeuti-svizzera/': typeof LangVisibilitaTerapeutiSvizzeraIndexRoute
+  '/$lang/visibilite-therapeute-suisse/': typeof LangVisibiliteTherapeuteSuisseIndexRoute
   '/admin/newsletter/': typeof AdminNewsletterIndexRoute
   '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
@@ -834,8 +858,11 @@ export interface FileRoutesByTo {
   '/$lang/mot-de-passe-oublie': typeof LangMotDePasseOublieIndexRoute
   '/$lang/paroles': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe': typeof LangReinitialiserMotDePasseIndexRoute
+  '/$lang/sichtbarkeit-therapeuten-schweiz': typeof LangSichtbarkeitTherapeutenSchweizIndexRoute
   '/$lang/tarifs': typeof LangTarifsIndexRoute
   '/$lang/therapeutes': typeof LangTherapeutesIndexRoute
+  '/$lang/visibilita-terapeuti-svizzera': typeof LangVisibilitaTerapeutiSvizzeraIndexRoute
+  '/$lang/visibilite-therapeute-suisse': typeof LangVisibiliteTherapeuteSuisseIndexRoute
   '/admin/newsletter': typeof AdminNewsletterIndexRoute
   '/dashboard/salons': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
@@ -939,8 +966,11 @@ export interface FileRoutesById {
   '/$lang/mot-de-passe-oublie/': typeof LangMotDePasseOublieIndexRoute
   '/$lang/paroles/': typeof LangParolesIndexRoute
   '/$lang/reinitialiser-mot-de-passe/': typeof LangReinitialiserMotDePasseIndexRoute
+  '/$lang/sichtbarkeit-therapeuten-schweiz/': typeof LangSichtbarkeitTherapeutenSchweizIndexRoute
   '/$lang/tarifs/': typeof LangTarifsIndexRoute
   '/$lang/therapeutes/': typeof LangTherapeutesIndexRoute
+  '/$lang/visibilita-terapeuti-svizzera/': typeof LangVisibilitaTerapeutiSvizzeraIndexRoute
+  '/$lang/visibilite-therapeute-suisse/': typeof LangVisibiliteTherapeuteSuisseIndexRoute
   '/admin/newsletter/': typeof AdminNewsletterIndexRoute
   '/dashboard/salons/': typeof DashboardSalonsIndexRoute
   '/$lang/blog/categorie/$slug': typeof LangBlogCategorieSlugRoute
@@ -1045,8 +1075,11 @@ export interface FileRouteTypes {
     | '/$lang/mot-de-passe-oublie/'
     | '/$lang/paroles/'
     | '/$lang/reinitialiser-mot-de-passe/'
+    | '/$lang/sichtbarkeit-therapeuten-schweiz/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/$lang/visibilita-terapeuti-svizzera/'
+    | '/$lang/visibilite-therapeute-suisse/'
     | '/admin/newsletter/'
     | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
@@ -1146,8 +1179,11 @@ export interface FileRouteTypes {
     | '/$lang/mot-de-passe-oublie'
     | '/$lang/paroles'
     | '/$lang/reinitialiser-mot-de-passe'
+    | '/$lang/sichtbarkeit-therapeuten-schweiz'
     | '/$lang/tarifs'
     | '/$lang/therapeutes'
+    | '/$lang/visibilita-terapeuti-svizzera'
+    | '/$lang/visibilite-therapeute-suisse'
     | '/admin/newsletter'
     | '/dashboard/salons'
     | '/$lang/blog/categorie/$slug'
@@ -1250,8 +1286,11 @@ export interface FileRouteTypes {
     | '/$lang/mot-de-passe-oublie/'
     | '/$lang/paroles/'
     | '/$lang/reinitialiser-mot-de-passe/'
+    | '/$lang/sichtbarkeit-therapeuten-schweiz/'
     | '/$lang/tarifs/'
     | '/$lang/therapeutes/'
+    | '/$lang/visibilita-terapeuti-svizzera/'
+    | '/$lang/visibilite-therapeute-suisse/'
     | '/admin/newsletter/'
     | '/dashboard/salons/'
     | '/$lang/blog/categorie/$slug'
@@ -1833,6 +1872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangReinitialiserMotDePasseIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/sichtbarkeit-therapeuten-schweiz/': {
+      id: '/$lang/sichtbarkeit-therapeuten-schweiz/'
+      path: '/sichtbarkeit-therapeuten-schweiz'
+      fullPath: '/$lang/sichtbarkeit-therapeuten-schweiz/'
+      preLoaderRoute: typeof LangSichtbarkeitTherapeutenSchweizIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/tarifs/': {
       id: '/$lang/tarifs/'
       path: '/tarifs'
@@ -1873,6 +1919,20 @@ declare module '@tanstack/react-router' {
       path: '/therapeutes/holistique'
       fullPath: '/$lang/therapeutes/holistique'
       preLoaderRoute: typeof LangTherapeutesHolistiqueRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/visibilita-terapeuti-svizzera/': {
+      id: '/$lang/visibilita-terapeuti-svizzera/'
+      path: '/visibilita-terapeuti-svizzera'
+      fullPath: '/$lang/visibilita-terapeuti-svizzera/'
+      preLoaderRoute: typeof LangVisibilitaTerapeutiSvizzeraIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/visibilite-therapeute-suisse/': {
+      id: '/$lang/visibilite-therapeute-suisse/'
+      path: '/visibilite-therapeute-suisse'
+      fullPath: '/$lang/visibilite-therapeute-suisse/'
+      preLoaderRoute: typeof LangVisibiliteTherapeuteSuisseIndexRouteImport
       parentRoute: typeof LangRoute
     }
     '/admin/newsletter/': {
@@ -2043,8 +2103,11 @@ interface LangRouteChildren {
   LangMotDePasseOublieIndexRoute: typeof LangMotDePasseOublieIndexRoute
   LangParolesIndexRoute: typeof LangParolesIndexRoute
   LangReinitialiserMotDePasseIndexRoute: typeof LangReinitialiserMotDePasseIndexRoute
+  LangSichtbarkeitTherapeutenSchweizIndexRoute: typeof LangSichtbarkeitTherapeutenSchweizIndexRoute
   LangTarifsIndexRoute: typeof LangTarifsIndexRoute
   LangTherapeutesIndexRoute: typeof LangTherapeutesIndexRoute
+  LangVisibilitaTerapeutiSvizzeraIndexRoute: typeof LangVisibilitaTerapeutiSvizzeraIndexRoute
+  LangVisibiliteTherapeuteSuisseIndexRoute: typeof LangVisibiliteTherapeuteSuisseIndexRoute
   LangBlogCategorieSlugRoute: typeof LangBlogCategorieSlugRoute
   LangSpecialitesSpecialtySlugCitySlugRoute: typeof LangSpecialitesSpecialtySlugCitySlugRoute
   LangTherapeutesCantonCantonRoute: typeof LangTherapeutesCantonCantonRoute
@@ -2079,8 +2142,14 @@ const LangRouteChildren: LangRouteChildren = {
   LangMotDePasseOublieIndexRoute: LangMotDePasseOublieIndexRoute,
   LangParolesIndexRoute: LangParolesIndexRoute,
   LangReinitialiserMotDePasseIndexRoute: LangReinitialiserMotDePasseIndexRoute,
+  LangSichtbarkeitTherapeutenSchweizIndexRoute:
+    LangSichtbarkeitTherapeutenSchweizIndexRoute,
   LangTarifsIndexRoute: LangTarifsIndexRoute,
   LangTherapeutesIndexRoute: LangTherapeutesIndexRoute,
+  LangVisibilitaTerapeutiSvizzeraIndexRoute:
+    LangVisibilitaTerapeutiSvizzeraIndexRoute,
+  LangVisibiliteTherapeuteSuisseIndexRoute:
+    LangVisibiliteTherapeuteSuisseIndexRoute,
   LangBlogCategorieSlugRoute: LangBlogCategorieSlugRoute,
   LangSpecialitesSpecialtySlugCitySlugRoute:
     LangSpecialitesSpecialtySlugCitySlugRoute,
