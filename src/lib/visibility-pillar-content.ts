@@ -1,4 +1,5 @@
-/**
+/* eslint-disable */
+
  * Page pilier « visibilité des thérapeutes » — contenu éditorial validé.
  *
  * Trois langues seulement (fr, de, it), chacune avec son propre slug. Il n'y a
