@@ -223,6 +223,11 @@ export const recordRegistryCheck = createServerFn({ method: "POST" })
       .update({
         registry_check_result: reset ? null : data.result,
         registry_check_source: reset ? null : (data.source ?? "").trim() || null,
+        // Contrôle explicite : la date est remise à NULL pour que la base pose
+        // un horodatage frais, même si le résultat est identique au précédent.
+        // Aucune date fournie par l'application n'est jamais conservée.
+        registry_checked_at: null,
+        registry_checked_by: null,
       })
       .eq("id", data.id);
     if (error) {
