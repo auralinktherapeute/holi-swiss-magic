@@ -107,7 +107,9 @@ export const listMyCertifications = createServerFn({ method: "GET" })
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
     const { data, error } = await sb
       .from("therapist_certifications")
-      .select("id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason")
+      .select(
+        "id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason,credential_type,registration_number,holder_name,expires_at",
+      )
       .eq("therapist_id", therapistId)
       .order("created_at", { ascending: false });
     if (error) {
@@ -135,6 +137,10 @@ export const listMyCertifications = createServerFn({ method: "GET" })
           verifiedAt: (ce.verified_at ?? null) as string | null,
           rejectedAt: (ce.rejected_at ?? null) as string | null,
           rejectionReason: (ce.rejection_reason ?? null) as string | null,
+          credentialType: (ce.credential_type ?? null) as string | null,
+          registrationNumber: (ce.registration_number ?? null) as string | null,
+          holderName: (ce.holder_name ?? null) as string | null,
+          expiresAt: (ce.expires_at ?? null) as string | null,
         };
       }),
     );
@@ -149,6 +155,14 @@ export const addCertification = createServerFn({ method: "POST" })
       issuer: z.string().max(200).optional().nullable(),
       year: z.number().int().min(1950).max(2100).optional().nullable(),
       file_path: z.string().max(400).optional().nullable(), // chemin dans le bucket therapist-docs
+      credential_type: z.enum(["asca", "rme", "federal", "other"]).optional().nullable(),
+      registration_number: z.string().max(120).optional().nullable(),
+      holder_name: z.string().max(200).optional().nullable(),
+      expires_at: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional()
+        .nullable(),
     }),
   )
   .handler(async ({ context, data }) => {
@@ -161,6 +175,14 @@ export const addCertification = createServerFn({ method: "POST" })
         issuer: data.issuer ?? null,
         year: data.year ?? null,
         file_url: data.file_path ?? null,
+        credential_type: data.credential_type ?? null,
+        registration_number: data.registration_number?.trim() || null,
+        holder_name: data.holder_name?.trim() || null,
+        expires_at: data.expires_at ?? null,
+        // Statut imposé côté serveur : jamais une valeur venue du client.
+        verification_status: "declared",
+        verified_at: null,
+        verified_by: null,
       })
       .select("id")
       .maybeSingle();
@@ -176,6 +198,10 @@ export const addCertification = createServerFn({ method: "POST" })
       issuer: data.issuer ?? null,
       year: data.year ?? null,
       hasFile: !!data.file_path,
+      credentialType: data.credential_type ?? null,
+      registrationNumber: data.registration_number ?? null,
+      holderName: data.holder_name ?? null,
+      expiresAt: data.expires_at ?? null,
     });
     try {
       const { data: ther } = await sb
@@ -207,7 +233,7 @@ export const addCertification = createServerFn({ method: "POST" })
       /* best-effort */
     }
 
-    return { ok: true, autoCheck: check };
+    return { ok: true, status: "declared" as const, autoCheck: check };
   });
 
 export const deleteCertification = createServerFn({ method: "POST" })

@@ -30,7 +30,7 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
     let query = supabaseAdmin
       .from("therapist_certifications")
       .select(
-        "id,name,issuer,year,file_url,created_at,updated_at,verification_status,verified_at,verified_by,rejected_at,rejected_by,rejection_reason,verification_note,therapist_id",
+        "id,name,issuer,year,file_url,created_at,updated_at,verification_status,verified_at,verified_by,rejected_at,rejected_by,rejection_reason,verification_note,therapist_id,credential_type,registration_number,holder_name,expires_at",
       )
       .order("created_at", { ascending: false })
       .limit(200);
@@ -93,6 +93,10 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
             rejectionReason: (r.rejection_reason ?? null) as string | null,
             verificationNote: (r.verification_note ?? null) as string | null,
             fileUrl,
+            credentialType: (r.credential_type ?? null) as string | null,
+            registrationNumber: (r.registration_number ?? null) as string | null,
+            holderName: (r.holder_name ?? null) as string | null,
+            expiresAt: (r.expires_at ?? null) as string | null,
             therapistName: `${t?.first_name ?? ""} ${t?.last_name ?? ""}`.trim() || "—",
             therapistSlug: (t?.slug ?? null) as string | null,
             autoCheck: autoCheckCertification({
@@ -100,6 +104,10 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
               issuer: r.issuer,
               year: r.year,
               hasFile: !!r.file_url,
+              credentialType: r.credential_type ?? null,
+              registrationNumber: r.registration_number ?? null,
+              holderName: r.holder_name ?? null,
+              expiresAt: r.expires_at ?? null,
             }),
           };
         }),

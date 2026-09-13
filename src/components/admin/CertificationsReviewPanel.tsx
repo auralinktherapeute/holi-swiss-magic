@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck, XCircle, FileText, AlertTriangle, HelpCircle, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { listCertificationsToReview, reviewCertification } from "@/lib/admin-certifications.functions";
+import { CREDENTIAL_TYPE_LABELS } from "@/lib/certification-autocheck";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -138,6 +139,38 @@ export default function CertificationsReviewPanel() {
                   {r.issuer ? ` · ${r.issuer}` : ""}
                   {r.year ? ` · ${r.year}` : ""}
                 </p>
+
+                {(r.credentialType || r.holderName || r.registrationNumber || r.expiresAt) && (
+                  <dl className="mt-2 grid gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
+                    {r.credentialType && (
+                      <div className="flex gap-1.5">
+                        <dt className="text-muted-foreground">Type déclaré :</dt>
+                        <dd className="font-medium text-foreground">
+                          {CREDENTIAL_TYPE_LABELS[r.credentialType as keyof typeof CREDENTIAL_TYPE_LABELS] ?? r.credentialType}
+                        </dd>
+                      </div>
+                    )}
+                    {r.holderName && (
+                      <div className="flex min-w-0 gap-1.5">
+                        <dt className="text-muted-foreground">Nom sur le document :</dt>
+                        <dd className="truncate font-medium text-foreground">{r.holderName}</dd>
+                      </div>
+                    )}
+                    {r.registrationNumber && (
+                      <div className="flex min-w-0 gap-1.5">
+                        <dt className="text-muted-foreground">N° d'enregistrement :</dt>
+                        <dd className="truncate font-medium text-foreground">{r.registrationNumber}</dd>
+                      </div>
+                    )}
+                    {r.expiresAt && (
+                      <div className="flex gap-1.5">
+                        <dt className="text-muted-foreground">Expire le :</dt>
+                        <dd className="font-medium text-foreground">{r.expiresAt}</dd>
+                      </div>
+                    )}
+                  </dl>
+                )}
+
 
                 {r.status === "verified" && (
                   <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-500">
