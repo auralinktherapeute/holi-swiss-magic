@@ -1,10 +1,33 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, XCircle, FileText, AlertTriangle, HelpCircle, RotateCcw, ShieldCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  XCircle,
+  FileText,
+  AlertTriangle,
+  HelpCircle,
+  RotateCcw,
+  ShieldCheck,
+  ExternalLink,
+  Landmark,
+} from "lucide-react";
 import { toast } from "sonner";
-import { listCertificationsToReview, reviewCertification } from "@/lib/admin-certifications.functions";
+import {
+  listCertificationsToReview,
+  reviewCertification,
+  recordRegistryCheck,
+} from "@/lib/admin-certifications.functions";
 import { CREDENTIAL_TYPE_LABELS } from "@/lib/certification-autocheck";
+import {
+  CERTIFICATION_RESPONSIBILITY_NOTICE,
+  REGISTRY_ABSENCE_CAVEAT,
+  REGISTRY_RESULT_LABELS,
+  certificationStateLabel,
+  certificationTrustState,
+  formatCertDate,
+  type RegistryCheckResult,
+} from "@/lib/certification-labels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -171,13 +194,54 @@ export default function CertificationsReviewPanel() {
                   </dl>
                 )}
 
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {r.declarationAcceptedAt ? (
+                    <>
+                      Déclaration d'exactitude acceptée le {fmt(r.declarationAcceptedAt)}
+                      {r.declarationVersion ? ` (version ${r.declarationVersion})` : ""}
+                    </>
+                  ) : (
+                    <>Aucune déclaration d'exactitude enregistrée (dossier antérieur à cette obligation).</>
+                  )}
+                </p>
+
+                {r.officialProfileUrl && (
+                  <a
+                    href={r.officialProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="mt-1 inline-flex min-h-[44px] items-center gap-1.5 text-xs font-medium text-primary underline underline-offset-2"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                    Ouvrir la fiche officielle indiquée par le thérapeute
+                  </a>
+                )}
 
                 {r.status === "verified" && (
                   <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-500">
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                    Vérifié le {fmt(r.verifiedAt)}
+                    {certificationStateLabel(
+                      certificationTrustState({
+                        verification_status: r.status,
+                        registry_check_result: r.registryCheckResult,
+                        registry_checked_at: r.registryCheckedAt,
+                      }),
+                      { registryCheckedAt: r.registryCheckedAt, lang: "fr" },
+                    )}
+                    {` · examiné le ${fmt(r.verifiedAt)}`}
                     {r.verifiedByLabel ? ` · ${r.verifiedByLabel}` : ""}
                   </p>
+                )}
+
+                {r.status === "verified" && (
+                  <RegistryCheckBlock
+                    id={r.id}
+                    name={r.name}
+                    result={r.registryCheckResult}
+                    source={r.registryCheckSource}
+                    checkedAt={r.registryCheckedAt}
+                    checkedByLabel={r.registryCheckedByLabel}
+                  />
                 )}
                 {r.status === "rejected" && (
                   <p className="mt-2 inline-flex items-start gap-1.5 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400">
