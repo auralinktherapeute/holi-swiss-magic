@@ -1,6 +1,7 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { LANGS } from "@/lib/constants";
+import { mapPillarPath } from "@/lib/pillar-slugs";
 import { useEffect, useRef, useState } from "react";
 import { Globe, ChevronDown } from "lucide-react";
 
@@ -23,6 +24,12 @@ function useChangeLang() {
   const change = async (code: string) => {
     await i18n.changeLanguage(code);
     try { localStorage.setItem("holiswiss-lang", code); } catch {}
+    // Pages piliers : le slug change avec la langue (et EN mène à l'accueil).
+    const mapped = mapPillarPath(pathname, code);
+    if (mapped) {
+      navigate({ to: mapped });
+      return;
+    }
     const segments = pathname.split("/").filter(Boolean);
     if (segments.length && LANGS.some((l) => l.code === segments[0])) {
       segments[0] = code;

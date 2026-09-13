@@ -17,6 +17,8 @@
  * - aucun chiffre, avis ou statistique inventé.
  */
 
+import { PILLAR_SLUGS } from "./pillar-slugs";
+
 export const PILLAR_LANGS = ["fr", "de", "it"] as const;
 export type PillarLang = (typeof PILLAR_LANGS)[number];
 
@@ -52,7 +54,7 @@ export const PILLAR_SOURCES: { label: string; href: string }[] = [
 
 export const PILLAR: Record<PillarLang, PillarContent> = {
   fr: {
-    slug: "visibilite-therapeute-suisse",
+    slug: PILLAR_SLUGS.fr,
     title: "Visibilité des thérapeutes en Suisse | Holiswiss",
     description:
       "Développez la visibilité de votre cabinet en Suisse sur Google, les moteurs IA et les recherches locales grâce à un profil Holiswiss complet.",
@@ -139,7 +141,7 @@ export const PILLAR: Record<PillarLang, PillarContent> = {
       },
       {
         q: "Que signifient les différents états d’une certification sur Holiswiss ?",
-        a: "Trois états sont possibles. « Déclaré par le thérapeute » signifie que l’information a été saisie par le praticien, sans intervention de Holiswiss. « Justificatif examiné par Holiswiss » signifie qu’un administrateur a regardé le document transmis. « Inscription confirmée auprès du registre le [date] » n’apparaît qu’après un contrôle manuel réellement effectué et documenté. Aucun état n’est attribué automatiquement, et un contrôle Holiswiss ne remplace pas une certification délivrée par l’organisme concerné.",
+        a: "Trois états sont possibles. « Déclaré par le thérapeute » signifie que l’information a été saisie par le praticien, sans intervention de Holiswiss. « Justificatif examiné par Holiswiss » signifie qu’un administrateur a regardé le document transmis. « Inscription confirmée auprès du registre le [date] » n’apparaît qu’après un contrôle manuel réellement effectué et documenté. Aucune validation n’est accordée automatiquement, et un contrôle Holiswiss ne remplace pas une certification délivrée par l’organisme concerné.",
       },
     ],
     sourcesTitle: "Sources utiles",
@@ -148,7 +150,7 @@ export const PILLAR: Record<PillarLang, PillarContent> = {
   },
 
   de: {
-    slug: "sichtbarkeit-therapeuten-schweiz",
+    slug: PILLAR_SLUGS.de,
     title: "Sichtbarkeit für Therapeuten in der Schweiz | Holiswiss",
     description:
       "Verbessern Sie die Sichtbarkeit Ihrer Praxis in der Schweiz bei Google, in KI-Suchsystemen und in der lokalen Suche mit Holiswiss.",
@@ -235,7 +237,7 @@ export const PILLAR: Record<PillarLang, PillarContent> = {
       },
       {
         q: "Was bedeuten die Zertifizierungs-Status auf Holiswiss?",
-        a: "Es gibt drei Zustände. « Von der Therapeutin/dem Therapeuten angegeben » bedeutet, dass die Angabe ohne Zutun von Holiswiss erfasst wurde. « Nachweis von Holiswiss geprüft » bedeutet, dass eine Administratorin oder ein Administrator das eingereichte Dokument angesehen hat. « Registereintrag bestätigt am [Datum] » erscheint nur nach einer tatsächlich durchgeführten und dokumentierten manuellen Kontrolle. Kein Status wird automatisch zugewiesen, und eine Kontrolle von Holiswiss ersetzt keine von der Organisation ausgestellte Zertifizierung.",
+        a: "Es gibt drei Zustände. « Von der Therapeutin/dem Therapeuten angegeben » bedeutet, dass die Angabe ohne Zutun von Holiswiss erfasst wurde. « Nachweis von Holiswiss geprüft » bedeutet, dass eine Administratorin oder ein Administrator das eingereichte Dokument angesehen hat. « Registereintrag bestätigt am [Datum] » erscheint nur nach einer tatsächlich durchgeführten und dokumentierten manuellen Kontrolle. Keine Validierung wird automatisch gewährt, und eine Kontrolle von Holiswiss ersetzt keine von der Organisation ausgestellte Zertifizierung.",
       },
     ],
     sourcesTitle: "Nützliche Quellen",
@@ -244,7 +246,7 @@ export const PILLAR: Record<PillarLang, PillarContent> = {
   },
 
   it: {
-    slug: "visibilita-terapeuti-svizzera",
+    slug: PILLAR_SLUGS.it,
     title: "Visibilità per terapeuti in Svizzera | Holiswiss",
     description:
       "Migliorate la visibilità del vostro studio in Svizzera su Google, nei motori di ricerca IA e nelle ricerche locali con Holiswiss.",
@@ -331,7 +333,7 @@ export const PILLAR: Record<PillarLang, PillarContent> = {
       },
       {
         q: "Che cosa significano gli stati di una certificazione su Holiswiss?",
-        a: "Esistono tre stati. « Dichiarato dal terapeuta » significa che l’informazione è stata inserita dal professionista, senza intervento di Holiswiss. « Documento esaminato da Holiswiss » significa che un amministratore ha esaminato il documento trasmesso. « Iscrizione confermata presso il registro il [data] » appare solo dopo un controllo manuale effettivamente svolto e documentato. Nessuno stato è attribuito automaticamente e un controllo di Holiswiss non sostituisce una certificazione rilasciata dall’ente interessato.",
+        a: "Esistono tre stati. « Dichiarato dal terapeuta » significa che l’informazione è stata inserita dal professionista, senza intervento di Holiswiss. « Documento esaminato da Holiswiss » significa che un amministratore ha esaminato il documento trasmesso. « Iscrizione confermata presso il registro il [data] » appare solo dopo un controllo manuale effettivamente svolto e documentato. Nessuna validazione è concessa automaticamente e un controllo di Holiswiss non sostituisce una certificazione rilasciata dall’ente interessato.",
       },
     ],
     sourcesTitle: "Fonti utili",
