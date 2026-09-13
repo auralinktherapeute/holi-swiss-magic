@@ -230,6 +230,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
         <p className="text-xs text-[#a89bc4]">
           Documents privés (PDF ou image), jamais publiés. {AUTOCHECK_DISCLAIMER}.
         </p>
+        <p className="mt-2 rounded-lg border border-white/10 bg-white/5 p-3 text-xs leading-relaxed text-white/70">
+          {CERTIFICATION_RESPONSIBILITY_NOTICE.fr}
+        </p>
       </div>
 
       {loading ? (
