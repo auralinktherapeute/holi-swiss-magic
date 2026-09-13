@@ -150,6 +150,8 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
           registration_number: registrationNumber.trim() || null,
           holder_name: holderName.trim() || null,
           expires_at: expiresAt || null,
+          official_profile_url: urlCheck?.ok ? urlCheck.url : null,
+          declaration_accepted: true,
         },
       });
       toast.success("Diplôme soumis — en attente de validation Holiswiss.");
@@ -157,6 +159,7 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       // Le formulaire n'est vidé qu'après un enregistrement réussi.
       setName(""); setIssuer(""); setYear(""); setFile(null);
       setCredentialType(""); setRegistrationNumber(""); setHolderName(""); setExpiresAt("");
+      setOfficialUrl(""); setDeclaration(false);
       if (inputRef.current) inputRef.current.value = "";
       await refresh();
     } catch (e: any) {
