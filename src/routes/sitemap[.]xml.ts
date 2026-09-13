@@ -8,9 +8,14 @@ import {
   isSpecialtyCityIndexable,
   isCategoryIndexable,
 } from "@/lib/seo-thresholds";
+import { PILLAR_LANGS, pillarUrl } from "@/lib/visibility-pillar-content";
 
 const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
+
+/** `lastmod` de la page pilier — contenu en dur, à bumper à la main. */
+const PILLAR_LASTMOD = "2026-09-13";
+
 
 /**
  * Plancher de vraisemblance — détecteur de fumée, pas seuil métier.
@@ -73,10 +78,18 @@ function xmlEscape(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function urlBlock(loc: string, lastmod?: string, changefreq?: string, priority?: string) {
+function urlBlock(
+  loc: string,
+  lastmod?: string,
+  changefreq?: string,
+  priority?: string,
+  /** Alternatives hreflang, déjà sérialisées en lignes `<xhtml:link …>`. */
+  alternates?: string[],
+) {
   return [
     "  <url>",
     `    <loc>${xmlEscape(loc)}</loc>`,
+    ...(alternates ?? []),
     lastmod ? `    <lastmod>${lastmod}</lastmod>` : null,
     changefreq ? `    <changefreq>${changefreq}</changefreq>` : null,
     priority ? `    <priority>${priority}</priority>` : null,
@@ -85,6 +98,18 @@ function urlBlock(loc: string, lastmod?: string, changefreq?: string, priority?:
     .filter(Boolean)
     .join("\n");
 }
+
+/** `<xhtml:link>` réciproques des trois variantes de la page pilier. */
+function pillarAlternates() {
+  return [
+    ...PILLAR_LANGS.map(
+      (l) =>
+        `    <xhtml:link rel="alternate" hreflang="${l}" href="${xmlEscape(pillarUrl(l))}" />`,
+    ),
+    `    <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(pillarUrl("fr"))}" />`,
+  ];
+}
+
 
 /** `YYYY-MM-DD` à partir d'un timestamp Supabase, ou `undefined`. */
 function day(ts: string | null | undefined): string | undefined {
@@ -435,6 +460,18 @@ async function buildSitemap(): Promise<string> {
     }
   }
 
+  // Page pilier « visibilité » — trois slugs distincts, une seule langue chacun.
+  // Contrairement aux pages statiques ci-dessus, il n'existe PAS de version
+  // anglaise : la boucle `LANGS` produirait ici une 4ᵉ URL en 404. Les
+  // `xhtml:link` déclarent les trois variantes réciproquement, exactement comme
+  // les hreflang de la page.
+  for (const lang of PILLAR_LANGS) {
+    urls.push(
+      urlBlock(pillarUrl(lang), PILLAR_LASTMOD, "monthly", "0.7", pillarAlternates()),
+    );
+  }
+
+
   // Familles.
   for (const f of families) {
     for (const lang of LANGS) {
@@ -620,7 +657,7 @@ async function buildSitemap(): Promise<string> {
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">`,
     ...urls,
     `</urlset>`,
   ].join("\n");

@@ -14,6 +14,8 @@ import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand"
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
 import { FeaturedTherapist } from "@/components/holiswiss/FeaturedTherapist";
 import { CantonDirectory } from "@/components/holiswiss/CantonDirectory";
+import { VisibilityPillarLink } from "@/components/holiswiss/VisibilityPillarLink";
+
 
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 
@@ -143,7 +145,12 @@ function HomePage() {
                 {t("pricing.beta_cta")}
               </Link>
             </Button>
+            {/* Maillage interne — page pilier visibilité (fr/de/it) */}
+            <div className="mt-5">
+              <VisibilityPillarLink lang={lang} />
+            </div>
           </div>
+
         </div>
       </section>
 

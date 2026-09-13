@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Check, Sparkles, Crown, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hreflangLinks } from "@/lib/seo";
+import { VisibilityPillarLink } from "@/components/holiswiss/VisibilityPillarLink";
+
 
 // FAQ tarifs — réponses directes et citables (SEO/GEO), rendues côté serveur
 const PRICING_FAQ: Record<string, { q: string; a: string }[]> = {
@@ -260,6 +262,11 @@ function PricingPage() {
           </div>
         </div>
 
+        {/* Maillage interne — page pilier visibilité (fr/de/it) */}
+        <div className="mt-8 text-center">
+          <VisibilityPillarLink lang={lang} />
+        </div>
+
         {/* FAQ teaser */}
         <div className="mt-8 text-center text-xs text-[#d4c4e0]">
           {t("pricing.faq_question")}{" "}
@@ -267,6 +274,7 @@ function PricingPage() {
             {t("pricing.faq_link")}
           </Link>
         </div>
+
       </div>
     </div>
   );
