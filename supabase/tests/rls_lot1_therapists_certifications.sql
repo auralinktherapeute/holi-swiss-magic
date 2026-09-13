@@ -35,15 +35,15 @@ SELECT
   (SELECT id FROM public.therapists WHERE slug = 'rls-test-a') AS t_a,
   (SELECT id FROM public.therapists WHERE slug = 'rls-test-b') AS t_b;
 
-INSERT INTO public.therapist_certifications (therapist_id, title, verification_status)
-SELECT t_a, 'Certif A', 'pending' FROM ids
+INSERT INTO public.therapist_certifications (therapist_id, name, verification_status)
+SELECT t_a, 'Certif A', 'declared' FROM ids
 UNION ALL
-SELECT t_b, 'Certif B', 'pending' FROM ids;
+SELECT t_b, 'Certif B', 'declared' FROM ids;
 
 CREATE TEMP TABLE cids AS
 SELECT
-  (SELECT id FROM public.therapist_certifications WHERE title = 'Certif A') AS c_a,
-  (SELECT id FROM public.therapist_certifications WHERE title = 'Certif B') AS c_b;
+  (SELECT id FROM public.therapist_certifications WHERE name = 'Certif A') AS c_a,
+  (SELECT id FROM public.therapist_certifications WHERE name = 'Certif B') AS c_b;
 
 -- Helper : se faire passer pour un utilisateur authentifié.
 CREATE OR REPLACE FUNCTION pg_temp.act_as(p_uid uuid) RETURNS void
@@ -100,7 +100,7 @@ BEGIN
   END;
 
   -- 5. A ne peut PAS modifier la certification de B.
-  WITH u AS (UPDATE public.therapist_certifications SET title = 'Pirate' WHERE id = v_cb RETURNING 1)
+  WITH u AS (UPDATE public.therapist_certifications SET name = 'Pirate' WHERE id = v_cb RETURNING 1)
   SELECT count(*) INTO n FROM u;
   PERFORM pg_temp.check('A update certif de B (refus attendu)', 0, n);
 
@@ -110,7 +110,7 @@ BEGIN
   PERFORM pg_temp.check('A delete certif de B (refus attendu)', 0, n);
 
   -- 7. A peut modifier sa propre certification (hors champs de vérification).
-  WITH u AS (UPDATE public.therapist_certifications SET title = 'Certif A v2' WHERE id = v_ca RETURNING 1)
+  WITH u AS (UPDATE public.therapist_certifications SET name = 'Certif A v2' WHERE id = v_ca RETURNING 1)
   SELECT count(*) INTO n FROM u;
   PERFORM pg_temp.check('A update sa certif', 1, n);
 
