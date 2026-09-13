@@ -1,4 +1,4 @@
-/* eslint-disable */
+/**
 
  * Page pilier « visibilité des thérapeutes » — contenu éditorial validé.
  *
