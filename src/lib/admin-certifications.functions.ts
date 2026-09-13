@@ -30,7 +30,7 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
     let query = supabaseAdmin
       .from("therapist_certifications")
       .select(
-        "id,name,issuer,year,file_url,created_at,updated_at,verification_status,verified_at,verified_by,rejected_at,rejected_by,rejection_reason,verification_note,therapist_id,credential_type,registration_number,holder_name,expires_at",
+        "id,name,issuer,year,file_url,created_at,updated_at,verification_status,verified_at,verified_by,rejected_at,rejected_by,rejection_reason,verification_note,therapist_id,credential_type,registration_number,holder_name,expires_at,official_profile_url,registry_check_result,registry_check_source,registry_checked_at,registry_checked_by,declaration_accepted_at,declaration_version",
       )
       .order("created_at", { ascending: false })
       .limit(200);
