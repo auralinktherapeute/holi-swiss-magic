@@ -14,7 +14,7 @@ const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
 
 /** `lastmod` de la page pilier — contenu en dur, à bumper à la main. */
-const PILLAR_LASTMOD = "2026-09-14";
+const PILLAR_LASTMOD = "2026-09-13";
 
 
 /**
