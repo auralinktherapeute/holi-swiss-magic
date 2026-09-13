@@ -123,7 +123,43 @@ BEGIN
     RAISE NOTICE 'OK  [A self-verify certif bloqué] %', SQLERRM;
   END;
 
+  -- 9. A NE PEUT PAS créer une certification déjà 'verified'.
+  --    Deux issues acceptables : refus RLS, ou statut ramené à 'declared'
+  --    par le trigger therapist_certifications_lock_verification.
+  --    Une ligne 'verified' créée par A serait un ÉCHEC.
+  BEGIN
+    INSERT INTO public.therapist_certifications
+      (therapist_id, name, verification_status, verified_at, verified_by)
+    VALUES (v_a, 'Certif A frauduleuse', 'verified', now(), v_uid_a);
+    SELECT count(*) INTO n FROM public.therapist_certifications
+      WHERE name = 'Certif A frauduleuse' AND verification_status = 'verified';
+    PERFORM pg_temp.check('A insert certif verified (aucune ligne verified attendue)', 0, n);
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'OK  [A insert certif verified refusé par la RLS] %', SQLERRM;
+  END;
+
+  -- 10. A PEUT créer une certification 'declared'.
+  WITH i AS (
+    INSERT INTO public.therapist_certifications (therapist_id, name, verification_status)
+    VALUES (v_a, 'Certif A declaree', 'declared') RETURNING 1
+  )
+  SELECT count(*) INTO n FROM i;
+  PERFORM pg_temp.check('A insert certif declared', 1, n);
+
   RESET ROLE;
+
+  -- ---------- Visiteur anonyme ----------
+  PERFORM set_config('request.jwt.claims', NULL, true);
+  SET LOCAL ROLE anon;
+
+  -- 11. Le public ne voit QUE les certifications validées d'un thérapeute actif.
+  SELECT count(*) INTO n FROM public.therapist_certifications
+    WHERE therapist_id IN (v_a, v_b) AND verification_status <> 'verified';
+  PERFORM pg_temp.check('anon voit des certifs non verified (0 attendu)', 0, n);
+
+  RESET ROLE;
+
+
 
   -- ---------- Admin ----------
   PERFORM pg_temp.act_as(v_uid_admin);
