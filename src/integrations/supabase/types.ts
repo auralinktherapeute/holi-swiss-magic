@@ -4395,11 +4395,14 @@ export type Database = {
       therapist_certifications: {
         Row: {
           created_at: string
+          credential_type: string | null
           expires_at: string | null
           file_url: string | null
+          holder_name: string | null
           id: string
           issuer: string | null
           name: string
+          registration_number: string | null
           rejected_at: string | null
           rejected_by: string | null
           rejection_reason: string | null
@@ -4414,11 +4417,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credential_type?: string | null
           expires_at?: string | null
           file_url?: string | null
+          holder_name?: string | null
           id?: string
           issuer?: string | null
           name: string
+          registration_number?: string | null
           rejected_at?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
@@ -4433,11 +4439,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credential_type?: string | null
           expires_at?: string | null
           file_url?: string | null
+          holder_name?: string | null
           id?: string
           issuer?: string | null
           name?: string
+          registration_number?: string | null
           rejected_at?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
