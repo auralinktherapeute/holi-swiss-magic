@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
+import { isSafeRegistryUrl } from "@/lib/certification-registry-url";
+import { certificationTrustState, type RegistryCheckResult } from "@/lib/certification-labels";
 
 /**
  * Validation administrateur des diplômes déclarés par les thérapeutes.
@@ -57,7 +59,7 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
 
     // Nom/e-mail des administrateurs décisionnaires (visible entre admins).
     const adminIds = Array.from(
-      new Set(rows.flatMap((r: any) => [r.verified_by, r.rejected_by]).filter(Boolean)),
+      new Set(rows.flatMap((r: any) => [r.verified_by, r.rejected_by, r.registry_checked_by]).filter(Boolean)),
     ) as string[];
     const adminLabels = new Map<string, string>();
     for (const uid of adminIds) {
@@ -97,6 +99,15 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
             registrationNumber: (r.registration_number ?? null) as string | null,
             holderName: (r.holder_name ?? null) as string | null,
             expiresAt: (r.expires_at ?? null) as string | null,
+            // Lien fourni par le thérapeute : revalidé avant d'être rendu cliquable.
+            officialProfileUrl: isSafeRegistryUrl(r.official_profile_url) ? (r.official_profile_url as string) : null,
+            registryCheckResult: (r.registry_check_result ?? null) as RegistryCheckResult | null,
+            registryCheckSource: (r.registry_check_source ?? null) as string | null,
+            registryCheckedAt: (r.registry_checked_at ?? null) as string | null,
+            registryCheckedByLabel: r.registry_checked_by ? (adminLabels.get(r.registry_checked_by) ?? null) : null,
+            declarationAcceptedAt: (r.declaration_accepted_at ?? null) as string | null,
+            declarationVersion: (r.declaration_version ?? null) as string | null,
+            trustState: certificationTrustState(r),
             therapistName: `${t?.first_name ?? ""} ${t?.last_name ?? ""}`.trim() || "—",
             therapistSlug: (t?.slug ?? null) as string | null,
             autoCheck: autoCheckCertification({
