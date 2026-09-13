@@ -108,7 +108,7 @@ export const listMyCertifications = createServerFn({ method: "GET" })
     const { data, error } = await sb
       .from("therapist_certifications")
       .select(
-        "id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason,credential_type,registration_number,holder_name,expires_at",
+        "id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason,credential_type,registration_number,holder_name,expires_at,official_profile_url,registry_check_result,registry_check_source,registry_checked_at,declaration_accepted_at,declaration_version",
       )
       .eq("therapist_id", therapistId)
       .order("created_at", { ascending: false });
@@ -141,6 +141,12 @@ export const listMyCertifications = createServerFn({ method: "GET" })
           registrationNumber: (ce.registration_number ?? null) as string | null,
           holderName: (ce.holder_name ?? null) as string | null,
           expiresAt: (ce.expires_at ?? null) as string | null,
+          officialProfileUrl: (ce.official_profile_url ?? null) as string | null,
+          registryCheckResult: (ce.registry_check_result ?? null) as string | null,
+          registryCheckSource: (ce.registry_check_source ?? null) as string | null,
+          registryCheckedAt: (ce.registry_checked_at ?? null) as string | null,
+          declarationAcceptedAt: (ce.declaration_accepted_at ?? null) as string | null,
+          declarationVersion: (ce.declaration_version ?? null) as string | null,
         };
       }),
     );
