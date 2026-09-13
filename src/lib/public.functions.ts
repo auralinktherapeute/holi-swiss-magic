@@ -55,11 +55,19 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
       verified_at: string | null;
       expires_at: string | null;
       source_label: string | null;
+      registry_check_result: string | null;
+      registry_checked_at: string | null;
     }> = [];
     if (therapist?.id) {
       const { data: certs } = await supabase
         .from("therapist_certifications")
-        .select("id,name,issuer,year,verification_status,verified_at,expires_at,source_label")
+        // Projection publique minimale : jamais la source consultée, l'identité
+        // de l'administrateur, la déclaration sur l'honneur ni le document.
+        // `registry_check_result` / `registry_checked_at` servent uniquement à
+        // afficher « Inscription confirmée auprès du registre le [date] ».
+        .select(
+          "id,name,issuer,year,verification_status,verified_at,expires_at,source_label,registry_check_result,registry_checked_at",
+        )
         .eq("therapist_id", therapist.id)
         // Visibilité publique : uniquement les diplômes validés par un administrateur.
         .eq("verification_status", "verified")
