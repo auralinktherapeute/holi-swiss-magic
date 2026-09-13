@@ -7,6 +7,8 @@
  * `subscription_plan`.
  */
 
+import { certificationStateLabel, certificationTrustState } from "./certification-labels";
+
 export type CertificationStatus = "declared" | "verified" | "rejected" | "expired";
 
 export interface CertificationRow {
@@ -18,6 +20,9 @@ export interface CertificationRow {
   verified_at?: string | null;
   expires_at?: string | null;
   source_label?: string | null;
+  /** Contrôle de registre réellement effectué par un administrateur (jamais automatique). */
+  registry_check_result?: string | null;
+  registry_checked_at?: string | null;
 }
 
 export interface AccreditationEntry {
