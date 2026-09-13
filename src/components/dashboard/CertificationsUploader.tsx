@@ -423,19 +423,69 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
           />
         </div>
 
+        {/* Référence facultative vers la fiche officielle de l'organisme */}
+        <div className="sm:col-span-2">
+          <label htmlFor="cert-official-url" className={labelClass}>
+            Lien vers votre fiche officielle (facultatif)
+          </label>
+          <input
+            id="cert-official-url"
+            type="url"
+            inputMode="url"
+            value={officialUrl}
+            onChange={(e) => setOfficialUrl(e.target.value)}
+            placeholder="https://www.asca.ch/..."
+            aria-invalid={urlError ? true : undefined}
+            aria-describedby="cert-official-url-help"
+            className={inputClass}
+          />
+          <p id="cert-official-url-help" className="mt-1 text-xs text-white/50">
+            Adresses acceptées : {OFFICIAL_REGISTRY_DOMAINS_LABEL} (https uniquement). Ce lien aide l'équipe Holiswiss à
+            effectuer son contrôle ; il n'est jamais consulté automatiquement.
+          </p>
+          <p className="mt-1 text-xs text-amber-300" role="alert">
+            {urlError}
+          </p>
+        </div>
+
         {/* Pré-vérification en temps réel */}
         <div className="sm:col-span-2" aria-live="polite">
           {touched && renderCheck(check, "Pré-vérification")}
         </div>
 
+        {/* Déclaration sur l'honneur — jamais précochée */}
+        <div className="sm:col-span-2">
+          <label
+            htmlFor="cert-declaration"
+            className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-lg border border-white/15 bg-white/5 p-3 text-xs leading-relaxed text-white/80"
+          >
+            <input
+              id="cert-declaration"
+              type="checkbox"
+              checked={declaration}
+              onChange={(e) => setDeclaration(e.target.checked)}
+              required
+              className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/30 bg-transparent accent-[#b86ef9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5cc8fa]"
+            />
+            <span>
+              {CERTIFICATION_DECLARATION_TEXT.fr} <span aria-hidden>*</span>
+            </span>
+          </label>
+        </div>
+
         <div className="sm:col-span-2">
           <button
-            type="button" onClick={submit} disabled={busy}
+            type="button" onClick={submit} disabled={busy || !declaration || !!urlError}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Upload className="h-4 w-4" aria-hidden />}
             Soumettre à la validation Holiswiss
           </button>
+          {!declaration && (
+            <p className="mt-2 text-xs text-white/60" role="status">
+              Cochez la déclaration ci-dessus pour activer la soumission.
+            </p>
+          )}
         </div>
 
         {/* Résultat renvoyé par le serveur après soumission */}
