@@ -15,6 +15,13 @@ import {
   type AutoCheckResult,
   type CredentialType,
 } from "@/lib/certification-autocheck";
+import {
+  CERTIFICATION_DECLARATION_TEXT,
+  CERTIFICATION_RESPONSIBILITY_NOTICE,
+  certificationStateLabel,
+  certificationTrustState,
+} from "@/lib/certification-labels";
+import { OFFICIAL_REGISTRY_DOMAINS_LABEL, validateRegistryUrl } from "@/lib/certification-registry-url";
 
 const ACCEPTED = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 const BUCKET = "therapist-docs";
