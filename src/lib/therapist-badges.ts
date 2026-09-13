@@ -145,10 +145,22 @@ export function buildTrustBadges(input: {
     const name = (c.name ?? "").trim();
     if (!name) continue;
     const expired = c.expires_at ? Date.parse(c.expires_at) < now : false;
-    const isVerified = c.verification_status === "verified" && !expired;
+    // Un diplôme expiré retombe au rang de simple déclaration : ni examen ni
+    // confirmation de registre ne restent affichés.
+    const state = expired ? ("declared" as const) : certificationTrustState(c);
+    const isVerified = state !== "declared";
     const parts = [d.certOf(name)];
     if (c.issuer) parts.push(c.issuer + (c.year ? ` (${c.year})` : ""));
-    parts.push(isVerified ? `${d.verifiedSuffix}${c.source_label ? ` — ${c.source_label}` : ""}.` : d.declaredSuffix);
+    // Libellés exacts et non promotionnels : « Déclaré par le thérapeute »,
+    // « Justificatif examiné par Holiswiss », « Inscription confirmée auprès
+    // du registre le [date] ». Jamais de promotion automatique.
+    const stateLabel = certificationStateLabel(state, {
+      registryCheckedAt: c.registry_checked_at ?? null,
+      lang: input.lang,
+    });
+    parts.push(
+      state === "document_reviewed" && c.source_label ? `${stateLabel} — ${c.source_label}.` : `${stateLabel}.`,
+    );
     badges.push({
       key: `cert-${c.id ?? name}`,
       kind: "certification",
