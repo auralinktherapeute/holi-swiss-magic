@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Trash2, FileText, Upload, ExternalLink } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Trash2, FileText, Upload, ExternalLink, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,9 +8,22 @@ import {
   addCertification,
   deleteCertification,
 } from "@/lib/therapist-profile-extra.functions";
+import {
+  autoCheckCertification,
+  AUTOCHECK_DISCLAIMER,
+  CREDENTIAL_TYPE_LABELS,
+  type AutoCheckResult,
+  type CredentialType,
+} from "@/lib/certification-autocheck";
 
 const ACCEPTED = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 const BUCKET = "therapist-docs";
+
+const TYPES: CredentialType[] = ["asca", "rme", "federal", "other"];
+
+const inputClass =
+  "min-h-[44px] w-full rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-base text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#5cc8fa]";
+const labelClass = "mb-1 block text-xs font-medium text-white/80";
 
 /** Certifications / diplômes (PDF ou image, privés). userId = auth.users.id */
 export default function CertificationsUploader({ userId }: { userId: string }) {
@@ -29,6 +42,10 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       status?: "declared" | "verified" | "rejected" | "needs_information";
       verifiedAt?: string | null;
       rejectionReason?: string | null;
+      credentialType?: string | null;
+      registrationNumber?: string | null;
+      holderName?: string | null;
+      expiresAt?: string | null;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +54,11 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
   const [issuer, setIssuer] = useState("");
   const [year, setYear] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [credentialType, setCredentialType] = useState<CredentialType | "">("");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [holderName, setHolderName] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [submitted, setSubmitted] = useState<AutoCheckResult | null>(null);
 
   // Masque la section tant que la table n'existe pas côté base.
   const [supported, setSupported] = useState(true);
@@ -57,8 +79,28 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
     refresh();
   }, [refresh]);
 
+  // Pré-vérification en temps réel, purement locale (aucun appel réseau).
+  const check = useMemo(
+    () =>
+      autoCheckCertification({
+        name,
+        issuer,
+        year: year ? Number(year) : null,
+        hasFile: !!file,
+        credentialType: credentialType || null,
+        registrationNumber,
+        holderName,
+        expiresAt: expiresAt || null,
+      }),
+    [name, issuer, year, file, credentialType, registrationNumber, holderName, expiresAt],
+  );
+
+  const touched = !!(name || issuer || year || file || credentialType || registrationNumber || holderName || expiresAt);
+
   const submit = async () => {
-    if (!name.trim()) return toast.error("Indiquez le nom du document.");
+    if (!name.trim()) return toast.error("Indiquez l'intitulé du diplôme.");
+    if (!credentialType) return toast.error("Sélectionnez le type / l'organisme.");
+    if (!holderName.trim()) return toast.error("Indiquez le nom exact figurant sur le document.");
     setBusy(true);
     try {
       let filePath: string | null = null;
@@ -79,16 +121,23 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
           return toast.error(`Upload refusé : ${upErr.message}`);
         }
       }
-      await add({
+      const res = await add({
         data: {
           name: name.trim(),
           issuer: issuer.trim() || null,
           year: year ? Number(year) : null,
           file_path: filePath,
+          credential_type: credentialType,
+          registration_number: registrationNumber.trim() || null,
+          holder_name: holderName.trim() || null,
+          expires_at: expiresAt || null,
         },
       });
-      toast.success("Certification ajoutée.");
+      toast.success("Diplôme soumis — en attente de validation Holiswiss.");
+      setSubmitted((res as any)?.autoCheck ?? null);
+      // Le formulaire n'est vidé qu'après un enregistrement réussi.
       setName(""); setIssuer(""); setYear(""); setFile(null);
+      setCredentialType(""); setRegistrationNumber(""); setHolderName(""); setExpiresAt("");
       if (inputRef.current) inputRef.current.value = "";
       await refresh();
     } catch (e: any) {
@@ -109,11 +158,56 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
 
   if (!supported) return null;
 
+  const verdictStyles: Record<AutoCheckResult["verdict"], string> = {
+    recognized: "border-emerald-400/40 bg-emerald-500/10 text-emerald-200",
+    plausible: "border-sky-400/40 bg-sky-500/10 text-sky-200",
+    incomplete: "border-amber-400/40 bg-amber-500/10 text-amber-200",
+  };
+
+  const VerdictIcon = ({ verdict }: { verdict: AutoCheckResult["verdict"] }) =>
+    verdict === "incomplete" ? (
+      <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+    ) : (
+      <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+    );
+
+  const renderCheck = (r: AutoCheckResult, title: string) => (
+    <div className={`rounded-xl border p-3 text-sm ${verdictStyles[r.verdict]}`}>
+      <p className="flex items-center gap-2 font-semibold">
+        <VerdictIcon verdict={r.verdict} />
+        {title} : {r.label}
+      </p>
+      <ul className="mt-2 space-y-1 text-xs">
+        {r.passed.map((p) => (
+          <li key={p} className="flex items-start gap-1.5">
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>{p}</span>
+          </li>
+        ))}
+        {r.missing.map((m) => (
+          <li key={m} className="flex items-start gap-1.5">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>À compléter : {m}</span>
+          </li>
+        ))}
+        {r.notes.map((n) => (
+          <li key={n} className="flex items-start gap-1.5 text-white/70">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>{n}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-white/70">{AUTOCHECK_DISCLAIMER}</p>
+    </div>
+  );
+
   return (
     <div>
       <div className="mb-3">
-        <h3 className="text-base font-semibold text-white">Certifications & diplômes</h3>
-        <p className="text-xs text-[#a89bc4]">Documents privés (PDF ou image). Le nom renforce la confiance des patients.</p>
+        <h3 className="text-base font-semibold text-white">Certifications &amp; diplômes</h3>
+        <p className="text-xs text-[#a89bc4]">
+          Documents privés (PDF ou image), jamais publiés. {AUTOCHECK_DISCLAIMER}.
+        </p>
       </div>
 
       {loading ? (
@@ -131,6 +225,20 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
                     {r.year ? <span className="text-white/45"> · {r.year}</span> : null}
                   </span>
                 </span>
+                {(r.credentialType || r.registrationNumber || r.holderName || r.expiresAt) && (
+                  <span className="pl-6 text-xs text-white/45">
+                    {[
+                      r.credentialType
+                        ? (CREDENTIAL_TYPE_LABELS[r.credentialType as CredentialType] ?? r.credentialType)
+                        : null,
+                      r.holderName,
+                      r.registrationNumber ? `N° ${r.registrationNumber}` : null,
+                      r.expiresAt ? `expire le ${r.expiresAt}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                )}
                 <span className="flex flex-wrap items-center gap-2 pl-6 text-xs">
                   {r.status === "verified" && (
                     <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-300">
@@ -138,7 +246,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
                     </span>
                   )}
                   {(!r.status || r.status === "declared") && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">En attente de vérification</span>
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">
+                      En attente de validation Holiswiss
+                    </span>
                   )}
                   {r.status === "needs_information" && (
                     <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-300">
@@ -155,11 +265,22 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
               </span>
               <span className="flex shrink-0 items-center gap-2">
                 {r.fileUrl && (
-                  <a href={r.fileUrl} target="_blank" rel="noreferrer" className="text-cyan-300" aria-label="Voir le document">
+                  <a
+                    href={r.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-cyan-300"
+                    aria-label={`Voir le document « ${r.name} »`}
+                  >
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 )}
-                <button type="button" onClick={() => remove(r.id)} aria-label="Supprimer" className="text-white/40 hover:text-red-400">
+                <button
+                  type="button"
+                  onClick={() => remove(r.id)}
+                  aria-label={`Supprimer « ${r.name} »`}
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-white/40 hover:text-red-400"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </span>
@@ -170,32 +291,126 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       )}
 
       {/* Formulaire d'ajout */}
-      <div className="grid gap-2 rounded-xl border border-white/10 bg-white/5 p-3 sm:grid-cols-2">
-        <input
-          value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du document *"
-          className="rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white placeholder:text-white/30"
-        />
-        <input
-          value={issuer} onChange={(e) => setIssuer(e.target.value)} placeholder="Organisme (ex. ASCA, RME)"
-          className="rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white placeholder:text-white/30"
-        />
-        <input
-          value={year} onChange={(e) => setYear(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Année"
-          className="rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white placeholder:text-white/30"
-        />
-        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white/70">
-          <Upload className="h-4 w-4" />
-          <span className="truncate">{file ? file.name : "Choisir un fichier (PDF/image)"}</span>
-          <input ref={inputRef} type="file" accept={ACCEPTED.join(",")} className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </label>
+      <div className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="cert-name" className={labelClass}>
+            Intitulé du diplôme <span aria-hidden>*</span>
+          </label>
+          <input id="cert-name" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="cert-type" className={labelClass}>
+            Type / organisme <span aria-hidden>*</span>
+          </label>
+          <select
+            id="cert-type"
+            value={credentialType}
+            onChange={(e) => setCredentialType(e.target.value as CredentialType | "")}
+            required
+            className={inputClass}
+          >
+            <option value="">— Sélectionner —</option>
+            {TYPES.map((t) => (
+              <option key={t} value={t}>
+                {CREDENTIAL_TYPE_LABELS[t]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="cert-holder" className={labelClass}>
+            Nom exact figurant sur le document <span aria-hidden>*</span>
+          </label>
+          <input id="cert-holder" value={holderName} onChange={(e) => setHolderName(e.target.value)} required className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="cert-issuer" className={labelClass}>
+            Organisme délivrant (ex. ASCA, RME)
+          </label>
+          <input id="cert-issuer" value={issuer} onChange={(e) => setIssuer(e.target.value)} className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="cert-number" className={labelClass}>
+            Numéro d'enregistrement (optionnel)
+          </label>
+          <input
+            id="cert-number"
+            value={registrationNumber}
+            onChange={(e) => setRegistrationNumber(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="cert-year" className={labelClass}>
+            Année d'obtention
+          </label>
+          <input
+            id="cert-year"
+            inputMode="numeric"
+            value={year}
+            onChange={(e) => setYear(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="cert-expires" className={labelClass}>
+            Date d'expiration (optionnelle)
+          </label>
+          <input id="cert-expires" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="cert-file" className={labelClass}>
+            Justificatif (PDF ou image, max 10 Mo)
+          </label>
+          <label
+            htmlFor="cert-file"
+            className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-[#1a0a2e] px-3 py-2 text-sm text-white/70"
+          >
+            <Upload className="h-4 w-4" aria-hidden />
+            <span className="truncate">{file ? file.name : "Choisir un fichier"}</span>
+          </label>
+          <input
+            id="cert-file"
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED.join(",")}
+            className="sr-only"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
+
+        {/* Pré-vérification en temps réel */}
+        <div className="sm:col-span-2" aria-live="polite">
+          {touched && renderCheck(check, "Pré-vérification")}
+        </div>
+
         <div className="sm:col-span-2">
           <button
             type="button" onClick={submit} disabled={busy}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Ajouter la certification
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Upload className="h-4 w-4" aria-hidden />}
+            Soumettre à la validation Holiswiss
           </button>
+        </div>
+
+        {/* Résultat renvoyé par le serveur après soumission */}
+        <div className="sm:col-span-2" role="status" aria-live="polite">
+          {submitted && (
+            <>
+              {renderCheck(submitted, "Dossier soumis")}
+              <p className="mt-2 text-xs text-white/60">
+                Statut du dossier : en attente de validation Holiswiss. Un administrateur examine votre justificatif.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
