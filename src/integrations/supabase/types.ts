@@ -4396,13 +4396,20 @@ export type Database = {
         Row: {
           created_at: string
           credential_type: string | null
+          declaration_accepted_at: string | null
+          declaration_version: string | null
           expires_at: string | null
           file_url: string | null
           holder_name: string | null
           id: string
           issuer: string | null
           name: string
+          official_profile_url: string | null
           registration_number: string | null
+          registry_check_result: string | null
+          registry_check_source: string | null
+          registry_checked_at: string | null
+          registry_checked_by: string | null
           rejected_at: string | null
           rejected_by: string | null
           rejection_reason: string | null
@@ -4418,13 +4425,20 @@ export type Database = {
         Insert: {
           created_at?: string
           credential_type?: string | null
+          declaration_accepted_at?: string | null
+          declaration_version?: string | null
           expires_at?: string | null
           file_url?: string | null
           holder_name?: string | null
           id?: string
           issuer?: string | null
           name: string
+          official_profile_url?: string | null
           registration_number?: string | null
+          registry_check_result?: string | null
+          registry_check_source?: string | null
+          registry_checked_at?: string | null
+          registry_checked_by?: string | null
           rejected_at?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
@@ -4440,13 +4454,20 @@ export type Database = {
         Update: {
           created_at?: string
           credential_type?: string | null
+          declaration_accepted_at?: string | null
+          declaration_version?: string | null
           expires_at?: string | null
           file_url?: string | null
           holder_name?: string | null
           id?: string
           issuer?: string | null
           name?: string
+          official_profile_url?: string | null
           registration_number?: string | null
+          registry_check_result?: string | null
+          registry_check_source?: string | null
+          registry_checked_at?: string | null
+          registry_checked_by?: string | null
           rejected_at?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
@@ -6393,6 +6414,18 @@ export type Database = {
       }
       agent_notify_secret_ok: { Args: { _secret: string }; Returns: boolean }
       anonymize_user_analytics: { Args: { _uid: string }; Returns: undefined }
+      certification_admin_fields_unchanged: {
+        Args: {
+          _declaration_accepted_at: string
+          _declaration_version: string
+          _id: string
+          _registry_check_result: string
+          _registry_check_source: string
+          _registry_checked_at: string
+          _registry_checked_by: string
+        }
+        Returns: boolean
+      }
       certification_verification_unchanged: {
         Args: {
           _id: string
