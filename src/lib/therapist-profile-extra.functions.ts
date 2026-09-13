@@ -108,7 +108,7 @@ export const listMyCertifications = createServerFn({ method: "GET" })
     const { data, error } = await sb
       .from("therapist_certifications")
       .select(
-        "id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason,credential_type,registration_number,holder_name,expires_at",
+        "id,name,issuer,year,file_url,created_at,verification_status,verified_at,rejected_at,rejection_reason,credential_type,registration_number,holder_name,expires_at,official_profile_url,registry_check_result,registry_check_source,registry_checked_at,declaration_accepted_at,declaration_version",
       )
       .eq("therapist_id", therapistId)
       .order("created_at", { ascending: false });
@@ -141,6 +141,12 @@ export const listMyCertifications = createServerFn({ method: "GET" })
           registrationNumber: (ce.registration_number ?? null) as string | null,
           holderName: (ce.holder_name ?? null) as string | null,
           expiresAt: (ce.expires_at ?? null) as string | null,
+          officialProfileUrl: (ce.official_profile_url ?? null) as string | null,
+          registryCheckResult: (ce.registry_check_result ?? null) as string | null,
+          registryCheckSource: (ce.registry_check_source ?? null) as string | null,
+          registryCheckedAt: (ce.registry_checked_at ?? null) as string | null,
+          declarationAcceptedAt: (ce.declaration_accepted_at ?? null) as string | null,
+          declarationVersion: (ce.declaration_version ?? null) as string | null,
         };
       }),
     );
@@ -163,10 +169,30 @@ export const addCertification = createServerFn({ method: "POST" })
         .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional()
         .nullable(),
+      /** Lien facultatif vers la fiche officielle ASCA/RME (jamais consulté par le serveur). */
+      official_profile_url: z.string().max(2000).optional().nullable(),
+      /**
+       * Déclaration sur l'honneur : obligatoire, jamais précochée côté formulaire.
+       * Le refus ici est volontairement incontournable — une soumission sans
+       * déclaration n'est pas enregistrée.
+       */
+      declaration_accepted: z.literal(true),
     }),
   )
   .handler(async ({ context, data }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
+
+    // Le lien officiel est revalidé côté serveur : la valeur cliente n'est jamais crue.
+    let officialUrl: string | null = null;
+    if ((data.official_profile_url ?? "").trim()) {
+      const { validateRegistryUrl } = await import("@/lib/certification-registry-url");
+      const check = validateRegistryUrl(data.official_profile_url);
+      if (!check.ok) throw new Error(check.error);
+      officialUrl = check.url;
+    }
+
+    const { CERTIFICATION_DECLARATION_VERSION } = await import("@/lib/certification-labels");
+
     const { data: inserted, error } = await sb
       .from("therapist_certifications")
       .insert({
@@ -179,10 +205,14 @@ export const addCertification = createServerFn({ method: "POST" })
         registration_number: data.registration_number?.trim() || null,
         holder_name: data.holder_name?.trim() || null,
         expires_at: data.expires_at ?? null,
+        official_profile_url: officialUrl,
         // Statut imposé côté serveur : jamais une valeur venue du client.
         verification_status: "declared",
         verified_at: null,
         verified_by: null,
+        // Version acceptée ; l'horodatage définitif est posé par la base (trigger).
+        declaration_version: CERTIFICATION_DECLARATION_VERSION,
+        declaration_accepted_at: new Date().toISOString(),
       })
       .select("id")
       .maybeSingle();

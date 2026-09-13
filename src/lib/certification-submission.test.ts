@@ -35,3 +35,25 @@ describe("addCertification", () => {
     expect(addBlock).toMatch(/return \{ ok: true, status: "declared" as const, autoCheck: check \}/);
   });
 });
+
+describe("déclaration obligatoire et champs d'administration non usurpables", () => {
+  const src = readFileSync(new URL("./therapist-profile-extra.functions.ts", import.meta.url), "utf8");
+
+  it("la déclaration d'exactitude est exigée par le serveur", () => {
+    expect(src).toMatch(/declaration_accepted:\s*z\.literal\(true\)/);
+  });
+
+  it("le lien officiel est revalidé côté serveur", () => {
+    expect(src).toContain("validateRegistryUrl");
+  });
+
+  it("aucun champ de contrôle de registre n'est accepté du client", () => {
+    for (const f of ["registry_check_result", "registry_check_source", "registry_checked_at", "registry_checked_by"]) {
+      expect(src.includes(`data.${f}`), f).toBe(false);
+    }
+  });
+
+  it("le statut inséré est toujours declared", () => {
+    expect(src).toMatch(/verification_status:\s*"declared"/);
+  });
+});

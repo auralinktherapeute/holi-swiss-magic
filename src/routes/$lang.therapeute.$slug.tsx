@@ -1,6 +1,7 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
 import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
+import { CERTIFICATION_RESPONSIBILITY_NOTICE } from "@/lib/certification-labels";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -1059,14 +1060,19 @@ function Page() {
                     expand: t("therapist_profile.certifications_expand", { defaultValue: "Voir tous les diplômes" }),
                     collapse: t("therapist_profile.certifications_collapse", { defaultValue: "Réduire" }),
                   }}
-                  notice={
+                  notice={[
                     trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified)
                       ? t("therapist_profile.declared_notice", {
                           defaultValue:
                             "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
                         })
-                      : null
-                  }
+                      : null,
+                    t("therapist_profile.certifications_disclaimer", {
+                      defaultValue: CERTIFICATION_RESPONSIBILITY_NOTICE.fr,
+                    }),
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 />
               </motion.div>
             )}

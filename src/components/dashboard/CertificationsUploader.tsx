@@ -15,6 +15,13 @@ import {
   type AutoCheckResult,
   type CredentialType,
 } from "@/lib/certification-autocheck";
+import {
+  CERTIFICATION_DECLARATION_TEXT,
+  CERTIFICATION_RESPONSIBILITY_NOTICE,
+  certificationStateLabel,
+  certificationTrustState,
+} from "@/lib/certification-labels";
+import { OFFICIAL_REGISTRY_DOMAINS_LABEL, validateRegistryUrl } from "@/lib/certification-registry-url";
 
 const ACCEPTED = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 const BUCKET = "therapist-docs";
@@ -46,6 +53,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       registrationNumber?: string | null;
       holderName?: string | null;
       expiresAt?: string | null;
+      officialProfileUrl?: string | null;
+      registryCheckResult?: string | null;
+      registryCheckedAt?: string | null;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +68,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [holderName, setHolderName] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [officialUrl, setOfficialUrl] = useState("");
+  // Case JAMAIS précochée : la déclaration doit être un geste explicite.
+  const [declaration, setDeclaration] = useState(false);
   const [submitted, setSubmitted] = useState<AutoCheckResult | null>(null);
 
   // Masque la section tant que la table n'existe pas côté base.
@@ -97,10 +110,16 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
 
   const touched = !!(name || issuer || year || file || credentialType || registrationNumber || holderName || expiresAt);
 
+  // Validation locale du lien officiel : miroir exact du contrôle serveur.
+  const urlCheck = officialUrl.trim() ? validateRegistryUrl(officialUrl) : null;
+  const urlError = urlCheck && !urlCheck.ok ? urlCheck.error : null;
+
   const submit = async () => {
     if (!name.trim()) return toast.error("Indiquez l'intitulé du diplôme.");
     if (!credentialType) return toast.error("Sélectionnez le type / l'organisme.");
     if (!holderName.trim()) return toast.error("Indiquez le nom exact figurant sur le document.");
+    if (urlError) return toast.error(urlError);
+    if (!declaration) return toast.error("Cochez la déclaration d'exactitude pour soumettre votre dossier.");
     setBusy(true);
     try {
       let filePath: string | null = null;
@@ -131,6 +150,8 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
           registration_number: registrationNumber.trim() || null,
           holder_name: holderName.trim() || null,
           expires_at: expiresAt || null,
+          official_profile_url: urlCheck?.ok ? urlCheck.url : null,
+          declaration_accepted: true,
         },
       });
       toast.success("Diplôme soumis — en attente de validation Holiswiss.");
@@ -138,6 +159,7 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
       // Le formulaire n'est vidé qu'après un enregistrement réussi.
       setName(""); setIssuer(""); setYear(""); setFile(null);
       setCredentialType(""); setRegistrationNumber(""); setHolderName(""); setExpiresAt("");
+      setOfficialUrl(""); setDeclaration(false);
       if (inputRef.current) inputRef.current.value = "";
       await refresh();
     } catch (e: any) {
@@ -208,6 +230,9 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
         <p className="text-xs text-[#a89bc4]">
           Documents privés (PDF ou image), jamais publiés. {AUTOCHECK_DISCLAIMER}.
         </p>
+        <p className="mt-2 rounded-lg border border-white/10 bg-white/5 p-3 text-xs leading-relaxed text-white/70">
+          {CERTIFICATION_RESPONSIBILITY_NOTICE.fr}
+        </p>
       </div>
 
       {loading ? (
@@ -242,13 +267,25 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
                 <span className="flex flex-wrap items-center gap-2 pl-6 text-xs">
                   {r.status === "verified" && (
                     <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-medium text-emerald-300">
-                      Diplôme vérifié
+                      {certificationStateLabel(
+                        certificationTrustState({
+                          verification_status: r.status,
+                          registry_check_result: r.registryCheckResult ?? null,
+                          registry_checked_at: r.registryCheckedAt ?? null,
+                        }),
+                        { registryCheckedAt: r.registryCheckedAt ?? null, lang: "fr" },
+                      )}
                     </span>
                   )}
                   {(!r.status || r.status === "declared") && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">
-                      En attente de validation Holiswiss
-                    </span>
+                    <>
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">
+                        En attente de validation Holiswiss
+                      </span>
+                      <span className="rounded-full bg-white/5 px-2 py-0.5 text-white/50">
+                        {certificationStateLabel("declared", { lang: "fr" })}
+                      </span>
+                    </>
                   )}
                   {r.status === "needs_information" && (
                     <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-300">
@@ -386,19 +423,69 @@ export default function CertificationsUploader({ userId }: { userId: string }) {
           />
         </div>
 
+        {/* Référence facultative vers la fiche officielle de l'organisme */}
+        <div className="sm:col-span-2">
+          <label htmlFor="cert-official-url" className={labelClass}>
+            Lien vers votre fiche officielle (facultatif)
+          </label>
+          <input
+            id="cert-official-url"
+            type="url"
+            inputMode="url"
+            value={officialUrl}
+            onChange={(e) => setOfficialUrl(e.target.value)}
+            placeholder="https://www.asca.ch/..."
+            aria-invalid={urlError ? true : undefined}
+            aria-describedby="cert-official-url-help"
+            className={inputClass}
+          />
+          <p id="cert-official-url-help" className="mt-1 text-xs text-white/50">
+            Adresses acceptées : {OFFICIAL_REGISTRY_DOMAINS_LABEL} (https uniquement). Ce lien aide l'équipe Holiswiss à
+            effectuer son contrôle ; il n'est jamais consulté automatiquement.
+          </p>
+          <p className="mt-1 text-xs text-amber-300" role="alert">
+            {urlError}
+          </p>
+        </div>
+
         {/* Pré-vérification en temps réel */}
         <div className="sm:col-span-2" aria-live="polite">
           {touched && renderCheck(check, "Pré-vérification")}
         </div>
 
+        {/* Déclaration sur l'honneur — jamais précochée */}
+        <div className="sm:col-span-2">
+          <label
+            htmlFor="cert-declaration"
+            className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-lg border border-white/15 bg-white/5 p-3 text-xs leading-relaxed text-white/80"
+          >
+            <input
+              id="cert-declaration"
+              type="checkbox"
+              checked={declaration}
+              onChange={(e) => setDeclaration(e.target.checked)}
+              required
+              className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/30 bg-transparent accent-[#b86ef9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5cc8fa]"
+            />
+            <span>
+              {CERTIFICATION_DECLARATION_TEXT.fr} <span aria-hidden>*</span>
+            </span>
+          </label>
+        </div>
+
         <div className="sm:col-span-2">
           <button
-            type="button" onClick={submit} disabled={busy}
+            type="button" onClick={submit} disabled={busy || !declaration || !!urlError}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Upload className="h-4 w-4" aria-hidden />}
             Soumettre à la validation Holiswiss
           </button>
+          {!declaration && (
+            <p className="mt-2 text-xs text-white/60" role="status">
+              Cochez la déclaration ci-dessus pour activer la soumission.
+            </p>
+          )}
         </div>
 
         {/* Résultat renvoyé par le serveur après soumission */}

@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
+import { isSafeRegistryUrl } from "@/lib/certification-registry-url";
+import { certificationTrustState, type RegistryCheckResult } from "@/lib/certification-labels";
 
 /**
  * Validation administrateur des diplômes déclarés par les thérapeutes.
@@ -30,7 +32,7 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
     let query = supabaseAdmin
       .from("therapist_certifications")
       .select(
-        "id,name,issuer,year,file_url,created_at,updated_at,verification_status,verified_at,verified_by,rejected_at,rejected_by,rejection_reason,verification_note,therapist_id,credential_type,registration_number,holder_name,expires_at",
+        "id,name,issuer,year,file_url,created_at,updated_at,verification_status,verified_at,verified_by,rejected_at,rejected_by,rejection_reason,verification_note,therapist_id,credential_type,registration_number,holder_name,expires_at,official_profile_url,registry_check_result,registry_check_source,registry_checked_at,registry_checked_by,declaration_accepted_at,declaration_version",
       )
       .order("created_at", { ascending: false })
       .limit(200);
@@ -57,7 +59,7 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
 
     // Nom/e-mail des administrateurs décisionnaires (visible entre admins).
     const adminIds = Array.from(
-      new Set(rows.flatMap((r: any) => [r.verified_by, r.rejected_by]).filter(Boolean)),
+      new Set(rows.flatMap((r: any) => [r.verified_by, r.rejected_by, r.registry_checked_by]).filter(Boolean)),
     ) as string[];
     const adminLabels = new Map<string, string>();
     for (const uid of adminIds) {
@@ -97,6 +99,15 @@ export const listCertificationsToReview = createServerFn({ method: "POST" })
             registrationNumber: (r.registration_number ?? null) as string | null,
             holderName: (r.holder_name ?? null) as string | null,
             expiresAt: (r.expires_at ?? null) as string | null,
+            // Lien fourni par le thérapeute : revalidé avant d'être rendu cliquable.
+            officialProfileUrl: isSafeRegistryUrl(r.official_profile_url) ? (r.official_profile_url as string) : null,
+            registryCheckResult: (r.registry_check_result ?? null) as RegistryCheckResult | null,
+            registryCheckSource: (r.registry_check_source ?? null) as string | null,
+            registryCheckedAt: (r.registry_checked_at ?? null) as string | null,
+            registryCheckedByLabel: r.registry_checked_by ? (adminLabels.get(r.registry_checked_by) ?? null) : null,
+            declarationAcceptedAt: (r.declaration_accepted_at ?? null) as string | null,
+            declarationVersion: (r.declaration_version ?? null) as string | null,
+            trustState: certificationTrustState(r),
             therapistName: `${t?.first_name ?? ""} ${t?.last_name ?? ""}`.trim() || "—",
             therapistSlug: (t?.slug ?? null) as string | null,
             autoCheck: autoCheckCertification({
@@ -167,4 +178,56 @@ export const reviewCertification = createServerFn({ method: "POST" })
       throw new Error("Impossible d'enregistrer la décision. Veuillez réessayer.");
     }
     return { ok: true, status: target };
+  });
+
+/**
+ * Enregistrement du contrôle de registre RÉELLEMENT effectué par un administrateur.
+ *
+ * Aucun appel réseau, aucune API de registre : l'administrateur ouvre lui-même
+ * la fiche officielle (ou l'annuaire de l'organisme), puis note ce qu'il a vu.
+ * La date et l'auteur du contrôle sont posés par la base — ils ne peuvent pas
+ * être envoyés par un navigateur. Un contrôle n'est possible que sur un
+ * justificatif déjà examiné (statut « verified »).
+ */
+export const recordRegistryCheck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      id: z.string().uuid(),
+      result: z.enum(["confirmed", "not_found", "inconclusive", "reset"]),
+      /** Source consultée (annuaire, fiche officielle…) — obligatoire pour une confirmation. */
+      source: z.string().trim().max(300).optional().nullable(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: current, error: readErr } = await context.supabase
+      .from("therapist_certifications")
+      .select("id,verification_status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+    if (!current) throw new Error("Diplôme introuvable.");
+
+    const reset = data.result === "reset";
+    if (!reset && (current as any).verification_status !== "verified") {
+      throw new Error("Examinez d'abord le justificatif : le contrôle de registre s'ajoute ensuite.");
+    }
+    if (data.result === "confirmed" && !(data.source ?? "").trim()) {
+      throw new Error("Indiquez la source consultée pour confirmer une inscription.");
+    }
+
+    const { error } = await context.supabase
+      .from("therapist_certifications")
+      .update({
+        registry_check_result: reset ? null : data.result,
+        registry_check_source: reset ? null : (data.source ?? "").trim() || null,
+      })
+      .eq("id", data.id);
+    if (error) {
+      console.error("[recordRegistryCheck] échec", { id: data.id, result: data.result, error: error.message });
+      throw new Error("Impossible d'enregistrer le contrôle. Veuillez réessayer.");
+    }
+    return { ok: true, result: reset ? null : data.result };
   });
