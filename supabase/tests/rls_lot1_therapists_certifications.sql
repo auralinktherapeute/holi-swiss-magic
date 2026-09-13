@@ -35,15 +35,15 @@ SELECT
   (SELECT id FROM public.therapists WHERE slug = 'rls-test-a') AS t_a,
   (SELECT id FROM public.therapists WHERE slug = 'rls-test-b') AS t_b;
 
-INSERT INTO public.therapist_certifications (therapist_id, title, verification_status)
-SELECT t_a, 'Certif A', 'pending' FROM ids
+INSERT INTO public.therapist_certifications (therapist_id, name, verification_status)
+SELECT t_a, 'Certif A', 'declared' FROM ids
 UNION ALL
-SELECT t_b, 'Certif B', 'pending' FROM ids;
+SELECT t_b, 'Certif B', 'declared' FROM ids;
 
 CREATE TEMP TABLE cids AS
 SELECT
-  (SELECT id FROM public.therapist_certifications WHERE title = 'Certif A') AS c_a,
-  (SELECT id FROM public.therapist_certifications WHERE title = 'Certif B') AS c_b;
+  (SELECT id FROM public.therapist_certifications WHERE name = 'Certif A') AS c_a,
+  (SELECT id FROM public.therapist_certifications WHERE name = 'Certif B') AS c_b;
 
 -- Helper : se faire passer pour un utilisateur authentifié.
 CREATE OR REPLACE FUNCTION pg_temp.act_as(p_uid uuid) RETURNS void
@@ -100,7 +100,7 @@ BEGIN
   END;
 
   -- 5. A ne peut PAS modifier la certification de B.
-  WITH u AS (UPDATE public.therapist_certifications SET title = 'Pirate' WHERE id = v_cb RETURNING 1)
+  WITH u AS (UPDATE public.therapist_certifications SET name = 'Pirate' WHERE id = v_cb RETURNING 1)
   SELECT count(*) INTO n FROM u;
   PERFORM pg_temp.check('A update certif de B (refus attendu)', 0, n);
 
@@ -110,7 +110,7 @@ BEGIN
   PERFORM pg_temp.check('A delete certif de B (refus attendu)', 0, n);
 
   -- 7. A peut modifier sa propre certification (hors champs de vérification).
-  WITH u AS (UPDATE public.therapist_certifications SET title = 'Certif A v2' WHERE id = v_ca RETURNING 1)
+  WITH u AS (UPDATE public.therapist_certifications SET name = 'Certif A v2' WHERE id = v_ca RETURNING 1)
   SELECT count(*) INTO n FROM u;
   PERFORM pg_temp.check('A update sa certif', 1, n);
 
@@ -123,12 +123,48 @@ BEGIN
     RAISE NOTICE 'OK  [A self-verify certif bloqué] %', SQLERRM;
   END;
 
+  -- 9. A NE PEUT PAS créer une certification déjà 'verified'.
+  --    Deux issues acceptables : refus RLS, ou statut ramené à 'declared'
+  --    par le trigger therapist_certifications_lock_verification.
+  --    Une ligne 'verified' créée par A serait un ÉCHEC.
+  BEGIN
+    INSERT INTO public.therapist_certifications
+      (therapist_id, name, verification_status, verified_at, verified_by)
+    VALUES (v_a, 'Certif A frauduleuse', 'verified', now(), v_uid_a);
+    SELECT count(*) INTO n FROM public.therapist_certifications
+      WHERE name = 'Certif A frauduleuse' AND verification_status = 'verified';
+    PERFORM pg_temp.check('A insert certif verified (aucune ligne verified attendue)', 0, n);
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'OK  [A insert certif verified refusé par la RLS] %', SQLERRM;
+  END;
+
+  -- 10. A PEUT créer une certification 'declared'.
+  WITH i AS (
+    INSERT INTO public.therapist_certifications (therapist_id, name, verification_status)
+    VALUES (v_a, 'Certif A declaree', 'declared') RETURNING 1
+  )
+  SELECT count(*) INTO n FROM i;
+  PERFORM pg_temp.check('A insert certif declared', 1, n);
+
   RESET ROLE;
+
+  -- ---------- Visiteur anonyme ----------
+  PERFORM set_config('request.jwt.claims', NULL, true);
+  SET LOCAL ROLE anon;
+
+  -- 11. Le public ne voit QUE les certifications validées d'un thérapeute actif.
+  SELECT count(*) INTO n FROM public.therapist_certifications
+    WHERE therapist_id IN (v_a, v_b) AND verification_status <> 'verified';
+  PERFORM pg_temp.check('anon voit des certifs non verified (0 attendu)', 0, n);
+
+  RESET ROLE;
+
+
 
   -- ---------- Admin ----------
   PERFORM pg_temp.act_as(v_uid_admin);
 
-  -- 9. L'admin conserve ses droits (statut fiche + vérification certif).
+  -- 12. L'admin conserve ses droits (statut fiche + vérification certif).
   WITH u AS (UPDATE public.therapists SET verified = true WHERE id = v_b RETURNING 1)
   SELECT count(*) INTO n FROM u;
   PERFORM pg_temp.check('admin update fiche B', 1, n);
