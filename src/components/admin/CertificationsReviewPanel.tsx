@@ -146,6 +146,9 @@ export default function CertificationsReviewPanel() {
             </button>
           ))}
         </div>
+        <p className="mt-3 rounded-lg border border-border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          {CERTIFICATION_RESPONSIBILITY_NOTICE.fr}
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-3">
