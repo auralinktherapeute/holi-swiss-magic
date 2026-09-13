@@ -352,14 +352,13 @@ export function pillarUrl(lang: PillarLang) {
  * `x-default` pointe sur le français, langue par défaut du site.
  */
 export function pillarHreflangLinks() {
-  const links = PILLAR_LANGS.map((l) => ({
-    rel: "alternate" as const,
-    hrefLang: l,
-    href: pillarUrl(l),
-  }));
-  links.push({ rel: "alternate" as const, hrefLang: "x-default", href: pillarUrl("fr") });
+  const links: Array<{ rel: "alternate"; hrefLang: string; href: string }> = PILLAR_LANGS.map(
+    (l) => ({ rel: "alternate" as const, hrefLang: l as string, href: pillarUrl(l) }),
+  );
+  links.push({ rel: "alternate", hrefLang: "x-default", href: pillarUrl("fr") });
   return links;
 }
+
 
 /** `head()` complet d'une variante : métadonnées, canonical, hreflang, JSON-LD. */
 export function pillarHead(lang: PillarLang) {
