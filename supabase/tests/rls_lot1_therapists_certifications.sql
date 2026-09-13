@@ -226,6 +226,65 @@ BEGIN
 
   RESET ROLE;
 
+  -- ---------- Contrôle de registre : source, invalidation, réactualisation ----------
+  PERFORM pg_temp.act_as(v_uid_admin);
+
+  -- 17. Une confirmation sans source consultee est refusee par la base.
+  BEGIN
+    UPDATE public.therapist_certifications
+       SET registry_check_result = 'confirmed', registry_check_source = '   '
+     WHERE id = v_cb;
+    PERFORM pg_temp.check('confirmation sans source refusee', 1, 0);
+  EXCEPTION WHEN check_violation THEN
+    PERFORM pg_temp.check('confirmation sans source refusee', 1, 1);
+  END;
+
+  -- 18. Un controle refait a l'identique reactualise la date (appelant : date NULL).
+  UPDATE public.therapist_certifications
+     SET registry_check_result = 'confirmed', registry_check_source = 'annuaire asca.ch',
+         registry_checked_at = NULL, registry_checked_by = NULL
+   WHERE id = v_cb;
+  SELECT count(*) INTO n FROM public.therapist_certifications
+   WHERE id = v_cb AND registry_checked_at IS NOT NULL AND registry_checked_by = v_uid_admin;
+  PERFORM pg_temp.check('controle refait a lidentique reactualise la date', 1, n);
+
+  -- 19. Une date forgee par un admin est ignoree au profit de celle de la base.
+  UPDATE public.therapist_certifications
+     SET registry_checked_at = '2000-01-01T00:00:00Z'
+   WHERE id = v_cb;
+  SELECT count(*) INTO n FROM public.therapist_certifications
+   WHERE id = v_cb AND registry_checked_at < '2010-01-01';
+  PERFORM pg_temp.check('date de controle forgee par un admin ignoree', 0, n);
+
+  -- 20. Une preuve modifiee par l'admin invalide la confirmation.
+  UPDATE public.therapist_certifications SET year = 2019 WHERE id = v_cb;
+  SELECT count(*) INTO n FROM public.therapist_certifications
+   WHERE id = v_cb AND registry_check_result IS NULL AND registry_checked_at IS NULL
+     AND verification_status = 'declared';
+  PERFORM pg_temp.check('preuve modifiee par admin invalide la confirmation', 1, n);
+
+  RESET ROLE;
+
+  -- 21. Le proprietaire peut corriger une certif examinee : elle repasse declaree.
+  PERFORM pg_temp.act_as(v_uid_admin);
+  UPDATE public.therapist_certifications
+     SET verification_status = 'verified' WHERE id = v_cb;
+  UPDATE public.therapist_certifications
+     SET registry_check_result = 'confirmed', registry_check_source = 'annuaire asca.ch',
+         registry_checked_at = NULL, registry_checked_by = NULL
+   WHERE id = v_cb;
+  RESET ROLE;
+
+  PERFORM pg_temp.act_as(v_uid_b);
+  UPDATE public.therapist_certifications SET name = 'Diplome corrige' WHERE id = v_cb;
+  SELECT count(*) INTO n FROM public.therapist_certifications
+   WHERE id = v_cb AND name = 'Diplome corrige' AND verification_status = 'declared'
+     AND verified_at IS NULL AND verified_by IS NULL
+     AND registry_check_result IS NULL AND registry_checked_at IS NULL;
+  PERFORM pg_temp.check('le proprietaire peut corriger une certif examinee (retour declare)', 1, n);
+
+  RESET ROLE;
+
   RAISE NOTICE '=== Toutes les assertions RLS du Lot 1 sont passées ===';
 END $$;
 

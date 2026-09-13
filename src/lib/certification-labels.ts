@@ -31,7 +31,7 @@ export const CERTIFICATION_DECLARATION_VERSION = "2026-09-13";
 /** Déclaration sur l'honneur — case jamais précochée, exigée à chaque soumission. */
 export const CERTIFICATION_DECLARATION_TEXT: Record<Lang, string> = {
   fr: "Je certifie l’exactitude des informations et l’authenticité des justificatifs transmis. Je m’engage à signaler toute expiration, suspension ou révocation de mes certifications.",
-  de: "Ich bestätige die Richtigkeit der Angaben und die Echtheit der eingereichten Nachweise. Ich verpflichte mich, jede Ablauf, Sperrung oder Widerruf meiner Zertifizierungen zu melden.",
+  de: "Ich bestätige die Richtigkeit der Angaben und die Echtheit der eingereichten Nachweise. Ich verpflichte mich, jeden Ablauf, jede Sperrung oder jeden Widerruf meiner Zertifizierungen zu melden.",
   it: "Certifico l’esattezza delle informazioni e l’autenticità dei documenti trasmessi. Mi impegno a segnalare qualsiasi scadenza, sospensione o revoca delle mie certificazioni.",
   en: "I certify that the information is accurate and that the supporting documents are genuine. I undertake to report any expiry, suspension or revocation of my certifications.",
 };
