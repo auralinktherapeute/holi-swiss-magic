@@ -175,6 +175,57 @@ BEGIN
 
   RESET ROLE;
 
+
+  -- 13. L'admin peut consigner un contrôle de registre sur une certif examinée.
+  UPDATE public.therapist_certifications
+     SET registry_check_result = 'confirmed', registry_check_source = 'annuaire asca.ch'
+   WHERE id = v_cb;
+  SELECT count(*) INTO n FROM public.therapist_certifications
+   WHERE id = v_cb AND registry_check_result = 'confirmed' AND registry_checked_at IS NOT NULL
+     AND registry_checked_by = v_uid_admin;
+  PERFORM pg_temp.check('admin consigne le controle registre (date+auteur poses par la base)', 1, n);
+
+  RESET ROLE;
+
+  -- ---------- Therapeute A : champs d'administration non usurpables ----------
+  PERFORM pg_temp.act_as(v_uid_a);
+
+  -- 14. A ne peut pas s'attribuer une confirmation de registre.
+  BEGIN
+    UPDATE public.therapist_certifications
+       SET registry_check_result = 'confirmed', registry_check_source = 'moi-meme'
+     WHERE id = v_ca;
+    SELECT count(*) INTO n FROM public.therapist_certifications
+     WHERE id = v_ca AND registry_check_result IS NOT NULL;
+    PERFORM pg_temp.check('A ne peut pas se confirmer aupres du registre', 0, n);
+  EXCEPTION WHEN insufficient_privilege OR check_violation THEN
+    PERFORM pg_temp.check('A ne peut pas se confirmer aupres du registre (refus)', 1, 1);
+  END;
+
+  -- 15. A ne peut pas forger la date d'acceptation de sa declaration.
+  BEGIN
+    UPDATE public.therapist_certifications
+       SET declaration_accepted_at = '2000-01-01T00:00:00Z'
+     WHERE id = v_ca;
+    SELECT count(*) INTO n FROM public.therapist_certifications
+     WHERE id = v_ca AND declaration_accepted_at < '2010-01-01';
+    PERFORM pg_temp.check('A ne peut pas forger la date de declaration', 0, n);
+  EXCEPTION WHEN insufficient_privilege OR check_violation THEN
+    PERFORM pg_temp.check('A ne peut pas forger la date de declaration (refus)', 1, 1);
+  END;
+
+  -- 16. Un lien officiel hors domaines autorises est refuse.
+  BEGIN
+    UPDATE public.therapist_certifications
+       SET official_profile_url = 'https://evil.example.com/asca'
+     WHERE id = v_ca;
+    PERFORM pg_temp.check('lien officiel hors domaine refuse', 1, 0);
+  EXCEPTION WHEN check_violation OR insufficient_privilege THEN
+    PERFORM pg_temp.check('lien officiel hors domaine refuse', 1, 1);
+  END;
+
+  RESET ROLE;
+
   RAISE NOTICE '=== Toutes les assertions RLS du Lot 1 sont passées ===';
 END $$;
 
