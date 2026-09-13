@@ -198,6 +198,10 @@ export const addCertification = createServerFn({ method: "POST" })
       issuer: data.issuer ?? null,
       year: data.year ?? null,
       hasFile: !!data.file_path,
+      credentialType: data.credential_type ?? null,
+      registrationNumber: data.registration_number ?? null,
+      holderName: data.holder_name ?? null,
+      expiresAt: data.expires_at ?? null,
     });
     try {
       const { data: ther } = await sb
@@ -229,7 +233,7 @@ export const addCertification = createServerFn({ method: "POST" })
       /* best-effort */
     }
 
-    return { ok: true, autoCheck: check };
+    return { ok: true, status: "declared" as const, autoCheck: check };
   });
 
 export const deleteCertification = createServerFn({ method: "POST" })
