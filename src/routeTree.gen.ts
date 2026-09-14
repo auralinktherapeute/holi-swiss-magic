@@ -16,7 +16,6 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as TmpProbeUnavailableRouteImport } from './routes/tmp-probe-unavailable'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAbonnementsRouteImport } from './routes/admin.abonnements'
@@ -150,11 +149,6 @@ const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TmpProbeUnavailableRoute = TmpProbeUnavailableRouteImport.update({
-  id: '/tmp-probe-unavailable',
-  path: '/tmp-probe-unavailable',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LangIndexRoute = LangIndexRouteImport.update({
@@ -681,7 +675,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tmp-probe-unavailable': typeof TmpProbeUnavailableRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
@@ -786,7 +779,6 @@ export interface FileRoutesByTo {
   '/41c3cce6c762af43d78a7895dfc0afe3.txt': typeof R41c3cce6c762af43d78a7895dfc0afe3DottxtRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tmp-probe-unavailable': typeof TmpProbeUnavailableRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
@@ -895,7 +887,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tmp-probe-unavailable': typeof TmpProbeUnavailableRoute
   '/admin/abonnements': typeof AdminAbonnementsRoute
   '/admin/agents': typeof AdminAgentsRoute
   '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
@@ -1005,7 +996,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/llms-full.txt'
     | '/sitemap.xml'
-    | '/tmp-probe-unavailable'
     | '/admin/abonnements'
     | '/admin/agents'
     | '/admin/ameliorations-seo'
@@ -1110,7 +1100,6 @@ export interface FileRouteTypes {
     | '/41c3cce6c762af43d78a7895dfc0afe3.txt'
     | '/llms-full.txt'
     | '/sitemap.xml'
-    | '/tmp-probe-unavailable'
     | '/admin/abonnements'
     | '/admin/agents'
     | '/admin/ameliorations-seo'
@@ -1218,7 +1207,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/llms-full.txt'
     | '/sitemap.xml'
-    | '/tmp-probe-unavailable'
     | '/admin/abonnements'
     | '/admin/agents'
     | '/admin/ameliorations-seo'
@@ -1327,7 +1315,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  TmpProbeUnavailableRoute: typeof TmpProbeUnavailableRoute
   FactureTokenRoute: typeof FactureTokenRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
   PreviewAmbianceRoute: typeof PreviewAmbianceRoute
@@ -1400,13 +1387,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tmp-probe-unavailable': {
-      id: '/tmp-probe-unavailable'
-      path: '/tmp-probe-unavailable'
-      fullPath: '/tmp-probe-unavailable'
-      preLoaderRoute: typeof TmpProbeUnavailableRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lang/': {
@@ -2293,7 +2273,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  TmpProbeUnavailableRoute: TmpProbeUnavailableRoute,
   FactureTokenRoute: FactureTokenRoute,
   IntakeSlugRoute: IntakeSlugRoute,
   PreviewAmbianceRoute: PreviewAmbianceRoute,
