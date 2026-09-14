@@ -4,6 +4,9 @@ import { listTherapistsByCanton } from "@/lib/geo-listings.functions";
 import { cantonName, isCantonCode, citySlug } from "@/lib/geo-listings";
 import { ogLocale, seoLinks, SITE } from "@/lib/seo";
 import { TherapistCardCompact } from "@/components/holiswiss/TherapistCardCompact";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 
 const T = {
   fr: {
@@ -74,12 +77,11 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
   loader: async ({ params }) => {
     const code = params.canton.toUpperCase();
     if (!isCantonCode(code)) throw notFound();
-    try {
-      const { therapists } = await listTherapistsByCanton({ data: { canton: code } });
-      return { therapists };
-    } catch {
-      return { therapists: [] };
-    }
+    // Panne technique ≠ canton réellement sans praticien : on ne sert plus une
+    // liste vide en 200, la réponse SSR devient un vrai 503 réessayable.
+    const res = await loadEssential(() => listTherapistsByCanton({ data: { canton: code } }));
+    if (!res.ok) return { therapists: [] as PublicTherapistCard[], unavailable: true as const };
+    return { therapists: res.data.therapists, unavailable: false as const };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -90,6 +92,8 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     const description = t.desc(name);
     const url = `${SITE}/${lang}/therapeutes/canton/${code}`;
     const list = (loaderData?.therapists ?? []) as Array<{ slug: string | null; first_name: string | null; last_name: string | null }>;
+    // En panne : aucun ItemList (un ItemList vide mentirait sur le contenu réel).
+    const unavailable = loaderData?.unavailable === true;
     return {
       meta: [
         { title },
@@ -104,7 +108,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
         { name: "twitter:description", content: description },
       ],
       links: seoLinks(lang, `/therapeutes/canton/${code}`),
-      scripts: [
+      scripts: unavailable ? [] : [
         {
           type: "application/ld+json",
           children: JSON.stringify({
@@ -141,8 +145,9 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
 
 function Page() {
   const { lang, canton } = useParams({ from: "/$lang/therapeutes/canton/$canton" });
-  const { therapists } = Route.useLoaderData();
+  const { therapists, unavailable } = Route.useLoaderData();
   const t = tr(lang);
+  if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const code = canton.toUpperCase();
   const name = cantonName(code, lang);
 

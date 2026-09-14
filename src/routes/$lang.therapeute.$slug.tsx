@@ -1,4 +1,4 @@
-import { createFileRoute, useParams, Link } from "@tanstack/react-router";
+import { createFileRoute, useParams, Link, notFound } from "@tanstack/react-router";
 import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
 import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
 import { CERTIFICATION_RESPONSIBILITY_NOTICE } from "@/lib/certification-labels";
@@ -20,6 +20,8 @@ import { getTherapistBySlug } from "@/lib/public.functions";
 import { getPublicFaqs } from "@/lib/therapist-faq.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { OrgCertificationBadges, type OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { FavoriteButton } from "@/components/holiswiss/FavoriteButton";
@@ -48,31 +50,41 @@ const SITE = "https://holiswiss.ch";
 export const Route = createFileRoute("/$lang/therapeute/$slug")({
   component: Page,
   loader: async ({ params }) => {
-    try {
-      const { therapist, reviews, certifications, articles, events, orgCertifications } = await getTherapistBySlug({
-        data: { slug: params.slug },
-      });
-      // FAQ : lecture séparée et tolérante. La RLS filtre déjà sur l'activation
-      // et le statut du praticien — un échec ici ne doit pas priver le visiteur
-      // de toute la fiche.
-      let faqs: Array<{ question: string; answer: string }> = [];
-      try {
-        const r = await getPublicFaqs({ data: { slug: params.slug } });
-        faqs = r.faqs ?? [];
-      } catch { /* fiche servie sans FAQ */ }
+    // Lecture principale (essentielle) et FAQ (tolérante) menées en parallèle :
+    // la FAQ ne dépend que du slug. Un échec FAQ sert la fiche sans FAQ ; un
+    // échec de la lecture principale rend la page indisponible (vrai 503 SSR),
+    // et un praticien réellement absent donne un 404.
+    const [main, faqs] = await Promise.all([
+      loadEssential(() => getTherapistBySlug({ data: { slug: params.slug } })),
+      getPublicFaqs({ data: { slug: params.slug } })
+        .then((r) => (r.faqs ?? []) as Array<{ question: string; answer: string }>)
+        .catch(() => [] as Array<{ question: string; answer: string }>),
+    ]);
+    if (!main.ok) {
       return {
-        therapist,
-        reviews: reviews ?? [],
-        certifications: certifications ?? [],
-        articles: articles ?? [],
-        events: events ?? [],
-        orgCertifications: orgCertifications ?? [],
-        faqs,
+        therapist: null,
+        reviews: [],
+        certifications: [],
+        articles: [],
+        events: [],
+        orgCertifications: [],
+        faqs: [],
+        unavailable: true as const,
       };
-    } catch {
-      return { therapist: null, reviews: [], certifications: [], articles: [], events: [], orgCertifications: [], faqs: [] };
-
     }
+    const { therapist, reviews, certifications, articles, events, orgCertifications } = main.data;
+    // Fiche réellement absente (ou non publiée) : 404, pas une panne.
+    if (!therapist) throw notFound();
+    return {
+      therapist,
+      reviews: reviews ?? [],
+      certifications: certifications ?? [],
+      articles: articles ?? [],
+      events: events ?? [],
+      orgCertifications: orgCertifications ?? [],
+      faqs,
+      unavailable: false as const,
+    };
   },
 
   head: ({ params, loaderData }) => {
@@ -525,6 +537,13 @@ function ContentCard({
 }
 
 function Page() {
+  const { lang } = useParams({ from: "/$lang/therapeute/$slug" });
+  const { unavailable } = Route.useLoaderData();
+  if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
+  return <ProfilePage />;
+}
+
+function ProfilePage() {
   const { slug, lang } = useParams({ from: "/$lang/therapeute/$slug" });
   const { t } = useTranslation();
   const [phoneVisible, setPhoneVisible] = useState(false);
