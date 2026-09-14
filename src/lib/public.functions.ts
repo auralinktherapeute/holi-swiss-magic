@@ -14,39 +14,33 @@ export const getWaitingListCount = createServerFn({ method: "GET" }).handler(asy
 export const getTherapistBySlug = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ slug: z.string().min(1).max(160) }).parse(data))
   .handler(async ({ data }) => {
+    const { timedRead, timedOptionalRead } = await import("@/lib/read-metrics.server");
     const { createClient } = await import("@supabase/supabase-js");
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_PUBLISHABLE_KEY!,
       { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
     );
-    const { data: therapist, error } = await supabase
-      .from("therapists")
-      .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,status")
-      .eq("slug", data.slug)
-      .eq("status", "active")
-      .maybeSingle();
-    if (error) throw new Error("Impossible de charger le thérapeute.");
-    let reviews: Array<{
+    // Lecture PRINCIPALE : son échec rend la fiche indisponible (503 côté route).
+    const therapist = await timedRead("therapist_profile_main", async () => {
+      const { data: row, error } = await supabase
+        .from("therapists")
+        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,status")
+        .eq("slug", data.slug)
+        .eq("status", "active")
+        .maybeSingle();
+      if (error) throw error;
+      return row;
+    });
+
+    type Review = {
       id: string;
       rating: number;
       comment: string | null;
       author_name: string | null;
       created_at: string;
-    }> = [];
-    if (therapist?.id) {
-      const { data: rows } = await supabase
-        .from("reviews")
-        .select("id,rating,comment,author_name,created_at")
-        .eq("therapist_id", therapist.id)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      reviews = (rows ?? []) as any;
-    }
-    // Certifications : lecture publique, avec leur état de vérification réel
-    // (jamais présentées comme vérifiées sans validation administrateur).
-    let certifications: Array<{
+    };
+    type Certification = {
       id: string;
       name: string | null;
       issuer: string | null;
@@ -57,34 +51,16 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
       source_label: string | null;
       registry_check_result: string | null;
       registry_checked_at: string | null;
-    }> = [];
-    if (therapist?.id) {
-      const { data: certs } = await supabase
-        .from("therapist_certifications")
-        // Projection publique minimale : jamais la source consultée, l'identité
-        // de l'administrateur, la déclaration sur l'honneur ni le document.
-        // `registry_check_result` / `registry_checked_at` servent uniquement à
-        // afficher « Inscription confirmée auprès du registre le [date] ».
-        .select(
-          "id,name,issuer,year,verification_status,verified_at,expires_at,source_label,registry_check_result,registry_checked_at",
-        )
-        .eq("therapist_id", therapist.id)
-        // Visibilité publique : uniquement les diplômes validés par un administrateur.
-        .eq("verification_status", "verified")
-        .order("year", { ascending: false });
-      certifications = (certs ?? []) as any;
-    }
-    // Publications « Voix d'experts » et événements à venir du praticien :
-    // lecture serveur (admin) restreinte aux contenus publiés uniquement.
-    let articles: Array<{
+    };
+    type Article = {
       id: string;
       slug: string;
       titre: string;
       extrait: string | null;
       image_couverture: string | null;
       date_publication: string | null;
-    }> = [];
-    let events: Array<{
+    };
+    type PublicEvent = {
       id: string;
       title: string;
       short_description: string | null;
@@ -96,47 +72,8 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
       is_paid: boolean | null;
       price: number | null;
       image_signed_url: string | null;
-    }> = [];
-    if (therapist?.id) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const today = new Date().toISOString().slice(0, 10);
-      const [{ data: arts }, { data: evs }] = await Promise.all([
-        supabaseAdmin
-          .from("therapist_articles")
-          .select("id,slug,titre,extrait,image_couverture,date_publication")
-          .eq("therapist_id", therapist.id)
-          .eq("statut", "publie")
-          .order("date_publication", { ascending: false })
-          .limit(6),
-        supabaseAdmin
-          .from("events")
-          .select("id,title,short_description,category,event_date,start_time,format,location,is_paid,price,image_url")
-          .eq("therapist_id", therapist.id)
-          .eq("status", "published")
-          .gte("event_date", today)
-          .order("event_date", { ascending: true })
-          .limit(6),
-      ]);
-      articles = (arts ?? []) as any;
-      events = await Promise.all(
-        ((evs ?? []) as any[]).map(async (e) => {
-          let image: string | null = null;
-          if (e.image_url) {
-            const { data: signed } = await supabaseAdmin.storage
-              .from("event-images")
-              .createSignedUrl(e.image_url, 60 * 60 * 24 * 7);
-            image = signed?.signedUrl ?? null;
-          }
-          const { image_url, ...rest } = e;
-          return { ...rest, image_signed_url: image };
-        }),
-      );
-    }
-
-    // Certifications délivrées par des organismes externes (SVHH, SoulSense…).
-    // Uniquement les associations actives d'organismes actifs. Aucune donnée
-    // privée (external_reference) n'est renvoyée au public.
-    let orgCertifications: Array<{
+    };
+    type OrgCertification = {
       id: string;
       organization_id: string;
       code: string;
@@ -145,34 +82,150 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
       badge_color: string | null;
       certification_label: string | null;
       website_url: string | null;
-    }> = [];
-    if (therapist?.id) {
-      const { data: rows } = await supabase
-        .from("therapist_org_certifications")
-        .select(
-          "id,organization_id,certification_organizations!inner(id,code,display_name,logo_url,badge_color,certification_label,website_url,is_active)",
-        )
-        .eq("therapist_id", therapist.id)
-        .eq("status", "active");
-      orgCertifications = ((rows ?? []) as any[])
-        .map((r) => {
-          const o = Array.isArray(r.certification_organizations)
-            ? r.certification_organizations[0]
-            : r.certification_organizations;
-          if (!o || o.is_active === false) return null;
-          return {
-            id: r.id as string,
-            organization_id: r.organization_id as string,
-            code: o.code as string,
-            display_name: o.display_name as string,
-            logo_url: (o.logo_url ?? null) as string | null,
-            badge_color: (o.badge_color ?? null) as string | null,
-            certification_label: (o.certification_label ?? null) as string | null,
-            website_url: (o.website_url ?? null) as string | null,
-          };
-        })
-        .filter(Boolean) as typeof orgCertifications;
+    };
+
+    if (!therapist?.id) {
+      return {
+        therapist,
+        reviews: [] as Review[],
+        certifications: [] as Certification[],
+        articles: [] as Article[],
+        events: [] as PublicEvent[],
+        orgCertifications: [] as OrgCertification[],
+      };
     }
+
+    const therapistId = therapist.id as string;
+
+    // Lectures SECONDAIRES : indépendantes, donc menées en parallèle, et
+    // tolérantes — un échec dégrade la section concernée sans priver le
+    // visiteur de la fiche. Aucun badge ni aucune confirmation n'est inventé :
+    // les filtres de visibilité (avis approuvés, diplômes validés par un
+    // administrateur, associations actives d'organismes actifs) sont inchangés.
+    const [reviews, certifications, articles, events, orgCertifications] = await Promise.all([
+      timedOptionalRead<Review[]>(
+        "therapist_profile_reviews",
+        async () => {
+          const { data: rows, error } = await supabase
+            .from("reviews")
+            .select("id,rating,comment,author_name,created_at")
+            .eq("therapist_id", therapistId)
+            .eq("status", "approved")
+            .order("created_at", { ascending: false })
+            .limit(20);
+          if (error) throw error;
+          return (rows ?? []) as any;
+        },
+        [],
+      ),
+      // Certifications : lecture publique, avec leur état de vérification réel
+      // (jamais présentées comme vérifiées sans validation administrateur).
+      timedOptionalRead<Certification[]>(
+        "therapist_profile_certifications",
+        async () => {
+          const { data: certs, error } = await supabase
+            .from("therapist_certifications")
+            // Projection publique minimale : jamais la source consultée, l'identité
+            // de l'administrateur, la déclaration sur l'honneur ni le document.
+            // `registry_check_result` / `registry_checked_at` servent uniquement à
+            // afficher « Inscription confirmée auprès du registre le [date] ».
+            .select(
+              "id,name,issuer,year,verification_status,verified_at,expires_at,source_label,registry_check_result,registry_checked_at",
+            )
+            .eq("therapist_id", therapistId)
+            // Visibilité publique : uniquement les diplômes validés par un administrateur.
+            .eq("verification_status", "verified")
+            .order("year", { ascending: false });
+          if (error) throw error;
+          return (certs ?? []) as any;
+        },
+        [],
+      ),
+      // Publications « Voix d'experts » : lecture serveur restreinte aux
+      // contenus publiés uniquement.
+      timedOptionalRead<Article[]>(
+        "therapist_profile_articles",
+        async () => {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: arts, error } = await supabaseAdmin
+            .from("therapist_articles")
+            .select("id,slug,titre,extrait,image_couverture,date_publication")
+            .eq("therapist_id", therapistId)
+            .eq("statut", "publie")
+            .order("date_publication", { ascending: false })
+            .limit(6);
+          if (error) throw error;
+          return (arts ?? []) as any;
+        },
+        [],
+      ),
+      timedOptionalRead<PublicEvent[]>(
+        "therapist_profile_events",
+        async () => {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const today = new Date().toISOString().slice(0, 10);
+          const { data: evs, error } = await supabaseAdmin
+            .from("events")
+            .select("id,title,short_description,category,event_date,start_time,format,location,is_paid,price,image_url")
+            .eq("therapist_id", therapistId)
+            .eq("status", "published")
+            .gte("event_date", today)
+            .order("event_date", { ascending: true })
+            .limit(6);
+          if (error) throw error;
+          // Une URL signée par image, comme avant, mais toutes en parallèle.
+          return (await Promise.all(
+            ((evs ?? []) as any[]).map(async (e) => {
+              let image: string | null = null;
+              if (e.image_url) {
+                const { data: signed } = await supabaseAdmin.storage
+                  .from("event-images")
+                  .createSignedUrl(e.image_url, 60 * 60 * 24 * 7);
+                image = signed?.signedUrl ?? null;
+              }
+              const { image_url, ...rest } = e;
+              return { ...rest, image_signed_url: image };
+            }),
+          )) as any;
+        },
+        [],
+      ),
+      // Certifications délivrées par des organismes externes (SVHH, SoulSense…).
+      // Uniquement les associations actives d'organismes actifs. Aucune donnée
+      // privée (external_reference) n'est renvoyée au public.
+      timedOptionalRead<OrgCertification[]>(
+        "therapist_profile_org_certifications",
+        async () => {
+          const { data: rows, error } = await supabase
+            .from("therapist_org_certifications")
+            .select(
+              "id,organization_id,certification_organizations!inner(id,code,display_name,logo_url,badge_color,certification_label,website_url,is_active)",
+            )
+            .eq("therapist_id", therapistId)
+            .eq("status", "active");
+          if (error) throw error;
+          return ((rows ?? []) as any[])
+            .map((r) => {
+              const o = Array.isArray(r.certification_organizations)
+                ? r.certification_organizations[0]
+                : r.certification_organizations;
+              if (!o || o.is_active === false) return null;
+              return {
+                id: r.id as string,
+                organization_id: r.organization_id as string,
+                code: o.code as string,
+                display_name: o.display_name as string,
+                logo_url: (o.logo_url ?? null) as string | null,
+                badge_color: (o.badge_color ?? null) as string | null,
+                certification_label: (o.certification_label ?? null) as string | null,
+                website_url: (o.website_url ?? null) as string | null,
+              };
+            })
+            .filter(Boolean) as OrgCertification[];
+        },
+        [],
+      ),
+    ]);
 
     return { therapist, reviews, certifications, articles, events, orgCertifications };
   });

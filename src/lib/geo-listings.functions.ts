@@ -38,6 +38,8 @@ export type PublicTherapistCard = {
 export const listTherapistsByCanton = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ canton: z.string().min(2).max(2) }).parse(data))
   .handler(async ({ data }) => {
+    const { timedRead } = await import("@/lib/read-metrics.server");
+    return timedRead("directory_canton", async () => {
     const supabase = await publicClient();
     const { data: rows, error } = await supabase
       .from("therapists")
@@ -49,6 +51,7 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
       .limit(300);
     if (error) throw new Error("Impossible de charger les thérapeutes.");
     return { therapists: (rows ?? []) as unknown as PublicTherapistCard[] };
+    });
   });
 
 /**
@@ -63,6 +66,8 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
  * toucher.
  */
 export const listAllPublicTherapists = createServerFn({ method: "GET" }).handler(async () => {
+  const { timedRead } = await import("@/lib/read-metrics.server");
+  return timedRead("directory_index", async () => {
   const supabase = await publicClient();
   const { data: rows, error } = await supabase
     .from("therapists")
@@ -74,6 +79,7 @@ export const listAllPublicTherapists = createServerFn({ method: "GET" }).handler
     .limit(1000);
   if (error) throw new Error("Impossible de charger les thérapeutes.");
   return { therapists: (rows ?? []) as unknown as PublicTherapistCard[] };
+  });
 });
 
 /**
@@ -81,6 +87,8 @@ export const listAllPublicTherapists = createServerFn({ method: "GET" }).handler
  * et leur nombre de fiches. Sert au listing par ville et au maillage interne.
  */
 export const listPublicCities = createServerFn({ method: "GET" }).handler(async () => {
+  const { timedRead } = await import("@/lib/read-metrics.server");
+  return timedRead("directory_cities", async () => {
   const supabase = await publicClient();
   const { data: rows, error } = await supabase
     .from("therapists")
@@ -104,11 +112,14 @@ export const listPublicCities = createServerFn({ method: "GET" }).handler(async 
   return {
     cities: [...map.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
   };
+  });
 });
 
 export const listTherapistsByCity = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ citySlug: z.string().min(1).max(120) }).parse(data))
   .handler(async ({ data }) => {
+    const { timedRead } = await import("@/lib/read-metrics.server");
+    return timedRead("directory_city", async () => {
     const supabase = await publicClient();
     const { data: rows, error } = await supabase
       .from("therapists")
@@ -128,4 +139,5 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
       cityName: therapists[0]?.city ?? null,
       canton: therapists[0]?.canton ?? null,
     };
+    });
   });

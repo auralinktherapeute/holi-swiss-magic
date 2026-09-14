@@ -5,6 +5,8 @@ import { getFamilyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 
 export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
   component: Page,
@@ -15,12 +17,9 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
    * `specialty_families` porte name_fr/de/it/en. Détecté par npm run seo:check.
    */
   loader: async ({ params }) => {
-    try {
-      const page = await getFamilyPage({ data: { slug: params.familySlug } });
-      return { page };
-    } catch {
-      return { page: null };
-    }
+    const res = await loadEssential(() => getFamilyPage({ data: { slug: params.familySlug } }));
+    if (!res.ok) return { page: null, unavailable: true as const };
+    return { page: res.data, unavailable: false as const };
   },
   head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/therapeutes/famille/${params.familySlug}`;
@@ -53,6 +52,13 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
 });
 
 function Page() {
+  const { lang } = useParams({ from: "/$lang/therapeutes/famille/$familySlug" });
+  const { unavailable } = Route.useLoaderData();
+  if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
+  return <FamilyPage />;
+}
+
+function FamilyPage() {
   const { lang, familySlug } = useParams({ from: "/$lang/therapeutes/famille/$familySlug" });
   const fetchFamily = useServerFn(getFamilyPage);
   // `initialData` vient du loader : le H1 et la liste sont présents dès le HTML

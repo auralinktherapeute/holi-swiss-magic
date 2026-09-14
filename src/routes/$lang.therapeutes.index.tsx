@@ -13,6 +13,8 @@ import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { DIRECTORY_INTRO, DIRECTORY_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { listAllPublicTherapists, type PublicTherapistCard } from "@/lib/geo-listings.functions";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -47,12 +49,9 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
   // chemin de crawl vers les profils. Ce loader n'alimente QUE l'index statique
   // du bas de page — il ne touche pas au useQuery interactif.
   loader: async () => {
-    try {
-      const { therapists } = await listAllPublicTherapists();
-      return { seoTherapists: therapists };
-    } catch {
-      return { seoTherapists: [] as PublicTherapistCard[] };
-    }
+    const res = await loadEssential(() => listAllPublicTherapists());
+    if (!res.ok) return { seoTherapists: [] as PublicTherapistCard[], unavailable: true as const };
+    return { seoTherapists: res.data.therapists, unavailable: false as const };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -197,7 +196,18 @@ function useSmallViewport() {
   return isSmall;
 }
 
+/**
+ * Garde d'indisponibilité : en panne de lecture essentielle, on n'appelle aucun
+ * des hooks de l'annuaire (l'ordre des hooks reste stable dans chaque branche).
+ */
 function Page() {
+  const { lang } = useParams({ from: "/$lang/therapeutes/" });
+  const { unavailable } = Route.useLoaderData();
+  if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
+  return <DirectoryPage />;
+}
+
+function DirectoryPage() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
   // Index SSR uniquement — la recherche interactive ci-dessous garde sa propre requête.
   const { seoTherapists } = Route.useLoaderData();

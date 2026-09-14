@@ -4,6 +4,9 @@ import { listTherapistsByCity } from "@/lib/geo-listings.functions";
 import { cantonName } from "@/lib/geo-listings";
 import { ogLocale, seoLinks, SITE } from "@/lib/seo";
 import { TherapistCardCompact } from "@/components/holiswiss/TherapistCardCompact";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 
 const T = {
   fr: {
@@ -79,12 +82,16 @@ function titleCase(slug: string) {
 export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
   component: Page,
   loader: async ({ params }) => {
-    try {
-      const res = await listTherapistsByCity({ data: { citySlug: params.citySlug } });
-      return res;
-    } catch {
-      return { therapists: [], cityName: null, canton: null };
+    const res = await loadEssential(() => listTherapistsByCity({ data: { citySlug: params.citySlug } }));
+    if (!res.ok) {
+      return {
+        therapists: [] as PublicTherapistCard[],
+        cityName: null,
+        canton: null,
+        unavailable: true as const,
+      };
     }
+    return { ...res.data, unavailable: false as const };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -98,7 +105,9 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
       first_name: string | null;
       last_name: string | null;
     }>;
-    const empty = list.length === 0;
+    // Panne : ni noindex ni ItemList vide — seul un vrai vide reste noindex.
+    const unavailable = loaderData?.unavailable === true;
+    const empty = !unavailable && list.length === 0;
     return {
       meta: [
         { title },
@@ -115,7 +124,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         ...(empty ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
       links: seoLinks(lang, `/therapeutes/ville/${params.citySlug}`),
-      scripts: empty
+      scripts: empty || unavailable
         ? []
         : [
             {
@@ -154,8 +163,9 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
 
 function Page() {
   const { lang, citySlug: slug } = useParams({ from: "/$lang/therapeutes/ville/$citySlug" });
-  const { therapists, cityName, canton } = Route.useLoaderData();
+  const { therapists, cityName, canton, unavailable } = Route.useLoaderData();
   const t = tr(lang);
+  if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const name = cityName ?? titleCase(slug);
 
   return (

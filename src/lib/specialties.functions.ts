@@ -202,12 +202,17 @@ export const searchSpecialties = createServerFn({ method: "POST" })
 export const getFamilyPage = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => ({ slug: String(data?.slug ?? "").slice(0, 80) }))
   .handler(async ({ data }) => {
+    const { timedRead } = await import("@/lib/read-metrics.server");
+    return timedRead("directory_family", async () => {
     const sb = serverClient();
-    const { data: family } = await sb
+    const { data: family, error: familyError } = await sb
       .from("specialty_families")
       .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,icon")
       .eq("slug", data.slug)
       .maybeSingle();
+    // Panne technique ≠ famille inexistante : on propage pour que la route
+    // réponde « temporairement indisponible » au lieu d'une page vide.
+    if (familyError) throw familyError;
     if (!family) return null;
 
     const specs = await selectSpecialties(
@@ -245,6 +250,7 @@ export const getFamilyPage = createServerFn({ method: "GET" })
     }
 
     return { family, specialties: specs ?? [], therapists };
+    });
   });
 
 export const getSpecialtyPage = createServerFn({ method: "GET" })
@@ -390,6 +396,8 @@ export const getCategoryPage = createServerFn({ method: "GET" })
     category: asFinderCategory(String(data?.category ?? "")),
   }))
   .handler(async ({ data }) => {
+    const { timedRead } = await import("@/lib/read-metrics.server");
+    return timedRead("directory_category", async () => {
     const sb = serverClient();
 
     const specs = await selectSpecialties(
@@ -428,6 +436,7 @@ export const getCategoryPage = createServerFn({ method: "GET" })
     }
 
     return { category: data.category, specialties: specs ?? [], therapists };
+    });
   });
 
 // ─── Pastilles du jour (page d'accueil) ───

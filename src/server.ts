@@ -2,6 +2,10 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  UNAVAILABLE_MARKER_HEADER,
+  UNAVAILABLE_RETRY_AFTER_SECONDS,
+} from "./lib/read-health";
 
 // CSP volontairement en Report-Only : elle ne bloque rien, elle journalise les
 // violations dans la console du navigateur pour calibrer la liste des sources
@@ -48,6 +52,26 @@ function withSecurityHeaders(response: Response): Response {
   });
 }
 
+// Panne de lecture essentielle signalée par un loader public (voir
+// src/lib/read-health.ts) : TanStack Start écrase le statut du document après
+// rendu, mais conserve les en-têtes. On relaie donc le marqueur en un véritable
+// HTTP 503, non cacheable, avec Retry-After — comme le fait déjà sitemap.xml.
+function applyUnavailableMarker(response: Response): Response {
+  if (!response.headers.has(UNAVAILABLE_MARKER_HEADER)) return response;
+  if (response.status >= 400) return response;
+  const headers = new Headers(response.headers);
+  headers.delete(UNAVAILABLE_MARKER_HEADER);
+  headers.set("Cache-Control", "no-store");
+  if (!headers.has("Retry-After")) {
+    headers.set("Retry-After", String(UNAVAILABLE_RETRY_AFTER_SECONDS));
+  }
+  return new Response(response.body, {
+    status: 503,
+    statusText: "Service Unavailable",
+    headers,
+  });
+}
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -87,7 +111,9 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
+      return withSecurityHeaders(
+        applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+      );
     } catch (error) {
       console.error(error);
       return withSecurityHeaders(
