@@ -40,7 +40,7 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Special = { date: string; start_time: string; end_time: string };
 type Block = { start_date: string; end_date: string };
-type Appt = { appointment_date: string; appointment_time: string };
+type PartialBlock = { start_date: string; end_date: string; start_time: string | null; end_time: string | null };
 type Busy = { startsAt: string; endsAt: string };
 
 export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
