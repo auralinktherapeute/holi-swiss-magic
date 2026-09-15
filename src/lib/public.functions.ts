@@ -251,12 +251,14 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
     if (therapistError) throw new Error("Impossible de charger les créneaux.");
     if (!therapist) return { slots: [], busy: [] };
 
+    // Intervalles COMPLETS : l'heure de départ seule ne suffit pas à écarter un
+    // créneau qui chevauche partiellement une séance plus longue.
     const { data: rows, error } = await supabaseAdmin
       .from("appointments")
-      .select("appointment_date, appointment_time")
+      .select("appointment_date, appointment_time, duration_minutes, start_time, end_time")
       .eq("therapist_id", data.therapistId)
       .eq("appointment_date", data.appointmentDate)
-      .in("status", ["pending", "confirmed"]);
+      .in("status", ["pending", "confirmed", "completed", "blocked"]);
 
     if (error) throw new Error("Impossible de charger les créneaux.");
 
@@ -267,21 +269,45 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
     const dayStart = new Date(`${data.appointmentDate}T00:00:00Z`);
     const from = new Date(dayStart.getTime() - 86400000).toISOString();
     const to = new Date(dayStart.getTime() + 2 * 86400000).toISOString();
-    const { data: busyRows } = await (supabaseAdmin as any)
+    // Lecture ESSENTIELLE : son échec ne doit pas faire croire à des créneaux
+    // libres pendant que le praticien est ailleurs.
+    const { data: busyRows, error: busyError } = await (supabaseAdmin as any)
       .from("therapist_external_busy")
       .select("starts_at, ends_at")
       .eq("therapist_id", data.therapistId)
       .lt("starts_at", to)
       .gt("ends_at", from);
 
+    if (busyError) throw new Error("Impossible de charger les créneaux.");
+
+    const booked = (rows ?? []) as Array<{
+      appointment_date: string | null;
+      appointment_time: string | null;
+      duration_minutes: number | null;
+      start_time: string | null;
+      end_time: string | null;
+    }>;
+
     return {
-      slots: rows ?? [],
+      // `slots` conservé tel quel : la version du site déjà publiée le lit.
+      slots: booked.map((r) => ({
+        appointment_date: r.appointment_date,
+        appointment_time: r.appointment_time,
+      })),
+      booked: booked.map((r) => ({
+        date: r.appointment_date,
+        time: r.appointment_time,
+        durationMinutes: r.duration_minutes,
+        startsAt: r.start_time,
+        endsAt: r.end_time,
+      })),
       busy: ((busyRows ?? []) as Array<{ starts_at: string; ends_at: string }>).map((b) => ({
         startsAt: b.starts_at,
         endsAt: b.ends_at,
       })),
     };
   });
+
 
 
 export const listPublishedEvents = createServerFn({ method: "GET" }).handler(async () => {
