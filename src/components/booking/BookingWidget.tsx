@@ -25,7 +25,7 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { gridColumnIndex, localDateISO, parseDateOnly, storageDow } from "@/lib/dateUtils";
-import { filterAvailableSlots } from "@/lib/booking-slots";
+import { appointmentsToBusyRanges, filterAvailableSlots, isSlotBlocked } from "@/lib/booking-slots";
 import {
   AlertDialog,
   AlertDialogAction,
