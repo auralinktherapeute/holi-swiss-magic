@@ -25,7 +25,7 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { gridColumnIndex, localDateISO, parseDateOnly, storageDow } from "@/lib/dateUtils";
-import { filterAvailableSlots } from "@/lib/booking-slots";
+import { appointmentsToBusyRanges, filterAvailableSlots, isSlotBlocked } from "@/lib/booking-slots";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +40,7 @@ import {
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Special = { date: string; start_time: string; end_time: string };
 type Block = { start_date: string; end_date: string };
-type Appt = { appointment_date: string; appointment_time: string };
+type PartialBlock = { start_date: string; end_date: string; start_time: string | null; end_time: string | null };
 type Busy = { startsAt: string; endsAt: string };
 
 export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
@@ -78,8 +78,23 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [avs, setAvs] = useState<Avail[]>([]);
   const [specials, setSpecials] = useState<Special[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
-  const [taken, setTaken] = useState<Appt[]>([]);
+  const [partialBlocks, setPartialBlocks] = useState<PartialBlock[]>([]);
+  // Rendez-vous existants convertis en INTERVALLES (durée comprise), et
+  // occupations importées de l'agenda personnel du praticien.
+  const [bookedRanges, setBookedRanges] = useState<Busy[]>([]);
   const [busy, setBusy] = useState<Busy[]>([]);
+  // Les horaires et les occupations sont des lectures ESSENTIELLES : en cas
+  // d'échec on n'affiche AUCUN créneau, jamais une fausse disponibilité.
+  const [schedLoading, setSchedLoading] = useState(true);
+  const [schedError, setSchedError] = useState(false);
+  const [schedReload, setSchedReload] = useState(0);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState(false);
+  const [slotsReload, setSlotsReload] = useState(0);
+  // Jeton de requête : une réponse arrivée après un changement de jour, de
+  // praticien ou de service doit être ignorée, pas appliquée.
+  const slotsReqRef = useRef(0);
+
 
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
@@ -114,43 +129,79 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   };
 
   useEffect(() => {
+    let cancelled = false;
+    setSchedLoading(true);
+    setSchedError(false);
+    const fail = () => {
+      if (cancelled) return;
+      // Aucune donnée partielle : mieux vaut « indisponible » qu'un agenda
+      // faussement ouvert.
+      setAvs([]); setSpecials([]); setBlocks([]); setPartialBlocks([]);
+      setSelectedDate(null); setSelectedTime(null);
+      setSchedError(true); setSchedLoading(false);
+    };
     (async () => {
       const todayISO = localDateISO(new Date());
-      const [{ data: a }, { data: sp }, { data: b }] = await Promise.all([
+      const [aRes, spRes, bRes] = await Promise.all([
         // Horaires HEBDOMADAIRES uniquement : les lignes portant une
         // `specific_date` ont aussi un `day_of_week`, les inclure ouvrirait
         // tous les jours de la semaine correspondants (bug constaté).
         supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).is("specific_date", null).not("day_of_week", "is", null),
         // Disponibilités PONCTUELLES : elles n'ouvrent que leur date exacte.
         supabase.from("availabilities").select("specific_date,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("specific_date", "is", null).gte("specific_date", todayISO),
-        supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day").eq("therapist_id", therapistId),
+        supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day,start_time,end_time").eq("therapist_id", therapistId),
       ]);
+      if (cancelled) return;
+      // Une erreur sur l'une de ces trois lectures était jusqu'ici ignorée.
+      if (aRes.error || spRes.error || bRes.error) { fail(); return; }
+      const a = aRes.data, sp = spRes.data, b = bRes.data;
       setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
       setSpecials(((sp ?? []) as Array<{ specific_date: string; start_time: string; end_time: string }>)
         .map(({ specific_date, start_time, end_time }) => ({ date: specific_date, start_time, end_time })));
-      // Only all-day blocks fully prevent date selection; partial-time blocks remain
-      // (the booking widget operates at day granularity for now).
-      setBlocks(((b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean }>)
+      const blockRows = (b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean; start_time?: string | null; end_time?: string | null }>;
+      // Seuls les blocages de journée entière ferment la date ; les blocages
+      // partiels ferment les créneaux qu'ils recouvrent (voir slotsForDay).
+      setBlocks(blockRows
         .filter((x) => x.is_all_day !== false)
         .map(({ start_date, end_date }) => ({ start_date, end_date })));
-    })();
-  }, [therapistId]);
+      setPartialBlocks(blockRows
+        .filter((x) => x.is_all_day === false && x.start_time && x.end_time)
+        .map(({ start_date, end_date, start_time, end_time }) => ({ start_date, end_date, start_time: start_time ?? null, end_time: end_time ?? null })));
+      setSchedLoading(false);
+    })().catch(fail);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [therapistId, schedReload]);
 
 
   useEffect(() => {
-    if (!selectedDate) return;
-    let cancelled = false;
+    if (!selectedDate) {
+      setBookedRanges([]); setBusy([]); setSlotsError(false); setSlotsLoading(false);
+      return;
+    }
+    // Nouveau jeton : toute réponse d'une requête antérieure sera écartée.
+    const token = ++slotsReqRef.current;
+    setSlotsLoading(true);
+    setSlotsError(false);
+    setBookedRanges([]);
+    setBusy([]);
     fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } })
       .then((res) => {
-        if (cancelled) return;
-        setTaken(res.slots as Appt[]);
-        setBusy((res as { busy?: Busy[] }).busy ?? []);
+        if (token !== slotsReqRef.current) return;
+        const payload = res as { booked?: Parameters<typeof appointmentsToBusyRanges>[0]; busy?: Busy[] };
+        setBookedRanges(appointmentsToBusyRanges(payload.booked ?? []));
+        setBusy(payload.busy ?? []);
+        setSlotsLoading(false);
       })
       .catch(() => {
-        if (!cancelled) { setTaken([]); setBusy([]); }
+        if (token !== slotsReqRef.current) return;
+        setBookedRanges([]); setBusy([]);
+        setSelectedTime(null);
+        setSlotsError(true); setSlotsLoading(false);
       });
-    return () => { cancelled = true; };
-  }, [fetchBookedSlots, selectedDate, therapistId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchBookedSlots, selectedDate, therapistId, slotMin, slotsReload]);
+
 
 
   const days = useMemo(() => {
@@ -172,8 +223,31 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     return cells;
   }, [month, avs, specials, blocks]);
 
+  // Blocages partiels du jour sélectionné, convertis en intervalles.
+  const partialBlockRanges = useMemo<Busy[]>(() => {
+    if (!selectedDate) return [];
+    return appointmentsToBusyRanges(
+      partialBlocks
+        .filter((p) => selectedDate >= p.start_date && selectedDate <= p.end_date && p.start_time && p.end_time)
+        .map((p) => {
+          const [sh, sm] = (p.start_time as string).split(":").map(Number);
+          const [eh, em] = (p.end_time as string).split(":").map(Number);
+          const minutes = Math.max(1, (eh * 60 + em) - (sh * 60 + sm));
+          return { date: selectedDate, time: p.start_time, durationMinutes: minutes };
+        }),
+    );
+  }, [partialBlocks, selectedDate]);
+
+  const allBusyRanges = useMemo<Busy[]>(
+    () => [...bookedRanges, ...busy, ...partialBlockRanges],
+    [bookedRanges, busy, partialBlockRanges],
+  );
+
   const slotsForDay = useMemo(() => {
     if (!selectedDate) return [];
+    // Tant que les occupations ne sont pas connues (chargement ou panne), on
+    // n'affiche AUCUN créneau : une fausse disponibilité coûte un déplacement.
+    if (schedLoading || schedError || slotsLoading || slotsError) return [];
     const parsed = parseDateOnly(selectedDate);
     if (!parsed) return [];
     const dow = storageDow(parsed);
@@ -186,19 +260,29 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const all = Array.from(
       new Set(ranges.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin))),
     ).sort();
-    const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
 
-    // Un créneau qui chevauche une occupation importée de l'agenda personnel
-    // du praticien n'est pas réservable.
+    // Un créneau qui chevauche un rendez-vous existant, un blocage partiel ou
+    // une occupation importée de l'agenda personnel n'est pas réservable — la
+    // DURÉE ENTIÈRE compte, pas seulement l'heure de départ.
     //
     // Le calcul est ancré sur le fuseau du THÉRAPEUTE, pas sur celui du
     // navigateur : « 09:00 » est l'heure murale du praticien, telle que la
     // base la stocke. Construire l'instant avec `new Date(y, m, d, h, min)`
     // aurait utilisé le fuseau du visiteur — juste depuis la Suisse, faux
     // d'une heure depuis Londres, de plusieurs depuis un autre continent.
-    const free = all.filter((s) => !takenSet.has(s));
-    return filterAvailableSlots(free, selectedDate, slotMin, busy);
-  }, [selectedDate, avs, specials, taken, busy, slotMin]);
+    return filterAvailableSlots(all, selectedDate, slotMin, allBusyRanges);
+  }, [selectedDate, avs, specials, allBusyRanges, slotMin, schedLoading, schedError, slotsLoading, slotsError]);
+
+  // Sélection devenue caduque (créneau pris entre-temps, durée changée) :
+  // on l'efface SANS toucher au formulaire déjà rempli.
+  useEffect(() => {
+    if (!selectedTime || slotsLoading || slotsError || schedLoading || schedError) return;
+    if (!slotsForDay.includes(selectedTime)) {
+      setSelectedTime(null);
+      toast.info(t("booking.slot_expired"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slotsForDay, selectedTime, slotsLoading, slotsError, schedLoading, schedError]);
 
 
   const openConfirm = (e: React.FormEvent) => {
@@ -215,6 +299,32 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSubmitting(true);
+
+    // Recontrôle au moment de l'envoi : la page a pu rester ouverte longtemps.
+    // Ce contrôle ne remplace pas la garantie en base, il évite un refus sec.
+    try {
+      const fresh = await fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } });
+      const payload = fresh as { booked?: Parameters<typeof appointmentsToBusyRanges>[0]; busy?: Busy[] };
+      const ranges = [
+        ...appointmentsToBusyRanges(payload.booked ?? []),
+        ...(payload.busy ?? []),
+        ...partialBlockRanges,
+      ];
+      if (isSlotBlocked(selectedTime, selectedDate, slotMin, ranges)) {
+        setSubmitting(false);
+        setConfirmOpen(false);
+        setSelectedTime(null);
+        setSlotsReload((n) => n + 1);
+        toast.error(t("booking.slot_taken"));
+        return;
+      }
+    } catch {
+      setSubmitting(false);
+      setConfirmOpen(false);
+      toast.error(t("booking.slots_error"));
+      return;
+    }
+
     // Analytics maison : clic de confirmation, indépendant du succès de
     // l'insertion ci-dessous (mesure l'intention, pas la conversion —
     // celle-ci reste lisible via la table appointments).
@@ -237,6 +347,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     setConfirmOpen(false);
     if (error) {
       console.error("[booking] appointment insert failed", error);
+      // Refus de la garantie posée en base : le créneau vient d'être pris.
+      if (/BOOKING_SLOT_CONFLICT/.test(error.message ?? "")) {
+        setSelectedTime(null);
+        setSlotsReload((n) => n + 1);
+        toast.error(t("booking.slot_taken"));
+        return;
+      }
       toast.error(t("booking.error_generic", "Impossible d'envoyer la demande. Veuillez réessayer."));
       return;
     }
@@ -246,6 +363,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     await clearDraft();
     toast.success(t("booking.request_sent_toast"));
   };
+
 
   if (success) {
     return (
@@ -318,7 +436,18 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
           </div>
         )}
 
+        {schedError ? (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 space-y-3" aria-live="polite">
+            <p className="text-sm text-foreground">{t("booking.schedule_error")}</p>
+            <Button type="button" variant="outline" className="min-h-11" onClick={() => setSchedReload((n) => n + 1)}>
+              {t("booking.retry")}
+            </Button>
+          </div>
+        ) : schedLoading ? (
+          <p className="text-sm text-muted-foreground" aria-live="polite">{t("booking.slots_loading")}</p>
+        ) : (
         <div className={services.length > 0 && !selectedService ? "pointer-events-none opacity-40" : ""} aria-disabled={services.length > 0 && !selectedService}>
+
           {services.length > 0 && <div className="text-sm font-medium mb-2">2. Choisissez une date</div>}
           <div className="flex items-center justify-between mb-3">
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
@@ -352,28 +481,56 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
             })}
           </div>
         </div>
+        )}
+
 
         {selectedDate && (
           <div>
             <div className="text-sm font-medium mb-2">{t("booking.available_slots")}</div>
-            {slotsForDay.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {slotsForDay.map((s) => {
-                  const sel = selectedTime === s;
-                  return (
-                    <Badge key={s} onClick={() => setSelectedTime(s)}
-                      className={`cursor-pointer px-3 py-1.5 text-sm ${sel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
-                      style={sel && accent ? { background: accent, color: "#fff" } : (!sel && accent ? { background: `${accent}1a`, color: accent } : undefined)}>
-                      {s}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
+            <div aria-live="polite">
+              {slotsLoading ? (
+                <p className="text-sm text-muted-foreground">{t("booking.slots_loading")}</p>
+              ) : slotsError ? (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-3">
+                  <p className="text-sm text-foreground">{t("booking.slots_error")}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11"
+                    onClick={() => setSlotsReload((n) => n + 1)}
+                  >
+                    {t("booking.retry")}
+                  </Button>
+                </div>
+              ) : slotsForDay.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {slotsForDay.map((s) => {
+                    const sel = selectedTime === s;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={sel}
+                        onClick={() => setSelectedTime(s)}
+                        className="min-h-11 min-w-11 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Badge
+                          className={`cursor-pointer px-3 py-1.5 text-sm ${sel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                          style={sel && accent ? { background: accent, color: "#fff" } : (!sel && accent ? { background: `${accent}1a`, color: accent } : undefined)}
+                        >
+                          {s}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
+
 
         {selectedDate && selectedTime && (services.length === 0 || selectedService) && (
           <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">

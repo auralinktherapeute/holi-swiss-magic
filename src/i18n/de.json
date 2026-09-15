@@ -336,7 +336,13 @@
       "Oktober",
       "November",
       "Dezember"
-    ]
+    ],
+    "slots_loading": "Verfügbarkeiten werden geprüft…",
+    "slots_error": "Die Verfügbarkeiten können derzeit nicht geprüft werden. Es werden keine Termine angezeigt, um eine unmögliche Buchung zu vermeiden.",
+    "schedule_error": "Die Öffnungszeiten dieser Therapeutin oder dieses Therapeuten können derzeit nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "slot_taken": "Dieser Termin wurde gerade vergeben. Bitte wählen Sie einen anderen Termin.",
+    "slot_expired": "Dieser Termin ist nicht mehr verfügbar. Bitte wählen Sie einen anderen; Ihre Angaben bleiben erhalten."
   },
   "categories": {
     "sophrologie": "Sophrologie",

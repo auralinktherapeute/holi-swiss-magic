@@ -68,3 +68,50 @@ export function filterAvailableSlots(
   if (!ranges.length) return slots;
   return slots.filter((s) => !isSlotBlocked(s, dateISO, slotMinutes, ranges, tz));
 }
+
+export interface BookedAppointment {
+  date?: string | null;
+  time?: string | null;
+  durationMinutes?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+}
+
+/**
+ * Convertit des rendez-vous existants en périodes occupées.
+ *
+ * On garde l'INTERVALLE ENTIER, pas seulement l'heure de départ : une séance
+ * de 90 min à 10:00 doit fermer aussi le créneau de 11:00, ce qu'une simple
+ * comparaison d'heures de début laissait ouvert.
+ *
+ * Les instants stockés (`startsAt`/`endsAt`) font foi quand ils existent ;
+ * sinon on reconstruit l'intervalle depuis l'heure murale du praticien.
+ * Une ligne inexploitable est ignorée plutôt que de fermer tout l'agenda.
+ */
+export function appointmentsToBusyRanges(
+  rows: BookedAppointment[],
+  tz = "Europe/Zurich",
+): BusyRange[] {
+  const out: BusyRange[] = [];
+  for (const r of rows) {
+    const dur = Math.max(1, Number(r.durationMinutes) || 60);
+    if (r.startsAt) {
+      const s = Date.parse(r.startsAt);
+      if (Number.isNaN(s)) continue;
+      const e = r.endsAt && !Number.isNaN(Date.parse(r.endsAt))
+        ? Date.parse(r.endsAt)
+        : s + dur * 60000;
+      out.push({ startsAt: new Date(s).toISOString(), endsAt: new Date(e).toISOString() });
+      continue;
+    }
+    if (!r.date || !r.time) continue;
+    const start = localDateTimeToUtc(r.date, r.time, tz);
+    if (!start) continue;
+    out.push({
+      startsAt: start.toISOString(),
+      endsAt: new Date(start.getTime() + dur * 60000).toISOString(),
+    });
+  }
+  return out;
+}
+

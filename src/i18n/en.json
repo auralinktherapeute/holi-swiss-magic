@@ -336,7 +336,13 @@
       "October",
       "November",
       "December"
-    ]
+    ],
+    "slots_loading": "Checking availability…",
+    "slots_error": "Availability cannot be checked right now. No slots are shown, to avoid a booking that could not be honoured.",
+    "schedule_error": "This therapist's opening hours cannot be loaded right now.",
+    "retry": "Try again",
+    "slot_taken": "This slot has just been booked. Please choose another slot.",
+    "slot_expired": "This slot is no longer available. Please choose another one; your details are kept."
   },
   "categories": {
     "sophrologie": "Sophrology",

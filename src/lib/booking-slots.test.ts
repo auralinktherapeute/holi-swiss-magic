@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isSlotBlocked, filterAvailableSlots, type BusyRange } from "./booking-slots";
+import { isSlotBlocked, filterAvailableSlots, appointmentsToBusyRanges, type BusyRange } from "./booking-slots";
 
 // Réunion privée de 09:00 à 11:00 heure suisse, un jour d'été (UTC+2).
 const MATIN: BusyRange[] = [
@@ -80,5 +80,46 @@ describe("filterAvailableSlots", () => {
   it("rend la liste intacte sans période importée", () => {
     const slots = ["08:00", "09:00"];
     expect(filterAvailableSlots(slots, D, 60, [])).toBe(slots);
+  });
+});
+
+describe("appointmentsToBusyRanges", () => {
+  it("garde la durée entière d'un rendez-vous existant", () => {
+    // 10:00 + 90 min = 11:30 heure suisse (été, UTC+2) → 08:00Z–09:30Z.
+    const r = appointmentsToBusyRanges([{ date: D, time: "10:00:00", durationMinutes: 90 }]);
+    expect(r).toEqual([{ startsAt: "2026-09-01T08:00:00.000Z", endsAt: "2026-09-01T09:30:00.000Z" }]);
+    // Le créneau de 11:00 est fermé, ce qu'une comparaison d'heures de départ
+    // laissait ouvert ; celui de 11:30 reste libre (bord adjacent).
+    expect(isSlotBlocked("11:00", D, 60, r)).toBe(true);
+    expect(isSlotBlocked("11:30", D, 60, r)).toBe(false);
+    expect(isSlotBlocked("09:00", D, 60, r)).toBe(false);
+  });
+
+  it("préfère les instants stockés quand ils existent", () => {
+    const r = appointmentsToBusyRanges([
+      { date: D, time: "10:00:00", durationMinutes: 60, startsAt: "2026-09-01T13:00:00.000Z", endsAt: "2026-09-01T14:00:00.000Z" },
+    ]);
+    expect(r).toEqual([{ startsAt: "2026-09-01T13:00:00.000Z", endsAt: "2026-09-01T14:00:00.000Z" }]);
+  });
+
+  it("complète une fin manquante avec la durée", () => {
+    const r = appointmentsToBusyRanges([{ startsAt: "2026-09-01T13:00:00.000Z", durationMinutes: 30 }]);
+    expect(r).toEqual([{ startsAt: "2026-09-01T13:00:00.000Z", endsAt: "2026-09-01T13:30:00.000Z" }]);
+  });
+
+  it("retient 60 minutes par défaut quand la durée manque", () => {
+    const r = appointmentsToBusyRanges([{ date: D, time: "10:00" }]);
+    expect(r[0].endsAt).toBe("2026-09-01T09:00:00.000Z");
+  });
+
+  it("ignore une ligne inexploitable au lieu de fermer l'agenda", () => {
+    expect(appointmentsToBusyRanges([{ date: null, time: null }, { startsAt: "n'importe quoi" }])).toEqual([]);
+  });
+
+  it("chevauchement partiel entre durées différentes", () => {
+    // Séance existante 10:00–11:00 ; une demande de 30 min à 10:30 chevauche.
+    const r = appointmentsToBusyRanges([{ date: D, time: "10:00", durationMinutes: 60 }]);
+    expect(isSlotBlocked("10:30", D, 30, r)).toBe(true);
+    expect(isSlotBlocked("09:30", D, 30, r)).toBe(false);
   });
 });
