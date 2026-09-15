@@ -436,7 +436,18 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
           </div>
         )}
 
+        {schedError ? (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 space-y-3" aria-live="polite">
+            <p className="text-sm text-foreground">{t("booking.schedule_error")}</p>
+            <Button type="button" variant="outline" className="min-h-11" onClick={() => setSchedReload((n) => n + 1)}>
+              {t("booking.retry")}
+            </Button>
+          </div>
+        ) : schedLoading ? (
+          <p className="text-sm text-muted-foreground" aria-live="polite">{t("booking.slots_loading")}</p>
+        ) : (
         <div className={services.length > 0 && !selectedService ? "pointer-events-none opacity-40" : ""} aria-disabled={services.length > 0 && !selectedService}>
+
           {services.length > 0 && <div className="text-sm font-medium mb-2">2. Choisissez une date</div>}
           <div className="flex items-center justify-between mb-3">
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
