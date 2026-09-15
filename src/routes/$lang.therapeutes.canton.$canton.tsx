@@ -15,7 +15,7 @@ const T = {
     h1: (c: string) => `Thérapeutes holistiques dans le canton de ${c}`,
     title: (c: string) => `Thérapeutes à ${c} — Annuaire holistique | Holiswiss`,
     desc: (c: string) =>
-      `Trouvez un thérapeute holistique dans le canton de ${c} : profils vérifiés, spécialités, tarifs et prise de rendez-vous en ligne sur Holiswiss.`,
+      `Trouvez un thérapeute holistique dans le canton de ${c} : profils validés par Holiswiss, spécialités, tarifs et prise de rendez-vous en ligne sur Holiswiss.`,
     count: (n: number, c: string) =>
       `${n} ${n > 1 ? "thérapeutes" : "thérapeute"} référencés dans le canton de ${c}`,
     none: (c: string) => `Aucun thérapeute référencé dans le canton de ${c} pour le moment.`,

@@ -32,7 +32,7 @@ export const FAQ_PAGE: Record<FaqLang, FaqPageContent> = {
           },
           {
             q: "Les thérapeutes référencés sur Holiswiss sont-ils vérifiés ?",
-            a: "Oui. Les profils sont vérifiés et présentent la spécialité, l'approche, les langues parlées, les tarifs et, le cas échéant, les certifications professionnelles (ASCA, RME/EMR) ainsi que des avis authentiques laissés par des patients.",
+            a: "Chaque inscription est validée manuellement par Holiswiss avant publication : Holiswiss contrôle le profil, mais ne certifie pas le praticien. Le profil présente la spécialité, l'approche, les langues parlées, les tarifs et, lorsqu'un justificatif a réellement été examiné, les certifications déclarées (ASCA, RME/EMR), ainsi que des avis authentiques laissés par des patients.",
           },
           {
             q: "Dans quelles villes et cantons Holiswiss est-il disponible ?",

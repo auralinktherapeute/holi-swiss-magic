@@ -28,7 +28,8 @@ const SITE = "https://holiswiss.ch";
 const HEADER = `# Holiswiss — corpus intégral
 
 > Plateforme suisse dédiée aux thérapies holistiques et médecines douces, qui
-> connecte patients et praticiens certifiés dans les 26 cantons, en 4 langues
+> connecte patients et praticiens dans toute la Suisse (recherche couvrant les
+> 26 cantons), en 4 langues
 > (français, allemand, italien, anglais).
 
 Entité : Holiswiss (${SITE}). Éditeur : Gérald Henry, entrepreneur individuel,
@@ -42,8 +43,10 @@ ${SITE}/llms.txt. Les fiches de thérapeutes ne sont pas incluses : elles
 changent en continu, leur source fait foi (${SITE}/fr/therapeutes).
 
 ## Pages principales
-- ${SITE}/fr — Accueil : trouver un thérapeute holistique certifié en Suisse.
+- ${SITE}/fr — Accueil : trouver un thérapeute holistique en Suisse.
 - ${SITE}/fr/therapeutes — Annuaire : recherche par spécialité, canton et langue.
+  Chaque inscription est validée manuellement par Holiswiss avant publication ;
+  Holiswiss ne certifie pas les praticiens.
 - ${SITE}/fr/blog — Blog bien-être.
 - ${SITE}/fr/paroles — Voix d'experts : articles publiés par les thérapeutes.
 - ${SITE}/fr/evenements — Ateliers, retraites et conférences en Suisse.

@@ -98,7 +98,7 @@ export const organizationNode = {
   },
   image: LOGO_URL,
   description:
-    "Plateforme suisse de mise en relation avec des thérapeutes holistiques et praticiens en médecines douces certifiés, dans les 26 cantons et en 4 langues.",
+    "Plateforme suisse de mise en relation avec des thérapeutes holistiques et praticiens en médecines douces, inscrits après validation manuelle par Holiswiss, avec une recherche couvrant les 26 cantons et 4 langues.",
   slogan: "Trouvez le bon thérapeute, partout en Suisse.",
   email: "contact@holiswiss.ch",
   // « Exploitant : Gérald Henry » — /impressum, section « Éditeur du site ».

@@ -74,7 +74,9 @@ function formatDate(d: string, lang: string) {
 function Page() {
   const { lang } = Route.useParams();
   const { t, i18n } = useTranslation();
-  if (i18n.language !== lang) i18n.changeLanguage(lang);
+  // Côté serveur l'instance est déjà figée sur la langue de l'URL (voir __root) :
+  // on ne mute rien pendant le rendu.
+  if (typeof window !== "undefined" && i18n.language !== lang) i18n.changeLanguage(lang);
   // `initialData` vient du loader : les liens sont dans le HTML initial.
   const loaderData = Route.useLoaderData();
   const { data, isLoading } = useQuery({

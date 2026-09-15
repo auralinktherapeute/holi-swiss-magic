@@ -1,23 +1,27 @@
 # Holiswiss — Plateforme suisse de thérapies holistiques
 
 > Plateforme suisse dédiée aux thérapies holistiques et médecines douces, qui
-> connecte patients et praticiens certifiés dans les 26 cantons, en 4 langues
+> connecte patients et praticiens dans toute la Suisse (recherche couvrant les
+> 26 cantons), en 4 langues
 > (français, allemand, italien, anglais).
 
 ## À propos
 Holiswiss est un annuaire suisse de thérapeutes holistiques et de praticiens
-en médecines douces. Il aide les patients à trouver un praticien certifié près
-de chez eux, dans toute la Suisse (26 cantons ; langues : FR, DE, IT, EN), et
-à réserver une séance en ligne. Les profils sont vérifiés et accompagnés d'avis
-authentiques de patients.
+en médecines douces. Il aide les patients à trouver un praticien près
+de chez eux, dans toute la Suisse (recherche couvrant les 26 cantons ; langues :
+FR, DE, IT, EN), et à réserver une séance en ligne. Chaque inscription est
+validée manuellement par Holiswiss avant publication ; Holiswiss ne certifie pas
+les praticiens. La mention « certification vérifiée » n'apparaît que sur un
+justificatif réellement examiné, et une inscription à un registre professionnel
+n'est affichée comme confirmée qu'après un contrôle manuel daté.
 
 Entité : Holiswiss (holiswiss.ch). Pays : Suisse (CH). Contact : contact@holiswiss.ch.
 
 ## Ce que propose Holiswiss
-- Annuaire de thérapeutes certifiés, avec recherche par spécialité, canton et langue
+- Annuaire de thérapeutes, avec recherche par spécialité, canton et langue
 - Réservation de séances en ligne
-- Profils vérifiés avec avis authentiques
-- Carte interactive couvrant les 26 cantons suisses
+- Profils validés manuellement par Holiswiss, avec avis authentiques
+- Carte interactive dont la recherche couvre les 26 cantons suisses
 - Contenu et interface en 4 langues (FR, DE, IT, EN)
 
 ## Spécialités couvertes
@@ -29,7 +33,7 @@ médecine douce et de bien-être.
 ## Pages principales (multilingue)
 
 ## Pages
-- [Accueil](/fr): Trouver un thérapeute holistique certifié en Suisse.
+- [Accueil](/fr): Trouver un thérapeute holistique en Suisse.
 - [Annuaire des thérapeutes](/fr/therapeutes): Recherche par spécialité, canton et langue, avec carte interactive.
 - [Blog bien-être](/fr/blog): Articles et dossiers sur les thérapies holistiques et médecines douces.
 - [Voix d'experts](/fr/paroles): Articles publiés par les thérapeutes de la plateforme.

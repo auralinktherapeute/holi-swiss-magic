@@ -36,10 +36,10 @@ export const Route = createFileRoute("/$lang/")({
       en: "Holiswiss — Holistic therapists across Switzerland",
     };
     const descs: Record<string, string> = {
-      fr: "Trouvez un thérapeute certifié près de chez vous : sophrologie, hypnose, naturopathie, méditation. 26 cantons, profils vérifiés, réservation en ligne.",
-      de: "Finden Sie zertifizierte Therapeuten in Ihrer Nähe: Sophrologie, Hypnose, Naturheilkunde, Meditation. 26 Kantone, geprüfte Profile, Online-Buchung.",
-      it: "Trova terapeuti certificati vicino a te: sofrologia, ipnosi, naturopatia, meditazione. 26 cantoni, profili verificati, prenotazione online.",
-      en: "Find certified holistic therapists near you: sophrology, hypnosis, naturopathy, meditation. 26 cantons, verified profiles, online booking.",
+      fr: "Trouvez un thérapeute près de chez vous : sophrologie, hypnose, naturopathie, méditation. Recherche dans les 26 cantons, profils validés par Holiswiss, réservation en ligne.",
+      de: "Finden Sie Therapeut:innen in Ihrer Nähe: Sophrologie, Hypnose, Naturheilkunde, Meditation. Suche in allen 26 Kantonen, von Holiswiss geprüfte Profile, Online-Buchung.",
+      it: "Trova terapeuti vicino a te: sofrologia, ipnosi, naturopatia, meditazione. Ricerca nei 26 cantoni, profili convalidati da Holiswiss, prenotazione online.",
+      en: "Find holistic therapists near you: sophrology, hypnosis, naturopathy, meditation. Search across all 26 cantons, profiles validated by Holiswiss, online booking.",
     };
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;

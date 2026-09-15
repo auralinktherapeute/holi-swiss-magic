@@ -26,7 +26,7 @@
       "cta": "Cerca"
     },
     "trust": {
-      "verified": "Profili verificati",
+      "verified": "Profili convalidati da Holiswiss",
       "reviews": "Recensioni autentiche",
       "booking": "Prenotazione online",
       "cantons": "26 cantoni"
@@ -518,7 +518,7 @@
     "subtitle": "Sviluppa il tuo studio, ci occupiamo noi del resto. Più visibilità, meno burocrazia.",
     "search_placeholder": "Specialità, città…",
     "search_btn": "Cerca",
-    "trust_verified": "Professionisti verificati",
+    "trust_verified": "Professionisti convalidati da Holiswiss",
     "trust_cantons": "26 cantoni",
     "find_btn": "Trova un terapeuta",
     "signup_free": "Registrati gratis",
