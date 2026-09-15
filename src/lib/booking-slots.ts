@@ -69,6 +69,37 @@ export function filterAvailableSlots(
   return slots.filter((s) => !isSlotBlocked(s, dateISO, slotMinutes, ranges, tz));
 }
 
+/** Jour civil suivant, en arithmétique de calendrier (pas d'ajout de 24 h). */
+export function nextDateISO(dateISO: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateISO);
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + 1));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Bornes INSTANTANÉES d'une journée à l'heure du praticien.
+ *
+ * Sert à chercher les rendez-vous qui RECOUVRENT la journée, y compris celui
+ * de la veille qui franchit minuit : filtrer sur `appointment_date = jour`
+ * laissait ce cas entièrement invisible.
+ *
+ * La borne de fin passe par la date civile suivante, jamais par « +24 h » :
+ * les jours de changement d'heure font 23 ou 25 heures.
+ */
+export function swissDayWindow(
+  dateISO: string,
+  tz = "Europe/Zurich",
+): { from: string; to: string } | null {
+  const next = nextDateISO(dateISO);
+  if (!next) return null;
+  const from = localDateTimeToUtc(dateISO, "00:00", tz);
+  const to = localDateTimeToUtc(next, "00:00", tz);
+  if (!from || !to) return null;
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
+
 export interface BookedAppointment {
   date?: string | null;
   time?: string | null;

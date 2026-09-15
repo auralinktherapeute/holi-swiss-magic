@@ -60,6 +60,71 @@ function buildSlots(start: string, end: string, slotMin: number): string[] {
   return out;
 }
 
+type Schedule = { avs: Avail[]; specials: Special[]; blocks: Block[]; partialBlocks: PartialBlock[] };
+
+/**
+ * Lecture des horaires, disponibilités ponctuelles et indisponibilités.
+ *
+ * Une seule fonction, utilisée à l'affichage ET au recontrôle final : le
+ * recontrôle repartait sinon de données chargées à l'ouverture de la page,
+ * qui peuvent avoir des heures d'écart.
+ */
+async function loadSchedule(therapistId: string): Promise<Schedule> {
+  const todayISO = localDateISO(new Date());
+  const [aRes, spRes, bRes] = await Promise.all([
+    // Horaires HEBDOMADAIRES uniquement : les lignes portant une
+    // `specific_date` ont aussi un `day_of_week`, les inclure ouvrirait tous
+    // les jours de la semaine correspondants (bug constaté).
+    supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).is("specific_date", null).not("day_of_week", "is", null),
+    // Disponibilités PONCTUELLES : elles n'ouvrent que leur date exacte.
+    supabase.from("availabilities").select("specific_date,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("specific_date", "is", null).gte("specific_date", todayISO),
+    supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day,start_time,end_time").eq("therapist_id", therapistId),
+  ]);
+  if (aRes.error || spRes.error || bRes.error) throw new Error("SCHEDULE_READ_FAILED");
+  const blockRows = (bRes.data ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean; start_time?: string | null; end_time?: string | null }>;
+  return {
+    avs: ((aRes.data ?? []) as Avail[]).filter((x) => x.day_of_week !== null),
+    specials: ((spRes.data ?? []) as Array<{ specific_date: string; start_time: string; end_time: string }>)
+      .map(({ specific_date, start_time, end_time }) => ({ date: specific_date, start_time, end_time })),
+    // Seuls les blocages de journée entière ferment la date ; les blocages
+    // partiels ferment les créneaux qu'ils recouvrent.
+    blocks: blockRows.filter((x) => x.is_all_day !== false).map(({ start_date, end_date }) => ({ start_date, end_date })),
+    partialBlocks: blockRows
+      .filter((x) => x.is_all_day === false && x.start_time && x.end_time)
+      .map(({ start_date, end_date, start_time, end_time }) => ({ start_date, end_date, start_time: start_time ?? null, end_time: end_time ?? null })),
+  };
+}
+
+/** Créneaux ouverts par les horaires du praticien, hors occupations. */
+function openSlotsFor(sched: Pick<Schedule, "avs" | "specials" | "blocks">, dateISO: string, slotMin: number): string[] {
+  if (sched.blocks.some((b) => dateISO >= b.start_date && dateISO <= b.end_date)) return [];
+  const parsed = parseDateOnly(dateISO);
+  if (!parsed) return [];
+  const dow = storageDow(parsed);
+  const ranges = [
+    ...sched.avs.filter((a) => a.day_of_week === dow),
+    ...sched.specials.filter((s) => s.date === dateISO),
+  ];
+  return Array.from(
+    new Set(ranges.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin))),
+  ).sort();
+}
+
+/** Blocages partiels du jour, convertis en intervalles horaires. */
+function partialRangesFor(partialBlocks: PartialBlock[], dateISO: string): Busy[] {
+  return appointmentsToBusyRanges(
+    partialBlocks
+      .filter((p) => dateISO >= p.start_date && dateISO <= p.end_date && p.start_time && p.end_time)
+      .map((p) => {
+        const [sh, sm] = (p.start_time as string).split(":").map(Number);
+        const [eh, em] = (p.end_time as string).split(":").map(Number);
+        const minutes = Math.max(1, eh * 60 + em - (sh * 60 + sm));
+        return { date: dateISO, time: p.start_time, durationMinutes: minutes };
+      }),
+  );
+}
+
+
 export function BookingWidget({ therapistId, therapistName, services = [] }: { therapistId: string; therapistName?: string; services?: BookingService[] }) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
@@ -128,6 +193,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     setFormTouched(true);
   };
 
+  // Clé du triplet praticien / jour / durée. Les créneaux ne sont réputés
+  // vérifiés que pour CE triplet : après un changement de service ou de jour,
+  // et même après restauration de la session, plus rien n'est réservable tant
+  // que la vérification n'a pas été refaite.
+  const slotsKey = selectedDate ? `${therapistId}|${selectedDate}|${slotMin}` : null;
+  const [verifiedKey, setVerifiedKey] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     setSchedLoading(true);
@@ -138,49 +210,34 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       // faussement ouvert.
       setAvs([]); setSpecials([]); setBlocks([]); setPartialBlocks([]);
       setSelectedDate(null); setSelectedTime(null);
+      setVerifiedKey(null);
       setSchedError(true); setSchedLoading(false);
     };
-    (async () => {
-      const todayISO = localDateISO(new Date());
-      const [aRes, spRes, bRes] = await Promise.all([
-        // Horaires HEBDOMADAIRES uniquement : les lignes portant une
-        // `specific_date` ont aussi un `day_of_week`, les inclure ouvrirait
-        // tous les jours de la semaine correspondants (bug constaté).
-        supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).is("specific_date", null).not("day_of_week", "is", null),
-        // Disponibilités PONCTUELLES : elles n'ouvrent que leur date exacte.
-        supabase.from("availabilities").select("specific_date,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("specific_date", "is", null).gte("specific_date", todayISO),
-        supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day,start_time,end_time").eq("therapist_id", therapistId),
-      ]);
-      if (cancelled) return;
-      // Une erreur sur l'une de ces trois lectures était jusqu'ici ignorée.
-      if (aRes.error || spRes.error || bRes.error) { fail(); return; }
-      const a = aRes.data, sp = spRes.data, b = bRes.data;
-      setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
-      setSpecials(((sp ?? []) as Array<{ specific_date: string; start_time: string; end_time: string }>)
-        .map(({ specific_date, start_time, end_time }) => ({ date: specific_date, start_time, end_time })));
-      const blockRows = (b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean; start_time?: string | null; end_time?: string | null }>;
-      // Seuls les blocages de journée entière ferment la date ; les blocages
-      // partiels ferment les créneaux qu'ils recouvrent (voir slotsForDay).
-      setBlocks(blockRows
-        .filter((x) => x.is_all_day !== false)
-        .map(({ start_date, end_date }) => ({ start_date, end_date })));
-      setPartialBlocks(blockRows
-        .filter((x) => x.is_all_day === false && x.start_time && x.end_time)
-        .map(({ start_date, end_date, start_time, end_time }) => ({ start_date, end_date, start_time: start_time ?? null, end_time: end_time ?? null })));
-      setSchedLoading(false);
-    })().catch(fail);
+    loadSchedule(therapistId)
+      .then((sched) => {
+        if (cancelled) return;
+        setAvs(sched.avs);
+        setSpecials(sched.specials);
+        setBlocks(sched.blocks);
+        setPartialBlocks(sched.partialBlocks);
+        setSchedLoading(false);
+      })
+      .catch(fail);
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [therapistId, schedReload]);
 
 
   useEffect(() => {
-    if (!selectedDate) {
+    // Toute réponse d'une requête antérieure est écartée — y compris au
+    // démontage et quand la date vient d'être annulée, cas où une réponse
+    // tardive rouvrait auparavant des créneaux pour un jour plus sélectionné.
+    const token = ++slotsReqRef.current;
+    setVerifiedKey(null);
+    if (!slotsKey || !selectedDate) {
       setBookedRanges([]); setBusy([]); setSlotsError(false); setSlotsLoading(false);
       return;
     }
-    // Nouveau jeton : toute réponse d'une requête antérieure sera écartée.
-    const token = ++slotsReqRef.current;
     setSlotsLoading(true);
     setSlotsError(false);
     setBookedRanges([]);
@@ -191,6 +248,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         const payload = res as { booked?: Parameters<typeof appointmentsToBusyRanges>[0]; busy?: Busy[] };
         setBookedRanges(appointmentsToBusyRanges(payload.booked ?? []));
         setBusy(payload.busy ?? []);
+        setVerifiedKey(slotsKey);
         setSlotsLoading(false);
       })
       .catch(() => {
@@ -199,8 +257,10 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         setSelectedTime(null);
         setSlotsError(true); setSlotsLoading(false);
       });
+    return () => { ++slotsReqRef.current; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchBookedSlots, selectedDate, therapistId, slotMin, slotsReload]);
+  }, [fetchBookedSlots, slotsKey, slotsReload]);
+
 
 
 
@@ -224,42 +284,27 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   }, [month, avs, specials, blocks]);
 
   // Blocages partiels du jour sélectionné, convertis en intervalles.
-  const partialBlockRanges = useMemo<Busy[]>(() => {
-    if (!selectedDate) return [];
-    return appointmentsToBusyRanges(
-      partialBlocks
-        .filter((p) => selectedDate >= p.start_date && selectedDate <= p.end_date && p.start_time && p.end_time)
-        .map((p) => {
-          const [sh, sm] = (p.start_time as string).split(":").map(Number);
-          const [eh, em] = (p.end_time as string).split(":").map(Number);
-          const minutes = Math.max(1, (eh * 60 + em) - (sh * 60 + sm));
-          return { date: selectedDate, time: p.start_time, durationMinutes: minutes };
-        }),
-    );
-  }, [partialBlocks, selectedDate]);
+  const partialBlockRanges = useMemo<Busy[]>(
+    () => (selectedDate ? partialRangesFor(partialBlocks, selectedDate) : []),
+    [partialBlocks, selectedDate],
+  );
 
   const allBusyRanges = useMemo<Busy[]>(
     () => [...bookedRanges, ...busy, ...partialBlockRanges],
     [bookedRanges, busy, partialBlockRanges],
   );
 
+  // Les créneaux ne sont considérés vérifiés que pour le triplet courant.
+  const slotsVerified =
+    !!selectedDate && verifiedKey === slotsKey && !schedLoading && !schedError && !slotsLoading && !slotsError;
+
   const slotsForDay = useMemo(() => {
     if (!selectedDate) return [];
-    // Tant que les occupations ne sont pas connues (chargement ou panne), on
-    // n'affiche AUCUN créneau : une fausse disponibilité coûte un déplacement.
-    if (schedLoading || schedError || slotsLoading || slotsError) return [];
-    const parsed = parseDateOnly(selectedDate);
-    if (!parsed) return [];
-    const dow = storageDow(parsed);
-    const dayAvs = avs.filter((a) => a.day_of_week === dow);
-    const daySpecials = specials.filter((s) => s.date === selectedDate);
-    const ranges = [
-      ...dayAvs.map((a) => ({ start_time: a.start_time, end_time: a.end_time })),
-      ...daySpecials.map((s) => ({ start_time: s.start_time, end_time: s.end_time })),
-    ];
-    const all = Array.from(
-      new Set(ranges.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin))),
-    ).sort();
+    // Tant que les occupations ne sont pas connues (chargement, panne, ou
+    // vérification faite pour un AUTRE jour/service), on n'affiche AUCUN
+    // créneau : une fausse disponibilité coûte un déplacement.
+    if (!slotsVerified) return [];
+    const all = openSlotsFor({ avs, specials, blocks }, selectedDate, slotMin);
 
     // Un créneau qui chevauche un rendez-vous existant, un blocage partiel ou
     // une occupation importée de l'agenda personnel n'est pas réservable — la
@@ -267,28 +312,37 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     //
     // Le calcul est ancré sur le fuseau du THÉRAPEUTE, pas sur celui du
     // navigateur : « 09:00 » est l'heure murale du praticien, telle que la
-    // base la stocke. Construire l'instant avec `new Date(y, m, d, h, min)`
-    // aurait utilisé le fuseau du visiteur — juste depuis la Suisse, faux
-    // d'une heure depuis Londres, de plusieurs depuis un autre continent.
+    // base la stocke.
     return filterAvailableSlots(all, selectedDate, slotMin, allBusyRanges);
-  }, [selectedDate, avs, specials, allBusyRanges, slotMin, schedLoading, schedError, slotsLoading, slotsError]);
+  }, [selectedDate, avs, specials, blocks, allBusyRanges, slotMin, slotsVerified]);
+
 
   // Sélection devenue caduque (créneau pris entre-temps, durée changée) :
   // on l'efface SANS toucher au formulaire déjà rempli.
   useEffect(() => {
-    if (!selectedTime || slotsLoading || slotsError || schedLoading || schedError) return;
+    if (!selectedTime || !slotsVerified) return;
     if (!slotsForDay.includes(selectedTime)) {
       setSelectedTime(null);
       toast.info(t("booking.slot_expired"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slotsForDay, selectedTime, slotsLoading, slotsError, schedLoading, schedError]);
+  }, [slotsForDay, selectedTime, slotsVerified]);
 
 
   const openConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (services.length > 0 && !selectedService) { toast.error("Veuillez choisir un service."); return; }
     if (!selectedDate || !selectedTime) { toast.error(t("booking.choose_slot")); return; }
+    // Envoi pendant un chargement ou après une panne : on refuse plutôt que de
+    // partir d'une disponibilité non vérifiée.
+    if (schedLoading || slotsLoading) { toast.info(t("booking.slots_loading")); return; }
+    if (schedError || slotsError) { toast.error(t("booking.slots_error")); return; }
+    // Le créneau doit appartenir aux créneaux VÉRIFIÉS du triplet courant.
+    if (!slotsVerified || !slotsForDay.includes(selectedTime)) {
+      setSelectedTime(null);
+      toast.error(t("booking.choose_slot"));
+      return;
+    }
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setConfirmOpen(true);
@@ -296,24 +350,38 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
 
   const confirmBooking = async () => {
     if (!selectedDate || !selectedTime) return;
+    if (schedLoading || slotsLoading) { toast.info(t("booking.slots_loading")); return; }
+    if (schedError || slotsError || !slotsVerified || !slotsForDay.includes(selectedTime)) {
+      setConfirmOpen(false);
+      setSelectedTime(null);
+      toast.error(t("booking.slots_error"));
+      return;
+    }
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSubmitting(true);
 
     // Recontrôle au moment de l'envoi : la page a pu rester ouverte longtemps.
-    // Ce contrôle ne remplace pas la garantie en base, il évite un refus sec.
+    // On RECHARGE aussi horaires et indisponibilités — s'appuyer sur ceux du
+    // premier rendu laissait passer un créneau fermé depuis. Ce contrôle ne
+    // remplace pas la garantie en base, il évite un refus sec.
     try {
-      const fresh = await fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } });
+      const [fresh, sched] = await Promise.all([
+        fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } }),
+        loadSchedule(therapistId),
+      ]);
       const payload = fresh as { booked?: Parameters<typeof appointmentsToBusyRanges>[0]; busy?: Busy[] };
       const ranges = [
         ...appointmentsToBusyRanges(payload.booked ?? []),
         ...(payload.busy ?? []),
-        ...partialBlockRanges,
+        ...partialRangesFor(sched.partialBlocks, selectedDate),
       ];
-      if (isSlotBlocked(selectedTime, selectedDate, slotMin, ranges)) {
+      const stillOpen = openSlotsFor(sched, selectedDate, slotMin).includes(selectedTime);
+      if (!stillOpen || isSlotBlocked(selectedTime, selectedDate, slotMin, ranges)) {
         setSubmitting(false);
         setConfirmOpen(false);
         setSelectedTime(null);
+        setSchedReload((n) => n + 1);
         setSlotsReload((n) => n + 1);
         toast.error(t("booking.slot_taken"));
         return;
@@ -324,6 +392,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       toast.error(t("booking.slots_error"));
       return;
     }
+
 
     // Analytics maison : clic de confirmation, indépendant du succès de
     // l'insertion ci-dessous (mesure l'intention, pas la conversion —

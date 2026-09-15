@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { swissDayWindow } from "@/lib/booking-slots";
+
 
 export const getWaitingListCount = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -253,14 +255,45 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
 
     // Intervalles COMPLETS : l'heure de départ seule ne suffit pas à écarter un
     // créneau qui chevauche partiellement une séance plus longue.
-    const { data: rows, error } = await supabaseAdmin
-      .from("appointments")
-      .select("appointment_date, appointment_time, duration_minutes, start_time, end_time")
-      .eq("therapist_id", data.therapistId)
-      .eq("appointment_date", data.appointmentDate)
-      .in("status", ["pending", "confirmed", "completed", "blocked"]);
+    //
+    // On cherche les rendez-vous qui RECOUVRENT la journée du praticien, pas
+    // ceux dont la date est égale au jour demandé : une séance de la veille qui
+    // franchit minuit occupe le début de la journée demandée, et un filtre sur
+    // `appointment_date` la rendait invisible.
+    const window = swissDayWindow(data.appointmentDate);
+    if (!window) throw new Error("Impossible de charger les créneaux.");
+    const dayBefore = (() => {
+      const d = new Date(`${data.appointmentDate}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() - 1);
+      return d.toISOString().slice(0, 10);
+    })();
 
-    if (error) throw new Error("Impossible de charger les créneaux.");
+
+    const STATUSES = ["pending", "confirmed", "completed", "blocked"];
+    const [overlapRes, legacyRes] = await Promise.all([
+      // Cas normal : les instants sont renseignés (calculés en base).
+      supabaseAdmin
+        .from("appointments")
+        .select("id, appointment_date, appointment_time, duration_minutes, start_time, end_time")
+        .eq("therapist_id", data.therapistId)
+        .in("status", STATUSES)
+        .not("start_time", "is", null)
+        .not("end_time", "is", null)
+        .lt("start_time", window.to)
+        .gt("end_time", window.from),
+      // Repli COHÉRENT pour les lignes historiques sans instants : on prend le
+      // jour demandé ET la veille, l'intervalle exact étant reconstruit côté
+      // client depuis l'heure murale et la durée.
+      supabaseAdmin
+        .from("appointments")
+        .select("id, appointment_date, appointment_time, duration_minutes, start_time, end_time")
+        .eq("therapist_id", data.therapistId)
+        .in("status", STATUSES)
+        .is("start_time", null)
+        .in("appointment_date", [dayBefore, data.appointmentDate]),
+    ]);
+
+    if (overlapRes.error || legacyRes.error) throw new Error("Impossible de charger les créneaux.");
 
     // Occupations importées de l'agenda personnel du praticien : elles doivent
     // masquer les créneaux, sinon la promesse faite au thérapeute est fausse.
@@ -280,13 +313,20 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
 
     if (busyError) throw new Error("Impossible de charger les créneaux.");
 
-    const booked = (rows ?? []) as Array<{
+    type Row = {
+      id?: string;
       appointment_date: string | null;
       appointment_time: string | null;
       duration_minutes: number | null;
       start_time: string | null;
       end_time: string | null;
-    }>;
+    };
+    const byId = new Map<string, Row>();
+    for (const r of [...((overlapRes.data ?? []) as Row[]), ...((legacyRes.data ?? []) as Row[])]) {
+      byId.set(String(r.id ?? `${r.appointment_date}-${r.appointment_time}-${r.duration_minutes}`), r);
+    }
+    const booked = Array.from(byId.values());
+
 
     return {
       // `slots` conservé tel quel : la version du site déjà publiée le lit.
