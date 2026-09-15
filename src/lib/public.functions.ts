@@ -249,7 +249,7 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (therapistError) throw new Error("Impossible de charger les créneaux.");
-    if (!therapist) return { slots: [], busy: [] };
+    if (!therapist) return { slots: [], booked: [], busy: [] };
 
     // Intervalles COMPLETS : l'heure de départ seule ne suffit pas à écarter un
     // créneau qui chevauche partiellement une séance plus longue.
