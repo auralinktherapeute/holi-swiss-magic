@@ -78,8 +78,23 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [avs, setAvs] = useState<Avail[]>([]);
   const [specials, setSpecials] = useState<Special[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
-  const [taken, setTaken] = useState<Appt[]>([]);
+  const [partialBlocks, setPartialBlocks] = useState<PartialBlock[]>([]);
+  // Rendez-vous existants convertis en INTERVALLES (durée comprise), et
+  // occupations importées de l'agenda personnel du praticien.
+  const [bookedRanges, setBookedRanges] = useState<Busy[]>([]);
   const [busy, setBusy] = useState<Busy[]>([]);
+  // Les horaires et les occupations sont des lectures ESSENTIELLES : en cas
+  // d'échec on n'affiche AUCUN créneau, jamais une fausse disponibilité.
+  const [schedLoading, setSchedLoading] = useState(true);
+  const [schedError, setSchedError] = useState(false);
+  const [schedReload, setSchedReload] = useState(0);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState(false);
+  const [slotsReload, setSlotsReload] = useState(0);
+  // Jeton de requête : une réponse arrivée après un changement de jour, de
+  // praticien ou de service doit être ignorée, pas appliquée.
+  const slotsReqRef = useRef(0);
+
 
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
