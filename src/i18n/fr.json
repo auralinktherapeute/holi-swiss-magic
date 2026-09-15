@@ -336,7 +336,13 @@
       "octobre",
       "novembre",
       "décembre"
-    ]
+    ],
+    "slots_loading": "Vérification des disponibilités…",
+    "slots_error": "Impossible de vérifier les disponibilités pour le moment. Aucun créneau n'est affiché pour éviter une réservation impossible.",
+    "schedule_error": "Impossible de charger les horaires de ce thérapeute pour le moment.",
+    "retry": "Réessayer",
+    "slot_taken": "Ce créneau vient d'être réservé. Veuillez choisir un autre créneau.",
+    "slot_expired": "Ce créneau n'est plus disponible. Veuillez en choisir un autre ; vos informations sont conservées."
   },
   "categories": {
     "sophrologie": "Sophrologie",

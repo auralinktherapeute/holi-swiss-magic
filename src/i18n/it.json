@@ -336,7 +336,13 @@
       "ottobre",
       "novembre",
       "dicembre"
-    ]
+    ],
+    "slots_loading": "Verifica delle disponibilità…",
+    "slots_error": "Per il momento non è possibile verificare le disponibilità. Nessun orario viene mostrato per evitare una prenotazione impossibile.",
+    "schedule_error": "Per il momento non è possibile caricare gli orari di questo terapeuta.",
+    "retry": "Riprova",
+    "slot_taken": "Questo orario è stato appena prenotato. Scelga un altro orario.",
+    "slot_expired": "Questo orario non è più disponibile. Ne scelga un altro; i suoi dati sono conservati."
   },
   "categories": {
     "sophrologie": "Sofrologia",
