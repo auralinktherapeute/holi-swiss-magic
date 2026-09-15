@@ -481,6 +481,8 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
             })}
           </div>
         </div>
+        )}
+
 
         {selectedDate && (
           <div>
