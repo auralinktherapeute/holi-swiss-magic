@@ -474,24 +474,50 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         {selectedDate && (
           <div>
             <div className="text-sm font-medium mb-2">{t("booking.available_slots")}</div>
-            {slotsForDay.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {slotsForDay.map((s) => {
-                  const sel = selectedTime === s;
-                  return (
-                    <Badge key={s} onClick={() => setSelectedTime(s)}
-                      className={`cursor-pointer px-3 py-1.5 text-sm ${sel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
-                      style={sel && accent ? { background: accent, color: "#fff" } : (!sel && accent ? { background: `${accent}1a`, color: accent } : undefined)}>
-                      {s}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
+            <div aria-live="polite">
+              {slotsLoading ? (
+                <p className="text-sm text-muted-foreground">{t("booking.slots_loading")}</p>
+              ) : slotsError ? (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-3">
+                  <p className="text-sm text-foreground">{t("booking.slots_error")}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11"
+                    onClick={() => setSlotsReload((n) => n + 1)}
+                  >
+                    {t("booking.retry")}
+                  </Button>
+                </div>
+              ) : slotsForDay.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("booking.no_slots")}</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {slotsForDay.map((s) => {
+                    const sel = selectedTime === s;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={sel}
+                        onClick={() => setSelectedTime(s)}
+                        className="min-h-11 min-w-11 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Badge
+                          className={`cursor-pointer px-3 py-1.5 text-sm ${sel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                          style={sel && accent ? { background: accent, color: "#fff" } : (!sel && accent ? { background: `${accent}1a`, color: accent } : undefined)}
+                        >
+                          {s}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
+
 
         {selectedDate && selectedTime && (services.length === 0 || selectedService) && (
           <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
