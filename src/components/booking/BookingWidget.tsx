@@ -223,8 +223,31 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     return cells;
   }, [month, avs, specials, blocks]);
 
+  // Blocages partiels du jour sélectionné, convertis en intervalles.
+  const partialBlockRanges = useMemo<Busy[]>(() => {
+    if (!selectedDate) return [];
+    return appointmentsToBusyRanges(
+      partialBlocks
+        .filter((p) => selectedDate >= p.start_date && selectedDate <= p.end_date && p.start_time && p.end_time)
+        .map((p) => {
+          const [sh, sm] = (p.start_time as string).split(":").map(Number);
+          const [eh, em] = (p.end_time as string).split(":").map(Number);
+          const minutes = Math.max(1, (eh * 60 + em) - (sh * 60 + sm));
+          return { date: selectedDate, time: p.start_time, durationMinutes: minutes };
+        }),
+    );
+  }, [partialBlocks, selectedDate]);
+
+  const allBusyRanges = useMemo<Busy[]>(
+    () => [...bookedRanges, ...busy, ...partialBlockRanges],
+    [bookedRanges, busy, partialBlockRanges],
+  );
+
   const slotsForDay = useMemo(() => {
     if (!selectedDate) return [];
+    // Tant que les occupations ne sont pas connues (chargement ou panne), on
+    // n'affiche AUCUN créneau : une fausse disponibilité coûte un déplacement.
+    if (schedLoading || schedError || slotsLoading || slotsError) return [];
     const parsed = parseDateOnly(selectedDate);
     if (!parsed) return [];
     const dow = storageDow(parsed);
@@ -237,19 +260,29 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const all = Array.from(
       new Set(ranges.flatMap((a) => buildSlots(a.start_time.slice(0, 5), a.end_time.slice(0, 5), slotMin))),
     ).sort();
-    const takenSet = new Set(taken.map((t) => t.appointment_time.slice(0, 5)));
 
-    // Un créneau qui chevauche une occupation importée de l'agenda personnel
-    // du praticien n'est pas réservable.
+    // Un créneau qui chevauche un rendez-vous existant, un blocage partiel ou
+    // une occupation importée de l'agenda personnel n'est pas réservable — la
+    // DURÉE ENTIÈRE compte, pas seulement l'heure de départ.
     //
     // Le calcul est ancré sur le fuseau du THÉRAPEUTE, pas sur celui du
     // navigateur : « 09:00 » est l'heure murale du praticien, telle que la
     // base la stocke. Construire l'instant avec `new Date(y, m, d, h, min)`
     // aurait utilisé le fuseau du visiteur — juste depuis la Suisse, faux
     // d'une heure depuis Londres, de plusieurs depuis un autre continent.
-    const free = all.filter((s) => !takenSet.has(s));
-    return filterAvailableSlots(free, selectedDate, slotMin, busy);
-  }, [selectedDate, avs, specials, taken, busy, slotMin]);
+    return filterAvailableSlots(all, selectedDate, slotMin, allBusyRanges);
+  }, [selectedDate, avs, specials, allBusyRanges, slotMin, schedLoading, schedError, slotsLoading, slotsError]);
+
+  // Sélection devenue caduque (créneau pris entre-temps, durée changée) :
+  // on l'efface SANS toucher au formulaire déjà rempli.
+  useEffect(() => {
+    if (!selectedTime || slotsLoading || slotsError || schedLoading || schedError) return;
+    if (!slotsForDay.includes(selectedTime)) {
+      setSelectedTime(null);
+      toast.info(t("booking.slot_expired"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slotsForDay, selectedTime, slotsLoading, slotsError, schedLoading, schedError]);
 
 
   const openConfirm = (e: React.FormEvent) => {
@@ -266,6 +299,32 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setSubmitting(true);
+
+    // Recontrôle au moment de l'envoi : la page a pu rester ouverte longtemps.
+    // Ce contrôle ne remplace pas la garantie en base, il évite un refus sec.
+    try {
+      const fresh = await fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } });
+      const payload = fresh as { booked?: Parameters<typeof appointmentsToBusyRanges>[0]; busy?: Busy[] };
+      const ranges = [
+        ...appointmentsToBusyRanges(payload.booked ?? []),
+        ...(payload.busy ?? []),
+        ...partialBlockRanges,
+      ];
+      if (isSlotBlocked(selectedTime, selectedDate, slotMin, ranges)) {
+        setSubmitting(false);
+        setConfirmOpen(false);
+        setSelectedTime(null);
+        setSlotsReload((n) => n + 1);
+        toast.error(t("booking.slot_taken"));
+        return;
+      }
+    } catch {
+      setSubmitting(false);
+      setConfirmOpen(false);
+      toast.error(t("booking.slots_error"));
+      return;
+    }
+
     // Analytics maison : clic de confirmation, indépendant du succès de
     // l'insertion ci-dessous (mesure l'intention, pas la conversion —
     // celle-ci reste lisible via la table appointments).
@@ -288,6 +347,13 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     setConfirmOpen(false);
     if (error) {
       console.error("[booking] appointment insert failed", error);
+      // Refus de la garantie posée en base : le créneau vient d'être pris.
+      if (/BOOKING_SLOT_CONFLICT/.test(error.message ?? "")) {
+        setSelectedTime(null);
+        setSlotsReload((n) => n + 1);
+        toast.error(t("booking.slot_taken"));
+        return;
+      }
       toast.error(t("booking.error_generic", "Impossible d'envoyer la demande. Veuillez réessayer."));
       return;
     }
@@ -297,6 +363,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     await clearDraft();
     toast.success(t("booking.request_sent_toast"));
   };
+
 
   if (success) {
     return (
