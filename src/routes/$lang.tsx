@@ -25,6 +25,11 @@ export const Route = createFileRoute("/$lang")({
   beforeLoad: async ({ params }) => {
     if (!isLang(params.lang)) throw notFound();
     const resolved = isLang(params.lang) ? params.lang : DEFAULT_LANG;
+    // JAMAIS côté serveur : `i18n` est un singleton de module partagé par toutes
+    // les requêtes du worker, et l'écrire ici mélangeait les langues entre
+    // requêtes simultanées. Au rendu serveur, la langue vient d'une instance
+    // dédiée fournie par `__root.tsx`.
+    if (typeof window === "undefined") return;
     if (i18n.language.split("-")[0] !== resolved) {
       await i18n.changeLanguage(resolved);
     }

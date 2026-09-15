@@ -26,7 +26,7 @@
       "cta": "Suchen"
     },
     "trust": {
-      "verified": "Geprüfte Profile",
+      "verified": "Von Holiswiss geprüfte Profile",
       "reviews": "Echte Bewertungen",
       "booking": "Online-Buchung",
       "cantons": "26 Kantone"
@@ -518,7 +518,7 @@
     "subtitle": "Entwickeln Sie Ihre Praxis, wir kümmern uns um den Rest. Mehr Sichtbarkeit, weniger Verwaltung.",
     "search_placeholder": "Spezialität, Stadt…",
     "search_btn": "Suchen",
-    "trust_verified": "Verifizierte Praktiker",
+    "trust_verified": "Von Holiswiss geprüfte Fachpersonen",
     "trust_cantons": "26 Kantone",
     "find_btn": "Therapeut finden",
     "signup_free": "Kostenlos registrieren",

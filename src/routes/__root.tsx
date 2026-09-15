@@ -8,11 +8,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
+import { I18nextProvider } from "react-i18next";
+
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import "../lib/i18n";
+import i18nClient, { createI18nForLang, detectLangFromPath } from "../lib/i18n";
 import { Toaster } from "../components/ui/sonner";
 import { LanguageSwitcherDevPicker } from "../components/holiswiss/LanguageSwitcher";
 import { PublicNavDevPicker } from "../components/layout/PublicNav";
@@ -65,18 +67,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { name: "description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
+      { name: "description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. Profils validés par Holiswiss, avis authentiques, réservation en ligne." },
       { name: "author", content: "Holiswiss" },
       { property: "og:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
+      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. Profils validés par Holiswiss, avis authentiques, réservation en ligne." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Holiswiss" },
       { name: "twitter:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { name: "twitter:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. 26 cantons · 4 langues. Profils vérifiés, avis authentiques, réservation en ligne." },
+      { name: "twitter:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. Profils validés par Holiswiss, avis authentiques, réservation en ligne." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
-      { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, thérapeute certifié, réservation thérapeute" },
+      { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, profil validé Holiswiss, réservation thérapeute" },
       { name: "robots", content: "index, follow" },
       { property: "og:locale", content: "fr_CH" },
       { property: "og:site_name", content: "Holiswiss" },
@@ -134,18 +136,37 @@ function AnalyticsTracking() {
   return null;
 }
 
+/**
+ * Instance i18next utilisée par tout l'arbre.
+ * - Serveur : une instance DÉDIÉE à la requête, figée sur la langue de l'URL.
+ *   Aucune requête concurrente ne peut plus changer la langue d'une autre.
+ * - Navigateur : le singleton, pour que le changement de langue en navigation
+ *   SPA (LanguageSwitcher, `/$lang`) continue de fonctionner à l'identique.
+ */
+function useRequestI18n() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lang = detectLangFromPath(pathname);
+  return useMemo(
+    () => (typeof window === "undefined" ? createI18nForLang(lang) : i18nClient),
+    [lang],
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const i18nInstance = useRequestI18n();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AnalyticsTracking />
-      <CrossTabAuthSync />
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      <Toaster />
-      <LanguageSwitcherDevPicker />
-      <PublicNavDevPicker />
+      <I18nextProvider i18n={i18nInstance}>
+        <AnalyticsTracking />
+        <CrossTabAuthSync />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <Toaster />
+        <LanguageSwitcherDevPicker />
+        <PublicNavDevPicker />
+      </I18nextProvider>
     </QueryClientProvider>
   );
 }

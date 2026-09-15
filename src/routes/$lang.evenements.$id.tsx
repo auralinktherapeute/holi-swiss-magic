@@ -124,7 +124,8 @@ function ErrorView() {
 function Page() {
   const { lang, id } = Route.useParams();
   const { t, i18n } = useTranslation();
-  if (i18n.language !== lang) i18n.changeLanguage(lang);
+  // Idem : au rendu serveur, l'instance dédiée porte déjà la bonne langue.
+  if (typeof window !== "undefined" && i18n.language !== lang) i18n.changeLanguage(lang);
   const { data } = useQuery({
     queryKey: ["public-event", id],
     queryFn: () => getPublishedEvent({ data: { id } }),

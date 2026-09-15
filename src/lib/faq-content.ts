@@ -26,7 +26,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Comment devenir thérapeute référencé sur Holiswiss ?",
-      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens certifiés exerçant en Suisse.",
+      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse, chaque profil étant validé manuellement par Holiswiss avant publication.",
     },
     {
       q: "Quelles approches complémentaires sont disponibles sur Holiswiss ?",
@@ -61,7 +61,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Wie werde ich als Therapeut:in auf Holiswiss gelistet?",
-      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für zertifizierte Fachpersonen in der Schweiz geöffnet.",
+      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; jedes Profil wird vor der Veröffentlichung von Holiswiss manuell geprüft.",
     },
     {
       q: "Welche komplementären Ansätze sind auf Holiswiss verfügbar?",
@@ -257,7 +257,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "Comment choisir votre praticien",
-        p: "Comparez les profils vérifiés : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis authentiques d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
+        p: "Comparez les profils validés par Holiswiss : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis authentiques d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
       },
       {
         h3: "Remboursement et certifications",
@@ -378,7 +378,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Les thérapeutes de Holiswiss sont-ils vérifiés ?",
-      a: "Oui. Les profils sont vérifiés et présentent la spécialité, l'approche, les langues, les tarifs et, le cas échéant, les certifications (ASCA, RME, EMR) ainsi que des avis authentiques de patients.",
+      a: "Chaque inscription est validée manuellement par Holiswiss avant publication : Holiswiss contrôle le profil, mais ne certifie pas le praticien. Le profil présente la spécialité, l'approche, les langues, les tarifs et, lorsqu'un justificatif a réellement été examiné, les certifications déclarées (ASCA, RME, EMR), ainsi que des avis authentiques de patients.",
     },
     {
       q: "Dans quelles langues puis-je chercher un thérapeute ?",

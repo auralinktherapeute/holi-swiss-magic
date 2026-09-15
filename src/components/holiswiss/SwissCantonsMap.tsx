@@ -55,7 +55,7 @@ export function SwissCantonsMap() {
             {t("home.map.title", "Trouvez un thérapeute près de chez vous")}
           </h2>
           <p className="mt-2 text-sm text-[#5b4a6e]">
-            {t("home.map.subtitle", "{{count}} praticiens vérifiés dans les 26 cantons suisses", { count: total })}
+            {t("home.map.subtitle", "{{count}} praticiens inscrits — recherche dans les 26 cantons suisses", { count: total })}
           </p>
         </div>
 
