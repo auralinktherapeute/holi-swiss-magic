@@ -129,43 +129,79 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   };
 
   useEffect(() => {
+    let cancelled = false;
+    setSchedLoading(true);
+    setSchedError(false);
+    const fail = () => {
+      if (cancelled) return;
+      // Aucune donnée partielle : mieux vaut « indisponible » qu'un agenda
+      // faussement ouvert.
+      setAvs([]); setSpecials([]); setBlocks([]); setPartialBlocks([]);
+      setSelectedDate(null); setSelectedTime(null);
+      setSchedError(true); setSchedLoading(false);
+    };
     (async () => {
       const todayISO = localDateISO(new Date());
-      const [{ data: a }, { data: sp }, { data: b }] = await Promise.all([
+      const [aRes, spRes, bRes] = await Promise.all([
         // Horaires HEBDOMADAIRES uniquement : les lignes portant une
         // `specific_date` ont aussi un `day_of_week`, les inclure ouvrirait
         // tous les jours de la semaine correspondants (bug constaté).
         supabase.from("availabilities").select("day_of_week,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).is("specific_date", null).not("day_of_week", "is", null),
         // Disponibilités PONCTUELLES : elles n'ouvrent que leur date exacte.
         supabase.from("availabilities").select("specific_date,start_time,end_time,is_active").eq("therapist_id", therapistId).eq("is_active", true).not("specific_date", "is", null).gte("specific_date", todayISO),
-        supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day").eq("therapist_id", therapistId),
+        supabase.from("public_blocked_periods" as never).select("start_date,end_date,is_all_day,start_time,end_time").eq("therapist_id", therapistId),
       ]);
+      if (cancelled) return;
+      // Une erreur sur l'une de ces trois lectures était jusqu'ici ignorée.
+      if (aRes.error || spRes.error || bRes.error) { fail(); return; }
+      const a = aRes.data, sp = spRes.data, b = bRes.data;
       setAvs((a ?? []).filter((x) => x.day_of_week !== null) as Avail[]);
       setSpecials(((sp ?? []) as Array<{ specific_date: string; start_time: string; end_time: string }>)
         .map(({ specific_date, start_time, end_time }) => ({ date: specific_date, start_time, end_time })));
-      // Only all-day blocks fully prevent date selection; partial-time blocks remain
-      // (the booking widget operates at day granularity for now).
-      setBlocks(((b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean }>)
+      const blockRows = (b ?? []) as Array<{ start_date: string; end_date: string; is_all_day?: boolean; start_time?: string | null; end_time?: string | null }>;
+      // Seuls les blocages de journée entière ferment la date ; les blocages
+      // partiels ferment les créneaux qu'ils recouvrent (voir slotsForDay).
+      setBlocks(blockRows
         .filter((x) => x.is_all_day !== false)
         .map(({ start_date, end_date }) => ({ start_date, end_date })));
-    })();
-  }, [therapistId]);
+      setPartialBlocks(blockRows
+        .filter((x) => x.is_all_day === false && x.start_time && x.end_time)
+        .map(({ start_date, end_date, start_time, end_time }) => ({ start_date, end_date, start_time: start_time ?? null, end_time: end_time ?? null })));
+      setSchedLoading(false);
+    })().catch(fail);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [therapistId, schedReload]);
 
 
   useEffect(() => {
-    if (!selectedDate) return;
-    let cancelled = false;
+    if (!selectedDate) {
+      setBookedRanges([]); setBusy([]); setSlotsError(false); setSlotsLoading(false);
+      return;
+    }
+    // Nouveau jeton : toute réponse d'une requête antérieure sera écartée.
+    const token = ++slotsReqRef.current;
+    setSlotsLoading(true);
+    setSlotsError(false);
+    setBookedRanges([]);
+    setBusy([]);
     fetchBookedSlots({ data: { therapistId, appointmentDate: selectedDate } })
       .then((res) => {
-        if (cancelled) return;
-        setTaken(res.slots as Appt[]);
-        setBusy((res as { busy?: Busy[] }).busy ?? []);
+        if (token !== slotsReqRef.current) return;
+        const payload = res as { booked?: Parameters<typeof appointmentsToBusyRanges>[0]; busy?: Busy[] };
+        setBookedRanges(appointmentsToBusyRanges(payload.booked ?? []));
+        setBusy(payload.busy ?? []);
+        setSlotsLoading(false);
       })
       .catch(() => {
-        if (!cancelled) { setTaken([]); setBusy([]); }
+        if (token !== slotsReqRef.current) return;
+        setBookedRanges([]); setBusy([]);
+        setSelectedTime(null);
+        setSlotsError(true); setSlotsLoading(false);
       });
-    return () => { cancelled = true; };
-  }, [fetchBookedSlots, selectedDate, therapistId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchBookedSlots, selectedDate, therapistId, slotMin, slotsReload]);
+
 
 
   const days = useMemo(() => {
