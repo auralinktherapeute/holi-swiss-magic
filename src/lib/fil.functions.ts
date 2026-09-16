@@ -16,7 +16,7 @@ import {
 } from "@/data/fil-holiswiss";
 
 const LIST_COLUMNS =
-  "id,slug,category,cover_image_url,image_alt_text,published_at,created_at,is_featured," +
+  "id,slug,category,cover_image_url,image_alt_text,published_at,created_at,updated_at,is_featured," +
   "title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en";
 
 function pick(row: Record<string, any>, prefix: string, lang: FilLang): string {
@@ -34,6 +34,7 @@ function toPost(row: Record<string, any>, lang: FilLang, withBody = false): FilP
     image: (row.cover_image_url as string) || null,
     imageAlt: (row.image_alt_text as string) || "",
     date: String(row.published_at ?? row.created_at ?? ""),
+    updatedAt: (row.updated_at as string) ?? null,
     author: null,
     featured: row.is_featured === true,
     seoTitle: (row.meta_title_fr as string) || undefined,

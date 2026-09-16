@@ -11,6 +11,16 @@ import {
   formatFilDate,
 } from "@/data/fil-holiswiss";
 import { getFilPost } from "@/lib/fil.functions";
+import { organizationRef, publisherNode } from "@/lib/organization-schema";
+
+/** Libellé « Accueil » du fil d'Ariane structuré, dans les 4 langues du site. */
+const BREADCRUMB_HOME: Record<"fr" | "de" | "it" | "en", string> = {
+  fr: "Accueil",
+  de: "Startseite",
+  it: "Home",
+  en: "Home",
+};
+
 
 export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
   component: Page,
@@ -38,7 +48,11 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
         { property: "og:url", content: url },
         { property: "og:type", content: "article" },
         { property: "og:locale", content: ogLocale(l) },
-        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:card", content: post.image ? "summary_large_image" : "summary" },
+        // Sans ces deux lignes, l'aperçu X héritait du titre et de la description
+        // FRANÇAIS de l'accueil, y compris sur les versions DE, IT et EN.
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
         ...(post.image
           ? [
               { property: "og:image", content: post.image },
@@ -56,12 +70,35 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Article",
+            // `@id` stable + `mainEntityOfPage` en OBJET WebPage : avant, c'était
+            // une simple chaîne, que Google ignore, et le nœud n'avait aucune
+            // clé pour fusionner avec le reste du graphe de la page.
+            "@id": `${url}#article`,
             headline: post.title,
             description,
+            url,
+            inLanguage: l,
             datePublished: post.date,
-            mainEntityOfPage: url,
-            ...(post.author ? { author: { "@type": "Person", name: post.author } } : {}),
-            ...(post.image ? { image: post.image } : {}),
+            // `dateModified` uniquement si la donnée existe réellement en base.
+            ...(post.updatedAt ? { dateModified: post.updatedAt } : {}),
+            mainEntityOfPage: { "@type": "WebPage", "@id": url },
+            // `publisher` (avec logo) est requis par le résultat enrichi Article
+            // et manquait totalement. Nœud partagé, donc même `@id` que la racine.
+            publisher: publisherNode,
+            author: post.author ? { "@type": "Person", name: post.author } : organizationRef,
+            ...(post.image ? { image: [post.image] } : {}),
+          }),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: BREADCRUMB_HOME[l], item: `https://holiswiss.ch/${l}` },
+              { "@type": "ListItem", position: 2, name: FIL_COPY[l].title, item: `https://holiswiss.ch/${l}/fil-holiswiss` },
+              { "@type": "ListItem", position: 3, name: post.title, item: url },
+            ],
           }),
         },
       ],

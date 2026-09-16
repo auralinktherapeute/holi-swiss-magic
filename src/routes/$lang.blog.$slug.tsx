@@ -10,6 +10,7 @@ import { categoryLabel } from "@/lib/article-categories";
 import { blogCopy } from "@/lib/blog-copy";
 import { redirectTargetForSlug } from "@/lib/blog-redirects";
 import { publisherNode, organizationRef, LOGO_URL, ORGANIZATION_NAME } from "@/lib/organization-schema";
+import { buildMetaTitle } from "@/lib/seo-title";
 
 
 const SITE = "https://holiswiss.ch";
@@ -69,7 +70,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     if (!article) {
       return {
         meta: [
-          { title: "Article — HoliSwiss" },
+          { title: "Article — Holiswiss" },
           { name: "description", content: "Conseils, dossiers et actualités sur les thérapies holistiques en Suisse." },
           { property: "og:url", content: url },
         ],
@@ -80,8 +81,12 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     const rawTitle = titleForLang(article, lang) || "Article";
     const rawExcerpt = excerptForLang(article, lang);
     const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
-    const description = ((rawExcerpt || fallback) || "Lire l'article sur HoliSwiss.").slice(0, 160);
-    const title = `${rawTitle} | HoliSwiss`.slice(0, 60);
+    const description = ((rawExcerpt || fallback) || "Lire l'article sur Holiswiss.").slice(0, 160);
+    // Coupe sur une frontière de mot, et marque écrite « Holiswiss » comme dans
+    // le nœud Organization : `slice(0, 60)` produisait des titres tronqués en
+    // plein mot, parfois jusqu'à amputer la marque elle-même. Métadonnées
+    // uniquement — aucun texte visible de l'article n'est touché.
+    const title = buildMetaTitle(rawTitle, "Holiswiss");
     const image = (article["cover_image_url"] as string | undefined) || undefined;
     const meta: Array<Record<string, string>> = [
       { title },
