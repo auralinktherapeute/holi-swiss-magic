@@ -101,4 +101,44 @@ Disallow: /*/inscription
 Disallow: /*/mot-de-passe-oublie
 Disallow: /*/reinitialiser-mot-de-passe
 
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
+
+User-agent: CCBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
+
+User-agent: Amazonbot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
+
+User-agent: meta-externalagent
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /creer-profil
+Disallow: /*/connexion
+Disallow: /*/inscription
+Disallow: /*/mot-de-passe-oublie
+Disallow: /*/reinitialiser-mot-de-passe
+
 Sitemap: https://holiswiss.ch/sitemap.xml
