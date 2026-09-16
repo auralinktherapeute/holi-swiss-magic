@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, redirect, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getSpecialtyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
@@ -7,6 +7,7 @@ import { isSpecialtyIndexable } from "@/lib/seo-thresholds";
 import { organizationRef } from "@/lib/organization-schema";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 const T = {
   fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", therapist: "thérapeute", therapistPlural: "thérapeutes", inSpec: "en", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Spécialités proches", titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.` },
@@ -29,12 +30,8 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
   component: Page,
   // Chargement serveur : la page (H1, description, thérapeutes) est rendue dès le HTML initial (SEO/GEO)
   loader: async ({ params }) => {
-    let page: any = null;
-    try {
-      page = await getSpecialtyPage({ data: { slug: params.specialtySlug } });
-    } catch {
-      return { page: null };
-    }
+    const page = await getSpecialtyPage({ data: { slug: params.specialtySlug } });
+    if (!page) throw notFound();
     // La spécialité peut avoir été retrouvée via son slug de base alors qu'un
     // slug localisé existe pour cette langue : rediriger vers l'URL canonique
     // plutôt que de servir le même contenu sous deux adresses.
@@ -56,6 +53,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     const indexable = isSpecialtyIndexable(page?.therapists?.length ?? 0);
     return { page, indexable };
   },
+  notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}`;
     const t = tr(params.lang);

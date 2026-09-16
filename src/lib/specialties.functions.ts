@@ -88,7 +88,10 @@ async function findActiveSpecialty(sb: ReturnType<typeof serverClient>, slug: st
     .eq("is_active", true)
     .maybeSingle();
   if (!enriched.error) return enriched.data;
-  if (!isMissingColumn(enriched.error)) return null;
+  // Une erreur de lecture n'est pas une spécialité absente. La propager évite
+  // qu'une panne Supabase soit publiée comme une page 404 et laisse le serveur
+  // appliquer son statut d'indisponibilité prévu.
+  if (!isMissingColumn(enriched.error)) throw new Error("Impossible de charger la spécialité.");
 
   const base = await sb
     .from("specialties")
@@ -96,6 +99,7 @@ async function findActiveSpecialty(sb: ReturnType<typeof serverClient>, slug: st
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
+  if (base.error) throw new Error("Impossible de charger la spécialité.");
   return base.data;
 }
 

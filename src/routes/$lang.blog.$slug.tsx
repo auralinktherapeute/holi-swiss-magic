@@ -1,5 +1,5 @@
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
-import { createFileRoute, useParams, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, useParams, Link, redirect, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
@@ -11,6 +11,7 @@ import { blogCopy } from "@/lib/blog-copy";
 import { redirectTargetForSlug } from "@/lib/blog-redirects";
 import { publisherNode, organizationRef, LOGO_URL, ORGANIZATION_NAME } from "@/lib/organization-schema";
 import { buildMetaTitle } from "@/lib/seo-title";
+import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 
 const SITE = "https://holiswiss.ch";
@@ -38,13 +39,11 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         statusCode: 301,
       });
     }
-    let article: Record<string, unknown> | null = null;
-    try {
-      const res = await getArticleBySlug({ data: { slug: params.slug, lang: params.lang } });
-      article = res.article as Record<string, unknown> | null;
-    } catch {
-      return { article: null };
-    }
+    const res = await getArticleBySlug({ data: { slug: params.slug, lang: params.lang } });
+    const article = res.article as Record<string, unknown> | null;
+    // Un article absent est une URL invalide, pas une page vide. Le loader doit
+    // lever le 404 avant le rendu SSR pour éviter le Soft 404 « 200 + skeleton ».
+    if (!article) throw notFound();
 
     // L'article peut avoir été retrouvé via son slug de base alors qu'un slug
     // localisé existe pour cette langue : rediriger vers l'URL canonique plutôt
@@ -64,6 +63,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     }
     return { article };
   },
+  notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
     const article = loaderData?.article as Record<string, unknown> | null | undefined;
     const url = `${SITE}/${params.lang}/blog/${params.slug}`;
@@ -72,6 +72,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         meta: [
           { title: "Article — Holiswiss" },
           { name: "description", content: "Conseils, dossiers et actualités sur les thérapies holistiques en Suisse." },
+          { name: "robots", content: "noindex,follow" },
           { property: "og:url", content: url },
         ],
         links: [{ rel: "canonical", href: url }],

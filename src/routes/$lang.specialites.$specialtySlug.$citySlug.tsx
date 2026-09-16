@@ -6,6 +6,7 @@ import { LANGS, ogLocale } from "@/lib/seo";
 import { isSpecialtyCityIndexable } from "@/lib/seo-thresholds";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 function humanCity(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -24,14 +25,10 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
   // Chargement serveur : le contenu (H1, thérapeutes de la ville) est rendu dès
   // le HTML initial — sinon les crawlers et les IA ne voyaient que « Chargement… ».
   loader: async ({ params }) => {
-    let page: any = null;
-    try {
-      page = await getSpecialtyCityPage({
-        data: { slug: params.specialtySlug, city: params.citySlug.replace(/-/g, " ") },
-      });
-    } catch {
-      return { page: null };
-    }
+    const page = await getSpecialtyCityPage({
+      data: { slug: params.specialtySlug, city: params.citySlug.replace(/-/g, " ") },
+    });
+    if (!page) throw notFound();
     // Même logique que la page spécialité : une seule URL canonique par langue.
     if (page?.specialty) {
       const canonical = specialtySlugForLang(page.specialty, params.lang);
@@ -72,6 +69,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
     const indexable = isSpecialtyCityIndexable(page?.therapists?.length ?? 0);
     return { page, indexable };
   },
+  notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/specialites/${params.specialtySlug}/${params.citySlug}`;
     const specialty = (loaderData as any)?.page?.specialty;

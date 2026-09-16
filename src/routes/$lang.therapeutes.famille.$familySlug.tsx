@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getFamilyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
@@ -8,6 +8,7 @@ import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
   component: Page,
@@ -20,8 +21,10 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
   loader: async ({ params }) => {
     const res = await loadEssential(() => getFamilyPage({ data: { slug: params.familySlug } }));
     if (!res.ok) return { page: null, unavailable: true as const };
+    if (!res.data) throw notFound();
     return { page: res.data, unavailable: false as const };
   },
+  notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
     const url = `https://holiswiss.ch/${params.lang}/therapeutes/famille/${params.familySlug}`;
     const family = (loaderData as any)?.page?.family;

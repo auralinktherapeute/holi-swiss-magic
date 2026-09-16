@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedTherapistArticleBySlug } from "@/lib/therapist-articles.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
@@ -7,6 +7,7 @@ import { ArticleContent } from "@/components/articles/ArticleContent";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { ogLocale, resolveProfileLang } from "@/lib/seo";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
+import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 export const Route = createFileRoute("/$lang/paroles/$slug")({
   component: Page,
@@ -17,13 +18,11 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
    * npm run seo:check.
    */
   loader: async ({ params }) => {
-    try {
-      const article = await getPublishedTherapistArticleBySlug({ data: { slug: params.slug } });
-      return { article: (article as Record<string, unknown> | null) ?? null };
-    } catch {
-      return { article: null };
-    }
+    const article = await getPublishedTherapistArticleBySlug({ data: { slug: params.slug } });
+    if (!article) throw notFound();
+    return { article: article as Record<string, unknown> };
   },
+  notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
     const a = (loaderData as any)?.article;
     const url = `https://holiswiss.ch/${params.lang}/paroles/${params.slug}`;
@@ -57,6 +56,7 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
       : null;
     const meta: Array<Record<string, string>> = [
       { title },
+      ...(!a ? [{ name: "robots", content: "noindex,follow" }] : []),
       { name: "description", content: description },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
