@@ -9,6 +9,7 @@ import {
   isCategoryIndexable,
 } from "@/lib/seo-thresholds";
 import { PILLAR_LANGS, pillarUrl } from "@/lib/visibility-pillar-content";
+import { FIL_CATEGORY_SLUGS } from "@/data/fil-holiswiss";
 
 const BASE_URL = "https://holiswiss.ch";
 const LANGS = ["fr", "de", "it", "en"] as const;
@@ -47,13 +48,17 @@ const STATIC_PATHS: {
   /** Date fixe, pour les pages sans contenu en base. */
   lastmod?: string;
   /** Collection dont la fraîcheur fait celle de la page d'index. */
-  lastmodFrom?: "all" | "therapists" | "articles" | "paroles" | "events";
+  lastmodFrom?: "all" | "therapists" | "articles" | "paroles" | "events" | "fil";
 }[] = [
   { path: "", priority: "1.0", changefreq: "weekly", lastmodFrom: "all" },
   { path: "/therapeutes", priority: "0.9", changefreq: "daily", lastmodFrom: "therapists" },
   { path: "/therapeutes/bien-etre", priority: "0.8", changefreq: "daily", lastmodFrom: "therapists" },
   { path: "/therapeutes/holistique", priority: "0.8", changefreq: "daily", lastmodFrom: "therapists" },
   { path: "/blog", priority: "0.8", changefreq: "weekly", lastmodFrom: "articles" },
+  // Route statique hreflangée, contenu en dur : `lastmod` = date du dernier
+  // commit réel du fichier de route, pas la date du build.
+  { path: "/blog/qu-est-ce-que-la-sophrologie", priority: "0.7", changefreq: "yearly", lastmod: "2026-08-31" },
+  { path: "/fil-holiswiss", priority: "0.7", changefreq: "weekly", lastmodFrom: "fil" },
   { path: "/paroles", priority: "0.8", changefreq: "weekly", lastmodFrom: "paroles" },
   { path: "/evenements", priority: "0.8", changefreq: "daily", lastmodFrom: "events" },
   { path: "/tarifs", priority: "0.7", changefreq: "monthly", lastmod: "2026-07-04" },
@@ -394,7 +399,28 @@ async function buildSitemap(): Promise<string> {
       : (rich.data as ArticleRow[]);
   }
   const articleDay = (a: ArticleRow) => day(a.updated_at) ?? day(a.published_at);
-  const articlesFreshness = articles.reduce<string | undefined>(
+
+  // ── Séparation blog / « Le fil Holiswiss » ────────────────────────────────
+  //
+  // Une publication du fil EST une ligne de `articles`, distinguée par sa
+  // catégorie (`fil-…`). Le listing du blog les exclut déjà
+  // (`FIL_EXCLUDE` dans `articles.functions.ts`) et la rubrique a ses propres
+  // URL `/{lang}/fil-holiswiss/{slug}`. Le sitemap, lui, les déclarait dans la
+  // boucle du blog : chaque billet était donc annoncé deux fois, sous deux
+  // adresses — exactement le doublon que la séparation ci-dessous supprime.
+  //
+  // Repli sans colonne `category` (requête dégradée ci-dessus) : la catégorie
+  // est `undefined`, les billets retombent alors dans le blog. C'est le
+  // comportement d'avant, jamais une URL en 404.
+  const isFil = (a: ArticleRow) => !!a.category && FIL_CATEGORY_SLUGS.includes(a.category);
+  const filArticles = articles.filter(isFil);
+  const blogArticles = articles.filter((a) => !isFil(a));
+
+  const articlesFreshness = blogArticles.reduce<string | undefined>(
+    (acc, a) => newer(acc, articleDay(a)),
+    undefined,
+  );
+  const filFreshness = filArticles.reduce<string | undefined>(
     (acc, a) => newer(acc, articleDay(a)),
     undefined,
   );
@@ -446,11 +472,16 @@ async function buildSitemap(): Promise<string> {
         return parolesFreshness;
       case "events":
         return eventsFreshness;
+      case "fil":
+        return filFreshness;
       case "all":
-        return [therapistsFreshness, articlesFreshness, parolesFreshness, eventsFreshness].reduce(
-          newer,
-          undefined,
-        );
+        return [
+          therapistsFreshness,
+          articlesFreshness,
+          parolesFreshness,
+          eventsFreshness,
+          filFreshness,
+        ].reduce(newer, undefined);
     }
   };
   for (const lang of LANGS) {
@@ -601,7 +632,7 @@ async function buildSitemap(): Promise<string> {
   }
 
   // Articles de blog.
-  for (const a of articles) {
+  for (const a of blogArticles) {
     if (!a.slug) continue;
     const lastmod = articleDay(a);
     for (const lang of LANGS) {
@@ -616,6 +647,25 @@ async function buildSitemap(): Promise<string> {
     }
   }
 
+  // « Le fil Holiswiss » — billets.
+  //
+  // La route `$lang.fil-holiswiss.$slug.tsx` sert les quatre langues (titres et
+  // extraits traduits en base, hreflang réciproques) : les quatre URL sont donc
+  // légitimes, contrairement aux fiches ou aux Voix d'experts. Aucune page de
+  // catégorie du fil n'existe (le filtre est un état d'interface, sans URL) :
+  // rien de tel n'est déclaré ici.
+  for (const a of filArticles) {
+    if (!a.slug) continue;
+    const lastmod = articleDay(a);
+    for (const lang of LANGS) {
+      urls.push(
+        urlBlock(`${BASE_URL}/${lang}/fil-holiswiss/${a.slug}`, lastmod, "monthly", "0.6"),
+      );
+    }
+  }
+
+
+
   // Catégories du blog : seulement celles qui portent assez d'articles. Elles
   // étaient indexables mais jamais déclarées — 112 URLs dans un entre-deux. Le
   // seuil vient de `seo-thresholds.ts`, lu aussi par la route catégorie et par
@@ -624,7 +674,7 @@ async function buildSitemap(): Promise<string> {
   {
     const perCategory = new Map<string, number>();
     const categoryFreshness = new Map<string, string | undefined>();
-    for (const a of articles) {
+    for (const a of blogArticles) {
       const keys = new Set<string>();
       if (a.category) keys.add(a.category);
       for (const t of a.secondary_tags ?? []) if (t) keys.add(t);

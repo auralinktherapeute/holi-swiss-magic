@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, Clock, Tag, Sparkles, Heart, Brain, Wind, ShieldCheck } from "lucide-react";
 import { hreflangLinks } from "@/lib/seo";
+import { buildMetaTitle } from "@/lib/seo-title";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
 
 const SITE = "https://holiswiss.ch";
@@ -14,7 +15,9 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
   component: Page,
   head: ({ params }) => {
     const url = `${SITE}/${params.lang}/blog/${SLUG}`;
-    const title = `${TITLE} | HoliSwiss`;
+    // Coupe sur une frontière de mot et graphie de marque unifiée — métadonnées
+    // uniquement, aucun texte visible modifié.
+    const title = buildMetaTitle(TITLE, "Holiswiss");
     return {
       meta: [
         { title },
