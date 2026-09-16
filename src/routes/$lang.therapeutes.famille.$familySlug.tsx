@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getFamilyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { organizationRef } from "@/lib/organization-schema";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { loadEssential } from "@/lib/read-health";
@@ -36,6 +37,18 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
     const copy = T[params.lang] ?? T.fr;
     const title = copy.t;
     const description = copy.d(famName);
+    const B: Record<string, { home: string; therapists: string }> = {
+      fr: { home: "Accueil", therapists: "Thérapeutes" },
+      de: { home: "Startseite", therapists: "Therapeuten" },
+      it: { home: "Home", therapists: "Terapeuti" },
+      en: { home: "Home", therapists: "Therapists" },
+    };
+    const bc = B[params.lang] ?? B.fr;
+    // En panne de lecture : aucune donnée structurée (un ItemList vide mentirait).
+    const unavailable = (loaderData as any)?.unavailable === true;
+    const list = (((loaderData as any)?.page?.therapists ?? []) as Array<{
+      slug: string | null; first_name: string | null; last_name: string | null;
+    }>).filter((x) => x.slug);
     return {
       meta: [
         { title },
@@ -45,8 +58,52 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
         { property: "og:locale", content: ogLocale(params.lang) },
+        // Sans ces trois lignes, l'aperçu Twitter/X héritait du titre et de la
+        // description FRANÇAIS posés à la racine, dans les quatre langues.
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/therapeutes/famille/${params.familySlug}`)],
+      scripts: unavailable ? [] : [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: bc.home, item: `https://holiswiss.ch/${params.lang}` },
+              { "@type": "ListItem", position: 2, name: bc.therapists, item: `https://holiswiss.ch/${params.lang}/therapeutes` },
+              { "@type": "ListItem", position: 3, name: famName, item: url },
+            ],
+          }),
+        },
+        ...(list.length === 0 ? [] : [{
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "@id": `${url}#page`,
+            url,
+            name: title,
+            description,
+            inLanguage: params.lang,
+            isPartOf: { "@id": "https://holiswiss.ch/#website" },
+            publisher: organizationRef,
+            mainEntity: {
+              "@type": "ItemList",
+              name: title,
+              numberOfItems: list.length,
+              itemListElement: list.map((x, i) => ({
+                "@type": "ListItem",
+                position: i + 1,
+                name: `${x.first_name ?? ""} ${x.last_name ?? ""}`.trim(),
+                url: `https://holiswiss.ch/${params.lang}/therapeute/${x.slug}`,
+              })),
+            },
+          }),
+        }]),
+      ],
     };
   },
 });

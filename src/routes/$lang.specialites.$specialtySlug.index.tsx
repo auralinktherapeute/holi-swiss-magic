@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getSpecialtyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
 import { LANGS, ogLocale } from "@/lib/seo";
 import { isSpecialtyIndexable } from "@/lib/seo-thresholds";
+import { organizationRef } from "@/lib/organization-schema";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 
@@ -86,6 +87,12 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // jus de lien continue de circuler. Émis dans le HTML initial, donc lu par
     // les crawlers IA qui ne rendent pas le JavaScript.
     const indexable = (loaderData as any)?.indexable !== false;
+    // Liste RÉELLE du loader : jamais d'ItemList inventé ni vide. Une page
+    // `noindex` (aucun praticien) reste `noindex` — on n'ajoute pas de données
+    // structurées pour la rendre attirante, il n'y a rien à lister.
+    const list = (((loaderData as any)?.page?.therapists ?? []) as Array<{
+      slug: string | null; first_name: string | null; last_name: string | null;
+    }>).filter((x) => x.slug);
     return {
       meta: [
         { title },
@@ -96,6 +103,11 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
         { property: "og:locale", content: ogLocale(params.lang) },
+        // Sans ces trois lignes, l'aperçu Twitter/X héritait du titre et de la
+        // description FRANÇAIS posés à la racine, dans les quatre langues.
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangs],
       scripts: [
@@ -111,6 +123,31 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
             ],
           }),
         },
+        ...(list.length === 0 ? [] : [{
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "@id": `${url}#page`,
+            url,
+            name: title,
+            description,
+            inLanguage: params.lang,
+            isPartOf: { "@id": "https://holiswiss.ch/#website" },
+            publisher: organizationRef,
+            mainEntity: {
+              "@type": "ItemList",
+              name: title,
+              numberOfItems: list.length,
+              itemListElement: list.map((x, i) => ({
+                "@type": "ListItem",
+                position: i + 1,
+                name: `${x.first_name ?? ""} ${x.last_name ?? ""}`.trim(),
+                url: `https://holiswiss.ch/${params.lang}/therapeute/${x.slug}`,
+              })),
+            },
+          }),
+        }]),
       ],
     };
   },

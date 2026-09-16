@@ -37,31 +37,6 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
     const description =
       (raw ? String(raw).replace(/[#*_>\-\[\]()]/g, " ").replace(/\s+/g, " ").trim() : "").slice(0, 160) ||
       "Regards et conseils de praticiens holistiques en Suisse, sur Holiswiss.";
-    const meta: Array<Record<string, string>> = [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "article" },
-      { property: "og:url", content: url },
-      { property: "og:locale", content: ogLocale(params.lang) },
-    ];
-    const ld = a?.titre
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Article",
-          headline: a.titre,
-          description,
-          mainEntityOfPage: { "@type": "WebPage", "@id": url },
-          url,
-          inLanguage: params.lang,
-          author: author ? { "@type": "Person", name: author } : organizationRef,
-          // Le publisher n'avait pas de `logo` : champ requis du résultat
-          // enrichi Article. Il vient maintenant du nœud partagé.
-          publisher: publisherNode,
-          ...(a.date_publication ? { datePublished: a.date_publication } : {}),
-        }
-      : null;
     // Une seule langue indexable : `therapist_articles` n'a qu'une colonne
     // `titre`, sans traduction. Les quatre URLs servaient le même texte, ce que
     // npm run seo:check a signalé (« title identique à … »). La langue suit le
@@ -69,10 +44,84 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
     // de hreflang : une grappe hreflang suppose des membres canoniques d'eux-mêmes.
     const contentLang = resolveProfileLang(null, a?.therapists?.canton, null);
     const canonicalUrl = `https://holiswiss.ch/${contentLang}/paroles/${params.slug}`;
+    const pageUrl = a?.titre ? canonicalUrl : url;
+    // Image RÉELLE, celle que la page affiche (`image_couverture`) et seulement
+    // si c'est déjà une URL absolue. Aucun repli sur le logo : ce serait annoncer
+    // aux réseaux sociaux une illustration que l'article n'a pas.
+    const cover = typeof a?.image_couverture === "string" && /^https?:\/\//.test(a.image_couverture)
+      ? (a.image_couverture as string)
+      : null;
+    const authorSlug = a?.therapists?.slug ? String(a.therapists.slug) : null;
+    const authorUrl = authorSlug
+      ? `https://holiswiss.ch/${contentLang}/therapeute/${authorSlug}`
+      : null;
+    const meta: Array<Record<string, string>> = [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: pageUrl },
+      { property: "og:locale", content: ogLocale(contentLang) },
+      // Sans `twitter:title` / `twitter:description` ici, l'aperçu X héritait du
+      // titre et de la description de l'accueil, en français.
+      { name: "twitter:card", content: cover ? "summary_large_image" : "summary" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+      ...(cover
+        ? [{ property: "og:image", content: cover }, { name: "twitter:image", content: cover }]
+        : []),
+    ];
+    const bcHome: Record<string, string> = { fr: "Accueil", de: "Startseite", it: "Home", en: "Home" };
+    const bcParoles: Record<string, string> = {
+      fr: "Voix d'experts", de: "Expertenstimmen", it: "Voci di esperti", en: "Expert voices",
+    };
+    const ld = a?.titre
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          // `@id` stable : sans lui, chaque moteur inventait sa propre clé et le
+          // nœud ne pouvait pas fusionner avec la WebPage.
+          "@id": `${pageUrl}#article`,
+          headline: a.titre,
+          description,
+          mainEntityOfPage: { "@type": "WebPage", "@id": pageUrl },
+          url: pageUrl,
+          inLanguage: contentLang,
+          author: author
+            ? { "@type": "Person", name: author, ...(authorUrl ? { url: authorUrl } : {}) }
+            : organizationRef,
+          // Le publisher n'avait pas de `logo` : champ requis du résultat
+          // enrichi Article. Il vient maintenant du nœud partagé.
+          publisher: publisherNode,
+          ...(cover ? { image: [cover] } : {}),
+          ...(a.date_publication ? { datePublished: a.date_publication } : {}),
+          // `dateModified` uniquement si la donnée existe réellement en base.
+          ...(a.updated_at ? { dateModified: a.updated_at } : {}),
+        }
+      : null;
+    const breadcrumb = a?.titre
+      ? {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: bcHome[contentLang] ?? bcHome.fr, item: `https://holiswiss.ch/${contentLang}` },
+            { "@type": "ListItem", position: 2, name: bcParoles[contentLang] ?? bcParoles.fr, item: `https://holiswiss.ch/${contentLang}/paroles` },
+            { "@type": "ListItem", position: 3, name: a.titre, item: pageUrl },
+          ],
+        }
+      : null;
     return {
       meta,
-      links: [{ rel: "canonical", href: a?.titre ? canonicalUrl : url }],
-      ...(ld ? { scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }] } : {}),
+      links: [{ rel: "canonical", href: pageUrl }],
+      ...(ld
+        ? {
+            scripts: [
+              { type: "application/ld+json", children: JSON.stringify(ld) },
+              ...(breadcrumb ? [{ type: "application/ld+json", children: JSON.stringify(breadcrumb) }] : []),
+            ],
+          }
+        : {}),
     };
   },
 });

@@ -74,10 +74,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Holiswiss" },
-      { name: "twitter:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { name: "twitter:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. Profils validés par Holiswiss, avis authentiques, réservation en ligne." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f65eee24-f112-4f11-aafe-91b49aa10354/id-preview-246cabfd--2c2ca56b-598e-4651-bc14-8ba533771ae9.lovable.app-1781045501960.png" },
+      // ⚠️ PAS de `twitter:title` / `twitter:description` ici.
+      //
+      // TanStack Router fusionne les `meta` par `name`/`property` : une valeur
+      // posée à la racine survit sur TOUTE page qui ne la redéfinit pas. Les
+      // pages de blog, Voix d'experts, Fil, spécialités et familles ne posent
+      // que `og:title` / `og:description` — l'aperçu Twitter/X de leurs versions
+      // DE, IT et EN servait donc le titre et la description FRANÇAIS de
+      // l'accueil. Les plateformes retombent sur `og:*` en l'absence de
+      // `twitter:*` : le comportement reste correct, et devient multilingue.
+      //
+      // Image de partage : actif STABLE servi par notre domaine
+      // (`public/logo.png`, 500 × 500). Avant, c'était une capture d'écran de
+      // l'environnement de prévisualisation Lovable, hébergée sur un domaine
+      // r2.dev éphémère — une URL qui n'a aucune raison de rester valide.
+      { property: "og:image", content: "https://holiswiss.ch/logo.png" },
+      { property: "og:image:width", content: "500" },
+      { property: "og:image:height", content: "500" },
+      { property: "og:image:alt", content: "Logo Holiswiss" },
+      { name: "twitter:image", content: "https://holiswiss.ch/logo.png" },
       { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, profil validé Holiswiss, réservation thérapeute" },
       { name: "robots", content: "index, follow" },
       { property: "og:locale", content: "fr_CH" },

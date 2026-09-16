@@ -5,7 +5,9 @@ import { useTranslation } from "react-i18next";
 import { getPublishedEvent } from "@/lib/public.functions";
 import { EventFlyer } from "@/components/events/EventFlyer";
 import { Button } from "@/components/ui/button";
-import { resolveProfileLang } from "@/lib/seo";
+import { ogLocale, resolveProfileLang } from "@/lib/seo";
+import { publisherNode } from "@/lib/organization-schema";
+import { buildMetaTitle } from "@/lib/seo-title";
 
 const SITE = "https://holiswiss.ch";
 
@@ -31,7 +33,10 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     }
     const contentLang = resolveProfileLang(null, (loaderData as any)?.therapist?.canton, null);
     const canonicalUrl = `${SITE}/${contentLang}/evenements/${params.id}`;
-    const title = `${e.title} | HoliSwiss`.slice(0, 60);
+    // Titre coupé sur une frontière de mot : `slice(0, 60)` tranchait au milieu
+    // d'un mot (« Atelier de respiration consci »). Marque écrite « Holiswiss »,
+    // comme partout ailleurs dans le graphe — uniquement dans les métadonnées.
+    const title = buildMetaTitle(e.title, "Holiswiss");
     const description = (e.short_description || e.long_description || `Événement bien-être en Suisse.`).slice(0, 160);
     const meta: Array<Record<string, string>> = [
       { title },
@@ -39,8 +44,11 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: url },
-      { name: "twitter:card", content: "summary_large_image" },
+      // `og:url` suit la page canonique (une seule langue indexable), sinon on
+      // annonce aux réseaux une adresse que l'on déclare non canonique.
+      { property: "og:url", content: canonicalUrl },
+      { property: "og:locale", content: ogLocale(contentLang) },
+      { name: "twitter:card", content: e.image_signed_url ? "summary_large_image" : "summary" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
     ];
@@ -51,25 +59,55 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     const startDate = e.start_time
       ? `${e.event_date}T${e.start_time}`
       : e.event_date;
+    // `endDate` seulement si `end_time` existe réellement en base.
+    const endDate = e.event_date && e.end_time ? `${e.event_date}T${e.end_time}` : null;
     // La table events n'a pas de colonne is_online : l'état « en ligne » se
     // dérive de format (in_person | online | hybrid).
     const isOnline = e.format === "online" || e.format === "hybrid";
+    // `offers` reprend EXACTEMENT le tarif affiché sur la page (« X CHF » ou
+    // « Gratuit »). Aucun prix déduit : sans montant renseigné, pas d'offre.
+    const offers =
+      e.is_paid === true && e.price != null
+        ? { "@type": "Offer", price: String(e.price), priceCurrency: "CHF", url: canonicalUrl, availability: "https://schema.org/InStock" }
+        : e.is_paid === false
+          ? { "@type": "Offer", price: "0", priceCurrency: "CHF", url: canonicalUrl, availability: "https://schema.org/InStock" }
+          : null;
     const eventLd: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Event",
+      "@id": `${canonicalUrl}#event`,
       name: e.title,
       startDate,
+      ...(endDate ? { endDate } : {}),
       description: e.short_description || e.long_description || undefined,
+      inLanguage: contentLang,
       eventStatus: "https://schema.org/EventScheduled",
       eventAttendanceMode: isOnline
         ? "https://schema.org/OnlineEventAttendanceMode"
         : "https://schema.org/OfflineEventAttendanceMode",
       location: isOnline
-        ? { "@type": "VirtualLocation", url: e.online_link || url }
+        ? { "@type": "VirtualLocation", url: e.online_link || canonicalUrl }
         : { "@type": "Place", name: e.location || "Suisse", address: e.location || "Suisse" },
       image: e.image_signed_url ? [e.image_signed_url] : undefined,
-      organizer: { "@type": "Organization", name: "HoliSwiss", url: SITE },
-      url,
+      // `organizer` porte désormais l'`@id` de l'Organization officielle : avant,
+      // c'était un second nœud « HoliSwiss » sans identifiant, qui fragmentait
+      // l'entité au lieu de la renforcer.
+      organizer: publisherNode,
+      ...(offers ? { offers } : {}),
+      url: canonicalUrl,
+    };
+    const bcHome: Record<string, string> = { fr: "Accueil", de: "Startseite", it: "Home", en: "Home" };
+    const bcEvents: Record<string, string> = {
+      fr: "Événements", de: "Veranstaltungen", it: "Eventi", en: "Events",
+    };
+    const breadcrumbLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: bcHome[contentLang] ?? bcHome.fr, item: `${SITE}/${contentLang}` },
+        { "@type": "ListItem", position: 2, name: bcEvents[contentLang] ?? bcEvents.fr, item: `${SITE}/${contentLang}/evenements` },
+        { "@type": "ListItem", position: 3, name: e.title, item: canonicalUrl },
+      ],
     };
     return {
       meta,
@@ -91,6 +129,7 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
       ],
       scripts: [
         { type: "application/ld+json", children: JSON.stringify(eventLd) },
+        { type: "application/ld+json", children: JSON.stringify(breadcrumbLd) },
       ],
     };
   },

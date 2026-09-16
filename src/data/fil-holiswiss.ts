@@ -48,6 +48,8 @@ export type FilPost = {
   image?: string | null;
   imageAlt?: string;
   date: string; // ISO
+  /** `updated_at` réel de la ligne `articles` — jamais dérivé ni inventé. */
+  updatedAt?: string | null;
   author?: string | null;
   featured?: boolean;
   seoTitle?: string;

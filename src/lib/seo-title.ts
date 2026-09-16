@@ -113,3 +113,33 @@ export function buildGeneratedSeoTitle(input: {
     [input.title?.trim(), place ? `à ${place}` : ""].filter(Boolean).join(" ");
   return `${fullName}${role ? ` — ${role}` : ""} | Holiswiss`.slice(0, SEO_TITLE_MAX);
 }
+
+/**
+ * Titre de métadonnée coupé sur une frontière de MOT.
+ *
+ * `\`${titre} | Holiswiss\`.slice(0, 60)` tronquait au milieu d'un mot — et
+ * pouvait même amputer le nom de la marque (« … | HoliSw »). Ici la marque est
+ * toujours préservée : seul le titre éditorial est raccourci, sur le dernier
+ * espace utile, avec une ellipse quand il a réellement été coupé.
+ *
+ * Aucun texte visible n'est concerné : cette fonction ne sert qu'aux balises
+ * `<title>` / `og:title` / `twitter:title`.
+ */
+export function buildMetaTitle(
+  rawTitle: string,
+  brand = "Holiswiss",
+  max = SEO_TITLE_MAX,
+): string {
+  const t = cleanSeoTitle(rawTitle);
+  const suffix = ` | ${brand}`;
+  if (!t) return brand;
+  const full = `${t}${suffix}`;
+  if ([...full].length <= max) return full;
+
+  const room = max - suffix.length - 1; // -1 : place de l'ellipse
+  if (room <= 0) return t.slice(0, max);
+  const head = t.slice(0, room);
+  const cut = head.lastIndexOf(" ");
+  const base = (cut > room * 0.5 ? head.slice(0, cut) : head).replace(/[\s,;:–—-]+$/, "");
+  return `${base}…${suffix}`;
+}
