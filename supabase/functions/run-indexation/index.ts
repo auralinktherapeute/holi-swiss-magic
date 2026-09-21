@@ -673,13 +673,16 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
       body: JSON.stringify({
         run_at: now,
         trigger,
-        urls_total: totalUrls,
+        // Un compte indisponible n'est PAS écrit : la colonne garde sa valeur
+        // par défaut plutôt que d'enregistrer un faux zéro, et l'erreur figure
+        // dans `errors` comme dans le résumé.
+        ...(totalUrls !== null ? { urls_total: totalUrls } : {}),
         urls_checked: inspected,
         newly_indexed: newlyIndexed,
         newly_discovered: newUrlsAdded,
-        // Le vrai constat, plus le périmètre suivi (le dashboard affiche ce
-        // champ sous le libellé « non indexées » : il doit le mériter).
-        not_indexed: notIndexedTotal,
+        // Le vrai constat (URLs contrôlées et non indexées) — le dashboard
+        // affiche ce champ sous le libellé « non indexées » : il doit le mériter.
+        ...(notIndexedTotal !== null ? { not_indexed: notIndexedTotal } : {}),
         blocked: archivedTotal,
         errors: errors.length,
         quota_used: inspected,
