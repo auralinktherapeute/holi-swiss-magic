@@ -627,7 +627,9 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
         urls_checked: inspected,
         newly_indexed: newlyIndexed,
         newly_discovered: newUrlsAdded,
-        not_indexed: activeTotal,
+        // Le vrai constat, plus le périmètre suivi (le dashboard affiche ce
+        // champ sous le libellé « non indexées » : il doit le mériter).
+        not_indexed: notIndexedTotal,
         blocked: archivedTotal,
         errors: errors.length,
         quota_used: inspected,
