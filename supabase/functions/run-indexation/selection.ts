@@ -64,18 +64,22 @@ export function countStale(
   return rows.filter((r) => !r.last_checked_at || r.last_checked_at < cutoff).length;
 }
 
+/**
+ * `null` = compte INDISPONIBLE (lecture en échec). Jamais 0 : un faux zéro dans
+ * un rapport de suivi se lit comme une bonne nouvelle.
+ */
 export type TrackingState = {
   /** URLs actives (non archivées) — le périmètre suivi, PAS un compte de non-indexées. */
-  active: number;
-  /** URLs actives dont l'état constaté n'est pas `indexed`. */
-  notIndexed: number;
+  active: number | null;
+  /** URLs actives CONTRÔLÉES dont l'état constaté n'est pas `indexed`. */
+  notIndexed: number | null;
   /** URLs actives jamais inspectées par Search Console. */
-  neverInspected: number;
+  neverInspected: number | null;
   /** URLs actives dont le dernier contrôle dépasse `staleDays`. */
-  staleChecks: number;
+  staleChecks: number | null;
   staleDays: number;
   /** Total suivi, archivées comprises. */
-  total: number;
+  total: number | null;
   /** Inspections réellement effectuées ce run, et échecs d'appel API. */
   inspected: number;
   inspectFailures: number;
