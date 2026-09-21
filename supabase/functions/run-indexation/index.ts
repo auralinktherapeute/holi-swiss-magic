@@ -652,16 +652,18 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
   // e-mail Resend. Le statut HTTP est VÉRIFIÉ dans les deux cas : c'est son
   // absence de contrôle qui a laissé la notification muette huit jours en août.
   const notifParts = [
-    `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus}`,
-    inspected > 0 ? `${inspected} inspectées, ${newlyIndexed} nouvellement indexées` : null,
+    `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus} (soumission, pas indexation)`,
+    inspected > 0 ? `${inspected} constatées, ${newlyIndexed} nouvellement indexées` : null,
+    indexLost > 0 ? `${indexLost} indexation perdue` : null,
+    inspectFailures > 0 ? `⚠️ ${inspectFailures} inspection(s) en échec` : null,
     newUrlsAdded > 0 ? `+${newUrlsAdded} nouvelles` : null,
     archivedTotal > 0 ? `${archivedTotal} archivées` : null,
-    `${activeTotal} actives`,
+    `${activeTotal} actives suivies · ${notIndexedTotal} non indexées · ${neverInspectedTotal} jamais inspectées`,
     errors.length > 0 ? `${errors.length} erreur(s)` : null,
   ]
     .filter(Boolean)
     .join(" · ");
-  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${activeTotal} en file`;
+  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${notIndexedTotal} non indexées`;
 
   let notified = false;
   const notifySecret = await secret("agent_notify_secret");
