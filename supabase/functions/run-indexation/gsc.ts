@@ -120,12 +120,25 @@ export async function accessToken(serviceAccountJson: string): Promise<string | 
   return access_token ?? null;
 }
 
-/** Inspecte UNE URL. `null` = échec de cette URL, pas du lot. */
+export type InspectOutcome =
+  | { ok: true; inspection: Inspection }
+  | { ok: false; error: string };
+
+/**
+ * Inspecte UNE URL.
+ *
+ * Renvoie un ÉCHEC EXPLICITE au lieu de `null` : un timeout, un 429 de quota ou
+ * un 403 de permission ne doivent surtout pas se confondre avec « pas de
+ * données », sinon une panne d'API se lit comme une désindexation. L'appelant
+ * compte l'échec, le publie dans le rapport, ne touche PAS au statut de l'URL,
+ * et continue avec les autres.
+ */
 export async function inspect(
   token: string,
   siteUrl: string,
   url: string,
-): Promise<Inspection | null> {
+  timeoutMs = 15000,
+): Promise<InspectOutcome> {
   // PAS de `languageCode` : `coverageState` est de la prose LOCALISÉE, et c'est
   // la seule chose qui distingue « Discovered » de « Crawled » (les deux ont le
   // verdict NEUTRAL). Avec `languageCode: "fr"`, l'API renvoyait « Détectée,
