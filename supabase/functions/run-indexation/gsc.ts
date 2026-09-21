@@ -104,6 +104,9 @@ export async function accessToken(serviceAccountJson: string): Promise<string | 
   );
   const jwt = `${header}.${claims}.${b64url(sig)}`;
 
+  // Échéance explicite : sans elle, un point de terminaison OAuth qui ne répond
+  // pas suspend tout le cycle jusqu'à ce que l'edge function soit tuée — donc
+  // ni rapport ni notification.
   const r = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -111,6 +114,7 @@ export async function accessToken(serviceAccountJson: string): Promise<string | 
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: jwt,
     }),
+    signal: AbortSignal.timeout(20000),
   });
   if (!r.ok) {
     const body = await r.text();
@@ -158,7 +162,11 @@ export async function inspect(
     return { ok: false, error: `réseau (${msg})` };
   }
   if (!r.ok) return { ok: false, error: `HTTP ${r.status}` };
-  const d = (await r.json()) as {
+  // La LECTURE DU CORPS peut échouer elle aussi : JSON tronqué, page d'erreur
+  // HTML d'un intermédiaire, ou coupure du flux après l'en-tête (le timeout
+  // couvre aussi le corps). Une exception ici remonterait jusqu'au `catch` du
+  // cycle entier et arrêterait le lot — exactement ce qu'on veut éviter.
+  type GscBody = {
     inspectionResult?: {
       indexStatusResult?: {
         verdict?: string;
@@ -170,7 +178,17 @@ export async function inspect(
       };
     };
   };
-  const i = d.inspectionResult?.indexStatusResult;
+  let d: GscBody;
+  try {
+    d = (await r.json()) as GscBody;
+  } catch (e) {
+    const msg =
+      (e as Error).name === "TimeoutError"
+        ? `timeout ${timeoutMs} ms à la lecture du corps`
+        : `corps illisible (${(e as Error).message})`;
+    return { ok: false, error: msg };
+  }
+  const i = d?.inspectionResult?.indexStatusResult;
   if (!i) return { ok: false, error: "réponse sans indexStatusResult" };
   return {
     ok: true,

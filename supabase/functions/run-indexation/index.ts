@@ -66,6 +66,8 @@ import { accessToken, inspect, toStatus } from "./gsc.ts";
 import { preflightAll } from "./preflight.ts";
 import {
   buildStateSection,
+  fmtCount,
+  fmtIndexNow,
   orderInspectionCandidates,
   type InspectionCandidate,
 } from "./selection.ts";
@@ -237,13 +239,6 @@ Deno.serve(async (req) => {
   let indexLost = 0;
   let unarchived = 0;
   let deadlineHit = 0; // URLs laissées de côté par l'échéance de temps
-  // Instantané des actives, aussi utilisé pour les compteurs de fraîcheur du rapport.
-  let activeSnapshot: InspectionCandidate[] = [];
-  const snapResp = await gpld(
-    `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status,priority,last_checked_at&limit=5000`,
-  );
-  if (snapResp.ok) activeSnapshot = await snapResp.json();
-  else errors.push(`Lecture des actives HTTP ${snapResp.status}`);
 
   const saJson = Deno.env.get("GSC_SERVICE_ACCOUNT_JSON");
   if (saJson) {
@@ -252,10 +247,26 @@ Deno.serve(async (req) => {
       if (!token) throw new Error("jeton Google vide");
 
       // ÉQUITÉ : jamais inspectées d'abord, puis contrôle le plus ancien, la
-      // priorité en simple départage (cf. selection.ts). L'ancien tri par
-      // priorité saturait les 85 places avec les P1/P2 déjà vus la veille et
-      // laissait 223 articles jamais contrôlés depuis juillet.
-      const actives = orderInspectionCandidates(activeSnapshot, INSPECT_ACTIVE);
+      // priorité en simple départage. L'ancien tri par priorité saturait les 85
+      // places avec les P1/P2 déjà vus la veille et laissait 223 articles jamais
+      // contrôlés depuis juillet.
+      //
+      // Le tri est fait PAR POSTGREST, avant la limite : lire d'abord un lot
+      // « large » puis trier en mémoire réintroduirait la famine dès que la
+      // table dépasse le plafond de lignes du serveur (1 000 par défaut) — les
+      // 223 laissées pour compte pourraient tomber hors du lot lu. Le helper
+      // `orderInspectionCandidates` reste utilisé pour re-trier le lot reçu
+      // (l'ordre exact est ainsi vérifié par les tests, indépendamment du SGBD).
+      const actResp = await gpld(
+        `/rest/v1/indexed_urls?archived_at=is.null` +
+          `&select=id,url,status,priority,last_checked_at` +
+          `&order=last_checked_at.asc.nullsfirst,priority.asc,id.asc&limit=${INSPECT_ACTIVE}`,
+      );
+      if (!actResp.ok) errors.push(`Sélection actives HTTP ${actResp.status}`);
+      const actives = orderInspectionCandidates(
+        (actResp.ok ? await actResp.json() : []) as InspectionCandidate[],
+        INSPECT_ACTIVE,
+      );
       const arcResp = await gpld(
         `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
           `&select=id,url,status,priority,last_checked_at&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
@@ -282,7 +293,12 @@ Deno.serve(async (req) => {
           break;
         }
         await Promise.all(
+          // Chaque URL est ISOLÉE : `Promise.all` rejette au premier échec, donc
+          // une exception imprévue (réseau coupé pendant le PATCH, corps
+          // illisible, quota) faisait sauter tout le paquet et remontait au
+          // `catch` du cycle. Ici l'incident est compté et les autres continuent.
           targets.slice(i, i + INSPECT_CONCURRENCY).map(async (t) => {
+            try {
             const out = await inspect(token, GSC_SITE, t.url);
             if (!out.ok) {
               // PANNE D'API ≠ DÉSINDEXATION : on ne touche à aucun champ de
@@ -333,6 +349,10 @@ Deno.serve(async (req) => {
             if (gained) newlyIndexed++;
             if (lost) indexLost++;
             if (unarchiving) unarchived++;
+            } catch (e) {
+              inspectFailures++;
+              if (inspectFailures <= 5) errors.push(`Inspection ${(e as Error).message}`);
+            }
           }),
         );
       }
@@ -472,26 +492,33 @@ Deno.serve(async (req) => {
   if (!queueResp.ok) errors.push(`Lecture file HTTP ${queueResp.status}`);
 
   // Compteurs : `limit=1` suffit, seul l'en-tête content-range est lu.
-  async function countOf(filter: string): Promise<number> {
-    const r = await gpld(`/rest/v1/indexed_urls?${filter}&select=id&limit=1`, {
-      headers: { Prefer: "count=exact" },
-    });
-    return parseInt((r.headers.get("content-range") ?? "").split("/")[1] ?? "0") || 0;
+  //
+  // `null` = COMPTE INDISPONIBLE, jamais 0. Un `|| 0` sur un en-tête absent ou
+  // une réponse en erreur annonçait « 0 non indexées » — un faux zéro
+  // rassurant, c'est-à-dire le pire résultat possible pour un rapport de suivi.
+  async function countOf(label: string, filter: string): Promise<number | null> {
+    let r: Response;
+    try {
+      r = await gpld(`/rest/v1/indexed_urls?${filter}&select=id&limit=1`, {
+        headers: { Prefer: "count=exact" },
+      });
+    } catch (e) {
+      errors.push(`Compte ${label} : ${(e as Error).message}`);
+      return null;
+    }
+    if (!r.ok) {
+      errors.push(`Compte ${label} HTTP ${r.status}`);
+      return null;
+    }
+    const raw = (r.headers.get("content-range") ?? "").split("/")[1];
+    const n = raw === undefined ? NaN : Number.parseInt(raw, 10);
+    if (!Number.isFinite(n)) {
+      errors.push(`Compte ${label} : en-tête content-range illisible`);
+      return null;
+    }
+    return n;
   }
-  const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
-  const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
-  // « Actives » = périmètre suivi. « Non indexées » = constat réel. Les deux ont
-  // longtemps été confondus dans le rapport (`not_indexed: activeTotal`), d'où
-  // des e-mails annonçant 432 pages non indexées alors que le suivi n'avait
-  // jamais inspecté 223 d'entre elles.
-  const notIndexedTotal = await countOf(`archived_at=is.null${scopeFilter}&status=neq.indexed`);
-  const neverInspectedTotal = await countOf(
-    `archived_at=is.null${scopeFilter}&last_checked_at=is.null`,
-  );
-  const staleChecksTotal = await countOf(
-    `archived_at=is.null${scopeFilter}` +
-      `&or=(last_checked_at.is.null,last_checked_at.lt."${daysAgo(STALE_CHECK_DAYS)}")`,
-  );
+
 
   // ── 5bis. Pré-contrôle d'indexabilité — la garde d'entrée ─────────────────
   //
@@ -565,7 +592,33 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── 7. Rapport ────────────────────────────────────────────────────────────
+  // ── 7. Compteurs d'état — APRÈS le pré-contrôle et l'archivage ────────────
+  //
+  // Comptés plus haut, ils décrivaient la table AVANT que ce run n'archive les
+  // URLs mortes ou noindex : le rapport annonçait alors un périmètre qui
+  // n'existait plus au moment de son envoi.
+  const activeTotal = await countOf("actives", `archived_at=is.null${scopeFilter}`);
+  // Filtre toujours vrai : compte la table entière.
+  const totalUrls = await countOf("total", "id=not.is.null");
+  // « Actives » = périmètre suivi. « Non indexées » = CONSTAT. Une URL jamais
+  // contrôlée n'est pas un constat : elle est exclue ici (`last_checked_at`
+  // non nul) et comptée séparément, sinon le rapport traitait l'ignorance
+  // comme une mauvaise nouvelle.
+  const notIndexedTotal = await countOf(
+    "non indexées",
+    `archived_at=is.null${scopeFilter}&status=neq.indexed&last_checked_at=not.is.null`,
+  );
+  const neverInspectedTotal = await countOf(
+    "jamais inspectées",
+    `archived_at=is.null${scopeFilter}&last_checked_at=is.null`,
+  );
+  const staleChecksTotal = await countOf(
+    "suivi périmé",
+    `archived_at=is.null${scopeFilter}` +
+      `&or=(last_checked_at.is.null,last_checked_at.lt."${daysAgo(STALE_CHECK_DAYS)}")`,
+  );
+
+  // ── 8. Rapport ────────────────────────────────────────────────────────────
   const byType = pushable.reduce<Record<string, number>>((acc, u) => {
     acc[u.page_type] = (acc[u.page_type] ?? 0) + 1;
     return acc;
@@ -587,7 +640,7 @@ Deno.serve(async (req) => {
   const summaryMd = `## Run ${trigger} — ${now.substring(0, 16).replace("T", " ")}
 
 ### Actions
-- IndexNow : ${indexNowSubmitted > 0 ? `${indexNowSubmitted} URLs poussées → HTTP ${indexNowStatus}` : "0 URL poussée"}
+- IndexNow : ${indexNowSubmitted > 0 && indexNowStatus > 0 ? `${indexNowSubmitted} URLs poussées → HTTP ${indexNowStatus}` : "aucune soumission"}
 - Composition du lot : ${Object.entries(byType).map(([t, n]) => `${n} ${t}`).join(" · ") || "—"}
 - Écartées au pré-contrôle : ${Object.keys(rejected).length > 0 ? Object.entries(rejected).map(([r, n]) => `${n} ${r}`).join(" · ") : "aucune"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
@@ -622,13 +675,16 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
       body: JSON.stringify({
         run_at: now,
         trigger,
-        urls_total: totalUrls,
+        // Un compte indisponible n'est PAS écrit : la colonne garde sa valeur
+        // par défaut plutôt que d'enregistrer un faux zéro, et l'erreur figure
+        // dans `errors` comme dans le résumé.
+        ...(totalUrls !== null ? { urls_total: totalUrls } : {}),
         urls_checked: inspected,
         newly_indexed: newlyIndexed,
         newly_discovered: newUrlsAdded,
-        // Le vrai constat, plus le périmètre suivi (le dashboard affiche ce
-        // champ sous le libellé « non indexées » : il doit le mériter).
-        not_indexed: notIndexedTotal,
+        // Le vrai constat (URLs contrôlées et non indexées) — le dashboard
+        // affiche ce champ sous le libellé « non indexées » : il doit le mériter.
+        ...(notIndexedTotal !== null ? { not_indexed: notIndexedTotal } : {}),
         blocked: archivedTotal,
         errors: errors.length,
         quota_used: inspected,
@@ -651,18 +707,18 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
   // e-mail Resend. Le statut HTTP est VÉRIFIÉ dans les deux cas : c'est son
   // absence de contrôle qui a laissé la notification muette huit jours en août.
   const notifParts = [
-    `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus} (soumission, pas indexation)`,
+    `IndexNow : ${fmtIndexNow(indexNowSubmitted, indexNowStatus)} (soumission, pas indexation)`,
     inspected > 0 ? `${inspected} constatées, ${newlyIndexed} nouvellement indexées` : null,
     indexLost > 0 ? `${indexLost} indexation perdue` : null,
     inspectFailures > 0 ? `⚠️ ${inspectFailures} inspection(s) en échec` : null,
     newUrlsAdded > 0 ? `+${newUrlsAdded} nouvelles` : null,
     archivedTotal > 0 ? `${archivedTotal} archivées` : null,
-    `${activeTotal} actives suivies · ${notIndexedTotal} non indexées · ${neverInspectedTotal} jamais inspectées`,
+    `${fmtCount(activeTotal)} actives suivies · ${fmtCount(notIndexedTotal)} non indexées au dernier contrôle · ${fmtCount(neverInspectedTotal)} jamais inspectées`,
     errors.length > 0 ? `${errors.length} erreur(s)` : null,
   ]
     .filter(Boolean)
     .join(" · ");
-  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${notIndexedTotal} non indexées`;
+  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${fmtCount(notIndexedTotal)} non indexées au dernier contrôle`;
 
   let notified = false;
   const notifySecret = await secret("agent_notify_secret");
