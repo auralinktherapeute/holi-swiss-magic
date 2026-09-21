@@ -479,6 +479,18 @@ Deno.serve(async (req) => {
   }
   const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
   const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
+  // « Actives » = périmètre suivi. « Non indexées » = constat réel. Les deux ont
+  // longtemps été confondus dans le rapport (`not_indexed: activeTotal`), d'où
+  // des e-mails annonçant 432 pages non indexées alors que le suivi n'avait
+  // jamais inspecté 223 d'entre elles.
+  const notIndexedTotal = await countOf(`archived_at=is.null${scopeFilter}&status=neq.indexed`);
+  const neverInspectedTotal = await countOf(
+    `archived_at=is.null${scopeFilter}&last_checked_at=is.null`,
+  );
+  const staleChecksTotal = await countOf(
+    `archived_at=is.null${scopeFilter}` +
+      `&or=(last_checked_at.is.null,last_checked_at.lt."${daysAgo(STALE_CHECK_DAYS)}")`,
+  );
 
   // ── 5bis. Pré-contrôle d'indexabilité — la garde d'entrée ─────────────────
   //
