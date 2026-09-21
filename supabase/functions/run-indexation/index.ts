@@ -638,7 +638,7 @@ Deno.serve(async (req) => {
   const summaryMd = `## Run ${trigger} — ${now.substring(0, 16).replace("T", " ")}
 
 ### Actions
-- IndexNow : ${indexNowSubmitted > 0 ? `${indexNowSubmitted} URLs poussées → HTTP ${indexNowStatus}` : "0 URL poussée"}
+- IndexNow : ${indexNowSubmitted > 0 && indexNowStatus > 0 ? `${indexNowSubmitted} URLs poussées → HTTP ${indexNowStatus}` : "aucune soumission"}
 - Composition du lot : ${Object.entries(byType).map(([t, n]) => `${n} ${t}`).join(" · ") || "—"}
 - Écartées au pré-contrôle : ${Object.keys(rejected).length > 0 ? Object.entries(rejected).map(([r, n]) => `${n} ${r}`).join(" · ") : "aucune"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
