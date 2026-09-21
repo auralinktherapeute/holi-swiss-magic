@@ -490,26 +490,33 @@ Deno.serve(async (req) => {
   if (!queueResp.ok) errors.push(`Lecture file HTTP ${queueResp.status}`);
 
   // Compteurs : `limit=1` suffit, seul l'en-tête content-range est lu.
-  async function countOf(filter: string): Promise<number> {
-    const r = await gpld(`/rest/v1/indexed_urls?${filter}&select=id&limit=1`, {
-      headers: { Prefer: "count=exact" },
-    });
-    return parseInt((r.headers.get("content-range") ?? "").split("/")[1] ?? "0") || 0;
+  //
+  // `null` = COMPTE INDISPONIBLE, jamais 0. Un `|| 0` sur un en-tête absent ou
+  // une réponse en erreur annonçait « 0 non indexées » — un faux zéro
+  // rassurant, c'est-à-dire le pire résultat possible pour un rapport de suivi.
+  async function countOf(label: string, filter: string): Promise<number | null> {
+    let r: Response;
+    try {
+      r = await gpld(`/rest/v1/indexed_urls?${filter}&select=id&limit=1`, {
+        headers: { Prefer: "count=exact" },
+      });
+    } catch (e) {
+      errors.push(`Compte ${label} : ${(e as Error).message}`);
+      return null;
+    }
+    if (!r.ok) {
+      errors.push(`Compte ${label} HTTP ${r.status}`);
+      return null;
+    }
+    const raw = (r.headers.get("content-range") ?? "").split("/")[1];
+    const n = raw === undefined ? NaN : Number.parseInt(raw, 10);
+    if (!Number.isFinite(n)) {
+      errors.push(`Compte ${label} : en-tête content-range illisible`);
+      return null;
+    }
+    return n;
   }
-  const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
-  const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
-  // « Actives » = périmètre suivi. « Non indexées » = constat réel. Les deux ont
-  // longtemps été confondus dans le rapport (`not_indexed: activeTotal`), d'où
-  // des e-mails annonçant 432 pages non indexées alors que le suivi n'avait
-  // jamais inspecté 223 d'entre elles.
-  const notIndexedTotal = await countOf(`archived_at=is.null${scopeFilter}&status=neq.indexed`);
-  const neverInspectedTotal = await countOf(
-    `archived_at=is.null${scopeFilter}&last_checked_at=is.null`,
-  );
-  const staleChecksTotal = await countOf(
-    `archived_at=is.null${scopeFilter}` +
-      `&or=(last_checked_at.is.null,last_checked_at.lt."${daysAgo(STALE_CHECK_DAYS)}")`,
-  );
+
 
   // ── 5bis. Pré-contrôle d'indexabilité — la garde d'entrée ─────────────────
   //
