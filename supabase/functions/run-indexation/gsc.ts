@@ -145,12 +145,19 @@ export async function inspect(
   // actuellement non indexée » — que `toStatus()` ne reconnaissait pas, d'où
   // 13 URLs silencieusement rétrogradées en `discovered` le 07/09. Sans le
   // paramètre, l'API répond en anglais, langue de référence du mapping.
-  const r = await fetch(GSC_API, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ inspectionUrl: url, siteUrl }),
-  });
-  if (!r.ok) return null;
+  let r: Response;
+  try {
+    r = await fetch(GSC_API, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ inspectionUrl: url, siteUrl }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    const msg = (e as Error).name === "TimeoutError" ? `timeout ${timeoutMs} ms` : (e as Error).message;
+    return { ok: false, error: `réseau (${msg})` };
+  }
+  if (!r.ok) return { ok: false, error: `HTTP ${r.status}` };
   const d = (await r.json()) as {
     inspectionResult?: {
       indexStatusResult?: {
