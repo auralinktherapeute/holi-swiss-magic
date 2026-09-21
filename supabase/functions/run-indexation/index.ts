@@ -745,7 +745,9 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
     submitted: indexNowSubmitted,
     indexNowStatus,
     inspected,
+    inspectFailures,
     newlyIndexed,
+    indexLost,
     unarchived,
     deadlineHit,
     rejected,
@@ -753,7 +755,12 @@ Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (
     newUrlsAdded,
     archived,
     activeTotal,
-    notIndexedCount: activeTotal,
+    neverInspected: neverInspectedTotal,
+    staleChecks: staleChecksTotal,
+    staleCheckDays: STALE_CHECK_DAYS,
+    // Conservé pour le dashboard existant, mais il porte désormais le VRAI
+    // compte de non indexées, pas le nombre d'URLs actives.
+    notIndexedCount: notIndexedTotal,
     queue: queue.map((u) => ({ url: u.url, priority: u.priority, page_type: u.page_type })),
     reportId,
     errors,
