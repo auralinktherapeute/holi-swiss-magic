@@ -347,6 +347,10 @@ Deno.serve(async (req) => {
             if (gained) newlyIndexed++;
             if (lost) indexLost++;
             if (unarchiving) unarchived++;
+            } catch (e) {
+              inspectFailures++;
+              if (inspectFailures <= 5) errors.push(`Inspection ${(e as Error).message}`);
+            }
           }),
         );
       }
