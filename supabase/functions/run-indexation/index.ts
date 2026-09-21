@@ -225,32 +225,41 @@ Deno.serve(async (req) => {
   // états qu'on vient de constater, pas sur ceux d'il y a trois semaines.
   // Se désactive proprement si le secret est absent — le reste du cycle tourne.
   let inspected = 0;
+  let inspectFailures = 0;
   let newlyIndexed = 0;
+  let indexLost = 0;
   let unarchived = 0;
   let deadlineHit = 0; // URLs laissées de côté par l'échéance de temps
+  // Instantané des actives, aussi utilisé pour les compteurs de fraîcheur du rapport.
+  let activeSnapshot: InspectionCandidate[] = [];
+  const snapResp = await gpld(
+    `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status,priority,last_checked_at&limit=5000`,
+  );
+  if (snapResp.ok) activeSnapshot = await snapResp.json();
+  else errors.push(`Lecture des actives HTTP ${snapResp.status}`);
+
   const saJson = Deno.env.get("GSC_SERVICE_ACCOUNT_JSON");
   if (saJson) {
     try {
       const token = await accessToken(saJson);
       if (!token) throw new Error("jeton Google vide");
 
-      // Actives d'abord, par priorité, jamais contrôlées en tête. Puis quelques
-      // archivées « indexées stables » : si Google en a désindexé une, elle doit
-      // revenir en file — c'est le SEUL cas de désarchivage.
-      const [actResp, arcResp] = await Promise.all([
-        gpld(
-          `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status` +
-            `&order=priority.asc,last_checked_at.asc.nullsfirst&limit=${INSPECT_ACTIVE}`,
-        ),
-        gpld(
-          `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
-            `&select=id,url,status&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
-        ),
-      ]);
-      const targets: { id: string; url: string; status: string; wasArchived?: boolean }[] = [
-        ...(actResp.ok ? await actResp.json() : []),
-        ...((arcResp.ok ? await arcResp.json() : []) as { id: string; url: string; status: string }[])
-          .map((r) => ({ ...r, wasArchived: true })),
+      // ÉQUITÉ : jamais inspectées d'abord, puis contrôle le plus ancien, la
+      // priorité en simple départage (cf. selection.ts). L'ancien tri par
+      // priorité saturait les 85 places avec les P1/P2 déjà vus la veille et
+      // laissait 223 articles jamais contrôlés depuis juillet.
+      const actives = orderInspectionCandidates(activeSnapshot, INSPECT_ACTIVE);
+      const arcResp = await gpld(
+        `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
+          `&select=id,url,status,priority,last_checked_at&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
+      );
+      if (!arcResp.ok) errors.push(`Sélection archivées HTTP ${arcResp.status}`);
+      const targets: (InspectionCandidate & { wasArchived?: boolean })[] = [
+        ...actives,
+        ...((arcResp.ok ? await arcResp.json() : []) as InspectionCandidate[]).map((r) => ({
+          ...r,
+          wasArchived: true,
+        })),
       ];
 
       // PAR PAQUETS PARALLÈLES, pas en série. En série, 30 inspections à ~2 s
