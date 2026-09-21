@@ -276,9 +276,16 @@ Deno.serve(async (req) => {
         }
         await Promise.all(
           targets.slice(i, i + INSPECT_CONCURRENCY).map(async (t) => {
-            const res = await inspect(token, GSC_SITE, t.url);
-            if (!res) return;
-            inspected++;
+            const out = await inspect(token, GSC_SITE, t.url);
+            if (!out.ok) {
+              // PANNE D'API ≠ DÉSINDEXATION : on ne touche à aucun champ de
+              // cette URL (ni `status`, ni `last_checked_at`), on compte l'échec,
+              // on le publie, et on continue avec les autres.
+              inspectFailures++;
+              if (inspectFailures <= 5) errors.push(`Inspection ${out.error}`);
+              return;
+            }
+            const res = out.inspection;
             const status = toStatus(res, t.url);
             const patch: Record<string, unknown> = {
               status,
@@ -289,23 +296,36 @@ Deno.serve(async (req) => {
               last_checked_at: now,
               updated_at: now,
             };
-            if (status === "indexed" && t.status !== "indexed") {
-              patch.indexed_at = now;
-              newlyIndexed++;
-            }
+            const gained = status === "indexed" && t.status !== "indexed";
+            const lost = status !== "indexed" && t.status === "indexed";
+            if (gained) patch.indexed_at = now;
+            // PERTE D'INDEXATION : `indexed_at` doit être remis à zéro, sinon la
+            // date d'acquisition survit à la désindexation et l'archivage
+            // « indexée stable » se déclenche sur une page qui ne l'est plus.
+            if (lost) patch.indexed_at = null;
             // Une archivée qui n'est plus indexée retourne en file — le seul
             // désarchivage automatique, et la raison d'être du re-contrôle.
-            if (t.wasArchived && status !== "indexed") {
+            const unarchiving = t.wasArchived === true && status !== "indexed";
+            if (unarchiving) {
               patch.archived_at = null;
               patch.archive_reason = null;
-              unarchived++;
             }
             const up = await gpld(`/rest/v1/indexed_urls?id=eq.${t.id}`, {
               method: "PATCH",
               headers: { Prefer: "return=minimal" },
               body: JSON.stringify(patch),
             });
-            if (!up.ok) errors.push(`MAJ inspection HTTP ${up.status}`);
+            if (!up.ok) {
+              errors.push(`MAJ inspection HTTP ${up.status}`);
+              return;
+            }
+            // Les transitions ne sont comptées qu'APRÈS un PATCH réussi : un
+            // rapport qui annonce « 12 nouvellement indexées » alors que rien
+            // n'a été écrit est pire qu'un rapport vide.
+            inspected++;
+            if (gained) newlyIndexed++;
+            if (lost) indexLost++;
+            if (unarchiving) unarchived++;
           }),
         );
       }
