@@ -579,15 +579,27 @@ Deno.serve(async (req) => {
 - Écartées au pré-contrôle : ${Object.keys(rejected).length > 0 ? Object.entries(rejected).map(([r, n]) => `${n} ${r}`).join(" · ") : "aucune"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
 - Archivées ce run : ${archivedLine}
-- Inspection GSC : ${saJson ? `${inspected} URLs contrôlées · ${newlyIndexed} nouvellement indexées${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}${deadlineHit > 0 ? ` · ⏱ ${deadlineHit} reportées (échéance de temps)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
+- Inspection GSC : ${saJson ? `${inspected} URLs constatées · ${newlyIndexed} nouvellement indexées · ${indexLost} indexation perdue${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}${inspectFailures > 0 ? ` · ⚠️ ${inspectFailures} appel(s) en échec (état inchangé pour ces URLs)` : ""}${deadlineHit > 0 ? ` · ⏱ ${deadlineHit} reportées (échéance de temps)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
 ${errors.length > 0 ? `- ⚠️ Erreurs : ${errors.join(", ")}` : ""}
 
 ### Lot poussé (par priorité — thérapeutes d'abord)
 ${pushed}
 
-### État
-${activeTotal} URLs actives (non archivées)${scope === "therapists" ? " sur le périmètre thérapeutes" : ""} · ${totalUrls} suivies au total.
-Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DAYS} j, ou sortie du sitemap.`;
+### État du suivi
+${buildStateSection({
+  active: activeTotal,
+  notIndexed: notIndexedTotal,
+  neverInspected: neverInspectedTotal,
+  staleChecks: staleChecksTotal,
+  staleDays: STALE_CHECK_DAYS,
+  total: totalUrls,
+  inspected,
+  inspectFailures,
+  indexNowSubmitted,
+  indexNowStatus,
+})}${scope === "therapists" ? "\n(Comptes limités au périmètre thérapeutes.)" : ""}
+Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DAYS} j, ou sortie du sitemap.
+Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (priorité en départage).`;
 
   let reportId: string | null = null;
   try {
