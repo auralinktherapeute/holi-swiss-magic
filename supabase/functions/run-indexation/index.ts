@@ -66,6 +66,8 @@ import { accessToken, inspect, toStatus } from "./gsc.ts";
 import { preflightAll } from "./preflight.ts";
 import {
   buildStateSection,
+  fmtCount,
+  fmtIndexNow,
   orderInspectionCandidates,
   type InspectionCandidate,
 } from "./selection.ts";
