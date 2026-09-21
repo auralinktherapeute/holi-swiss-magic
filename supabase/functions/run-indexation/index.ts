@@ -112,6 +112,8 @@ const INSPECT_CONCURRENCY = 10;
  * gardent leur `last_checked_at`, donc elles repassent en tête au run suivant.
  */
 const INSPECT_DEADLINE_MS = 90_000;
+/** Au-delà de N jours sans inspection, le suivi d'une URL est jugé périmé. */
+const STALE_CHECK_DAYS = 30;
 /** Propriété Search Console. */
 const GSC_SITE = "sc-domain:holiswiss.ch";
 
