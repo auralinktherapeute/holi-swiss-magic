@@ -237,13 +237,6 @@ Deno.serve(async (req) => {
   let indexLost = 0;
   let unarchived = 0;
   let deadlineHit = 0; // URLs laissées de côté par l'échéance de temps
-  // Instantané des actives, aussi utilisé pour les compteurs de fraîcheur du rapport.
-  let activeSnapshot: InspectionCandidate[] = [];
-  const snapResp = await gpld(
-    `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status,priority,last_checked_at&limit=5000`,
-  );
-  if (snapResp.ok) activeSnapshot = await snapResp.json();
-  else errors.push(`Lecture des actives HTTP ${snapResp.status}`);
 
   const saJson = Deno.env.get("GSC_SERVICE_ACCOUNT_JSON");
   if (saJson) {
@@ -252,10 +245,26 @@ Deno.serve(async (req) => {
       if (!token) throw new Error("jeton Google vide");
 
       // ÉQUITÉ : jamais inspectées d'abord, puis contrôle le plus ancien, la
-      // priorité en simple départage (cf. selection.ts). L'ancien tri par
-      // priorité saturait les 85 places avec les P1/P2 déjà vus la veille et
-      // laissait 223 articles jamais contrôlés depuis juillet.
-      const actives = orderInspectionCandidates(activeSnapshot, INSPECT_ACTIVE);
+      // priorité en simple départage. L'ancien tri par priorité saturait les 85
+      // places avec les P1/P2 déjà vus la veille et laissait 223 articles jamais
+      // contrôlés depuis juillet.
+      //
+      // Le tri est fait PAR POSTGREST, avant la limite : lire d'abord un lot
+      // « large » puis trier en mémoire réintroduirait la famine dès que la
+      // table dépasse le plafond de lignes du serveur (1 000 par défaut) — les
+      // 223 laissées pour compte pourraient tomber hors du lot lu. Le helper
+      // `orderInspectionCandidates` reste utilisé pour re-trier le lot reçu
+      // (l'ordre exact est ainsi vérifié par les tests, indépendamment du SGBD).
+      const actResp = await gpld(
+        `/rest/v1/indexed_urls?archived_at=is.null` +
+          `&select=id,url,status,priority,last_checked_at` +
+          `&order=last_checked_at.asc.nullsfirst,priority.asc,id.asc&limit=${INSPECT_ACTIVE}`,
+      );
+      if (!actResp.ok) errors.push(`Sélection actives HTTP ${actResp.status}`);
+      const actives = orderInspectionCandidates(
+        (actResp.ok ? await actResp.json() : []) as InspectionCandidate[],
+        INSPECT_ACTIVE,
+      );
       const arcResp = await gpld(
         `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
           `&select=id,url,status,priority,last_checked_at&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
