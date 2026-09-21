@@ -162,7 +162,11 @@ export async function inspect(
     return { ok: false, error: `réseau (${msg})` };
   }
   if (!r.ok) return { ok: false, error: `HTTP ${r.status}` };
-  const d = (await r.json()) as {
+  // La LECTURE DU CORPS peut échouer elle aussi : JSON tronqué, page d'erreur
+  // HTML d'un intermédiaire, ou coupure du flux après l'en-tête (le timeout
+  // couvre aussi le corps). Une exception ici remonterait jusqu'au `catch` du
+  // cycle entier et arrêterait le lot — exactement ce qu'on veut éviter.
+  type GscBody = {
     inspectionResult?: {
       indexStatusResult?: {
         verdict?: string;
@@ -174,7 +178,17 @@ export async function inspect(
       };
     };
   };
-  const i = d.inspectionResult?.indexStatusResult;
+  let d: GscBody;
+  try {
+    d = (await r.json()) as GscBody;
+  } catch (e) {
+    const msg =
+      (e as Error).name === "TimeoutError"
+        ? `timeout ${timeoutMs} ms à la lecture du corps`
+        : `corps illisible (${(e as Error).message})`;
+    return { ok: false, error: msg };
+  }
+  const i = d?.inspectionResult?.indexStatusResult;
   if (!i) return { ok: false, error: "réponse sans indexStatusResult" };
   return {
     ok: true,
