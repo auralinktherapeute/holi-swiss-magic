@@ -93,7 +93,27 @@ describe("buildStateSection", () => {
   it("distingue le périmètre suivi du constat de non-indexation", () => {
     expect(section).toMatch(/432 URLs actives suivies/);
     expect(section).toMatch(/ce n'est PAS un nombre de pages non indexées/);
-    expect(section).toMatch(/non indexées au dernier constat : 397/);
+    expect(section).toMatch(/non indexées au dernier contrôle : 397/);
+  });
+
+  it("annonce un compte indisponible plutôt qu'un faux zéro", () => {
+    const degraded = buildStateSection({
+      active: null,
+      notIndexed: null,
+      neverInspected: 223,
+      staleChecks: null,
+      staleDays: 30,
+      total: null,
+      inspected: 0,
+      inspectFailures: 0,
+      indexNowSubmitted: 0,
+      indexNowStatus: 0,
+    });
+    expect(degraded).toMatch(/indisponible \(lecture en échec\)/);
+    expect(degraded).not.toMatch(/ : 0\./);
+    // `status === 0` = aucun appel : « HTTP 0 » n'existe pas.
+    expect(degraded).not.toMatch(/HTTP 0/);
+    expect(degraded).toMatch(/aucune soumission ce run/);
   });
 
   it("annonce les jamais inspectées et la fraîcheur du suivi", () => {
