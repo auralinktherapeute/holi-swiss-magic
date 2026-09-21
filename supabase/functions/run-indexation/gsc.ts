@@ -104,6 +104,9 @@ export async function accessToken(serviceAccountJson: string): Promise<string | 
   );
   const jwt = `${header}.${claims}.${b64url(sig)}`;
 
+  // Échéance explicite : sans elle, un point de terminaison OAuth qui ne répond
+  // pas suspend tout le cycle jusqu'à ce que l'edge function soit tuée — donc
+  // ni rapport ni notification.
   const r = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -111,6 +114,7 @@ export async function accessToken(serviceAccountJson: string): Promise<string | 
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: jwt,
     }),
+    signal: AbortSignal.timeout(20000),
   });
   if (!r.ok) {
     const body = await r.text();
