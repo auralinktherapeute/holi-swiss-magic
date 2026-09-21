@@ -110,7 +110,9 @@ describe("buildStateSection", () => {
       indexNowStatus: 0,
     });
     expect(degraded).toMatch(/indisponible \(lecture en échec\)/);
-    expect(degraded).not.toMatch(/ : 0\./);
+    // Aucun compte d'état illisible n'est rendu par un 0 rassurant.
+    expect(degraded).not.toMatch(/0 URLs actives/);
+    expect(degraded).not.toMatch(/dernier contrôle : 0/);
     // `status === 0` = aucun appel : « HTTP 0 » n'existe pas.
     expect(degraded).not.toMatch(/HTTP 0/);
     expect(degraded).toMatch(/aucune soumission ce run/);
