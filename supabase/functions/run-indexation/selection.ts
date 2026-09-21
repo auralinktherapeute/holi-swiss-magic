@@ -94,12 +94,23 @@ export type TrackingState = {
  */
 export function buildStateSection(s: TrackingState): string {
   return [
-    `${s.active} URLs actives suivies (périmètre du suivi, ce n'est PAS un nombre de pages non indexées).`,
-    `Dont non indexées au dernier constat : ${s.notIndexed}.`,
-    `Jamais inspectées par Search Console : ${s.neverInspected}.`,
-    `Contrôle plus ancien que ${s.staleDays} j (ou jamais) : ${s.staleChecks} — fraîcheur du suivi.`,
-    `${s.total} URLs suivies au total, archivées comprises.`,
+    `${fmtCount(s.active)} URLs actives suivies (périmètre du suivi, ce n'est PAS un nombre de pages non indexées).`,
+    `Dont non indexées au dernier contrôle : ${fmtCount(s.notIndexed)} (URLs réellement inspectées).`,
+    `Jamais inspectées par Search Console : ${fmtCount(s.neverInspected)} — état inconnu, pas « non indexées ».`,
+    `Contrôle plus ancien que ${s.staleDays} j (ou jamais) : ${fmtCount(s.staleChecks)} — fraîcheur du suivi.`,
+    `${fmtCount(s.total)} URLs suivies au total, archivées comprises.`,
     `Inspections ce run : ${s.inspected}${s.inspectFailures > 0 ? ` · ${s.inspectFailures} appel(s) Search Console en échec (aucun état n'a été dégradé pour autant)` : ""}.`,
-    `IndexNow : ${s.indexNowSubmitted} URLs → HTTP ${s.indexNowStatus}. Une soumission acceptée n'est pas une indexation : seul Search Console constate l'indexation Google.`,
+    `IndexNow : ${fmtIndexNow(s.indexNowSubmitted, s.indexNowStatus)} Une soumission acceptée n'est pas une indexation : seul Search Console constate l'indexation Google.`,
   ].join("\n");
+}
+
+/** Compte indisponible : on le DIT, on n'invente pas un zéro. */
+export function fmtCount(n: number | null): string {
+  return n === null ? "indisponible (lecture en échec)" : String(n);
+}
+
+/** `status === 0` = aucun appel n'a eu lieu ; « HTTP 0 » n'existe pas. */
+export function fmtIndexNow(submitted: number, status: number): string {
+  if (submitted === 0 || status === 0) return "aucune soumission ce run.";
+  return `${submitted} URLs → HTTP ${status}.`;
 }
