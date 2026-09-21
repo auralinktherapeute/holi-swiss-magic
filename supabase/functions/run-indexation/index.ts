@@ -64,6 +64,11 @@
 
 import { accessToken, inspect, toStatus } from "./gsc.ts";
 import { preflightAll } from "./preflight.ts";
+import {
+  buildStateSection,
+  orderInspectionCandidates,
+  type InspectionCandidate,
+} from "./selection.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -106,6 +111,8 @@ const INSPECT_CONCURRENCY = 10;
  * gardent leur `last_checked_at`, donc elles repassent en tête au run suivant.
  */
 const INSPECT_DEADLINE_MS = 90_000;
+/** Au-delà de N jours sans inspection, le suivi d'une URL est jugé périmé. */
+const STALE_CHECK_DAYS = 30;
 /** Propriété Search Console. */
 const GSC_SITE = "sc-domain:holiswiss.ch";
 
@@ -225,32 +232,41 @@ Deno.serve(async (req) => {
   // états qu'on vient de constater, pas sur ceux d'il y a trois semaines.
   // Se désactive proprement si le secret est absent — le reste du cycle tourne.
   let inspected = 0;
+  let inspectFailures = 0;
   let newlyIndexed = 0;
+  let indexLost = 0;
   let unarchived = 0;
   let deadlineHit = 0; // URLs laissées de côté par l'échéance de temps
+  // Instantané des actives, aussi utilisé pour les compteurs de fraîcheur du rapport.
+  let activeSnapshot: InspectionCandidate[] = [];
+  const snapResp = await gpld(
+    `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status,priority,last_checked_at&limit=5000`,
+  );
+  if (snapResp.ok) activeSnapshot = await snapResp.json();
+  else errors.push(`Lecture des actives HTTP ${snapResp.status}`);
+
   const saJson = Deno.env.get("GSC_SERVICE_ACCOUNT_JSON");
   if (saJson) {
     try {
       const token = await accessToken(saJson);
       if (!token) throw new Error("jeton Google vide");
 
-      // Actives d'abord, par priorité, jamais contrôlées en tête. Puis quelques
-      // archivées « indexées stables » : si Google en a désindexé une, elle doit
-      // revenir en file — c'est le SEUL cas de désarchivage.
-      const [actResp, arcResp] = await Promise.all([
-        gpld(
-          `/rest/v1/indexed_urls?archived_at=is.null&select=id,url,status` +
-            `&order=priority.asc,last_checked_at.asc.nullsfirst&limit=${INSPECT_ACTIVE}`,
-        ),
-        gpld(
-          `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
-            `&select=id,url,status&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
-        ),
-      ]);
-      const targets: { id: string; url: string; status: string; wasArchived?: boolean }[] = [
-        ...(actResp.ok ? await actResp.json() : []),
-        ...((arcResp.ok ? await arcResp.json() : []) as { id: string; url: string; status: string }[])
-          .map((r) => ({ ...r, wasArchived: true })),
+      // ÉQUITÉ : jamais inspectées d'abord, puis contrôle le plus ancien, la
+      // priorité en simple départage (cf. selection.ts). L'ancien tri par
+      // priorité saturait les 85 places avec les P1/P2 déjà vus la veille et
+      // laissait 223 articles jamais contrôlés depuis juillet.
+      const actives = orderInspectionCandidates(activeSnapshot, INSPECT_ACTIVE);
+      const arcResp = await gpld(
+        `/rest/v1/indexed_urls?archived_at=not.is.null&archive_reason=eq.indexed_stable` +
+          `&select=id,url,status,priority,last_checked_at&order=last_checked_at.asc.nullsfirst&limit=${INSPECT_ARCHIVED}`,
+      );
+      if (!arcResp.ok) errors.push(`Sélection archivées HTTP ${arcResp.status}`);
+      const targets: (InspectionCandidate & { wasArchived?: boolean })[] = [
+        ...actives,
+        ...((arcResp.ok ? await arcResp.json() : []) as InspectionCandidate[]).map((r) => ({
+          ...r,
+          wasArchived: true,
+        })),
       ];
 
       // PAR PAQUETS PARALLÈLES, pas en série. En série, 30 inspections à ~2 s
@@ -267,9 +283,16 @@ Deno.serve(async (req) => {
         }
         await Promise.all(
           targets.slice(i, i + INSPECT_CONCURRENCY).map(async (t) => {
-            const res = await inspect(token, GSC_SITE, t.url);
-            if (!res) return;
-            inspected++;
+            const out = await inspect(token, GSC_SITE, t.url);
+            if (!out.ok) {
+              // PANNE D'API ≠ DÉSINDEXATION : on ne touche à aucun champ de
+              // cette URL (ni `status`, ni `last_checked_at`), on compte l'échec,
+              // on le publie, et on continue avec les autres.
+              inspectFailures++;
+              if (inspectFailures <= 5) errors.push(`Inspection ${out.error}`);
+              return;
+            }
+            const res = out.inspection;
             const status = toStatus(res, t.url);
             const patch: Record<string, unknown> = {
               status,
@@ -280,23 +303,36 @@ Deno.serve(async (req) => {
               last_checked_at: now,
               updated_at: now,
             };
-            if (status === "indexed" && t.status !== "indexed") {
-              patch.indexed_at = now;
-              newlyIndexed++;
-            }
+            const gained = status === "indexed" && t.status !== "indexed";
+            const lost = status !== "indexed" && t.status === "indexed";
+            if (gained) patch.indexed_at = now;
+            // PERTE D'INDEXATION : `indexed_at` doit être remis à zéro, sinon la
+            // date d'acquisition survit à la désindexation et l'archivage
+            // « indexée stable » se déclenche sur une page qui ne l'est plus.
+            if (lost) patch.indexed_at = null;
             // Une archivée qui n'est plus indexée retourne en file — le seul
             // désarchivage automatique, et la raison d'être du re-contrôle.
-            if (t.wasArchived && status !== "indexed") {
+            const unarchiving = t.wasArchived === true && status !== "indexed";
+            if (unarchiving) {
               patch.archived_at = null;
               patch.archive_reason = null;
-              unarchived++;
             }
             const up = await gpld(`/rest/v1/indexed_urls?id=eq.${t.id}`, {
               method: "PATCH",
               headers: { Prefer: "return=minimal" },
               body: JSON.stringify(patch),
             });
-            if (!up.ok) errors.push(`MAJ inspection HTTP ${up.status}`);
+            if (!up.ok) {
+              errors.push(`MAJ inspection HTTP ${up.status}`);
+              return;
+            }
+            // Les transitions ne sont comptées qu'APRÈS un PATCH réussi : un
+            // rapport qui annonce « 12 nouvellement indexées » alors que rien
+            // n'a été écrit est pire qu'un rapport vide.
+            inspected++;
+            if (gained) newlyIndexed++;
+            if (lost) indexLost++;
+            if (unarchiving) unarchived++;
           }),
         );
       }
@@ -444,6 +480,18 @@ Deno.serve(async (req) => {
   }
   const activeTotal = await countOf(`archived_at=is.null${scopeFilter}`);
   const totalUrls = await countOf("id=not.is.null"); // filtre toujours vrai : compte la table entière
+  // « Actives » = périmètre suivi. « Non indexées » = constat réel. Les deux ont
+  // longtemps été confondus dans le rapport (`not_indexed: activeTotal`), d'où
+  // des e-mails annonçant 432 pages non indexées alors que le suivi n'avait
+  // jamais inspecté 223 d'entre elles.
+  const notIndexedTotal = await countOf(`archived_at=is.null${scopeFilter}&status=neq.indexed`);
+  const neverInspectedTotal = await countOf(
+    `archived_at=is.null${scopeFilter}&last_checked_at=is.null`,
+  );
+  const staleChecksTotal = await countOf(
+    `archived_at=is.null${scopeFilter}` +
+      `&or=(last_checked_at.is.null,last_checked_at.lt."${daysAgo(STALE_CHECK_DAYS)}")`,
+  );
 
   // ── 5bis. Pré-contrôle d'indexabilité — la garde d'entrée ─────────────────
   //
@@ -544,15 +592,27 @@ Deno.serve(async (req) => {
 - Écartées au pré-contrôle : ${Object.keys(rejected).length > 0 ? Object.entries(rejected).map(([r, n]) => `${n} ${r}`).join(" · ") : "aucune"}
 - Nouvelles URLs du sitemap : ${newUrlsAdded > 0 ? `+${newUrlsAdded}` : "0"}
 - Archivées ce run : ${archivedLine}
-- Inspection GSC : ${saJson ? `${inspected} URLs contrôlées · ${newlyIndexed} nouvellement indexées${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}${deadlineHit > 0 ? ` · ⏱ ${deadlineHit} reportées (échéance de temps)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
+- Inspection GSC : ${saJson ? `${inspected} URLs constatées · ${newlyIndexed} nouvellement indexées · ${indexLost} indexation perdue${unarchived > 0 ? ` · ${unarchived} désarchivée(s)` : ""}${inspectFailures > 0 ? ` · ⚠️ ${inspectFailures} appel(s) en échec (état inchangé pour ces URLs)` : ""}${deadlineHit > 0 ? ` · ⏱ ${deadlineHit} reportées (échéance de temps)` : ""}` : "désactivée (secret GSC_SERVICE_ACCOUNT_JSON absent)"}
 ${errors.length > 0 ? `- ⚠️ Erreurs : ${errors.join(", ")}` : ""}
 
 ### Lot poussé (par priorité — thérapeutes d'abord)
 ${pushed}
 
-### État
-${activeTotal} URLs actives (non archivées)${scope === "therapists" ? " sur le périmètre thérapeutes" : ""} · ${totalUrls} suivies au total.
-Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DAYS} j, ou sortie du sitemap.`;
+### État du suivi
+${buildStateSection({
+  active: activeTotal,
+  notIndexed: notIndexedTotal,
+  neverInspected: neverInspectedTotal,
+  staleChecks: staleChecksTotal,
+  staleDays: STALE_CHECK_DAYS,
+  total: totalUrls,
+  inspected,
+  inspectFailures,
+  indexNowSubmitted,
+  indexNowStatus,
+})}${scope === "therapists" ? "\n(Comptes limités au périmètre thérapeutes.)" : ""}
+Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DAYS} j, ou sortie du sitemap.
+Ordre d'inspection : jamais inspectées d'abord, puis contrôle le plus ancien (priorité en départage).`;
 
   let reportId: string | null = null;
   try {
@@ -566,7 +626,9 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
         urls_checked: inspected,
         newly_indexed: newlyIndexed,
         newly_discovered: newUrlsAdded,
-        not_indexed: activeTotal,
+        // Le vrai constat, plus le périmètre suivi (le dashboard affiche ce
+        // champ sous le libellé « non indexées » : il doit le mériter).
+        not_indexed: notIndexedTotal,
         blocked: archivedTotal,
         errors: errors.length,
         quota_used: inspected,
@@ -589,16 +651,18 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
   // e-mail Resend. Le statut HTTP est VÉRIFIÉ dans les deux cas : c'est son
   // absence de contrôle qui a laissé la notification muette huit jours en août.
   const notifParts = [
-    `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus}`,
-    inspected > 0 ? `${inspected} inspectées, ${newlyIndexed} nouvellement indexées` : null,
+    `${indexNowSubmitted} URLs → IndexNow HTTP ${indexNowStatus} (soumission, pas indexation)`,
+    inspected > 0 ? `${inspected} constatées, ${newlyIndexed} nouvellement indexées` : null,
+    indexLost > 0 ? `${indexLost} indexation perdue` : null,
+    inspectFailures > 0 ? `⚠️ ${inspectFailures} inspection(s) en échec` : null,
     newUrlsAdded > 0 ? `+${newUrlsAdded} nouvelles` : null,
     archivedTotal > 0 ? `${archivedTotal} archivées` : null,
-    `${activeTotal} actives`,
+    `${activeTotal} actives suivies · ${notIndexedTotal} non indexées · ${neverInspectedTotal} jamais inspectées`,
     errors.length > 0 ? `${errors.length} erreur(s)` : null,
   ]
     .filter(Boolean)
     .join(" · ");
-  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${activeTotal} en file`;
+  const subject = `Indexation (${trigger}) — ${indexNowSubmitted} URLs poussées, ${notIndexedTotal} non indexées`;
 
   let notified = false;
   const notifySecret = await secret("agent_notify_secret");
@@ -680,7 +744,9 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
     submitted: indexNowSubmitted,
     indexNowStatus,
     inspected,
+    inspectFailures,
     newlyIndexed,
+    indexLost,
     unarchived,
     deadlineHit,
     rejected,
@@ -688,7 +754,12 @@ Refroidissement : ${COOLDOWN_DAYS} j. Archivage : indexée > ${INDEXED_STABLE_DA
     newUrlsAdded,
     archived,
     activeTotal,
-    notIndexedCount: activeTotal,
+    neverInspected: neverInspectedTotal,
+    staleChecks: staleChecksTotal,
+    staleCheckDays: STALE_CHECK_DAYS,
+    // Conservé pour le dashboard existant, mais il porte désormais le VRAI
+    // compte de non indexées, pas le nombre d'URLs actives.
+    notIndexedCount: notIndexedTotal,
     queue: queue.map((u) => ({ url: u.url, priority: u.priority, page_type: u.page_type })),
     reportId,
     errors,

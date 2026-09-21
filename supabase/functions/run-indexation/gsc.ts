@@ -120,24 +120,44 @@ export async function accessToken(serviceAccountJson: string): Promise<string | 
   return access_token ?? null;
 }
 
-/** Inspecte UNE URL. `null` = échec de cette URL, pas du lot. */
+export type InspectOutcome =
+  | { ok: true; inspection: Inspection }
+  | { ok: false; error: string };
+
+/**
+ * Inspecte UNE URL.
+ *
+ * Renvoie un ÉCHEC EXPLICITE au lieu de `null` : un timeout, un 429 de quota ou
+ * un 403 de permission ne doivent surtout pas se confondre avec « pas de
+ * données », sinon une panne d'API se lit comme une désindexation. L'appelant
+ * compte l'échec, le publie dans le rapport, ne touche PAS au statut de l'URL,
+ * et continue avec les autres.
+ */
 export async function inspect(
   token: string,
   siteUrl: string,
   url: string,
-): Promise<Inspection | null> {
+  timeoutMs = 15000,
+): Promise<InspectOutcome> {
   // PAS de `languageCode` : `coverageState` est de la prose LOCALISÉE, et c'est
   // la seule chose qui distingue « Discovered » de « Crawled » (les deux ont le
   // verdict NEUTRAL). Avec `languageCode: "fr"`, l'API renvoyait « Détectée,
   // actuellement non indexée » — que `toStatus()` ne reconnaissait pas, d'où
   // 13 URLs silencieusement rétrogradées en `discovered` le 07/09. Sans le
   // paramètre, l'API répond en anglais, langue de référence du mapping.
-  const r = await fetch(GSC_API, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ inspectionUrl: url, siteUrl }),
-  });
-  if (!r.ok) return null;
+  let r: Response;
+  try {
+    r = await fetch(GSC_API, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ inspectionUrl: url, siteUrl }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    const msg = (e as Error).name === "TimeoutError" ? `timeout ${timeoutMs} ms` : (e as Error).message;
+    return { ok: false, error: `réseau (${msg})` };
+  }
+  if (!r.ok) return { ok: false, error: `HTTP ${r.status}` };
   const d = (await r.json()) as {
     inspectionResult?: {
       indexStatusResult?: {
@@ -151,15 +171,18 @@ export async function inspect(
     };
   };
   const i = d.inspectionResult?.indexStatusResult;
-  if (!i) return null;
+  if (!i) return { ok: false, error: "réponse sans indexStatusResult" };
   return {
-    url,
-    verdict: i.verdict ?? null,
-    coverageState: i.coverageState ?? null,
-    lastCrawlTime: i.lastCrawlTime ?? null,
-    googleCanonical: i.googleCanonical ?? null,
-    robotsTxtState: i.robotsTxtState ?? null,
-    indexingState: i.indexingState ?? null,
+    ok: true,
+    inspection: {
+      url,
+      verdict: i.verdict ?? null,
+      coverageState: i.coverageState ?? null,
+      lastCrawlTime: i.lastCrawlTime ?? null,
+      googleCanonical: i.googleCanonical ?? null,
+      robotsTxtState: i.robotsTxtState ?? null,
+      indexingState: i.indexingState ?? null,
+    },
   };
 }
 
