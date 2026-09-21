@@ -590,7 +590,33 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── 7. Rapport ────────────────────────────────────────────────────────────
+  // ── 7. Compteurs d'état — APRÈS le pré-contrôle et l'archivage ────────────
+  //
+  // Comptés plus haut, ils décrivaient la table AVANT que ce run n'archive les
+  // URLs mortes ou noindex : le rapport annonçait alors un périmètre qui
+  // n'existait plus au moment de son envoi.
+  const activeTotal = await countOf("actives", `archived_at=is.null${scopeFilter}`);
+  // Filtre toujours vrai : compte la table entière.
+  const totalUrls = await countOf("total", "id=not.is.null");
+  // « Actives » = périmètre suivi. « Non indexées » = CONSTAT. Une URL jamais
+  // contrôlée n'est pas un constat : elle est exclue ici (`last_checked_at`
+  // non nul) et comptée séparément, sinon le rapport traitait l'ignorance
+  // comme une mauvaise nouvelle.
+  const notIndexedTotal = await countOf(
+    "non indexées",
+    `archived_at=is.null${scopeFilter}&status=neq.indexed&last_checked_at=not.is.null`,
+  );
+  const neverInspectedTotal = await countOf(
+    "jamais inspectées",
+    `archived_at=is.null${scopeFilter}&last_checked_at=is.null`,
+  );
+  const staleChecksTotal = await countOf(
+    "suivi périmé",
+    `archived_at=is.null${scopeFilter}` +
+      `&or=(last_checked_at.is.null,last_checked_at.lt."${daysAgo(STALE_CHECK_DAYS)}")`,
+  );
+
+  // ── 8. Rapport ────────────────────────────────────────────────────────────
   const byType = pushable.reduce<Record<string, number>>((acc, u) => {
     acc[u.page_type] = (acc[u.page_type] ?? 0) + 1;
     return acc;
