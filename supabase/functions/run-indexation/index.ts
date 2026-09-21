@@ -64,6 +64,12 @@
 
 import { accessToken, inspect, toStatus } from "./gsc.ts";
 import { preflightAll } from "./preflight.ts";
+import {
+  buildStateSection,
+  countStale,
+  orderInspectionCandidates,
+  type InspectionCandidate,
+} from "./selection.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
