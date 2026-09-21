@@ -291,7 +291,12 @@ Deno.serve(async (req) => {
           break;
         }
         await Promise.all(
+          // Chaque URL est ISOLÉE : `Promise.all` rejette au premier échec, donc
+          // une exception imprévue (réseau coupé pendant le PATCH, corps
+          // illisible, quota) faisait sauter tout le paquet et remontait au
+          // `catch` du cycle. Ici l'incident est compté et les autres continuent.
           targets.slice(i, i + INSPECT_CONCURRENCY).map(async (t) => {
+            try {
             const out = await inspect(token, GSC_SITE, t.url);
             if (!out.ok) {
               // PANNE D'API ≠ DÉSINDEXATION : on ne touche à aucun champ de
