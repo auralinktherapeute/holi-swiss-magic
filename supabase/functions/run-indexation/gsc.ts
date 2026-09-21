@@ -171,15 +171,18 @@ export async function inspect(
     };
   };
   const i = d.inspectionResult?.indexStatusResult;
-  if (!i) return null;
+  if (!i) return { ok: false, error: "réponse sans indexStatusResult" };
   return {
-    url,
-    verdict: i.verdict ?? null,
-    coverageState: i.coverageState ?? null,
-    lastCrawlTime: i.lastCrawlTime ?? null,
-    googleCanonical: i.googleCanonical ?? null,
-    robotsTxtState: i.robotsTxtState ?? null,
-    indexingState: i.indexingState ?? null,
+    ok: true,
+    inspection: {
+      url,
+      verdict: i.verdict ?? null,
+      coverageState: i.coverageState ?? null,
+      lastCrawlTime: i.lastCrawlTime ?? null,
+      googleCanonical: i.googleCanonical ?? null,
+      robotsTxtState: i.robotsTxtState ?? null,
+      indexingState: i.indexingState ?? null,
+    },
   };
 }
 
