@@ -18,12 +18,16 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/")({
   loader: async ({ params }) => {
     try {
       const res = await getFilPosts({ data: { lang: asFilLang(params.lang) } });
-      return { posts: (res?.posts ?? []) as FilPost[] };
+      const posts = (res?.posts ?? []) as FilPost[];
+      // Décision prise dans le loader (jamais dans `head`) : un fil sans aucune
+      // publication n'a rien à indexer. Il redevient indexable dès la première.
+      return { posts, indexable: posts.length > 0 };
     } catch {
-      return { posts: [] as FilPost[] };
+      // Panne de lecture ≠ fil vide : on garde le défaut sûr (indexable).
+      return { posts: [] as FilPost[], indexable: true };
     }
   },
-  head: ({ params }) => {
+  head: ({ params, loaderData }) => {
     const l = asFilLang(params.lang);
     const copy = FIL_COPY[l];
     const url = `https://holiswiss.ch/${l}/fil-holiswiss`;
@@ -37,6 +41,7 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/")({
         { property: "og:type", content: "website" },
         { property: "og:locale", content: ogLocale(l) },
         { name: "twitter:card", content: "summary_large_image" },
+        ...(loaderData?.indexable === false ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/fil-holiswiss")],
     };

@@ -80,8 +80,15 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     // Panne technique ≠ canton réellement sans praticien : on ne sert plus une
     // liste vide en 200, la réponse SSR devient un vrai 503 réessayable.
     const res = await loadEssential(() => listTherapistsByCanton({ data: { canton: code } }));
-    if (!res.ok) return { therapists: [] as PublicTherapistCard[], unavailable: true as const };
-    return { therapists: res.data.therapists, unavailable: false as const };
+    if (!res.ok) return { therapists: [] as PublicTherapistCard[], unavailable: true as const, indexable: true };
+    // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08) :
+    // un canton sans aucun praticien n'a rien à indexer — même règle que le
+    // gabarit ville et que le sitemap, qui n'annonce que les cantons peuplés.
+    return {
+      therapists: res.data.therapists,
+      unavailable: false as const,
+      indexable: res.data.therapists.length > 0,
+    };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -94,6 +101,8 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     const list = (loaderData?.therapists ?? []) as Array<{ slug: string | null; first_name: string | null; last_name: string | null }>;
     // En panne : aucun ItemList (un ItemList vide mentirait sur le contenu réel).
     const unavailable = loaderData?.unavailable === true;
+    // Défaut sûr : indexable tant que le loader n'a pas explicitement dit le contraire.
+    const noindex = loaderData?.indexable === false;
     return {
       meta: [
         { title },
@@ -106,9 +115,10 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
+        ...(noindex ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
       links: seoLinks(lang, `/therapeutes/canton/${code}`),
-      scripts: unavailable ? [] : [
+      scripts: unavailable || noindex ? [] : [
         {
           type: "application/ld+json",
           children: JSON.stringify({

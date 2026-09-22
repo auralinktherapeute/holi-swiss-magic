@@ -12,6 +12,7 @@ import { redirectTargetForSlug } from "@/lib/blog-redirects";
 import { publisherNode, organizationRef, LOGO_URL, ORGANIZATION_NAME } from "@/lib/organization-schema";
 import { buildMetaTitle } from "@/lib/seo-title";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
+import { renderMarkdown } from "@/lib/blog-markdown";
 
 
 const SITE = "https://holiswiss.ch";
@@ -183,21 +184,6 @@ function estimateReadTime(text: string): number {
 }
 
 // Markdown → HTML sécurisé (sans innerHTML d'user input non contrôlé)
-function renderMarkdown(md: string): string {
-  return md
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/^### (.+)$/gm, '<h3 class="text-xl font-bold text-white mt-8 mb-3">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold text-white mt-10 mb-4">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-3xl font-bold text-white mt-10 mb-4">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em class="text-[#d4c4e0] italic">$1</em>')
-    .replace(/^- (.+)$/gm, '<li class="text-[#d4c4e0] leading-relaxed ml-4 list-disc">$1</li>')
-    .replace(/(<li[^>]*>.*<\/li>\n?)+/g, m => `<ul class="my-4 space-y-1.5">${m}</ul>`)
-    .split(/\n\n+/)
-    .map(block => block.trim().startsWith("<") ? block : `<p class="text-[#d4c4e0] leading-relaxed mb-4">${block.replace(/\n/g, " ")}</p>`)
-    .join("\n");
-}
-
 function SkeletonPage() {
   return (
     <div className="min-h-screen bg-[#2d1248]">
@@ -330,7 +316,7 @@ function Page() {
         {body && (
           <div
             className="text-base leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(body) }}
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(body, l) }}
           />
         )}
 

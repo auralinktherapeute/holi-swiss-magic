@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { specSlugForLang } from "@/lib/specialty-slug";
 import type {} from "@tanstack/react-start";
 import { resolveProfileLang } from "@/lib/seo";
 import { cityToSlug } from "@/lib/city-slug";
@@ -188,15 +189,6 @@ type TherapistRow = {
  * (qui EST le slug français). Le sitemap et la page doivent nommer la même URL —
  * deux sources qui divergent publient des URL que le site ne sert pas.
  */
-function specSlugForLang(
-  s: Pick<SpecRow, "slug" | "slug_de" | "slug_it" | "slug_en">,
-  lang: string,
-) {
-  return (
-    (lang === "de" ? s.slug_de : lang === "it" ? s.slug_it : lang === "en" ? s.slug_en : null) ||
-    s.slug
-  );
-}
 
 async function buildSitemap(): Promise<string> {
   const urls: string[] = [];
@@ -380,6 +372,9 @@ async function buildSitemap(): Promise<string> {
     updated_at: string | null;
   };
   let articles: ArticleRow[];
+  // Faux si la requête a dû se replier sans la colonne `category` : on ne sait
+  // alors plus distinguer le fil du blog, et on ne retire rien.
+  let articlesHaveCategory = true;
   {
     const { holiswissPublic } = await import("@/integrations/supabase/holiswiss-public");
     // `slug_de` peut ne pas encore exister côté base : repli sur le slug de base
@@ -388,6 +383,7 @@ async function buildSitemap(): Promise<string> {
       .from("articles")
       .select("slug, slug_de, category, secondary_tags, published_at, updated_at")
       .eq("status", "validated");
+    articlesHaveCategory = !rich.error;
     articles = rich.error
       ? (unwrap(
           "sitemap: articles de blog (repli sans slug_de)",
@@ -486,6 +482,9 @@ async function buildSitemap(): Promise<string> {
   };
   for (const lang of LANGS) {
     for (const p of STATIC_PATHS) {
+      // Même règle que la page : un fil sans publication est `noindex`, donc
+      // absent du sitemap (un sitemap ne doit jamais annoncer une page noindex).
+      if (p.path === "/fil-holiswiss" && articlesHaveCategory && filArticles.length === 0) continue;
       const lastmod = p.lastmod ?? (p.lastmodFrom ? freshnessOf(p.lastmodFrom) : undefined);
       urls.push(urlBlock(`${BASE_URL}/${lang}${p.path}`, lastmod, p.changefreq, p.priority));
     }

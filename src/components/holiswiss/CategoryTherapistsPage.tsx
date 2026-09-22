@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { specSlugForLang } from "@/lib/specialty-slug";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getCategoryPage, pickI18n } from "@/lib/specialties.functions";
@@ -109,9 +110,8 @@ export function CategoryTherapistsPage({
           .map((s) => (
             <li key={s.id}>
               <Link
-                to="/$lang/therapeutes"
-                params={{ lang }}
-                search={{ specialite: s.slug } as any}
+                to="/$lang/specialites/$specialtySlug"
+                params={{ lang, specialtySlug: specSlugForLang(s, lang) }}
                 className="inline-flex min-h-[36px] items-center rounded-full border border-[rgba(184,110,249,0.35)] bg-[rgba(184,110,249,0.1)] px-4 py-1.5 text-sm text-white transition hover:border-[#b86ef9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]"
               >
                 {pickI18n(s, lang)}
