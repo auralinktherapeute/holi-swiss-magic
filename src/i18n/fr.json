@@ -404,6 +404,7 @@
     "phone": "Numéro de téléphone",
     "phone_visibility": "(visible après clic sur « Afficher le numéro »)",
     "phone_protected_note": "Votre numéro est protégé : il n'apparaît qu'aux visiteurs authentifiés qui cliquent sur « Afficher le numéro ».",
+    "sensitive_load_failed": "Impossible de charger votre téléphone et/ou votre numéro IDE pour le moment. Ces champs sont laissés vides à l'écran, mais vos valeurs enregistrées sont conservées : ne les saisissez à nouveau que si vous voulez les modifier. Rechargez la page pour réessayer.",
     "section_approaches": "Approches & langues",
     "canton": "Canton",
     "languages": "Langues parlées",

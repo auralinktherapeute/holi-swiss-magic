@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Camera, X, Plus, Search, MapPin, Phone, Globe, Link2, ShieldCheck,
   FileText, Trash2, Pencil, Upload, Clock, Save, Eye, EyeOff, Check, BadgeCheck,
-  ArrowUp, ArrowDown, Package as PackageIcon, Mail, GraduationCap,
+  ArrowUp, ArrowDown, Package as PackageIcon, Mail, GraduationCap, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,6 +168,11 @@ function ProfilePage() {
   const [postalCode, setPostalCode] = useSessionState(`${profileStatePrefix}.postalCode`, "");
   const [address, setAddress] = useSessionState(`${profileStatePrefix}.address`, "");
   const [phone, setPhone] = useSessionState(`${profileStatePrefix}.phone`, "");
+  // Lectures sensibles (téléphone via RPC, IDE en table privée) : si elles
+  // échouent, le champ reste vide à l'écran. On mémorise l'échec pour (1)
+  // avertir visiblement et (2) ne JAMAIS écraser la valeur réelle en base.
+  const [phoneLoadFailed, setPhoneLoadFailed] = useState(false);
+  const [ideLoadFailed, setIdeLoadFailed] = useState(false);
 
   // Approaches
   const [canton, setCanton] = useSessionState(`${profileStatePrefix}.canton`, "GE");
@@ -391,7 +396,9 @@ function ProfilePage() {
         .eq("user_id", user.id)
         .maybeSingle() as any;
       // Fetch the owner's phone via a controlled security-definer RPC.
-      const { data: contact } = await (supabase as any).rpc("get_my_therapist_contact");
+      const { data: contact, error: contactError } = await (supabase as any).rpc("get_my_therapist_contact");
+      const contactFailed = Boolean(contactError);
+      setPhoneLoadFailed(contactFailed);
       const ownerPhone: string = (Array.isArray(contact) ? contact[0]?.phone : contact?.phone) ?? "";
       if (data) {
         (data as any).phone = ownerPhone;
@@ -441,7 +448,8 @@ function ProfilePage() {
         setCity(data.city ?? "");
         setPostalCode(data.postal_code ?? "");
         setAddress(data.address ?? "");
-        setPhone(data.phone ?? "");
+        // Lecture en échec : on ne remplace pas la valeur affichée par du vide.
+        if (!contactFailed) setPhone(data.phone ?? "");
         setCanton(data.canton ?? "GE");
         setLangs(data.languages ?? []);
         setPriceMin(data.price_min ?? "");
@@ -465,13 +473,14 @@ function ProfilePage() {
         setTrainerSubjects((data as any).trainer_subjects ?? "");
         setTrainerInstitution((data as any).trainer_institution ?? "");
         setTrainerSince((data as any).trainer_since ? String((data as any).trainer_since) : "");
-        const { data: privateIds } = await supabase
+        const { data: privateIds, error: privateIdsError } = await supabase
           .from("therapist_private_identifiers" as any)
           .select("ide")
           .eq("therapist_id", data.id)
           .eq("user_id", user.id)
           .maybeSingle() as any;
-        setIde(privateIds?.ide ?? "");
+        setIdeLoadFailed(Boolean(privateIdsError));
+        if (!privateIdsError) setIde(privateIds?.ide ?? "");
 
         const { data: docs } = await supabase
           .from("therapist_documents" as any)
@@ -576,6 +585,10 @@ function ProfilePage() {
       return;
     }
     setSaving(true);
+    // Si la lecture a échoué et que l'utilisateur n'a rien saisi, on n'envoie
+    // pas le champ : la valeur en base est conservée telle quelle.
+    const phoneToSave = phoneLoadFailed && phone.trim() === "" ? undefined : phone;
+    const ideToSave = ideLoadFailed && ide.trim() === "" ? undefined : (ide || null);
     const payload: any = {
       user_id: user.id,
       first_name: firstName || (user.email?.split("@")[0] ?? "Thérapeute"),
@@ -610,7 +623,7 @@ function ProfilePage() {
           city,
           postal_code: postalCode,
           address,
-          phone,
+          phone: phoneToSave,
           canton,
           languages: langs,
           price_min: payload.price_min,
@@ -636,7 +649,7 @@ function ProfilePage() {
           trainer_subjects: trainerSubjects.trim() || null,
           trainer_institution: trainerInstitution.trim() || null,
           trainer_since: trainerSince.trim() === "" ? null : Number(trainerSince),
-          ide: ide || null,
+          ide: ideToSave,
         },
       });
       if (!rowId) setRowId(id);
@@ -704,6 +717,17 @@ function ProfilePage() {
             <DraftSavedIndicator status={draftStatus} savedAt={savedAt} />
           </div>
         </header>
+
+        {(phoneLoadFailed || ideLoadFailed) && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="mt-6 flex items-start gap-3 rounded-xl border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-4 py-3 text-sm text-[#fde68a]"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{t("profile_edit.sensitive_load_failed")}</span>
+          </div>
+        )}
 
         {/* Score de complétion — mis à jour en direct pendant l'édition */}
         <div className="mt-6">
