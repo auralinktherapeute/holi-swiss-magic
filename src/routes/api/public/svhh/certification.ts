@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createHmac, timingSafeEqual } from "crypto";
 import { z } from "zod";
 
 /**
@@ -34,12 +33,18 @@ function json(body: unknown, status: number) {
   });
 }
 
-export function verifySvhhSignature(raw: string, header: string | null, secret: string): boolean {
+export async function verifySvhhSignature(raw: string, header: string | null, secret: string): Promise<boolean> {
   if (!header || !secret) return false;
   const given = header.trim().replace(/^sha256=/i, "").toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(given)) return false;
-  const expected = createHmac("sha256", secret).update(raw).digest("hex");
-  return timingSafeEqual(Buffer.from(given, "hex"), Buffer.from(expected, "hex"));
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(raw)));
+  const expected = Array.from(mac, (b) => b.toString(16).padStart(2, "0")).join("");
+  // Comparaison à temps constant (longueurs égales garanties : 64 hex).
+  let diff = 0;
+  for (let i = 0; i < 64; i++) diff |= given.charCodeAt(i) ^ expected.charCodeAt(i);
+  return diff === 0;
 }
 
 export const Route = createFileRoute("/api/public/svhh/certification")({
@@ -51,7 +56,7 @@ export const Route = createFileRoute("/api/public/svhh/certification")({
 
         const raw = await request.text();
         if (raw.length > 10_000) return json({ error: "payload_too_large" }, 413);
-        if (!verifySvhhSignature(raw, request.headers.get("x-svhh-signature"), secret)) {
+        if (!(await verifySvhhSignature(raw, request.headers.get("x-svhh-signature"), secret))) {
           return json({ error: "invalid_signature" }, 401);
         }
 
