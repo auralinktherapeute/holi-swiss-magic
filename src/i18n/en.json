@@ -404,6 +404,7 @@
     "phone": "Phone number",
     "phone_visibility": "(visible after clicking « Show number »)",
     "phone_protected_note": "Your number is protected: only authenticated visitors who click « Show number » can see it.",
+    "sensitive_load_failed": "Your phone number and/or business ID could not be loaded right now. These fields stay empty on screen, but your saved values are preserved: re-enter them only if you want to change them. Reload the page to try again.",
     "section_approaches": "Approaches & languages",
     "canton": "Canton",
     "languages": "Spoken languages",

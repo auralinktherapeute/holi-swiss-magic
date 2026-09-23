@@ -404,6 +404,7 @@
     "phone": "Telefonnummer",
     "phone_visibility": "(sichtbar nach Klick auf « Nummer anzeigen »)",
     "phone_protected_note": "Ihre Nummer ist geschützt: nur authentifizierte Besucher, die auf « Nummer anzeigen » klicken, sehen sie.",
+    "sensitive_load_failed": "Ihre Telefonnummer und/oder Ihre UID konnten derzeit nicht geladen werden. Diese Felder bleiben hier leer, Ihre gespeicherten Werte bleiben jedoch erhalten: Geben Sie sie nur erneut ein, wenn Sie sie ändern möchten. Laden Sie die Seite neu, um es erneut zu versuchen.",
     "section_approaches": "Ansätze & Sprachen",
     "canton": "Kanton",
     "languages": "Gesprochene Sprachen",

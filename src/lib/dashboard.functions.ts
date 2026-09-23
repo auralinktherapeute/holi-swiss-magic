@@ -20,7 +20,9 @@ const profileSchema = z.object({
   city: z.string().max(120),
   postal_code: z.string().max(30),
   address: z.string().max(300),
-  phone: z.string().max(60),
+  // Optionnel : un appel qui n'envoie pas le téléphone laisse la valeur en base
+  // intacte (lecture sensible en échec côté client → aucun écrasement).
+  phone: z.string().max(60).optional(),
   canton: z.string().max(10),
   languages: z.array(z.string().max(50)).max(20),
   price_min: z.number().nullable(),
@@ -38,7 +40,7 @@ const profileSchema = z.object({
   meta_title: z.string().max(120).nullable().optional(),
   meta_description: z.string().max(320).nullable().optional(),
   consultation_modes: z.array(z.string().max(40)).max(10).optional(),
-  ide: z.string().max(40).nullable(),
+  ide: z.string().max(40).nullable().optional(),
   // Formateur — déclaratif. Optionnels : un appel qui ne les envoie pas laisse
   // les valeurs en base intactes (voir le motif `!== undefined` plus bas).
   // Réseaux sociaux : lien conservé même masqué (visible=false).
@@ -302,7 +304,7 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       city: data.city,
       postal_code: data.postal_code,
       address: data.address,
-      phone: data.phone,
+      ...(data.phone !== undefined ? { phone: data.phone } : {}),
       canton: data.canton,
       languages: data.languages,
       price_min: data.price_min,
@@ -356,10 +358,14 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
       : await supabaseAdmin.from("therapists").insert(payload).select("id").maybeSingle();
     if (result.error || !result.data) throw new Error("Impossible d'enregistrer le profil.");
 
-    const { error: privateError } = await supabaseAdmin
-      .from("therapist_private_identifiers")
-      .upsert({ therapist_id: result.data.id, user_id: context.userId, ide: data.ide }, { onConflict: "therapist_id" });
-    if (privateError) throw new Error("Impossible d'enregistrer l'IDE.");
+    // IDE non transmis (lecture en échec côté client) : on ne touche pas la
+    // ligne privée, pour ne jamais effacer un IDE réellement enregistré.
+    if (data.ide !== undefined) {
+      const { error: privateError } = await supabaseAdmin
+        .from("therapist_private_identifiers")
+        .upsert({ therapist_id: result.data.id, user_id: context.userId, ide: data.ide }, { onConflict: "therapist_id" });
+      if (privateError) throw new Error("Impossible d'enregistrer l'IDE.");
+    }
 
     // ── Sync des prestations du profil vers le catalogue de facturation.
     try {
