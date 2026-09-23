@@ -114,6 +114,7 @@ import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksResendEventsRouteImport } from './routes/api/public/hooks/resend-events'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
 import { Route as ApiPublicNewsletterUnsubscribeRouteImport } from './routes/api/public/newsletter/unsubscribe'
+import { Route as ApiPublicSvhhCertificationRouteImport } from './routes/api/public/svhh/certification'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -666,6 +667,12 @@ const ApiPublicNewsletterUnsubscribeRoute =
     path: '/api/public/newsletter/unsubscribe',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSvhhCertificationRoute =
+  ApiPublicSvhhCertificationRouteImport.update({
+    id: '/api/public/svhh/certification',
+    path: '/api/public/svhh/certification',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -772,6 +779,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
+  '/api/public/svhh/certification': typeof ApiPublicSvhhCertificationRoute
   '/$lang/specialites/$specialtySlug/': typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 export interface FileRoutesByTo {
@@ -876,6 +884,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
+  '/api/public/svhh/certification': typeof ApiPublicSvhhCertificationRoute
   '/$lang/specialites/$specialtySlug': typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 export interface FileRoutesById {
@@ -984,6 +993,7 @@ export interface FileRoutesById {
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
+  '/api/public/svhh/certification': typeof ApiPublicSvhhCertificationRoute
   '/$lang/specialites/$specialtySlug/': typeof LangSpecialitesSpecialtySlugIndexRoute
 }
 export interface FileRouteTypes {
@@ -1093,6 +1103,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
+    | '/api/public/svhh/certification'
     | '/$lang/specialites/$specialtySlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1197,6 +1208,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
+    | '/api/public/svhh/certification'
     | '/$lang/specialites/$specialtySlug'
   id:
     | '__root__'
@@ -1304,6 +1316,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
+    | '/api/public/svhh/certification'
     | '/$lang/specialites/$specialtySlug/'
   fileRoutesById: FileRoutesById
 }
@@ -1336,6 +1349,7 @@ export interface RootRouteChildren {
   ApiPublicHooksResendEventsRoute: typeof ApiPublicHooksResendEventsRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
   ApiPublicNewsletterUnsubscribeRoute: typeof ApiPublicNewsletterUnsubscribeRoute
+  ApiPublicSvhhCertificationRoute: typeof ApiPublicSvhhCertificationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2075,6 +2089,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNewsletterUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/svhh/certification': {
+      id: '/api/public/svhh/certification'
+      path: '/api/public/svhh/certification'
+      fullPath: '/api/public/svhh/certification'
+      preLoaderRoute: typeof ApiPublicSvhhCertificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2294,6 +2315,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksResendEventsRoute: ApiPublicHooksResendEventsRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
   ApiPublicNewsletterUnsubscribeRoute: ApiPublicNewsletterUnsubscribeRoute,
+  ApiPublicSvhhCertificationRoute: ApiPublicSvhhCertificationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
