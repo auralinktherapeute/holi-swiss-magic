@@ -131,9 +131,9 @@ Génère un rapport synthétique en 10 lignes MAX en français pour Gérald. Inc
   await db.from("ai_agent_logs").insert({
     agent_id: agent.id as string, agent_slug: agent.slug as string, status: "success", level: "info",
     started_at: startedAt.toISOString(), finished_at: new Date().toISOString(),
-    output: { rapport, ...brut }, triggered_by: "manual", message: rapport.slice(0, 200),
+    output: { ...brut, rapport }, triggered_by: "manual", message: rapport.slice(0, 200),
   });
-  return { rapport, ...brut };
+  return { ...brut, rapport };
 }
 
 // ─── Agent Recrutement — tracker objectif 100 thérapeutes (routine, hors pipeline)
