@@ -20,7 +20,8 @@ export type ArticleBlock =
   | { type: "heading"; level: 2 | 3 | 4; tokens: InlineToken[] }
   | { type: "paragraph"; tokens: InlineToken[] }
   | { type: "quote"; tokens: InlineToken[] }
-  | { type: "list"; ordered: boolean; items: InlineToken[][] };
+  | { type: "list"; ordered: boolean; items: InlineToken[][] }
+  | { type: "logo"; alt: string; src: string };
 
 /* ------------------------------------------------------------------ */
 /* Collage riche -> Markdown                                           */
@@ -177,6 +178,15 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
     const trimmed = line.trim();
 
     if (!trimmed) { flush(); continue; }
+
+    // Logo partenaire sur sa propre ligne : ![Logo SVHH](https://...) — jamais
+    // mélangé au texte, pour rester distinct d'un lien ou d'un mot en gras.
+    const logo = /^!\[([^\]]*)\]\(([^)\s]+)\)$/.exec(trimmed);
+    if (logo) {
+      flush();
+      blocks.push({ type: "logo", alt: logo[1].trim(), src: logo[2].trim() });
+      continue;
+    }
 
     const heading = /^(#{1,6})\s+(.*)$/.exec(trimmed);
     if (heading) {

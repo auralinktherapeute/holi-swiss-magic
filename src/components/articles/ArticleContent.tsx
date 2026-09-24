@@ -55,6 +55,17 @@ function Block({ block }: { block: ArticleBlock }) {
           {block.items.map((it, i) => <li key={i}><Inline tokens={it} /></li>)}
         </ul>
       );
+    case "logo":
+      return (
+        <div className="my-6 flex justify-center">
+          <img
+            src={block.src}
+            alt={block.alt}
+            loading="lazy"
+            className="h-16 w-auto max-w-[220px] rounded-lg bg-white/90 object-contain p-1.5"
+          />
+        </div>
+      );
     default:
       return <p className="my-4 leading-relaxed whitespace-pre-line"><Inline tokens={block.tokens} /></p>;
   }

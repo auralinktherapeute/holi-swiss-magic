@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Rss, MessageSquare, ListChecks, CheckCircle2, XCircle, Pencil, Loader2 } from "lucide-react";
 import { listFilProposals } from "@/lib/copywriter-agent.functions";
 import { setArticleStatus, updateArticle } from "@/lib/articles.functions";
+import { listCertificationOrganizations } from "@/lib/org-certifications.functions";
 import { CopywriterAgentChat } from "@/components/admin/CopywriterAgentChat";
+import { ArticleContent } from "@/components/articles/ArticleContent";
 import { FIL_CATEGORIES } from "@/data/fil-holiswiss";
 
 export const Route = createFileRoute("/admin/copywriter")({
@@ -52,6 +54,7 @@ function CopywriterPage() {
   const fetchProposals = useServerFn(listFilProposals);
   const setStatus = useServerFn(setArticleStatus);
   const saveEdits = useServerFn(updateArticle);
+  const fetchOrganizations = useServerFn(listCertificationOrganizations);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"agent" | "proposals">("agent");
 
@@ -61,6 +64,16 @@ function CopywriterPage() {
   });
   const rows = (data?.articles ?? []) as Proposal[];
   const pending = rows.filter((p) => p.status === "pending_validation").length;
+
+  const { data: orgsData } = useQuery({
+    queryKey: ["cert-organizations-for-logos"],
+    queryFn: () => fetchOrganizations(),
+  });
+  const logoOrgs = (orgsData ?? []).filter((o) => o.is_active && o.logo_url) as Array<{
+    id: string;
+    display_name: string;
+    logo_url: string;
+  }>;
 
   const act = async (id: string, status: "validated" | "rejected", reason?: string) => {
     try {
@@ -150,7 +163,7 @@ function CopywriterPage() {
           )}
           <div className="space-y-5">
             {rows.map((p) => (
-              <ProposalCard key={p.id} p={p} onAct={act} onSaveEdit={saveEdit} />
+              <ProposalCard key={p.id} p={p} onAct={act} onSaveEdit={saveEdit} logoOrgs={logoOrgs} />
             ))}
           </div>
         </>
@@ -163,10 +176,12 @@ function ProposalCard({
   p,
   onAct,
   onSaveEdit,
+  logoOrgs,
 }: {
   p: Proposal;
   onAct: (id: string, status: "validated" | "rejected", reason?: string) => void;
   onSaveEdit: (p: Proposal, edited: { title_fr: string; excerpt_fr: string; body_fr: string }) => Promise<void>;
+  logoOrgs: Array<{ id: string; display_name: string; logo_url: string }>;
 }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
@@ -175,6 +190,29 @@ function ProposalCard({
   const [title, setTitle] = useState(p.title_fr);
   const [excerpt, setExcerpt] = useState(p.excerpt_fr ?? "");
   const [body, setBody] = useState(p.body_fr);
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insertLogo = (org: { display_name: string; logo_url: string }) => {
+    const el = bodyRef.current;
+    const snippet = `![Logo ${org.display_name}](${org.logo_url})`;
+    if (!el) { setBody((b) => `${b}\n\n${snippet}\n\n`); return; }
+    const start = el.selectionStart ?? body.length;
+    const end = el.selectionEnd ?? body.length;
+    // Lignes vides autour : le logo doit rester seul sur sa ligne pour être
+    // reconnu comme bloc image, jamais mélangé au texte qui l'entoure.
+    const before = body.slice(0, start);
+    const after = body.slice(end);
+    const needsNlBefore = before.length > 0 && !before.endsWith("\n\n");
+    const needsNlAfter = after.length > 0 && !after.startsWith("\n\n");
+    const insert = `${needsNlBefore ? "\n\n" : ""}${snippet}${needsNlAfter ? "\n\n" : ""}`;
+    const next = before + insert + after;
+    setBody(next);
+    const caret = (before + insert).length;
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(caret, caret);
+    });
+  };
 
   const startEditing = () => {
     setTitle(p.title_fr);
@@ -230,7 +268,25 @@ function ProposalCard({
             placeholder="Extrait / chapô"
             className="w-full rounded-lg border border-[rgba(184,110,249,0.3)] bg-[#0f0a1e] px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:border-[#b86ef9] focus:outline-none"
           />
+          {logoOrgs.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-2 py-1.5">
+              <span className="text-xs text-white/50">Insérer un logo à la position du curseur :</span>
+              {logoOrgs.map((org) => (
+                <button
+                  key={org.id}
+                  type="button"
+                  onClick={() => insertLogo(org)}
+                  title={`Insérer le logo ${org.display_name}`}
+                  className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/70 hover:border-[#b86ef9]/50 hover:text-white"
+                >
+                  <img src={org.logo_url} alt="" className="h-4 w-4 rounded bg-white/90 object-contain" />
+                  {org.display_name}
+                </button>
+              ))}
+            </div>
+          )}
           <textarea
+            ref={bodyRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={10}
@@ -243,8 +299,8 @@ function ProposalCard({
           <h3 className="text-lg font-semibold text-white">{p.title_fr}</h3>
           {p.excerpt_fr && <p className="mt-1 text-sm text-white/70">{p.excerpt_fr}</p>}
           {p.body_fr && (
-            <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0a1e] p-3">
-              <p className="whitespace-pre-wrap text-sm text-white/80">{p.body_fr}</p>
+            <div className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0a1e] p-3">
+              <ArticleContent source={p.body_fr} className="text-sm text-white/80 [&_h2]:text-base [&_h3]:text-sm" />
             </div>
           )}
         </>
