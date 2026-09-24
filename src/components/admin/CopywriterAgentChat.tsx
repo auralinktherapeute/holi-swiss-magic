@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Send, Loader2, Plus, Trash2, Bookmark, MessageSquare, Image, ExternalLink, Check } from "lucide-react";
+import { Send, Loader2, Plus, Trash2, Bookmark, MessageSquare, Image, ExternalLink, Check, Upload } from "lucide-react";
 import {
   askCopywriterAgent,
   listCopywriterThreads,
@@ -11,6 +11,47 @@ import {
   saveAnswerAsArticleDraft,
 } from "@/lib/copywriter-agent.functions";
 import { trackUnsplashDownload } from "@/lib/unsplash.functions";
+import { supabase } from "@/integrations/supabase/client";
+
+const COVER_BUCKET = "fil-covers";
+const COVER_ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+const COVER_MAX_SIZE = 5 * 1024 * 1024;
+const COVER_MAX_DIM = 1600;
+const COVER_SIGNED_TTL = 60 * 60 * 24 * 365 * 5;
+
+/** Redimensionne (≤1600px, ratio conservé) et convertit en WebP — même logique que
+ * OrganizationLogoUploader, adaptée à une photo de couverture plutôt qu'un petit logo. */
+async function processCoverImage(file: File): Promise<{ blob: Blob; ext: string; type: string }> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, COVER_MAX_DIM / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Traitement de l'image impossible.");
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.88));
+  if (!blob) throw new Error("Conversion de l'image impossible.");
+  return { blob, ext: "webp", type: "image/webp" };
+}
+
+/** Upload direct navigateur -> Supabase Storage, comme OrganizationLogoUploader :
+ * bucket privé, URL signée longue durée stockée telle quelle en `cover_image_url`. */
+async function uploadCoverPhoto(file: File): Promise<string> {
+  if (!COVER_ACCEPTED.includes(file.type)) throw new Error("Format non supporté — utilisez PNG, JPG ou WebP.");
+  if (file.size > COVER_MAX_SIZE) throw new Error("Fichier trop volumineux — 5 Mo maximum.");
+  const { blob, ext, type } = await processCoverImage(file);
+  const path = `fil/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from(COVER_BUCKET)
+    .upload(path, blob, { cacheControl: "3600", upsert: false, contentType: type });
+  if (upErr) throw new Error(upErr.message);
+  const { data: signed, error: sErr } = await supabase.storage.from(COVER_BUCKET).createSignedUrl(path, COVER_SIGNED_TTL);
+  if (sErr || !signed?.signedUrl) throw new Error("Impossible de générer le lien de la photo.");
+  return signed.signedUrl;
+}
 
 type Msg = { id: string; role: "user" | "assistant"; content: string; created_at: string };
 type Thread = { id: string; title: string; updated_at: string };
@@ -106,6 +147,8 @@ export function CopywriterAgentChat() {
   const [loadingPhotos, setLoadingPhotos] = useState<string | null>(null);
   const [photoStates, setPhotoStates] = useState<Record<string, PhotoState>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const loadThreads = useCallback(async () => {
@@ -177,6 +220,28 @@ export function CopywriterAgentChat() {
 
   const setAltText = (messageId: string, altText: string) => {
     setPhotoStates((s) => ({ ...s, [messageId]: { ...s[messageId], altText } }));
+  };
+
+  const handleUploadCover = async (messageId: string, file: File) => {
+    setUploadingCover(messageId);
+    try {
+      const url = await uploadCoverPhoto(file);
+      const uploaded: Photo = {
+        id: `upload-${Date.now()}`,
+        urls: { small: url, regular: url },
+        alt_description: "",
+        user: { name: "", links: { html: "" } },
+        links: { download_location: "" },
+      };
+      setPhotoStates((s) => ({
+        ...s,
+        [messageId]: { query: s[messageId]?.query ?? "", photos: s[messageId]?.photos ?? [], altText: s[messageId]?.altText ?? "", selected: uploaded },
+      }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Téléversement impossible");
+    } finally {
+      setUploadingCover(null);
+    }
   };
 
   const toDraft = async (messageId: string) => {
@@ -286,54 +351,103 @@ export function CopywriterAgentChat() {
                   <Markdown text={m.content} />
 
                   {!photoStates[m.id] && (
-                    <button
-                      onClick={() => void askForPhotos(m.id)}
-                      disabled={loadingPhotos === m.id}
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1 text-xs text-white/70 hover:border-[#b86ef9]/50 hover:text-white disabled:opacity-50"
-                    >
-                      {loadingPhotos === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Image className="h-3.5 w-3.5" />}
-                      Proposer une photo de couverture
-                    </button>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => void askForPhotos(m.id)}
+                        disabled={loadingPhotos === m.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1 text-xs text-white/70 hover:border-[#b86ef9]/50 hover:text-white disabled:opacity-50"
+                      >
+                        {loadingPhotos === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Image className="h-3.5 w-3.5" />}
+                        Proposer une photo de couverture
+                      </button>
+                      <button
+                        onClick={() => fileInputRefs.current[m.id]?.click()}
+                        disabled={uploadingCover === m.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1 text-xs text-white/70 hover:border-[#b86ef9]/50 hover:text-white disabled:opacity-50"
+                      >
+                        {uploadingCover === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        Uploader ma propre photo
+                      </button>
+                      <input
+                        ref={(el) => { fileInputRefs.current[m.id] = el; }}
+                        type="file"
+                        accept={COVER_ACCEPTED.join(",")}
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) void handleUploadCover(m.id, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </div>
                   )}
 
                   {photoStates[m.id] && (
                     <div className="mt-3 rounded-xl border border-white/10 bg-[#1a0a2e] p-3">
-                      <p className="mb-2 text-xs text-white/50">
-                        Suggestions Unsplash pour « {photoStates[m.id].query} » — choisissez-en une :
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {photoStates[m.id].photos.map((p) => {
-                          const isSelected = photoStates[m.id].selected?.id === p.id;
-                          return (
-                            <button
-                              key={p.id}
-                              onClick={() => pickPhoto(m.id, p)}
-                              className={`group relative overflow-hidden rounded-lg border-2 ${
-                                isSelected ? "border-[#b86ef9]" : "border-transparent hover:border-white/30"
-                              }`}
-                            >
-                              <img src={p.urls.small} alt={p.alt_description || ""} className="h-20 w-full object-cover" />
-                              {isSelected && (
-                                <span className="absolute right-1 top-1 rounded-full bg-[#b86ef9] p-0.5">
-                                  <Check className="h-3 w-3 text-white" />
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
+                      {photoStates[m.id].photos.length > 0 && (
+                        <>
+                          <p className="mb-2 text-xs text-white/50">
+                            Suggestions Unsplash pour « {photoStates[m.id].query} » — choisissez-en une :
+                          </p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {photoStates[m.id].photos.map((p) => {
+                              const isSelected = photoStates[m.id].selected?.id === p.id;
+                              return (
+                                <button
+                                  key={p.id}
+                                  onClick={() => pickPhoto(m.id, p)}
+                                  className={`group relative overflow-hidden rounded-lg border-2 ${
+                                    isSelected ? "border-[#b86ef9]" : "border-transparent hover:border-white/30"
+                                  }`}
+                                >
+                                  <img src={p.urls.small} alt={p.alt_description || ""} className="h-20 w-full object-cover" />
+                                  {isSelected && (
+                                    <span className="absolute right-1 top-1 rounded-full bg-[#b86ef9] p-0.5">
+                                      <Check className="h-3 w-3 text-white" />
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+
+                      <div className="mt-2 flex items-center gap-2">
+                        <button
+                          onClick={() => fileInputRefs.current[m.id]?.click()}
+                          disabled={uploadingCover === m.id}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2 py-1 text-[11px] text-white/60 hover:border-[#b86ef9]/50 hover:text-white disabled:opacity-50"
+                        >
+                          {uploadingCover === m.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                          Aucune ne convient ? Uploader ma propre photo
+                        </button>
+                        <input
+                          ref={(el) => { fileInputRefs.current[m.id] = el; }}
+                          type="file"
+                          accept={COVER_ACCEPTED.join(",")}
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) void handleUploadCover(m.id, f);
+                            e.target.value = "";
+                          }}
+                        />
                       </div>
 
                       {photoStates[m.id].selected && (
                         <div className="mt-2 space-y-2">
-                          <a
-                            href={photoStates[m.id].selected!.user.links.html}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-white/40 hover:text-white/60"
-                          >
-                            Photo par {photoStates[m.id].selected!.user.name} sur Unsplash
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
+                          {photoStates[m.id].selected!.user.name && (
+                            <a
+                              href={photoStates[m.id].selected!.user.links.html}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-white/40 hover:text-white/60"
+                            >
+                              Photo par {photoStates[m.id].selected!.user.name} sur Unsplash
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
                           <input
                             value={photoStates[m.id].altText}
                             onChange={(e) => setAltText(m.id, e.target.value)}

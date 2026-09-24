@@ -270,8 +270,10 @@ export const saveAnswerAsArticleDraft = createServerFn({ method: "POST" })
       .object({
         messageId: z.string().uuid(),
         coverImageUrl: z.string().url(),
-        coverImageCreditName: z.string().min(1),
-        coverImageCreditUrl: z.string().url(),
+        // Attribution Unsplash obligatoire pour une photo Unsplash ; absente pour
+        // une photo importée par l'admin, qui n'a personne à créditer.
+        coverImageCreditName: z.string().max(200).optional().default(""),
+        coverImageCreditUrl: z.string().url().optional().or(z.literal("")),
         imageAltText: z.string().min(1).max(125),
       })
       .parse(d),
@@ -310,8 +312,8 @@ export const saveAnswerAsArticleDraft = createServerFn({ method: "POST" })
       lang: "fr",
       status: "pending_validation",
       cover_image_url: data.coverImageUrl,
-      cover_image_credit_name: data.coverImageCreditName,
-      cover_image_credit_url: data.coverImageCreditUrl,
+      cover_image_credit_name: data.coverImageCreditName || null,
+      cover_image_credit_url: data.coverImageCreditUrl || null,
       image_alt_text: data.imageAltText,
       author_id: context.userId,
       published_at: null,
