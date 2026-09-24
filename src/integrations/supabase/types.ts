@@ -385,12 +385,15 @@ export type Database = {
           body_fr: string
           body_it: string | null
           category: string | null
+          cover_image_credit_name: string | null
+          cover_image_credit_url: string | null
           cover_image_url: string | null
           created_at: string
           excerpt_de: string | null
           excerpt_en: string | null
           excerpt_fr: string | null
           excerpt_it: string | null
+          fil_notified: boolean
           id: string
           image_alt_text: string | null
           is_featured: boolean
@@ -404,6 +407,7 @@ export type Database = {
           meta_title_fr: string | null
           meta_title_it: string | null
           published_at: string | null
+          rejection_reason: string | null
           secondary_tags: string[]
           slug: string
           slug_de: string | null
@@ -421,12 +425,15 @@ export type Database = {
           body_fr: string
           body_it?: string | null
           category?: string | null
+          cover_image_credit_name?: string | null
+          cover_image_credit_url?: string | null
           cover_image_url?: string | null
           created_at?: string
           excerpt_de?: string | null
           excerpt_en?: string | null
           excerpt_fr?: string | null
           excerpt_it?: string | null
+          fil_notified?: boolean
           id?: string
           image_alt_text?: string | null
           is_featured?: boolean
@@ -440,6 +447,7 @@ export type Database = {
           meta_title_fr?: string | null
           meta_title_it?: string | null
           published_at?: string | null
+          rejection_reason?: string | null
           secondary_tags?: string[]
           slug: string
           slug_de?: string | null
@@ -457,12 +465,15 @@ export type Database = {
           body_fr?: string
           body_it?: string | null
           category?: string | null
+          cover_image_credit_name?: string | null
+          cover_image_credit_url?: string | null
           cover_image_url?: string | null
           created_at?: string
           excerpt_de?: string | null
           excerpt_en?: string | null
           excerpt_fr?: string | null
           excerpt_it?: string | null
+          fil_notified?: boolean
           id?: string
           image_alt_text?: string | null
           is_featured?: boolean
@@ -476,6 +487,7 @@ export type Database = {
           meta_title_fr?: string | null
           meta_title_it?: string | null
           published_at?: string | null
+          rejection_reason?: string | null
           secondary_tags?: string[]
           slug?: string
           slug_de?: string | null
@@ -1060,6 +1072,62 @@ export type Database = {
           name?: string
           status?: string
           subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      copywriter_agent_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copywriter_agent_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "copywriter_agent_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      copywriter_agent_threads: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -6472,6 +6540,7 @@ export type Database = {
       }
       crm_norm_email: { Args: { _v: string }; Returns: string }
       crm_norm_phone: { Args: { _v: string }; Returns: string }
+      dispatch_fil_newsletter_digest: { Args: never; Returns: undefined }
       get_my_therapist_contact: {
         Args: never
         Returns: {
