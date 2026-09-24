@@ -26,6 +26,7 @@ import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminCertificationsOrganismesRouteImport } from './routes/admin.certifications-organismes'
 import { Route as AdminCerveauRouteImport } from './routes/admin.cerveau'
+import { Route as AdminCopywriterRouteImport } from './routes/admin.copywriter'
 import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminEvenementsRouteImport } from './routes/admin.evenements'
@@ -111,6 +112,7 @@ import { Route as LangTherapeutesSpecialiteSpecialtySlugRouteImport } from './ro
 import { Route as LangTherapeutesVilleCitySlugRouteImport } from './routes/$lang.therapeutes.ville.$citySlug'
 import { Route as ApiPublicAnalyticsEndSessionRouteImport } from './routes/api/public/analytics/end-session'
 import { Route as ApiPublicHooksArticleAgentRouteImport } from './routes/api/public/hooks/article-agent'
+import { Route as ApiPublicHooksFilNewsletterDigestRouteImport } from './routes/api/public/hooks/fil-newsletter-digest'
 import { Route as ApiPublicHooksResendEventsRouteImport } from './routes/api/public/hooks/resend-events'
 import { Route as ApiPublicHooksSeoAuditAgentRouteImport } from './routes/api/public/hooks/seo-audit-agent'
 import { Route as ApiPublicNewsletterUnsubscribeRouteImport } from './routes/api/public/newsletter/unsubscribe'
@@ -201,6 +203,11 @@ const AdminCertificationsOrganismesRoute =
 const AdminCerveauRoute = AdminCerveauRouteImport.update({
   id: '/cerveau',
   path: '/cerveau',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCopywriterRoute = AdminCopywriterRouteImport.update({
+  id: '/copywriter',
+  path: '/copywriter',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCrmRoute = AdminCrmRouteImport.update({
@@ -649,6 +656,12 @@ const ApiPublicHooksArticleAgentRoute =
     path: '/api/public/hooks/article-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksFilNewsletterDigestRoute =
+  ApiPublicHooksFilNewsletterDigestRouteImport.update({
+    id: '/api/public/hooks/fil-newsletter-digest',
+    path: '/api/public/hooks/fil-newsletter-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksResendEventsRoute =
   ApiPublicHooksResendEventsRouteImport.update({
     id: '/api/public/hooks/resend-events',
@@ -690,6 +703,7 @@ export interface FileRoutesByFullPath {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/certifications-organismes': typeof AdminCertificationsOrganismesRoute
   '/admin/cerveau': typeof AdminCerveauRoute
+  '/admin/copywriter': typeof AdminCopywriterRoute
   '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
@@ -776,6 +790,7 @@ export interface FileRoutesByFullPath {
   '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
+  '/api/public/hooks/fil-newsletter-digest': typeof ApiPublicHooksFilNewsletterDigestRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
@@ -795,6 +810,7 @@ export interface FileRoutesByTo {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/certifications-organismes': typeof AdminCertificationsOrganismesRoute
   '/admin/cerveau': typeof AdminCerveauRoute
+  '/admin/copywriter': typeof AdminCopywriterRoute
   '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
@@ -881,6 +897,7 @@ export interface FileRoutesByTo {
   '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
+  '/api/public/hooks/fil-newsletter-digest': typeof ApiPublicHooksFilNewsletterDigestRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
@@ -904,6 +921,7 @@ export interface FileRoutesById {
   '/admin/avis': typeof AdminAvisRoute
   '/admin/certifications-organismes': typeof AdminCertificationsOrganismesRoute
   '/admin/cerveau': typeof AdminCerveauRoute
+  '/admin/copywriter': typeof AdminCopywriterRoute
   '/admin/crm': typeof AdminCrmRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/evenements': typeof AdminEvenementsRoute
@@ -990,6 +1008,7 @@ export interface FileRoutesById {
   '/$lang/therapeutes/ville/$citySlug': typeof LangTherapeutesVilleCitySlugRoute
   '/api/public/analytics/end-session': typeof ApiPublicAnalyticsEndSessionRoute
   '/api/public/hooks/article-agent': typeof ApiPublicHooksArticleAgentRoute
+  '/api/public/hooks/fil-newsletter-digest': typeof ApiPublicHooksFilNewsletterDigestRoute
   '/api/public/hooks/resend-events': typeof ApiPublicHooksResendEventsRoute
   '/api/public/hooks/seo-audit-agent': typeof ApiPublicHooksSeoAuditAgentRoute
   '/api/public/newsletter/unsubscribe': typeof ApiPublicNewsletterUnsubscribeRoute
@@ -1014,6 +1033,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/certifications-organismes'
     | '/admin/cerveau'
+    | '/admin/copywriter'
     | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
@@ -1100,6 +1120,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
+    | '/api/public/hooks/fil-newsletter-digest'
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
@@ -1119,6 +1140,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/certifications-organismes'
     | '/admin/cerveau'
+    | '/admin/copywriter'
     | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
@@ -1205,6 +1227,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
+    | '/api/public/hooks/fil-newsletter-digest'
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
@@ -1227,6 +1250,7 @@ export interface FileRouteTypes {
     | '/admin/avis'
     | '/admin/certifications-organismes'
     | '/admin/cerveau'
+    | '/admin/copywriter'
     | '/admin/crm'
     | '/admin/emails'
     | '/admin/evenements'
@@ -1313,6 +1337,7 @@ export interface FileRouteTypes {
     | '/$lang/therapeutes/ville/$citySlug'
     | '/api/public/analytics/end-session'
     | '/api/public/hooks/article-agent'
+    | '/api/public/hooks/fil-newsletter-digest'
     | '/api/public/hooks/resend-events'
     | '/api/public/hooks/seo-audit-agent'
     | '/api/public/newsletter/unsubscribe'
@@ -1346,6 +1371,7 @@ export interface RootRouteChildren {
   ApiPublicModerateMessageRoute: typeof ApiPublicModerateMessageRoute
   ApiPublicAnalyticsEndSessionRoute: typeof ApiPublicAnalyticsEndSessionRoute
   ApiPublicHooksArticleAgentRoute: typeof ApiPublicHooksArticleAgentRoute
+  ApiPublicHooksFilNewsletterDigestRoute: typeof ApiPublicHooksFilNewsletterDigestRoute
   ApiPublicHooksResendEventsRoute: typeof ApiPublicHooksResendEventsRoute
   ApiPublicHooksSeoAuditAgentRoute: typeof ApiPublicHooksSeoAuditAgentRoute
   ApiPublicNewsletterUnsubscribeRoute: typeof ApiPublicNewsletterUnsubscribeRoute
@@ -1471,6 +1497,13 @@ declare module '@tanstack/react-router' {
       path: '/cerveau'
       fullPath: '/admin/cerveau'
       preLoaderRoute: typeof AdminCerveauRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/copywriter': {
+      id: '/admin/copywriter'
+      path: '/copywriter'
+      fullPath: '/admin/copywriter'
+      preLoaderRoute: typeof AdminCopywriterRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/crm': {
@@ -2068,6 +2101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksArticleAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/fil-newsletter-digest': {
+      id: '/api/public/hooks/fil-newsletter-digest'
+      path: '/api/public/hooks/fil-newsletter-digest'
+      fullPath: '/api/public/hooks/fil-newsletter-digest'
+      preLoaderRoute: typeof ApiPublicHooksFilNewsletterDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/resend-events': {
       id: '/api/public/hooks/resend-events'
       path: '/api/public/hooks/resend-events'
@@ -2194,6 +2234,7 @@ interface AdminRouteChildren {
   AdminAvisRoute: typeof AdminAvisRoute
   AdminCertificationsOrganismesRoute: typeof AdminCertificationsOrganismesRoute
   AdminCerveauRoute: typeof AdminCerveauRoute
+  AdminCopywriterRoute: typeof AdminCopywriterRoute
   AdminCrmRoute: typeof AdminCrmRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEvenementsRoute: typeof AdminEvenementsRoute
@@ -2222,6 +2263,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAvisRoute: AdminAvisRoute,
   AdminCertificationsOrganismesRoute: AdminCertificationsOrganismesRoute,
   AdminCerveauRoute: AdminCerveauRoute,
+  AdminCopywriterRoute: AdminCopywriterRoute,
   AdminCrmRoute: AdminCrmRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEvenementsRoute: AdminEvenementsRoute,
@@ -2312,6 +2354,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicModerateMessageRoute: ApiPublicModerateMessageRoute,
   ApiPublicAnalyticsEndSessionRoute: ApiPublicAnalyticsEndSessionRoute,
   ApiPublicHooksArticleAgentRoute: ApiPublicHooksArticleAgentRoute,
+  ApiPublicHooksFilNewsletterDigestRoute:
+    ApiPublicHooksFilNewsletterDigestRoute,
   ApiPublicHooksResendEventsRoute: ApiPublicHooksResendEventsRoute,
   ApiPublicHooksSeoAuditAgentRoute: ApiPublicHooksSeoAuditAgentRoute,
   ApiPublicNewsletterUnsubscribeRoute: ApiPublicNewsletterUnsubscribeRoute,
