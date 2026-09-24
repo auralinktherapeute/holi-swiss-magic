@@ -15,6 +15,13 @@
       "when": 1790246941857,
       "tag": "0001_create_app_settings_table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790246969713,
+      "tag": "0002_copywriter_agent",
+      "breakpoints": true
     }
   ]
 }
