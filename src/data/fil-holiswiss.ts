@@ -47,6 +47,9 @@ export type FilPost = {
   content: string;
   image?: string | null;
   imageAlt?: string;
+  /** Attribution Unsplash — affichée sous la photo quand présente (CGU Unsplash). */
+  imageCreditName?: string | null;
+  imageCreditUrl?: string | null;
   date: string; // ISO
   /** `updated_at` réel de la ligne `articles` — jamais dérivé ni inventé. */
   updatedAt?: string | null;

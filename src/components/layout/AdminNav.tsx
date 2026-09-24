@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Star, FileText, CalendarDays, UserCog,
   CreditCard, Bot, Mail, ShieldAlert, Settings, LogOut, Hourglass,
   Menu, X, Home, Gauge, Workflow, Bell, Sparkles, Globe2, Mic, Megaphone, HeartPulse,
-  Activity, Newspaper, BrainCircuit, BadgeCheck,
+  Activity, Newspaper, BrainCircuit, BadgeCheck, Rss,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -108,6 +108,7 @@ export function AdminNav() {
     { to: "/admin/ameliorations-seo", icon: Sparkles,       label: "Amélioration SEO/GEO via Claude" },
     { to: "/admin/indexation",       icon: Globe2,          label: "Indexation Google" },
     { to: "/admin/marketing",        icon: Megaphone,       label: "Marketing réseaux sociaux" },
+    { to: "/admin/copywriter",       icon: Rss,             label: "Copywriter — Le fil" },
     { to: "/admin/crm",              icon: Workflow,        label: "CRM" },
     { to: "/admin/parametres",       icon: Settings,        label: t("admin.settings") },
   ] as Array<{ to: string; icon: typeof LayoutDashboard; label: string; exact?: boolean; badge?: number }>;

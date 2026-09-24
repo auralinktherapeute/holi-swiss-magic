@@ -1,0 +1,219 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Rss, MessageSquare, ListChecks, CheckCircle2, XCircle, Pencil } from "lucide-react";
+import { listFilProposals } from "@/lib/copywriter-agent.functions";
+import { setArticleStatus } from "@/lib/articles.functions";
+import { CopywriterAgentChat } from "@/components/admin/CopywriterAgentChat";
+import { FIL_CATEGORIES } from "@/data/fil-holiswiss";
+
+export const Route = createFileRoute("/admin/copywriter")({
+  component: CopywriterPage,
+});
+
+type Proposal = {
+  id: string;
+  slug: string;
+  status: "pending_validation" | "rejected";
+  category: string;
+  title_fr: string;
+  excerpt_fr: string | null;
+  body_fr: string;
+  cover_image_url: string | null;
+  image_alt_text: string | null;
+  cover_image_credit_name: string | null;
+  cover_image_credit_url: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+};
+
+const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
+  FIL_CATEGORIES.map((c) => [c.slug, c.label.fr]),
+);
+
+function CopywriterPage() {
+  const fetchProposals = useServerFn(listFilProposals);
+  const setStatus = useServerFn(setArticleStatus);
+  const qc = useQueryClient();
+  const [tab, setTab] = useState<"agent" | "proposals">("agent");
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["fil-proposals"],
+    queryFn: () => fetchProposals(),
+  });
+  const rows = (data?.articles ?? []) as Proposal[];
+  const pending = rows.filter((p) => p.status === "pending_validation").length;
+
+  const act = async (id: string, status: "validated" | "rejected", reason?: string) => {
+    try {
+      await setStatus({ data: { id, status, reason } });
+      toast.success(status === "validated" ? "Article validé — publié sur Le fil ✓" : "Proposition refusée");
+      qc.invalidateQueries({ queryKey: ["fil-proposals"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur");
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <header className="mb-5">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-white sm:text-3xl">
+          <Rss className="h-6 w-6 text-[#b86ef9]" /> Copywriter — Le fil
+        </h1>
+        <p className="mt-2 text-sm text-[#d4c4e0]">
+          Décrivez un sujet, l'agent rédige un article complet pour « Le fil Holiswiss » et propose une photo.
+          <strong className="text-white"> Rien n'est publié sans votre validation.</strong>
+        </p>
+      </header>
+
+      <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+        <button
+          onClick={() => setTab("agent")}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            tab === "agent" ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" /> Demander à l'agent
+        </button>
+        <button
+          onClick={() => setTab("proposals")}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            tab === "proposals" ? "bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] text-white" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <ListChecks className="h-4 w-4" /> Propositions
+          {pending > 0 && (
+            <span className="rounded-full bg-amber-500/20 px-1.5 text-[11px] text-amber-300">{pending}</span>
+          )}
+        </button>
+      </div>
+
+      {tab === "agent" && <CopywriterAgentChat />}
+
+      {tab === "proposals" && (
+        <>
+          {isLoading && <div className="py-16 text-center text-white/50">Chargement…</div>}
+          {!isLoading && rows.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center text-white/60">
+              Aucune proposition pour le moment. Demandez-en une à l'agent dans l'onglet précédent.
+            </div>
+          )}
+          <div className="space-y-5">
+            {rows.map((p) => (
+              <ProposalCard key={p.id} p={p} onAct={act} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ProposalCard({
+  p,
+  onAct,
+}: {
+  p: Proposal;
+  onAct: (id: string, status: "validated" | "rejected", reason?: string) => void;
+}) {
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+
+  return (
+    <article className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[#1a0a2e] p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm text-white/80">
+          <span className="rounded-full bg-[rgba(184,110,249,0.15)] px-2 py-0.5 text-xs text-[#d4a8ff]">
+            {CATEGORY_LABEL[p.category] ?? p.category}
+          </span>
+        </div>
+        <span
+          className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
+            p.status === "rejected"
+              ? "border-red-500/30 bg-red-500/15 text-red-300"
+              : "border-amber-500/30 bg-amber-500/15 text-amber-300"
+          }`}
+        >
+          {p.status === "rejected" ? "Refusé" : "En attente de validation"}
+        </span>
+      </div>
+
+      <h3 className="text-lg font-semibold text-white">{p.title_fr}</h3>
+      {p.excerpt_fr && <p className="mt-1 text-sm text-white/70">{p.excerpt_fr}</p>}
+
+      {p.cover_image_url && (
+        <div className="mt-3">
+          <img src={p.cover_image_url} alt={p.image_alt_text ?? ""} className="h-40 w-full rounded-xl object-cover" />
+          {p.cover_image_credit_name && (
+            <p className="mt-1 text-[11px] text-white/40">
+              Photo par{" "}
+              {p.cover_image_credit_url ? (
+                <a href={p.cover_image_credit_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">
+                  {p.cover_image_credit_name}
+                </a>
+              ) : (
+                p.cover_image_credit_name
+              )}{" "}
+              sur Unsplash
+            </p>
+          )}
+        </div>
+      )}
+
+      {p.rejection_reason && (
+        <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200">
+          Motif du refus : {p.rejection_reason}
+        </p>
+      )}
+
+      <div className="mt-4 border-t border-white/10 pt-4">
+        {rejecting ? (
+          <div className="space-y-2">
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={2}
+              placeholder="Pourquoi refuser cette proposition ?"
+              className="w-full rounded-lg border border-[rgba(184,110,249,0.3)] bg-[#0f0a1e] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-[#b86ef9] focus:outline-none"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { onAct(p.id, "rejected", reason); setRejecting(false); setReason(""); }}
+                disabled={reason.trim().length < 3}
+                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40"
+              >
+                Confirmer le refus
+              </button>
+              <button onClick={() => { setRejecting(false); setReason(""); }} className="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-white/70">
+                Annuler
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => onAct(p.id, "validated")}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#22d3ee] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              <CheckCircle2 className="h-4 w-4" /> Valider et publier
+            </button>
+            <a
+              href={`/admin/articles?status=pending_validation`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/5"
+            >
+              <Pencil className="h-4 w-4" /> Modifier
+            </a>
+            <button
+              onClick={() => setRejecting(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/40 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/10"
+            >
+              <XCircle className="h-4 w-4" /> Refuser
+            </button>
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
