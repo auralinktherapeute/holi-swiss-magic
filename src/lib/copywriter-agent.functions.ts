@@ -89,7 +89,10 @@ export const listFilProposals = createServerFn({ method: "GET" })
     const { data, error } = await (supabaseAdmin as any)
       .from("articles")
       .select(
-        "id,slug,status,category,title_fr,excerpt_fr,body_fr,cover_image_url,image_alt_text,cover_image_credit_name,cover_image_credit_url,rejection_reason,created_at",
+        "id,slug,slug_de,status,lang,category,title_fr,title_de,title_it,title_en," +
+          "excerpt_fr,excerpt_de,excerpt_it,excerpt_en,body_fr,body_de,body_it,body_en," +
+          "meta_title_fr,meta_description_fr,secondary_tags,is_featured," +
+          "cover_image_url,image_alt_text,cover_image_credit_name,cover_image_credit_url,rejection_reason,created_at",
       )
       .in("category", FIL_CATEGORY_SLUGS)
       .in("status", ["pending_validation", "rejected"])

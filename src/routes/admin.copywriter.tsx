@@ -3,9 +3,9 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Rss, MessageSquare, ListChecks, CheckCircle2, XCircle, Pencil } from "lucide-react";
+import { Rss, MessageSquare, ListChecks, CheckCircle2, XCircle, Pencil, Loader2 } from "lucide-react";
 import { listFilProposals } from "@/lib/copywriter-agent.functions";
-import { setArticleStatus } from "@/lib/articles.functions";
+import { setArticleStatus, updateArticle } from "@/lib/articles.functions";
 import { CopywriterAgentChat } from "@/components/admin/CopywriterAgentChat";
 import { FIL_CATEGORIES } from "@/data/fil-holiswiss";
 
@@ -16,11 +16,26 @@ export const Route = createFileRoute("/admin/copywriter")({
 type Proposal = {
   id: string;
   slug: string;
+  slug_de: string | null;
   status: "pending_validation" | "rejected";
+  lang: "fr" | "de" | "it" | "en";
   category: string;
   title_fr: string;
+  title_de: string | null;
+  title_it: string | null;
+  title_en: string | null;
   excerpt_fr: string | null;
+  excerpt_de: string | null;
+  excerpt_it: string | null;
+  excerpt_en: string | null;
   body_fr: string;
+  body_de: string | null;
+  body_it: string | null;
+  body_en: string | null;
+  meta_title_fr: string | null;
+  meta_description_fr: string | null;
+  secondary_tags: string[] | null;
+  is_featured: boolean | null;
   cover_image_url: string | null;
   image_alt_text: string | null;
   cover_image_credit_name: string | null;
@@ -36,6 +51,7 @@ const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
 function CopywriterPage() {
   const fetchProposals = useServerFn(listFilProposals);
   const setStatus = useServerFn(setArticleStatus);
+  const saveEdits = useServerFn(updateArticle);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"agent" | "proposals">("agent");
 
@@ -54,6 +70,38 @@ function CopywriterPage() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur");
     }
+  };
+
+  const saveEdit = async (p: Proposal, edited: { title_fr: string; excerpt_fr: string; body_fr: string }) => {
+    await saveEdits({
+      data: {
+        id: p.id,
+        title_fr: edited.title_fr,
+        title_de: p.title_de ?? "",
+        title_it: p.title_it ?? "",
+        title_en: p.title_en ?? "",
+        excerpt_fr: edited.excerpt_fr,
+        excerpt_de: p.excerpt_de ?? "",
+        excerpt_it: p.excerpt_it ?? "",
+        excerpt_en: p.excerpt_en ?? "",
+        body_fr: edited.body_fr,
+        body_de: p.body_de ?? "",
+        body_it: p.body_it ?? "",
+        body_en: p.body_en ?? "",
+        slug: p.slug,
+        slug_de: p.slug_de ?? "",
+        cover_image_url: p.cover_image_url ?? "",
+        image_alt_text: p.image_alt_text ?? "",
+        category: p.category,
+        lang: p.lang,
+        status: p.status,
+        meta_title_fr: p.meta_title_fr ?? "",
+        meta_description_fr: p.meta_description_fr ?? "",
+        secondary_tags: p.secondary_tags ?? [],
+        is_featured: p.is_featured ?? false,
+      },
+    });
+    qc.invalidateQueries({ queryKey: ["fil-proposals"] });
   };
 
   return (
@@ -102,7 +150,7 @@ function CopywriterPage() {
           )}
           <div className="space-y-5">
             {rows.map((p) => (
-              <ProposalCard key={p.id} p={p} onAct={act} />
+              <ProposalCard key={p.id} p={p} onAct={act} onSaveEdit={saveEdit} />
             ))}
           </div>
         </>
@@ -114,12 +162,39 @@ function CopywriterPage() {
 function ProposalCard({
   p,
   onAct,
+  onSaveEdit,
 }: {
   p: Proposal;
   onAct: (id: string, status: "validated" | "rejected", reason?: string) => void;
+  onSaveEdit: (p: Proposal, edited: { title_fr: string; excerpt_fr: string; body_fr: string }) => Promise<void>;
 }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [title, setTitle] = useState(p.title_fr);
+  const [excerpt, setExcerpt] = useState(p.excerpt_fr ?? "");
+  const [body, setBody] = useState(p.body_fr);
+
+  const startEditing = () => {
+    setTitle(p.title_fr);
+    setExcerpt(p.excerpt_fr ?? "");
+    setBody(p.body_fr);
+    setEditing(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await onSaveEdit(p, { title_fr: title.trim(), excerpt_fr: excerpt.trim(), body_fr: body.trim() });
+      toast.success("Modifications enregistrées");
+      setEditing(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Enregistrement impossible");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <article className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[#1a0a2e] p-5">
@@ -140,8 +215,40 @@ function ProposalCard({
         </span>
       </div>
 
-      <h3 className="text-lg font-semibold text-white">{p.title_fr}</h3>
-      {p.excerpt_fr && <p className="mt-1 text-sm text-white/70">{p.excerpt_fr}</p>}
+      {editing ? (
+        <div className="space-y-2">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Titre"
+            className="w-full rounded-lg border border-[rgba(184,110,249,0.3)] bg-[#0f0a1e] px-3 py-2 text-lg font-semibold text-white placeholder:text-white/30 focus:border-[#b86ef9] focus:outline-none"
+          />
+          <textarea
+            value={excerpt}
+            onChange={(e) => setExcerpt(e.target.value)}
+            rows={2}
+            placeholder="Extrait / chapô"
+            className="w-full rounded-lg border border-[rgba(184,110,249,0.3)] bg-[#0f0a1e] px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:border-[#b86ef9] focus:outline-none"
+          />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={10}
+            placeholder="Corps de l'article (markdown)"
+            className="w-full rounded-lg border border-[rgba(184,110,249,0.3)] bg-[#0f0a1e] px-3 py-2 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-[#b86ef9] focus:outline-none"
+          />
+        </div>
+      ) : (
+        <>
+          <h3 className="text-lg font-semibold text-white">{p.title_fr}</h3>
+          {p.excerpt_fr && <p className="mt-1 text-sm text-white/70">{p.excerpt_fr}</p>}
+          {p.body_fr && (
+            <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0a1e] p-3">
+              <p className="whitespace-pre-wrap text-sm text-white/80">{p.body_fr}</p>
+            </div>
+          )}
+        </>
+      )}
 
       {p.cover_image_url && (
         <div className="mt-3">
@@ -169,7 +276,25 @@ function ProposalCard({
       )}
 
       <div className="mt-4 border-t border-white/10 pt-4">
-        {rejecting ? (
+        {editing ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => void save()}
+              disabled={saving || !title.trim() || !body.trim()}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#b86ef9] to-[#22d3ee] px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              Enregistrer les modifications
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              disabled={saving}
+              className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/70 disabled:opacity-40"
+            >
+              Annuler
+            </button>
+          </div>
+        ) : rejecting ? (
           <div className="space-y-2">
             <textarea
               value={reason}
@@ -199,12 +324,12 @@ function ProposalCard({
             >
               <CheckCircle2 className="h-4 w-4" /> Valider et publier
             </button>
-            <a
-              href={`/admin/articles?status=pending_validation`}
+            <button
+              onClick={startEditing}
               className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/5"
             >
               <Pencil className="h-4 w-4" /> Modifier
-            </a>
+            </button>
             <button
               onClick={() => setRejecting(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/40 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/10"
