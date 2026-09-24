@@ -272,12 +272,14 @@ export const setArticleStatus = createServerFn({ method: "POST" })
   .inputValidator(z.object({
     id: z.string().uuid(),
     status: z.enum(["draft", "validated", "pending_validation", "rejected"]),
+    reason: z.string().max(500).optional(),
   }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: Record<string, unknown> = { status: data.status };
     patch.published_at = data.status === "validated" ? new Date().toISOString() : null;
+    patch.rejection_reason = data.status === "rejected" ? (data.reason?.trim() || null) : null;
     const { error } = await (supabaseAdmin as any).from("articles").update(patch).eq("id", data.id);
     if (error) throw new Error("Impossible de modifier le statut.");
     return { ok: true };

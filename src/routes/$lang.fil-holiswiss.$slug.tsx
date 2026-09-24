@@ -148,18 +148,33 @@ function Page() {
       </section>
 
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <div className="mb-10 overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c]">
-          {post.image ? (
-            <img
-              src={post.image}
-              alt={post.imageAlt || post.title}
-              className="aspect-video w-full object-cover"
-              loading="eager"
-            />
-          ) : (
-            <div className="flex aspect-[21/9] w-full items-center justify-center bg-[#522870]">
-              <img src={lotusAsset.url} alt="" className="h-16 w-16 opacity-80" />
-            </div>
+        <div className="mb-10">
+          <div className="overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.2)] bg-[#3d1a5c]">
+            {post.image ? (
+              <img
+                src={post.image}
+                alt={post.imageAlt || post.title}
+                className="aspect-video w-full object-cover"
+                loading="eager"
+              />
+            ) : (
+              <div className="flex aspect-[21/9] w-full items-center justify-center bg-[#522870]">
+                <img src={lotusAsset.url} alt="" className="h-16 w-16 opacity-80" />
+              </div>
+            )}
+          </div>
+          {post.image && post.imageCreditName && (
+            <p className="mt-2 text-right text-[11px] text-[#d4c4e0]/50">
+              Photo par{" "}
+              {post.imageCreditUrl ? (
+                <a href={post.imageCreditUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-[#d4c4e0]/80">
+                  {post.imageCreditName}
+                </a>
+              ) : (
+                post.imageCreditName
+              )}{" "}
+              sur Unsplash
+            </p>
           )}
         </div>
 
