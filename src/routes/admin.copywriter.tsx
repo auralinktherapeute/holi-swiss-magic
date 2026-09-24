@@ -3,7 +3,10 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Rss, MessageSquare, ListChecks, CheckCircle2, XCircle, Pencil, Loader2 } from "lucide-react";
+import {
+  Rss, MessageSquare, ListChecks, CheckCircle2, XCircle, Pencil, Loader2,
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+} from "lucide-react";
 import { listFilProposals } from "@/lib/copywriter-agent.functions";
 import { setArticleStatus, updateArticle } from "@/lib/articles.functions";
 import { listCertificationOrganizations } from "@/lib/org-certifications.functions";
@@ -214,6 +217,45 @@ function ProposalCard({
     });
   };
 
+  /** Gras/italique/souligné : entoure la sélection (ou insère un texte à compléter). */
+  const wrapSelection = (before: string, after: string = before) => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? body.length;
+    const end = el.selectionEnd ?? body.length;
+    const selected = body.slice(start, end) || "texte";
+    const next = body.slice(0, start) + before + selected + after + body.slice(end);
+    setBody(next);
+    const newStart = start + before.length;
+    const newEnd = newStart + selected.length;
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(newStart, newEnd);
+    });
+  };
+
+  /** Aligne le paragraphe où se trouve le curseur (délimité par des lignes vides). */
+  const setAlign = (align: "left" | "center" | "right" | "justify") => {
+    const el = bodyRef.current;
+    const pos = el?.selectionStart ?? body.length;
+    const before = body.slice(0, pos);
+    const after = body.slice(pos);
+    const lastBreak = before.lastIndexOf("\n\n");
+    const paraStart = lastBreak === -1 ? 0 : lastBreak + 2;
+    const paraEndRel = after.indexOf("\n\n");
+    const paraEnd = paraEndRel === -1 ? body.length : pos + paraEndRel;
+    const paragraph = body.slice(paraStart, paraEnd);
+    const stripped = paragraph.replace(/^\{(left|center|right|justify)\}\s*/i, "");
+    const rebuilt = align === "left" ? stripped : `{${align}} ${stripped}`;
+    const next = body.slice(0, paraStart) + rebuilt + body.slice(paraEnd);
+    setBody(next);
+    const caret = paraStart + rebuilt.length;
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(caret, caret);
+    });
+  };
+
   const startEditing = () => {
     setTitle(p.title_fr);
     setExcerpt(p.excerpt_fr ?? "");
@@ -285,6 +327,30 @@ function ProposalCard({
               ))}
             </div>
           )}
+          <div className="flex flex-wrap items-center gap-1 rounded-lg border border-white/10 bg-white/[0.02] px-2 py-1.5">
+            <button type="button" title="Gras" onClick={() => wrapSelection("**")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <Bold className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Italique" onClick={() => wrapSelection("*")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <Italic className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Souligné" onClick={() => wrapSelection("++")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <Underline className="h-3.5 w-3.5" />
+            </button>
+            <span className="mx-1 h-4 w-px bg-white/15" />
+            <button type="button" title="Aligner à gauche" onClick={() => setAlign("left")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <AlignLeft className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Centrer" onClick={() => setAlign("center")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <AlignCenter className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Aligner à droite" onClick={() => setAlign("right")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <AlignRight className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Justifier" onClick={() => setAlign("justify")} className="rounded p-1.5 text-white/70 hover:bg-white/10 hover:text-white">
+              <AlignJustify className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <textarea
             ref={bodyRef}
             value={body}
@@ -293,6 +359,9 @@ function ProposalCard({
             placeholder="Corps de l'article (markdown)"
             className="w-full rounded-lg border border-[rgba(184,110,249,0.3)] bg-[#0f0a1e] px-3 py-2 font-mono text-sm text-white/90 placeholder:text-white/30 focus:border-[#b86ef9] focus:outline-none"
           />
+          <p className="text-[11px] text-white/35">
+            Sélectionnez du texte puis cliquez Gras/Italique/Souligné. Pour l'alignement, placez le curseur dans le paragraphe concerné.
+          </p>
         </div>
       ) : (
         <>

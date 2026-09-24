@@ -7,6 +7,7 @@ function Inline({ tokens }: { tokens: InlineToken[] }) {
       {tokens.map((tk, i) => {
         if (tk.type === "strong") return <strong key={i} className="font-semibold">{tk.value}</strong>;
         if (tk.type === "em") return <em key={i}>{tk.value}</em>;
+        if (tk.type === "underline") return <u key={i}>{tk.value}</u>;
         if (tk.type === "link") {
           const external = /^https?:\/\//i.test(tk.href);
           return (
@@ -66,6 +67,13 @@ function Block({ block }: { block: ArticleBlock }) {
           />
         </div>
       );
+    case "paragraph": {
+      const alignCls =
+        block.align === "center" ? "text-center" :
+        block.align === "right" ? "text-right" :
+        block.align === "justify" ? "text-justify" : "";
+      return <p className={`my-4 leading-relaxed whitespace-pre-line ${alignCls}`}><Inline tokens={block.tokens} /></p>;
+    }
     default:
       return <p className="my-4 leading-relaxed whitespace-pre-line"><Inline tokens={block.tokens} /></p>;
   }

@@ -14,11 +14,14 @@ export type InlineToken =
   | { type: "text"; value: string }
   | { type: "strong"; value: string }
   | { type: "em"; value: string }
+  | { type: "underline"; value: string }
   | { type: "link"; value: string; href: string };
+
+export type TextAlign = "left" | "center" | "right" | "justify";
 
 export type ArticleBlock =
   | { type: "heading"; level: 2 | 3 | 4; tokens: InlineToken[] }
-  | { type: "paragraph"; tokens: InlineToken[] }
+  | { type: "paragraph"; tokens: InlineToken[]; align?: TextAlign }
   | { type: "quote"; tokens: InlineToken[] }
   | { type: "list"; ordered: boolean; items: InlineToken[][] }
   | { type: "logo"; alt: string; src: string };
@@ -137,7 +140,8 @@ export function htmlToMarkdown(html: string): string {
 /* Markdown -> blocs                                                   */
 /* ------------------------------------------------------------------ */
 
-const INLINE_RE = /(\*\*[^*]+\*\*|__[^_]+__|\*[^*\n]+\*|_[^_\n]+_|\[[^\]]+\]\([^)\s]+\))/g;
+// ++texte++ = souligné — marqueur dédié : __texte__ est déjà pris par le gras.
+const INLINE_RE = /(\*\*[^*]+\*\*|__[^_]+__|\+\+[^+\n]+\+\+|\*[^*\n]+\*|_[^_\n]+_|\[[^\]]+\]\([^)\s]+\))/g;
 
 export function parseInline(text: string): InlineToken[] {
   const tokens: InlineToken[] = [];
@@ -148,6 +152,8 @@ export function parseInline(text: string): InlineToken[] {
     const raw = m[0];
     if (raw.startsWith("**") || raw.startsWith("__")) {
       tokens.push({ type: "strong", value: raw.slice(2, -2) });
+    } else if (raw.startsWith("++")) {
+      tokens.push({ type: "underline", value: raw.slice(2, -2) });
     } else if (raw.startsWith("[")) {
       const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(raw);
       if (link) tokens.push({ type: "link", value: link[1], href: link[2] });
@@ -161,6 +167,8 @@ export function parseInline(text: string): InlineToken[] {
   return tokens.length ? tokens : [{ type: "text", value: text }];
 }
 
+const ALIGN_MARKER_RE = /^\{(left|center|right|justify)\}\s*/i;
+
 /** Découpe le Markdown léger en blocs sémantiques prêts à rendre. */
 export function parseArticleMarkdown(source: string): ArticleBlock[] {
   const lines = (source ?? "").replace(/\r\n?/g, "\n").split("\n");
@@ -168,9 +176,18 @@ export function parseArticleMarkdown(source: string): ArticleBlock[] {
   let paragraph: string[] = [];
 
   const flush = () => {
-    const text = paragraph.join("\n").trim();
+    let text = paragraph.join("\n").trim();
     paragraph = [];
-    if (text) blocks.push({ type: "paragraph", tokens: parseInline(text) });
+    if (!text) return;
+    // Alignement choisi depuis la barre d'outils de l'éditeur : marqueur en
+    // tête de paragraphe, retiré avant le rendu, jamais visible pour le lecteur.
+    let align: TextAlign | undefined;
+    const m = ALIGN_MARKER_RE.exec(text);
+    if (m) {
+      align = m[1].toLowerCase() as TextAlign;
+      text = text.slice(m[0].length).trim();
+    }
+    if (text) blocks.push({ type: "paragraph", tokens: parseInline(text), align });
   };
 
   for (let i = 0; i < lines.length; i++) {
