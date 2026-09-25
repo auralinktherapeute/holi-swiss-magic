@@ -84,6 +84,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     if (!res.ok)
       return {
         therapists: [] as PublicTherapistCard[],
+        citySlugs: {} as Record<string, string>,
         asOf: null,
         unavailable: true as const,
         indexable: true,
@@ -93,6 +94,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     // gabarit ville et que le sitemap, qui n'annonce que les cantons peuplés.
     return {
       therapists: res.data.therapists,
+      citySlugs: res.data.citySlugs,
       asOf: res.data.asOf,
       unavailable: false as const,
       indexable: res.data.therapists.length > 0,
@@ -163,21 +165,25 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
 
 function Page() {
   const { lang, canton } = useParams({ from: "/$lang/therapeutes/canton/$canton" });
-  const { therapists, asOf, unavailable } = Route.useLoaderData();
+  const { therapists, citySlugs, asOf, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const code = canton.toUpperCase();
   const name = cantonName(code, lang);
 
-  // Une pastille par page ville : regroupement par slug (même clé que l'URL et
-  // que le chiffre « N villes » du bloc de faits), premier libellé rencontré.
+  // Une pastille par page ville : regroupement par slug CANONIQUE (cities.slug,
+  // calculé par le serveur — même règle que le sitemap et la page ville),
+  // premier libellé rencontré. Repli sur la slugification directe.
   const citiesBySlug = new Map<string, string>();
   for (const x of therapists) {
     const label = (x.city ?? "").trim();
-    const slug = citySlug(label);
+    const slug = citySlugs[label] ?? citySlug(label);
     if (slug && !citiesBySlug.has(slug)) citiesBySlug.set(slug, label);
   }
-  const cities = [...citiesBySlug.values()].sort();
+  const cities = [...citiesBySlug.entries()]
+    .map(([slug, label]) => ({ slug, label }))
+    // Tri par unité de code, comme l'ancien `.sort()` : identique serveur/client.
+    .sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -220,12 +226,12 @@ function Page() {
           <div className="flex flex-wrap gap-2">
             {cities.map((c) => (
               <Link
-                key={c}
+                key={c.slug}
                 to="/$lang/therapeutes/ville/$citySlug"
-                params={{ lang, citySlug: citySlug(c) }}
+                params={{ lang, citySlug: c.slug }}
                 className="rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] px-4 py-2 text-sm text-white hover:border-[#b86ef9] hover:bg-[rgba(184,110,249,0.2)]"
               >
-                {c}
+                {c.label}
               </Link>
             ))}
           </div>

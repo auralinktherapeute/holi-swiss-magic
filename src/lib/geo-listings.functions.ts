@@ -9,6 +9,17 @@ import { z } from "zod";
 const PUBLIC_COLUMNS =
   "id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,specialties,languages,price_min,price_max,currency,verified";
 
+/**
+ * Résolveur de slug de ville canonique (table `cities`), le même que le
+ * sitemap. Lecture SECONDAIRE : en cas d'échec, repli sur la slugification
+ * directe — la page reste servie, seules les redirections d'alias sautent.
+ */
+async function loadCityResolver(supabase: Awaited<ReturnType<typeof publicClient>>) {
+  const { buildCitySlugResolver } = await import("@/lib/city-slug");
+  const { data, error } = await supabase.from("cities").select("slug,canonical_name,aliases").limit(5000);
+  return buildCitySlugResolver(error ? [] : ((data ?? []) as never));
+}
+
 async function publicClient() {
   const { createClient } = await import("@supabase/supabase-js");
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -50,8 +61,17 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
       .order("verified", { ascending: false })
       .limit(300);
     if (error) throw new Error("Impossible de charger les thérapeutes.");
+    const therapists = (rows ?? []) as unknown as PublicTherapistCard[];
+    // Liens « Villes de ce canton » : slug canonique, pour ne jamais lier une
+    // URL qui redirige (ex. « Bienne » → /ville/biel-bienne).
+    const resolver = await loadCityResolver(supabase);
+    const citySlugs: Record<string, string> = {};
+    for (const t of therapists) {
+      const label = (t.city ?? "").trim();
+      if (label && !(label in citySlugs)) citySlugs[label] = resolver.tolerant(label);
+    }
     const { zurichDay } = await import("@/lib/directory-stats");
-    return { therapists: (rows ?? []) as unknown as PublicTherapistCard[], asOf: zurichDay() };
+    return { therapists, citySlugs, asOf: zurichDay() };
     });
   });
 
@@ -99,12 +119,12 @@ export const listPublicCities = createServerFn({ method: "GET" }).handler(async 
     .limit(2000);
   if (error) throw new Error("Impossible de charger les villes.");
 
-  const { citySlug } = await import("@/lib/geo-listings");
+  const resolver = await loadCityResolver(supabase);
   const map = new Map<string, { slug: string; name: string; canton: string | null; count: number }>();
   for (const r of (rows ?? []) as Array<{ city: string | null; canton: string | null }>) {
     const name = (r.city ?? "").trim();
     if (!name) continue;
-    const slug = citySlug(name);
+    const slug = resolver.tolerant(name);
     if (!slug) continue;
     const found = map.get(slug);
     if (found) found.count += 1;
@@ -131,12 +151,17 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
       .limit(2000);
     if (error) throw new Error("Impossible de charger les thérapeutes.");
 
-    const { citySlug } = await import("@/lib/geo-listings");
+    // Même résolution que le sitemap : un praticien « Bienne » apparaît sur
+    // /ville/biel-bienne (l'URL publiée), et un alias demandé (/ville/bienne,
+    // /ville/ge) renvoie `canonicalSlug` pour que la route redirige en 301.
+    const resolver = await loadCityResolver(supabase);
     const wanted = data.citySlug.toLowerCase();
+    const canonicalSlug = resolver.tolerant(wanted) || wanted;
     const all = (rows ?? []) as unknown as PublicTherapistCard[];
-    const therapists = all.filter((t) => citySlug(t.city ?? "") === wanted);
+    const therapists = all.filter((t) => resolver.tolerant(t.city ?? "") === canonicalSlug);
     const { zurichDay } = await import("@/lib/directory-stats");
     return {
+      canonicalSlug,
       therapists,
       cityName: therapists[0]?.city ?? null,
       canton: therapists[0]?.canton ?? null,

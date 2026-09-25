@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useParams } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { listTherapistsByCity } from "@/lib/geo-listings.functions";
 import { cantonName } from "@/lib/geo-listings";
@@ -93,7 +93,18 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         unavailable: true as const,
       };
     }
-    return { ...res.data, unavailable: false as const };
+    // Alias ou ancien nom de ville → URL canonique (cities.slug), en 301 :
+    // /ville/bienne → /ville/biel-bienne, /ville/ge → /ville/geneve. Même règle
+    // que le sitemap, qui ne publie que la forme canonique.
+    const { canonicalSlug, ...rest } = res.data;
+    if (canonicalSlug && canonicalSlug !== params.citySlug) {
+      throw redirect({
+        to: "/$lang/therapeutes/ville/$citySlug",
+        params: { lang: params.lang, citySlug: canonicalSlug },
+        statusCode: 301,
+      });
+    }
+    return { ...rest, unavailable: false as const };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;

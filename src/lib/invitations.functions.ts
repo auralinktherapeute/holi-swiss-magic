@@ -150,7 +150,10 @@ export const completeInvitationSignup = createServerFn({ method: "POST" })
       last_name: data.last_name,
       phone: data.phone || null,
       specialties: data.specialty ? [data.specialty] : [],
-      city: data.canton || null,
+      // La ville n'est pas connue à l'invitation (la liste d'attente ne
+      // demande que le canton) : null, jamais le code canton (« GE ») — le
+      // thérapeute choisit sa commune officielle dans son profil.
+      city: null,
       status: "pending",
     } as any);
 
