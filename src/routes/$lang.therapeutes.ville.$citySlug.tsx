@@ -15,7 +15,7 @@ const T = {
     h1: (c: string) => `Thérapeutes holistiques à ${c}`,
     title: (c: string) => `Thérapeutes à ${c} | Holiswiss`,
     desc: (c: string) =>
-      `Thérapeutes holistiques à ${c} : profils validés par Holiswiss, spécialités, tarifs et prise de rendez-vous en ligne sur Holiswiss.`,
+      `Thérapeutes holistiques à ${c} : profils détaillés, spécialités, tarifs et prise de rendez-vous en ligne sur Holiswiss.`,
     count: (n: number, c: string) => `${n} ${n > 1 ? "thérapeutes" : "thérapeute"} à ${c}`,
     none: (c: string) => `Aucun thérapeute référencé à ${c} pour le moment.`,
     intro: (c: string) =>
@@ -29,7 +29,7 @@ const T = {
     h1: (c: string) => `Ganzheitliche Therapeuten in ${c}`,
     title: (c: string) => `Therapeuten in ${c} | Holiswiss`,
     desc: (c: string) =>
-      `Ganzheitliche Therapeuten in ${c}: von Holiswiss geprüfte Profile, Spezialitäten, Preise und Online-Terminbuchung auf Holiswiss.`,
+      `Ganzheitliche Therapeuten in ${c}: detaillierte Profile, Spezialitäten, Preise und Online-Terminbuchung auf Holiswiss.`,
     count: (n: number, c: string) => `${n} Therapeut${n > 1 ? "en" : ""} in ${c}`,
     none: (c: string) => `Noch keine Therapeuten in ${c} eingetragen.`,
     intro: (c: string) =>
@@ -43,7 +43,7 @@ const T = {
     h1: (c: string) => `Terapeuti olistici a ${c}`,
     title: (c: string) => `Terapeuti a ${c} | Holiswiss`,
     desc: (c: string) =>
-      `Terapeuti olistici a ${c}: profili verificati, specialità, tariffe e prenotazione online su Holiswiss.`,
+      `Terapeuti olistici a ${c}: profili dettagliati, specialità, tariffe e prenotazione online su Holiswiss.`,
     count: (n: number, c: string) => `${n} terapeut${n > 1 ? "i" : "a"} a ${c}`,
     none: (c: string) => `Nessun terapeuta registrato a ${c} per il momento.`,
     intro: (c: string) =>
@@ -57,7 +57,7 @@ const T = {
     h1: (c: string) => `Holistic therapists in ${c}`,
     title: (c: string) => `Therapists in ${c} | Holiswiss`,
     desc: (c: string) =>
-      `Holistic therapists in ${c}: profiles validated by Holiswiss, specialties, prices and online booking on Holiswiss.`,
+      `Holistic therapists in ${c}: detailed profiles, specialties, prices and online booking on Holiswiss.`,
     count: (n: number, c: string) => `${n} therapist${n > 1 ? "s" : ""} in ${c}`,
     none: (c: string) => `No therapists listed in ${c} yet.`,
     intro: (c: string) =>

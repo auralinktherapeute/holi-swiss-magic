@@ -62,10 +62,10 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
       en: "Find a therapist in Switzerland — Holiswiss",
     };
     const descs: Record<string, string> = {
-      fr: "Annuaire des thérapeutes holistiques en Suisse : carte interactive, recherche dans les 26 cantons, filtres par spécialité et langue. Profils validés par Holiswiss et avis authentiques.",
-      de: "Verzeichnis ganzheitlicher Therapeuten in der Schweiz: interaktive Karte, Suche in allen 26 Kantonen, Filter nach Fachgebiet und Sprache. Von Holiswiss geprüfte Profile und echte Bewertungen.",
-      it: "Elenco dei terapeuti olistici in Svizzera: mappa interattiva, ricerca nei 26 cantoni, filtri per specialità e lingua. Profili convalidati da Holiswiss e recensioni autentiche.",
-      en: "Directory of holistic therapists in Switzerland: interactive map, search across all 26 cantons, filters by specialty and language. Profiles validated by Holiswiss and authentic reviews.",
+      fr: "Annuaire des thérapeutes holistiques en Suisse : carte interactive, recherche dans les 26 cantons, filtres par spécialité et langue. Profils détaillés et avis authentiques.",
+      de: "Verzeichnis ganzheitlicher Therapeuten in der Schweiz: interaktive Karte, Suche in allen 26 Kantonen, Filter nach Fachgebiet und Sprache. Detaillierte Profile und echte Bewertungen.",
+      it: "Elenco dei terapeuti olistici in Svizzera: mappa interattiva, ricerca nei 26 cantoni, filtri per specialità e lingua. Profili dettagliati e recensioni autentiche.",
+      en: "Directory of holistic therapists in Switzerland: interactive map, search across all 26 cantons, filters by specialty and language. Detailed profiles and authentic reviews.",
     };
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;
