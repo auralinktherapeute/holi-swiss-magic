@@ -36,7 +36,7 @@
     "how": {
       "title": "How it works",
       "step1": "Search by approach, canton or language",
-      "step2": "Browse profiles and verified reviews",
+      "step2": "Browse profiles and moderated reviews",
       "step3": "Book a session online easily"
     },
     "pricingTeaser": "Choose your plan",
@@ -127,7 +127,7 @@
         "features": [
           "Everything in Basic +",
           "Integrated online calendar",
-          "Verified reviews",
+          "Moderated reviews",
           "Unlimited blog articles",
           "Up to 5 specialties",
           "Essential badge visible"

@@ -285,7 +285,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "Come scegliere il professionista",
-        p: "Confronta i profili verificati: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni autentiche di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
+        p: "Confronta i profili convalidati da Holiswiss: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni autentiche di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
       },
       {
         h3: "Rimborso e certificazioni",
@@ -299,7 +299,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "How to choose your practitioner",
-        p: "Compare verified profiles: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
+        p: "Compare profiles validated by Holiswiss: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
       },
       {
         h3: "Reimbursement and certifications",
@@ -430,7 +430,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "I terapeuti di Holiswiss sono verificati?",
-      a: "Sì. I profili sono verificati e mostrano specialità, approccio, lingue, tariffe ed eventuali certificazioni (ASCA, RME, EMR), oltre a recensioni autentiche dei pazienti.",
+      a: "Ogni iscrizione è convalidata manualmente da Holiswiss prima della pubblicazione: Holiswiss controlla il profilo, ma non certifica il professionista. Il profilo presenta specialità, approccio, lingue, tariffe e, quando un documento giustificativo è stato effettivamente esaminato, le certificazioni dichiarate (ASCA, RME, EMR), oltre a recensioni autentiche dei pazienti.",
     },
     {
       q: "In quali lingue posso cercare?",
@@ -456,7 +456,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Are Holiswiss therapists verified?",
-      a: "Yes. Profiles are verified and show specialty, approach, languages, prices and, where applicable, certifications (ASCA, RME, EMR) as well as authentic patient reviews.",
+      a: "Every registration is validated manually by Holiswiss before publication: Holiswiss checks the profile but does not certify the practitioner. The profile shows specialty, approach, languages, prices and, where supporting documents have actually been reviewed, the declared certifications (ASCA, RME, EMR), as well as authentic patient reviews.",
     },
     {
       q: "In which languages can I search?",

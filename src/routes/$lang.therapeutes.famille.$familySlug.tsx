@@ -32,10 +32,10 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
       ? pickI18n(family, params.lang, "name")
       : params.familySlug.replace(/-/g, " ");
     const T: Record<string, { t: string; d: (n: string) => string }> = {
-      fr: { t: `${famName} — Thérapeutes en Suisse | Holiswiss`, d: (n) => `Praticiens suisses en ${n} : spécialités, approches et profils détaillés. Trouvez un thérapeute près de chez vous.` },
-      de: { t: `${famName} — Therapeuten in der Schweiz | Holiswiss`, d: (n) => `Schweizer Fachpersonen für ${n}: Spezialgebiete, Ansätze und detaillierte Profile. Finden Sie eine Therapeutin in Ihrer Nähe.` },
-      it: { t: `${famName} — Terapeuti in Svizzera | Holiswiss`, d: (n) => `Professionisti svizzeri in ${n}: specialità, approcci e profili dettagliati. Trova un terapeuta vicino a te.` },
-      en: { t: `${famName} — Therapists in Switzerland | Holiswiss`, d: (n) => `Swiss practitioners in ${n}: specialties, approaches and detailed profiles. Find a therapist near you.` },
+      fr: { t: `${famName} — Thérapeutes en Suisse | Holiswiss`, d: (n) => `Praticiens suisses en ${n} : spécialités, approches et profils validés par Holiswiss. Trouvez un thérapeute près de chez vous.` },
+      de: { t: `${famName} — Therapeuten in der Schweiz | Holiswiss`, d: (n) => `Schweizer Fachpersonen für ${n}: Spezialgebiete, Ansätze und geprüfte Profile. Finden Sie eine Therapeutin in Ihrer Nähe.` },
+      it: { t: `${famName} — Terapeuti in Svizzera | Holiswiss`, d: (n) => `Professionisti svizzeri in ${n}: specialità, approcci e profili convalidati da Holiswiss. Trova un terapeuta vicino a te.` },
+      en: { t: `${famName} — Therapists in Switzerland | Holiswiss`, d: (n) => `Swiss practitioners in ${n}: specialties, approaches and profiles validated by Holiswiss. Find a therapist near you.` },
     };
     const copy = T[params.lang] ?? T.fr;
     const title = copy.t;
