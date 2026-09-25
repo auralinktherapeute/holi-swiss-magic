@@ -385,6 +385,7 @@ export type Database = {
           body_fr: string
           body_it: string | null
           category: string | null
+          content_updated_at: string
           cover_image_credit_name: string | null
           cover_image_credit_url: string | null
           cover_image_url: string | null
@@ -425,6 +426,7 @@ export type Database = {
           body_fr: string
           body_it?: string | null
           category?: string | null
+          content_updated_at?: string
           cover_image_credit_name?: string | null
           cover_image_credit_url?: string | null
           cover_image_url?: string | null
@@ -465,6 +467,7 @@ export type Database = {
           body_fr?: string
           body_it?: string | null
           category?: string | null
+          content_updated_at?: string
           cover_image_credit_name?: string | null
           cover_image_credit_url?: string | null
           cover_image_url?: string | null
@@ -4281,6 +4284,7 @@ export type Database = {
       }
       therapist_articles: {
         Row: {
+          content_updated_at: string
           contenu: string
           created_at: string
           date_publication: string | null
@@ -4296,6 +4300,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          content_updated_at?: string
           contenu: string
           created_at?: string
           date_publication?: string | null
@@ -4311,6 +4316,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          content_updated_at?: string
           contenu?: string
           created_at?: string
           date_publication?: string | null
@@ -5904,6 +5910,7 @@ export type Database = {
           canton: string | null
           city: string | null
           consultation_modes: string[] | null
+          content_updated_at: string
           country: string | null
           created_at: string
           currency: string | null
@@ -5969,6 +5976,7 @@ export type Database = {
           canton?: string | null
           city?: string | null
           consultation_modes?: string[] | null
+          content_updated_at?: string
           country?: string | null
           created_at?: string
           currency?: string | null
@@ -6034,6 +6042,7 @@ export type Database = {
           canton?: string | null
           city?: string | null
           consultation_modes?: string[] | null
+          content_updated_at?: string
           country?: string | null
           created_at?: string
           currency?: string | null
