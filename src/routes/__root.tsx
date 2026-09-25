@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { organizationNode, websiteNode } from "@/lib/organization-schema";
 import {
   Outlet,
   createRootRouteWithContext,
@@ -108,15 +107,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@graph": [organizationNode, websiteNode],
-        }),
-      },
-    ],
+    // Le JSON-LD Organization/WebSite (@graph) est émis par le layout `$lang`
+    // (src/routes/$lang.tsx), pas ici : il dépend de la langue de l'URL, que
+    // cette route racine ne connaît pas. Les pages hors `/$lang` (admin,
+    // dashboard, liens à token) sont toutes `noindex` ou derrière
+    // authentification — elles n'ont pas besoin de ce balisage.
   }),
   shellComponent: RootShell,
   component: RootComponent,

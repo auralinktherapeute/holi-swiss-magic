@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AmbientPlayer } from "@/components/AmbientPlayer";
 import i18n, { isLang, DEFAULT_LANG } from "@/lib/i18n";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
+import { getOrganizationNode, getWebsiteNode } from "@/lib/organization-schema";
 
 
 export const Route = createFileRoute("/$lang")({
@@ -33,6 +34,29 @@ export const Route = createFileRoute("/$lang")({
     if (i18n.language.split("-")[0] !== resolved) {
       await i18n.changeLanguage(resolved);
     }
+  },
+  // JSON-LD Organization/WebSite (@graph) — voir organization-schema.ts.
+  // Déclaré ici, sur le layout partagé par toutes les pages publiques
+  // multilingues, plutôt que dans __root.tsx : c'est le premier point de la
+  // hiérarchie de routes qui connaît la langue de l'URL (`params.lang`), et
+  // le seul endroit où ce script est émis — pas de doublon avec la racine.
+  // (`head` doit rester déclaré après `beforeLoad` dans cet objet : placé
+  // avant, il casse l'inférence de type de `beforeLoad` — TS2322 sur son
+  // retour `Promise<void>` — comme le fait déjà chaque route `$lang.*.tsx`
+  // qui déclare les deux.)
+  head: ({ params }) => {
+    const lang = isLang(params.lang) ? params.lang : DEFAULT_LANG;
+    return {
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [getOrganizationNode(lang), getWebsiteNode(lang)],
+          }),
+        },
+      ],
+    };
   },
   // Sans ce `notFoundComponent`, une URL inconnue sous une langue valide
   // (`/fr/page-inconnue`) affichait le `<p>Not Found</p>` générique de TanStack

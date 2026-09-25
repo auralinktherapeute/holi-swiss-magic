@@ -3,7 +3,7 @@
  *
  * Pourquoi un module partagé : l'audit SEO/GEO du 30/08/2026 a relevé que le
  * `publisher` des articles déclarait une *deuxième* Organization, divergente de
- * celle du layout racine (nom « HoliSwiss » vs « Holiswiss », logo différent,
+ * celle du layout `$lang` (nom « HoliSwiss » vs « Holiswiss », logo différent,
  * pas d'`@id`). Deux nœuds concurrents fragmentent l'entité : Google et les
  * moteurs génératifs choisissent l'un ou l'autre sans règle. Ici, un seul nœud
  * complet, référencé partout ailleurs par son `@id`.
@@ -13,6 +13,8 @@
  * inventée — c'est la règle « visible content only » de Google, et une note
  * ou un profil social non vérifié suffit à disqualifier le balisage.
  */
+
+import type { Lang } from "@/lib/i18n";
 
 export const SITE_URL = "https://holiswiss.ch";
 
@@ -81,94 +83,136 @@ export const LEGAL_ADDRESS = {
  */
 const SIREN = "103987061";
 
-/** Le nœud Organization complet — déclaré UNE fois, dans le layout racine. */
-export const organizationNode = {
-  "@type": "Organization",
-  "@id": ORGANIZATION_ID,
-  name: ORGANIZATION_NAME,
-  alternateName: "HoliSwiss",
-  url: SITE_URL,
-  logo: {
-    "@type": "ImageObject",
-    url: LOGO_URL,
-    contentUrl: LOGO_URL,
-    width: LOGO_WIDTH,
-    height: LOGO_HEIGHT,
-    caption: "Logo Holiswiss",
-  },
-  image: LOGO_URL,
-  description:
-    "Plateforme suisse de mise en relation avec des thérapeutes holistiques et praticiens en médecines douces, inscrits après validation manuelle par Holiswiss, avec une recherche couvrant les 26 cantons et 4 langues.",
-  slogan: "Trouvez le bon thérapeute, partout en Suisse.",
-  email: "contact@holiswiss.ch",
-  // « Exploitant : Gérald Henry » — /impressum, section « Éditeur du site ».
-  founder: { "@type": "Person", name: "Gérald Henry" },
-  address: LEGAL_ADDRESS,
-  identifier: {
-    "@type": "PropertyValue",
-    propertyID: "SIREN",
-    value: SIREN,
-  },
-  iso6523Code: `0002:${SIREN}`,
-  ...(SAME_AS.length > 0 ? { sameAs: [...SAME_AS] } : {}),
-  areaServed: {
-    "@type": "Country",
-    name: "Switzerland",
-    alternateName: ["Suisse", "Schweiz", "Svizzera", "CH"],
-  },
-  knowsLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
-  knowsAbout: [
-    "Sophrologie",
-    "Hypnose",
-    "Naturopathie",
-    "Acupuncture",
-    "Ostéopathie",
-    "Réflexologie",
-    "Méditation",
-    "Reiki",
-    "Kinésiologie",
-    "Ayurveda",
-    "Médecine douce",
-    "Thérapie holistique",
-    "Bien-être",
-  ],
-  contactPoint: {
-    "@type": "ContactPoint",
-    email: "contact@holiswiss.ch",
-    contactType: "customer support",
-    availableLanguage: ["French", "German", "Italian", "English"],
-    areaServed: "CH",
-  },
-} as const;
+/**
+ * `description` d'Organization/WebSite par langue.
+ *
+ * Avant le 25/09/2026, les deux nœuds n'exposaient qu'un texte français, servi
+ * tel quel sur les pages /de, /it et /en (le JSON-LD racine était statique,
+ * calculé une fois pour toutes les langues). `certification-wording.test.ts`
+ * interdit déjà, dans ce fichier même, toute mention de certification associée
+ * aux thérapeutes (DE/IT/EN inclus) : la formulation ci-dessous reprend donc
+ * « geprüft » / « convalidat[o/i] » / « validated by », le même vocabulaire
+ * que les meta description de `$lang.index.tsx` et
+ * `$lang.therapeutes.index.tsx` — jamais le mot associé à une certification.
+ */
+const ORGANIZATION_DESCRIPTIONS: Record<Lang, string> = {
+  fr: "Plateforme suisse de mise en relation avec des thérapeutes holistiques et praticiens en médecines douces, inscrits après validation manuelle par Holiswiss, avec une recherche couvrant les 26 cantons et 4 langues.",
+  de: "Schweizer Plattform, die mit ganzheitlichen Therapeut:innen und Praktizierenden für Naturheilkunde verbindet – alle Profile werden von Holiswiss manuell geprüft, mit einer Suche in allen 26 Kantonen und 4 Sprachen.",
+  it: "Piattaforma svizzera che mette in contatto con terapeuti olistici e professionisti delle medicine dolci, iscritti dopo una convalida manuale da parte di Holiswiss, con una ricerca che copre i 26 cantoni e 4 lingue.",
+  en: "Swiss platform connecting people with holistic therapists and natural-medicine practitioners, listed only after manual validation by Holiswiss, with search covering all 26 cantons and 4 languages.",
+};
 
-/** Le nœud WebSite, déclaré UNE fois lui aussi, dans le layout racine. */
-export const websiteNode = {
-  "@type": "WebSite",
-  "@id": WEBSITE_ID,
-  name: ORGANIZATION_NAME,
-  url: SITE_URL,
-  description:
-    "Annuaire suisse des thérapeutes holistiques et praticiens bien-être — 26 cantons, 4 langues (FR/DE/IT/EN).",
-  inLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
-  publisher: { "@id": ORGANIZATION_ID },
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: `${SITE_URL}/fr/therapeutes?q={search_term_string}`,
+const WEBSITE_DESCRIPTIONS: Record<Lang, string> = {
+  fr: "Annuaire suisse des thérapeutes holistiques et praticiens bien-être — 26 cantons, 4 langues (FR/DE/IT/EN).",
+  de: "Schweizer Verzeichnis ganzheitlicher Therapeut:innen und Wellness-Praktizierender — 26 Kantone, 4 Sprachen (FR/DE/IT/EN).",
+  it: "Elenco svizzero di terapeuti olistici e professionisti del benessere — 26 cantoni, 4 lingue (FR/DE/IT/EN).",
+  en: "Swiss directory of holistic therapists and wellness practitioners — 26 cantons, 4 languages (FR/DE/IT/EN).",
+};
+
+/**
+ * Le nœud Organization complet — un par langue, calculé par le layout `$lang`
+ * (voir `src/routes/$lang.tsx`) à partir du segment de langue de l'URL.
+ *
+ * Seul `description` varie avec `lang` : `name`, `slogan`, `knowsAbout`, etc.
+ * restent des faits invariants par langue (raison sociale, expertise) — les
+ * traduire n'apporterait rien et risquerait de faire diverger l'`@id` fusionné.
+ */
+export function getOrganizationNode(lang: Lang) {
+  return {
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: ORGANIZATION_NAME,
+    alternateName: "HoliSwiss",
+    url: SITE_URL,
+    logo: {
+      "@type": "ImageObject",
+      url: LOGO_URL,
+      contentUrl: LOGO_URL,
+      width: LOGO_WIDTH,
+      height: LOGO_HEIGHT,
+      caption: "Logo Holiswiss",
     },
-    "query-input": "required name=search_term_string",
-  },
-} as const;
+    image: LOGO_URL,
+    description: ORGANIZATION_DESCRIPTIONS[lang],
+    slogan: "Trouvez le bon thérapeute, partout en Suisse.",
+    email: "contact@holiswiss.ch",
+    // « Exploitant : Gérald Henry » — /impressum, section « Éditeur du site ».
+    founder: { "@type": "Person", name: "Gérald Henry" },
+    address: LEGAL_ADDRESS,
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "SIREN",
+      value: SIREN,
+    },
+    iso6523Code: `0002:${SIREN}`,
+    ...(SAME_AS.length > 0 ? { sameAs: [...SAME_AS] } : {}),
+    areaServed: {
+      "@type": "Country",
+      name: "Switzerland",
+      alternateName: ["Suisse", "Schweiz", "Svizzera", "CH"],
+    },
+    knowsLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
+    knowsAbout: [
+      "Sophrologie",
+      "Hypnose",
+      "Naturopathie",
+      "Acupuncture",
+      "Ostéopathie",
+      "Réflexologie",
+      "Méditation",
+      "Reiki",
+      "Kinésiologie",
+      "Ayurveda",
+      "Médecine douce",
+      "Thérapie holistique",
+      "Bien-être",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: "contact@holiswiss.ch",
+      contactType: "customer support",
+      availableLanguage: ["French", "German", "Italian", "English"],
+      areaServed: "CH",
+    },
+  } as const;
+}
+
+/**
+ * Le nœud WebSite — un par langue, même logique que `getOrganizationNode`.
+ *
+ * `potentialAction.target.urlTemplate` pointait toujours vers `/fr/therapeutes`,
+ * quelle que soit la langue de la page : le Sitelinks Search Box de Google
+ * envoyait donc un visiteur DE/IT/EN chercher en français. `urlTemplate` suit
+ * maintenant `lang`.
+ */
+export function getWebsiteNode(lang: Lang) {
+  return {
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    name: ORGANIZATION_NAME,
+    url: SITE_URL,
+    description: WEBSITE_DESCRIPTIONS[lang],
+    inLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
+    publisher: { "@id": ORGANIZATION_ID },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/${lang}/therapeutes?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  } as const;
+}
 
 /**
  * Le `publisher` à utiliser dans tout nœud Article / BlogPosting.
  *
  * On répète `name` + `logo` plutôt que de ne poser qu'une référence `@id` nue :
  * le Rich Results Test évalue chaque bloc dans le graphe fusionné de la page,
- * mais un bloc autoportant reste valide même si le layout racine change. L'`@id`
- * identique garantit la fusion avec `organizationNode` — mêmes valeurs, même
- * source, donc aucune divergence possible.
+ * mais un bloc autoportant reste valide même si le layout `$lang` change. L'`@id`
+ * identique garantit la fusion avec `getOrganizationNode(lang)` — mêmes valeurs,
+ * même source, donc aucune divergence possible.
  */
 export const publisherNode = {
   "@type": "Organization",

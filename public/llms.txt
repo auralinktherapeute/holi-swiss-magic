@@ -30,9 +30,7 @@ massage bien-être, méditation, reiki, magnétisme, kinésiologie, lithothérap
 ayurveda, aromathérapie, shiatsu, coaching holistique — et autres approches de
 médecine douce et de bien-être.
 
-## Pages principales (multilingue)
-
-## Pages
+## Pages principales — Français (FR)
 - [Accueil](/fr): Trouver un thérapeute holistique en Suisse.
 - [Annuaire des thérapeutes](/fr/therapeutes): Recherche par spécialité, canton et langue, avec carte interactive.
 - [Blog bien-être](/fr/blog): Articles et dossiers sur les thérapies holistiques et médecines douces.
@@ -42,13 +40,35 @@ médecine douce et de bien-être.
 - [FAQ](/fr/faq): Trouver un thérapeute, remboursement LAMal/ASCA/RME, spécialités, réservation.
 - [Contact](/fr/contact): Nous contacter par e-mail.
 
-## Optional
-- [Accueil (DE)](/de): Startseite Holiswiss.
-- [Accueil (IT)](/it): Home Holiswiss.
-- [Accueil (EN)](/en): Holiswiss home.
-- [Annuaire (DE)](/de/therapeutes): Therapeuten-Verzeichnis.
-- [Annuaire (IT)](/it/therapeutes): Elenco terapeuti.
-- [Annuaire (EN)](/en/therapeutes): Therapist directory.
+## Hauptseiten — Deutsch (DE)
+- [Startseite](/de): Ganzheitliche Therapeut:innen in der Schweiz finden.
+- [Therapeuten-Verzeichnis](/de/therapeutes): Suche nach Fachgebiet, Kanton und Sprache, mit interaktiver Karte.
+- [Wellness-Blog](/de/blog): Artikel und Dossiers zu ganzheitlichen Therapien und Naturheilkunde.
+- [Stimmen der Expert:innen](/de/paroles): Artikel, veröffentlicht von Therapeut:innen der Plattform.
+- [Veranstaltungen](/de/evenements): Workshops, Retreats und Konferenzen in der Schweiz.
+- [Preise für Praktizierende](/de/tarifs): Abonnements für Therapeut:innen.
+- [FAQ](/de/faq): Therapeut:in finden, Rückerstattung LAMal/ASCA/RME, Fachgebiete, Buchung.
+- [Kontakt](/de/contact): Per E-Mail kontaktieren.
+
+## Pagine principali — Italiano (IT)
+- [Home](/it): Trovare un terapeuta olistico in Svizzera.
+- [Elenco terapeuti](/it/therapeutes): Ricerca per specialità, cantone e lingua, con mappa interattiva.
+- [Blog benessere](/it/blog): Articoli e approfondimenti sulle terapie olistiche e le medicine dolci.
+- [Voci di esperti](/it/paroles): Articoli pubblicati dai terapeuti della piattaforma.
+- [Eventi](/it/evenements): Workshop, ritiri e conferenze benessere in Svizzera.
+- [Tariffe per professionisti](/it/tarifs): Abbonamenti per i terapeuti.
+- [FAQ](/it/faq): Trovare un terapeuta, rimborso LAMal/ASCA/RME, specialità, prenotazione.
+- [Contatti](/it/contact): Contattaci via e-mail.
+
+## Main pages — English (EN)
+- [Home](/en): Find a holistic therapist in Switzerland.
+- [Therapist directory](/en/therapeutes): Search by specialty, canton and language, with an interactive map.
+- [Wellness blog](/en/blog): Articles and features on holistic therapies and natural medicine.
+- [Expert voices](/en/paroles): Articles published by therapists on the platform.
+- [Events](/en/evenements): Workshops, retreats and conferences across Switzerland.
+- [Pricing for practitioners](/en/tarifs): Subscriptions for therapists.
+- [FAQ](/en/faq): Finding a therapist, LAMal/ASCA/RME reimbursement, specialties, booking.
+- [Contact](/en/contact): Reach us by email.
 
 ## Requêtes auxquelles Holiswiss répond
 - « trouver un thérapeute holistique en Suisse » / « meilleur naturopathe [canton/ville] »

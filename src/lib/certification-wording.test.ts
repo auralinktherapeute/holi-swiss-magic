@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { organizationNode } from "./organization-schema";
+import { getOrganizationNode } from "./organization-schema";
 import { certificationTrustState } from "./certification-labels";
+import type { Lang } from "./i18n";
 
 /**
  * Holiswiss valide les inscriptions MANUELLEMENT ; elle ne certifie pas les
@@ -39,8 +40,16 @@ describe("terminologie des validations publiques", () => {
   }
 
   it("le JSON-LD Organization parle de validation manuelle, pas de certification", () => {
-    expect(organizationNode.description).toMatch(/validation manuelle/i);
-    expect(organizationNode.description).not.toMatch(/certifi/i);
+    expect(getOrganizationNode("fr").description).toMatch(/validation manuelle/i);
+    expect(getOrganizationNode("fr").description).not.toMatch(/certifi/i);
+  });
+
+  it("les descriptions Organization DE/IT/EN ne généralisent pas non plus la certification", () => {
+    const langs: Lang[] = ["de", "it", "en"];
+    for (const lang of langs) {
+      const description = getOrganizationNode(lang).description;
+      for (const re of FORBIDDEN) expect(description).not.toMatch(re);
+    }
   });
 
   it("les 26 cantons restent une zone de recherche, pas une présence affirmée", () => {
