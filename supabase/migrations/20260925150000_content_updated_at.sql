@@ -7,9 +7,16 @@
 -- le contenu visible change.
 --
 -- Colonnes éditoriales (comparaison NULL-safe par IS DISTINCT FROM) :
---   therapists          : bio, specialties, price_min, price_max, currency
---   articles            : body_fr, body_de, body_it, body_en
+--   therapists          : bio, short_bio, title, specialties, approaches,
+--                         services (prestations + tarifs, jsonb), price_min,
+--                         price_max, currency
+--   articles            : title_fr, excerpt_fr, body_fr — la version SOURCE
+--                         uniquement. Les colonnes _de/_it/_en sont remplies par la
+--                         traduction automatique (translateArticleRow) et réécrites
+--                         par le nettoyage des filigranes IA : les suivre ferait
+--                         avancer la date sans intervention éditoriale.
 --   therapist_articles  : contenu
+--   (therapists.profile_translations — traductions automatiques — n'est PAS suivi.)
 -- Pour élargir la liste plus tard : nouvelle migration qui remplace la fonction
 -- (CREATE OR REPLACE) — pas de backfill à refaire.
 --
@@ -122,8 +129,14 @@ begin
     else
       new.content_updated_at := now();
     end if;
+  -- jsonb : IS DISTINCT FROM compare la valeur normalisée (ordre des clés et
+  -- espaces indifférents) ; l'ordre des ÉLÉMENTS d'un tableau compte.
   elsif new.bio         is distinct from old.bio
+     or new.short_bio   is distinct from old.short_bio
+     or new.title       is distinct from old.title
      or new.specialties is distinct from old.specialties
+     or new.approaches  is distinct from old.approaches
+     or new.services    is distinct from old.services
      or new.price_min   is distinct from old.price_min
      or new.price_max   is distinct from old.price_max
      or new.currency    is distinct from old.currency then
@@ -148,10 +161,9 @@ begin
     else
       new.content_updated_at := now();
     end if;
-  elsif new.body_fr is distinct from old.body_fr
-     or new.body_de is distinct from old.body_de
-     or new.body_it is distinct from old.body_it
-     or new.body_en is distinct from old.body_en then
+  elsif new.title_fr   is distinct from old.title_fr
+     or new.excerpt_fr is distinct from old.excerpt_fr
+     or new.body_fr    is distinct from old.body_fr then
     new.content_updated_at := now();
   else
     new.content_updated_at := old.content_updated_at;
