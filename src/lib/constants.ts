@@ -58,7 +58,7 @@ export const THERAPY_SPECIALTIES: string[] = [
   "Énergéticien", "Magnétiseur", "Sophrologue", "Hypnothérapeute",
   "Naturopathe", "Ostéopathe", "Réflexologue", "Kinésiologue",
   "Acupuncteur", "Praticien Shiatsu", "Praticien Reiki", "Lithothérapeute",
-  "Radiesthésiste", "Médium", "Cartomancien", "Coach holistique",
+  "Radiesthésie", "Médium", "Cartomancien", "Coach holistique",
   "Art-thérapeute", "Aromathérapeute", "Phytothérapeute", "Fleurs de Bach",
   "Praticien Méditation", "Yoga thérapeutique", "Ayurveda",
   "Massage californien", "Massage suédois", "Massage thaï", "Massage lomi-lomi",
@@ -66,7 +66,7 @@ export const THERAPY_SPECIALTIES: string[] = [
   "Biorésonance", "EFT", "EMDR", "PNL", "Somatothérapie",
   "Gestalt-thérapie", "Analyse transactionnelle", "Constellation familiale",
   "Hypnose ericksonienne", "Respiration holotropique", "Sound healing",
-  "Chamanisme", "Soins esséniens", "Biomagnétisme", "Acupressure",
+  "Chamanisme", "Séances Esséniennes/Égyptiennes", "Biomagnétisme", "Acupressure",
   "Reboutement", "Iridologie", "Numérologie", "Médecine chinoise",
   "Médecine ayurvédique", "Tarot thérapeutique",
 ];

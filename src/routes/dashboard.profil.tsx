@@ -975,7 +975,7 @@ function ProfilePage() {
                 value={customSpec}
                 onChange={(e) => setCustomSpec(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSpec(); } }}
-                placeholder={t("profile_edit.custom_specialty_placeholder", { defaultValue: "Ex : Soins égyptiens" })}
+                placeholder={t("profile_edit.custom_specialty_placeholder", { defaultValue: "Ex : Séances Esséniennes/Égyptiennes" })}
                 className={inputClass}
               />
               <Button type="button" onClick={addCustomSpec} className="shrink-0 bg-[#b86ef9] hover:bg-[#a855f7] text-white">
