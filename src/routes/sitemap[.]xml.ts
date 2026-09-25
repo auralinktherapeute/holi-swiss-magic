@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { specSlugForLang } from "@/lib/specialty-slug";
 import type {} from "@tanstack/react-start";
 import { resolveProfileLang } from "@/lib/seo";
-import { cityToSlug } from "@/lib/city-slug";
+import { buildCitySlugResolver, type CityRow } from "@/lib/city-slug";
 import { getCategory } from "@/lib/article-categories";
 import {
   isSpecialtyIndexable,
@@ -252,20 +252,14 @@ async function buildSitemap(): Promise<string> {
   // saisissant « Geneve » sans accent aurait suffi à les faire diverger — et à
   // rediriger une URL du sitemap vers une URL absente du sitemap, l'incident du
   // 25/08. La table tranche désormais.
-  const citySlugByKey = new Map<string, string>();
-  {
-    const cityRows = unwrap(
+  // Résolution partagée avec la page ville et les liens internes
+  // (`buildCitySlugResolver`) : une seule règle, plus de copie locale.
+  const cityResolver = buildCitySlugResolver(
+    unwrap(
       "sitemap: table cities",
       await (supabaseAdmin as any).from("cities").select("slug, canonical_name, aliases"),
-    ) as Array<{ slug: string | null; canonical_name: string | null; aliases: string[] | null }>;
-    for (const c of cityRows) {
-      if (!c.slug) continue;
-      for (const key of [c.canonical_name, ...(c.aliases ?? [])]) {
-        const k = cityToSlug(key ?? "");
-        if (k && !citySlugByKey.has(k)) citySlugByKey.set(k, c.slug);
-      }
-    }
-  }
+    ) as CityRow[],
+  );
 
   /**
    * Résolution STRICTE : `null` si la ville n'est pas en base.
@@ -274,7 +268,7 @@ async function buildSitemap(): Promise<string> {
    * pages spécialité × ville, dont le loader fait `notFound()` quand
    * `resolve_city` ne renvoie rien.
    */
-  const strictCitySlug = (raw: string): string | null => citySlugByKey.get(cityToSlug(raw)) ?? null;
+  const strictCitySlug = (raw: string): string | null => cityResolver.strict(raw);
 
   /**
    * Résolution TOLÉRANTE : repli sur la slugification directe.
@@ -284,7 +278,7 @@ async function buildSitemap(): Promise<string> {
    * La distinction est délibérée : chaque résolution suit ce que sa route
    * SERT réellement. C'est leur confusion qui a produit les 4 × 404.
    */
-  const tolerantCitySlug = (raw: string): string => strictCitySlug(raw) ?? cityToSlug(raw);
+  const tolerantCitySlug = (raw: string): string => cityResolver.tolerant(raw);
 
   // ── Paires spécialité × ville ─────────────────────────────────────────────
   //
