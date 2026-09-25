@@ -5940,6 +5940,7 @@ export type Database = {
           postal_code: string | null
           price_max: number | null
           price_min: number | null
+          profile_translations: Json
           search_tokens: unknown
           services: Json
           short_bio: string | null
@@ -6004,6 +6005,7 @@ export type Database = {
           postal_code?: string | null
           price_max?: number | null
           price_min?: number | null
+          profile_translations?: Json
           search_tokens?: unknown
           services?: Json
           short_bio?: string | null
@@ -6068,6 +6070,7 @@ export type Database = {
           postal_code?: string | null
           price_max?: number | null
           price_min?: number | null
+          profile_translations?: Json
           search_tokens?: unknown
           services?: Json
           short_bio?: string | null

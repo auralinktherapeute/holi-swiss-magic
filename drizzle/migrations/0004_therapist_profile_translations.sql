@@ -1,0 +1,2 @@
+ALTER TABLE public.therapists ADD COLUMN IF NOT EXISTS profile_translations jsonb NOT NULL DEFAULT '{}'::jsonb;
+COMMENT ON COLUMN public.therapists.profile_translations IS 'Traductions du contenu rédigé par le praticien : {source_lang, source_hash, langs:{fr|de|it|en:{title,short_bio,bio,specialties[],services{id:{name,description}},status auto|reviewed,source_hash,updated_at}}}. Le texte original reste dans title/short_bio/bio/specialties/services.';
