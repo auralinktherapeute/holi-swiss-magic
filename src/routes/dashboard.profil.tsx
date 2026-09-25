@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -42,6 +42,7 @@ import FaqEditor from "@/components/dashboard/FaqEditor";
 import { SocialLinksEditor, EMPTY_SOCIAL_FORM, type SocialFormState } from "@/components/dashboard/SocialLinksEditor";
 import { normalizeSocialUrl, SOCIAL_NETWORKS, parseSocialLinks } from "@/lib/social-links";
 import { ProfileCompletionCard } from "@/components/dashboard/ProfileCompletionCard";
+import { SwissLocationFields, type SwissLocationValue } from "@/components/forms/SwissLocationFields";
 import { useHashFocus } from "@/hooks/use-hash-focus";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
@@ -107,6 +108,8 @@ const THERAPIST_PROFILE_SELECT = [
   "specialties", "services", "short_bio", "bio", "google_reviews_url", "website",
   "ide_verified", "accreditations", "meta_title", "meta_description", "consultation_modes",
   "is_trainer", "trainer_subjects", "trainer_institution", "trainer_since", "social_links",
+  // Statut : une fiche publiée (« active ») doit indiquer sa ville.
+  "status",
 ].join(",");
 
 /** Convertit la valeur en base vers l'état du formulaire (champs toujours présents). */
@@ -176,6 +179,13 @@ function ProfilePage() {
   // avertir visiblement et (2) ne JAMAIS écraser la valeur réelle en base.
   const [phoneLoadFailed, setPhoneLoadFailed] = useState(false);
   const [ideLoadFailed, setIdeLoadFailed] = useState(false);
+  // Localisation : statut de la fiche (règle « ville obligatoire si publiée »)
+  // et erreur bloquante remontée par SwissLocationFields.
+  const [profileStatus, setProfileStatus] = useState<string | null>(null);
+  // Ville / NPA tels qu'en base : une fiche non conforme n'est bloquée que si
+  // le thérapeute modifie sa localisation (même règle que le serveur).
+  const [initialLocation, setInitialLocation] = useState<{ city: string | null; postalCode: string | null } | null>(null);
+  const [locationError, setLocationError] = useState<{ code: string; message: string } | null>(null);
 
   // Approaches
   const [canton, setCanton] = useSessionState(`${profileStatePrefix}.canton`, "GE");
@@ -405,6 +415,8 @@ function ProfilePage() {
       const ownerPhone: string = (Array.isArray(contact) ? contact[0]?.phone : contact?.phone) ?? "";
       if (data) {
         (data as any).phone = ownerPhone;
+        setProfileStatus((data as any).status ?? null);
+        setInitialLocation({ city: data.city ?? null, postalCode: data.postal_code ?? null });
         const hasProfileSession = hasSessionState(`${profileStatePrefix}.rowId`) || hasSessionState(`${profileStatePrefix}.firstName`);
         profileBaselineScoreRef.current = profileDraftScore({
           firstName: data.first_name ?? "",
@@ -500,6 +512,18 @@ function ProfilePage() {
 
   const markDirty = () => setDirty(true);
 
+  // NPA → commune officielle → canton (SwissLocationFields). Le canton suit la
+  // commune : le sélecteur « Canton » est en lecture seule (le serveur l'écrase
+  // par celui de la commune, ou conserve la valeur en base si la localisation
+  // n'a pas changé).
+  const onLocationChange = useCallback((next: SwissLocationValue) => {
+    setPostalCode(next.postalCode);
+    setCity(next.city);
+    if (next.canton) setCanton(next.canton);
+    setDirty(true);
+  }, [setPostalCode, setCity, setCanton]);
+  const cantonFromNpa = /^\d{4}$/.test(postalCode) && city.trim() !== "" && !locationError;
+
   // Specialty helpers
   const filteredSpecs = useMemo(() => {
     const q = specSearch.trim().toLowerCase();
@@ -585,6 +609,13 @@ function ProfilePage() {
     const baselineScore = profileBaselineScoreRef.current;
     if (baselineScore >= 4 && currentScore <= baselineScore * 0.6) {
       toast.error("Sauvegarde bloquée : le formulaire semble incomplet. Rechargez la page avant d’enregistrer.");
+      return;
+    }
+    if (locationError) {
+      toast.error(`${t("profile_edit.location_fix_before_save")} ${locationError.message}`);
+      const el = document.getElementById("profile-npa");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus({ preventScroll: true });
       return;
     }
     setSaving(true);
@@ -850,15 +881,18 @@ function ProfilePage() {
           </div>
 
           <div id="localisation" className="mt-5 grid gap-5 sm:grid-cols-3">
-            <Field label={t("profile_edit.city") + " *"}>
-              <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89bc4]" />
-                <Input value={city} onChange={(e) => { setCity(e.target.value); markDirty(); }} className={`${inputClass} pl-9`} />
-              </div>
-            </Field>
-            <Field label={t("profile_edit.postal_code")}>
-              <Input value={postalCode} onChange={(e) => { setPostalCode(e.target.value); markDirty(); }} className={inputClass} />
-            </Field>
+            <SwissLocationFields
+              npaInputId="profile-npa"
+              value={{ postalCode, city, canton }}
+              onChange={onLocationChange}
+              status={profileStatus}
+              initial={initialLocation}
+              onValidityChange={setLocationError}
+              inputClassName={inputClass}
+              selectClassName={selectClass}
+              labelClassName="text-sm font-medium text-white/90"
+              hintClassName="text-xs text-[#a89bc4]"
+            />
             <Field label={t("profile_edit.address")}>
               <Input value={address} onChange={(e) => { setAddress(e.target.value); markDirty(); }} className={inputClass} />
             </Field>
@@ -887,14 +921,17 @@ function ProfilePage() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div id="canton">
             <Field label={t("profile_edit.canton")}>
-              <Select value={canton} onValueChange={(v) => { setCanton(v); markDirty(); }}>
-                <SelectTrigger className={selectClass}><SelectValue /></SelectTrigger>
+              <Select value={canton} onValueChange={(v) => { setCanton(v); markDirty(); }} disabled>
+                <SelectTrigger className={selectClass} aria-describedby="canton-from-npa"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[280px]">
                   {CANTONS.map((c) => (
                     <SelectItem key={c.code} value={c.code}>{c.code} — {c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p id="canton-from-npa" className="text-xs text-[#a89bc4]">
+                {t(cantonFromNpa ? "profile_edit.canton_from_npa" : "profile_edit.canton_from_npa_pending")}
+              </p>
             </Field>
             </div>
             <Field label={t("profile_edit.languages")}>

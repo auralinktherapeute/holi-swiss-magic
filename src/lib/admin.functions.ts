@@ -159,6 +159,23 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // GARDE AJOUTÉE HORS DEMANDE INITIALE (lot « ville officielle », 25/09/2026)
+    // — à annoncer dans la PR. Une fiche publiée doit indiquer sa ville (pages
+    // /ville/…, filtres, données structurées) : c'est la même règle que
+    // saveMyTherapistProfile, appliquée ici au seul autre chemin qui publie une
+    // fiche (passage en « active » par l'admin). Conséquence : une fiche sans
+    // ville ne peut plus être (ré)activée tant que le thérapeute n'a pas saisi
+    // son NPA et sa commune. Lecture en échec ou fiche introuvable → refus.
+    if (data.status === "active") {
+      const { data: current, error: currentError } = await supabaseAdmin
+        .from("therapists").select("city").eq("id", data.id).maybeSingle();
+      if (currentError || !current) {
+        throw new Error("Impossible de vérifier la fiche avant publication.");
+      }
+      if (!String((current as { city?: string | null }).city ?? "").trim()) {
+        throw new Error("Publication impossible : la fiche n'indique pas de ville. Demandez au thérapeute de renseigner son NPA et sa commune.");
+      }
+    }
     const { data: row, error } = await supabaseAdmin
       .from("therapists")
       .update({ status: data.status })
