@@ -103,7 +103,7 @@ export async function translateTherapistRow(row: Row, opts: { force?: boolean } 
     return { ...existing, source_lang: existing.source_lang ?? "fr", source_hash: hash, langs: existing.langs ?? {} };
   }
 
-  const prompt = `Détecte la langue source (fr, de, it ou en) de ce profil, puis traduis-le dans les TROIS autres langues parmi fr, de, it, en.
+  const prompt = `Détecte la langue source (fr, de, it ou en) de ce profil, puis traduis-le dans les TROIS autres langues parmi fr, de, it, en. Réponds en JSON.
 Format de réponse :
 {"source_lang":"fr","translations":{"<code>":{"title":"","short_bio":"","bio":"","specialties":[...],"services":[{"id":"","name":"","description":""}]}}}
 
