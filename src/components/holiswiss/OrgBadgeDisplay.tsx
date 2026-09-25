@@ -196,7 +196,7 @@ export function OrgBadgeDisplay({
 export function OrgBadgeHalo({ items }: { items: OrgCertificationBadge[] }) {
   if (!items?.length) return null;
   return (
-    <span className="absolute -bottom-2 -right-2 z-20 flex flex-col items-center">
+    <span className="absolute left-14 top-14 z-20 flex flex-col items-center">
       {items.map((c) => (
         <Popover key={c.id}>
           <PopoverTrigger asChild>
