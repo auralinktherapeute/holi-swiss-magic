@@ -79,8 +79,16 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 1. Écrire un fichier idempotent dans `supabase/migrations/AAAAMMJJHHMMSS_nom.sql`
 2. **Le tester** sur un PostgreSQL local (`/usr/local/opt/postgresql@16`) avec un stub du schéma qqwud —
    créer les rôles `anon`, `authenticated`, `service_role`, sinon les `GRANT` échouent
-3. Commit + push
+3. Commit + push **de la migration seule**
 4. Demander à **Lovable** : « Applique la migration `supabase/migrations/<fichier>.sql` »
+5. **Vérifier** en prod (`curl` REST ci-dessus : 200) que les nouvelles colonnes existent
+6. **Seulement ensuite**, pousser le code qui les lit
+
+> 🚨 **Ordre obligatoire : migration appliquée AVANT le code qui l'utilise.** Incident du 24/09/2026 :
+> le code de l'agent Copywriter (colonnes `cover_image_credit_*`) a été poussé à 08:45, la migration
+> appliquée par Lovable à 10:49 → pendant ~2 h, « Le fil Holiswiss » et l'onglet Propositions de
+> l'admin étaient vides (31 échecs `42703` colonne inexistante). Depuis, les lectures du fil passent
+> par `loadEssential` : une panne donne un 503 réessayable, plus jamais une page vide ou un faux 404.
 
 Contraintes de l'outil Lovable : il **refuse les écritures dans `storage.buckets`** (créer les buckets via
 son outil dédié ; les policies sur `storage.objects` passent). Il faut des **`GRANT` explicites** sur toute

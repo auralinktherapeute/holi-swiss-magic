@@ -11,6 +11,8 @@ import {
   formatFilDate,
 } from "@/data/fil-holiswiss";
 import { getFilPost } from "@/lib/fil.functions";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
 
 /** Libellé « Accueil » du fil d'Ariane structuré, dans les 4 langues du site. */
@@ -25,15 +27,24 @@ const BREADCRUMB_HOME: Record<"fr" | "de" | "it" | "en", string> = {
 export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
   component: Page,
   loader: async ({ params }) => {
-    const res = await getFilPost({ data: { slug: params.slug, lang: asFilLang(params.lang) } });
-    if (!res?.post) throw notFound();
-    return { post: res.post, related: res.related ?? [] };
+    // Panne de lecture → 503 réessayable ; seul un article réellement absent
+    // reste un 404 (un 404 sur panne ferait désindexer une page qui existe).
+    const res = await loadEssential(() =>
+      getFilPost({ data: { slug: params.slug, lang: asFilLang(params.lang) } }),
+    );
+    if (!res.ok) return { post: null, related: [], unavailable: true as const };
+    if (!res.data?.post) throw notFound();
+    return { post: res.data.post, related: res.data.related ?? [], unavailable: false as const };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
     const l = asFilLang(params.lang);
     if (!loaderData) {
       return { meta: [{ title: "Introuvable — Holiswiss" }, { name: "robots", content: "noindex" }] };
+    }
+    if (loaderData.unavailable || !loaderData.post) {
+      // 503 : aucune donnée structurée ni meta inventée pendant la panne.
+      return { meta: [{ title: "Holiswiss" }] };
     }
     const post = loaderData.post;
     const title = post.seoTitle || `${post.title} — Holiswiss`;
@@ -110,7 +121,8 @@ function Page() {
   const { lang } = useParams({ from: "/$lang/fil-holiswiss/$slug" });
   const l = asFilLang(lang);
   const copy = FIL_COPY[l];
-  const { post, related } = Route.useLoaderData();
+  const { post, related, unavailable } = Route.useLoaderData();
+  if (unavailable || !post) return <ServiceUnavailableNotice lang={l} />;
 
   return (
     <div className="min-h-screen bg-[#2d1248]">

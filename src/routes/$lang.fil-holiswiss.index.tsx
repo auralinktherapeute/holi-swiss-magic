@@ -12,20 +12,20 @@ import {
   type FilPost,
 } from "@/data/fil-holiswiss";
 import { getFilPosts } from "@/lib/fil.functions";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 
 export const Route = createFileRoute("/$lang/fil-holiswiss/")({
   component: Page,
   loader: async ({ params }) => {
-    try {
-      const res = await getFilPosts({ data: { lang: asFilLang(params.lang) } });
-      const posts = (res?.posts ?? []) as FilPost[];
-      // Décision prise dans le loader (jamais dans `head`) : un fil sans aucune
-      // publication n'a rien à indexer. Il redevient indexable dès la première.
-      return { posts, indexable: posts.length > 0 };
-    } catch {
-      // Panne de lecture ≠ fil vide : on garde le défaut sûr (indexable).
-      return { posts: [] as FilPost[], indexable: true };
-    }
+    // Panne de lecture ≠ fil vide : la réponse SSR devient un vrai 503
+    // réessayable (voir read-health.ts), au lieu d'un fil vide servi en 200.
+    const res = await loadEssential(() => getFilPosts({ data: { lang: asFilLang(params.lang) } }));
+    if (!res.ok) return { posts: [] as FilPost[], indexable: true, unavailable: true as const };
+    const posts = (res.data?.posts ?? []) as FilPost[];
+    // Décision prise dans le loader (jamais dans `head`) : un fil sans aucune
+    // publication n'a rien à indexer. Il redevient indexable dès la première.
+    return { posts, indexable: posts.length > 0, unavailable: false as const };
   },
   head: ({ params, loaderData }) => {
     const l = asFilLang(params.lang);
@@ -53,7 +53,7 @@ function Page() {
   const l = asFilLang(lang);
   const copy = FIL_COPY[l];
 
-  const { posts } = Route.useLoaderData();
+  const { posts, unavailable } = Route.useLoaderData();
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of posts) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
@@ -73,6 +73,9 @@ function Page() {
         .filter((p) => (active ? p.category === active : p.slug !== featured?.slug)),
     [posts, active, featured],
   );
+
+  // Après tous les hooks (règle des hooks) : en panne, notice + 503 SSR.
+  if (unavailable) return <ServiceUnavailableNotice lang={l} />;
 
   return (
     <div className="min-h-screen bg-[#2d1248]">
