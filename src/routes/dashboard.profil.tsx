@@ -22,6 +22,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
+import { translateMyProfile } from "@/lib/profile-translation.functions";
+import { ProfileTranslationsPanel } from "@/components/dashboard/ProfileTranslationsPanel";
 import {
   CANTONS, SPOKEN_LANGUAGES, THERAPY_SPECIALTIES, type TherapistService,
   ACCREDITATION_ORGS, type Accreditation, normalizeSwissIde,
@@ -148,6 +150,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const profileStatePrefix = user?.id ? `dashboard.profile.${user.id}` : "dashboard.profile.pending";
   const saveProfile = useServerFn(saveMyTherapistProfile);
+  const runTranslate = useServerFn(translateMyProfile);
   const addDocument = useServerFn(addMyTherapistDocument);
   const updateDocument = useServerFn(updateMyTherapistDocument);
   const deleteDocument = useServerFn(deleteMyTherapistDocument);
@@ -662,6 +665,11 @@ function ProfilePage() {
     // Sauvegarde confirmée côté serveur : on invalide profil + audit, puis on
     // relance l'audit depuis les données persistées (score, catégories,
     // actions prioritaires et éléments manquants recalculés).
+    // Traductions DE/IT/EN mises à jour en arrière-plan (les traductions relues
+    // et toujours à jour sont conservées). Un échec n'affecte pas la sauvegarde.
+    runTranslate()
+      .then(() => queryClient.invalidateQueries({ queryKey: ["my-profile-translations"] }))
+      .catch((e) => console.warn("[translations] échec", e instanceof Error ? e.message : e));
     const analyzedAt = await refreshShowcaseAfterSave(queryClient);
     setSaving(false);
     const when = formatAnalysisDate(analyzedAt);
@@ -1633,6 +1641,8 @@ function ProfilePage() {
           </Dialog>
         </Section>
       </div>
+
+      <div className="mx-auto max-w-6xl px-4 pb-32 sm:px-6 lg:px-8"><ProfileTranslationsPanel /></div>
 
       {/* Sticky save bar */}
       <div
