@@ -17,7 +17,7 @@ export const FEATURED = {
   years: 10,
   description:
     "Thérapeute en soins esséniens depuis plus de 10 ans, Gerald accompagne avec écoute et présence pour harmoniser le corps, le cœur et l'esprit.",
-  specialties: ["Énergéticien", "Magnétiseur", "Lithothérapeute", "Radiesthésie", "Soins esséniens"],
+  specialties: ["Énergéticien", "Magnétiseur", "Lithothérapeute", "Radiesthésie", "Séances Esséniennes/Égyptiennes"],
   articles: [
     "Retrouver son équilibre énergétique au quotidien",
     "Comprendre les soins esséniens",

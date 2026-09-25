@@ -78,8 +78,8 @@ Règles :
 - Traduction fidèle, naturelle, ton chaleureux. Tutoiement/vouvoiement : conserver celui de l'original.
 - Ne rien ajouter, ne rien retirer, aucune promesse de guérison ni vocabulaire médical absent de l'original.
 - Conserver les noms propres, lieux, chiffres, sauts de ligne.
-- Termes spécialisés (soins esséniens, magnétisme, lithothérapie, radiesthésie, reiki...) : utiliser l'équivalent reconnu dans la langue cible.
-- Glossaire imposé : « soins esséniens » = DE « essenische Behandlungen », IT « trattamenti esseni », EN « Essene healing » ; « esséniens/égyptiens » = DE « essenisch/ägyptisch » ; « énergéticien » = DE « Energetiker », IT « operatore energetico », EN « energy practitioner » ; « magnétiseur » = DE « Magnetiseur », IT « magnetizzatore », EN « magnetic healer » ; « radiesthésie » = DE « Radiästhesie », IT « radiestesia », EN « dowsing ». Ne jamais inventer de mot composé (ex. « essenergetisch » est interdit).
+- Termes spécialisés (séances esséniennes/égyptiennes, magnétisme, lithothérapie, radiesthésie, reiki...) : utiliser l'équivalent reconnu dans la langue cible.
+- Glossaire imposé : « Séances Esséniennes/Égyptiennes » = DE « Essenische/Ägyptische Sitzungen », IT « Sessioni essene/egiziane », EN « Essene/Egyptian sessions » ; « énergéticien » = DE « Energetiker », IT « operatore energetico », EN « energy practitioner » ; « magnétiseur » = DE « Magnetiseur », IT « magnetizzatore », EN « magnetic healer » ; « radiesthésie » = DE « Radiästhesie », IT « radiestesia », EN « dowsing ». Ne jamais inventer de mot composé (ex. « essenergetisch » est interdit).
 - Chaque liste garde exactement le même nombre d'éléments, dans le même ordre.
 Réponds uniquement en JSON valide.`;
 
