@@ -22,12 +22,14 @@
  * Colonne qui fait foi pour « Mis à jour le » et `dateModified`, sur
  * `therapists`, `articles` et `therapist_articles`.
  *
- * À passer à "content_updated_at" quand la colonne existera en prod.
- * Aujourd'hui `updated_at` est remis à now() par TOUT UPDATE (traductions
- * automatiques, compteur de factures, consentement newsletter, backfills…) :
- * ce n'est pas une date éditoriale. La colonne future ne serait alimentée que
- * par les écritures qui changent réellement le contenu (migration + GRANT
- * SELECT à anon, appliquée via Lovable).
+ * `content_updated_at` (migration 20260925150000, appliquée en prod le
+ * 26/09/2026, vérifiée : 200 en anon sur therapists, articles et
+ * therapist_articles, reprise conforme, aucune valeur au 25/09). Elle n'avance
+ * que sur une modification éditoriale (fiche : bio, short_bio, title,
+ * specialties, approaches, services, tarifs ; article : title_fr, excerpt_fr,
+ * body_fr ; article de thérapeute : contenu). Ne JAMAIS revenir à `updated_at`,
+ * remis à now() par tout UPDATE (traductions automatiques, factures,
+ * newsletter, backfills…).
  *
  * Lectures qui dépendent de cette constante :
  *  - src/lib/geo-listings.functions.ts : PUBLIC_COLUMNS (canton, ville, annuaire)
@@ -43,7 +45,7 @@
  * la date — la date vient du loader ; le sitemap (`sitemap[.]xml.ts`) a ses
  * propres `lastmod` sur `updated_at`.
  */
-export const CONTENT_DATE_COLUMN = "updated_at" as const;
+export const CONTENT_DATE_COLUMN = "content_updated_at" as const;
 export type ContentDateColumn = typeof CONTENT_DATE_COLUMN;
 
 export type PageDateLang = "fr" | "de" | "it" | "en";

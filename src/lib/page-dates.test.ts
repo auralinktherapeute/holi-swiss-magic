@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  CONTENT_DATE_COLUMN,
   articleDates,
   formatPublishedDate,
   visibleArticleUpdate,
@@ -134,21 +135,27 @@ describe("latestTimestamp / listModified", () => {
     expect(latestTimestamp([])).toBeNull();
     expect(latestTimestamp([null, undefined, ""])).toBeNull();
     expect(listModified([])).toBeNull();
-    expect(listModified([{ updated_at: null }, {}])).toBeNull();
+    expect(listModified([{ content_updated_at: null }, {}])).toBeNull();
   });
 
-  it("listModified lit la colonne demandée (bascule vers content_updated_at)", () => {
+  it("listModified lit content_updated_at par défaut, jamais updated_at", () => {
+    // Cas réel du 25/09 : updated_at avancé par la traduction automatique,
+    // content_updated_at resté à la dernière modification éditoriale.
     const rows = [
       { updated_at: "2026-09-25T14:35:42Z", content_updated_at: "2026-08-01T10:00:00Z" },
       { updated_at: "2026-09-25T09:00:00Z", content_updated_at: null },
     ];
-    expect(listModified(rows)?.day).toBe("2026-09-25");
-    expect(listModified(rows, "content_updated_at")?.raw).toBe("2026-08-01T10:00:00Z");
-    expect(listModified([{ updated_at: "2026-09-25T09:00:00Z" }], "content_updated_at")).toBeNull();
+    expect(CONTENT_DATE_COLUMN).toBe("content_updated_at");
+    expect(listModified(rows)?.raw).toBe("2026-08-01T10:00:00Z");
+    expect(listModified(rows)?.day).toBe("2026-08-01");
+    // Sans content_updated_at : aucune date, pas de repli sur updated_at.
+    expect(listModified([{ updated_at: "2026-09-25T09:00:00Z" }])).toBeNull();
+    // Le paramètre `key` reste utilisable explicitement.
+    expect(listModified(rows, "updated_at")?.day).toBe("2026-09-25");
   });
 
   it("listModified sur les lignes réelles", () => {
-    expect(listModified(REAL.map((updated_at) => ({ updated_at })))).toEqual({
+    expect(listModified(REAL.map((content_updated_at) => ({ content_updated_at })))).toEqual({
       raw: REAL[0],
       iso: "2026-09-25T16:35:42.775415+02:00",
       day: "2026-09-25",
@@ -218,10 +225,10 @@ describe("formatage 4 langues (sans Intl)", () => {
 
 describe("indépendance vis-à-vis de l'horloge", () => {
   it("les résultats ne changent pas quand l'horloge système change", () => {
-    const before = [pageModified(REAL[0]), listModified(REAL.map((u) => ({ updated_at: u })))];
+    const before = [pageModified(REAL[0]), listModified(REAL.map((u) => ({ content_updated_at: u })))];
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2031-01-01T03:00:00Z"));
-    const after = [pageModified(REAL[0]), listModified(REAL.map((u) => ({ updated_at: u })))];
+    const after = [pageModified(REAL[0]), listModified(REAL.map((u) => ({ content_updated_at: u })))];
     expect(after).toEqual(before);
     expect(pageModified(null)).toBeNull();
   });
