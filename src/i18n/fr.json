@@ -36,7 +36,7 @@
     "how": {
       "title": "Comment ça marche",
       "step1": "Recherchez par approche, canton ou langue",
-      "step2": "Consultez les profils et avis vérifiés",
+      "step2": "Consultez les profils et avis modérés",
       "step3": "Réservez une séance en ligne facilement"
     },
     "pricingTeaser": "Choisissez votre formule",
@@ -127,7 +127,7 @@
         "features": [
           "Tout le Basic +",
           "Agenda en ligne intégré",
-          "Avis vérifiés",
+          "Avis modérés",
           "Articles de blog illimités",
           "Jusqu'à 5 spécialités",
           "Badge Essentiel visible"

@@ -45,7 +45,7 @@ const T = {
     h1: (c: string) => `Terapeuti olistici nel cantone ${c}`,
     title: (c: string) => `Terapeuti a ${c} — Directory olistica | Holiswiss`,
     desc: (c: string) =>
-      `Trova un terapeuta olistico nel cantone ${c}: profili verificati, specialità, tariffe e prenotazione online su Holiswiss.`,
+      `Trova un terapeuta olistico nel cantone ${c}: profili convalidati da Holiswiss, specialità, tariffe e prenotazione online su Holiswiss.`,
     count: (n: number, c: string) => `${n} terapeut${n > 1 ? "i" : "a"} nel cantone ${c}`,
     none: (c: string) => `Nessun terapeuta registrato nel cantone ${c} per il momento.`,
     cities: "Città di questo cantone",
@@ -59,7 +59,7 @@ const T = {
     h1: (c: string) => `Holistic therapists in the canton of ${c}`,
     title: (c: string) => `Therapists in ${c} — Holistic directory | Holiswiss`,
     desc: (c: string) =>
-      `Find a holistic therapist in the canton of ${c}: verified profiles, specialties, prices and online booking on Holiswiss.`,
+      `Find a holistic therapist in the canton of ${c}: profiles validated by Holiswiss, specialties, prices and online booking on Holiswiss.`,
     count: (n: number, c: string) => `${n} therapist${n > 1 ? "s" : ""} in the canton of ${c}`,
     none: (c: string) => `No therapists listed in the canton of ${c} yet.`,
     cities: "Towns in this canton",

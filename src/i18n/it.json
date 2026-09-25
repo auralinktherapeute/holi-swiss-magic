@@ -36,7 +36,7 @@
     "how": {
       "title": "Come funziona",
       "step1": "Cerca per approccio, cantone o lingua",
-      "step2": "Consulta i profili e le recensioni verificate",
+      "step2": "Consulta i profili e le recensioni moderate",
       "step3": "Prenota una seduta online facilmente"
     },
     "pricingTeaser": "Scegli il tuo piano",
@@ -127,7 +127,7 @@
         "features": [
           "Tutto il Basic +",
           "Agenda online integrata",
-          "Recensioni verificate",
+          "Recensioni moderate",
           "Articoli blog illimitati",
           "Fino a 5 specialità",
           "Badge Essenziale visibile"

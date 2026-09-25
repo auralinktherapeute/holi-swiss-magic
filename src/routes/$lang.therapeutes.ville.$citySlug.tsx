@@ -44,7 +44,7 @@ const T = {
     h1: (c: string) => `Terapeuti olistici a ${c}`,
     title: (c: string) => `Terapeuti a ${c} | Holiswiss`,
     desc: (c: string) =>
-      `Terapeuti olistici a ${c}: profili verificati, specialità, tariffe e prenotazione online su Holiswiss.`,
+      `Terapeuti olistici a ${c}: profili convalidati da Holiswiss, specialità, tariffe e prenotazione online su Holiswiss.`,
     count: (n: number, c: string) => `${n} terapeut${n > 1 ? "i" : "a"} a ${c}`,
     none: (c: string) => `Nessun terapeuta registrato a ${c} per il momento.`,
     intro: (c: string) =>
