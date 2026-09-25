@@ -14,10 +14,11 @@ import {
   type FilLang,
   type FilPost,
 } from "@/data/fil-holiswiss";
+import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
 
 const LIST_COLUMNS =
   "id,slug,category,cover_image_url,image_alt_text,cover_image_credit_name,cover_image_credit_url," +
-  "published_at,created_at,updated_at,is_featured," +
+  `published_at,created_at,${CONTENT_DATE_COLUMN},is_featured,` +
   "title_fr,title_de,title_it,title_en,excerpt_fr,excerpt_de,excerpt_it,excerpt_en";
 
 function pick(row: Record<string, any>, prefix: string, lang: FilLang): string {
@@ -36,8 +37,12 @@ function toPost(row: Record<string, any>, lang: FilLang, withBody = false): FilP
     imageAlt: (row.image_alt_text as string) || "",
     imageCreditName: (row.cover_image_credit_name as string) || null,
     imageCreditUrl: (row.cover_image_credit_url as string) || null,
-    date: String(row.published_at ?? row.created_at ?? ""),
-    updatedAt: (row.updated_at as string) ?? null,
+    // Date de publication RÉELLE uniquement : plus de repli sur `created_at`
+    // (date de création du brouillon, pas de mise en ligne). Sans
+    // `published_at`, la page n'affiche aucune date et n'émet pas de
+    // `datePublished`.
+    date: (row.published_at as string | null) || null,
+    updatedAt: (row[CONTENT_DATE_COLUMN] as string | null) ?? null,
     author: null,
     featured: row.is_featured === true,
     seoTitle: (row.meta_title_fr as string) || undefined,

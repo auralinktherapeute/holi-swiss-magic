@@ -137,10 +137,12 @@ function Page() {
                   <span className="inline-flex items-center rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-medium text-[#d4a5f9]">
                     {filCategoryLabel(featured.category, l)}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-[#d4c4e0]/60">
-                    <CalendarDays className="h-3 w-3" />
-                    {formatFilDate(featured.date, l)}
-                  </span>
+                  {featured.date && (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-[#d4c4e0]/60">
+                      <CalendarDays className="h-3 w-3" />
+                      {formatFilDate(featured.date, l)}
+                    </span>
+                  )}
                 </div>
                 <h3 className="mb-3 text-2xl font-bold leading-tight text-white transition-colors group-hover:text-[#d4a5f9]">
                   {featured.title}
@@ -223,10 +225,12 @@ function Page() {
                     <span className="rounded-full border border-[rgba(184,110,249,0.35)] bg-[rgba(184,110,249,0.1)] px-2.5 py-0.5 text-[11px] font-medium text-[#d4a5f9]">
                       {filCategoryLabel(p.category, l)}
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-[#d4c4e0]/60">
-                      <CalendarDays className="h-3 w-3" />
-                      {formatFilDate(p.date, l)}
-                    </span>
+                    {p.date && (
+                      <span className="flex items-center gap-1 text-[11px] text-[#d4c4e0]/60">
+                        <CalendarDays className="h-3 w-3" />
+                        {formatFilDate(p.date, l)}
+                      </span>
+                    )}
                   </div>
                   <h2 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-white transition-colors group-hover:text-[#d4a5f9]">
                     {p.title}

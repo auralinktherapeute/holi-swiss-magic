@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { CONTENT_DATE_COLUMN, type ContentDateColumn } from "@/lib/page-dates";
 
 /**
  * Lectures publiques (anonymes) pour les pages d'annuaire géographiques.
@@ -7,7 +8,8 @@ import { z } from "zod";
  * les colonnes publiques sont projetées (jamais email ni téléphone).
  */
 const PUBLIC_COLUMNS =
-  "id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,specialties,languages,price_min,price_max,currency,verified";
+  "id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,specialties,languages,price_min,price_max,currency,verified," +
+  CONTENT_DATE_COLUMN;
 
 /**
  * Résolveur de slug de ville canonique (table `cities`), le même que le
@@ -44,6 +46,9 @@ export type PublicTherapistCard = {
   price_max: number | null;
   currency: string | null;
   verified: boolean | null;
+} & {
+  /** Date réelle de la fiche — colonne CONTENT_DATE_COLUMN (voir page-dates.ts). */
+  [K in ContentDateColumn]?: string | null;
 };
 
 export const listTherapistsByCanton = createServerFn({ method: "GET" })
@@ -71,7 +76,9 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
       if (label && !(label in citySlugs)) citySlugs[label] = resolver.tolerant(label);
     }
     const { zurichDay } = await import("@/lib/directory-stats");
-    return { therapists, citySlugs, asOf: zurichDay() };
+    const { listModified } = await import("@/lib/page-dates");
+    // « Mis à jour le » : la plus récente des fiches LISTÉES sur cette page.
+    return { therapists, citySlugs, asOf: zurichDay(), lastModified: listModified(therapists) };
     });
   });
 
@@ -99,7 +106,9 @@ export const listAllPublicTherapists = createServerFn({ method: "GET" }).handler
     .order("last_name", { ascending: true })
     .limit(1000);
   if (error) throw new Error("Impossible de charger les thérapeutes.");
-  return { therapists: (rows ?? []) as unknown as PublicTherapistCard[] };
+  const therapists = (rows ?? []) as unknown as PublicTherapistCard[];
+  const { listModified } = await import("@/lib/page-dates");
+  return { therapists, lastModified: listModified(therapists) };
   });
 });
 
@@ -160,12 +169,15 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
     const all = (rows ?? []) as unknown as PublicTherapistCard[];
     const therapists = all.filter((t) => resolver.tolerant(t.city ?? "") === canonicalSlug);
     const { zurichDay } = await import("@/lib/directory-stats");
+    const { listModified } = await import("@/lib/page-dates");
     return {
       canonicalSlug,
       therapists,
       cityName: therapists[0]?.city ?? null,
       canton: therapists[0]?.canton ?? null,
       asOf: zurichDay(),
+      // Calculé sur les fiches de CETTE ville (après filtrage), pas sur la requête brute.
+      lastModified: listModified(therapists),
     };
     });
   });
@@ -193,7 +205,7 @@ export const getDirectoryStats = createServerFn({ method: "GET" }).handler(async
     const [therapistsRes, pivotRes] = await Promise.all([
       supabase
         .from("therapists")
-        .select("id,verified,price_min,currency,canton,city,languages")
+        .select(`id,verified,price_min,currency,canton,city,languages,${CONTENT_DATE_COLUMN}`)
         .eq("status", "active")
         .not("slug", "is", null)
         .limit(5000),
@@ -238,6 +250,9 @@ export const getDirectoryStats = createServerFn({ method: "GET" }).handler(async
       specialtyCount,
       languages: countProfileLanguages(rows),
       asOf: zurichDay(),
+      // Même ensemble que le total affiché (= l'index de l'annuaire) : la
+      // fiche modifiée le plus récemment. Jamais la date du calcul.
+      lastModified: (await import("@/lib/page-dates")).listModified(rows),
     };
   }, null);
 });

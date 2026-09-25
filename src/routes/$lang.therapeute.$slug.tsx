@@ -39,6 +39,8 @@ import { TrustBadges } from "@/components/holiswiss/TrustBadges";
 import { CertificationsShowcase } from "@/components/holiswiss/CertificationsShowcase";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
 import { SocialLinksRow } from "@/components/holiswiss/SocialLinksRow";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
+import { CONTENT_DATE_COLUMN, pageModified, type PageModified } from "@/lib/page-dates";
 
 const LANG_FLAG: Record<string, string> = {
   fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
@@ -74,6 +76,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
         orgCertifications: [],
         faqs: [],
         autoFaqs: [] as AutoFaqItem[],
+        lastModified: null as PageModified | null,
         unavailable: true as const,
       };
     }
@@ -100,6 +103,11 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       orgCertifications: orgCertifications ?? [],
       faqs,
       autoFaqs,
+      // « Mis à jour le » : date réelle de la fiche (CONTENT_DATE_COLUMN), mise en forme ici (SSR)
+      // pour que le texte visible et le JSON-LD lisent la même valeur. Pas de
+      // `datePublished` : la table n'a pas de date de publication (`created_at`
+      // est la date d'inscription, pas de mise en ligne).
+      lastModified: pageModified((therapist as Record<string, unknown>)[CONTENT_DATE_COLUMN]),
       unavailable: false as const,
     };
   },
@@ -354,6 +362,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     // BreadcrumbList — reflète la navigation réelle
     const breadcrumbs = {
       "@type": "BreadcrumbList",
+      "@id": `${url}#breadcrumb`,
       itemListElement: [
         { "@type": "ListItem", position: 1, name: copy.breadcrumbHome, item: `${SITE}/${params.lang}` },
         {
@@ -426,7 +435,22 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       ],
     }] : [];
 
-    const graph: Array<Record<string, unknown>> = [person, ...businessNodes, ...serviceNodes, ...faqNode, breadcrumbs];
+    // ProfilePage : la page elle-même, seul nœud où `dateModified` est valide
+    // (ni Person ni HealthAndBeautyBusiness ne l'acceptent). Même valeur que
+    // le « Mis à jour le » visible dans l'en-tête de la fiche.
+    const modified = loaderData?.lastModified ?? null;
+    const profilePage: Record<string, unknown> = {
+      "@type": "ProfilePage",
+      "@id": `${url}#webpage`,
+      url,
+      name: title,
+      inLanguage: pageLang,
+      isPartOf: { "@id": "https://holiswiss.ch/#website" },
+      mainEntity: { "@id": personId },
+      breadcrumb: { "@id": `${url}#breadcrumb` },
+      ...(modified ? { dateModified: modified.iso } : {}),
+    };
+    const graph: Array<Record<string, unknown>> = [profilePage, person, ...businessNodes, ...serviceNodes, ...faqNode, breadcrumbs];
     const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
@@ -874,6 +898,13 @@ function ProfilePage() {
                       💶 {th.price_min}{th.price_max ? `–${th.price_max}` : ""} {th.currency ?? "CHF"} {t("therapist_profile.per_session")}
                     </span>
                   )}
+                  {/* Date réelle de la fiche, calculée par le loader (SSR). */}
+                  <LastUpdated
+                    as="span"
+                    modified={loaderData?.lastModified}
+                    lang={lang}
+                    className="flex items-center gap-1.5 text-sm text-[rgba(255,255,255,0.5)]"
+                  />
                 </div>
 
                 {specialties.length > 0 && (

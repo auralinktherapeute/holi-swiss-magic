@@ -8,6 +8,8 @@ import { ArrowLeft, CalendarDays } from "lucide-react";
 import { ogLocale, resolveProfileLang } from "@/lib/seo";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
+import { articleDates, CONTENT_DATE_COLUMN, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 
 export const Route = createFileRoute("/$lang/paroles/$slug")({
   component: Page,
@@ -76,6 +78,9 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
     const bcParoles: Record<string, string> = {
       fr: "Voix d'experts", de: "Expertenstimmen", it: "Voci di esperti", en: "Expert voices",
     };
+    // `date_publication` et CONTENT_DATE_COLUMN réels (therapist_articles n'a pas de
+    // `published_at`), réexprimés à l'heure de Zurich comme la page visible.
+    const dates = articleDates(a?.date_publication, a?.[CONTENT_DATE_COLUMN]);
     const ld = a?.titre
       ? {
           "@context": "https://schema.org",
@@ -95,9 +100,9 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
           // enrichi Article. Il vient maintenant du nœud partagé.
           publisher: publisherNode,
           ...(cover ? { image: [cover] } : {}),
-          ...(a.date_publication ? { datePublished: a.date_publication } : {}),
+          ...(dates.published ? { datePublished: dates.published.iso } : {}),
           // `dateModified` uniquement si la donnée existe réellement en base.
-          ...(a.updated_at ? { dateModified: a.updated_at } : {}),
+          ...(dates.modified ? { dateModified: dates.modified.iso } : {}),
         }
       : null;
     const breadcrumb = a?.titre
@@ -126,10 +131,9 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
   },
 });
 
+// Jour de Zurich, formatage manuel (sans Intl) : identique au SSR et au client.
 function formatDate(iso: string | null, lang: string) {
-  if (!iso) return "";
-  const locale = { de: "de-CH", it: "it-CH", en: "en-GB" }[lang] ?? "fr-CH";
-  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  return formatPublishedDate(iso, lang);
 }
 
 function Page() {
@@ -146,6 +150,9 @@ function Page() {
   const article = data as any;
   const t = article?.therapists;
   const name = t ? `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim() : "";
+  const updated = article
+    ? visibleArticleUpdate(articleDates(article.date_publication, article[CONTENT_DATE_COLUMN]))
+    : null;
 
   return (
     <div className="min-h-screen bg-[#14082d] text-white">
@@ -174,6 +181,7 @@ function Page() {
               <h1 className="text-3xl md:text-4xl font-bold leading-tight">{article.titre}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-white/60">
                 <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{formatDate(article.date_publication, lang)}</span>
+                <LastUpdated as="span" modified={updated} lang={lang} className="text-sm text-white/60" />
                 {t && (
                   <Link
                     to="/$lang/therapeute/$slug"

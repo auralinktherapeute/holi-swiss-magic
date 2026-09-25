@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { swissDayWindow } from "@/lib/booking-slots";
+import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
 
 
 export const getWaitingListCount = createServerFn({ method: "GET" }).handler(async () => {
@@ -27,7 +28,7 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     const therapist = await timedRead("therapist_profile_main", async () => {
       const { data: row, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,status,profile_translations")
+        .select(`id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,status,profile_translations,${CONTENT_DATE_COLUMN}`)
         .eq("slug", data.slug)
         .eq("status", "active")
         .maybeSingle();

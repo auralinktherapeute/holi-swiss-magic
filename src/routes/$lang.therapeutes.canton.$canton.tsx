@@ -8,6 +8,8 @@ import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
+import { WEBSITE_ID } from "@/lib/organization-schema";
 
 const T = {
   fr: {
@@ -86,6 +88,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
         therapists: [] as PublicTherapistCard[],
         citySlugs: {} as Record<string, string>,
         asOf: null,
+        lastModified: null,
         unavailable: true as const,
         indexable: true,
       };
@@ -96,6 +99,8 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
       therapists: res.data.therapists,
       citySlugs: res.data.citySlugs,
       asOf: res.data.asOf,
+      // Plus récente des fiches listées ici (calculée au SSR) ; null si liste vide.
+      lastModified: res.data.lastModified,
       unavailable: false as const,
       indexable: res.data.therapists.length > 0,
     };
@@ -113,6 +118,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     const unavailable = loaderData?.unavailable === true;
     // Défaut sûr : indexable tant que le loader n'a pas explicitement dit le contraire.
     const noindex = loaderData?.indexable === false;
+    const modified = loaderData?.lastModified ?? null;
     return {
       meta: [
         { title },
@@ -146,6 +152,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ItemList",
+            "@id": `${url}#itemlist`,
             name: title,
             numberOfItems: list.length,
             itemListElement: list
@@ -158,6 +165,28 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
               })),
           }),
         },
+        // La page elle-même : porte `dateModified` (invalide sur ItemList),
+        // égal au « Mis à jour le » visible — mêmes fiches, même instant.
+        // Même garde que la page ville : ni en panne, ni sur une liste vide.
+        ...(list.length === 0
+          ? []
+          : [
+              {
+                type: "application/ld+json",
+                children: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "CollectionPage",
+                  "@id": `${url}#webpage`,
+                  url,
+                  name: title,
+                  description,
+                  inLanguage: lang,
+                  isPartOf: { "@id": WEBSITE_ID },
+                  mainEntity: { "@id": `${url}#itemlist` },
+                  ...(modified ? { dateModified: modified.iso } : {}),
+                }),
+              },
+            ]),
       ],
     };
   },
@@ -165,7 +194,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
 
 function Page() {
   const { lang, canton } = useParams({ from: "/$lang/therapeutes/canton/$canton" });
-  const { therapists, citySlugs, asOf, unavailable } = Route.useLoaderData();
+  const { therapists, citySlugs, asOf, lastModified, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const code = canton.toUpperCase();
@@ -198,6 +227,7 @@ function Page() {
       <header className="mb-8">
         <h1 className="text-3xl font-semibold text-white sm:text-4xl">{t.h1(name)}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/70 sm:text-base">{t.intro(name)}</p>
+        <LastUpdated modified={lastModified} lang={lang} className="mt-2" />
       </header>
 
       <ListingFactsBlock

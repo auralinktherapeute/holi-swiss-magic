@@ -8,12 +8,13 @@ import {
   FIL_COPY,
   asFilLang,
   filCategoryLabel,
-  formatFilDate,
 } from "@/data/fil-holiswiss";
 import { getFilPost } from "@/lib/fil.functions";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
+import { articleDates, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 
 /** Libellé « Accueil » du fil d'Ariane structuré, dans les 4 langues du site. */
 const BREADCRUMB_HOME: Record<"fr" | "de" | "it" | "en", string> = {
@@ -50,6 +51,8 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
     const title = post.seoTitle || `${post.title} — Holiswiss`;
     const description = post.seoDescription || post.excerpt;
     const url = `https://holiswiss.ch/${l}/fil-holiswiss/${post.slug}`;
+    // Dates réelles (Zurich), même calcul que la ligne visible de la page.
+    const dates = articleDates(post.date, post.updatedAt);
     return {
       meta: [
         { title },
@@ -89,9 +92,9 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
             description,
             url,
             inLanguage: l,
-            datePublished: post.date,
+            ...(dates.published ? { datePublished: dates.published.iso } : {}),
             // `dateModified` uniquement si la donnée existe réellement en base.
-            ...(post.updatedAt ? { dateModified: post.updatedAt } : {}),
+            ...(dates.modified ? { dateModified: dates.modified.iso } : {}),
             mainEntityOfPage: { "@type": "WebPage", "@id": url },
             // `publisher` (avec logo) est requis par le résultat enrichi Article
             // et manquait totalement. Nœud partagé, donc même `@id` que la racine.
@@ -123,6 +126,7 @@ function Page() {
   const copy = FIL_COPY[l];
   const { post, related, unavailable } = Route.useLoaderData();
   if (unavailable || !post) return <ServiceUnavailableNotice lang={l} />;
+  const updated = visibleArticleUpdate(articleDates(post.date, post.updatedAt));
 
   return (
     <div className="min-h-screen bg-[#2d1248]">
@@ -144,10 +148,13 @@ function Page() {
             <span className="inline-flex items-center rounded-full border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.12)] px-3 py-1 text-xs font-medium text-[#d4a5f9]">
               {filCategoryLabel(post.category, l)}
             </span>
-            <span className="inline-flex items-center gap-1 text-[11px] text-[#d4c4e0]/60">
-              <CalendarDays className="h-3 w-3" />
-              {formatFilDate(post.date, l)}
-            </span>
+            {post.date && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-[#d4c4e0]/60">
+                <CalendarDays className="h-3 w-3" />
+                {formatPublishedDate(post.date, l)}
+              </span>
+            )}
+            <LastUpdated as="span" modified={updated} lang={l} className="text-[11px] text-[#d4c4e0]/60" />
             {post.author && (
               <span className="text-[11px] text-[#d4c4e0]/60">
                 {copy.by} {post.author}

@@ -9,6 +9,7 @@ import { isCategoryIndexable } from "@/lib/seo-thresholds";
 import { blogCopy } from "@/lib/blog-copy";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { BLOG_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
+import { formatPublishedDate } from "@/lib/page-dates";
 
 export const Route = createFileRoute("/$lang/blog/")({
   component: Page,
@@ -70,10 +71,10 @@ export const Route = createFileRoute("/$lang/blog/")({
 
 type Lang = "fr" | "de" | "it" | "en";
 
+// Jour de Zurich, formatage manuel (sans Intl) : même jour que la page de
+// l'article et son JSON-LD, au SSR comme après hydratation.
 function formatDate(iso: string | null, lang: string) {
-  if (!iso) return "";
-  const locale = { de: "de-CH", it: "it-CH", en: "en-GB" }[lang] ?? "fr-CH";
-  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  return formatPublishedDate(iso, lang);
 }
 
 function CardSkeleton() {

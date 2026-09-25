@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
+import { CONTENT_DATE_COLUMN, listModified } from "@/lib/page-dates";
 
 function serverClient() {
   const url = process.env.SUPABASE_URL!;
@@ -296,7 +297,7 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
     if (ids.length > 0) {
       const { data: ts } = await sb
         .from("therapists")
-        .select("id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties")
+        .select(`id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties,${CONTENT_DATE_COLUMN}`)
         .in("id", ids)
         .eq("status", "active")
         .order("verified", { ascending: false })
@@ -305,7 +306,19 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
     }
 
     const { zurichDay } = await import("@/lib/directory-stats");
-    return { specialty: s, family, siblings: siblings ?? [], therapists, asOf: zurichDay() };
+    return {
+      specialty: s,
+      family,
+      siblings: siblings ?? [],
+      therapists,
+      asOf: zurichDay(),
+      // Plus récente des fiches LISTÉES avec slug — le même ensemble que
+      // l'ItemList de la CollectionPage —, jamais la date du calcul.
+      lastModified: listModified(
+        therapists.filter((t: { slug?: string | null }) => t.slug),
+        CONTENT_DATE_COLUMN,
+      ),
+    };
   });
 
 export const listAllSpecialties = createServerFn({ method: "GET" }).handler(async () => {

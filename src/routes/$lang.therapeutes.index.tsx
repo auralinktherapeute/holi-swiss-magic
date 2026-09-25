@@ -15,6 +15,8 @@ import { DIRECTORY_INTRO, DIRECTORY_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq
 import { listAllPublicTherapists, type PublicTherapistCard } from "@/lib/geo-listings.functions";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
+import type { PageModified } from "@/lib/page-dates";
 
 const TherapistMap = lazy(() =>
   import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
@@ -50,8 +52,18 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
   // du bas de page — il ne touche pas au useQuery interactif.
   loader: async () => {
     const res = await loadEssential(() => listAllPublicTherapists());
-    if (!res.ok) return { seoTherapists: [] as PublicTherapistCard[], unavailable: true as const };
-    return { seoTherapists: res.data.therapists, unavailable: false as const };
+    if (!res.ok)
+      return {
+        seoTherapists: [] as PublicTherapistCard[],
+        lastModified: null as PageModified | null,
+        unavailable: true as const,
+      };
+    // `lastModified` : la plus récente des fiches de CET index (calculée au SSR).
+    return {
+      seoTherapists: res.data.therapists,
+      lastModified: res.data.lastModified,
+      unavailable: false as const,
+    };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -101,6 +113,8 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
                 isPartOf: { "@id": "https://holiswiss.ch/#website" },
                 about: { "@id": "https://holiswiss.ch/#organization" },
                 mainEntity: { "@id": `${url}#itemlist` },
+                // Même valeur que le « Mis à jour le » de l'index ci-dessous.
+                ...(loaderData?.lastModified ? { dateModified: loaderData.lastModified.iso } : {}),
               },
               // ItemList bâtie sur les MÊMES fiches que l'index HTML ci-dessous :
               // chaque entrée déclarée ici existe aussi comme <a href> réel.
@@ -210,7 +224,7 @@ function Page() {
 function DirectoryPage() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
   // Index SSR uniquement — la recherche interactive ci-dessous garde sa propre requête.
-  const { seoTherapists } = Route.useLoaderData();
+  const { seoTherapists, lastModified } = Route.useLoaderData();
   const navigate = useNavigate({ from: "/$lang/therapeutes/" });
   const searchParams = useSearch({ from: "/$lang/therapeutes/" });
   const { specialite: specFilter, famille: famFilter, canton: cantonFilter } = searchParams;
@@ -536,7 +550,7 @@ function DirectoryPage() {
       </div>
 
       {/* ── Bloc contenu SEO/GEO + index + FAQ (rendu serveur, sous la liste/carte) ── */}
-      <DirectorySeoContent lang={lang} therapists={seoTherapists} />
+      <DirectorySeoContent lang={lang} therapists={seoTherapists} lastModified={lastModified} />
     </div>
   );
 }
@@ -556,7 +570,15 @@ const DIRECTORY_INDEX_TITLE: Record<string, string> = {
  * chemin de crawl vers les profils. Chaque entrée correspond exactement à un
  * élément de l'ItemList émise dans le `head`.
  */
-function DirectoryIndex({ lang, therapists }: { lang: string; therapists: PublicTherapistCard[] }) {
+function DirectoryIndex({
+  lang,
+  therapists,
+  lastModified,
+}: {
+  lang: string;
+  therapists: PublicTherapistCard[];
+  lastModified: PageModified | null;
+}) {
   const listed = therapists.filter((t) => t.slug);
   if (listed.length === 0) return null;
   return (
@@ -564,6 +586,7 @@ function DirectoryIndex({ lang, therapists }: { lang: string; therapists: Public
       <h3 className="text-lg font-semibold text-white">
         {DIRECTORY_INDEX_TITLE[lang] ?? DIRECTORY_INDEX_TITLE.fr}
       </h3>
+      <LastUpdated modified={lastModified} lang={lang} className="mt-1" />
       <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
         {listed.map((t) => {
           const name = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
@@ -585,7 +608,15 @@ function DirectoryIndex({ lang, therapists }: { lang: string; therapists: Public
   );
 }
 
-function DirectorySeoContent({ lang, therapists }: { lang: string; therapists: PublicTherapistCard[] }) {
+function DirectorySeoContent({
+  lang,
+  therapists,
+  lastModified,
+}: {
+  lang: string;
+  therapists: PublicTherapistCard[];
+  lastModified: PageModified | null;
+}) {
   const l = asFaqLang(lang);
   const intro = DIRECTORY_INTRO[l];
   const faqItems = DIRECTORY_FAQ[l];
@@ -604,7 +635,7 @@ function DirectorySeoContent({ lang, therapists }: { lang: string; therapists: P
           ))}
         </div>
       </div>
-      <DirectoryIndex lang={lang} therapists={therapists} />
+      <DirectoryIndex lang={lang} therapists={therapists} lastModified={lastModified} />
       <FaqSection items={faqItems} title={faqTitles.title} subtitle={faqTitles.subtitle} />
     </section>
   );

@@ -13,6 +13,8 @@ import { publisherNode, organizationRef, LOGO_URL, ORGANIZATION_NAME } from "@/l
 import { buildMetaTitle } from "@/lib/seo-title";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { renderMarkdown } from "@/lib/blog-markdown";
+import { articleDates, CONTENT_DATE_COLUMN, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 
 
 const SITE = "https://holiswiss.ch";
@@ -103,8 +105,9 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       meta.push({ property: "og:image", content: image });
       meta.push({ name: "twitter:image", content: image });
     }
-    const publishedAt = (article["published_at"] as string | undefined) ?? undefined;
-    const updatedAt = (article["updated_at"] as string | undefined) ?? publishedAt;
+    // Dates réelles de la base (Zurich) : `published_at` et CONTENT_DATE_COLUMN, sans
+    // repli de l'une sur l'autre — même calcul que la ligne visible de la page.
+    const dates = articleDates(article["published_at"], article[CONTENT_DATE_COLUMN]);
     const authorName = (article["author_name"] as string | undefined) ?? "Holiswiss";
     const crumbs = BREADCRUMB_LABELS[lang] ?? BREADCRUMB_LABELS.fr;
     const ldArticle: Record<string, unknown> = {
@@ -128,8 +131,8 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       // affiché sur la page (règle « le balisage décrit le visible »).
       image: image ?? LOGO_URL,
     };
-    if (publishedAt) ldArticle.datePublished = publishedAt;
-    if (updatedAt) ldArticle.dateModified = updatedAt;
+    if (dates.published) ldArticle.datePublished = dates.published.iso;
+    if (dates.modified) ldArticle.dateModified = dates.modified.iso;
     const ldGraph = {
       "@context": "https://schema.org",
       "@graph": [
@@ -173,10 +176,11 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
 
 type Lang = "fr" | "de" | "it" | "en";
 
+// Jour de Zurich, formatage manuel : l'ancien `toLocaleDateString` sans fuseau
+// rendait le jour UTC au serveur et le jour local au navigateur (article publié
+// à 22:33 UTC → « 13 juillet » au SSR, « 14 juillet » après hydratation).
 function formatDate(iso: string | null, lang: string) {
-  if (!iso) return "";
-  const locale = { de: "de-CH", it: "it-CH", en: "en-GB" }[lang] ?? "fr-CH";
-  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  return formatPublishedDate(iso, lang);
 }
 
 function estimateReadTime(text: string): number {
@@ -237,6 +241,7 @@ function Page() {
   const excerpt = excerptForLang(raw, l);
   const readTime = body ? estimateReadTime(body) : null;
   const isFrFallback = l !== "fr" && !(raw[`body_${l}`] as string);
+  const updated = visibleArticleUpdate(articleDates(raw["published_at"], raw[CONTENT_DATE_COLUMN]));
 
   return (
     <div className="min-h-screen bg-[#2d1248]">
@@ -285,6 +290,7 @@ function Page() {
               <Clock className="h-4 w-4" />{copy.readTime(readTime)}
             </span>
           )}
+          <LastUpdated as="span" modified={updated} lang={l} className="text-sm text-[#d4c4e0]/60" />
         </div>
 
         {/* Titre */}

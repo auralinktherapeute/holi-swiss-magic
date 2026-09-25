@@ -8,6 +8,8 @@ import {
   type FactsRow,
   type ListingFacts,
 } from "@/lib/directory-stats";
+import type { PageModified } from "@/lib/page-dates";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 
 /**
  * Chiffres sourcés de l'annuaire, rendus dans le HTML initial (SSR).
@@ -132,7 +134,17 @@ export function ListingFactsBlock({
 }
 
 /** Accueil : chiffres globaux, calculés par `getDirectoryStats` au SSR. */
-export function HomeDirectoryFacts({ stats }: { stats: DirectoryFacts | null | undefined }) {
+export function HomeDirectoryFacts({
+  stats,
+  lang,
+  lastModified,
+}: {
+  stats: DirectoryFacts | null | undefined;
+  /** Langue de l'URL (et non `i18n.language`) : identique au SSR et au client. */
+  lang: string;
+  /** Fiche listée modifiée le plus récemment — même valeur que le `dateModified` de l'accueil. */
+  lastModified?: PageModified | null;
+}) {
   const { t } = useTranslation();
   if (!stats || stats.count === 0) return null;
   const date = formatSwissDate(stats.asOf);
@@ -172,6 +184,7 @@ export function HomeDirectoryFacts({ stats }: { stats: DirectoryFacts | null | u
           {languageList && <p>{t("directoryFacts.languages", { list: languageList })}</p>}
         </div>
         <p className="mt-4 text-xs text-white/45">{t("directoryFacts.source", { date })}</p>
+        <LastUpdated modified={lastModified} lang={lang} className="mt-1 text-white/45" />
       </FactsFrame>
     </section>
   );

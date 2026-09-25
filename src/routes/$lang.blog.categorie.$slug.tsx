@@ -7,6 +7,7 @@ import { isCategoryIndexable } from "@/lib/seo-thresholds";
 import { CalendarDays, ArrowRight, BookOpen, ArrowLeft } from "lucide-react";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { blogCopy } from "@/lib/blog-copy";
+import { formatPublishedDate } from "@/lib/page-dates";
 
 type Lang = "fr" | "de" | "it" | "en";
 
@@ -130,10 +131,10 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
  * Une catégorie franchit le seuil d'elle-même à mesure que le blog s'étoffe.
  */
 
+// Jour de Zurich, formatage manuel (sans Intl) : même jour que la page de
+// l'article et son JSON-LD, au SSR comme après hydratation.
 function formatDate(iso: string | null, lang: string) {
-  if (!iso) return "";
-  const locale = { de: "de-CH", it: "it-CH", en: "en-GB" }[lang] ?? "fr-CH";
-  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  return formatPublishedDate(iso, lang);
 }
 
 function Page() {
