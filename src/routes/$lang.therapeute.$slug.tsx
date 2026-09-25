@@ -21,6 +21,7 @@ import { getPublicFaqs } from "@/lib/therapist-faq.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { OrgCertificationBadges, type OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
 import { loadEssential } from "@/lib/read-health";
+import { localizeProfile } from "@/lib/profile-translations";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 
 import { ReviewForm } from "@/components/reviews/ReviewForm";
@@ -565,12 +566,12 @@ function ProfilePage() {
   // doit être dans le HTML initial pour être lue par les crawlers.
   const faqs = (loaderData?.faqs ?? []) as Array<{ question: string; answer: string }>;
 
-  const { data: th, isLoading } = useQuery({
+  const { data: rawTh, isLoading } = useQuery({
     queryKey: ["therapist", slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,is_trainer,trainer_subjects,trainer_institution,trainer_since")
+        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,is_trainer,trainer_subjects,trainer_institution,trainer_since,profile_translations")
         .eq("slug", slug)
         .eq("status", "active")
         .maybeSingle() as any;
@@ -579,6 +580,9 @@ function ProfilePage() {
     },
     initialData: (loaderData?.therapist ?? undefined) as never,
   });
+  // Contenu rédigé par le praticien affiché dans la langue du visiteur
+  // (repli sur l'original, avec mention discrète, si la traduction manque).
+  const th = localizeProfile(rawTh as any, lang) as any;
 
   // Analytics maison — une vue de profil par montage du composant, jamais
   // relancée si th.id ne change pas (StrictMode / re-renders). Le temps
@@ -794,6 +798,9 @@ function ProfilePage() {
                   {th.title}{th.city ? ` · ${th.city}${th.canton ? ` (${th.canton})` : ""}` : ""}
                 </p>
 
+                {th.translationNotice && (
+                  <p className="mb-2 text-xs italic text-[rgba(255,255,255,0.6)]" lang={lang}>{th.translationNotice}</p>
+                )}
                 {th.short_bio && (
                   <p className="mb-3 max-w-3xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
                     {th.short_bio}
