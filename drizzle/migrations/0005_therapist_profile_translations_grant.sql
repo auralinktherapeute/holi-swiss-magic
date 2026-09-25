@@ -1,0 +1,1 @@
+GRANT SELECT (profile_translations) ON public.therapists TO anon, authenticated;
