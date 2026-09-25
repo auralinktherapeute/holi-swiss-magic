@@ -50,14 +50,21 @@ export const getFilPosts = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const lang = asFilLang(data.lang);
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
-    const { data: rows, error } = await (supabase as any)
-      .from("articles")
-      .select(LIST_COLUMNS)
-      .eq("status", "validated")
-      .in("category", FIL_CATEGORY_SLUGS)
-      .order("published_at", { ascending: false });
-    if (error) return { posts: [] as FilPost[] };
-    return { posts: ((rows ?? []) as Array<Record<string, any>>).map((r) => toPost(r, lang)) };
+    const { timedRead } = await import("@/lib/read-metrics.server");
+    // Lecture ESSENTIELLE : une erreur est propagée (jamais un faux fil vide),
+    // le loader la transforme en 503 réessayable via `loadEssential`.
+    // Incident du 24/09 : colonnes de crédit photo lues avant que la migration
+    // soit appliquée → le fil s'affichait vide en 200 au lieu d'une panne.
+    return timedRead("fil_list", async () => {
+      const { data: rows, error } = await (supabase as any)
+        .from("articles")
+        .select(LIST_COLUMNS)
+        .eq("status", "validated")
+        .in("category", FIL_CATEGORY_SLUGS)
+        .order("published_at", { ascending: false });
+      if (error) throw error;
+      return { posts: ((rows ?? []) as Array<Record<string, any>>).map((r) => toPost(r, lang)) };
+    });
   });
 
 export const getFilPost = createServerFn({ method: "GET" })
@@ -66,13 +73,21 @@ export const getFilPost = createServerFn({ method: "GET" })
     const lang = asFilLang(data.lang);
     const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
 
-    const { data: row, error } = await (supabase as any)
-      .from("articles")
-      .select("*")
-      .eq("slug", data.slug)
-      .eq("status", "validated")
-      .maybeSingle();
-    if (error || !row || !FIL_CATEGORY_SLUGS.includes(row.category)) {
+    const { timedRead } = await import("@/lib/read-metrics.server");
+    // Lecture ESSENTIELLE : une panne est propagée (→ 503 réessayable), elle ne
+    // doit plus se déguiser en « article introuvable » (404 = désindexation).
+    const row = await timedRead("fil_post", async () => {
+      const { data: found, error } = await (supabase as any)
+        .from("articles")
+        .select("*")
+        .eq("slug", data.slug)
+        .eq("status", "validated")
+        .maybeSingle();
+      if (error) throw error;
+      return found as Record<string, any> | null;
+    });
+    // Seul un article réellement absent (ou hors fil) reste un 404.
+    if (!row || !FIL_CATEGORY_SLUGS.includes(row.category)) {
       return { post: null as FilPost | null, related: [] as FilPost[] };
     }
 
