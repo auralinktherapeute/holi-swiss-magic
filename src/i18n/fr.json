@@ -577,7 +577,8 @@
     "gallery_title": "Galerie photos",
     "gallery_open": "Agrandir l'image",
     "languages_title": "Langues parlées",
-    "certifications_disclaimer": "Les informations relatives aux qualifications et certifications sont fournies sous la responsabilité du thérapeute, qui s'engage à transmettre des informations exactes et à jour. Les contrôles réalisés par Holiswiss ne constituent pas une certification délivrée par l'organisme concerné et ne garantissent pas la validité actuelle d'une inscription dans son registre."
+    "certifications_disclaimer": "Les informations relatives aux qualifications et certifications sont fournies sous la responsabilité du thérapeute, qui s'engage à transmettre des informations exactes et à jour. Les contrôles réalisés par Holiswiss ne constituent pas une certification délivrée par l'organisme concerné et ne garantissent pas la validité actuelle d'une inscription dans son registre.",
+    "anonymous_reviewer": "Avis anonyme"
   },
   "waitlist": {
     "banner": {
