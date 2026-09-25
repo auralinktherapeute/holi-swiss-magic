@@ -8,6 +8,8 @@
  * lignes correspondantes de `article_categories`.
  */
 
+import { formatPublishedDate } from "@/lib/page-dates";
+
 export type FilLang = "fr" | "de" | "it" | "en";
 
 export type FilCategory = {
@@ -50,7 +52,8 @@ export type FilPost = {
   /** Attribution Unsplash — affichée sous la photo quand présente (CGU Unsplash). */
   imageCreditName?: string | null;
   imageCreditUrl?: string | null;
-  date: string; // ISO
+  /** `published_at` réel (ISO), ou null si l'article n'en a pas — jamais `created_at`. */
+  date: string | null;
   /** `updated_at` réel de la ligne `articles` — jamais dérivé ni inventé. */
   updatedAt?: string | null;
   author?: string | null;
@@ -140,7 +143,11 @@ export function asFilLang(lang: string | undefined): FilLang {
   return (["fr", "de", "it", "en"] as const).includes(lang as FilLang) ? (lang as FilLang) : "fr";
 }
 
-export function formatFilDate(iso: string, lang: FilLang): string {
-  const locale: Record<FilLang, string> = { fr: "fr-CH", de: "de-CH", it: "it-CH", en: "en-GB" };
-  return new Date(iso).toLocaleDateString(locale[lang], { day: "numeric", month: "long", year: "numeric" });
+/**
+ * Jour de publication à l'heure de Zurich, formatage manuel (sans Intl) : même
+ * jour sur la liste du fil, sur l'article et dans son JSON-LD, au SSR comme
+ * après hydratation. Chaîne vide si la date est absente.
+ */
+export function formatFilDate(iso: string | null | undefined, lang: FilLang): string {
+  return formatPublishedDate(iso, lang);
 }

@@ -23,6 +23,7 @@ import { FaqSection } from "@/components/holiswiss/FaqSection";
 
 import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { ORGANIZATION_ID, WEBSITE_ID } from "@/lib/organization-schema";
 
 export const Route = createFileRoute("/$lang/")({
   component: HomePage,
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/$lang/")({
     ]);
     return { ...chips, directoryStats };
   },
-  head: ({ params }) => {
+  head: ({ params, loaderData }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Holiswiss — Thérapeutes holistiques en Suisse",
@@ -59,6 +60,22 @@ export const Route = createFileRoute("/$lang/")({
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;
     const url = `https://holiswiss.ch/${lang}`;
+    // « Mis à jour le » de l'accueil = fiche de l'annuaire modifiée le plus
+    // récemment (même ensemble que les chiffres affichés). Lecture échouée →
+    // ni date visible ni `dateModified`.
+    const modified = loaderData?.directoryStats?.lastModified ?? null;
+    const webPage = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": `${url}#webpage`,
+      url,
+      name: title,
+      description,
+      inLanguage: lang,
+      isPartOf: { "@id": WEBSITE_ID },
+      about: { "@id": ORGANIZATION_ID },
+      ...(modified ? { dateModified: modified.iso } : {}),
+    };
     return {
       meta: [
         { title },
@@ -70,6 +87,7 @@ export const Route = createFileRoute("/$lang/")({
         { property: "og:locale", content: ogLocale(lang) },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/")],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(webPage) }],
     };
   },
 });
@@ -95,7 +113,7 @@ function HomePage() {
       <NewTherapistsShowcase />
 
       {/* L'annuaire en chiffres — calculés au SSR sur la base de production */}
-      <HomeDirectoryFacts stats={directoryStats} />
+      <HomeDirectoryFacts stats={directoryStats} lang={lang} lastModified={directoryStats?.lastModified ?? null} />
 
       {/* Specialty explorer — taxonomie familles / recherche libre */}
       {/* Trouver un thérapeute : deux univers de recherche (bien-être / holistique) */}

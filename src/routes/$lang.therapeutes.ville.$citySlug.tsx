@@ -8,6 +8,8 @@ import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
+import { WEBSITE_ID } from "@/lib/organization-schema";
 
 const T = {
   fr: {
@@ -90,6 +92,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         cityName: null,
         canton: null,
         asOf: null,
+        lastModified: null,
         unavailable: true as const,
       };
     }
@@ -121,6 +124,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
     // Panne : ni noindex ni ItemList vide — seul un vrai vide reste noindex.
     const unavailable = loaderData?.unavailable === true;
     const empty = !unavailable && list.length === 0;
+    const modified = loaderData?.lastModified ?? null;
     return {
       meta: [
         { title },
@@ -157,6 +161,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
               children: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "ItemList",
+                "@id": `${url}#itemlist`,
                 name: title,
                 numberOfItems: list.length,
                 itemListElement: list
@@ -169,6 +174,23 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
                   })),
               }),
             },
+            {
+              // La page elle-même : porte `dateModified` (invalide sur ItemList),
+              // égal au « Mis à jour le » visible — mêmes fiches, même instant.
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "CollectionPage",
+                "@id": `${url}#webpage`,
+                url,
+                name: title,
+                description,
+                inLanguage: lang,
+                isPartOf: { "@id": WEBSITE_ID },
+                mainEntity: { "@id": `${url}#itemlist` },
+                ...(modified ? { dateModified: modified.iso } : {}),
+              }),
+            },
           ],
     };
   },
@@ -176,7 +198,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
 
 function Page() {
   const { lang, citySlug: slug } = useParams({ from: "/$lang/therapeutes/ville/$citySlug" });
-  const { therapists, cityName, canton, asOf, unavailable } = Route.useLoaderData();
+  const { therapists, cityName, canton, asOf, lastModified, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const name = cityName ?? titleCase(slug);
@@ -206,6 +228,7 @@ function Page() {
       <header className="mb-8">
         <h1 className="text-3xl font-semibold text-white sm:text-4xl">{t.h1(name)}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/70 sm:text-base">{t.intro(name)}</p>
+        <LastUpdated modified={lastModified} lang={lang} className="mt-2" />
       </header>
 
       <ListingFactsBlock rows={therapists} asOf={asOf} scope={{ kind: "city", name }} />

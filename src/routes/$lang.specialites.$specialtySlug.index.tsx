@@ -9,6 +9,7 @@ import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
+import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 
 const T = {
   fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", therapist: "thérapeute", therapistPlural: "thérapeutes", inSpec: "en", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Spécialités proches", titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.` },
@@ -134,6 +135,10 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
             inLanguage: params.lang,
             isPartOf: { "@id": "https://holiswiss.ch/#website" },
             publisher: organizationRef,
+            // Même valeur que le « Mis à jour le » visible (fiches listées ici).
+            ...((loaderData as any)?.page?.lastModified
+              ? { dateModified: (loaderData as any).page.lastModified.iso }
+              : {}),
             mainEntity: {
               "@type": "ItemList",
               name: title,
@@ -176,6 +181,9 @@ function Page() {
   }
 
   const { specialty, family, siblings, therapists, asOf } = query.data as any;
+  // Date lue dans le loader (SSR), comme le `dateModified` du head — pas dans
+  // `query.data`, qu'une revalidation client pourrait faire diverger.
+  const lastModified = (loaderData as any)?.page?.lastModified ?? null;
   const specName = pickI18n(specialty, lang, "name");
   const specDesc = pickI18n(specialty, lang, "description");
 
@@ -208,6 +216,7 @@ function Page() {
             {specDesc}
           </p>
         )}
+        <LastUpdated modified={lastModified} lang={lang} className="mt-2" />
       </header>
 
       <ListingFactsBlock
