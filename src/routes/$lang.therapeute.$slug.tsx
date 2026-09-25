@@ -19,7 +19,8 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
 import { getPublicFaqs } from "@/lib/therapist-faq.functions";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
-import { OrgCertificationBadges, type OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
+import { OrgBadgeDisplay, OrgBadgeDevPicker, OrgBadgeHalo, useOrgBadgeVariant } from "@/components/holiswiss/OrgBadgeDisplay";
+import type { OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
 import { loadEssential } from "@/lib/read-health";
 import { localizeProfile } from "@/lib/profile-translations";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
@@ -684,6 +685,7 @@ function ProfilePage() {
   const showGallery = isPro && gallery.length > 0;
   const certifications = ((loaderData as any)?.certifications ?? []) as any[];
   const orgCertifications = ((loaderData as any)?.orgCertifications ?? []) as OrgCertificationBadge[];
+  const badgeVariant = useOrgBadgeVariant();
 
   const therapistArticles = ((loaderData as any)?.articles ?? []) as Array<{
     id: string; slug: string; titre: string; extrait: string | null;
@@ -768,15 +770,18 @@ function ProfilePage() {
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
                 )}
-                {/* Desktop : sous la photo, format plus petit que celle-ci */}
-                <OrgCertificationBadges items={orgCertifications} className="mt-3 hidden max-w-32 sm:flex" />
+                {/* Variante 2 : sceau chevauchant le bas-droit de la photo */}
+                {badgeVariant === 2 && <OrgBadgeHalo items={orgCertifications} />}
+                {/* Desktop : sous la photo, selon la variante choisie */}
+                <OrgBadgeDisplay items={orgCertifications} variant={badgeVariant} className="mt-3 hidden sm:flex" />
               </motion.div>
 
 
               {/* Certifications par organisme (SVHH…) — masqué si aucune active */}
               <div className="sm:hidden">
-                <OrgCertificationBadges items={orgCertifications} />
+                <OrgBadgeDisplay items={orgCertifications} variant={badgeVariant} />
               </div>
+              <OrgBadgeDevPicker />
 
 
               {/* Infos */}
