@@ -18,6 +18,8 @@ import {
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
 import { getPublicFaqs } from "@/lib/therapist-faq.functions";
+import { buildTherapistAutoFaq, type AutoFaqItem } from "@/lib/therapist-auto-faq";
+import i18n from "@/lib/i18n";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { OrgBadgeDisplay } from "@/components/holiswiss/OrgBadgeDisplay";
 import type { OrgCertificationBadge } from "@/components/holiswiss/OrgCertificationBadges";
@@ -71,12 +73,24 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
         events: [],
         orgCertifications: [],
         faqs: [],
+        autoFaqs: [] as AutoFaqItem[],
         unavailable: true as const,
       };
     }
     const { therapist, reviews, certifications, articles, events, orgCertifications } = main.data;
     // Fiche réellement absente (ou non publiée) : 404, pas une panne.
     if (!therapist) throw notFound();
+    // FAQ pratique, calculée UNE fois ici à partir des seules données de la
+    // fiche, dans la langue de la page. Le rendu visible et le JSON-LD lisent
+    // ce même tableau : textes identiques, et aucune divergence d'hydratation
+    // possible puisque le client reçoit la chaîne déjà construite.
+    const faqLang = resolveProfileLang(params.lang, therapist.canton, therapist.languages ?? null);
+    const tFaq = i18n.getFixedT(faqLang);
+    const autoFaqs = buildTherapistAutoFaq(
+      therapist,
+      certifications ?? [],
+      (key, vars) => String(tFaq(key, vars as never)),
+    );
     return {
       therapist,
       reviews: reviews ?? [],
@@ -85,6 +99,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       events: events ?? [],
       orgCertifications: orgCertifications ?? [],
       faqs,
+      autoFaqs,
       unavailable: false as const,
     };
   },
@@ -384,15 +399,31 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
 
     // FAQPage : bâtie sur les MÊMES questions que celles rendues en HTML —
     // jamais de balisage sans contrepartie visible sur la page.
+    // Un seul nœud FAQPage pour la page (deux déclenchent « Champ FAQPage en
+    // double » dans la Search Console) : questions pratiques générées, puis
+    // FAQ rédigée par le praticien. Les premières sont dans la langue de la
+    // page ; les secondes dans la langue où le praticien les a écrites, d'où
+    // `inLanguage` porté par question et, sur le nœud, seulement s'il n'y a
+    // que des questions générées.
     const faqList = ((loaderData as any)?.faqs ?? []) as Array<{ question: string; answer: string }>;
-    const faqNode = faqList.length > 0 ? [{
+    const autoFaqList: AutoFaqItem[] = loaderData?.autoFaqs ?? [];
+    const faqNode = autoFaqList.length + faqList.length > 0 ? [{
       "@type": "FAQPage",
       "@id": `${url}#faq`,
-      mainEntity: faqList.map((f) => ({
-        "@type": "Question",
-        name: f.question,
-        acceptedAnswer: { "@type": "Answer", text: f.answer },
-      })),
+      ...(faqList.length === 0 ? { inLanguage: pageLang } : {}),
+      mainEntity: [
+        ...autoFaqList.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          inLanguage: pageLang,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+        ...faqList.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+      ],
     }] : [];
 
     const graph: Array<Record<string, unknown>> = [person, ...businessNodes, ...serviceNodes, ...faqNode, breadcrumbs];
@@ -566,6 +597,7 @@ function ProfilePage() {
   // FAQ : uniquement depuis le loader, jamais re-fetchée côté client — elle
   // doit être dans le HTML initial pour être lue par les crawlers.
   const faqs = (loaderData?.faqs ?? []) as Array<{ question: string; answer: string }>;
+  const autoFaqs: AutoFaqItem[] = loaderData?.autoFaqs ?? [];
 
   const { data: rawTh, isLoading } = useQuery({
     queryKey: ["therapist", slug],
@@ -1209,6 +1241,38 @@ function ProfilePage() {
               </motion.section>
             </div>
 
+
+            {/* Questions pratiques — générées à partir des seules données de la
+                fiche (voir src/lib/therapist-auto-faq.ts). Texte identique à
+                celui du FAQPage JSON-LD, calculé dans le loader. */}
+            {autoFaqs.length > 0 && (
+              <motion.section
+                variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+                aria-labelledby="auto-faq-title"
+                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+              >
+                <h2 id="auto-faq-title" className="mb-1 text-lg font-bold text-white">
+                  {t("therapist_auto_faq.title")}
+                </h2>
+                <p className="mb-5 text-sm text-[rgba(255,255,255,0.55)]">
+                  {t("therapist_auto_faq.subtitle", { name: fullName })}
+                </p>
+                <dl className="divide-y divide-[rgba(168,85,247,0.18)] border-y border-[rgba(168,85,247,0.18)]">
+                  {autoFaqs.map((f, i) => (
+                    <div key={i} className="grid gap-1.5 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
+                      <dt className="flex items-start gap-3 text-[0.95rem] font-semibold text-white">
+                        <span
+                          aria-hidden="true"
+                          className="mt-[0.45rem] h-1.5 w-1.5 flex-none rounded-full bg-gradient-to-br from-[#a855f7] to-[#22d3ee]"
+                        />
+                        <span>{f.question}</span>
+                      </dt>
+                      <dd className="pl-[1.125rem] text-sm leading-relaxed text-[#d4c4e0] sm:pl-0">{f.answer}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </motion.section>
+            )}
 
             {/* FAQ — entre les prestations et les avis : le visiteur a compris
                 l'offre et lève ses derniers doutes avant de réserver. Rendue
