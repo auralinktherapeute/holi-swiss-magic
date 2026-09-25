@@ -293,19 +293,56 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const fallbackSlug = sanitizeSlug(`${data.first_name}-${data.last_name}`) || "therapeute";
     const requestedSlug = data.public_slug ? sanitizeSlug(data.public_slug) : "";
+
+    // Fiche existante, lue une seule fois : slug, statut (une ville vide est
+    // refusée sur une fiche publiée) et localisation actuelle (on ne bloque
+    // une fiche non conforme que si le thérapeute modifie sa ville ou son NPA).
+    // Lecture en échec : on refuse plutôt que de valider en mode dégradé.
+    type ExistingRow = { slug: string | null; status: string | null; city: string | null; postal_code: string | null };
+    let existing: ExistingRow | null = null;
+    if (data.rowId) {
+      const { data: row, error: existingError } = await supabaseAdmin
+        .from("therapists")
+        .select("slug,status,city,postal_code")
+        .eq("id", data.rowId)
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      if (existingError) throw new Error("Impossible de charger la fiche.");
+      existing = row as ExistingRow | null;
+    }
+
+    // Ville × NPA : normalisée et vérifiée contre le répertoire officiel des
+    // localités (swisstopo). Le formulaire fait la même vérification, mais un
+    // client ancien ou un appel direct ne doit pas pouvoir écrire « acacias ».
+    const [{ validateTherapistLocation }, { getSwissNpaIndex }] = await Promise.all([
+      import("@/lib/city-normalize"),
+      import("@/lib/swiss-npa"),
+    ]);
+    const location = validateTherapistLocation(getSwissNpaIndex(), {
+      city: data.city,
+      postalCode: data.postal_code,
+      status: existing?.status ?? null,
+      previous: existing ? { city: existing.city, postalCode: existing.postal_code } : null,
+    });
+    if (!location.ok) throw new Error(location.message);
+    // Localisation inchangée : ville / NPA / canton ne sont PAS réécrits (ni
+    // normalisés) — aucun slug /ville/… ne change sans action du thérapeute.
+    const keepLocation = location.unchanged === true;
+    const city = location.city;
+    const postalCode = location.postalCode;
+    const canton = location.canton ?? data.canton;
+
     const geo = await geocodeSwissAddress({
-      address: data.address, postal_code: data.postal_code, city: data.city, canton: data.canton,
+      address: data.address, postal_code: postalCode, city, canton,
     });
     const payload: any = {
       user_id: context.userId,
       first_name: data.first_name,
       last_name: data.last_name,
       photo_url: data.photo_url,
-      city: data.city,
-      postal_code: data.postal_code,
+      ...(keepLocation ? {} : { city, postal_code: postalCode, canton }),
       address: data.address,
       ...(data.phone !== undefined ? { phone: data.phone } : {}),
-      canton: data.canton,
       languages: data.languages,
       price_min: data.price_min,
       price_max: data.price_max,
@@ -336,9 +373,7 @@ export const saveMyTherapistProfile = createServerFn({ method: "POST" })
     // Resolve slug: requested > existing > auto-generated
     let finalSlug: string;
     if (data.rowId) {
-      const { data: existing } = await supabaseAdmin
-        .from("therapists").select("slug").eq("id", data.rowId).maybeSingle();
-      const existingSlug = (existing as any)?.slug as string | null;
+      const existingSlug = existing?.slug ?? null;
       finalSlug = requestedSlug || existingSlug || `${fallbackSlug}-${context.userId.slice(0, 6)}`;
     } else {
       finalSlug = requestedSlug || `${fallbackSlug}-${context.userId.slice(0, 6)}`;

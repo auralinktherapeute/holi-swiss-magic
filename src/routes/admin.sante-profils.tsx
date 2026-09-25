@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { HeartPulse, RefreshCw, Loader2, ExternalLink, CheckCircle2, AlertTriangle, Sparkles, PenLine, Mail, Radar, ArrowUp, ArrowDown, Minus, FileText } from "lucide-react";
+import { HeartPulse, RefreshCw, Loader2, ExternalLink, CheckCircle2, AlertTriangle, Sparkles, PenLine, Mail, Radar, ArrowUp, ArrowDown, Minus, FileText, MapPin } from "lucide-react";
 import {
   listHealthScores,
   getHealthDetail,
@@ -21,6 +21,7 @@ import {
   setFounderSeat,
   setFounderSeatDisplay,
 } from "@/lib/therapist-health.functions";
+import { listCityAnomalies } from "@/lib/city-audit.functions";
 import TherapistScorePanel from "@/components/admin/TherapistScorePanel";
 import CertificationsReviewPanel from "@/components/admin/CertificationsReviewPanel";
 
@@ -179,6 +180,124 @@ function FounderSeatsPanel() {
             </ul>
           )}
         </>
+      )}
+    </section>
+  );
+}
+
+const CITY_SEV_CLASS: Record<string, string> = {
+  critical: "border-red-400/40 bg-red-500/10 text-red-200",
+  warning: "border-amber-400/40 bg-amber-500/10 text-amber-100",
+  info: "border-white/15 bg-white/[0.04] text-white/70",
+};
+
+/**
+ * Cohérence ville × NPA : fiches dont la ville n'est pas la commune officielle
+ * du NPA (quartier, minuscules, « , Suisse », NPA d'un autre canton…).
+ * Lecture seule : corriger une ville change son slug /ville/… (voir city-slug.ts).
+ */
+function CityConsistencyPanel() {
+  const load = useServerFn(listCityAnomalies);
+  const [data, setData] = useState<Awaited<ReturnType<typeof listCityAnomalies>> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    load()
+      .then(setData)
+      .catch((e: any) => toast.error(e?.message ?? "Contrôle des villes impossible"))
+      .finally(() => setLoading(false));
+  }, [load]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const criticalCount = data?.rows.filter((r) => r.worst === 0).length ?? 0;
+
+  return (
+    <section aria-labelledby="city-check-title" className="mb-6 rounded-2xl border border-[rgba(168,85,247,.25)] bg-[#2d1b4e]/60 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <MapPin className="text-cyan-300" size={18} aria-hidden="true" />
+          <h2 id="city-check-title" className="text-base font-semibold">Villes et codes postaux</h2>
+          {data && (
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${data.rows.length === 0 ? "bg-[#22d3ee]/15 text-cyan-300" : criticalCount > 0 ? "bg-red-500/15 text-red-300" : "bg-amber-500/15 text-amber-200"}`}>
+              {data.rows.length === 0 ? "Tout est cohérent" : `${data.rows.length} fiche(s) à revoir`}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/80 hover:bg-white/5 disabled:opacity-60"
+        >
+          {loading ? <Loader2 className="animate-spin" size={13} /> : <RefreshCw size={13} />} Actualiser
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-white/50">
+        Fiches publiées et en attente comparées au répertoire officiel des localités (swisstopo
+        {data?.source.generatedAt ? `, extrait du ${fmtDate(data.source.generatedAt)}` : ""}). Rien n'est corrigé automatiquement :
+        changer une ville change l'URL <code className="text-white/70">/ville/…</code> de la fiche.
+      </p>
+
+      {data && data.rows.length > 0 && (
+        <div className="mt-3 max-h-96 overflow-auto rounded-lg border border-white/10">
+          <table className="w-full text-left text-xs">
+            <caption className="sr-only">Fiches dont la ville ou le code postal pose problème</caption>
+            <thead className="sticky top-0 bg-[#1a0a2e] text-white/60">
+              <tr>
+                <th scope="col" className="px-2 py-1.5">Thérapeute</th>
+                <th scope="col" className="px-2 py-1.5">Saisi (ville · NPA · canton)</th>
+                <th scope="col" className="px-2 py-1.5">Problèmes</th>
+                <th scope="col" className="px-2 py-1.5">Commune officielle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.rows.map((r) => (
+                <tr key={r.id} className="border-t border-white/5 align-top">
+                  <td className="px-2 py-1.5">
+                    <div className="font-medium text-white/85">{r.name || "—"}</div>
+                    <div className="text-[11px] text-white/40">
+                      {r.status === "active" ? "Publiée" : "En attente"}
+                      {r.slug && (
+                        <>
+                          {" · "}
+                          <a href={`/fr/therapeute/${r.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline underline-offset-2 hover:text-white/80">
+                            fiche <ExternalLink size={10} aria-hidden="true" />
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-1.5 font-mono text-[11px] text-white/75">
+                    {r.city === null ? <em className="not-italic text-white/35">vide</em> : `« ${r.city} »`} · {r.postal_code ?? "—"} · {r.canton ?? "—"}
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <ul className="flex flex-wrap gap-1">
+                      {r.issues.map((i) => (
+                        <li key={i.code} className={`rounded border px-1.5 py-0.5 text-[11px] ${CITY_SEV_CLASS[i.severity]}`}>
+                          <span className="sr-only">{i.severity === "critical" ? "Critique : " : i.severity === "warning" ? "À corriger : " : "Info : "}</span>
+                          {i.label}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td className="px-2 py-1.5 text-white/80">
+                    {r.suggestion ? (
+                      <span className="font-medium text-cyan-200">{r.suggestion.city} <span className="text-white/45">({r.suggestion.canton})</span></span>
+                    ) : r.alternatives.length > 0 ? (
+                      <span className="text-white/60">Au choix : {r.alternatives.join(", ")}</span>
+                    ) : (
+                      <span className="text-white/35">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {data && (
+        <p className="mt-2 text-[11px] text-white/40">{data.checked} fiche(s) contrôlée(s).</p>
       )}
     </section>
   );
@@ -374,6 +493,8 @@ function Page() {
       <FounderSeatsPanel />
 
       <CertificationsReviewPanel />
+
+      <CityConsistencyPanel />
 
       {loading ? (
         <div className="flex items-center gap-2 text-white/60"><Loader2 className="animate-spin" size={16} /> Chargement…</div>
