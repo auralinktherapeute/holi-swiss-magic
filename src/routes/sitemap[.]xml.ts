@@ -3,6 +3,8 @@ import { specSlugForLang } from "@/lib/specialty-slug";
 import type {} from "@tanstack/react-start";
 import { resolveProfileLang } from "@/lib/seo";
 import { buildCitySlugResolver, type CityRow } from "@/lib/city-slug";
+import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
+import { articleLastmod, contentDay, paroleLastmod } from "@/lib/sitemap-lastmod";
 import { getCategory } from "@/lib/article-categories";
 import {
   isSpecialtyIndexable,
@@ -176,7 +178,7 @@ type SpecRow = {
 type TherapistRow = {
   id: string;
   slug: string | null;
-  updated_at: string | null;
+  content_updated_at: string | null;
   canton: string | null;
   city: string | null;
   languages: string[] | null;
@@ -233,7 +235,7 @@ async function buildSitemap(): Promise<string> {
     "sitemap: praticiens actifs",
     await supabaseAdmin
       .from("therapists")
-      .select("id, slug, updated_at, canton, city, languages, latitude, longitude")
+      .select(`id, slug, ${CONTENT_DATE_COLUMN}, canton, city, languages, latitude, longitude`)
       .eq("status", "active"),
   ) as unknown as TherapistRow[];
 
@@ -241,7 +243,7 @@ async function buildSitemap(): Promise<string> {
   for (const t of therapists) therapistById.set(t.id, t);
 
   const therapistsFreshness = therapists.reduce<string | undefined>(
-    (acc, t) => newer(acc, day(t.updated_at)),
+    (acc, t) => newer(acc, contentDay(t)),
     undefined,
   );
 
@@ -341,7 +343,7 @@ async function buildSitemap(): Promise<string> {
       const key = `${spec.slug}::${cSlug}`;
       pairSpec.set(key, spec);
       pairCount.set(key, (pairCount.get(key) ?? 0) + 1);
-      bump(pairFreshness, key, day(t.updated_at));
+      bump(pairFreshness, key, contentDay(t));
     }
   }
 
@@ -363,7 +365,7 @@ async function buildSitemap(): Promise<string> {
     category?: string | null;
     secondary_tags?: string[] | null;
     published_at: string | null;
-    updated_at: string | null;
+    content_updated_at: string | null;
   };
   let articles: ArticleRow[];
   // Faux si la requête a dû se replier sans la colonne `category` : on ne sait
@@ -375,7 +377,7 @@ async function buildSitemap(): Promise<string> {
     // plutôt que de perdre les 150+ URL du blog. Si le repli échoue aussi, on lève.
     const rich = await (holiswissPublic as any)
       .from("articles")
-      .select("slug, slug_de, category, secondary_tags, published_at, updated_at")
+      .select(`slug, slug_de, category, secondary_tags, published_at, ${CONTENT_DATE_COLUMN}`)
       .eq("status", "validated");
     articlesHaveCategory = !rich.error;
     articles = rich.error
@@ -383,12 +385,12 @@ async function buildSitemap(): Promise<string> {
           "sitemap: articles de blog (repli sans slug_de)",
           await (holiswissPublic as any)
             .from("articles")
-            .select("slug, published_at, updated_at")
+            .select(`slug, published_at, ${CONTENT_DATE_COLUMN}`)
             .eq("status", "validated"),
         ) as ArticleRow[])
       : (rich.data as ArticleRow[]);
   }
-  const articleDay = (a: ArticleRow) => day(a.updated_at) ?? day(a.published_at);
+  const articleDay = (a: ArticleRow) => articleLastmod(a);
 
   // ── Séparation blog / « Le fil Holiswiss » ────────────────────────────────
   //
@@ -435,15 +437,15 @@ async function buildSitemap(): Promise<string> {
     "sitemap: Voix d'experts",
     await supabaseAdmin
       .from("therapist_articles")
-      .select("slug, updated_at, date_publication, therapist_id")
+      .select(`slug, ${CONTENT_DATE_COLUMN}, date_publication, therapist_id`)
       .eq("statut", "publie"),
   ) as unknown as Array<{
     slug: string | null;
-    updated_at: string | null;
+    content_updated_at: string | null;
     date_publication: string | null;
     therapist_id?: string | null;
   }>;
-  const paroleDay = (a: (typeof paroles)[number]) => day(a.updated_at) ?? day(a.date_publication);
+  const paroleDay = (a: (typeof paroles)[number]) => paroleLastmod(a);
   const parolesFreshness = paroles.reduce<string | undefined>(
     (acc, a) => newer(acc, paroleDay(a)),
     undefined,
@@ -561,7 +563,7 @@ async function buildSitemap(): Promise<string> {
     if (!t.slug) continue;
     const lang = resolveProfileLang(null, t.canton, t.languages);
     urls.push(
-      urlBlock(`${BASE_URL}/${lang}/therapeute/${t.slug}`, day(t.updated_at), "weekly", "0.8"),
+      urlBlock(`${BASE_URL}/${lang}/therapeute/${t.slug}`, contentDay(t), "weekly", "0.8"),
     );
   }
 
@@ -571,7 +573,7 @@ async function buildSitemap(): Promise<string> {
     const cantons = new Map<string, string | undefined>();
     const cities = new Map<string, string | undefined>();
     for (const t of therapists) {
-      const d = day(t.updated_at);
+      const d = contentDay(t);
       const code = (t.canton ?? "").trim().toUpperCase();
       if (code.length === 2) bump(cantons, code, d);
       const cSlug = tolerantCitySlug((t.city ?? "").trim());
