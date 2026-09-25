@@ -9,6 +9,8 @@ import { CANTONS, SPOKEN_LANGUAGES, formatCHF } from "@/lib/constants";
 import { HeroVariants } from "@/components/holiswiss/HeroVariants";
 import { TherapistFinderBlocks } from "@/components/holiswiss/TherapistFinderBlocks";
 import { getDailySpecialtyChips } from "@/lib/specialties.functions";
+import { getDirectoryStats } from "@/lib/geo-listings.functions";
+import { HomeDirectoryFacts } from "@/components/holiswiss/DirectoryFacts";
 import { NearbyTherapistsSwiss } from "@/components/holiswiss/NearbyTherapistsSwiss";
 import { PlatformPromiseBand } from "@/components/holiswiss/PlatformPromiseBand";
 import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowcase";
@@ -26,7 +28,20 @@ export const Route = createFileRoute("/$lang/")({
   component: HomePage,
   // Sélection du jour calculée côté serveur : le HTML servi aux crawlers
   // contient déjà les pastilles, identiques pour tous pendant 24 h.
-  loader: () => getDailySpecialtyChips(),
+  //
+  // Chiffres de l'annuaire (Levier 1 du Baromètre GEO) : calculés à la requête
+  // sur la base de production, dans le même passage serveur. Lecture
+  // SECONDAIRE : si elle échoue, le bloc disparaît, la page d'accueil reste
+  // servie normalement (jamais de 503 ni de chiffre inventé). Les pastilles
+  // restent au premier niveau de l'objet : `TherapistFinderBlocks` lit
+  // `blocks` directement dans les données de ce loader.
+  loader: async () => {
+    const [chips, directoryStats] = await Promise.all([
+      getDailySpecialtyChips(),
+      getDirectoryStats().catch(() => null),
+    ]);
+    return { ...chips, directoryStats };
+  },
   head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
@@ -63,6 +78,7 @@ function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
   const popularSearches = t("home.popular_searches", { returnObjects: true }) as string[];
+  const { directoryStats } = Route.useLoaderData();
 
   return (
     <>
@@ -77,6 +93,9 @@ function HomePage() {
 
       {/* Nouveaux thérapeutes — de vrais praticiens dès l'arrivée */}
       <NewTherapistsShowcase />
+
+      {/* L'annuaire en chiffres — calculés au SSR sur la base de production */}
+      <HomeDirectoryFacts stats={directoryStats} />
 
       {/* Specialty explorer — taxonomie familles / recherche libre */}
       {/* Trouver un thérapeute : deux univers de recherche (bien-être / holistique) */}

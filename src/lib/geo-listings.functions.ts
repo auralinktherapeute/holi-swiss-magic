@@ -50,7 +50,8 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
       .order("verified", { ascending: false })
       .limit(300);
     if (error) throw new Error("Impossible de charger les thérapeutes.");
-    return { therapists: (rows ?? []) as unknown as PublicTherapistCard[] };
+    const { zurichDay } = await import("@/lib/directory-stats");
+    return { therapists: (rows ?? []) as unknown as PublicTherapistCard[], asOf: zurichDay() };
     });
   });
 
@@ -134,10 +135,84 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
     const wanted = data.citySlug.toLowerCase();
     const all = (rows ?? []) as unknown as PublicTherapistCard[];
     const therapists = all.filter((t) => citySlug(t.city ?? "") === wanted);
+    const { zurichDay } = await import("@/lib/directory-stats");
     return {
       therapists,
       cityName: therapists[0]?.city ?? null,
       canton: therapists[0]?.canton ?? null,
+      asOf: zurichDay(),
     };
     });
   });
+
+/**
+ * Chiffres globaux de l'annuaire pour l'accueil (Levier 1 du Baromètre GEO).
+ *
+ * Même filtre de publication que l'index de l'annuaire
+ * (`listAllPublicTherapists`) : `status = 'active'` et `slug` non nul — le
+ * total affiché est donc exactement le nombre de fiches qu'un visiteur trouve
+ * listées. Deux lectures légères, en parallèle, colonnes explicites (anon n'a
+ * pas `select=*` sur `therapists`) :
+ *   1. les fiches publiées (colonnes nécessaires au calcul seulement) ;
+ *   2. le pivot `therapist_specialties`, restreint aux spécialités actives du
+ *      référentiel — le compte de spécialités ne lit JAMAIS le texte libre
+ *      `therapists.specialties`, non normalisé.
+ * Aucun cache : les chiffres sont ceux de la base au moment de la requête.
+ */
+export const getDirectoryStats = createServerFn({ method: "GET" }).handler(async () => {
+  // Lecture SECONDAIRE : en cas d'échec, `null` (bloc masqué) et journal
+  // `degraded=1`, jamais compté comme une panne de lecture essentielle.
+  const { timedOptionalRead } = await import("@/lib/read-metrics.server");
+  return timedOptionalRead("directory_stats", async () => {
+    const supabase = await publicClient();
+    const [therapistsRes, pivotRes] = await Promise.all([
+      supabase
+        .from("therapists")
+        .select("id,verified,price_min,currency,canton,city,languages")
+        .eq("status", "active")
+        .not("slug", "is", null)
+        .limit(5000),
+      supabase
+        .from("therapist_specialties")
+        .select("therapist_id,specialty_id,specialties!inner(is_active)")
+        .eq("specialties.is_active", true)
+        .limit(20000),
+    ]);
+    if (therapistsRes.error) throw new Error("Impossible de calculer les chiffres de l'annuaire.");
+
+    const { computeListingFacts, countProfileLanguages, zurichDay } =
+      await import("@/lib/directory-stats");
+    type Row = {
+      id: string;
+      verified: boolean | null;
+      price_min: number | null;
+      currency: string | null;
+      canton: string | null;
+      city: string | null;
+      languages: string[] | null;
+    };
+    const rows = (therapistsRes.data ?? []) as unknown as Row[];
+    const listed = new Set(rows.map((r) => r.id));
+
+    // Pivot illisible : on n'affiche pas de compte de spécialités (null)
+    // plutôt qu'un zéro faux ; le reste des chiffres reste valable.
+    let specialtyCount: number | null = null;
+    if (!pivotRes.error) {
+      const ids = new Set<string>();
+      for (const p of (pivotRes.data ?? []) as unknown as Array<{
+        therapist_id: string;
+        specialty_id: string;
+      }>) {
+        if (listed.has(p.therapist_id)) ids.add(p.specialty_id);
+      }
+      specialtyCount = ids.size;
+    }
+
+    return {
+      ...computeListingFacts(rows),
+      specialtyCount,
+      languages: countProfileLanguages(rows),
+      asOf: zurichDay(),
+    };
+  }, null);
+});

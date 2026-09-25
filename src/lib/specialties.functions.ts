@@ -304,7 +304,8 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
       therapists = ts ?? [];
     }
 
-    return { specialty: s, family, siblings: siblings ?? [], therapists };
+    const { zurichDay } = await import("@/lib/directory-stats");
+    return { specialty: s, family, siblings: siblings ?? [], therapists, asOf: zurichDay() };
   });
 
 export const listAllSpecialties = createServerFn({ method: "GET" }).handler(async () => {
@@ -324,6 +325,9 @@ export const listAllSpecialties = createServerFn({ method: "GET" }).handler(asyn
 });
 
 // ─── GEO page: therapists in a given city for a given specialty ───
+/** Rayon de recherche autour de la ville (affiché dans les chiffres de la page). */
+export const SPECIALTY_CITY_RADIUS_KM = 30;
+
 export const getSpecialtyCityPage = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string; city: string }) => ({
     slug: String(data?.slug ?? "").slice(0, 80),
@@ -377,11 +381,12 @@ export const getSpecialtyCityPage = createServerFn({ method: "GET" })
     const { data: near } = await sb.rpc("therapists_within_radius", {
       _lat: (city as any).lat,
       _lng: (city as any).lng,
-      _radius_m: 30000,
+      _radius_m: SPECIALTY_CITY_RADIUS_KM * 1000,
     });
     const set = new Set(specIds);
     const therapists = ((near ?? []) as any[]).filter((t) => set.has(t.id));
-    return { specialty, family, city, therapists };
+    const { zurichDay } = await import("@/lib/directory-stats");
+    return { specialty, family, city, therapists, asOf: zurichDay() };
   });
 // ─── Univers de recherche : bien-être / holistique ────────────────────────────
 //

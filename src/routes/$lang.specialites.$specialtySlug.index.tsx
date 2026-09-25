@@ -7,6 +7,7 @@ import { isSpecialtyIndexable } from "@/lib/seo-thresholds";
 import { organizationRef } from "@/lib/organization-schema";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 const T = {
@@ -174,7 +175,7 @@ function Page() {
     );
   }
 
-  const { specialty, family, siblings, therapists } = query.data as any;
+  const { specialty, family, siblings, therapists, asOf } = query.data as any;
   const specName = pickI18n(specialty, lang, "name");
   const specDesc = pickI18n(specialty, lang, "description");
 
@@ -208,6 +209,14 @@ function Page() {
           </p>
         )}
       </header>
+
+      <ListingFactsBlock
+        rows={therapists}
+        asOf={asOf}
+        scope={{ kind: "specialty", name: specName }}
+        showCantons
+        showCities
+      />
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">

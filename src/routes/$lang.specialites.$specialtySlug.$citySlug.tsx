@@ -1,11 +1,17 @@
 import { createFileRoute, Link, useParams, redirect, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getSpecialtyCityPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
+import {
+  getSpecialtyCityPage,
+  pickI18n,
+  specialtySlugForLang,
+  SPECIALTY_CITY_RADIUS_KM,
+} from "@/lib/specialties.functions";
 import { LANGS, ogLocale } from "@/lib/seo";
 import { isSpecialtyCityIndexable } from "@/lib/seo-thresholds";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
+import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
 
 function humanCity(slug: string) {
@@ -159,7 +165,7 @@ function Page() {
     );
   }
 
-  const { specialty, family, city, therapists } = query.data as any;
+  const { specialty, family, city, therapists, asOf } = query.data as any;
   const specName = pickI18n(specialty, lang, "name");
   const specDesc = pickI18n(specialty, lang, "description");
   const cityDisplay = city?.display_name || humanCity(citySlug);
@@ -205,6 +211,19 @@ function Page() {
             <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base leading-relaxed">{specDesc}</p>
           )}
         </header>
+
+        <ListingFactsBlock
+          rows={therapists}
+          asOf={asOf}
+          scope={{
+            kind: "specialtyCity",
+            name: specName,
+            // `display_name` vaut « Genève, Suisse » : la phrase chiffrée
+            // ne garde que le nom de la ville.
+            city: cityDisplay.split(",")[0].trim(),
+            km: SPECIALTY_CITY_RADIUS_KM,
+          }}
+        />
 
         <section>
           <h2 className="mb-4 text-lg font-semibold text-white">

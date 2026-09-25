@@ -6,6 +6,7 @@ import { ogLocale, seoLinks, SITE } from "@/lib/seo";
 import { TherapistCardCompact } from "@/components/holiswiss/TherapistCardCompact";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 
 const T = {
@@ -88,6 +89,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         therapists: [] as PublicTherapistCard[],
         cityName: null,
         canton: null,
+        asOf: null,
         unavailable: true as const,
       };
     }
@@ -163,7 +165,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
 
 function Page() {
   const { lang, citySlug: slug } = useParams({ from: "/$lang/therapeutes/ville/$citySlug" });
-  const { therapists, cityName, canton, unavailable } = Route.useLoaderData();
+  const { therapists, cityName, canton, asOf, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const name = cityName ?? titleCase(slug);
@@ -194,6 +196,8 @@ function Page() {
         <h1 className="text-3xl font-semibold text-white sm:text-4xl">{t.h1(name)}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/70 sm:text-base">{t.intro(name)}</p>
       </header>
+
+      <ListingFactsBlock rows={therapists} asOf={asOf} scope={{ kind: "city", name }} />
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">{t.count(therapists.length, name)}</h2>

@@ -6,6 +6,7 @@ import { ogLocale, seoLinks, SITE } from "@/lib/seo";
 import { TherapistCardCompact } from "@/components/holiswiss/TherapistCardCompact";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 
 const T = {
@@ -80,12 +81,19 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     // Panne technique ≠ canton réellement sans praticien : on ne sert plus une
     // liste vide en 200, la réponse SSR devient un vrai 503 réessayable.
     const res = await loadEssential(() => listTherapistsByCanton({ data: { canton: code } }));
-    if (!res.ok) return { therapists: [] as PublicTherapistCard[], unavailable: true as const, indexable: true };
+    if (!res.ok)
+      return {
+        therapists: [] as PublicTherapistCard[],
+        asOf: null,
+        unavailable: true as const,
+        indexable: true,
+      };
     // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08) :
     // un canton sans aucun praticien n'a rien à indexer — même règle que le
     // gabarit ville et que le sitemap, qui n'annonce que les cantons peuplés.
     return {
       therapists: res.data.therapists,
+      asOf: res.data.asOf,
       unavailable: false as const,
       indexable: res.data.therapists.length > 0,
     };
@@ -155,13 +163,21 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
 
 function Page() {
   const { lang, canton } = useParams({ from: "/$lang/therapeutes/canton/$canton" });
-  const { therapists, unavailable } = Route.useLoaderData();
+  const { therapists, asOf, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const code = canton.toUpperCase();
   const name = cantonName(code, lang);
 
-  const cities = [...new Set(therapists.map((x) => (x.city ?? "").trim()).filter(Boolean))].sort();
+  // Une pastille par page ville : regroupement par slug (même clé que l'URL et
+  // que le chiffre « N villes » du bloc de faits), premier libellé rencontré.
+  const citiesBySlug = new Map<string, string>();
+  for (const x of therapists) {
+    const label = (x.city ?? "").trim();
+    const slug = citySlug(label);
+    if (slug && !citiesBySlug.has(slug)) citiesBySlug.set(slug, label);
+  }
+  const cities = [...citiesBySlug.values()].sort();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -177,6 +193,13 @@ function Page() {
         <h1 className="text-3xl font-semibold text-white sm:text-4xl">{t.h1(name)}</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/70 sm:text-base">{t.intro(name)}</p>
       </header>
+
+      <ListingFactsBlock
+        rows={therapists}
+        asOf={asOf}
+        scope={{ kind: "canton", name }}
+        showCities
+      />
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">{t.count(therapists.length, name)}</h2>
