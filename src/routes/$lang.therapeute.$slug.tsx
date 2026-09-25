@@ -1293,10 +1293,10 @@ function ProfilePage() {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
-                            {(r.author_name?.[0] ?? "C").toUpperCase()}
+                            {(r.author_name || t("therapist_profile.anonymous_reviewer"))[0].toUpperCase()}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-white">{r.author_name || "Client vérifié"}</span>
+                            <span className="text-xs font-semibold text-white">{r.author_name || t("therapist_profile.anonymous_reviewer")}</span>
                             <StarRow rating={r.rating} size={3} />
                           </div>
                         </div>
