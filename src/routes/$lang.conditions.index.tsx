@@ -147,7 +147,10 @@ function ConditionsPage() {
       </Section>
 
       <p className="mt-10 text-xs text-[#9980b8]">
-        Dernière mise à jour : {new Date().toLocaleDateString("fr-CH", { year: "numeric", month: "long", day: "numeric" })}
+        {/* Date de la dernière révision du TEXTE des CGU, écrite en dur : à changer
+            à la main à chaque révision. Jamais `new Date()` (affichait la date du
+            jour à chaque visite). */}
+        Dernière mise à jour : <time dateTime="2026-08-01">1er août 2026</time>
       </p>
     </div>
   );
