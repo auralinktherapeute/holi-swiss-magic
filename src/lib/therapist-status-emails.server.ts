@@ -56,6 +56,7 @@ function buildEmail(args: {
          <p style="text-align:center;margin:28px 0;">
            <a href="${profileUrl}" style="display:inline-block;padding:14px 28px;border-radius:999px;background:linear-gradient(135deg,#b86ef9,#5cc8fa);color:#fff;font-weight:700;text-decoration:none;">Voir mon profil →</a>
          </p>
+         ${args.reason ? `<div style="margin-top:16px;background:rgba(245,158,11,0.1);border-left:3px solid #f59e0b;border-radius:6px;padding:12px 14px;"><strong style="color:#f59e0b;">À compléter :</strong><br>${escapeHtml(args.reason).replace(/\n/g, "<br>")}</div>` : ""}
          <p style="color:rgba(255,255,255,0.65);font-size:13.5px;">Pensez à compléter régulièrement vos disponibilités depuis votre tableau de bord.</p>`,
       ),
     };
