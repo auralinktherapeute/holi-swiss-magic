@@ -159,21 +159,18 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // GARDE AJOUTÉE HORS DEMANDE INITIALE (lot « ville officielle », 25/09/2026)
-    // — à annoncer dans la PR. Une fiche publiée doit indiquer sa ville (pages
-    // /ville/…, filtres, données structurées) : c'est la même règle que
-    // saveMyTherapistProfile, appliquée ici au seul autre chemin qui publie une
-    // fiche (passage en « active » par l'admin). Conséquence : une fiche sans
-    // ville ne peut plus être (ré)activée tant que le thérapeute n'a pas saisi
-    // son NPA et sa commune. Lecture en échec ou fiche introuvable → refus.
+    // Une ville manquante NE BLOQUE PLUS la validation (décision Gérald 28/09/2026) :
+    // le thérapeute est prévenu dans son e-mail de validation.
+    let missingNote: string | undefined;
     if (data.status === "active") {
-      const { data: current, error: currentError } = await supabaseAdmin
-        .from("therapists").select("city").eq("id", data.id).maybeSingle();
-      if (currentError || !current) {
-        throw new Error("Impossible de vérifier la fiche avant publication.");
-      }
-      if (!String((current as { city?: string | null }).city ?? "").trim()) {
-        throw new Error("Publication impossible : la fiche n'indique pas de ville. Demandez au thérapeute de renseigner son NPA et sa commune.");
+      const { data: current } = await supabaseAdmin
+        .from("therapists").select("city,postal_code").eq("id", data.id).maybeSingle();
+      const c = (current ?? {}) as { city?: string | null; postal_code?: string | null };
+      const missing: string[] = [];
+      if (!String(c.city ?? "").trim()) missing.push("votre commune (ville)");
+      if (!String(c.postal_code ?? "").trim()) missing.push("votre NPA (code postal)");
+      if (current && missing.length) {
+        missingNote = `Votre fiche est en ligne, mais il manque : ${missing.join(", ")}. Merci de les renseigner depuis votre tableau de bord (Mon profil) pour apparaître dans les recherches par ville.`;
       }
     }
     const { data: row, error } = await supabaseAdmin
@@ -198,7 +195,7 @@ export const updateTherapistStatus = createServerFn({ method: "POST" })
           lastName: row.last_name ?? undefined,
           slug: row.slug ?? undefined,
           status: data.status,
-          reason: data.reason,
+          reason: data.status === "active" ? missingNote : data.reason,
         });
       } catch (e) {
         console.error("[admin] therapist status email failed", e);
