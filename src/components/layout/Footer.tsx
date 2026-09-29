@@ -185,8 +185,8 @@ export function Footer() {
         </div>
 
         {/* Maillage interne géographique — cantons et villes principales */}
-        <nav aria-label="Thérapeutes par région" className="mt-9 border-t border-[rgba(255,255,255,0.08)] pt-6">
-          <h4 className={headingClass}>{t("footer.by_region", "Thérapeutes par région")}</h4>
+        <nav aria-label={t("footer.by_region")} className="mt-9 border-t border-[rgba(255,255,255,0.08)] pt-6">
+          <h4 className={headingClass}>{t("footer.by_region")}</h4>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#c3b4dc]">
             {FOOTER_CANTONS.map((code) => (
               <li key={code}>

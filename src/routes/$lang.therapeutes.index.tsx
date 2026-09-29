@@ -18,7 +18,7 @@ import {
   type DirectorySearchRow,
   type PublicTherapistCard,
 } from "@/lib/geo-listings.functions";
-import { UNFILTERED_DIRECTORY_SEARCH_ARGS } from "@/lib/geo-listings";
+import { UNFILTERED_DIRECTORY_SEARCH_ARGS, cantonName } from "@/lib/geo-listings";
 import { listFamiliesWithCounts } from "@/lib/specialties.functions";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
@@ -194,15 +194,6 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
 
 type Therapist = DirectorySearchRow;
 
-const CANTON_LABELS: Record<string, string> = {
-  GE: "Genève", VD: "Vaud", VS: "Valais", FR: "Fribourg", NE: "Neuchâtel",
-  JU: "Jura", BE: "Berne", ZH: "Zurich", BS: "Bâle-Ville", AG: "Argovie",
-  TI: "Tessin", LU: "Lucerne", SG: "Saint-Gall", BL: "Bâle-Campagne",
-  SO: "Soleure", SH: "Schaffhouse", TG: "Thurgovie", GR: "Grisons",
-  GL: "Glaris", ZG: "Zoug", SZ: "Schwyz", UR: "Uri", OW: "Obwald",
-  NW: "Nidwald", AR: "Appenzell Rh.-Ext.", AI: "Appenzell Rh.-Int.",
-};
-
 function CardSkeleton() {
   return (
     <div className="flex gap-3 rounded-2xl border border-[rgba(184,110,249,0.15)] bg-[#1a0a2e] p-4 animate-pulse">
@@ -292,19 +283,23 @@ function DirectoryPage() {
     },
   });
 
-  // Label lookup for the active chip
+  // Libellé de la puce active, dans la langue de la page (repli sur le
+  // français quand la traduction de la spécialité n'est pas renseignée).
+  const labelCol = (["de", "it", "en"] as const).find((l) => l === lang);
   const activeLabelQuery = useQuery({
-    queryKey: ["specialty-label", specFilter ?? null, famFilter ?? null],
+    queryKey: ["specialty-label", specFilter ?? null, famFilter ?? null, lang],
     enabled: !!(specFilter || famFilter),
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
+      const cols = labelCol ? `name_fr,name_${labelCol}` : "name_fr";
+      const pickName = (row: any) => (labelCol && row?.[`name_${labelCol}`]) || row?.name_fr;
       if (specFilter) {
-        const { data } = await supabase.from("specialties").select("name_fr").eq("slug", specFilter).maybeSingle();
-        return (data as any)?.name_fr ?? specFilter;
+        const { data } = await supabase.from("specialties").select(cols).eq("slug", specFilter).maybeSingle();
+        return pickName(data) ?? specFilter;
       }
       if (famFilter) {
-        const { data } = await supabase.from("specialty_families").select("name_fr").eq("slug", famFilter).maybeSingle();
-        return (data as any)?.name_fr ?? famFilter;
+        const { data } = await supabase.from("specialty_families").select(cols).eq("slug", famFilter).maybeSingle();
+        return pickName(data) ?? famFilter;
       }
       return null;
     },
@@ -366,7 +361,7 @@ function DirectoryPage() {
           />
           {(hasSpecFilter || cantonFilter) && (
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-              <span className="text-white/50">Filtre actif :</span>
+              <span className="text-white/50">{t("therapists_directory.active_filter")}</span>
               {hasSpecFilter && (
                 <button
                   onClick={clearFilter}
@@ -381,7 +376,7 @@ function DirectoryPage() {
                   onClick={clearCanton}
                   className="inline-flex items-center gap-1.5 rounded-full border border-[#5cc8fa] bg-[rgba(92,200,250,0.2)] px-3 py-1 font-medium text-white hover:bg-[rgba(92,200,250,0.35)]"
                 >
-                  {CANTON_LABELS[cantonFilter] ?? cantonFilter}
+                  {cantonName(cantonFilter, lang)}
                   <X className="h-3 w-3" />
                 </button>
               )}
@@ -389,7 +384,7 @@ function DirectoryPage() {
                 onClick={() => { clearFilter(); if (cantonFilter) clearCanton(); }}
                 className="rounded-full border border-white/15 px-3 py-1 text-white/70 hover:border-white/40 hover:text-white"
               >
-                Tous les thérapeutes
+                {t("therapists_directory.clear_filters")}
               </button>
             </div>
           )}
@@ -414,19 +409,24 @@ function DirectoryPage() {
         </div>
         {hasResults && (
           <span className="hidden sm:block text-sm text-[rgba(255,255,255,0.45)]">
-            {filtered.length} {filtered.length !== 1 ? t("therapist_profile.therapist_plural") : t("therapist_profile.therapist_singular")}
+            {t("therapists_directory.results_count", { count: filtered.length })}
           </span>
         )}
         {/* Mobile tabs */}
-        <div className="ml-auto flex sm:hidden rounded-xl border border-[rgba(184,110,249,0.25)] overflow-hidden">
+        <div
+          role="group"
+          aria-label={t("therapists_directory.view_switch")}
+          className="ml-auto flex sm:hidden rounded-xl border border-[rgba(184,110,249,0.25)] overflow-hidden"
+        >
           {(["list", "map"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setMobileTab(tab)}
+              aria-pressed={mobileTab === tab}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${mobileTab === tab ? "bg-[#b86ef9] text-white" : "text-[rgba(255,255,255,0.5)] hover:text-white"}`}
             >
               {tab === "list" ? <List className="h-3.5 w-3.5" /> : <Map className="h-3.5 w-3.5" />}
-              {tab === "list" ? "Liste" : "Carte"}
+              {tab === "list" ? t("therapists_directory.view_list") : t("therapists_directory.view_map")}
             </button>
           ))}
         </div>
@@ -440,9 +440,9 @@ function DirectoryPage() {
           <div className="space-y-2 p-3">
             {isSearching && !isLoading && (
               <div className="px-1 pb-1 text-xs text-[rgba(255,255,255,0.55)]">
-                {filtered.length} thérapeute{filtered.length !== 1 ? "s" : ""}
-                {matchedSpecialty && <> pour <span className="text-white">{matchedSpecialty}</span></>}
-                {matchedCity && <> autour de <span className="text-white">{matchedCity}</span></>}
+                {t("therapists_directory.results_count", { count: filtered.length })}
+                {matchedSpecialty && <> {t("therapists_directory.results_for")} <span className="text-white">{matchedSpecialty}</span></>}
+                {matchedCity && <> {t("therapists_directory.results_near")} <span className="text-white">{matchedCity}</span></>}
               </div>
             )}
             {isLoading && Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}

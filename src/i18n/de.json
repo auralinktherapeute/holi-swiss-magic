@@ -261,6 +261,7 @@
     "waitlist": "Warteliste"
   },
   "footer": {
+    "by_region": "Therapeuten nach Region",
     "rights": "Alle Rechte vorbehalten",
     "legal": "Impressum",
     "privacy": "Datenschutz",
@@ -911,6 +912,15 @@
     "certs_more_other": "und {{count}} weitere, weiter oben im Profil aufgeführt"
   },
   "therapists_directory": {
+    "active_filter": "Aktiver Filter:",
+    "clear_filters": "Alle Therapeuten",
+    "view_switch": "Ansicht",
+    "view_list": "Liste",
+    "view_map": "Karte",
+    "results_count_one": "{{count}} Therapeut",
+    "results_count_other": "{{count}} Therapeuten",
+    "results_for": "für",
+    "results_near": "in der Nähe von",
     "h1": "Therapeuten in der Schweiz finden"
   }
 }
