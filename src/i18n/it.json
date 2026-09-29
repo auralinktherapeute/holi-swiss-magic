@@ -261,6 +261,7 @@
     "waitlist": "Lista d'attesa"
   },
   "footer": {
+    "by_region": "Terapeuti per regione",
     "rights": "Tutti i diritti riservati",
     "legal": "Note legali",
     "privacy": "Privacy",
@@ -911,6 +912,15 @@
     "certs_more_other": "e altre {{count}}, elencate più in alto nel profilo"
   },
   "therapists_directory": {
+    "active_filter": "Filtro attivo:",
+    "clear_filters": "Tutti i terapeuti",
+    "view_switch": "Visualizzazione",
+    "view_list": "Elenco",
+    "view_map": "Mappa",
+    "results_count_one": "{{count}} terapeuta",
+    "results_count_other": "{{count}} terapeuti",
+    "results_for": "per",
+    "results_near": "vicino a",
     "h1": "Trovare un terapeuta in Svizzera"
   }
 }

@@ -261,6 +261,7 @@
     "waitlist": "Waiting list"
   },
   "footer": {
+    "by_region": "Therapists by region",
     "rights": "All rights reserved",
     "legal": "Legal",
     "privacy": "Privacy",
@@ -911,6 +912,15 @@
     "certs_more_other": "and {{count}} more, listed further up the profile"
   },
   "therapists_directory": {
+    "active_filter": "Active filter:",
+    "clear_filters": "All therapists",
+    "view_switch": "View",
+    "view_list": "List",
+    "view_map": "Map",
+    "results_count_one": "{{count}} therapist",
+    "results_count_other": "{{count}} therapists",
+    "results_for": "for",
+    "results_near": "near",
     "h1": "Find a therapist in Switzerland"
   }
 }
