@@ -126,6 +126,28 @@ describe("seo-thresholds — sitemap et routes partagent le même helper", () =>
     expect(head).toMatch(/loaderData[^;]*\?\.indexable/);
   });
 
+  // Pages liste : sous le seuil (noindex) ou en panne, AUCUN JSON-LD — ni
+  // BreadcrumbList, ni CollectionPage/ItemList, ni FAQPage. Même règle partout.
+  const LIST_ROUTES = [
+    "$lang.therapeutes.ville.$citySlug.tsx",
+    "$lang.therapeutes.canton.$canton.tsx",
+    "$lang.therapeutes.famille.$familySlug.tsx",
+    "$lang.specialites.$specialtySlug.index.tsx",
+  ];
+  it.each(LIST_ROUTES)("%s ne publie aucun JSON-LD en noindex ni en panne", (file) => {
+    const src = code(read(file));
+    const head = src.slice(src.indexOf("head:"));
+    // `noindex` est dérivé de la décision du loader…
+    expect(head).toMatch(/const noindex\s*=[^;]*loaderData[^;]*indexable|const noindex\s*=[^;]*!indexable/);
+    // … et coupe TOUS les scripts : `scripts: <garde avec noindex et unavailable> ? [] :`.
+    const guard = head.match(/scripts:\s*([^?]*)\?\s*\[\s*\]\s*:/);
+    expect(guard, `${file} : scripts non gardé par noindex`).not.toBeNull();
+    expect(guard![1]).toMatch(/\bnoindex\b/);
+    expect(guard![1]).toMatch(/\bunavailable\b/);
+    // Un seul bloc `scripts:` dans head (pas de second tableau non gardé).
+    expect(head.match(/\bscripts:/g)?.length).toBe(1);
+  });
+
   it.each(ROUTES)("le sitemap importe et appelle le helper de %s", (_file, helper) => {
     const src = code(read(SITEMAP));
     expect(importsHelper(src, helper)).toBe(true);

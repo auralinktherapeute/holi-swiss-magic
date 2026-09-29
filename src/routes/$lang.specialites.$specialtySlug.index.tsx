@@ -110,9 +110,13 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     const indexable = (loaderData as any)?.indexable !== false;
     // En panne : ni noindex (voir le loader) ni données structurées.
     const unavailable = (loaderData as any)?.unavailable === true;
-    // Liste RÉELLE du loader : jamais d'ItemList inventé ni vide. Une page
-    // `noindex` (aucun praticien) reste `noindex` — on n'ajoute pas de données
-    // structurées pour la rendre attirante, il n'y a rien à lister.
+    // Page sous le seuil (noindex) : AUCUNE donnée structurée — ni
+    // BreadcrumbList, ni CollectionPage/ItemList, ni FAQPage. Même règle que
+    // les pages ville, canton et famille (`scripts: unavailable || noindex ? [] …`).
+    // Avant le 29/09/2026, une spécialité à 1 praticien, noindex, publiait
+    // encore sa CollectionPage et son ItemList.
+    const noindex = !unavailable && !indexable;
+    // Liste RÉELLE du loader : jamais d'ItemList inventé ni vide.
     const list = (((loaderData as any)?.page?.therapists ?? []) as Array<{
       slug: string | null; first_name: string | null; last_name: string | null;
     }>).filter((x) => x.slug);
@@ -140,7 +144,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
         { name: "twitter:description", content: description },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangs],
-      scripts: unavailable ? [] : [
+      scripts: unavailable || noindex ? [] : [
         {
           type: "application/ld+json",
           children: JSON.stringify({
