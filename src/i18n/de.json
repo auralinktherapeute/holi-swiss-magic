@@ -951,5 +951,14 @@
     "q_languages": "{{place}}: In welchen Sprachen sind Sitzungen möglich?",
     "a_languages": "In den Profilen angegebene Sprachen: {{list}}.",
     "share": "{{label}} ({{count}} von {{total}})"
+  },
+  "homeLinks": {
+    "also_listed": "Ebenfalls im Verzeichnis",
+    "cities_title": "Nach Stadt",
+    "cantons_title": "Nach Kanton",
+    "city_link": "{{name}}: Therapeut:innen",
+    "articles_title": "Neueste Artikel",
+    "articles_subtitle": "Orientierung und Tipps zu ganzheitlichen Ansätzen, erschienen im Holiswiss-Blog",
+    "articles_all": "Alle Artikel"
   }
 }

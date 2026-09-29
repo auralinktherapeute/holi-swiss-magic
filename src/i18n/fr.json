@@ -951,5 +951,14 @@
     "q_languages": "{{place}} : dans quelles langues peut-on consulter ?",
     "a_languages": "Langues indiquées sur les fiches : {{list}}.",
     "share": "{{label}} ({{count}} sur {{total}})"
+  },
+  "homeLinks": {
+    "also_listed": "Également dans l'annuaire",
+    "cities_title": "Par ville",
+    "cantons_title": "Par canton",
+    "city_link": "{{name}} : thérapeutes",
+    "articles_title": "Derniers articles",
+    "articles_subtitle": "Repères et conseils sur les approches holistiques, publiés sur le blog Holiswiss",
+    "articles_all": "Tous les articles"
   }
 }

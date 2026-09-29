@@ -951,5 +951,14 @@
     "q_languages": "{{place}}: in quali lingue è possibile consultare?",
     "a_languages": "Lingue indicate nei profili: {{list}}.",
     "share": "{{label}} ({{count}} su {{total}})"
+  },
+  "homeLinks": {
+    "also_listed": "Anche nell'elenco",
+    "cities_title": "Per città",
+    "cantons_title": "Per cantone",
+    "city_link": "{{name}}: terapeuti",
+    "articles_title": "Ultimi articoli",
+    "articles_subtitle": "Punti di riferimento e consigli sugli approcci olistici, pubblicati sul blog Holiswiss",
+    "articles_all": "Tutti gli articoli"
   }
 }
