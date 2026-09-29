@@ -11,6 +11,9 @@ import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { WEBSITE_ID } from "@/lib/organization-schema";
 import { isCityIndexable } from "@/lib/seo-thresholds";
+import i18n, { DEFAULT_LANG, isLang } from "@/lib/i18n";
+import { buildLocalFaqSection, localFaqJsonLd, type LocalFaqSection } from "@/lib/local-faq";
+import { LocalFaq } from "@/components/holiswiss/LocalFaq";
 
 const T = {
   fr: {
@@ -20,7 +23,9 @@ const T = {
     title: (c: string) => `Thérapeutes à ${c} | Holiswiss`,
     desc: (c: string) =>
       `Thérapeutes holistiques à ${c} : profils validés par Holiswiss, spécialités, tarifs et prise de rendez-vous en ligne sur Holiswiss.`,
-    count: (n: number, c: string) => `${n} ${n > 1 ? "thérapeutes" : "thérapeute"} à ${c}`,
+    // Lieu en apposition (tiret), jamais après « à » : le nom est un texte libre
+    // (« Le Grand Saconnex » → « à Le Grand Saconnex »). Voir local-faq.ts.
+    count: (n: number, c: string) => `${n} ${n > 1 ? "profils de thérapeutes" : "profil de thérapeute"} — ${c}`,
     none: (c: string) => `Aucun thérapeute référencé à ${c} pour le moment.`,
     intro: (c: string) =>
       `Praticiens en médecines complémentaires et accompagnement bien-être exerçant à ${c}. Chaque profil précise les approches proposées, les langues parlées, les tarifs et les disponibilités.`,
@@ -34,7 +39,7 @@ const T = {
     title: (c: string) => `Therapeuten in ${c} | Holiswiss`,
     desc: (c: string) =>
       `Ganzheitliche Therapeuten in ${c}: von Holiswiss geprüfte Profile, Spezialitäten, Preise und Online-Terminbuchung auf Holiswiss.`,
-    count: (n: number, c: string) => `${n} Therapeut${n > 1 ? "en" : ""} in ${c}`,
+    count: (n: number, c: string) => `${n} Therapeutenprofil${n > 1 ? "e" : ""} — ${c}`,
     none: (c: string) => `Noch keine Therapeuten in ${c} eingetragen.`,
     intro: (c: string) =>
       `Fachpersonen für Komplementärmedizin und ganzheitliche Begleitung in ${c}. Jedes Profil zeigt Methoden, Sprachen, Preise und Verfügbarkeiten.`,
@@ -48,7 +53,7 @@ const T = {
     title: (c: string) => `Terapeuti a ${c} | Holiswiss`,
     desc: (c: string) =>
       `Terapeuti olistici a ${c}: profili convalidati da Holiswiss, specialità, tariffe e prenotazione online su Holiswiss.`,
-    count: (n: number, c: string) => `${n} terapeut${n > 1 ? "i" : "a"} a ${c}`,
+    count: (n: number, c: string) => `${n} ${n > 1 ? "profili di terapeuti" : "profilo di terapeuta"} — ${c}`,
     none: (c: string) => `Nessun terapeuta registrato a ${c} per il momento.`,
     intro: (c: string) =>
       `Professionisti di medicine complementari e benessere a ${c}. Ogni profilo indica approcci, lingue, tariffe e disponibilità.`,
@@ -62,7 +67,7 @@ const T = {
     title: (c: string) => `Therapists in ${c} | Holiswiss`,
     desc: (c: string) =>
       `Holistic therapists in ${c}: profiles validated by Holiswiss, specialties, prices and online booking on Holiswiss.`,
-    count: (n: number, c: string) => `${n} therapist${n > 1 ? "s" : ""} in ${c}`,
+    count: (n: number, c: string) => `${n} therapist profile${n > 1 ? "s" : ""} — ${c}`,
     none: (c: string) => `No therapists listed in ${c} yet.`,
     intro: (c: string) =>
       `Complementary medicine and wellbeing practitioners working in ${c}. Each profile lists approaches, languages, prices and availability.`,
@@ -94,6 +99,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         canton: null,
         asOf: null,
         lastModified: null,
+        localFaq: null as LocalFaqSection | null,
         unavailable: true as const,
         // Panne ≠ page mince : pas de noindex sur un 503 (voir `loadEssential`).
         indexable: true,
@@ -102,7 +108,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
     // Alias ou ancien nom de ville → URL canonique (cities.slug), en 301 :
     // /ville/bienne → /ville/biel-bienne, /ville/ge → /ville/geneve. Même règle
     // que le sitemap, qui ne publie que la forme canonique.
-    const { canonicalSlug, ...rest } = res.data;
+    const { canonicalSlug, specialtyLinks, ...rest } = res.data;
     if (canonicalSlug && canonicalSlug !== params.citySlug) {
       throw redirect({
         to: "/$lang/therapeutes/ville/$citySlug",
@@ -115,10 +121,28 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
     // (0 ou 1 fiche depuis le 29/09/2026) est `noindex,follow` ET absente du
     // sitemap. Calculée APRÈS la redirection d'alias : seule l'URL canonique
     // porte une décision.
+    const indexable = isCityIndexable(rest.therapists.length);
+    // FAQ locale : calculée UNE fois ici, depuis la liste affichée, puis reprise
+    // telle quelle par le HTML et par le JSON-LD FAQPage du `head`. Jamais sur
+    // une page noindex (sous le seuil) : ni section, ni FAQPage.
+    const lang = isLang(params.lang) ? params.lang : DEFAULT_LANG;
+    const localFaq = indexable
+      ? buildLocalFaqSection(
+          rest.therapists,
+          {
+            kind: "city",
+            place: rest.cityName ?? titleCase(params.citySlug),
+            lang,
+            specialtyLinks,
+          },
+          i18n.getFixedT(lang) as unknown as (key: string, vars?: Record<string, unknown>) => string,
+        )
+      : null;
     return {
       ...rest,
+      localFaq,
       unavailable: false as const,
-      indexable: isCityIndexable(rest.therapists.length),
+      indexable,
     };
   },
   head: ({ params, loaderData }) => {
@@ -138,6 +162,10 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
     const unavailable = loaderData?.unavailable === true;
     const noindex = !unavailable && loaderData?.indexable === false;
     const modified = loaderData?.lastModified ?? null;
+    const faqLd =
+      noindex || unavailable || !loaderData?.localFaq
+        ? null
+        : localFaqJsonLd(loaderData.localFaq.items, { url, lang, pageId: `${url}#webpage` });
     return {
       meta: [
         { title },
@@ -204,6 +232,8 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
                 ...(modified ? { dateModified: modified.iso } : {}),
               }),
             },
+            // Un seul FAQPage par page, texte identique à la section visible.
+            ...(faqLd ? [{ type: "application/ld+json", children: JSON.stringify(faqLd) }] : []),
           ],
     };
   },
@@ -211,7 +241,7 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
 
 function Page() {
   const { lang, citySlug: slug } = useParams({ from: "/$lang/therapeutes/ville/$citySlug" });
-  const { therapists, cityName, canton, asOf, lastModified, unavailable } = Route.useLoaderData();
+  const { therapists, cityName, canton, asOf, lastModified, localFaq, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const name = cityName ?? titleCase(slug);
@@ -258,6 +288,8 @@ function Page() {
           </div>
         )}
       </section>
+
+      <LocalFaq faq={localFaq} />
 
       <p className="mt-10 flex flex-wrap gap-4 text-sm">
         {canton && (

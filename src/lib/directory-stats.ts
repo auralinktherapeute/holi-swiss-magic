@@ -64,7 +64,12 @@ export type DirectoryFacts = ListingFacts & {
   asOf: string;
 };
 
-function validPrice(row: FactsRow): number | null {
+/**
+ * `price_min` retenu dans les chiffres publics : > 0, fini, en CHF (devise
+ * absente = CHF, colonne à défaut `CHF`). Exporté pour la FAQ locale
+ * (`local-faq.ts`), qui doit compter exactement les mêmes fiches tarifées.
+ */
+export function validChfPriceMin(row: FactsRow): number | null {
   const cur = (row.currency ?? "CHF").trim().toUpperCase();
   if (cur && cur !== "CHF") return null;
   const raw = row.price_min;
@@ -89,7 +94,7 @@ export function computeListingFacts(rows: ReadonlyArray<FactsRow>): ListingFacts
 
   for (const r of rows) {
     if (r.verified === true) verifiedCount += 1;
-    const p = validPrice(r);
+    const p = validChfPriceMin(r);
     if (p !== null) {
       pricedCount += 1;
       if (priceFrom === null || p < priceFrom) priceFrom = p;

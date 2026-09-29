@@ -12,12 +12,15 @@ import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
+import i18n, { DEFAULT_LANG, isLang } from "@/lib/i18n";
+import { buildLocalFaqSection, localFaqJsonLd, type LocalFaqSection } from "@/lib/local-faq";
+import { LocalFaq } from "@/components/holiswiss/LocalFaq";
 
 const T = {
-  fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", therapist: "thérapeute", therapistPlural: "thérapeutes", inSpec: "en", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Spécialités proches", titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.` },
-  de: { home: "Startseite", therapists: "Therapeuten", inSwitzerland: "in der Schweiz", loading: "Wird geladen…", notFound: "Spezialität nicht gefunden.", back: "Zurück zum Verzeichnis", therapist: "Therapeut", therapistPlural: "Therapeuten", inSpec: "in", none: "Noch keine Therapeuten für", forNow: "eingetragen.", nearby: "Ähnliche Spezialitäten", titleSuffix: "in der Schweiz — Therapeutenverzeichnis | Holiswiss", desc: (l: string) => `Finden Sie eine Fachperson für ${l} in der Schweiz: von Holiswiss geprüfte Profile, Preise, Bewertungen. In wenigen Klicks buchen.` },
-  it: { home: "Home", therapists: "Terapeuti", inSwitzerland: "in Svizzera", loading: "Caricamento…", notFound: "Specialità non trovata.", back: "Torna alla directory", therapist: "terapeuta", therapistPlural: "terapeuti", inSpec: "in", none: "Nessun terapeuta registrato in", forNow: "per il momento.", nearby: "Specialità simili", titleSuffix: "in Svizzera — Elenco dei terapeuti | Holiswiss", desc: (l: string) => `Trova un professionista di ${l} in Svizzera: profili convalidati da Holiswiss, tariffe, recensioni. Prenota in pochi clic.` },
-  en: { home: "Home", therapists: "Therapists", inSwitzerland: "in Switzerland", loading: "Loading…", notFound: "Specialty not found.", back: "Back to directory", therapist: "therapist", therapistPlural: "therapists", inSpec: "in", none: "No therapists listed in", forNow: "yet.", nearby: "Related specialties", titleSuffix: "in Switzerland — Therapist directory | Holiswiss", desc: (l: string) => `Find a ${l} practitioner in Switzerland: profiles validated by Holiswiss, prices, reviews. Book in a few clicks.` },
+  fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Autres spécialités de la même famille", listHeading: (n: number, s: string) => `${n} ${n > 1 ? "profils de thérapeutes" : "profil de thérapeute"} — ${s}`, titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.` },
+  de: { home: "Startseite", therapists: "Therapeuten", inSwitzerland: "in der Schweiz", loading: "Wird geladen…", notFound: "Spezialität nicht gefunden.", back: "Zurück zum Verzeichnis", none: "Noch keine Therapeuten für", forNow: "eingetragen.", nearby: "Weitere Spezialitäten derselben Familie", listHeading: (n: number, s: string) => `${n} Therapeutenprofil${n > 1 ? "e" : ""} — ${s}`, titleSuffix: "in der Schweiz — Therapeutenverzeichnis | Holiswiss", desc: (l: string) => `Finden Sie eine Fachperson für ${l} in der Schweiz: von Holiswiss geprüfte Profile, Preise, Bewertungen. In wenigen Klicks buchen.` },
+  it: { home: "Home", therapists: "Terapeuti", inSwitzerland: "in Svizzera", loading: "Caricamento…", notFound: "Specialità non trovata.", back: "Torna alla directory", none: "Nessun terapeuta registrato in", forNow: "per il momento.", nearby: "Altre specialità della stessa famiglia", listHeading: (n: number, s: string) => `${n} ${n > 1 ? "profili di terapeuti" : "profilo di terapeuta"} — ${s}`, titleSuffix: "in Svizzera — Elenco dei terapeuti | Holiswiss", desc: (l: string) => `Trova un professionista di ${l} in Svizzera: profili convalidati da Holiswiss, tariffe, recensioni. Prenota in pochi clic.` },
+  en: { home: "Home", therapists: "Therapists", inSwitzerland: "in Switzerland", loading: "Loading…", notFound: "Specialty not found.", back: "Back to directory", none: "No therapists listed in", forNow: "yet.", nearby: "Other specialties in the same family", listHeading: (n: number, s: string) => `${n} therapist profile${n > 1 ? "s" : ""} — ${s}`, titleSuffix: "in Switzerland — Therapist directory | Holiswiss", desc: (l: string) => `Find a ${l} practitioner in Switzerland: profiles validated by Holiswiss, prices, reviews. Book in a few clicks.` },
 } as const;
 function tr(lang: string) { return (T as any)[lang] ?? T.fr; }
 
@@ -38,7 +41,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // lecture n'est ni une 404 ni une page mince. `loadEssential` pose le 503
     // (réessayable) et la page ne reçoit AUCUN noindex (indexable: true).
     const res = await loadEssential(() => getSpecialtyPage({ data: { slug: params.specialtySlug } }));
-    if (!res.ok) return { page: null, indexable: true, unavailable: true as const };
+    if (!res.ok) return { page: null, indexable: true, localFaq: null as LocalFaqSection | null, unavailable: true as const };
     const page = res.data;
     if (!page) throw notFound();
     // La spécialité peut avoir été retrouvée via son slug de base alors qu'un
@@ -60,7 +63,18 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // Seuil unique et partagé avec le sitemap (`seo-thresholds.ts`) : le sitemap
     // ne doit jamais déclarer une page qui émet un noindex.
     const indexable = isSpecialtyIndexable(page?.therapists?.length ?? 0);
-    return { page, indexable, unavailable: false as const };
+    // FAQ locale : calculée UNE fois ici, depuis la liste affichée (et le bloc
+    // de chiffres), reprise telle quelle par le HTML et le JSON-LD FAQPage.
+    // Aucune FAQ sur une page en noindex (sous le seuil) ni en panne.
+    const lang = isLang(params.lang) ? params.lang : DEFAULT_LANG;
+    const localFaq: LocalFaqSection | null = indexable
+      ? buildLocalFaqSection(
+          page.therapists,
+          { kind: "specialty", place: pickI18n(page.specialty, lang, "name"), lang },
+          i18n.getFixedT(lang) as unknown as (key: string, vars?: Record<string, unknown>) => string,
+        )
+      : null;
+    return { page, indexable, localFaq, unavailable: false as const };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -102,6 +116,13 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     const list = (((loaderData as any)?.page?.therapists ?? []) as Array<{
       slug: string | null; first_name: string | null; last_name: string | null;
     }>).filter((x) => x.slug);
+    const localFaq = (loaderData as any)?.localFaq as LocalFaqSection | null | undefined;
+    // FAQPage seulement là où la CollectionPage existe (liste non vide) et
+    // jamais sur une page noindex. `#page` : @id de la CollectionPage ci-dessous.
+    const faqLd =
+      indexable && list.length > 0 && localFaq
+        ? localFaqJsonLd(localFaq.items, { url, lang: params.lang, pageId: `${url}#page` })
+        : null;
     return {
       meta: [
         { title },
@@ -161,6 +182,8 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
             },
           }),
         }]),
+        // Un seul FAQPage par page, texte identique à la section visible.
+        ...(faqLd ? [{ type: "application/ld+json", children: JSON.stringify(faqLd) }] : []),
       ],
     };
   },
@@ -246,7 +269,7 @@ function SpecialtyPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-white">
-          {therapists.length} {therapists.length > 1 ? t.therapistPlural : t.therapist} {t.inSpec} {specName}
+          {t.listHeading(therapists.length, specName)}
         </h2>
         {therapists.length === 0 ? (
           <p className="text-sm text-white/60">
@@ -280,6 +303,8 @@ function SpecialtyPage() {
           </div>
         )}
       </section>
+
+      <LocalFaq faq={(loaderData as any)?.localFaq ?? null} />
 
       {siblings.length > 0 && (
         <section className="mt-12 border-t border-white/10 pt-8">
