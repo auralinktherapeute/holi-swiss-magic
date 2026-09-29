@@ -485,7 +485,11 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
 type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string; short_description?: string; kind?: "session" | "package"; visible?: boolean };
 type AccreditationEntry = { org: string; number?: string };
 
-const FADE_UP = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
+// Sections secondaires (événements, voix d'experts, FAQ automatique et FAQ du
+// praticien, avis, carte…) : JAMAIS d'opacity:0 initial — leur texte doit être
+// visible dans le HTML serveur, sans JavaScript (crawlers, lecteurs sans JS).
+// On garde seulement un léger glissement à l'entrée dans l'écran.
+const FADE_UP = { hidden: { opacity: 1, y: 12 }, show: { opacity: 1, y: 0 } };
 
 function StarRow({ rating, size = 4 }: { rating: number; size?: number }) {
   return (
@@ -534,7 +538,8 @@ function ContentCard({
 
   return (
     <motion.div
-      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: compact ? 10 : 16 }}
+      // Visible dès le HTML serveur (pas d'opacity:0) : seul un léger glissement.
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: compact ? 6 : 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * (compact ? 0.05 : 0.08), ease: [0.16, 1, 0.3, 1] }}
