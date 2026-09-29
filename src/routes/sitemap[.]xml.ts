@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { specSlugForLang } from "@/lib/specialty-slug";
 import type {} from "@tanstack/react-start";
-import { resolveProfileLang } from "@/lib/seo";
+import { PROFILE_LANG_COLUMNS, profileCanonicalUrl, profileContentLang } from "@/lib/seo";
 import { buildCitySlugResolver, type CityRow } from "@/lib/city-slug";
 import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
 import { articleLastmod, contentDay, paroleLastmod } from "@/lib/sitemap-lastmod";
@@ -207,6 +207,7 @@ type TherapistRow = {
   canton: string | null;
   city: string | null;
   languages: string[] | null;
+  profile_translations: unknown;
   latitude: number | null;
   longitude: number | null;
 };
@@ -260,7 +261,7 @@ async function buildSitemap(): Promise<string> {
     "sitemap: praticiens actifs",
     await supabaseAdmin
       .from("therapists")
-      .select(`id, slug, ${CONTENT_DATE_COLUMN}, canton, city, languages, latitude, longitude`)
+      .select(`id, slug, ${CONTENT_DATE_COLUMN}, city, latitude, longitude, ${PROFILE_LANG_COLUMNS}`)
       .eq("status", "active"),
   ) as unknown as TherapistRow[];
   // `[]` sans erreur n'est pas « aucun praticien » : c'est une lecture perdue.
@@ -609,18 +610,14 @@ async function buildSitemap(): Promise<string> {
 
   // Fiches praticiens — une SEULE URL par fiche, dans sa langue de rédaction.
   //
-  // La table `therapists` n'a pas de colonnes de traduction : publier les quatre
-  // langues revenait à déclarer quatre URL pour un unique texte français. Google
-  // l'avait déjà compris et consolidait vers la version francophone
-  // (`canonical_other` sur les variantes DE/EN/IT). La langue retenue suit le
-  // canton, puis les langues parlées — même règle que le canonical de la fiche,
-  // qu'il ne faut pas laisser diverger.
+  // Le texte du praticien n'existe qu'en une langue ; les autres versions sont
+  // des traductions automatiques. On publie donc l'URL de la langue d'origine
+  // (`profile_translations.source_lang`), puis, à défaut, celle du canton ou des
+  // langues parlées. `profileCanonicalUrl` est exactement ce que la fiche
+  // déclare en canonical : ne pas recomposer cette règle ici.
   for (const t of therapists) {
     if (!t.slug) continue;
-    const lang = resolveProfileLang(null, t.canton, t.languages);
-    urls.push(
-      urlBlock(`${BASE_URL}/${lang}/therapeute/${t.slug}`, contentDay(t), "weekly", "0.8"),
-    );
+    urls.push(urlBlock(profileCanonicalUrl(t.slug, t), contentDay(t), "weekly", "0.8"));
   }
 
   // Listings géographiques : canton et ville. Uniquement ceux qui atteignent
@@ -660,13 +657,14 @@ async function buildSitemap(): Promise<string> {
   }
 
   // Événements — une seule URL par événement, comme pour les fiches : `events`
-  // n'a aucune colonne de traduction. La langue suit le canton du praticien
-  // organisateur, même règle que le canonical de la page.
+  // n'a aucune colonne de traduction. La langue suit la langue de rédaction de
+  // la fiche de l'organisateur (`profileContentLang`), même règle que le
+  // canonical de la page. Organisateur hors des fiches actives → français.
   for (const e of events) {
-    const canton = e.therapist_id ? (therapistById.get(e.therapist_id)?.canton ?? null) : null;
+    const organizer = e.therapist_id ? therapistById.get(e.therapist_id) : null;
     urls.push(
       urlBlock(
-        `${BASE_URL}/${resolveProfileLang(null, canton, null)}/evenements/${e.id}`,
+        `${BASE_URL}/${profileContentLang(organizer)}/evenements/${e.id}`,
         day(e.updated_at),
         "weekly",
         "0.7",
@@ -679,10 +677,11 @@ async function buildSitemap(): Promise<string> {
   // c'est le doublon que `npm run seo:check` signalait.
   for (const a of paroles) {
     if (!a.slug) continue;
-    const canton = a.therapist_id ? (therapistById.get(a.therapist_id)?.canton ?? null) : null;
+    // Même règle que l'événement : langue de rédaction de la fiche de l'auteur.
+    const author = a.therapist_id ? therapistById.get(a.therapist_id) : null;
     urls.push(
       urlBlock(
-        `${BASE_URL}/${resolveProfileLang(null, canton, null)}/paroles/${a.slug}`,
+        `${BASE_URL}/${profileContentLang(author)}/paroles/${a.slug}`,
         paroleDay(a),
         "monthly",
         "0.7",

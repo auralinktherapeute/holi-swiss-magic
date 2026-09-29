@@ -5,7 +5,7 @@ import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ArticleContent } from "@/components/articles/ArticleContent";
 
 import { ArrowLeft, CalendarDays } from "lucide-react";
-import { ogLocale, resolveProfileLang } from "@/lib/seo";
+import { ogLocale, profileCanonicalUrl, profileContentLang } from "@/lib/seo";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { articleDates, CONTENT_DATE_COLUMN, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
@@ -40,10 +40,11 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
       "Regards et conseils de praticiens holistiques en Suisse, sur Holiswiss.";
     // Une seule langue indexable : `therapist_articles` n'a qu'une colonne
     // `titre`, sans traduction. Les quatre URLs servaient le même texte, ce que
-    // npm run seo:check a signalé (« title identique à … »). La langue suit le
-    // canton de l'auteur — même règle que sa fiche et que ses événements. Pas
+    // npm run seo:check a signalé (« title identique à … »). La langue suit la
+    // langue de rédaction de la fiche de l'auteur (puis son canton, ses langues
+    // parlées) — même fonction que sa fiche, ses événements et le sitemap. Pas
     // de hreflang : une grappe hreflang suppose des membres canoniques d'eux-mêmes.
-    const contentLang = resolveProfileLang(null, a?.therapists?.canton, null);
+    const contentLang = profileContentLang(a?.therapists);
     const canonicalUrl = `https://holiswiss.ch/${contentLang}/paroles/${params.slug}`;
     const pageUrl = a?.titre ? canonicalUrl : url;
     // Image RÉELLE, celle que la page affiche (`image_couverture`) et seulement
@@ -54,7 +55,7 @@ export const Route = createFileRoute("/$lang/paroles/$slug")({
       : null;
     const authorSlug = a?.therapists?.slug ? String(a.therapists.slug) : null;
     const authorUrl = authorSlug
-      ? `https://holiswiss.ch/${contentLang}/therapeute/${authorSlug}`
+      ? profileCanonicalUrl(authorSlug, a?.therapists)
       : null;
     const meta: Array<Record<string, string>> = [
       { title },
