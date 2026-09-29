@@ -3,14 +3,14 @@ import {
   canonicalProfileLang,
   cantonCounts,
   indexableCities,
-  isHomeCityIndexable,
   pickNearby,
   pickNewest,
   toHomeArticles,
   toHomeTherapists,
   type HomeTherapistRow,
 } from "./home-links";
-import { resolveProfileLang } from "./seo";
+import { profileCanonicalUrl, profileContentLang } from "./seo";
+import { isCityIndexable } from "./seo-thresholds";
 
 const row = (o: Partial<HomeTherapistRow> & { id: string }): HomeTherapistRow => ({
   slug: o.id,
@@ -42,7 +42,7 @@ const CITIES = [
 ];
 
 describe("canonicalProfileLang — même règle que le canonical de la fiche et le sitemap", () => {
-  it("délègue à resolveProfileLang sans langue d'URL", () => {
+  it("délègue à profileContentLang (source unique)", () => {
     for (const [canton, langs] of [
       ["GE", null],
       ["ZH", ["Deutsch"]],
@@ -51,11 +51,23 @@ describe("canonicalProfileLang — même règle que le canonical de la fiche et 
       [null, null],
     ] as const) {
       expect(canonicalProfileLang({ canton, languages: langs as string[] | null })).toBe(
-        resolveProfileLang(null, canton, langs as string[] | null),
+        profileContentLang({ canton, languages: langs as string[] | null }),
       );
     }
     expect(canonicalProfileLang({ canton: "ZH", languages: null })).toBe("de");
     expect(canonicalProfileLang({ canton: "TI", languages: null })).toBe("it");
+  });
+
+  it("la langue de rédaction prime sur le canton (cas réel henry-gerald, BS, rédigée en français)", () => {
+    const henry = {
+      canton: "BS",
+      languages: ["Français", "Deutsch", "English"],
+      profile_translations: { source_lang: "fr", langs: { de: { status: "auto" } } },
+    };
+    expect(canonicalProfileLang(henry)).toBe("fr");
+    expect(`https://holiswiss.ch/${canonicalProfileLang(henry)}/therapeute/henry-gerald`).toBe(
+      profileCanonicalUrl("henry-gerald", henry),
+    );
   });
 });
 
@@ -107,8 +119,8 @@ describe("pickNewest / pickNearby", () => {
 
 describe("indexableCities — seuil de 2 fiches, compté comme la page ville", () => {
   it("le seuil local vaut 2 (à remplacer par isCityIndexable après la PR #22)", () => {
-    expect(isHomeCityIndexable(1)).toBe(false);
-    expect(isHomeCityIndexable(2)).toBe(true);
+    expect(isCityIndexable(1)).toBe(false);
+    expect(isCityIndexable(2)).toBe(true);
   });
 
   it("reproduit la production du 29/09/2026 : seule Genève est liée", () => {

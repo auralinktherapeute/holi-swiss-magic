@@ -12,12 +12,13 @@
  *   et poussait des pages vides.
  */
 import { buildCitySlugResolver, type CityRow } from "@/lib/city-slug";
-import { resolveProfileLang, type SeoLang } from "@/lib/seo";
+import { PROFILE_LANG_COLUMNS, profileContentLang, type SeoLang } from "@/lib/seo";
+import { isCityIndexable } from "@/lib/seo-thresholds";
 import { slugForLang, titleForLang } from "@/lib/articles.functions";
 
 /** Colonnes publiques lues pour l'accueil (vérifiées sur qqwud le 29/09/2026). */
 export const HOME_THERAPIST_COLUMNS =
-  "id,slug,first_name,last_name,title,photo_url,city,canton,languages,verified,specialties,created_at,latitude,longitude,price_min,currency";
+  `id,slug,first_name,last_name,title,photo_url,city,verified,specialties,created_at,latitude,longitude,price_min,currency,${PROFILE_LANG_COLUMNS}`;
 
 export type HomeTherapistRow = {
   id: string;
@@ -36,20 +37,25 @@ export type HomeTherapistRow = {
   longitude: number | null;
   price_min: number | null;
   currency: string | null;
+  /** Sert uniquement à calculer la langue canonique ; jamais renvoyé au navigateur. */
+  profile_translations?: unknown;
 };
 
 /** Fiche prête à lier : slug garanti et langue de l'URL canonique. */
-export type HomeTherapist = HomeTherapistRow & { slug: string; profileLang: SeoLang };
+export type HomeTherapist = Omit<HomeTherapistRow, "profile_translations"> & {
+  slug: string;
+  profileLang: SeoLang;
+};
 
 /**
  * Langue de l'URL CANONIQUE d'une fiche — celle que déclarent le `<link
- * rel="canonical">` de la fiche et le sitemap. On passe par
- * `resolveProfileLang` SANS langue d'URL, exactement comme eux : si la règle
- * change (ex. primauté de la langue de rédaction), l'accueil suit sans
- * modification ici — à condition que l'appelant garde cette même signature.
+ * rel="canonical">` de la fiche et le sitemap, via `profileContentLang`
+ * (source unique, PR #23 : la langue de rédaction prime sur le canton).
  */
-export function canonicalProfileLang(t: Pick<HomeTherapistRow, "canton" | "languages">): SeoLang {
-  return resolveProfileLang(null, t.canton, t.languages);
+export function canonicalProfileLang(
+  t: Pick<HomeTherapistRow, "canton" | "languages" | "profile_translations">,
+): SeoLang {
+  return profileContentLang(t);
 }
 
 /** Écarte les fiches sans slug (lien mort) et calcule leur langue canonique. */
@@ -58,7 +64,9 @@ export function toHomeTherapists(rows: ReadonlyArray<HomeTherapistRow>): HomeThe
   for (const r of rows) {
     const slug = (r.slug ?? "").trim();
     if (!slug) continue;
-    out.push({ ...r, slug, profileLang: canonicalProfileLang(r) });
+    // profile_translations (bios traduites, volumineux) ne part pas au navigateur.
+    const { profile_translations: _pt, ...rest } = r;
+    out.push({ ...rest, slug, profileLang: canonicalProfileLang(r) });
   }
   return out;
 }
@@ -90,19 +98,6 @@ export function pickNearby(list: ReadonlyArray<HomeTherapist>, n = 20): HomeTher
         a.slug.localeCompare(b.slug),
     )
     .slice(0, n);
-}
-
-/**
- * Seuil d'indexabilité d'une page ville : 2 fiches.
- *
- * ⚠️ À REMPLACER PAR `isCityIndexable` (`@/lib/seo-thresholds`) APRÈS LA
- *    FUSION DE LA PR #22 (`fix/indexation-sitemap`), qui introduit ce seuil
- *    unique — sitemap, route ville et accueil liront alors la même constante.
- *    Défini ici en attendant pour ne pas entrer en conflit avec la PR.
- */
-export const HOME_CITY_MIN_THERAPISTS = 2;
-export function isHomeCityIndexable(count: number): boolean {
-  return count >= HOME_CITY_MIN_THERAPISTS;
 }
 
 export type HomeCityLink = { slug: string; name: string; canton: string | null; count: number };
@@ -137,7 +132,7 @@ export function indexableCities(
     groups.set(key, g);
   }
   return [...groups]
-    .filter(([, g]) => isHomeCityIndexable(g.count))
+    .filter(([, g]) => isCityIndexable(g.count))
     .map(([slug, g]) => ({
       slug,
       name: [...g.labels].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0],

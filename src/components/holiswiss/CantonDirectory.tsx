@@ -12,7 +12,7 @@ import type { HomeCityLink } from "@/lib/home-links";
  * serveur : compteurs compris (ils s'hydrataient auparavant côté navigateur).
  *
  * Villes : seules celles qui atteignent le seuil d'indexabilité (2 fiches,
- * `isHomeCityIndexable`) sont liées. La liste se met à jour d'elle-même : une
+ * `isCityIndexable`, seuil partagé avec la page ville et le sitemap) sont liées. La liste se met à jour d'elle-même : une
  * ville qui passe à 2 fiches apparaît, sans modification du code. Elles
  * remplacent les 7 villes écrites en dur dans le pied de page, dont 6 pages à
  * 0 ou 1 fiche.
