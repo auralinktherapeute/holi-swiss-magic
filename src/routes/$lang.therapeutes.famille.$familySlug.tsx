@@ -9,6 +9,7 @@ import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
+import { isFamilyIndexable } from "@/lib/seo-thresholds";
 
 export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
   component: Page,
@@ -20,9 +21,17 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
    */
   loader: async ({ params }) => {
     const res = await loadEssential(() => getFamilyPage({ data: { slug: params.familySlug } }));
-    if (!res.ok) return { page: null, unavailable: true as const };
+    // Panne ≠ page mince : pas de noindex sur un 503.
+    if (!res.ok) return { page: null, unavailable: true as const, indexable: true };
     if (!res.data) throw notFound();
-    return { page: res.data, unavailable: false as const };
+    // Décision d'indexation prise ICI, jamais dans `head` (`seo-thresholds.ts`).
+    // Même helper que le sitemap : depuis le 29/09/2026, une famille à moins de
+    // 2 praticiens distincts est `noindex,follow` ET absente du sitemap.
+    return {
+      page: res.data,
+      unavailable: false as const,
+      indexable: isFamilyIndexable(res.data.therapists.length),
+    };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -49,6 +58,8 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
     const bc = B[params.lang] ?? B.fr;
     // En panne de lecture : aucune donnée structurée (un ItemList vide mentirait).
     const unavailable = (loaderData as any)?.unavailable === true;
+    // Relit la décision du loader ; défaut sûr = indexable.
+    const noindex = !unavailable && (loaderData as any)?.indexable === false;
     const list = (((loaderData as any)?.page?.therapists ?? []) as Array<{
       slug: string | null; first_name: string | null; last_name: string | null;
     }>).filter((x) => x.slug);
@@ -66,9 +77,10 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
+        ...(noindex ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/therapeutes/famille/${params.familySlug}`)],
-      scripts: unavailable ? [] : [
+      scripts: unavailable || noindex ? [] : [
         {
           type: "application/ld+json",
           children: JSON.stringify({

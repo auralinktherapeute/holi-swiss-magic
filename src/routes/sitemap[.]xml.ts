@@ -10,7 +10,17 @@ import {
   isSpecialtyIndexable,
   isSpecialtyCityIndexable,
   isCategoryIndexable,
+  isCityIndexable,
+  isCantonIndexable,
+  isFamilyIndexable,
 } from "@/lib/seo-thresholds";
+import {
+  countTherapistsByCanton,
+  countTherapistsByCity,
+  countTherapistsByFamily,
+  countTherapistsBySpecialty,
+  type PivotRow,
+} from "@/lib/listing-counts";
 import { PILLAR_LANGS, pillarUrl } from "@/lib/visibility-pillar-content";
 import { FIL_CATEGORY_SLUGS } from "@/data/fil-holiswiss";
 
@@ -27,9 +37,22 @@ const PILLAR_LASTMOD = "2026-09-13";
  * Un sitemap amputé servi en 200 désindexe en silence. Les garde-fous par
  * requête (`unwrap`) attrapent les erreurs déclarées ; ce plancher attrape le
  * reste — une base qui répond `[]` sans erreur, une jointure qui cesse de
- * ramener ses lignes. Valeur choisie très en dessous du volume réel (585 au
- * 30/08/2026) pour ne jamais se déclencher sur une variation normale, y compris
- * après un éventuel relèvement des seuils de `seo-thresholds.ts` (~437 attendus).
+ * ramener ses lignes.
+ *
+ * Recalculé le 29/09/2026, après le passage à 2 fiches des pages ville,
+ * canton, spécialité et famille (`seo-thresholds.ts`). Données de production
+ * du 29/09 : le sitemap passe de 453 à 381 URL. Sur ces 381, 325 ne dépendent
+ * d'AUCUN seuil d'annuaire (pages statiques 48, pilier 3, fiches 13, articles
+ * 196, catégories 52, fil 8, Voix d'experts 4, événements 1) ; les pages
+ * famille / spécialité / canton / ville n'en pèsent que 56.
+ *   · pire cas LÉGITIME (toutes les pages d'annuaire sous le seuil, plus aucun
+ *     événement ni billet) : ~310 URL → 200 garde plus d'un tiers de marge ;
+ *   · panne visée (articles lus `[]` sans erreur) : il reste 381 − 196
+ *     articles − 52 catégories − 12 fil = 121 URL → sous 200, génération
+ *     refusée, 503.
+ * La valeur reste donc 200 : le relèvement des seuils ne la rapproche pas du
+ * volume réel au point de la faire déclencher, et la baisser à 150 laisserait
+ * moins de marge sur le seul scénario qu'elle doit attraper.
  */
 const MIN_EXPECTED_URLS = 200;
 
@@ -168,6 +191,8 @@ function unwrap<T>(label: string, res: { data: T | null; error: unknown }): T {
 }
 
 type SpecRow = {
+  id?: string;
+  family_id?: string | null;
   slug: string;
   slug_de?: string | null;
   slug_it?: string | null;
@@ -200,8 +225,8 @@ async function buildSitemap(): Promise<string> {
   // ── Familles de spécialités ────────────────────────────────────────────────
   const families = unwrap(
     "sitemap: familles de spécialités",
-    await supabaseAdmin.from("specialty_families").select("slug, updated_at"),
-  ) as Array<{ slug: string; updated_at: string | null }>;
+    await supabaseAdmin.from("specialty_families").select("id, slug, updated_at"),
+  ) as Array<{ id: string; slug: string; updated_at: string | null }>;
 
   // ── Spécialités actives ───────────────────────────────────────────────────
   // Les colonnes de slug localisé peuvent ne pas exister côté base (migration
@@ -213,14 +238,14 @@ async function buildSitemap(): Promise<string> {
   {
     const rich = await (supabaseAdmin as any)
       .from("specialties")
-      .select("slug, slug_de, slug_it, slug_en, updated_at")
+      .select("id, family_id, slug, slug_de, slug_it, slug_en, updated_at")
       .eq("is_active", true);
     specs = rich.error
       ? (unwrap(
           "sitemap: spécialités (repli sans slugs localisés)",
           await (supabaseAdmin as any)
             .from("specialties")
-            .select("slug, updated_at")
+            .select("id, family_id, slug, updated_at")
             .eq("is_active", true),
         ) as SpecRow[])
       : (rich.data as SpecRow[]);
@@ -238,6 +263,12 @@ async function buildSitemap(): Promise<string> {
       .select(`id, slug, ${CONTENT_DATE_COLUMN}, canton, city, languages, latitude, longitude`)
       .eq("status", "active"),
   ) as unknown as TherapistRow[];
+  // `[]` sans erreur n'est pas « aucun praticien » : c'est une lecture perdue.
+  // Sans ce garde, la génération passait au-dessus du plancher (~325 URL
+  // hors annuaire) en retirant les 13 fiches et toutes les pages d'annuaire.
+  if (therapists.length === 0) {
+    throw new Error("sitemap: aucun praticien actif lu — génération jugée incomplète");
+  }
 
   const therapistById = new Map<string, TherapistRow>();
   for (const t of therapists) therapistById.set(t.id, t);
@@ -311,22 +342,32 @@ async function buildSitemap(): Promise<string> {
   const pairFreshness = new Map<string, string | undefined>();
   const pairCount = new Map<string, number>();
   const pairSpec = new Map<string, SpecRow>();
+  // Pivot brut (praticien, spécialité) : sert les effectifs des pages
+  // spécialité et famille, comptés comme leurs routes (`listing-counts.ts`).
+  const pivot: PivotRow[] = [];
   {
     const select = (cols: string) => supabaseAdmin.from("therapist_specialties").select(cols);
     const rich = await select(
-      "specialties!inner(slug,slug_de,slug_it,slug_en,is_active), therapists!inner(id,city,status)",
+      "therapist_id, specialty_id, specialties!inner(slug,slug_de,slug_it,slug_en,is_active), therapists!inner(id,city,status)",
     );
     const geoPairs = (rich.error
       ? unwrap(
           "sitemap: paires spécialité × ville (repli sans slugs localisés)",
-          await select("specialties!inner(slug,is_active), therapists!inner(id,city,status)"),
+          await select(
+            "therapist_id, specialty_id, specialties!inner(slug,is_active), therapists!inner(id,city,status)",
+          ),
         )
       : rich.data) as unknown as Array<{
+      therapist_id: string;
+      specialty_id: string;
       specialties: (SpecRow & { is_active: boolean }) | null;
       therapists: { id: string; city: string | null; status: string | null } | null;
     }>;
 
     for (const row of geoPairs) {
+      if (row.therapist_id && row.specialty_id) {
+        pivot.push({ therapist_id: row.therapist_id, specialty_id: row.specialty_id });
+      }
       const spec = row.specialties;
       const link = row.therapists;
       if (!spec?.slug || !spec.is_active || !link || link.status !== "active") continue;
@@ -347,14 +388,27 @@ async function buildSitemap(): Promise<string> {
     }
   }
 
-  // Effectif par spécialité, toutes villes confondues — sert le seuil des pages
-  // `/specialites/{spec}`. Recomposé depuis les paires : même source, donc pas
-  // de comptage concurrent.
+  // Effectifs des pages spécialité et famille — comptés COMME LEURS ROUTES.
+  //
+  // Jusqu'au 29/09/2026, l'effectif d'une spécialité était recomposé depuis les
+  // paires spécialité × ville ci-dessus, donc amputé des praticiens sans
+  // coordonnées ou dont la ville manque à `cities`. Or `getSpecialtyPage` liste
+  // TOUS les praticiens actifs du pivot : le sitemap pouvait taire une page
+  // que la route jugeait indexable. `listing-counts.ts` reproduit désormais la
+  // lecture de chaque route.
+  const activeIds = new Set(therapists.map((t) => t.id));
+  const countBySpecId = countTherapistsBySpecialty(pivot, activeIds);
   const specCount = new Map<string, number>();
-  for (const [key, n] of pairCount) {
-    const slug = key.split("::")[0];
-    specCount.set(slug, (specCount.get(slug) ?? 0) + n);
+  for (const s of specs) {
+    if (s.id) specCount.set(s.slug, countBySpecId.get(s.id) ?? 0);
   }
+  const familyCount = countTherapistsByFamily(
+    pivot,
+    activeIds,
+    specs
+      .filter((s): s is SpecRow & { id: string } => !!s.id)
+      .map((s) => ({ id: s.id, family_id: s.family_id ?? null })),
+  );
 
   // ── Blog (projet CMS séparé) ──────────────────────────────────────────────
   // Lu AVANT l'assemblage : la page d'accueil et `/blog` ont besoin de la
@@ -498,8 +552,10 @@ async function buildSitemap(): Promise<string> {
   }
 
 
-  // Familles.
+  // Familles — seulement celles qui atteignent le seuil (`isFamilyIndexable`,
+  // lu aussi par le loader de `$lang.therapeutes.famille.$familySlug.tsx`).
   for (const f of families) {
+    if (!isFamilyIndexable(familyCount.get(f.id) ?? 0)) continue;
     for (const lang of LANGS) {
       urls.push(
         urlBlock(
@@ -519,7 +575,7 @@ async function buildSitemap(): Promise<string> {
     // praticiens qu'elle liste : c'est ce que la page affiche qui change.
     const lastmod = newer(
       day(s.updated_at),
-      specCount.has(s.slug) ? therapistsFreshness : undefined,
+      (specCount.get(s.slug) ?? 0) > 0 ? therapistsFreshness : undefined,
     );
     for (const lang of LANGS) {
       urls.push(
@@ -567,17 +623,25 @@ async function buildSitemap(): Promise<string> {
     );
   }
 
-  // Listings géographiques : canton et ville. Uniquement ceux qui comptent au
-  // moins une fiche active (pas de page vide).
+  // Listings géographiques : canton et ville. Uniquement ceux qui atteignent
+  // le seuil (`isCantonIndexable`, `isCityIndexable`) — les mêmes helpers que
+  // les loaders des deux routes. Effectifs comptés comme les routes les
+  // lisent (`listing-counts.ts`) : fiches actives AVEC slug, canton exact,
+  // ville résolue par `buildCitySlugResolver` (tolérant).
   {
+    const cantonCount = countTherapistsByCanton(therapists);
+    const cityCount = countTherapistsByCity(therapists, { strict: strictCitySlug, tolerant: tolerantCitySlug });
     const cantons = new Map<string, string | undefined>();
     const cities = new Map<string, string | undefined>();
     for (const t of therapists) {
+      // `lastmod` = fiches que la page AFFICHE : sans slug, elle n'en montre pas.
+      if (!t.slug) continue;
       const d = contentDay(t);
-      const code = (t.canton ?? "").trim().toUpperCase();
-      if (code.length === 2) bump(cantons, code, d);
-      const cSlug = tolerantCitySlug((t.city ?? "").trim());
-      if (cSlug) bump(cities, cSlug, d);
+      const code = t.canton ?? "";
+      if (isCantonIndexable(cantonCount.get(code) ?? 0)) bump(cantons, code, d);
+      if (t.city === null) continue;
+      const cSlug = tolerantCitySlug(t.city);
+      if (cSlug && isCityIndexable(cityCount.get(cSlug) ?? 0)) bump(cities, cSlug, d);
     }
     for (const [code, lastmod] of cantons) {
       for (const lang of LANGS) {

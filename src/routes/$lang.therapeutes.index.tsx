@@ -12,7 +12,14 @@ import { hreflangLinks, ogLocale } from "@/lib/seo";
 import { SpecialtyExplorer } from "@/components/holiswiss/SpecialtyExplorer";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 import { DIRECTORY_INTRO, DIRECTORY_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
-import { listAllPublicTherapists, type PublicTherapistCard } from "@/lib/geo-listings.functions";
+import {
+  getInitialDirectorySearch,
+  listAllPublicTherapists,
+  type DirectorySearchRow,
+  type PublicTherapistCard,
+} from "@/lib/geo-listings.functions";
+import { UNFILTERED_DIRECTORY_SEARCH_ARGS } from "@/lib/geo-listings";
+import { listFamiliesWithCounts } from "@/lib/specialties.functions";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
@@ -45,23 +52,46 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
       });
     }
   },
-  // Index rendu côté serveur. La recherche de cette page vit dans le navigateur
-  // (RPC search_therapists, debounce, carte) : son HTML initial ne contenait donc
-  // aucun lien vers une fiche, et la page centrale de l'annuaire n'ouvrait aucun
-  // chemin de crawl vers les profils. Ce loader n'alimente QUE l'index statique
-  // du bas de page — il ne touche pas au useQuery interactif.
+  // Rendu serveur de l'annuaire — trois lectures en parallèle :
+  //   1. l'index statique du bas de page (ESSENTIELLE : 503 si elle échoue) ;
+  //   2. la liste non filtrée du haut, même RPC et mêmes arguments que la
+  //      recherche navigateur, qu'elle amorce en `initialData` (secondaire) ;
+  //   3. les familles de spécialités du SpecialtyExplorer (secondaire).
+  //
+  // POURQUOI 2 et 3 (29/09/2026) : ces deux blocs n'étaient chargés que dans le
+  // navigateur. Le HTML serveur servait six cartes squelettes, quatre blocs
+  // `animate-pulse` et « 0 terapeuti » dans les quatre langues — Search Console
+  // a classé /it/therapeutes en soft 404. Les filtres restent côté client : seule
+  // la liste SANS filtre est amorcée. Une lecture secondaire en échec rend
+  // `null` et la page retombe sur le chargement navigateur d'avant.
+  // Coût : le routeur a `defaultPreloadStaleTime: 0` (src/router.tsx), donc
+  // chaque survol d'un lien vers /therapeutes relançait les trois lectures.
+  // 30 s de fraîcheur, comme le `staleTime` de la requête de recherche : un
+  // survol puis un clic, ou un aller-retour rapide, ne relisent plus rien.
+  // Plus simple qu'un loader qui ne lirait 2 et 3 qu'au SSR, et sans perte :
+  // passé 30 s, les données sont relues comme avant.
+  staleTime: 30_000,
+  preloadStaleTime: 30_000,
   loader: async () => {
-    const res = await loadEssential(() => listAllPublicTherapists());
+    const [res, initialSearch, initialFamilies] = await Promise.all([
+      loadEssential(() => listAllPublicTherapists()),
+      getInitialDirectorySearch().catch(() => null),
+      listFamiliesWithCounts().catch(() => null),
+    ]);
     if (!res.ok)
       return {
         seoTherapists: [] as PublicTherapistCard[],
         lastModified: null as PageModified | null,
+        initialSearch: null as DirectorySearchRow[] | null,
+        initialFamilies: null as Awaited<ReturnType<typeof listFamiliesWithCounts>> | null,
         unavailable: true as const,
       };
     // `lastModified` : la plus récente des fiches de CET index (calculée au SSR).
     return {
       seoTherapists: res.data.therapists,
       lastModified: res.data.lastModified,
+      initialSearch,
+      initialFamilies,
       unavailable: false as const,
     };
   },
@@ -162,17 +192,7 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
   },
 });
 
-type Therapist = {
-  id: string; slug: string; first_name: string; last_name: string;
-  title?: string; short_bio?: string; photo_url?: string;
-  city?: string; canton?: string; latitude?: number; longitude?: number;
-  price_min?: number; price_max?: number; currency?: string;
-  subscription_plan?: string | null; verified?: boolean; specialties?: string[];
-  distance_m?: number;
-  score?: number;
-  matched_city?: string | null;
-  matched_specialty?: string | null;
-};
+type Therapist = DirectorySearchRow;
 
 const CANTON_LABELS: Record<string, string> = {
   GE: "Genève", VD: "Vaud", VS: "Valais", FR: "Fribourg", NE: "Neuchâtel",
@@ -224,7 +244,7 @@ function Page() {
 function DirectoryPage() {
   const { lang } = useParams({ from: "/$lang/therapeutes/" });
   // Index SSR uniquement — la recherche interactive ci-dessous garde sa propre requête.
-  const { seoTherapists, lastModified } = Route.useLoaderData();
+  const { seoTherapists, lastModified, initialSearch, initialFamilies } = Route.useLoaderData();
   const navigate = useNavigate({ from: "/$lang/therapeutes/" });
   const searchParams = useSearch({ from: "/$lang/therapeutes/" });
   const { specialite: specFilter, famille: famFilter, canton: cantonFilter } = searchParams;
@@ -252,15 +272,20 @@ function DirectoryPage() {
   const hasSpecFilter = !!(specFilter || famFilter);
 
   // ── Unified search RPC: name, city, specialty, tags, bio, aliases
+  // Amorce SSR : uniquement pour la clé de la liste NON filtrée — exactement
+  // ce que le loader a lu (`UNFILTERED_DIRECTORY_SEARCH_ARGS`). Une recherche
+  // ou un filtre actif garde son chargement navigateur.
+  const isUnfiltered = debounced === "" && !specFilter && !famFilter;
   const searchQuery = useQuery({
     queryKey: ["therapists-search", debounced, specFilter ?? null, famFilter ?? null],
     staleTime: 30 * 1000,
+    initialData: isUnfiltered && initialSearch ? (initialSearch as Therapist[]) : undefined,
     queryFn: async () => {
       const { data, error } = await (supabase.rpc as any)("search_therapists", {
+        ...UNFILTERED_DIRECTORY_SEARCH_ARGS,
         _q: debounced.length >= 2 ? debounced : null,
         _spec_slug: specFilter ?? null,
         _family_slug: famFilter ?? null,
-        _limit: 100,
       });
       if (error) throw error;
       return (data ?? []) as Therapist[];
@@ -287,6 +312,9 @@ function DirectoryPage() {
 
   const isSearching = debounced.length >= 2;
   const isLoading = searchQuery.isLoading;
+  // Donnée CONNUE : jamais de compteur « 0 thérapeutes » ni de « aucun
+  // thérapeute » tant que la liste n'est pas chargée (ou si elle a échoué).
+  const hasResults = searchQuery.data !== undefined;
   const searchResults: Therapist[] = searchQuery.data ?? [];
   // Filtre canton (liens homepage « Holiswiss dans toute la Suisse »)
   const filtered: Therapist[] = cantonFilter
@@ -332,6 +360,7 @@ function DirectoryPage() {
         <div className="mx-auto max-w-5xl">
           <SpecialtyExplorer
             lang={lang}
+            initialFamilies={initialFamilies}
             active={{ specialite: specFilter, famille: famFilter }}
             onSelect={setSelection}
           />
@@ -383,9 +412,11 @@ function DirectoryPage() {
             className="w-full rounded-xl border border-[rgba(184,110,249,0.25)] bg-[rgba(184,110,249,0.06)] py-2 pl-9 pr-4 text-sm text-white placeholder-[rgba(255,255,255,0.6)] outline-none focus:border-[#b86ef9] transition"
           />
         </div>
-        <span className="hidden sm:block text-sm text-[rgba(255,255,255,0.45)]">
-          {filtered.length} {filtered.length !== 1 ? t("therapist_profile.therapist_plural") : t("therapist_profile.therapist_singular")}
-        </span>
+        {hasResults && (
+          <span className="hidden sm:block text-sm text-[rgba(255,255,255,0.45)]">
+            {filtered.length} {filtered.length !== 1 ? t("therapist_profile.therapist_plural") : t("therapist_profile.therapist_singular")}
+          </span>
+        )}
         {/* Mobile tabs */}
         <div className="ml-auto flex sm:hidden rounded-xl border border-[rgba(184,110,249,0.25)] overflow-hidden">
           {(["list", "map"] as const).map((tab) => (
@@ -415,7 +446,10 @@ function DirectoryPage() {
               </div>
             )}
             {isLoading && Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
-            <AnimatePresence>
+            {/* `initial={false}` : les cartes présentes au premier rendu (dont celles
+                du HTML serveur) s'affichent sans partir d'`opacity: 0` ; seules
+                les cartes ajoutées ensuite par une recherche s'animent. */}
+            <AnimatePresence initial={false}>
               {filtered.map((th, i) => {
                 const fullName = `${th.first_name} ${th.last_name}`.trim();
                 const isSelected = th.id === selectedId;
@@ -520,7 +554,7 @@ function DirectoryPage() {
                 );
               })}
             </AnimatePresence>
-            {!isLoading && filtered.length === 0 && (
+            {hasResults && filtered.length === 0 && (
               <div className="py-16 text-center text-[rgba(255,255,255,0.4)] text-sm">
                 {t("therapist_profile.no_therapist")}
               </div>

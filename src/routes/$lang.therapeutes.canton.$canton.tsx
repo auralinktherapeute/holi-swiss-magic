@@ -10,6 +10,7 @@ import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { WEBSITE_ID } from "@/lib/organization-schema";
+import { isCantonIndexable } from "@/lib/seo-thresholds";
 
 const T = {
   fr: {
@@ -92,9 +93,9 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
         unavailable: true as const,
         indexable: true,
       };
-    // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08) :
-    // un canton sans aucun praticien n'a rien à indexer — même règle que le
-    // gabarit ville et que le sitemap, qui n'annonce que les cantons peuplés.
+    // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08).
+    // Même helper que le sitemap (`seo-thresholds.ts`) : depuis le 29/09/2026,
+    // un canton à moins de 2 fiches est `noindex,follow` ET absent du sitemap.
     return {
       therapists: res.data.therapists,
       citySlugs: res.data.citySlugs,
@@ -102,7 +103,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
       // Plus récente des fiches listées ici (calculée au SSR) ; null si liste vide.
       lastModified: res.data.lastModified,
       unavailable: false as const,
-      indexable: res.data.therapists.length > 0,
+      indexable: isCantonIndexable(res.data.therapists.length),
     };
   },
   head: ({ params, loaderData }) => {

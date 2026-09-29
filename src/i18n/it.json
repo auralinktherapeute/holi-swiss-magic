@@ -909,5 +909,8 @@
     "a_certs_other": "Certificazioni il cui attestato è stato esaminato da Holiswiss: {{list}}.",
     "certs_more_one": "e {{count}} altra, elencata più in alto nel profilo",
     "certs_more_other": "e altre {{count}}, elencate più in alto nel profilo"
+  },
+  "therapists_directory": {
+    "h1": "Trovare un terapeuta in Svizzera"
   }
 }

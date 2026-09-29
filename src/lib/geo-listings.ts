@@ -17,6 +17,23 @@ export { cityToSlug as citySlug } from "@/lib/city-slug";
 
 export const CANTON_CODES = CANTONS.map((c) => c.code);
 
+/**
+ * Arguments de la RPC `search_therapists` pour la liste NON filtrée de
+ * l'annuaire (`/therapeutes`, sans recherche, spécialité ni famille).
+ *
+ * Partagés par la requête navigateur de la page et par sa lecture serveur
+ * (`getInitialDirectorySearch`) : la seconde amorce la première en
+ * `initialData`. Deux jeux d'arguments qui divergent, et le HTML serveur
+ * montrerait une liste que le navigateur remplacerait aussitôt.
+ */
+export const DIRECTORY_SEARCH_LIMIT = 100;
+export const UNFILTERED_DIRECTORY_SEARCH_ARGS = {
+  _q: null,
+  _spec_slug: null,
+  _family_slug: null,
+  _limit: DIRECTORY_SEARCH_LIMIT,
+} as const;
+
 /** Nom du canton par langue. Les cantons alémaniques gardent leur endonyme. */
 const CANTON_NAMES: Record<string, Partial<Record<SeoLang, string>>> = {
   AG: { fr: "Argovie", de: "Aargau", it: "Argovia", en: "Aargau" },

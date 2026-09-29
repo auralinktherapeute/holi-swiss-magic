@@ -10,6 +10,8 @@ import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
+import { loadEssential } from "@/lib/read-health";
+import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 
 const T = {
   fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", therapist: "thérapeute", therapistPlural: "thérapeutes", inSpec: "en", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Spécialités proches", titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.` },
@@ -32,7 +34,12 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
   component: Page,
   // Chargement serveur : la page (H1, description, thérapeutes) est rendue dès le HTML initial (SEO/GEO)
   loader: async ({ params }) => {
-    const page = await getSpecialtyPage({ data: { slug: params.specialtySlug } });
+    // Même contrat que les pages ville, canton et famille : une panne de
+    // lecture n'est ni une 404 ni une page mince. `loadEssential` pose le 503
+    // (réessayable) et la page ne reçoit AUCUN noindex (indexable: true).
+    const res = await loadEssential(() => getSpecialtyPage({ data: { slug: params.specialtySlug } }));
+    if (!res.ok) return { page: null, indexable: true, unavailable: true as const };
+    const page = res.data;
     if (!page) throw notFound();
     // La spécialité peut avoir été retrouvée via son slug de base alors qu'un
     // slug localisé existe pour cette langue : rediriger vers l'URL canonique
@@ -53,7 +60,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // Seuil unique et partagé avec le sitemap (`seo-thresholds.ts`) : le sitemap
     // ne doit jamais déclarer une page qui émet un noindex.
     const indexable = isSpecialtyIndexable(page?.therapists?.length ?? 0);
-    return { page, indexable };
+    return { page, indexable, unavailable: false as const };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -87,6 +94,8 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // jus de lien continue de circuler. Émis dans le HTML initial, donc lu par
     // les crawlers IA qui ne rendent pas le JavaScript.
     const indexable = (loaderData as any)?.indexable !== false;
+    // En panne : ni noindex (voir le loader) ni données structurées.
+    const unavailable = (loaderData as any)?.unavailable === true;
     // Liste RÉELLE du loader : jamais d'ItemList inventé ni vide. Une page
     // `noindex` (aucun praticien) reste `noindex` — on n'ajoute pas de données
     // structurées pour la rendre attirante, il n'y a rien à lister.
@@ -110,7 +119,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
         { name: "twitter:description", content: description },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangs],
-      scripts: [
+      scripts: unavailable ? [] : [
         {
           type: "application/ld+json",
           children: JSON.stringify({
@@ -157,7 +166,15 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
   },
 });
 
+/** Garde d'indisponibilité : aucun hook de la page n'est appelé en panne. */
 function Page() {
+  const { lang } = useParams({ from: "/$lang/specialites/$specialtySlug/" });
+  const { unavailable } = Route.useLoaderData();
+  if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
+  return <SpecialtyPage />;
+}
+
+function SpecialtyPage() {
   const { lang, specialtySlug } = useParams({ from: "/$lang/specialites/$specialtySlug/" });
   const t = tr(lang);
   const fetchSpec = useServerFn(getSpecialtyPage);
