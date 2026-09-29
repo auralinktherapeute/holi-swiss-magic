@@ -17,12 +17,16 @@ import { NewTherapistsShowcase } from "@/components/holiswiss/NewTherapistsShowc
 import { FeaturedTherapist } from "@/components/holiswiss/FeaturedTherapist";
 import { CantonDirectory } from "@/components/holiswiss/CantonDirectory";
 import { VisibilityPillarLink } from "@/components/holiswiss/VisibilityPillarLink";
+import { HomeLatestArticles } from "@/components/holiswiss/HomeLatestArticles";
+import { getHomeDirectoryLinks } from "@/lib/home-links.functions";
+import { getPublishedArticles } from "@/lib/articles.functions";
+import { toHomeArticles } from "@/lib/home-links";
 
 
 import { FaqSection } from "@/components/holiswiss/FaqSection";
 
 import { GLOBAL_FAQ, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { hreflangLinks, ogLocale, LANGS, type SeoLang } from "@/lib/seo";
 import { ORGANIZATION_ID, WEBSITE_ID } from "@/lib/organization-schema";
 
 export const Route = createFileRoute("/$lang/")({
@@ -36,12 +40,22 @@ export const Route = createFileRoute("/$lang/")({
   // servie normalement (jamais de 503 ni de chiffre inventé). Les pastilles
   // restent au premier niveau de l'objet : `TherapistFinderBlocks` lit
   // `blocks` directement dans les données de ce loader.
-  loader: async () => {
-    const [chips, directoryStats] = await Promise.all([
+  //
+  // Maillage interne (décision du 29/09/2026, voir `home-links.ts`) : fiches
+  // actives, villes indexables, compteurs de cantons et derniers articles sont
+  // lus ICI, pour figurer dans le HTML serveur. Lectures SECONDAIRES elles
+  // aussi : un échec masque le bloc, jamais la page.
+  loader: async ({ params }) => {
+    const lang: SeoLang = (LANGS as readonly string[]).includes(params.lang)
+      ? (params.lang as SeoLang)
+      : "fr";
+    const [chips, directoryStats, directoryLinks, latestArticles] = await Promise.all([
       getDailySpecialtyChips(),
       getDirectoryStats().catch(() => null),
+      getHomeDirectoryLinks().catch(() => null),
+      loadLatestArticles(lang).catch(() => []),
     ]);
-    return { ...chips, directoryStats };
+    return { ...chips, directoryStats, directoryLinks, latestArticles };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -92,11 +106,25 @@ export const Route = createFileRoute("/$lang/")({
   },
 });
 
+/**
+ * Six derniers articles validés, par la MÊME lecture que l'index `/blog`
+ * (`getPublishedArticles`) et avec le même repli sur le français quand la
+ * langue n'a aucun article (ils portent tous `lang = 'fr'` aujourd'hui).
+ */
+async function loadLatestArticles(lang: SeoLang) {
+  let res = await getPublishedArticles({ data: { lang, limit: 12 } });
+  if (!res?.articles?.length && lang !== "fr") {
+    res = await getPublishedArticles({ data: { lang: "fr", limit: 12 } });
+  }
+  return toHomeArticles((res?.articles ?? []) as Array<Record<string, unknown>>, lang, 6);
+}
+
 function HomePage() {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
   const popularSearches = t("home.popular_searches", { returnObjects: true }) as string[];
-  const { directoryStats } = Route.useLoaderData();
+  const { directoryStats, directoryLinks, latestArticles } = Route.useLoaderData();
+  const pageLang: SeoLang = (LANGS as readonly string[]).includes(lang) ? (lang as SeoLang) : "fr";
 
   return (
     <>
@@ -110,7 +138,7 @@ function HomePage() {
       <FeaturedTherapist />
 
       {/* Nouveaux thérapeutes — de vrais praticiens dès l'arrivée */}
-      <NewTherapistsShowcase />
+      <NewTherapistsShowcase therapists={directoryLinks?.newest ?? []} />
 
       {/* L'annuaire en chiffres — calculés au SSR sur la base de production */}
       <HomeDirectoryFacts stats={directoryStats} lang={lang} lastModified={directoryStats?.lastModified ?? null} />
@@ -192,10 +220,16 @@ function HomePage() {
       </section>
 
       {/* Nearby therapists list + Swiss map */}
-      <NearbyTherapistsSwiss />
+      <NearbyTherapistsSwiss therapists={directoryLinks?.nearby ?? null} />
 
       {/* Les 26 cantons — liens crawlables vers l'annuaire filtré */}
-      <CantonDirectory />
+      <CantonDirectory
+        counts={directoryLinks?.cantonCounts ?? null}
+        cities={directoryLinks?.cities ?? []}
+      />
+
+      {/* Derniers articles du blog — liens rendus au SSR */}
+      <HomeLatestArticles articles={latestArticles} lang={pageLang} />
 
       {/* Inscription à La Lettre Holiswiss : uniquement dans le pied de page (évite le doublon) */}
 

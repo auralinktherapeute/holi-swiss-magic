@@ -2,15 +2,14 @@ import { Link, useParams } from "@tanstack/react-router";
 import { cantonName } from "@/lib/geo-listings";
 
 const FOOTER_CANTONS = ["GE", "VD", "VS", "FR", "NE", "BE", "ZH", "TI"] as const;
-const FOOTER_CITIES = [
-  { slug: "geneve", name: "Genève" },
-  { slug: "lausanne", name: "Lausanne" },
-  { slug: "sion", name: "Sion" },
-  { slug: "fribourg", name: "Fribourg" },
-  { slug: "neuchatel", name: "Neuchâtel" },
-  { slug: "zurich", name: "Zürich" },
-  { slug: "lugano", name: "Lugano" },
-] as const;
+/*
+ * Plus de villes écrites en dur ici (29/09/2026). Les 7 liens (Genève,
+ * Lausanne, Sion, Fribourg, Neuchâtel, Zürich, Lugano) partaient de CHAQUE page
+ * du site vers des pages ville dont 6 comptaient 0 ou 1 fiche — pages minces,
+ * `noindex` depuis le seuil à 2 fiches (PR #22). Une liste statique ne peut pas
+ * suivre ce seuil ; les villes indexables sont désormais liées depuis
+ * l'accueil (`CantonDirectory`), calculées au SSR.
+ */
 import { useTranslation } from "react-i18next";
 import { Check, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -184,7 +183,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Maillage interne géographique — cantons et villes principales */}
+        {/* Maillage interne géographique — cantons principaux */}
         <nav aria-label={t("footer.by_region")} className="mt-9 border-t border-[rgba(255,255,255,0.08)] pt-6">
           <h4 className={headingClass}>{t("footer.by_region")}</h4>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#c3b4dc]">
@@ -196,17 +195,6 @@ export function Footer() {
                   className={linkClass}
                 >
                   {cantonName(code, lang)}
-                </Link>
-              </li>
-            ))}
-            {FOOTER_CITIES.map((c) => (
-              <li key={c.slug}>
-                <Link
-                  to="/$lang/therapeutes/ville/$citySlug"
-                  params={{ lang, citySlug: c.slug }}
-                  className={linkClass}
-                >
-                  {c.name}
                 </Link>
               </li>
             ))}

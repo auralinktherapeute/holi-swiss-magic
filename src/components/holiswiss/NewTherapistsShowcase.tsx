@@ -1,42 +1,23 @@
 import { Link, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { MapPin, BadgeCheck, Languages, ArrowRight, CalendarCheck, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
-
-type Therapist = {
-  id: string; slug: string; first_name: string; last_name: string;
-  title?: string | null; photo_url?: string | null; city?: string | null;
-  canton?: string | null; languages?: string[] | null; verified?: boolean;
-  specialties?: string[] | null; created_at?: string;
-};
+import type { HomeTherapist } from "@/lib/home-links";
 
 /**
  * « Nouveaux thérapeutes » — de vrais praticiens visibles dès la homepage :
  * grande photo, spécialité, canton, langues, badge vérifié et CTA rendez-vous.
+ *
+ * Les fiches viennent du loader de l'accueil (`getHomeDirectoryLinks`) : elles
+ * sont dans le HTML serveur, donc chaque carte est un lien crawlable. Chaque
+ * lien pointe vers l'URL CANONIQUE de la fiche (`profileLang`), pas vers la
+ * langue de l'accueil — sinon l'accueil DE lierait une URL canonicalisée
+ * ailleurs.
  */
-export function NewTherapistsShowcase() {
+export function NewTherapistsShowcase({ therapists }: { therapists: ReadonlyArray<HomeTherapist> }) {
   const { t } = useTranslation();
   const { lang } = useParams({ from: "/$lang/" });
 
-  const { data } = useQuery({
-    queryKey: ["home-new-therapists"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("therapists")
-        .select("id,slug,first_name,last_name,title,photo_url,city,canton,languages,verified,specialties,created_at")
-        .eq("status", "active")
-        .not("photo_url", "is", null)
-        .neq("photo_url", "")
-        .order("created_at", { ascending: false })
-        .limit(4);
-      if (error) throw error;
-      return (data ?? []) as Therapist[];
-    },
-  });
-
-  const therapists = data ?? [];
   if (therapists.length === 0) return null;
 
   return (
@@ -63,7 +44,7 @@ export function NewTherapistsShowcase() {
             >
               <Link
                 to="/$lang/therapeute/$slug"
-                params={{ lang, slug: th.slug }}
+                params={{ lang: th.profileLang, slug: th.slug }}
                 className="relative block aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#3d1a5c] to-[#1a1035]"
                 aria-label={`${th.first_name} ${th.last_name}`}
               >
@@ -107,7 +88,7 @@ export function NewTherapistsShowcase() {
                 <div className="mt-auto flex gap-2 pt-3">
                   <Link
                     to="/$lang/therapeute/$slug"
-                    params={{ lang, slug: th.slug }}
+                    params={{ lang: th.profileLang, slug: th.slug }}
                     className="nt-shine inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#b86ef9] px-3 py-2 text-xs font-semibold text-white shadow-md shadow-[#b86ef9]/30 transition-colors hover:bg-[#a855f7]"
                   >
                     <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
@@ -115,7 +96,7 @@ export function NewTherapistsShowcase() {
                   </Link>
                   <Link
                     to="/$lang/therapeute/$slug"
-                    params={{ lang, slug: th.slug }}
+                    params={{ lang: th.profileLang, slug: th.slug }}
                     className="nt-shine inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[rgba(184,110,249,0.35)] px-3 py-2 text-xs font-semibold text-[#d4a5f9] transition-colors hover:border-[#b86ef9] hover:text-white"
                     aria-label={t("home.newest.profile", "Voir le profil")}
                   >

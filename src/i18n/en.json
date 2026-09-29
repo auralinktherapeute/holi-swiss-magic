@@ -951,5 +951,14 @@
     "q_languages": "{{place}}: in which languages are sessions available?",
     "a_languages": "Languages stated on the profiles: {{list}}.",
     "share": "{{label}} ({{count}} of {{total}})"
+  },
+  "homeLinks": {
+    "also_listed": "Also in the directory",
+    "cities_title": "By city",
+    "cantons_title": "By canton",
+    "city_link": "{{name}}: therapists",
+    "articles_title": "Latest articles",
+    "articles_subtitle": "Guidance and tips on holistic approaches, published on the Holiswiss blog",
+    "articles_all": "All articles"
   }
 }

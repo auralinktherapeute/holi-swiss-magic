@@ -810,10 +810,12 @@ function ProfilePage() {
           <div className="mx-auto w-full max-w-[1440px]">
             <div className="flex flex-col sm:flex-row gap-5 sm:gap-8 items-center sm:items-start">
               {/* Photo */}
+              {/* Haut de fiche : visible dès le HTML serveur. `initial={false}`
+                  rend directement l'état final — auparavant `opacity: 0`
+                  laissait photo, nom et h1 invisibles jusqu'à l'hydratation
+                  (et pour tout robot qui n'exécute pas le JS). */}
               <motion.div
-                initial={{ scale: 0.85, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4 }}
+                initial={false}
                 className="relative shrink-0"
               >
                 <div
@@ -856,8 +858,7 @@ function ProfilePage() {
 
               {/* Infos */}
               <motion.div
-                variants={FADE_UP} initial="hidden" animate="show"
-                transition={{ delay: 0.1, duration: 0.4 }}
+                initial={false}
                 className="flex-1 min-w-0"
               >
                 <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -937,8 +938,7 @@ function ProfilePage() {
 
               {/* Actions */}
               <motion.div
-                initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
+                initial={false}
                 className="flex gap-2 shrink-0"
               >
                 <button type="button" onClick={share} aria-label={copied ? t("therapist_profile.copied") : t("therapist_profile.share")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
@@ -967,9 +967,9 @@ function ProfilePage() {
           {/* ── COLONNE GAUCHE ── */}
           <div className="space-y-6 min-w-0 lg:col-span-8">
 
-            {/* À propos */}
+            {/* À propos — contenu principal : jamais masqué au SSR (initial={false}). */}
             {th.bio && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+              <motion.section initial={false}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.about")}</h2>
@@ -993,7 +993,7 @@ function ProfilePage() {
 
             {/* Métadonnées compactes — comblent le vide sous la bio */}
             {(languages.length > 0 || th.city || th.canton) && (
-              <motion.div variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+              <motion.div initial={false}
                 className="grid grid-cols-1 gap-4 sm:grid-cols-2"
               >
                 {languages.length > 0 && (
@@ -1120,7 +1120,7 @@ function ProfilePage() {
 
             {/* Services / tarifs */}
             {services.length > 0 && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+              <motion.section initial={false}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
                 <h2 className="mb-1 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
@@ -1160,7 +1160,7 @@ function ProfilePage() {
 
             {/* Accréditations */}
             {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
-              <motion.div variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}>
+              <motion.div initial={false}>
                 <CertificationsShowcase
                   title={t("therapist_profile.certifications_title")}
                   badges={trustBadges.filter((b) => b.kind === "certification" || b.kind === "accreditation")}
