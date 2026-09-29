@@ -10,6 +10,7 @@ import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { WEBSITE_ID } from "@/lib/organization-schema";
+import { isCityIndexable } from "@/lib/seo-thresholds";
 
 const T = {
   fr: {
@@ -94,6 +95,8 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         asOf: null,
         lastModified: null,
         unavailable: true as const,
+        // Panne ≠ page mince : pas de noindex sur un 503 (voir `loadEssential`).
+        indexable: true,
       };
     }
     // Alias ou ancien nom de ville → URL canonique (cities.slug), en 301 :
@@ -107,7 +110,16 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         statusCode: 301,
       });
     }
-    return { ...rest, unavailable: false as const };
+    // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08,
+    // `seo-thresholds.ts`). Même helper que le sitemap : une ville sous le seuil
+    // (0 ou 1 fiche depuis le 29/09/2026) est `noindex,follow` ET absente du
+    // sitemap. Calculée APRÈS la redirection d'alias : seule l'URL canonique
+    // porte une décision.
+    return {
+      ...rest,
+      unavailable: false as const,
+      indexable: isCityIndexable(rest.therapists.length),
+    };
   },
   head: ({ params, loaderData }) => {
     const lang = params.lang;
@@ -121,9 +133,10 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
       first_name: string | null;
       last_name: string | null;
     }>;
-    // Panne : ni noindex ni ItemList vide — seul un vrai vide reste noindex.
+    // Panne : ni noindex ni ItemList vide. Le noindex relit la décision du
+    // loader ; défaut sûr = indexable tant qu'il n'a pas dit le contraire.
     const unavailable = loaderData?.unavailable === true;
-    const empty = !unavailable && list.length === 0;
+    const noindex = !unavailable && loaderData?.indexable === false;
     const modified = loaderData?.lastModified ?? null;
     return {
       meta: [
@@ -137,11 +150,11 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
-        // Une ville sans praticien n'a rien à indexer : pas de page vide dans l'index.
-        ...(empty ? [{ name: "robots", content: "noindex,follow" }] : []),
+        // Ville sous le seuil (`isCityIndexable`) : hors index, liens suivis.
+        ...(noindex ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
       links: seoLinks(lang, `/therapeutes/ville/${params.citySlug}`),
-      scripts: empty || unavailable
+      scripts: noindex || unavailable
         ? []
         : [
             {

@@ -112,6 +112,64 @@ export const listAllPublicTherapists = createServerFn({ method: "GET" }).handler
   });
 });
 
+/** Ligne renvoyée par la RPC `search_therapists` (liste de l'annuaire). */
+export type DirectorySearchRow = {
+  id: string;
+  slug: string;
+  first_name: string;
+  last_name: string;
+  title?: string;
+  short_bio?: string;
+  photo_url?: string;
+  city?: string;
+  canton?: string;
+  latitude?: number;
+  longitude?: number;
+  price_min?: number;
+  price_max?: number;
+  currency?: string;
+  subscription_plan?: string | null;
+  verified?: boolean;
+  specialties?: string[];
+  distance_m?: number;
+  score?: number;
+  matched_city?: string | null;
+  matched_specialty?: string | null;
+};
+
+/**
+ * Liste NON filtrée de l'annuaire, lue au SSR — même RPC, mêmes arguments que
+ * la requête navigateur de `/therapeutes` (`UNFILTERED_DIRECTORY_SEARCH_ARGS`).
+ *
+ * POURQUOI (29/09/2026) : cette liste n'était chargée que dans le navigateur.
+ * Le HTML serveur montrait six squelettes et « 0 thérapeutes » — Search Console
+ * a classé /it/therapeutes en soft 404. La même RPC plutôt que
+ * `listAllPublicTherapists` : même population aujourd'hui (13 fiches, vérifié
+ * sur qqwud), mais pas même forme ni même ordre (score, abonnement,
+ * coordonnées pour la carte) ; l'amorce doit être identique à ce que le
+ * navigateur rechargera, sinon la liste se réordonne sous les yeux.
+ *
+ * Lecture SECONDAIRE : en cas d'échec, `null` — la page retombe sur le
+ * chargement navigateur d'avant, sans 503 (l'index du bas reste essentiel).
+ */
+export const getInitialDirectorySearch = createServerFn({ method: "GET" }).handler(async () => {
+  const { timedOptionalRead } = await import("@/lib/read-metrics.server");
+  return timedOptionalRead(
+    "directory_search_initial",
+    async () => {
+      const { UNFILTERED_DIRECTORY_SEARCH_ARGS } = await import("@/lib/geo-listings");
+      const supabase = await publicClient();
+      const { data, error } = await (supabase.rpc as any)(
+        "search_therapists",
+        UNFILTERED_DIRECTORY_SEARCH_ARGS,
+      );
+      if (error) throw new Error("Impossible de charger la liste de l'annuaire.");
+      return (data ?? []) as DirectorySearchRow[];
+    },
+    null as DirectorySearchRow[] | null,
+  );
+});
+
 /**
  * Toutes les villes disposant d'au moins un thérapeute actif, avec leur canton
  * et leur nombre de fiches. Sert au listing par ville et au maillage interne.

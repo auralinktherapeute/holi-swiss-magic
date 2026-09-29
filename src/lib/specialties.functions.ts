@@ -64,11 +64,21 @@ async function selectSpecialties(
   build: (columns: string) => any,
   columnsBase: string,
   columnsFull: string,
+  /**
+   * `true` : une erreur de lecture LÈVE au lieu de rendre `[]`. À utiliser
+   * quand la liste décide de l'indexabilité (page famille) : un `[]` de panne
+   * y deviendrait une page à 0 praticien, donc `noindex`, servie en 200.
+   */
+  strict = false,
 ): Promise<any[]> {
   const enriched = await build(columnsFull);
   if (!enriched.error) return enriched.data ?? [];
-  if (!isMissingColumn(enriched.error)) return [];
+  if (!isMissingColumn(enriched.error)) {
+    if (strict) throw new Error("Impossible de charger les spécialités.");
+    return [];
+  }
   const base = await build(columnsBase);
+  if (base.error && strict) throw new Error("Impossible de charger les spécialités.");
   return base.data ?? [];
 }
 
@@ -138,7 +148,7 @@ export type SpecialtyRow = {
 export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
   async () => {
     const sb = serverClient();
-    const [{ data: families }, specs, { data: pivot }] = await Promise.all([
+    const [familiesRes, specs, pivotRes, activeRes] = await Promise.all([
       sb
         .from("specialty_families")
         .select("id,slug,name_fr,name_de,name_it,name_en,description_fr,description_de,description_it,description_en,icon,sort_order")
@@ -147,14 +157,39 @@ export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
         (cols) => sb.from("specialties").select(cols).eq("is_active", true),
         LIST_COLUMNS_BASE,
         LIST_COLUMNS_FULL,
+        true,
       ),
-      sb.from("therapist_specialties").select("specialty_id"),
+      sb.from("therapist_specialties").select("therapist_id,specialty_id"),
+      sb.from("therapists").select("id").eq("status", "active"),
     ]);
-
-    const countsBySpec = new Map<string, number>();
-    for (const row of (pivot ?? []) as Array<{ specialty_id: string }>) {
-      countsBySpec.set(row.specialty_id, (countsBySpec.get(row.specialty_id) ?? 0) + 1);
+    // Toute erreur LÈVE : l'appelant SSR (`.catch(() => null)` du loader de
+    // /therapeutes) retombe alors sur le chargement navigateur, au lieu de
+    // servir des familles absentes ou des effectifs à 0.
+    if (familiesRes.error || pivotRes.error || activeRes.error) {
+      throw new Error("Impossible de charger les familles de spécialités.");
     }
+    const families = familiesRes.data;
+    const pivot = pivotRes.data;
+    const active = activeRes.data;
+
+    // Effectifs comptés COMME LES PAGES spécialité et famille
+    // (`listing-counts.ts`) : praticiens ACTIFS, distincts par famille.
+    // Avant le 29/09/2026, la carte famille additionnait les lignes du pivot
+    // (praticiens inactifs compris, un praticien compté une fois par
+    // spécialité) : « 13 terapeuti » sur une famille qui en liste 4 — chiffre
+    // désormais présent dans le HTML serveur de /therapeutes.
+    const { countTherapistsBySpecialty, countTherapistsByFamily } = await import("@/lib/listing-counts");
+    const pivotRows = (pivot ?? []) as Array<{ therapist_id: string; specialty_id: string }>;
+    const activeIds = new Set(((active ?? []) as Array<{ id: string }>).map((r) => r.id));
+    const countsBySpec = countTherapistsBySpecialty(pivotRows, activeIds);
+    const countsByFamily = countTherapistsByFamily(
+      pivotRows,
+      activeIds,
+      ((specs ?? []) as Array<{ id: string; family_id: string | null }>).map((s) => ({
+        id: s.id,
+        family_id: s.family_id,
+      })),
+    );
 
     const specsByFamily = new Map<string, Array<any>>();
     for (const s of (specs ?? []) as Array<any>) {
@@ -177,11 +212,10 @@ export const listFamiliesWithCounts = createServerFn({ method: "GET" }).handler(
 
     return ((families ?? []) as FamilyRow[]).map((f) => {
       const items = specsByFamily.get(f.id) ?? [];
-      const totalTherapists = items.reduce((n, s) => n + s.count, 0);
       return {
         ...f,
         specialties: items.sort((a, b) => a.name_fr.localeCompare(b.name_fr)),
-        therapist_count: totalTherapists,
+        therapist_count: countsByFamily.get(f.id) ?? 0,
       };
     });
   },
@@ -230,27 +264,32 @@ export const getFamilyPage = createServerFn({ method: "GET" })
           .order("sort_order", { ascending: true }),
       FAMILY_SPEC_COLUMNS_BASE,
       FAMILY_SPEC_COLUMNS_FULL,
+      true,
     );
 
     const specIds = (specs ?? []).map((s: { id: string }) => s.id);
     let therapistIds: string[] = [];
     if (specIds.length > 0) {
-      const { data: pivot } = await sb
+      const { data: pivot, error: pivotError } = await sb
         .from("therapist_specialties")
         .select("therapist_id")
         .in("specialty_id", specIds);
+      // Panne ≠ famille vide : un `[]` ici donnerait une page à 0 praticien,
+      // donc `noindex`. On lève : `loadEssential` répond 503, sans noindex.
+      if (pivotError) throw new Error("Impossible de charger les praticiens de la famille.");
       therapistIds = Array.from(new Set(((pivot ?? []) as Array<{ therapist_id: string }>).map((p) => p.therapist_id)));
     }
 
     let therapists: any[] = [];
     if (therapistIds.length > 0) {
-      const { data: ts } = await sb
+      const { data: ts, error: tsError } = await sb
         .from("therapists")
         .select("id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties")
         .in("id", therapistIds)
         .eq("status", "active")
         .order("verified", { ascending: false })
         .limit(60);
+      if (tsError) throw new Error("Impossible de charger les praticiens de la famille.");
       therapists = ts ?? [];
     }
 
@@ -287,21 +326,25 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
       SIBLING_COLUMNS_FULL,
     );
 
-    const { data: pivot } = await sb
+    const { data: pivot, error: pivotError } = await sb
       .from("therapist_specialties")
       .select("therapist_id")
       .eq("specialty_id", s.id);
+    // Panne ≠ spécialité vide : sans ce `throw`, une erreur donnait 0 praticien,
+    // donc un `noindex` servi en 200. Le loader (`loadEssential`) répond 503.
+    if (pivotError) throw new Error("Impossible de charger les praticiens de la spécialité.");
     const ids = ((pivot ?? []) as Array<{ therapist_id: string }>).map((p) => p.therapist_id);
 
     let therapists: any[] = [];
     if (ids.length > 0) {
-      const { data: ts } = await sb
+      const { data: ts, error: tsError } = await sb
         .from("therapists")
         .select(`id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties,${CONTENT_DATE_COLUMN}`)
         .in("id", ids)
         .eq("status", "active")
         .order("verified", { ascending: false })
         .limit(60);
+      if (tsError) throw new Error("Impossible de charger les praticiens de la spécialité.");
       therapists = ts ?? [];
     }
 

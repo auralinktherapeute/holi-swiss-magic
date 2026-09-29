@@ -74,10 +74,16 @@ export function SpecialtyExplorer({
   lang,
   active,
   onSelect,
+  initialFamilies,
 }: {
   lang: string;
   active: Selection;
   onSelect: (sel: Selection) => void;
+  /**
+   * Familles lues au SSR par le loader de la page (`listFamiliesWithCounts`).
+   * Sans elles, le HTML serveur montrait quatre blocs `animate-pulse` vides.
+   */
+  initialFamilies?: Awaited<ReturnType<typeof listFamiliesWithCounts>> | null;
 }) {
   const { i18n } = useTranslation();
   const uiLang = (lang || i18n.language || "fr").slice(0, 2);
@@ -98,6 +104,7 @@ export function SpecialtyExplorer({
   const families = useQuery({
     queryKey: ["specialty-families"],
     queryFn: () => fetchFamilies(),
+    initialData: initialFamilies ?? undefined,
     staleTime: 5 * 60 * 1000,
   });
 

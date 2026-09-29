@@ -1,28 +1,35 @@
 /**
- * Seuils d'indexabilité des pages spécialité — source unique.
+ * Seuils d'indexabilité des pages d'annuaire (spécialité, spécialité × ville,
+ * ville, canton, famille) et des catégories du blog — source unique.
  *
- * ⚠️ CES SEUILS SONT DÉLIBÉRÉMENT NEUTRES AUJOURD'HUI.
- *    Les valeurs ci-dessous reproduisent EXACTEMENT le comportement actuel du
- *    site : aucune page ne bascule en noindex, aucune URL ne disparaît du
- *    sitemap du fait de ce fichier. Il est posé pour que l'activation soit un
- *    changement d'un chiffre, le jour où l'arbitrage produit est rendu.
+ * ── DÉCISION DU 29/09/2026 (Gérald, audit Search Console) ─────────────────────
+ *   Search Console relevait 443 URL au sitemap pour 11–13 fiches actives, la
+ *   plupart « Découverte – non indexée » ou « Inconnue de Google ». Un sitemap
+ *   qui annonce des dizaines de pages à une seule fiche dilue le budget de
+ *   crawl d'un petit site et habitue Google à y trouver des pages minces.
+ *   Arbitrage : une page ville, canton, spécialité ou famille n'est indexable
+ *   ET déclarée au sitemap qu'à partir de DEUX fiches actives. Au-dessous, la
+ *   page reste servie (200), liée depuis le site, mais émet `noindex,follow` —
+ *   décidé dans le LOADER — et disparaît du sitemap. Jamais l'un sans l'autre.
+ *   Les effectifs sont comptés par `listing-counts.ts`, qui reproduit filtre
+ *   pour filtre la lecture de chaque route.
  *
- * POURQUOI CE FICHIER EXISTE
- *   Diagnostic du 30/08/2026 (`diagnostic-donnees-holiswiss.md`) : 10 praticiens
- *   actifs engendrent 54 pages spécialité FR — 31 pages de spécialité (dont 14
- *   sans aucun praticien) et 23 pages spécialité × ville (toutes à exactement
- *   un praticien) — soit 216 URLs sur 4 langues. Le rendu est correct ; c'est le
- *   rapport pages/données qui ne l'est pas.
+ *   Effet mesuré sur qqwud le 29/09 (74 spécialités actives, 13 fiches) :
+ *   sitemap 453 → 381 URL. Spécialités 15 → 7, villes 9 → 1, cantons 4 → 2,
+ *   familles 4 → 4 (détail dans `seo-thresholds.test.ts`).
  *
- *   Valeurs recommandées, EN ATTENTE DE VALIDATION HUMAINE :
- *     SPECIALTY_MIN_THERAPISTS      = 1   (retire 14 × 4 = 56 URLs)
- *     SPECIALTY_CITY_MIN_THERAPISTS = 2   (retire 23 × 4 = 92 URLs)
- *   Une page spécialité × ville à un seul praticien est un sous-ensemble strict
- *   de sa fiche, décliné sur 160 mots — d'où un seuil plus exigeant que celui
- *   de la page spécialité, qui garde une valeur de définition et de maillage
- *   même à un praticien.
+ * ── HISTORIQUE ─────────────────────────────────────────────────────────────
+ *   30/08/2026 — fichier posé avec des seuils NEUTRES (aucun effet), pour que
+ *   l'activation tienne en un chiffre. Diagnostic de l'époque
+ *   (`diagnostic-donnees-holiswiss.md`) : 10 praticiens, 31 spécialités
+ *   actives dont 14 sans praticien, 23 paires spécialité × ville à un seul
+ *   praticien. Le référentiel compte 74 spécialités actives au 29/09/2026.
+ *   07/09/2026 — activation : spécialité ≥ 1, paire spécialité × ville ≥ 2
+ *   (600 → 448 URL).
+ *   29/09/2026 — tout à 2 (ci-dessus). `THRESHOLDS_ARE_NEUTRAL` reste exporté
+ *   pour le test de garde ; il vaut `false` depuis le 07/09.
  *
- * DEUX RÈGLES À NE PAS ENFREINDRE EN ACTIVANT
+ * DEUX RÈGLES À NE PAS ENFREINDRE
  *   1. La décision se calcule DANS LE LOADER, jamais dans `head`. Le 25/08/2026,
  *      une condition d'indexation posée dans `head` lisait des données absentes
  *      à ce niveau et a basculé en noindex TOUTES les pages spécialité × ville,
@@ -37,12 +44,13 @@
  * Nombre minimum de praticiens actifs pour qu'une page `/specialites/{spec}`
  * soit indexable et déclarée au sitemap.
  *
- * `1` depuis le 07/09/2026 — arbitrage rendu par Gérald sur l'audit
- * d'indexation. Retire les 14 spécialités sans praticien (14 × 4 = 56 URLs)
- * qui servaient « 0 thérapeute en Sophrologie » sur ~160 mots, en
- * `index, follow`. Repasser à `0` republie tout, sans autre changement.
+ * `2` depuis le 29/09/2026 (audit Search Console, voir en tête de fichier).
+ * Auparavant `1` (07/09/2026), qui retirait les spécialités sans praticien.
+ * À un seul praticien, la page spécialité répète sa fiche.
+ * Compté comme `getSpecialtyPage` : praticiens actifs du pivot, sans condition
+ * de ville ni de coordonnées (`countTherapistsBySpecialty`).
  */
-export const SPECIALTY_MIN_THERAPISTS: number = 1;
+export const SPECIALTY_MIN_THERAPISTS: number = 2;
 
 /**
  * Idem pour `/specialites/{spec}/{ville}`.
@@ -80,6 +88,40 @@ export function isSpecialtyIndexable(count: number): boolean {
 /** Une page spécialité × ville mérite-t-elle d'être indexée avec `count` praticiens ? */
 export function isSpecialtyCityIndexable(count: number): boolean {
   return count >= SPECIALTY_CITY_MIN_THERAPISTS;
+}
+
+/**
+ * `/therapeutes/ville/{slug}` — indexable et au sitemap à partir de 2 fiches
+ * (29/09/2026). Compté comme `listTherapistsByCity` (`countTherapistsByCity`).
+ */
+export const CITY_MIN_THERAPISTS: number = 2;
+
+/**
+ * `/therapeutes/canton/{CODE}` — indexable et au sitemap à partir de 2 fiches
+ * (29/09/2026). Compté comme `listTherapistsByCanton` (`countTherapistsByCanton`).
+ */
+export const CANTON_MIN_THERAPISTS: number = 2;
+
+/**
+ * `/therapeutes/famille/{slug}` — indexable et au sitemap à partir de 2
+ * praticiens distincts (29/09/2026). Compté comme `getFamilyPage`
+ * (`countTherapistsByFamily`).
+ */
+export const FAMILY_MIN_THERAPISTS: number = 2;
+
+/** Une page ville mérite-t-elle d'être indexée avec `count` fiches ? */
+export function isCityIndexable(count: number): boolean {
+  return count >= CITY_MIN_THERAPISTS;
+}
+
+/** Une page canton mérite-t-elle d'être indexée avec `count` fiches ? */
+export function isCantonIndexable(count: number): boolean {
+  return count >= CANTON_MIN_THERAPISTS;
+}
+
+/** Une page famille mérite-t-elle d'être indexée avec `count` praticiens ? */
+export function isFamilyIndexable(count: number): boolean {
+  return count >= FAMILY_MIN_THERAPISTS;
 }
 
 /** Vrai tant que les seuils n'ont pas été relevés — sert aux tests de garde. */
