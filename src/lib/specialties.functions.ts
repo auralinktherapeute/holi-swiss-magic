@@ -339,7 +339,7 @@ export const getSpecialtyPage = createServerFn({ method: "GET" })
     if (ids.length > 0) {
       const { data: ts, error: tsError } = await sb
         .from("therapists")
-        .select(`id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties,${CONTENT_DATE_COLUMN}`)
+        .select(`id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,price_min,price_max,currency,verified,specialties,languages,consultation_modes,${CONTENT_DATE_COLUMN}`)
         .in("id", ids)
         .eq("status", "active")
         .order("verified", { ascending: false })

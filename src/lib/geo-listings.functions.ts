@@ -8,7 +8,7 @@ import { CONTENT_DATE_COLUMN, type ContentDateColumn } from "@/lib/page-dates";
  * les colonnes publiques sont projetées (jamais email ni téléphone).
  */
 const PUBLIC_COLUMNS =
-  "id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,specialties,languages,price_min,price_max,currency,verified," +
+  "id,slug,first_name,last_name,title,short_bio,photo_url,city,canton,specialties,languages,consultation_modes,price_min,price_max,currency,verified," +
   CONTENT_DATE_COLUMN;
 
 /**
@@ -20,6 +20,54 @@ async function loadCityResolver(supabase: Awaited<ReturnType<typeof publicClient
   const { buildCitySlugResolver } = await import("@/lib/city-slug");
   const { data, error } = await supabase.from("cities").select("slug,canonical_name,aliases").limit(5000);
   return buildCitySlugResolver(error ? [] : ((data ?? []) as never));
+}
+
+/**
+ * Rattachements des fiches listées aux spécialités ACTIVES du référentiel
+ * (`therapist_specialties` → `specialties`), pour la FAQ locale des pages ville
+ * et canton. Jamais le texte libre `therapists.specialties` : non normalisé
+ * (« Naturopathe » / « naturopathie », doubles espaces), en français seulement.
+ *
+ * Lecture SECONDAIRE (`timedOptionalRead`, journal `degraded=1`) : en cas
+ * d'échec, `null` — la question « spécialités » est omise, la page et la liste
+ * restent servies (jamais de 503). Filtrée côté serveur sur les fiches listées.
+ * L'appelant ne la lance que pour une page indexable qui ne redirige pas.
+ */
+async function loadSpecialtyLinks(
+  supabase: Awaited<ReturnType<typeof publicClient>>,
+  therapistIds: ReadonlyArray<string>,
+): Promise<import("@/lib/local-faq").SpecialtyLink[] | null> {
+  if (therapistIds.length === 0) return [];
+  const { timedOptionalRead } = await import("@/lib/read-metrics.server");
+  return timedOptionalRead(
+    "directory_specialty_links",
+    async () => {
+      const { data, error } = await supabase
+        .from("therapist_specialties")
+        .select("therapist_id,specialties!inner(slug,name_fr,name_de,name_it,name_en,is_active)")
+        .eq("specialties.is_active", true)
+        .in("therapist_id", [...therapistIds]);
+      if (error) throw new Error("therapist_specialties illisible");
+      type Row = {
+        therapist_id: string;
+        specialties: {
+          slug: string;
+          name_fr: string | null;
+          name_de: string | null;
+          name_it: string | null;
+          name_en: string | null;
+        } | null;
+      };
+      const out: import("@/lib/local-faq").SpecialtyLink[] = [];
+      for (const r of (data ?? []) as unknown as Row[]) {
+        if (!r.specialties) continue;
+        const { slug, name_fr, name_de, name_it, name_en } = r.specialties;
+        out.push({ therapist_id: r.therapist_id, slug, name_fr, name_de, name_it, name_en });
+      }
+      return out;
+    },
+    null,
+  );
 }
 
 async function publicClient() {
@@ -42,6 +90,8 @@ export type PublicTherapistCard = {
   canton: string | null;
   specialties: string[] | null;
   languages: string[] | null;
+  /** `in_person` | `online` | `home` (colonne lisible par `anon`, vérifié sur qqwud). */
+  consultation_modes: string[] | null;
   price_min: number | null;
   price_max: number | null;
   currency: string | null;
@@ -75,10 +125,22 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
       const label = (t.city ?? "").trim();
       if (label && !(label in citySlugs)) citySlugs[label] = resolver.tolerant(label);
     }
+    // Pivot lu seulement si la page portera une FAQ (indexable) — même seuil que
+    // la route et le sitemap.
+    const { isCantonIndexable } = await import("@/lib/seo-thresholds");
+    const specialtyLinks = isCantonIndexable(therapists.length)
+      ? await loadSpecialtyLinks(supabase, therapists.map((t) => t.id))
+      : null;
     const { zurichDay } = await import("@/lib/directory-stats");
     const { listModified } = await import("@/lib/page-dates");
     // « Mis à jour le » : la plus récente des fiches LISTÉES sur cette page.
-    return { therapists, citySlugs, asOf: zurichDay(), lastModified: listModified(therapists) };
+    return {
+      therapists,
+      citySlugs,
+      specialtyLinks,
+      asOf: zurichDay(),
+      lastModified: listModified(therapists),
+    };
     });
   });
 
@@ -226,6 +288,13 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
     const canonicalSlug = resolver.tolerant(wanted) || wanted;
     const all = (rows ?? []) as unknown as PublicTherapistCard[];
     const therapists = all.filter((t) => resolver.tolerant(t.city ?? "") === canonicalSlug);
+    // Pivot lu seulement si la page sera servie (pas de 301 d'alias) ET
+    // indexable — sinon la route n'affiche aucune FAQ.
+    const { isCityIndexable } = await import("@/lib/seo-thresholds");
+    const specialtyLinks =
+      canonicalSlug === wanted && isCityIndexable(therapists.length)
+        ? await loadSpecialtyLinks(supabase, therapists.map((t) => t.id))
+        : null;
     const { zurichDay } = await import("@/lib/directory-stats");
     const { listModified } = await import("@/lib/page-dates");
     return {
@@ -233,6 +302,7 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
       therapists,
       cityName: therapists[0]?.city ?? null,
       canton: therapists[0]?.canton ?? null,
+      specialtyLinks,
       asOf: zurichDay(),
       // Calculé sur les fiches de CETTE ville (après filtrage), pas sur la requête brute.
       lastModified: listModified(therapists),

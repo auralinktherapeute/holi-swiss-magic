@@ -11,6 +11,9 @@ import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { WEBSITE_ID } from "@/lib/organization-schema";
 import { isCantonIndexable } from "@/lib/seo-thresholds";
+import i18n, { DEFAULT_LANG, isLang } from "@/lib/i18n";
+import { buildLocalFaqSection, localFaqJsonLd, type LocalFaqSection } from "@/lib/local-faq";
+import { LocalFaq } from "@/components/holiswiss/LocalFaq";
 
 const T = {
   fr: {
@@ -20,10 +23,12 @@ const T = {
     title: (c: string) => `Thérapeutes à ${c} — Annuaire holistique | Holiswiss`,
     desc: (c: string) =>
       `Trouvez un thérapeute holistique dans le canton de ${c} : profils validés par Holiswiss, spécialités, tarifs et prise de rendez-vous en ligne sur Holiswiss.`,
+    // « canton de ${c} » donne « canton de Valais / de Tessin / de Grisons » :
+    // le nom est posé en apposition, avec son code.
     count: (n: number, c: string) =>
-      `${n} ${n > 1 ? "thérapeutes" : "thérapeute"} référencés dans le canton de ${c}`,
+      `${n} ${n > 1 ? "profils de thérapeutes" : "profil de thérapeute"} — ${c}`,
     none: (c: string) => `Aucun thérapeute référencé dans le canton de ${c} pour le moment.`,
-    cities: "Villes de ce canton",
+    cities: "Localités du canton avec des thérapeutes référencés",
     all: "Voir tous les thérapeutes en Suisse",
     intro: (c: string) =>
       `Praticiens en médecines complémentaires et accompagnement bien-être exerçant dans le canton de ${c}. Chaque profil précise les approches proposées, les langues parlées, les tarifs et les disponibilités.`,
@@ -35,9 +40,9 @@ const T = {
     title: (c: string) => `Therapeuten in ${c} — Ganzheitliches Verzeichnis | Holiswiss`,
     desc: (c: string) =>
       `Finden Sie eine ganzheitliche Fachperson im Kanton ${c}: geprüfte Profile, Spezialitäten, Preise und Online-Terminbuchung auf Holiswiss.`,
-    count: (n: number, c: string) => `${n} Therapeut${n > 1 ? "en" : ""} im Kanton ${c}`,
+    count: (n: number, c: string) => `${n} Therapeutenprofil${n > 1 ? "e" : ""} — ${c}`,
     none: (c: string) => `Noch keine Therapeuten im Kanton ${c} eingetragen.`,
-    cities: "Städte in diesem Kanton",
+    cities: "Orte im Kanton mit eingetragenen Therapeuten",
     all: "Alle Therapeuten in der Schweiz",
     intro: (c: string) =>
       `Fachpersonen für Komplementärmedizin und ganzheitliche Begleitung im Kanton ${c}. Jedes Profil zeigt Methoden, Sprachen, Preise und Verfügbarkeiten.`,
@@ -49,9 +54,9 @@ const T = {
     title: (c: string) => `Terapeuti a ${c} — Directory olistica | Holiswiss`,
     desc: (c: string) =>
       `Trova un terapeuta olistico nel cantone ${c}: profili convalidati da Holiswiss, specialità, tariffe e prenotazione online su Holiswiss.`,
-    count: (n: number, c: string) => `${n} terapeut${n > 1 ? "i" : "a"} nel cantone ${c}`,
+    count: (n: number, c: string) => `${n} ${n > 1 ? "profili di terapeuti" : "profilo di terapeuta"} — ${c}`,
     none: (c: string) => `Nessun terapeuta registrato nel cantone ${c} per il momento.`,
-    cities: "Città di questo cantone",
+    cities: "Località del cantone con terapeuti registrati",
     all: "Tutti i terapeuti in Svizzera",
     intro: (c: string) =>
       `Professionisti di medicine complementari e benessere nel cantone ${c}. Ogni profilo indica approcci, lingue, tariffe e disponibilità.`,
@@ -63,9 +68,9 @@ const T = {
     title: (c: string) => `Therapists in ${c} — Holistic directory | Holiswiss`,
     desc: (c: string) =>
       `Find a holistic therapist in the canton of ${c}: profiles validated by Holiswiss, specialties, prices and online booking on Holiswiss.`,
-    count: (n: number, c: string) => `${n} therapist${n > 1 ? "s" : ""} in the canton of ${c}`,
+    count: (n: number, c: string) => `${n} therapist profile${n > 1 ? "s" : ""} — ${c}`,
     none: (c: string) => `No therapists listed in the canton of ${c} yet.`,
-    cities: "Towns in this canton",
+    cities: "Towns in this canton with listed therapists",
     all: "See all therapists in Switzerland",
     intro: (c: string) =>
       `Complementary medicine and wellbeing practitioners working in the canton of ${c}. Each profile lists approaches, languages, prices and availability.`,
@@ -90,20 +95,39 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
         citySlugs: {} as Record<string, string>,
         asOf: null,
         lastModified: null,
+        localFaq: null as LocalFaqSection | null,
         unavailable: true as const,
         indexable: true,
       };
     // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08).
     // Même helper que le sitemap (`seo-thresholds.ts`) : depuis le 29/09/2026,
     // un canton à moins de 2 fiches est `noindex,follow` ET absent du sitemap.
+    const indexable = isCantonIndexable(res.data.therapists.length);
+    // FAQ locale : calculée UNE fois ici, depuis la liste affichée, puis reprise
+    // telle quelle par le HTML et par le JSON-LD FAQPage du `head`. Jamais sur
+    // une page noindex : ni section, ni FAQPage.
+    const lang = isLang(params.lang) ? params.lang : DEFAULT_LANG;
+    const localFaq = indexable
+      ? buildLocalFaqSection(
+          res.data.therapists,
+          {
+            kind: "canton",
+            place: `${cantonName(code, lang)} (${code})`,
+            lang,
+            specialtyLinks: res.data.specialtyLinks,
+          },
+          i18n.getFixedT(lang) as unknown as (key: string, vars?: Record<string, unknown>) => string,
+        )
+      : null;
     return {
       therapists: res.data.therapists,
       citySlugs: res.data.citySlugs,
       asOf: res.data.asOf,
       // Plus récente des fiches listées ici (calculée au SSR) ; null si liste vide.
       lastModified: res.data.lastModified,
+      localFaq,
       unavailable: false as const,
-      indexable: isCantonIndexable(res.data.therapists.length),
+      indexable,
     };
   },
   head: ({ params, loaderData }) => {
@@ -120,6 +144,10 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     // Défaut sûr : indexable tant que le loader n'a pas explicitement dit le contraire.
     const noindex = loaderData?.indexable === false;
     const modified = loaderData?.lastModified ?? null;
+    const faqLd =
+      unavailable || noindex || list.length === 0 || !loaderData?.localFaq
+        ? null
+        : localFaqJsonLd(loaderData.localFaq.items, { url, lang, pageId: `${url}#webpage` });
     return {
       meta: [
         { title },
@@ -188,6 +216,8 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
                 }),
               },
             ]),
+        // Un seul FAQPage par page, texte identique à la section visible.
+        ...(faqLd ? [{ type: "application/ld+json", children: JSON.stringify(faqLd) }] : []),
       ],
     };
   },
@@ -195,7 +225,7 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
 
 function Page() {
   const { lang, canton } = useParams({ from: "/$lang/therapeutes/canton/$canton" });
-  const { therapists, citySlugs, asOf, lastModified, unavailable } = Route.useLoaderData();
+  const { therapists, citySlugs, asOf, lastModified, localFaq, unavailable } = Route.useLoaderData();
   const t = tr(lang);
   if (unavailable) return <ServiceUnavailableNotice lang={lang} />;
   const code = canton.toUpperCase();
@@ -239,7 +269,7 @@ function Page() {
       />
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold text-white">{t.count(therapists.length, name)}</h2>
+        <h2 className="mb-4 text-lg font-semibold text-white">{t.count(therapists.length, `${name} (${code})`)}</h2>
         {therapists.length === 0 ? (
           <p className="text-sm text-white/60">{t.none(name)}</p>
         ) : (
@@ -250,6 +280,8 @@ function Page() {
           </div>
         )}
       </section>
+
+      <LocalFaq faq={localFaq} />
 
       {cities.length > 0 && (
         <section className="mt-12 border-t border-white/10 pt-8">

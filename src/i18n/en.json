@@ -912,5 +912,34 @@
   },
   "therapists_directory": {
     "h1": "Find a therapist in Switzerland"
+  },
+  "local_faq": {
+    "title": "Practical questions — {{place}}",
+    "subtitle": "Answers based solely on the information stated on the profiles listed here.",
+    "q_count_city": "{{place}}: how many holistic therapists are listed in this locality?",
+    "q_count_canton": "{{place}}: how many holistic therapists are listed in this canton?",
+    "q_count_specialty": "{{place}}: how many practitioners are listed in Switzerland?",
+    "a_count_city_one": "The Holiswiss directory lists {{count}} therapist profile whose stated locality is {{place}}.",
+    "a_count_city_other": "The Holiswiss directory lists {{count}} therapist profiles whose stated locality is {{place}}.",
+    "a_count_canton_one": "The Holiswiss directory lists {{count}} therapist profile whose stated canton is {{place}}.",
+    "a_count_canton_other": "The Holiswiss directory lists {{count}} therapist profiles whose stated canton is {{place}}.",
+    "a_count_specialty_one": "The Holiswiss directory lists {{count}} therapist profile linked to the specialty {{place}}.",
+    "a_count_specialty_other": "The Holiswiss directory lists {{count}} therapist profiles linked to the specialty {{place}}.",
+    "q_specialties": "{{place}}: which specialties do the listed therapists indicate?",
+    "a_specialties": "Specialties from the Holiswiss reference list linked to the profiles (number of profiles in brackets): {{list}}.",
+    "more_one": "and {{count}} more",
+    "more_other": "and {{count}} more",
+    "q_price": "{{place}}: how much does a session cost?",
+    "a_price_range_one": "Prices per session stated on the profiles: {{min}} to {{max}} ({{count}} of {{total}} profiles states a price).",
+    "a_price_range_other": "Prices per session stated on the profiles: {{min}} to {{max}} ({{count}} of {{total}} profiles state a price).",
+    "a_price_single_one": "Price per session stated on the profiles: {{min}} ({{count}} of {{total}} profiles states a price).",
+    "a_price_single_other": "Price per session stated on the profiles: {{min}} ({{count}} of {{total}} profiles state a price).",
+    "q_modes": "{{place}}: are sessions available in person, online or at your home?",
+    "a_modes": "Consultation formats stated on the profiles: {{list}}.",
+    "a_modes_missing_one": "{{count}} profile does not state any.",
+    "a_modes_missing_other": "{{count}} profiles do not state any.",
+    "q_languages": "{{place}}: in which languages are sessions available?",
+    "a_languages": "Languages stated on the profiles: {{list}}.",
+    "share": "{{label}} ({{count}} of {{total}})"
   }
 }

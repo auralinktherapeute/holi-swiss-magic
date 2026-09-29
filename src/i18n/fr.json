@@ -912,5 +912,34 @@
   },
   "therapists_directory": {
     "h1": "Trouver un thérapeute en Suisse"
+  },
+  "local_faq": {
+    "title": "Questions pratiques — {{place}}",
+    "subtitle": "Réponses établies uniquement à partir des informations indiquées sur les fiches listées ici.",
+    "q_count_city": "{{place}} : combien de thérapeutes holistiques sont référencés dans cette localité ?",
+    "q_count_canton": "{{place}} : combien de thérapeutes holistiques sont référencés dans ce canton ?",
+    "q_count_specialty": "{{place}} : combien de praticiens sont référencés en Suisse ?",
+    "a_count_city_one": "L'annuaire Holiswiss référence {{count}} fiche de thérapeute dont la localité indiquée est {{place}}.",
+    "a_count_city_other": "L'annuaire Holiswiss référence {{count}} fiches de thérapeutes dont la localité indiquée est {{place}}.",
+    "a_count_canton_one": "L'annuaire Holiswiss référence {{count}} fiche de thérapeute dont le canton indiqué est {{place}}.",
+    "a_count_canton_other": "L'annuaire Holiswiss référence {{count}} fiches de thérapeutes dont le canton indiqué est {{place}}.",
+    "a_count_specialty_one": "L'annuaire Holiswiss référence {{count}} fiche de thérapeute rattachée à la spécialité {{place}}.",
+    "a_count_specialty_other": "L'annuaire Holiswiss référence {{count}} fiches de thérapeutes rattachées à la spécialité {{place}}.",
+    "q_specialties": "{{place}} : quelles spécialités indiquent les thérapeutes référencés ?",
+    "a_specialties": "Spécialités du référentiel Holiswiss rattachées aux fiches (nombre de fiches entre parenthèses) : {{list}}.",
+    "more_one": "et {{count}} autre",
+    "more_other": "et {{count}} autres",
+    "q_price": "{{place}} : quel est le tarif d'une séance ?",
+    "a_price_range_one": "Tarifs par séance indiqués sur les fiches : de {{min}} à {{max}} ({{count}} fiche sur {{total}} indique un tarif).",
+    "a_price_range_other": "Tarifs par séance indiqués sur les fiches : de {{min}} à {{max}} ({{count}} fiches sur {{total}} indiquent un tarif).",
+    "a_price_single_one": "Tarif par séance indiqué sur les fiches : {{min}} ({{count}} fiche sur {{total}} indique un tarif).",
+    "a_price_single_other": "Tarif par séance indiqué sur les fiches : {{min}} ({{count}} fiches sur {{total}} indiquent un tarif).",
+    "q_modes": "{{place}} : peut-on consulter en présentiel, en ligne ou à domicile ?",
+    "a_modes": "Modalités de consultation indiquées sur les fiches : {{list}}.",
+    "a_modes_missing_one": "{{count}} fiche n'en indique aucune.",
+    "a_modes_missing_other": "{{count}} fiches n'en indiquent aucune.",
+    "q_languages": "{{place}} : dans quelles langues peut-on consulter ?",
+    "a_languages": "Langues indiquées sur les fiches : {{list}}.",
+    "share": "{{label}} ({{count}} sur {{total}})"
   }
 }
