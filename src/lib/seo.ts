@@ -62,22 +62,88 @@ const CANTON_LANG: Record<string, SeoLang> = {
 };
 
 /**
- * Langue principale d'une fiche : la langue de l'URL prime (c'est la version
- * consultée), sinon le canton, sinon la première langue parlée déclarée.
+ * Normalise un code de langue vers fr/de/it/en : « fr-CH », « FR », « de_CH »,
+ * «  it  » sont acceptés ; tout le reste (« french », « es », vide) → null.
+ */
+export function normalizeSeoLang(value: unknown): SeoLang | null {
+  if (typeof value !== "string") return null;
+  const base = value.trim().toLowerCase().split(/[-_]/)[0];
+  return (LANGS as readonly string[]).includes(base) ? (base as SeoLang) : null;
+}
+
+/**
+ * Langue de RÉDACTION d'une fiche, lue dans `therapists.profile_translations`.
+ *
+ * `source_lang` est détecté par le modèle au moment de la traduction. Mais un
+ * profil encore vide reçoit `source_lang: "fr"` PAR DÉFAUT, sans détection
+ * (`translateTherapistRow`, branche « aucun champ ») : on ne s'y fie donc que
+ * si au moins une traduction a été produite (`langs` non vide), preuve que la
+ * détection a eu lieu. Sinon → null, et la règle canton / langues parlées
+ * reprend la main.
+ */
+export function profileSourceLang(profileTranslations: unknown): SeoLang | null {
+  if (!profileTranslations || typeof profileTranslations !== "object") return null;
+  const tr = profileTranslations as { source_lang?: unknown; langs?: unknown };
+  const detected =
+    !!tr.langs && typeof tr.langs === "object" && Object.keys(tr.langs as object).length > 0;
+  return detected ? normalizeSeoLang(tr.source_lang) : null;
+}
+
+/**
+ * Langue principale d'une fiche, par ordre de priorité :
+ *   1. la langue de l'URL (c'est la version consultée — libellés, FAQ auto) ;
+ *   2. la langue de rédaction (`sourceLang`, cf. `profileSourceLang`) ;
+ *   3. la langue officielle du canton ;
+ *   4. la première langue parlée reconnue (« Français », « de-CH »…) ;
+ *   5. le français.
+ * Le canton ne sert qu'en repli : une fiche rédigée en français à Bâle reste
+ * française, sa version allemande n'est qu'une traduction automatique.
  */
 export function resolveProfileLang(
   urlLang?: string | null,
   canton?: string | null,
   spokenLanguages?: string[] | null,
+  sourceLang?: string | null,
 ): SeoLang {
   const u = (urlLang ?? "").slice(0, 2) as SeoLang;
   if (LANGS.includes(u)) return u;
+  const src = normalizeSeoLang(sourceLang);
+  if (src) return src;
   const c = CANTON_LANG[(canton ?? "").trim().toUpperCase()];
   if (c) return c;
   const s = (spokenLanguages ?? [])
-    .map((l) => l.slice(0, 2))
+    .map((l) => String(l ?? "").trim().slice(0, 2).toLowerCase())
     .find((l) => LANGS.includes(l as SeoLang));
   return (s as SeoLang) ?? "fr";
+}
+
+/** Les colonnes de `therapists` dont dépend la langue indexable d'une fiche. */
+export const PROFILE_LANG_COLUMNS = "canton,languages,profile_translations" as const;
+
+export type ProfileLangSource = {
+  canton?: string | null;
+  languages?: string[] | null;
+  profile_translations?: unknown;
+};
+
+/**
+ * Langue indexable (canonique) d'une fiche, indépendante de l'URL consultée.
+ * SEULE source de vérité pour le canonical de la fiche, son URL de sitemap et
+ * les liens canoniques vers la fiche (auteur d'une parole, organisateur d'un
+ * événement) : ne jamais recomposer cette règle ailleurs.
+ */
+export function profileContentLang(row: ProfileLangSource | null | undefined): SeoLang {
+  return resolveProfileLang(
+    null,
+    row?.canton ?? null,
+    row?.languages ?? null,
+    profileSourceLang(row?.profile_translations),
+  );
+}
+
+/** URL canonique absolue d'une fiche praticien. */
+export function profileCanonicalUrl(slug: string, row: ProfileLangSource | null | undefined): string {
+  return `${SITE}/${profileContentLang(row)}/therapeute/${slug}`;
 }
 
 /** Langue officielle du canton, indépendamment de la version consultée. */

@@ -1,6 +1,18 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { cityToSlug } from "./city-slug";
-import { hreflangLinks, resolveProfileLang, LANGS, SITE } from "./seo";
+import {
+  hreflangLinks,
+  normalizeSeoLang,
+  profileCanonicalUrl,
+  profileContentLang,
+  profileSourceLang,
+  resolveProfileLang,
+  LANGS,
+  PROFILE_LANG_COLUMNS,
+  SITE,
+} from "./seo";
 import { slugForLang, titleForLang } from "./articles.functions";
 import { specialtySlugForLang } from "./specialties.functions";
 
@@ -99,6 +111,141 @@ describe("resolveProfileLang — langue indexable d'une fiche (R2)", () => {
 
   it("respecte la langue de l'URL quand elle est fournie et valide", () => {
     expect(resolveProfileLang("de", "GE", null)).toBe("de");
+  });
+});
+
+/** Forme réelle de `profile_translations` en production (relevé du 29/09/2026). */
+const translated = (source_lang: unknown) => ({
+  source_lang,
+  source_hash: "7296200d",
+  langs: { de: { status: "auto" }, en: { status: "auto" }, it: { status: "auto" } },
+});
+
+describe("Langue de rédaction d'une fiche — prime sur le canton (29/09/2026)", () => {
+  it("une fiche rédigée en français à Bâle ou Berne reste française", () => {
+    // Cas réels : henry-gerald (BS) et susanna-probst (BE), rédigées en
+    // français, étaient canonicalisées sur /de/ — une traduction automatique
+    // désignée comme l'original.
+    expect(
+      profileContentLang({ canton: "BS", languages: ["Français", "Deutsch", "English"], profile_translations: translated("fr") }),
+    ).toBe("fr");
+    expect(
+      profileContentLang({ canton: "BE", languages: ["Français", "Italiano"], profile_translations: translated("fr") }),
+    ).toBe("fr");
+    expect(resolveProfileLang(null, "BS", null, "fr")).toBe("fr");
+  });
+
+  it("une fiche rédigée en allemand à Genève est allemande", () => {
+    expect(profileContentLang({ canton: "GE", profile_translations: translated("de") })).toBe("de");
+  });
+
+  it("la langue de l'URL prime toujours (libellés, FAQ auto de la version consultée)", () => {
+    expect(resolveProfileLang("it", "BS", null, "fr")).toBe("it");
+  });
+
+  it("normalise les variantes régionales et la casse", () => {
+    expect(normalizeSeoLang("fr-CH")).toBe("fr");
+    expect(normalizeSeoLang("DE")).toBe("de");
+    expect(normalizeSeoLang(" it_CH ")).toBe("it");
+    expect(normalizeSeoLang("en")).toBe("en");
+    expect(profileContentLang({ canton: "GE", profile_translations: translated("DE-ch") })).toBe("de");
+  });
+
+  it("rejette les valeurs hors fr/de/it/en et retombe sur le canton", () => {
+    for (const bad of ["es", "french", "", "  ", null, undefined, 42, {}]) {
+      expect(normalizeSeoLang(bad)).toBeNull();
+      expect(profileContentLang({ canton: "ZH", profile_translations: translated(bad) })).toBe("de");
+    }
+  });
+
+  it("ignore un source_lang posé par défaut sans détection (profil vide, aucune traduction)", () => {
+    // translateTherapistRow pose source_lang: "fr" sans appeler le modèle quand
+    // le profil est vide : ce n'est pas une langue de rédaction constatée.
+    const undetected = { source_lang: "fr", source_hash: "x", langs: {} };
+    expect(profileSourceLang(undetected)).toBeNull();
+    expect(profileContentLang({ canton: "ZH", profile_translations: undetected })).toBe("de");
+  });
+
+  it("sans profile_translations : canton, puis langues parlées, puis français", () => {
+    expect(profileContentLang({ canton: "TI", profile_translations: null })).toBe("it");
+    expect(profileContentLang({ canton: null, languages: ["Deutsch"], profile_translations: null })).toBe("de");
+    expect(profileContentLang({ canton: null, languages: ["Italiano", "Français"] })).toBe("it");
+    expect(profileContentLang(null)).toBe("fr");
+    expect(profileContentLang(undefined)).toBe("fr");
+  });
+
+  it("profileCanonicalUrl compose l'URL absolue dans la langue de rédaction", () => {
+    expect(profileCanonicalUrl("henry-gerald", { canton: "BS", profile_translations: translated("fr") })).toBe(
+      `${SITE}/fr/therapeute/henry-gerald`,
+    );
+  });
+});
+
+describe("Sitemap ↔ canonical de la fiche — même fonction, même donnée", () => {
+  // Les routes importent du code serveur et ne se chargent pas dans vitest : on
+  // verrouille donc leur source. Si le sitemap ou la fiche recompose la langue
+  // à la main, ou ne lit pas les colonnes dont elle dépend, ce test tombe.
+  const read = (p: string) => readFileSync(resolve(__dirname, "..", p), "utf8");
+  const sitemap = read("routes/sitemap[.]xml.ts");
+  const route = read("routes/$lang.therapeute.$slug.tsx");
+  const publicFns = read("lib/public.functions.ts");
+  const articleFns = read("lib/therapist-articles.functions.ts");
+  const cols = PROFILE_LANG_COLUMNS.split(",");
+
+  it("les deux passent par profileCanonicalUrl", () => {
+    expect(sitemap).toMatch(/profileCanonicalUrl\(t\.slug, t\)/);
+    expect(route).toMatch(/const canonicalUrl = profileCanonicalUrl\(params\.slug, t\)/);
+  });
+
+  it("aucun des deux ne recompose l'URL de fiche ni la règle de langue", () => {
+    expect(sitemap).not.toMatch(/\/therapeute\/\$\{/);
+    expect(sitemap).not.toMatch(/resolveProfileLang\(/);
+    expect(route).not.toMatch(/resolveProfileLang\(\s*null/);
+    expect(route).not.toMatch(/\$\{[a-zA-Z]+Lang\}\/therapeute\//);
+  });
+
+  it("le sitemap et la fiche lisent toutes les colonnes dont dépend la langue", () => {
+    expect(sitemap).toContain("${PROFILE_LANG_COLUMNS}");
+    const ficheSelect = publicFns.match(/from\("therapists"\)\s*\.select\(`([^`]*)`\)/)?.[1] ?? "";
+    expect(ficheSelect).not.toBe("");
+    const eventSelect = publicFns.match(/select\("(id,slug,first_name,last_name,photo_url,city,canton[^"]*)"\)/)?.[1] ?? "";
+    expect(eventSelect).not.toBe("");
+    const articleBlock = articleFns.slice(articleFns.indexOf("getPublishedTherapistArticleBySlug ="));
+    const authorSelect = articleBlock.match(/therapists\(([^)]*)\)/)?.[1] ?? "";
+    expect(authorSelect).not.toBe("");
+    for (const c of cols) {
+      expect(ficheSelect.split(",")).toContain(c);
+      expect(eventSelect.split(",")).toContain(c);
+      expect(authorSelect.split(",")).toContain(c);
+    }
+  });
+
+  it("donne la même URL que la fiche pour les 13 fiches actives relevées en production", () => {
+    // Relevé qqwud du 29/09/2026 (tous source_lang = fr, sauf 2 profils vides
+    // sans traduction). Seules henry-gerald et susanna-probst changent (de → fr).
+    const rows: Array<[string, string | null, string[] | null, boolean, string]> = [
+      ["alexiacalluy-c56e54", null, ["Français"], true, "fr"],
+      ["carine-9ffd3d", "GE", ["Français"], true, "fr"],
+      ["caroline-roch-the-undiet-plan", "VD", ["Français", "English"], true, "fr"],
+      ["d-jourdain-5de6e6", "VD", ["Français", "English"], true, "fr"],
+      ["dominique-marine-oberhofer-bb2a1b", "VD", ["Français"], true, "fr"],
+      ["emilie-chardon-8df145", "GE", ["Français"], true, "fr"],
+      ["fajeiv-pm-69192a", null, null, false, "fr"],
+      ["greg-arshakuni-67e978", "VD", ["Français", "Deutsch", "English"], true, "fr"],
+      ["henry-gerald", "BS", ["Français", "Deutsch", "English"], true, "fr"],
+      ["olivier-larue-efbaa6", "GE", null, true, "fr"],
+      ["susanna-probst-bio-nerg-ticienne-2ea5be", "BE", ["Français", "Italiano"], true, "fr"],
+      ["vanessa-novel-df680b", null, null, false, "fr"],
+      ["zorana-38b08b", "GE", ["Français", "English"], true, "fr"],
+    ];
+    for (const [slug, canton, languages, detected, want] of rows) {
+      const row = {
+        canton,
+        languages,
+        profile_translations: detected ? translated("fr") : { source_lang: "fr", langs: {} },
+      };
+      expect(profileCanonicalUrl(slug, row)).toBe(`${SITE}/${want}/therapeute/${slug}`);
+    }
   });
 });
 

@@ -34,7 +34,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Info, Clock, Package as PackageIcon, Sparkles, Video, Users } from "lucide-react";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
-import { hreflangLinks, ogLocale, profileCopy, resolveProfileLang } from "@/lib/seo";
+import {
+  hreflangLinks,
+  ogLocale,
+  profileCanonicalUrl,
+  profileCopy,
+  profileSourceLang,
+  resolveProfileLang,
+} from "@/lib/seo";
 import { TrustBadges } from "@/components/holiswiss/TrustBadges";
 import { CertificationsShowcase } from "@/components/holiswiss/CertificationsShowcase";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
@@ -87,7 +94,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     // fiche, dans la langue de la page. Le rendu visible et le JSON-LD lisent
     // ce même tableau : textes identiques, et aucune divergence d'hydratation
     // possible puisque le client reçoit la chaîne déjà construite.
-    const faqLang = resolveProfileLang(params.lang, therapist.canton, therapist.languages ?? null);
+    const faqLang = resolveProfileLang(
+      params.lang,
+      therapist.canton,
+      therapist.languages ?? null,
+      profileSourceLang(therapist.profile_translations),
+    );
     const tFaq = i18n.getFixedT(faqLang);
     const autoFaqs = buildTherapistAutoFaq(
       therapist,
@@ -136,6 +148,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
           price_max?: number | null;
           currency?: string | null;
           languages?: string[] | null;
+          profile_translations?: unknown;
           specialties?: string[] | null;
           years_experience?: number | null;
           phone?: string | null;
@@ -166,19 +179,18 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     /**
      * Langue de RÉDACTION de la fiche, indépendante de l'URL consultée.
      *
-     * La table `therapists` n'a aucune colonne de traduction : bio, titre et méta
-     * sont uniques. Les quatre URL de langue servaient donc le même texte, chacune
-     * se déclarant canonique et alternative des trois autres — Google a tranché seul
-     * et a consolidé vers le français (variantes DE/EN/IT marquées `canonical_other`).
+     * Le texte rédigé par le praticien n'existe qu'en une langue ; les trois
+     * autres versions sont des traductions automatiques
+     * (`profile_translations.langs`). Une seule URL est donc indexable : celle
+     * de la langue d'origine (`profile_translations.source_lang`), puis, à
+     * défaut, celle du canton ou des langues parlées. Les autres pointent leur
+     * canonical vers elle ; aucune redirection (l'habillage et le contenu y sont
+     * traduits, la page reste utile).
      *
-     * On ne redirige pas : l'habillage d'interface est bien traduit, une fiche reste
-     * donc utile dans les quatre langues. Mais une seule est indexable — les autres
-     * pointent leur canonical vers elle, et on n'annonce plus de hreflang, qui
-     * suppose des traductions véritables. Le jour où la fiche sera réellement
-     * traduite, il faudra rétablir `altLinks` et le canonical auto-référent.
+     * `profileCanonicalUrl` est AUSSI ce que le sitemap publie : même fonction,
+     * même donnée — les deux ne peuvent pas diverger (test dans seo-urls.test.ts).
      */
-    const contentLang = resolveProfileLang(null, (t as any)?.canton, (t as any)?.languages ?? null);
-    const canonicalUrl = `${SITE}/${contentLang}/therapeute/${params.slug}`;
+    const canonicalUrl = profileCanonicalUrl(params.slug, t);
     // Pas de hreflang ici, même sur la version canonique : un cluster hreflang
     // suppose que chaque membre est canonique de lui-même. Les annoncer tout en
     // les canonicalisant ailleurs enverrait deux signaux contraires.
@@ -198,7 +210,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     // SEO local : la langue de la version consultée pilote les libellés
     // générés (« Therapeut in Zürich », « Thérapeute à Genève »). Les textes
     // rédigés par le praticien (bio, approche) ne sont jamais traduits.
-    const pageLang = resolveProfileLang(params.lang, t.canton, t.languages ?? null);
+    const pageLang = resolveProfileLang(
+      params.lang,
+      t.canton,
+      t.languages ?? null,
+      profileSourceLang(t.profile_translations),
+    );
     const copy = profileCopy(pageLang);
     const place = [t.city, t.canton].filter(Boolean).join(", ");
     const role = copy.role(t.title ?? copy.fallbackRole, place);

@@ -426,7 +426,9 @@ export const getPublishedEvent = createServerFn({ method: "GET" })
     }
     const { data: t } = await supabaseAdmin
       .from("therapists")
-      .select("id,slug,first_name,last_name,photo_url,city,canton")
+      // languages + profile_translations : langue canonique de l'événement
+      // (`profileContentLang`), même règle que la fiche et le sitemap.
+      .select("id,slug,first_name,last_name,photo_url,city,canton,languages,profile_translations")
       .eq("id", (e as any).therapist_id)
       .maybeSingle();
 

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { getPublishedEvent } from "@/lib/public.functions";
 import { EventFlyer } from "@/components/events/EventFlyer";
 import { Button } from "@/components/ui/button";
-import { ogLocale, resolveProfileLang } from "@/lib/seo";
+import { ogLocale, profileContentLang } from "@/lib/seo";
 import { publisherNode } from "@/lib/organization-schema";
 import { buildMetaTitle } from "@/lib/seo-title";
 
@@ -31,7 +31,9 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     if (!e) {
       return { meta: [{ title: "Événement — HoliSwiss" }], links: [{ rel: "canonical", href: url }] };
     }
-    const contentLang = resolveProfileLang(null, (loaderData as any)?.therapist?.canton, null);
+    // Langue de rédaction de la fiche de l'organisateur (puis canton, langues
+    // parlées) — même fonction que le sitemap, qui publie donc la même URL.
+    const contentLang = profileContentLang((loaderData as any)?.therapist);
     const canonicalUrl = `${SITE}/${contentLang}/evenements/${params.id}`;
     // Titre coupé sur une frontière de mot : `slice(0, 60)` tranchait au milieu
     // d'un mot (« Atelier de respiration consci »). Marque écrite « Holiswiss »,
