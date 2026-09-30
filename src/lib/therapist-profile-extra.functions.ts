@@ -176,7 +176,9 @@ export const addCertification = createServerFn({ method: "POST" })
        * Le refus ici est volontairement incontournable — une soumission sans
        * déclaration n'est pas enregistrée.
        */
-      declaration_accepted: z.literal(true),
+      // Ne bloque jamais l'import : sans déclaration, le diplôme est enregistré
+      // sans horodatage d'acceptation (visible par l'admin lors de la validation manuelle).
+      declaration_accepted: z.boolean().optional().nullable(),
     }),
   )
   .handler(async ({ context, data }) => {
@@ -211,8 +213,8 @@ export const addCertification = createServerFn({ method: "POST" })
         verified_at: null,
         verified_by: null,
         // Version acceptée ; l'horodatage définitif est posé par la base (trigger).
-        declaration_version: CERTIFICATION_DECLARATION_VERSION,
-        declaration_accepted_at: new Date().toISOString(),
+        declaration_version: data.declaration_accepted === true ? CERTIFICATION_DECLARATION_VERSION : null,
+        declaration_accepted_at: data.declaration_accepted === true ? new Date().toISOString() : null,
       })
       .select("id")
       .maybeSingle();
