@@ -39,8 +39,8 @@ describe("addCertification", () => {
 describe("déclaration obligatoire et champs d'administration non usurpables", () => {
   const src = readFileSync(new URL("./therapist-profile-extra.functions.ts", import.meta.url), "utf8");
 
-  it("la déclaration d'exactitude est exigée par le serveur", () => {
-    expect(src).toMatch(/declaration_accepted:\s*z\.literal\(true\)/);
+  it("la déclaration n'est horodatée que si elle est réellement acceptée", () => {
+    expect(src).toMatch(/declaration_accepted === true \? new Date\(\)\.toISOString\(\) : null/);
   });
 
   it("le lien officiel est revalidé côté serveur", () => {
