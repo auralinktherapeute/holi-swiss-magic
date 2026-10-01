@@ -19,3 +19,4 @@
 - [x] Spécialités et familles : CollectionPage + ItemList + Twitter/OG
 - [x] Robots : groupes explicites uniquement si exclusions identiques
 - [x] Tests, typecheck, build, seo:check, sitemap avant/après, SSR 4 langues
+- [ ] Carte : clé CARTO sur l'URL des tuiles (TherapistMapInner)
