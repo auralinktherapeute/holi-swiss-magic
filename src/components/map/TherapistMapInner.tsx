@@ -97,7 +97,7 @@ export function TherapistMapInner({ therapists, selectedId, onSelect, lang }: Th
         zoomControl={false}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_46gl_1_e5af20f8c01c61fd606de819"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
           subdomains="abcd"
           maxZoom={19}
