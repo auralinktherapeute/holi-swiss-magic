@@ -14,12 +14,21 @@
 //      guérison » (marketing-carousels.ts:277), « Keine Heilversprechen »,
 //      « Nessuna promessa di guarigione », « No healing claims » — et sur les
 //      idiomes de bien-être génériques (« prendre soin de soi », « cura di
-//      sé ») qui n'allèguent rien. Ajout d'une fenêtre de négation
-//      multilingue + une liste d'idiomes explicitement sûrs.
+//      sé ») qui n'allèguent rien.
 //   3. `countForbidden` (article-clean) comparait des comptes AVANT/APRÈS
 //      dédupliqués — un mot déjà présent qui se répète n'était plus détecté.
 //      `countForbiddenOccurrences` (non dédupliqué) répare ça ;
 //      `findForbiddenTerms` reste dédupliqué pour les messages d'erreur.
+//
+// Audit 2026-10-02c a trouvé que la CORRECTION du bug 2 (une fenêtre
+// générique « un mot de négation dans les ~30-40 caractères qui précèdent »)
+// ouvrait un trou pire que le bug d'origine : « Sans médicaments, notre
+// méthode guérit l'anxiété » n'était plus détecté, parce que « sans » est
+// dans la fenêtre même s'il ne porte pas du tout sur « guérit ». La fenêtre
+// générique est donc supprimée. Les 4 disclaimers réels restent couverts,
+// mais par des motifs EXACTS et serrés (négation directement collée au
+// verbe : « ne soigne pas », « n'est pas un traitement »...), jamais par une
+// proximité approximative qui ne comprend pas la portée grammaticale.
 
 const TERMS = [
   // FR — soigner
@@ -53,34 +62,71 @@ export const LPMED_FORBIDDEN = new RegExp(
 );
 
 // Phrases qui emploient ce vocabulaire SANS allégation — au contraire, ce
-// sont souvent les disclaimers légaux requis. Vérifiées sur une fenêtre
-// autour de chaque match avant de conclure à une violation.
+// sont souvent les disclaimers légaux requis, ou des idiomes génériques qui
+// n'allèguent rien. Chaque motif est EXACT et SERRÉ : la négation doit être
+// directement collée au terme (pas de fenêtre de proximité approximative —
+// voir la note d'audit 2026-10-02c en tête de fichier). Vérifiés sur une
+// petite fenêtre autour de chaque match, mais c'est le motif complet qui
+// doit matcher dans cette fenêtre, jamais un mot de négation isolé.
 const SAFE_IDIOMS: RegExp[] = [
+  // Disclaimers réels (marketing-carousels.ts:277 et ses traductions)
   /aucune?\s+promesse\s+de\s+gu[ée]rison/i,
   /sans\s+promesse\s+de\s+gu[ée]rison/i,
   /keine\s+heilversprechen/i,
   /nessun[ae]?\s+promessa\s+di\s+guarigione/i,
   /no\s+healing\s+claims?/i,
+  // Négation directement sur le verbe — FR
+  /\bne\s+soigne[nz]?\s+pas\b/i,
+  /\bne\s+soignons\s+pas\b/i,
+  /\bne\s+gu[ée]ri[st]?\s+pas\b/i,
+  /\bne\s+gu[ée]rissent\s+pas\b/i,
+  /\bne\s+traite[nz]?\s+pas\b/i,
+  /\bne\s+traitons\s+pas\b/i,
+  /\bn['’]est\s+pas\s+(?:un|une)\s+(?:traitement|diagnostic|prescription)\b/i,
+  /\bpas\s+de\s+(?:promesse\s+de\s+)?(?:gu[ée]rison|traitement|diagnostic|prescription)\b/i,
+  // Négation directement sur le verbe — DE/IT/EN
+  /\bkeine?\s+heilung\b/i,
+  /\bnicht\s+(?:behandelt|geheilt)\b/i,
+  /\bnessun[ao]?\s+(?:cura|trattamento|diagnosi)\b/i,
+  /\bnon\s+(?:cura|tratta|guarisce)\b/i,
+  /\bno\s+(?:cure|treatment|diagnosis)\b/i,
+  /\b(?:does\s+not|doesn['’]t|is\s+not\s+a)\s+(?:cure|treat|heal)\b/i,
+  // Idiomes génériques de bien-être (pas une allégation thérapeutique)
   /prendre\s+soin\s+de\s+(soi|vous|vos|eux|elle|lui)/i,
   /\bsoins?\s+de\s+soi\b/i,
   /cura\s+di\s+s[ée]/i,
   /self[\s-]?care/i,
 ];
 
-// Négation immédiatement avant le terme (fenêtre courte, multilingue) :
-// « ne soigne pas », « n'est pas un traitement », « keine Heilung »,
-// « nessuna cura », « no cure », « not a treatment ».
-const NEGATION_BEFORE =
-  /\b(ne|n['’]|aucun[e]?|sans|jamais|non|keine[nrs]?|nessun[ao]?|no|not|never)\b[^.!?\n]{0,30}$/i;
+/**
+ * Spans (début, fin) de chaque occurrence de chaque idiome sûr dans le
+ * texte. Un hit n'est sûr QUE si sa position tombe ENTIÈREMENT à
+ * l'intérieur d'un de ces spans — pas « quelque part dans une fenêtre
+ * autour » (c'est précisément ce qui causait le faux-négatif N4 de l'audit
+ * 2026-10-02c : un idiome sûr présent ailleurs dans la phrase ne doit
+ * jamais blanchir une allégation réelle qui le suit).
+ */
+function computeSafeSpans(text: string): Array<[number, number]> {
+  const spans: Array<[number, number]> = [];
+  for (const re of SAFE_IDIOMS) {
+    const flags = re.flags.includes("g") ? re.flags : `${re.flags}g`;
+    const r = new RegExp(re.source, flags);
+    let m: RegExpExecArray | null;
+    while ((m = r.exec(text))) {
+      spans.push([m.index, m.index + m[0].length]);
+      if (m[0].length === 0) r.lastIndex += 1;
+    }
+  }
+  return spans;
+}
 
-function isSafeContext(text: string, matchIndex: number, matchLength: number): boolean {
-  const windowStart = Math.max(0, matchIndex - 40);
-  const windowEnd = Math.min(text.length, matchIndex + matchLength + 40);
-  const window = text.slice(windowStart, windowEnd);
-  if (SAFE_IDIOMS.some((re) => re.test(window))) return true;
-
-  const before = text.slice(Math.max(0, matchIndex - 40), matchIndex);
-  return NEGATION_BEFORE.test(before);
+function isWithinSafeSpan(
+  spans: Array<[number, number]>,
+  matchIndex: number,
+  matchLength: number,
+): boolean {
+  const hitEnd = matchIndex + matchLength;
+  return spans.some(([start, end]) => matchIndex >= start && hitEnd <= end);
 }
 
 interface ForbiddenHit {
@@ -90,11 +136,12 @@ interface ForbiddenHit {
 
 function rawHits(text: string | null | undefined): ForbiddenHit[] {
   if (!text) return [];
+  const safeSpans = computeSafeSpans(text);
   const hits: ForbiddenHit[] = [];
   const re = new RegExp(LPMED_FORBIDDEN.source, "giu");
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
-    if (!isSafeContext(text, m.index, m[0].length)) {
+    if (!isWithinSafeSpan(safeSpans, m.index, m[0].length)) {
       hits.push({ term: m[0], index: m.index });
     }
     if (m[0].length === 0) re.lastIndex += 1; // garde-fou anti-boucle infinie

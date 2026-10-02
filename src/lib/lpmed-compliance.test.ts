@@ -81,6 +81,46 @@ describe("findForbiddenTerms", () => {
       expect(findForbiddenTerms("Nous soignons efficacement.").length).toBeGreaterThan(0);
     });
   });
+
+  // Bug N4 (audit 2026-10-02c) : la fenêtre de négation générique (bug 2,
+  // v1) canceled une allégation réelle dès qu'un mot de négation quelconque
+  // traînait à proximité, SANS lien grammatical avec le terme. Remplacée
+  // par des motifs exacts dont le terme interdit fait partie intégrante —
+  // ces 4 phrases, données par l'audit comme passant à tort, doivent
+  // maintenant être détectées.
+  describe("allégations réelles à proximité d'un mot de négation sans rapport (régression N4)", () => {
+    it("détecte une allégation même si une négation sans rapport est proche", () => {
+      expect(
+        findForbiddenTerms("Sans médicaments, notre méthode guérit l'anxiété.").length,
+      ).toBeGreaterThan(0);
+      expect(
+        findForbiddenTerms("Une approche non médicamenteuse qui soigne en profondeur.").length,
+      ).toBeGreaterThan(0);
+      expect(findForbiddenTerms("Not just relaxation, it heals anxiety.").length).toBeGreaterThan(0);
+      expect(
+        findForbiddenTerms("Prendre soin de soi : cette séance soigne l'anxiété.").length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("l'idiome sûr ne blanchit que ce qu'il contient réellement, pas toute la phrase", () => {
+      // "Prendre soin de soi" doit rester blanc, mais le "soigne" séparé
+      // plus loin dans la même phrase doit être détecté.
+      const terms = findForbiddenTerms("Prendre soin de soi : cette séance soigne l'anxiété.");
+      expect(terms).toContain("soigne");
+    });
+  });
+
+  // Bug N5 (audit 2026-10-02c) : la fenêtre de négation scannait un simple
+  // « ne » isolé par `\b`, qui matchait à tort la fin de mots accentués
+  // comme « hygiène », « gêne », « scène » (même bug de frontière que le
+  // bug 1, reporté dans un nouvel endroit). Plus de scan de mot de négation
+  // isolé désormais — ces phrases doivent être détectées normalement.
+  describe("mots accentués finissant en -ène ne sont plus pris pour une négation (régression N5)", () => {
+    it("détecte l'allégation malgré un mot en -ène juste avant", () => {
+      expect(findForbiddenTerms("Une hygiène de vie qui soigne.").length).toBeGreaterThan(0);
+      expect(findForbiddenTerms("Sans gêne, cette méthode guérit.").length).toBeGreaterThan(0);
+    });
+  });
 });
 
 // Bug 3 (audit 2026-10-02b) : countForbidden (article-clean) comparait des
