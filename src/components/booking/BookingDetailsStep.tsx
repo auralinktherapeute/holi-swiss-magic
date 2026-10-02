@@ -1,4 +1,5 @@
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, CalendarDays, Clock, MapPin, User, Wallet, Timer, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,12 @@ export function BookingDetailsStep(p: BookingDetailsStepProps) {
     </div>
   );
 
-  return (
+  // Rendu dans <body> : un ancêtre de la colonne latérale (transform /
+  // backdrop-filter) piégeait sinon le `position: fixed` dans la colonne étroite.
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  useEffect(() => { setPortalTarget(document.body); }, []);
+
+  const content = (
     <section
       aria-labelledby={`${uid}-title`}
       data-testid="booking-details-step"
@@ -140,4 +146,5 @@ export function BookingDetailsStep(p: BookingDetailsStepProps) {
       </div>
     </section>
   );
+  return portalTarget ? createPortal(content, portalTarget) : content;
 }
