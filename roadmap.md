@@ -21,3 +21,10 @@
 - [x] Tests, typecheck, build, seo:check, sitemap avant/après, SSR 4 langues
 - [x] Carte : clé CARTO sur l'URL des tuiles (TherapistMapInner)
 - [x] Agent Automation phases 0+1
+
+# Confirmation dédiée de réservation (Option C)
+
+- [ ] Auditer le parcours actuel et réutiliser l'état/fonctions existants
+- [ ] Remplacer le formulaire latéral par une étape de confirmation dédiée
+- [ ] Ajouter les tests ciblés et vérifier compilation/tests
+- [ ] Contrôler l'aperçu desktop/mobile sans publier
