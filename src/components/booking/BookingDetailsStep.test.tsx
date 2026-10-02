@@ -32,7 +32,7 @@ describe("étape de confirmation de réservation", () => {
     expect(src).not.toContain("booking.book_at");
     expect(src).not.toMatch(/<form\b/);
     expect(src).not.toMatch(/<Input\b|<Textarea\b/);
-    expect(src).toMatch(/setSelectedTime\(s\);[^}]*setStep\("details"\)/);
+    expect(src).toMatch(/setSelectedTime\(s\);[\s\S]{0,80}setStep\("details"\)/);
     expect(src).toMatch(/step === "details"[\s\S]{0,200}<BookingDetailsStep/);
   });
 });
