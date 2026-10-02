@@ -1,0 +1,9 @@
+.vibeflow-fragments/infrastructure-audit.json
+scripts/audit-infra.sh
+scripts/known-versions.txt
+scripts/tests/test-audit-infra.sh
+skills/infrastructure-audit/SKILL.md
+skills/infrastructure-audit/references/claude-code-runtime.md
+skills/infrastructure-audit/references/hooks-contract.md
+skills/infrastructure-audit/references/scripts-integrity.md
+skills/infrastructure-audit/references/snapshot-format.md

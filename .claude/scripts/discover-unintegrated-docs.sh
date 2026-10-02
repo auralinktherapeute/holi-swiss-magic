@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+# discover-unintegrated-docs.sh — Quels cadrages écrits ne sont pas encore intégrés à la feuille
+#                                  de route ? (BRDG-02)
+#
+# Rôle (ADR-055 §3) : répondre au FAIT, jamais au métier. Ce script ne dit PAS si un document est
+# un ADR, une SPEC, un PRD ou un DOC — ça reste du jugement porté par l'agent (vibeflow-head, plan
+# 13-02). Il dit seulement : « ce document existe sous docs/superpowers/{specs,plans}/, et aucun
+# registre ne le cite » — et à quel GRAIN il appartient (spec | plan).
+#
+# Usage:
+#   discover-unintegrated-docs.sh [--path <dir>] [--hook] [--quiet]
+# Defaults: --path .
+#
+# --hook (plan 17-02, additif) change le format d'affichage — au lieu de la liste grain<TAB>chemin,
+# émet une ligne agrégée [docs-ingest] (compte total + ventilation spec/plan) suivie de sa ligne de
+# geste. Le contrat historique grain<TAB>chemin, consommé par ingestion-flow.md, reste le seul mode
+# actif sans --hook — il ne bouge pas d'un octet, et sans --hook les 3 codes ci-dessous restent
+# INCHANGÉS (compat CLI/tests). Sous --hook (D-06, Portabilité Windows II), le SEUL code de silence
+# interne (3, « rien à intégrer ») est en outre traduit en 0 à la frontière du harness par
+# hook_exit() — le code 0 « signal émis » et le 64 restent inchangés. Voir
+# docs/HOOKS-CONTRAT-SORTIE.md. --hook et --quiet sont mutuellement exclusifs (exit 64).
+#
+# Sources scannées (grain) :
+#   <sources>/specs/*.md  → grain spec
+#   <sources>/plans/*.md  → grain plan
+#
+# Registres de citation consultés :
+#   Pour CHAQUE compartiment de workstream présent sur le disque (<planning>/workstreams/*/, énuméré
+#   par vf_ws_enumerate — phase 41.1, D-04) :
+#     <compartiment>/ROADMAP.md, <compartiment>/REQUIREMENTS.md, <compartiment>/MILESTONES.md,
+#     <compartiment>/PROJECT.md, <compartiment>/milestones/*.md
+#   PLUS, hors compartiment par nature et lus une seule fois :
+#     <planning>/ROADMAP.md, <planning>/REQUIREMENTS.md, <planning>/MILESTONES.md,
+#     <planning>/PROJECT.md, <planning>/milestones/*.md, <adr>
+#   <planning>/phases/** est EXCLU : ce sont des sorties du moteur, pas des entrées — y compris
+#   <planning>/workstreams/<nom>/phases/**.
+#
+# Règle de citation : un document est « intégré » si son basename (extension .md incluse), borné
+# des DEUX côtés (début/fin de ligne ou caractère hors [0-9A-Za-z._-]), apparaît dans une ligne
+# d'un registre. Jamais de match sur le stem, jamais par préfixe de dossier, jamais sur un
+# basename plus long se terminant par le sien (ex. redesign.md ne cite pas design.md). Une ligne
+# de registre contenant un glob (ex. docs/superpowers/specs/*.md) est ignorée comme source de
+# citation.
+#
+# Env (surcharge — testabilité, modèle VF_GSD_SKILLS_DIR de build-gsd-index.sh) :
+#   VF_INGEST_SOURCES_DIR   (défaut <path>/docs/superpowers) — racine contenant specs/ et plans/
+#   VF_INGEST_PLANNING_DIR  (défaut <path>/.planning)        — racine des registres GSD
+#   VF_INGEST_ADR_FILE      (défaut <path>/docs/ADR.md)      — registre hors chaîne GSD
+#
+# Sortie : une ligne par document non intégré, "grain<TAB>chemin" (chemin relatif à --path),
+# triée. Rien d'autre — pas de prose, pas d'en-tête.
+#
+# Exit codes (contrat interne, s'applique SANS --hook) :
+#   0  = au moins un document non intégré (listé sur stdout)
+#   3  = rien à intégrer (corpus vide, corpus entièrement cité, ou .planning/ absent)
+#   64 = argument inconnu
+set -uo pipefail
+shopt -s nullglob
+
+ROOT="."
+QUIET=0
+HOOK=0
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --path)
+      if [ "$#" -lt 2 ]; then
+        echo "[discover-unintegrated-docs] --path nécessite une valeur" >&2
+        exit 64
+      fi
+      ROOT="$2"; shift 2 ;;
+    --quiet) QUIET=1; shift ;;
+    --hook) HOOK=1; shift ;;
+    -h|--help) grep '^# ' "$0" | sed 's/^# //'; exit 0 ;;
+    *) echo "[discover-unintegrated-docs] argument inconnu : $1" >&2; exit 64 ;;
+  esac
+done
+
+# Gate de mutuelle exclusion, avant toute autre logique (même position que le gate --path).
+if [ "$HOOK" -eq 1 ] && [ "$QUIET" -eq 1 ]; then
+  echo "[discover-unintegrated-docs] --hook et --quiet sont mutuellement exclusifs" >&2
+  exit 64
+fi
+
+SOURCES_ROOT="${VF_INGEST_SOURCES_DIR:-$ROOT/docs/superpowers}"
+PLANNING_DIR="${VF_INGEST_PLANNING_DIR:-$ROOT/.planning}"
+ADR_FILE="${VF_INGEST_ADR_FILE:-$ROOT/docs/ADR.md}"
+SPECS_DIR="$SOURCES_ROOT/specs"
+PLANS_DIR="$SOURCES_ROOT/plans"
+
+say() { [ "$QUIET" -eq 1 ] || echo "[discover-unintegrated-docs] $*" >&2; }
+
+# --- Traduction du silence interne vers le harness (D-06, uniquement sous --hook) ---------------
+# hook_exit <code> : sous --hook, le SEUL code de silence interne (3) devient 0 à la frontière du
+# harness — une TRADUCTION, jamais un masquage : elle ne touche ni le code d'erreur d'argument
+# (64), ni 0, ni aucun autre code. Sans --hook (CLI, suites de tests), le code reçu ressort
+# inchangé. Voir docs/HOOKS-CONTRAT-SORTIE.md §2.
+hook_exit() { # <code>
+  local code="$1"
+  if [ "$HOOK" -eq 1 ] && [ "$code" -eq 3 ]; then
+    exit 0
+  fi
+  exit "$code"
+}
+
+# --- .planning/ absent : pas de moteur de planning, rien à évaluer contre ---
+if [ ! -d "$PLANNING_DIR" ]; then
+  say "$PLANNING_DIR absent — aucun registre à consulter."
+  hook_exit 3
+fi
+
+# --- Collecte des documents source (grain, chemin relatif à --path) ---
+DOCS_TMP="$(mktemp)" || { echo "[discover-unintegrated-docs] mktemp a échoué" >&2; exit 64; }
+REG_TMP="$(mktemp)" || { echo "[discover-unintegrated-docs] mktemp a échoué" >&2; rm -f "$DOCS_TMP"; exit 64; }
+OUT_TMP="$(mktemp)" || { echo "[discover-unintegrated-docs] mktemp a échoué" >&2; rm -f "$DOCS_TMP" "$REG_TMP"; exit 64; }
+trap 'rm -f "$DOCS_TMP" "$REG_TMP" "$OUT_TMP"' EXIT
+
+for f in "$SPECS_DIR"/*.md; do printf 'spec\t%s\n' "$f" >> "$DOCS_TMP"; done
+for f in "$PLANS_DIR"/*.md; do printf 'plan\t%s\n' "$f" >> "$DOCS_TMP"; done
+
+if [ ! -s "$DOCS_TMP" ]; then
+  say "Aucun document source sous $SPECS_DIR ou $PLANS_DIR."
+  hook_exit 3
+fi
+
+# --- Registres PAR COMPARTIMENT, plus les fichiers hors compartiment par nature -----------------
+# (les lignes glob sont filtrées au moment du match, règle de citation inchangée)
+#
+# Sourcing de la politique de workstream : recherche à DEUX candidats, patron de check-divergence.sh
+# — à plat (`.claude/scripts/` chez l'utilisateur, où copy_module_scripts pose tous les modules sur
+# un seul niveau) puis inter-module dans l'arbre du dépôt. `dev-orchestrator` requiert `conductor`,
+# qui requiert `planning-core` : le fichier est toujours dans la chaîne d'install.
+WS_POLICY=""
+for _cand in "$(dirname "$0")/workstream-policy.sh" \
+             "$(dirname "$0")/../../planning-core/scripts/workstream-policy.sh"; do
+  [ -r "$_cand" ] && { WS_POLICY="$_cand"; break; }
+done
+if [ -n "$WS_POLICY" ]; then
+  # shellcheck source=/dev/null
+  . "$WS_POLICY"
+fi
+
+# AUCUNE DÉGRADATION SILENCIEUSE (invariant de mission, correction C-06 du juge frais). Patron
+# IDENTIQUE aux plans 41.1-02 et 41.1-03, et pour les mêmes raisons :
+#   - énumération vers un FICHIER TEMPORAIRE, jamais une substitution de commande/processus : elle
+#     perd le code de retour par construction ;
+#   - rc CAPTURÉ dans une variable préfixée (`set -e` n'est pas actif ici, l.51 `set -uo pipefail`,
+#     donc `_ws_rc=$?` juste après l'appel est sûr) ;
+#   - stderr LAISSÉ PASSER, jamais `2>/dev/null` ;
+#   - `case` avec branche `*)` NOMMÉE.
+# MESURE qui motive : les DEUX formes de rc=2 de `vf_ws_enumerate` (lien symbolique sur
+# `workstreams/`, vide après filtrage anti-lien) rendent 0 ligne sur stdout et portent leur raison
+# UNIQUEMENT sur stderr — jetées, elles rendent un `.planning/workstreams` détourné en lien
+# symbolique INDISTINGUABLE d'un dépôt non partitionné (rc=3, également 0 ligne).
+# Le script reste NON BLOQUANT : une ligne de stderr n'est pas un blocage, les codes de sortie
+# (0/3/64) sont INCHANGÉS.
+if [ -n "$WS_POLICY" ]; then
+  _WS_TMP="$(mktemp)" || _WS_TMP=""
+  if [ -n "$_WS_TMP" ]; then
+    # Nom en *TMP* EXIGÉ par l'invariant T21b de test-dev-orchestrator.sh (SC5) : toute
+    # redirection d'écriture de ce script cible /dev/null, un descripteur, ou une variable dont le
+    # nom contient TMP. Mesuré : `_WS_LIST` faisait rougir T21b.
+    vf_ws_enumerate "$PLANNING_DIR" > "$_WS_TMP"   # stderr NON redirigé : la raison reste audible
+    _ws_rc=$?
+    case "$_ws_rc" in
+      0)
+        while IFS= read -r _wsdir; do
+          [ -n "$_wsdir" ] || continue
+          for r in "$_wsdir/ROADMAP.md" "$_wsdir/REQUIREMENTS.md" "$_wsdir/MILESTONES.md" \
+                   "$_wsdir/PROJECT.md" "$_wsdir/milestones"/*.md; do
+            [ -f "$r" ] && cat "$r" >> "$REG_TMP"
+          done
+        done < "$_WS_TMP"
+        ;;
+      3)
+        : # SILENCE LÉGITIME — dépôt non partitionné. Le repli racine ci-dessous est l'univers
+          # complet, aucune dégradation : rien à annoncer.
+        ;;
+      2)
+        echo "[discover-unintegrated-docs] vf_ws_enumerate : $PLANNING_DIR/workstreams présent mais NON VÉRIFIABLE (lien symbolique, non-répertoire, ou vide après filtrage) — registre PAR COMPARTIMENT sauté, seul le repli racine est consulté ; la liste ci-dessous peut SUR-signaler des documents pourtant cités dans un compartiment" >&2
+        ;;
+      *)
+        echo "[discover-unintegrated-docs] vf_ws_enumerate : code de sortie imprévu ($_ws_rc, attendu 0/2/3) — registre par compartiment sauté, la liste ci-dessous peut sur-signaler" >&2
+        ;;
+    esac
+    rm -f "$_WS_TMP"
+  else
+    echo "[discover-unintegrated-docs] mktemp a échoué pour l'énumération des compartiments — registre par compartiment sauté, repli racine seul" >&2
+  fi
+else
+  echo "[discover-unintegrated-docs] workstream-policy.sh introuvable (recherche à deux candidats) — registre par compartiment indisponible, repli racine seul, comportement d'avant la phase 41.1 ; ce hook reste NON BLOQUANT" >&2
+fi
+
+# Repli racine — layout legacy non partitionné, ou dépôt PARTIELLEMENT partitionné : mêmes quatre
+# fichiers lus À LA RACINE de $PLANNING_DIR, comportement identique à avant ce plan. Délibérément
+# PAS un `elif` : les deux univers sont vus ensemble, une citation dans l'un OU l'autre suffit à
+# marquer intégré — cohérent avec la sémantique déjà en place (concaténation en un seul buffer).
+for r in "$PLANNING_DIR/ROADMAP.md" "$PLANNING_DIR/REQUIREMENTS.md" "$PLANNING_DIR/MILESTONES.md" \
+         "$PLANNING_DIR/PROJECT.md" "$PLANNING_DIR/milestones"/*.md; do
+  [ -f "$r" ] && cat "$r" >> "$REG_TMP"
+done
+# $ADR_FILE reste hors compartiment par nature — lu UNE SEULE FOIS, inchangé.
+[ -f "$ADR_FILE" ] && cat "$ADR_FILE" >> "$REG_TMP"
+
+# Un document est cité si son basename, borné des DEUX côtés (par le début/fin de ligne ou un
+# caractère hors [0-9A-Za-z._-]), apparaît dans une ligne NON glob d'un registre. Padding d'un
+# espace en début ET en fin de ligne : évite l'ancrage ^/$ à l'intérieur d'une alternative ERE
+# (portabilité awk POSIX), les bornes sont alors toujours "caractère hors [0-9A-Za-z._-]".
+# Tous les métacaractères ERE actifs du basename sont échappés caractère par caractère (pas de
+# gsub global sur une classe : piège à écrire correctement en awk POSIX portable).
+is_cited() { # <basename>
+  awk -v base="$1" '
+    BEGIN {
+      special = "\\.[]()*+?{}|^$"
+      esc = ""
+      n = length(base)
+      for (i = 1; i <= n; i++) {
+        c = substr(base, i, 1)
+        if (index(special, c) > 0) esc = esc "\\" c
+        else esc = esc c
+      }
+      pat = "[^0-9A-Za-z._-]" esc "[^0-9A-Za-z._-]"
+    }
+    index($0, "/*") > 0 { next }
+    { line = " " $0 " "; if (line ~ pat) { found = 1; exit } }
+    END { exit (found ? 0 : 1) }
+  ' "$REG_TMP"
+}
+
+while IFS="$(printf '\t')" read -r grain path; do
+  [ -z "$grain" ] && continue
+  base="$(basename "$path")"
+  if is_cited "$base"; then
+    continue
+  fi
+  rel="$path"
+  case "$rel" in
+    "$ROOT"/*) rel="${rel#"$ROOT"/}" ;;
+  esac
+  printf '%s\t%s\n' "$grain" "$rel" >> "$OUT_TMP"
+done < "$DOCS_TMP"
+
+if [ ! -s "$OUT_TMP" ]; then
+  say "Corpus entièrement cité — rien à intégrer."
+  hook_exit 3
+fi
+
+# --- Mode --hook (additif) : une ligne agrégée au lieu de la liste ------------------------------
+# Compte total + ventilation par grain en une seule passe awk POSIX. Le calcul amont ($OUT_TMP)
+# n'est pas modifié — cette branche ne fait que remplacer le rendu ; le code de silence (3, ci-
+# dessus) est traduit par hook_exit(), le code 0 « signal émis » ci-dessous reste inchangé.
+if [ "$HOOK" -eq 1 ]; then
+  IFS="$(printf '\t')" read -r TOTAL NSPEC NPLAN <<HOOKEOF
+$(awk -F'\t' '{c[$1]++; n++} END{printf "%d\t%d\t%d\n", n, c["spec"]+0, c["plan"]+0}' "$OUT_TMP")
+HOOKEOF
+  printf '%s\n' "[docs-ingest] ${TOTAL} documents de cadrage hors feuille de route (${NSPEC} spec, ${NPLAN} plan)."
+  printf '%s\n' "            → propose l'ingestion (gsd-ingest-docs --mode merge / gsd-import), jamais sans confirmation."
+  exit 0
+fi
+
+[ "$QUIET" -eq 1 ] && exit 0
+
+LC_ALL=C sort "$OUT_TMP"
+exit 0

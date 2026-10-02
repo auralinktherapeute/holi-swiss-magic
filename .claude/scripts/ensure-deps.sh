@@ -1,0 +1,806 @@
+#!/usr/bin/env bash
+# ensure-deps.sh — Bootstrap auto-install non-interactif des dépendances (dev-orchestrator)
+#
+# Vision §1 / D3 : rendre les deux dépendances invisibles et auto-installées.
+#   - GSD          → via npm (npx @opengsd/gsd-core), flag --claude + flag de scope dérivé (non-interactif).
+#                    Dual-layout pendant la fenêtre de compat : détection VERSION file gsd-core
+#                    prioritaire, get-shit-done legacy en repli (jamais de test PATH — piège #1).
+#   - Superpowers  → via plugin Claude Code (claude plugin install --scope <scope>).
+#
+# Garde-fou (D3 / BOOT-04) : ce script NE LANCE JAMAIS `gsd-new-project` (interactif).
+# L'init projet reste sur confirmation explicite de l'agent.
+#
+# Usage:
+#   ./ensure-deps.sh                       # détecte + auto-installe ce qui manque
+#   VF_ENSURE_DRY_RUN=1 ./ensure-deps.sh   # détecte + logue les commandes SANS les exécuter (tests, idempotence)
+#   VF_ENSURE_AUTO_MAP=1 ./ensure-deps.sh  # autorise un message map-codebase si du code est détecté (non-interactif)
+#   VF_SCOPE=project ./ensure-deps.sh      # scope d'install (user|project|local) — voir mapping ci-dessous
+#   VF_ENSURE_DRY_RUN=1 VF_ENSURE_FORCE=1 ./ensure-deps.sh  # dry-run observable : logue la cmd scopée même si déps présentes
+#
+# Variables d'environnement :
+#   VF_ENSURE_DRY_RUN  (défaut vide) — 1 → simule sans exécuter npx/claude.
+#   VF_ENSURE_AUTO_MAP (défaut vide) — 1 → logue que gsd-map-codebase est lançable si codebase détecté.
+#   VF_SCOPE           (défaut user) — scope d'install : user|project|local. Mapping (spec §3 / §8) :
+#                        GSD :         user → --global ; project|local → --local
+#                        Superpowers : user|project|local → --scope <même valeur>
+#                      Le défaut LEGACY `user` est un fallback pour les APPELS DIRECTS uniquement
+#                      (CI, debug, run manuel). EN PRODUCTION, le skill /vibeflow-install (Phase 4)
+#                      passe TOUJOURS un VF_SCOPE explicite à l'engine ET à ce script (un seul scope
+#                      partout — cohérence ID4, spec §3/§8). Ce défaut ne co-occurre donc jamais en prod
+#                      avec le défaut LEGACY de l'engine (`project`). Une valeur explicite incohérente
+#                      est rejetée tôt par la validation stricte ci-dessous (err + exit 1).
+#   VF_ENSURE_FORCE    (défaut vide) — 1 → EN DRY-RUN UNIQUEMENT, court-circuite l'early-return de
+#                      détection (skip) pour loguer la commande scopée QUI SERAIT émise, sans rien
+#                      installer. Sans effet hors dry-run (jamais d'install forcée). Rend le dry-run
+#                      observable sur une machine où GSD/Superpowers sont déjà présents (CI/dev).
+#   VF_ENSURE_AUTO_NODE (défaut 1) — 0 → n'installe JAMAIS Node, se contente de nommer l'étape
+#                      manuelle. Par défaut, un Node trop ancien pour gsd-core est mis à niveau
+#                      automatiquement sous $HOME via un gestionnaire de version (jamais de sudo,
+#                      jamais le Node système) — voir la section « Runtime Node » plus bas.
+#   VF_ENSURE_MIGRATE_ENGINE (défaut vide) — 1 → équivaut au flag --migrate-engine (voir Usage) :
+#                      autorise l'install npx sur un état `legacy` détecté (D-06). SANS cette
+#                      variable ni le flag, un état `legacy` est SIGNALÉ (message explicite) mais
+#                      JAMAIS migré (P-07) — la confirmation humaine appartient à l'appelant
+#                      (/vf-update, ADR-031), jamais à ce script.
+#   VF_ENSURE_UPGRADE_ENGINE (défaut vide) — 1 → équivaut au flag --upgrade-engine (voir Usage) :
+#                      autorise la MISE À JOUR d'un gsd-core déjà présent mais PÉRIMÉ face à la
+#                      dernière version publiée sous le plafond `^1` (même résolution qu'une install
+#                      neuve). SANS cette variable ni le flag, un gsd-core périmé est SKIPPÉ comme
+#                      avant, sans aucune sonde réseau — la mise à jour est un geste autorisé par
+#                      l'appelant (/vf-update, ADR-031), jamais un effet de bord du bootstrap.
+#
+# Flags CLI (rétro-compat : historiquement "$@" n'était jamais lu, les arguments inconnus sont
+# donc IGNORÉS avec une ligne log plutôt que rejetés — un rejet strict casserait un appelant
+# non recensé) :
+#   --migrate-engine   Équivalent à VF_ENSURE_MIGRATE_ENGINE=1 (voir ci-dessus).
+#   --upgrade-engine   Équivalent à VF_ENSURE_UPGRADE_ENGINE=1 (voir ci-dessus).
+#   --check-engine-update
+#                      Mode LECTURE SEULE, sonde réseau best-effort (npm view, jamais npx) : sur un
+#                      état gsd-core, compare le VERSION installé à la dernière version publiée
+#                      sous `^1`. Périmé → UNE ligne `[gsd-outdated] … A.B.C installé → X.Y.Z
+#                      publié` sur stdout, exit 0 (seul cas actionnable). À jour, état non
+#                      gsd-core (absent/legacy : affaire de check-gsd-engine.sh), réseau ou npm
+#                      KO, VERSION illisible → stdout vide, exit 3 (INDÉTERMINÉ, jamais une erreur
+#                      ni un faux signal). Même contrat de sortie que check-gsd-engine.sh.
+#   -h | --help        Affiche cet en-tête (grep '^# ') et exit 0.
+#
+# Comportement : idempotent (2e run consécutif = no-op, mode normal non forcé). Jamais d'échec silencieux :
+# si un prérequis (Node/npm ou CLI claude) manque, les étapes manuelles sont affichées et exit 0.
+#
+# Référence : BOOT-01 (GSD auto), BOOT-02 (Superpowers auto), BOOT-03 (idempotent + fallback manuel),
+#             BOOT-04 (gsd-new-project jamais lancé seul), SCOPE-03 (scope-aware via VF_SCOPE), D3.
+
+# Pas de `-e` : certaines détections (command -v, grep) doivent pouvoir échouer sans tuer le script.
+set -uo pipefail
+
+# ---------- Variables ----------
+DRY_RUN="${VF_ENSURE_DRY_RUN:-}"
+AUTO_MAP="${VF_ENSURE_AUTO_MAP:-}"
+# Scope d'install. Défaut LEGACY `user` = rétro-compat APPEL-DIRECT (le skill /vibeflow-install
+# de Phase 4 passe TOUJOURS un VF_SCOPE explicite en prod — cohérence ID4, voir en-tête).
+SCOPE="${VF_SCOPE:-user}"
+# 1 → en DRY-RUN, court-circuite l'early-return de détection pour loguer la cmd scopée (sans installer).
+# Sans effet hors dry-run (jamais d'install forcée).
+FORCE="${VF_ENSURE_FORCE:-}"
+# 1 → autorise l'install npx sur un état `legacy` détecté (D-06). Sans elle (ni le flag
+# --migrate-engine, réglé plus bas au parsing des arguments), un état `legacy` est SIGNALÉ mais
+# JAMAIS migré (P-07, ADR-031) — la confirmation humaine vit dans l'appelant (/vf-update), jamais
+# dans ce script.
+MIGRATE_ENGINE="${VF_ENSURE_MIGRATE_ENGINE:-}"
+# 1 → autorise la mise à jour d'un gsd-core présent mais périmé face au dernier `^1` publié. Sans
+# elle (ni le flag --upgrade-engine), l'état gsd-core garde son skip historique, SANS sonde réseau.
+UPGRADE_ENGINE="${VF_ENSURE_UPGRADE_ENGINE:-}"
+# 1 (flag --check-engine-update uniquement) → mode lecture seule : signal de fraîcheur puis exit.
+CHECK_ENGINE_UPDATE=""
+# Paquet et plafond du moteur — UNE seule définition, partagée par l'install, la mise à jour et la
+# sonde de fraîcheur : « la plus récente pour VibeFlow » = la dernière version publiée qui satisfait
+# ce plafond, exactement ce que `npx -y "$GSD_PACKAGE@$GSD_RANGE"` résoudrait sur une install neuve.
+GSD_PACKAGE="@opengsd/gsd-core"
+GSD_RANGE="^1"
+# Fenêtre de compat dual-layout (D-01/D3, 11-CONTEXT.md) : le VERSION file du nouveau layout est
+# DÉRIVÉ de la même cascade que GSD_HOME (detect-gsd-engine.sh/build-gsd-index.sh), jamais une
+# constante $HOME figée — un chemin $HOME-only raterait le scope --local de gsd-core 1.9.0, qui
+# dépose le payload sous <projet>/.claude/gsd-core/. Pas de variante projet-local pour le legacy
+# (D-01 : antérieur au scope --local).
+default_gsd_home_new() {
+  local root claude_home
+  root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  claude_home="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  if [ -d "$root/.claude/gsd-core" ]; then
+    echo "$root/.claude/gsd-core"
+  else
+    echo "$claude_home/gsd-core"
+  fi
+}
+GSD_HOME_NEW="$(default_gsd_home_new)"
+GSD_VERSION_FILE_NEW="$GSD_HOME_NEW/VERSION"                                    # D3 : dérivé, pas figé
+GSD_VERSION_FILE_LEGACY="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/get-shit-done/VERSION"
+# État legacy capturé UNE SEULE FOIS en tête de ensure_gsd() (D-08.3) — source unique du
+# message de nettoyage : l'installeur amont supprime lui-même ce VERSION file à l'install
+# réussie, donc une re-détection après coup le rendrait définitivement inatteignable, sans
+# aucune erreur visible.
+GSD_LEGACY_DETECTED=""
+GSD_LEGACY_VERSION=""
+PLUGINS_CACHE_DIR="$HOME/.claude/plugins/cache"
+
+# ---------- Résolution de runtime-cli-dispatch.sh (RUNT-01) ----------
+# Cascade EXACTE de find_hooks_merger() (plugin/_internal/vibeflow-update.sh) : script partagé
+# posé par l'engine, jamais un `source` (D-01). Introuvable aux deux positions → repli sur le
+# comportement `claude`-figé ACTUEL (jamais une régression silencieuse sur un poste où le script
+# partagé n'est pas encore posé — cas d'un `update` partiel).
+find_runtime_cli_dispatch() {
+  local c
+  c="${VIBEFLOW_CACHE:-.vibeflow-cache}/_internal/runtime-cli-dispatch.sh"; [ -f "$c" ] && { echo "$c"; return 0; }
+  c="$(dirname "$0")/runtime-cli-dispatch.sh"; [ -f "$c" ] && { echo "$c"; return 0; }
+  echo ""
+}
+
+# ---------- Helpers ----------
+log() {
+  echo "[ensure-deps] $*" >&2
+}
+
+err() {
+  echo "[ensure-deps] ERROR: $*" >&2
+}
+
+# --- Assainissement d'une valeur VERSION lue (duplication DÉLIBÉRÉE de
+# check-gsd-engine.sh:99-121, motivée par le même précédent que default_gsd_home_new() ci-dessus
+# (D-01) : ce script doit rester testable en boîte noire sans sourcer un script à effets de bord.
+# La RÉFÉRENCE de contenu de cette fonction reste check-gsd-engine.sh — ne pas la faire diverger
+# d'un côté sans reporter le changement de l'autre (T-19-01-01).
+# La lecture est bornée EN AMONT (200 octets max au point d'appel — jamais un `cat` intégral d'un
+# fichier de taille arbitraire, T-19-01-04), puis la valeur est validée contre une classe de
+# caractères restreinte. Toute valeur non conforme (substitution de commande, octet de contrôle,
+# longueur excessive) est remplacée par une mention neutre et n'est JAMAIS réinjectée dans une
+# expansion ni imprimée telle quelle.
+sanitize_version() { # <raw>
+  local v="$1"
+  if [ "${#v}" -gt 80 ]; then
+    printf '%s' "(version illisible)"
+    return 1
+  fi
+  case "$v" in
+    \"*) [ "${v%\"}" != "$v" ] && { v="${v#\"}"; v="${v%\"}"; } ;;
+    \'*) [ "${v%\'}" != "$v" ] && { v="${v#\'}"; v="${v%\'}"; } ;;
+  esac
+  if printf '%s' "$v" | grep -Eq '^[0-9A-Za-z._-]{1,80}$'; then
+    printf '%s' "$v"
+    return 0
+  fi
+  printf '%s' "(version illisible)"
+  return 1
+}
+
+# ---------- Validation du scope (T-03-04) ----------
+# Valider VF_SCOPE EN TÊTE, AVANT toute définition de main et tout effet de bord / run_cmd :
+# un scope invalide injecté dans les flags d'install est rejeté tôt (err + exit 1).
+case "$SCOPE" in
+  user | project | local) ;;
+  *)
+    err "VF_SCOPE invalide : $SCOPE (attendu user|project|local)"
+    exit 1
+    ;;
+esac
+
+# Dérivation des flags de scope (spec §3 / §8) :
+#   GSD :         user → --global ; project|local → --local
+#   Superpowers : user|project|local → --scope <même valeur>
+if [ "$SCOPE" = "user" ]; then
+  GSD_SCOPE_FLAG="--global"
+else
+  GSD_SCOPE_FLAG="--local"
+fi
+SUPERPOWERS_SCOPE="$SCOPE"
+
+# Exécute une commande, ou la logue seulement en mode dry-run. Retourne le code de sortie réel.
+run_cmd() {
+  if [ -n "$DRY_RUN" ]; then
+    log "(dry-run) $*"
+    return 0
+  fi
+  "$@"
+}
+
+# ---------- Runtime Node (BOOT-01) ----------
+#
+# POURQUOI CETTE SECTION EXISTE. `engines` de @opengsd/gsd-core est passé de node>=22 (1.10.0) à
+# node>=24 (1.11.0). Sous Node 22, `npx -y "@opengsd/gsd-core@^1"` n'échoue pas : npm résout la
+# dernière version dont les `engines` sont satisfaits et installe 1.10.0 SANS LE DIRE. Le poste
+# repart donc avec un moteur antérieur, et rien dans la sortie ne le signale. Mesuré le 2026-08-27
+# en conteneur : node:22-slim → 1.10.0 ; node:24-slim → 1.11.0.
+#
+# CE QUE CETTE SECTION S'INTERDIT. Aucun `sudo`. Aucune installation par gestionnaire système
+# (brew/apt/dnf) : elle remplacerait le Node dont d'autres projets du poste dépendent. Le runtime
+# n'est posé que sous $HOME, via un gestionnaire de version — jamais à l'échelle de la machine.
+NODE_MIN_MAJOR=24
+# Tag ÉPINGLÉ (jamais `master`) : ce script est exécuté, pas seulement lu. Rafraîchir consciemment.
+NVM_PINNED_TAG="v0.40.7"
+AUTO_NODE="${VF_ENSURE_AUTO_NODE:-1}"
+
+node_major_now() {
+  node -e 'process.stdout.write(String(process.versions.node.split(".")[0]))' 2>/dev/null || echo 0
+}
+
+# MSYS2/Cygwin : les gestionnaires de version Unix n'y posent pas un runtime utilisable (nvm-windows
+# est un autre produit, piloté autrement). On y refuse l'auto-install plutôt que d'échouer à mi-course.
+host_is_windows() {
+  case "$(uname -s 2>/dev/null || echo unknown)" in
+    MINGW* | MSYS* | CYGWIN*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Place en tête de PATH le répertoire d'un node fraîchement posé, pour que le `npx` qui suit dans
+# CE script l'utilise. La persistance pour les prochains shells est le travail du gestionnaire
+# (alias default / use -g), fait par chaque branche ci-dessous.
+use_node_bin_dir() {
+  local dir="$1"
+  [ -n "$dir" ] && [ -x "$dir/node" ] || return 1
+  PATH="$dir:$PATH"
+  export PATH
+}
+
+node_via_nvm() {
+  local nvm_sh="${NVM_DIR:-$HOME/.nvm}/nvm.sh" resolved
+  [ -s "$nvm_sh" ] || return 1
+  # shellcheck disable=SC1090
+  . "$nvm_sh" >/dev/null 2>&1 || return 1
+  nvm install "$NODE_MIN_MAJOR" >&2 || return 1
+  nvm alias default "$NODE_MIN_MAJOR" >/dev/null 2>&1 || true
+  resolved="$(nvm which "$NODE_MIN_MAJOR" 2>/dev/null)" || return 1
+  use_node_bin_dir "$(dirname "$resolved")"
+}
+
+node_via_fnm() {
+  local resolved
+  command -v fnm >/dev/null 2>&1 || return 1
+  fnm install "$NODE_MIN_MAJOR" >&2 || return 1
+  fnm default "$NODE_MIN_MAJOR" >/dev/null 2>&1 || true
+  resolved="$(fnm exec --using="$NODE_MIN_MAJOR" -- node -e 'process.stdout.write(process.execPath)' 2>/dev/null)" || return 1
+  use_node_bin_dir "$(dirname "$resolved")"
+}
+
+# volta pose des shims déjà présents sur le PATH : rien à repositionner, la re-sonde suffit.
+node_via_volta() {
+  command -v volta >/dev/null 2>&1 || return 1
+  volta install "node@$NODE_MIN_MAJOR" >&2 || return 1
+}
+
+node_via_mise() {
+  local resolved
+  command -v mise >/dev/null 2>&1 || return 1
+  mise use -g "node@$NODE_MIN_MAJOR" >&2 || return 1
+  resolved="$(mise which node 2>/dev/null)" || return 1
+  use_node_bin_dir "$(dirname "$resolved")"
+}
+
+# Dernier recours : poser nvm lui-même sous $HOME, puis reprendre la branche nvm. C'est le SEUL
+# endroit où ce script installe un outil tiers — décision de Samuel du 2026-08-27, prise en
+# connaissance de cause pour couvrir la machine vierge. nvm est du bash pur, confiné à $HOME/.nvm,
+# et ne demande jamais sudo.
+node_via_fresh_nvm() {
+  command -v curl >/dev/null 2>&1 || return 1
+  log "Aucun gestionnaire de version Node détecté — installation de nvm $NVM_PINNED_TAG sous \$HOME..."
+  curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_PINNED_TAG/install.sh" | bash >&2 || return 1
+  NVM_DIR="${NVM_DIR:-$HOME/.nvm}" node_via_nvm
+}
+
+# Retourne 0 si le PATH offre un Node ≥ NODE_MIN_MAJOR — au besoin en l'installant. Retourne 1 en
+# laissant à l'appelant le soin d'abandonner proprement (jamais d'exit : ce script ne fait pas
+# échouer un bootstrap sur une dépendance qu'il a su nommer).
+ensure_node_runtime() {
+  local before after
+  before="$(node_major_now)"
+  [ "${before:-0}" -ge "$NODE_MIN_MAJOR" ] 2>/dev/null && return 0
+
+  err "Node $(node --version 2>/dev/null || echo '?') détecté — @opengsd/gsd-core requiert Node ≥ $NODE_MIN_MAJOR."
+
+  # Dry-run : on ANNONCE le geste sans le poser, et on retourne 1 — le runtime n'a pas bougé, donc
+  # npx ne doit pas être tenté derrière. C'est ce que vérifie T2e.
+  if [ -n "$DRY_RUN" ]; then
+    log "(dry-run) auto-install Node $NODE_MIN_MAJOR via gestionnaire de version sous \$HOME"
+    return 1
+  fi
+
+  if [ "$AUTO_NODE" != "1" ]; then
+    log "Auto-install Node désactivée (VF_ENSURE_AUTO_NODE=$AUTO_NODE)."
+    log_node_manual_steps
+    return 1
+  fi
+
+  if host_is_windows; then
+    log "Windows détecté — l'auto-install Node n'y est pas pilotable depuis ce script."
+    log_node_manual_steps
+    return 1
+  fi
+
+  log "Installation de Node $NODE_MIN_MAJOR (sous \$HOME, sans sudo, sans toucher au Node système)..."
+  node_via_nvm || node_via_fnm || node_via_volta || node_via_mise || node_via_fresh_nvm || true
+
+  after="$(node_major_now)"
+  if [ "${after:-0}" -ge "$NODE_MIN_MAJOR" ] 2>/dev/null; then
+    log "Node $(node --version 2>/dev/null || echo '?') actif — reprise du bootstrap."
+    return 0
+  fi
+
+  err "L'auto-install Node a échoué (version active : $(node --version 2>/dev/null || echo '?'))."
+  log_node_manual_steps
+  return 1
+}
+
+log_node_manual_steps() {
+  log "Étape manuelle Node :"
+  log "  1. Installer Node.js $NODE_MIN_MAJOR+ (https://nodejs.org) puis vérifier : node --version"
+  log "  2. Relancer ce script : ./ensure-deps.sh"
+}
+
+# ---------- GSD (BOOT-01 / BOOT-03) ----------
+
+# Détecte l'état à 3 valeurs du moteur GSD (D-03) : source UNIQUE, réutilisée par detect_gsd()
+# ci-dessous — cascade fichier VERSION UNIQUEMENT (jamais de test PATH — piège n°1). Un shim
+# legacy (ex. gsd-sdk) peut rester sur le PATH après migration : un `command -v` ferait toujours
+# renvoyer vrai et gsd-core ne serait jamais installé (panne silencieuse et durable).
+detect_gsd_state() {
+  if [ -f "$GSD_VERSION_FILE_NEW" ]; then
+    echo "gsd-core"
+  elif [ -f "$GSD_VERSION_FILE_LEGACY" ]; then
+    echo "legacy"
+  else
+    echo "absent"
+  fi
+}
+
+# Détecte GSD : booléen DÉRIVÉ de detect_gsd_state() — les états gsd-core ET legacy comptent
+# tous deux comme « présent » (tolérance dual-layout, D-01/D3 Phase 10). Ne refait plus le test
+# elle-même : l'ancien `||` a disparu de son corps.
+detect_gsd() {
+  [ "$(detect_gsd_state)" != "absent" ]
+}
+
+# Legacy détecté = le VERSION file de l'ancien layout existe (le nouveau peut coexister ou non —
+# la coexistence n'est pas garantie propre, Phase 10). Sert à déclencher l'affichage du nettoyage
+# manuel (ADR-031), indépendamment du succès de l'install gsd-core.
+detect_gsd_legacy() {
+  [ -f "$GSD_VERSION_FILE_LEGACY" ]
+}
+
+# ---------- Fraîcheur du moteur gsd-core (plafond ^1) ----------
+# POURQUOI ICI ET PAS DANS check-gsd-engine.sh. Ce gate classe sur la PRÉSENCE des fichiers VERSION
+# et ne compare AUCUN numéro, par doctrine (D-05) : le paquet legacy est figé à 1.42.3, donc tout
+# comparateur y classerait un poste legacy « à jour » pour toujours. La fraîcheur, elle, ne compare
+# que gsd-core à gsd-core — même paquet, même ligne de versions — et vit dans le script qui porte
+# déjà le plafond `^1` (point de vérité unique du scope et du plafond, Iron Law 2). Avant ce bloc,
+# un poste en 1.13.0 restait « GSD déjà présent (skip) » alors que 1.14.0 était publié : personne
+# ne lisait le VERSION installé, personne n'interrogeait le registre.
+
+# Version installée du moteur gsd-core (nouveau layout) — lecture bornée (200 octets) puis
+# assainie (sanitize_version), jamais réinjectée telle quelle. Vide + rc 1 si absente ou illisible.
+gsd_installed_version() {
+  local raw v
+  [ -f "$GSD_VERSION_FILE_NEW" ] || return 1
+  raw="$(head -c 200 "$GSD_VERSION_FILE_NEW" 2>/dev/null)"
+  v="$(sanitize_version "$raw")" || return 1
+  printf '%s' "$v"
+}
+
+# Dernière version PUBLIÉE satisfaisant le plafond (dist-tags exclus par construction : `npm view
+# <pkg>@^1 version` ne rend que des versions stables du range). Sortie npm en --json : un tableau
+# de chaînes s'il y a plusieurs candidates, une chaîne nue s'il n'y en a qu'une — les deux formes
+# sont réduites à une version par ligne, filtrées en semver strict, triées par sort -V. Réseau ou
+# npm KO → vide (rc du pipeline non significatif : l'appelant teste la vacuité). Bornes réseau
+# explicites (fetch-timeout / fetch-retries=0) : un registre injoignable ne doit jamais pendre
+# une session /vf-update.
+gsd_latest_published() {
+  command -v npm >/dev/null 2>&1 || return 1
+  npm view "${GSD_PACKAGE}@${GSD_RANGE}" version --json --fetch-timeout=10000 --fetch-retries=0 2>/dev/null \
+    | tr -d '",[] \r' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1
+}
+
+# Comparaison semver : vrai si $1 > $2 (sort -V, jamais lexical — 1.9.0 < 1.14.0).
+newer() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]; }
+
+# Mode --check-engine-update (lecture seule, contrat de sortie de check-gsd-engine.sh) : imprime
+# le signal [gsd-outdated] et sort en 0 si — et seulement si — un gsd-core lisible est strictement
+# inférieur au dernier ^1 publié. Tout autre cas sort en 3, stdout vide (diagnostics sur stderr).
+check_engine_update() {
+  local installed latest
+  if [ "$(detect_gsd_state)" != "gsd-core" ]; then
+    log "fraîcheur : état $(detect_gsd_state) — hors périmètre (voir check-gsd-engine.sh)."
+    exit 3
+  fi
+  if ! installed="$(gsd_installed_version)"; then
+    log "fraîcheur : VERSION installé illisible — indécidable."
+    exit 3
+  fi
+  latest="$(gsd_latest_published)"
+  if [ -z "$latest" ]; then
+    log "fraîcheur : dernière version ${GSD_PACKAGE}@${GSD_RANGE} indéterminable (réseau ou npm KO) — silence."
+    exit 3
+  fi
+  if newer "$latest" "$installed"; then
+    printf '%s\n' "[gsd-outdated] moteur ${GSD_PACKAGE} ${installed} installé → ${latest} publié (plafond ${GSD_RANGE}) — mise à jour disponible."
+    printf '%s\n' "              → propose la mise à jour (confirmation requise via /vf-update)."
+    exit 0
+  fi
+  log "fraîcheur : ${GSD_PACKAGE} ${installed} = dernier ${GSD_RANGE} publié — à jour."
+  exit 3
+}
+
+ensure_gsd() {
+  # D-08.3 : capturer l'état legacy UNE SEULE FOIS, tout en haut, avant toute garde et tout
+  # run_cmd — l'installeur amont supprime lui-même le VERSION legacy à l'install réussie ; une
+  # capture après coup rendrait log_legacy_cleanup_if_needed() définitivement muette, sans aucun
+  # signal d'erreur (le piège de séquencement, preuve directe en T2k).
+  if detect_gsd_legacy; then
+    GSD_LEGACY_DETECTED=1
+    # T-19-01-01/T-19-01-04 : lecture bornée (200 octets max, jamais un `cat` intégral d'un
+    # fichier de taille arbitraire) PUIS assainissement (sanitize_version) avant assignation —
+    # la valeur assainie est ensuite réutilisée telle quelle par les deux sites d'affichage
+    # (${GSD_LEGACY_VERSION:-?}), sans nouveau traitement à chaque usage.
+    local raw_legacy_version
+    raw_legacy_version="$(head -c 200 "$GSD_VERSION_FILE_LEGACY" 2>/dev/null)"
+    GSD_LEGACY_VERSION="$(sanitize_version "$raw_legacy_version")"
+  fi
+
+  local state dry_run_forced
+  state="$(detect_gsd_state)"
+  dry_run_forced=0
+  { [ -n "$DRY_RUN" ] && [ -n "$FORCE" ]; } && dry_run_forced=1
+
+  # État gsd-core : skip historique (y compris son exception dry-run forcé, D-03) — SAUF si
+  # l'appelant a autorisé la mise à jour (--upgrade-engine / VF_ENSURE_UPGRADE_ENGINE=1) : la
+  # sonde réseau ne tourne QUE sous cette autorisation, et n'aboutit à npx que si le VERSION
+  # installé est lisible ET strictement inférieur au dernier ^1 publié. Indécidable (VERSION
+  # illisible, registre injoignable) ≠ périmé : on skippe en le disant, jamais d'install à l'aveugle.
+  if [ "$state" = "gsd-core" ] && [ "$dry_run_forced" -eq 0 ]; then
+    local installed latest
+    installed="$(gsd_installed_version)" || installed=""
+    if [ -z "$UPGRADE_ENGINE" ]; then
+      log "GSD déjà présent (${GSD_PACKAGE} ${installed:-version illisible}, skip)."
+      log_legacy_cleanup_if_needed
+      return 0
+    fi
+    if [ -z "$installed" ]; then
+      log "GSD déjà présent mais VERSION illisible — mise à jour indécidable, skip (jamais d'install à l'aveugle)."
+      log_legacy_cleanup_if_needed
+      return 0
+    fi
+    latest="$(gsd_latest_published)"
+    if [ -z "$latest" ]; then
+      log "GSD déjà présent (${installed}) — dernier ${GSD_RANGE} publié indéterminable (réseau ou npm KO), skip."
+      log_legacy_cleanup_if_needed
+      return 0
+    fi
+    if ! newer "$latest" "$installed"; then
+      log "GSD à jour (${GSD_PACKAGE} ${installed} = dernier ${GSD_RANGE} publié), skip."
+      log_legacy_cleanup_if_needed
+      return 0
+    fi
+    log "GSD ${installed} → ${latest} (dernier ${GSD_RANGE} publié) — mise à jour autorisée (--upgrade-engine), poursuite vers npx."
+    GSD_UPGRADE_FROM="$installed"
+  fi
+
+  # État legacy SANS autorisation de migration (ni --migrate-engine, ni VF_ENSURE_MIGRATE_ENGINE,
+  # ni le court-circuit dry-run forcé) : SIGNALÉ, jamais migré (P-07, D-06). Le skip silencieux
+  # historique ne s'applique plus à cet état — c'est le trou identifié par le rapport d'audit.
+  if [ "$state" = "legacy" ] && [ -z "$MIGRATE_ENGINE" ] && [ "$dry_run_forced" -eq 0 ]; then
+    log "Moteur GSD legacy détecté (version ${GSD_LEGACY_VERSION:-?}) — migration disponible vers @opengsd/gsd-core, ce run ne migre pas."
+    log "  Pour migrer : ./ensure-deps.sh --migrate-engine (ou VF_ENSURE_MIGRATE_ENGINE=1)."
+    log_legacy_cleanup_if_needed
+    return 0
+  fi
+
+  # Ici : état absent, OU legacy autorisé (--migrate-engine / VF_ENSURE_MIGRATE_ENGINE=1), OU
+  # dry-run forcé (observabilité T2b/T2g) — suite inchangée de la fonction.
+
+  # Prérequis : Node/npm sur le PATH. Absent → étapes manuelles, jamais d'échec silencieux.
+  if ! command -v npm >/dev/null 2>&1; then
+    err "Node/npm introuvable — GSD ne peut pas être auto-installé."
+    log "Étape manuelle GSD :"
+    log "  1. Installer Node.js (https://nodejs.org) puis vérifier : npm --version"
+    log "  2. Relancer ce script : ./ensure-deps.sh"
+    log_legacy_cleanup_if_needed
+    return 0
+  fi
+
+  # Garde Node (BOOT-01), auto-réparatrice. gsd-core 1.11.0 exige Node ≥ 24 : sous un Node plus
+  # ancien, `npx @opengsd/gsd-core@^1` ne CASSE PAS, il RÉTROGRADE en silence vers la dernière
+  # version compatible (1.10.0) — un moteur antérieur s'installe sans que personne ne le sache.
+  # C'est précisément le motif « close ≠ releasé ≠ installé », appliqué cette fois à la
+  # distribution : la garde ne se contente donc plus de refuser, elle tente de réparer.
+  if ! ensure_node_runtime; then
+    log_legacy_cleanup_if_needed
+    return 0
+  fi
+
+  if [ -n "${GSD_UPGRADE_FROM:-}" ]; then
+    log "GSD ${GSD_UPGRADE_FROM} périmé — mise à jour via npx (non-interactif, scope=$SCOPE → $GSD_SCOPE_FLAG)..."
+  else
+    log "GSD absent — installation via npx (non-interactif, scope=$SCOPE → $GSD_SCOPE_FLAG)..."
+  fi
+  # Plafond semver "^1" (arbitrage 2026-07-26, audit Phase 11) : toujours le dernier 1.x —
+# fraîcheur sans pin figé — mais un saut de MAJEURE (breaking ou compromission d'un fork
+# jeune) ne s'installe jamais seul : il redevient une décision humaine.
+if run_cmd npx -y "@opengsd/gsd-core@^1" --claude "$GSD_SCOPE_FLAG"; then
+    log "GSD installé via npx."
+    log_legacy_cleanup_if_needed
+    return 0
+  fi
+
+  # Échec de l'install → bascule sur étapes manuelles (pas d'échec silencieux).
+  err "L'auto-install GSD a échoué."
+  log "Étape manuelle GSD :"
+  log "  npx -y \"@opengsd/gsd-core@^1\" --claude $GSD_SCOPE_FLAG"
+  log_legacy_cleanup_if_needed
+  return 0
+}
+
+# Vérifie, en LECTURE SEULE, si <pkg> est installé en global via npm (npm ls -g --depth=0). Seul
+# appel npm réellement EXÉCUTÉ dans tout ce chemin (P-01) — jamais un uninstall. Retourne faux
+# (1) si npm est absent du PATH ou si le paquet n'est pas listé en global.
+npm_pkg_installed_globally() {
+  local pkg="$1"
+  command -v npm >/dev/null 2>&1 || return 1
+  npm ls -g --depth=0 "$pkg" >/dev/null 2>&1
+}
+
+# Affiche (jamais n'exécute — ADR-031) le nettoyage manuel de l'ancien layout quand des artefacts
+# legacy ont été CAPTURÉS en tête de ensure_gsd() (D-08.3 — jamais une re-détection ici, l'install
+# amont peut avoir déjà supprimé le témoin). L'installeur amont de gsd-core nettoie
+# hooks/commands/skills legacy à l'install, mais PAS les paquets npm globaux ni l'arbre
+# ~/.claude/get-shit-done/ — cette responsabilité reste manuelle.
+#
+# D-08.1 : les deux lignes `npm uninstall -g` ne sont proposées QUE si npm_pkg_installed_globally()
+# confirme le paquet réellement présent en global (sur le poste audité, aucun des deux ne l'était —
+# install faite en npx — donc deux lignes sur trois étaient des no-op trompeurs).
+# D-08.2 : le retrait de l'arborescence vide laissée debout par l'installeur amont est proposé,
+# jamais exécuté — même forme "afficher, jamais lancer" que le reste de cette fonction.
+log_legacy_cleanup_if_needed() {
+  [ -n "$GSD_LEGACY_DETECTED" ] || return 0
+
+  log "Artefacts legacy détectés (~/.claude/get-shit-done/, version ${GSD_LEGACY_VERSION:-?}) — nettoyage manuel recommandé :"
+  if npm_pkg_installed_globally "get-shit-done-cc"; then
+    log "  npm uninstall -g get-shit-done-cc"
+  fi
+  if npm_pkg_installed_globally "@gsd-build/sdk"; then
+    log "  npm uninstall -g @gsd-build/sdk"
+  fi
+  log "  rm -rf ~/.claude/get-shit-done"
+  log "  find ~/.claude/get-shit-done -type d -empty -delete"
+}
+
+# ---------- Superpowers (BOOT-02 / BOOT-03) ----------
+
+# Détecte Superpowers : présent dans la liste des plugins (runtime-aware, RUNT-01) OU dossier en
+# cache. Repli claude-figé si le dispatch partagé est introuvable (script pas encore posé).
+detect_superpowers() {
+  local dispatch out
+  dispatch="$(find_runtime_cli_dispatch)"
+  if [ -n "$dispatch" ]; then
+    out="$(bash "$dispatch" list-json 2>/dev/null)"
+    if [ -n "$out" ] && printf '%s' "$out" | grep -q superpowers; then
+      return 0
+    fi
+  elif command -v claude >/dev/null 2>&1 && claude plugin list 2>/dev/null | grep -q superpowers; then
+    return 0
+  fi
+  [ -d "$PLUGINS_CACHE_DIR" ] && find "$PLUGINS_CACHE_DIR" -type d -name 'superpowers*' 2>/dev/null | grep -q .
+}
+
+ensure_superpowers() {
+  # Early-return skip si Superpowers détecté — SAUF en dry-run forcé (on logue alors la cmd scopée
+  # via run_cmd sans installer). Mode normal : comportement inchangé.
+  if detect_superpowers && ! { [ -n "$DRY_RUN" ] && [ -n "$FORCE" ]; }; then
+    log "Superpowers déjà présent (skip)."
+    return 0
+  fi
+
+  local dispatch runtime
+  dispatch="$(find_runtime_cli_dispatch)"
+
+  # Repli : script partagé introuvable → comportement `claude`-figé ACTUEL, inchangé (jamais une
+  # régression silencieuse sur un poste où le dispatch n'est pas encore posé).
+  if [ -z "$dispatch" ]; then
+    if ! command -v claude >/dev/null 2>&1; then
+      err "CLI claude introuvable — Superpowers ne peut pas être auto-installé."
+      log "Étape manuelle Superpowers (dans la TUI Claude Code) :"
+      log "  /plugin install superpowers@claude-plugins-official"
+      return 0
+    fi
+
+    log "Superpowers absent — installation via plugin (non-interactif, --scope $SUPERPOWERS_SCOPE)..."
+    if run_cmd claude plugin install superpowers@claude-plugins-official --scope "$SUPERPOWERS_SCOPE"; then
+      log "Superpowers installé via plugin."
+      return 0
+    fi
+
+    log "Install directe KO — tentative via marketplace..."
+    if run_cmd claude plugin marketplace add anthropics/claude-plugins-official &&
+      run_cmd claude plugin install superpowers@claude-plugins-official --scope "$SUPERPOWERS_SCOPE"; then
+      log "Superpowers installé via marketplace + plugin."
+      return 0
+    fi
+
+    err "L'auto-install Superpowers a échoué (directe + marketplace)."
+    log "Étape manuelle Superpowers (dans la TUI Claude Code, scope visé : $SUPERPOWERS_SCOPE) :"
+    log "  /plugin install superpowers@claude-plugins-official"
+    return 0
+  fi
+
+  # Dispatch runtime-aware (RUNT-01) : détecter EN AMONT le runtime supporté, pour garder la
+  # même sémantique de message que le repli ci-dessus (« aucun runtime détecté → étape manuelle »,
+  # jamais nommer `claude` spécifiquement quand la détection a échoué pour tous les runtimes).
+  runtime="$(bash "$dispatch" detect 2>/dev/null)"
+  case "$runtime" in
+    claude | codex) ;;
+    *)
+      err "Aucun runtime CLI détecté — Superpowers ne peut pas être auto-installé."
+      log "Étape manuelle Superpowers (dans la TUI Claude Code) :"
+      log "  /plugin install superpowers@claude-plugins-official"
+      return 0
+      ;;
+  esac
+
+  log "Superpowers absent — installation via plugin (non-interactif, --scope $SUPERPOWERS_SCOPE)..."
+  if run_cmd bash "$dispatch" install superpowers@claude-plugins-official --scope "$SUPERPOWERS_SCOPE"; then
+    log "Superpowers installé via plugin."
+    return 0
+  fi
+
+  # Fallback : ajouter le marketplace puis re-tenter l'install.
+  log "Install directe KO — tentative via marketplace..."
+  if run_cmd bash "$dispatch" marketplace-add anthropics/claude-plugins-official --scope "$SUPERPOWERS_SCOPE" &&
+    run_cmd bash "$dispatch" install superpowers@claude-plugins-official --scope "$SUPERPOWERS_SCOPE"; then
+    log "Superpowers installé via marketplace + plugin."
+    return 0
+  fi
+
+  # Toujours KO → étape manuelle (jamais d'échec silencieux).
+  err "L'auto-install Superpowers a échoué (directe + marketplace)."
+  log "Étape manuelle Superpowers (dans la TUI Claude Code, scope visé : $SUPERPOWERS_SCOPE) :"
+  log "  /plugin install superpowers@claude-plugins-official"
+  return 0
+}
+
+# ---------- Précondition Codex (RUNT-01 étendu, tâche 3) ----------
+# multi_agent_v2 posé (idempotent, commande officielle) + trust_level DÉCLARÉ jamais auto-écrit.
+# Best-effort — un échec ne doit JAMAIS faire échouer le reste du bootstrap. Gaté sur runtime
+# codex uniquement, aucun effet sur un poste claude/opencode/kimi-code.
+ensure_codex_preconditions_if_applicable() {
+  local dispatch runtime
+  dispatch="$(find_runtime_cli_dispatch)"
+  [ -n "$dispatch" ] || return 0
+  runtime="$(bash "$dispatch" detect 2>/dev/null)"
+  [ "$runtime" = "codex" ] || return 0
+  bash "$dispatch" ensure-codex-preconditions 2>&1 | while IFS= read -r line; do log "$line"; done
+  return 0
+}
+
+# ---------- Patch MCP de gsd-executor (ADR-051) ----------
+# gsd-executor N'APPARTIENT PAS au plugin VibeFlow : il est fourni par GSD et posé dans
+# ~/.claude/agents/gsd-executor.md (ou ./.claude/agents en scope local). Son `tools:` ne liste,
+# côté MCP, que `mcp__context7__*` — donc, dispatché en sous-agent, il est aveugle au serveur MCP
+# du projet (XcodeBuildMCP, etc.). VibeFlow le PATCHE après l'install de GSD, dans le même esprit
+# que build-gsd-index.sh post-traite déjà GSD. Idempotent + best-effort + re-jouable : rejoué à
+# chaque run, il ré-affirme l'injection même après qu'une réinstall GSD a réécrit le fichier.
+patch_gsd_executor_mcp() {
+  local injector
+  injector="$(dirname "$0")/inject-mcp-tools.sh"
+  if [ ! -f "$injector" ]; then
+    log "gsd-executor : inject-mcp-tools.sh introuvable à côté de ce script — patch MCP sauté (best-effort)."
+    return 0
+  fi
+
+  # Chercher gsd-executor.md aux emplacements connus (global d'abord, puis local projet).
+  local candidates=("$HOME/.claude/agents/gsd-executor.md" "./.claude/agents/gsd-executor.md")
+  local found=""
+  local c
+  for c in "${candidates[@]}"; do
+    [ -f "$c" ] && found="$c" && break
+  done
+  if [ -z "$found" ]; then
+    log "gsd-executor.md introuvable (GSD pas encore posé ?) — patch MCP différé (best-effort)."
+    return 0
+  fi
+
+  # --force : gsd-executor ne porte pas le flag vf-mcp-consumer (fichier hors plugin). Source des
+  # serveurs = ./.mcp.json du lab. En dry-run ensure-deps, propager --dry-run (aucune écriture).
+  # (Pas de tableau d'args : incompatible bash 3.2/macOS sous set -u quand il est vide.)
+  local rc
+  if [ -n "$DRY_RUN" ]; then
+    bash "$injector" --target "$found" --mcp-json "./.mcp.json" --force --dry-run
+    rc=$?
+  else
+    bash "$injector" --target "$found" --mcp-json "./.mcp.json" --force
+    rc=$?
+  fi
+  if [ "$rc" -eq 0 ]; then
+    log "gsd-executor : serveurs MCP du lab injectés dans son tools: (ADR-051) → $found"
+  else
+    log "gsd-executor : injection MCP best-effort (voir inject-mcp-tools.sh)."
+  fi
+
+  # SC3/D-09 : vérification après coup, hors dry-run UNIQUEMENT (en dry-run rien n'a été écrit,
+  # une vérification y serait une fausse alarme). --force est REQUIS ici aussi (même motif que
+  # l'injection ci-dessus) : sans lui, --verify en mode fichier unique écarte gsd-executor.md
+  # (pas de flag vf-mcp-consumer) et sort systématiquement en 3 ("aucune cible determinee"),
+  # jamais 0 ni 1 — un garde-fou qui ne peut jamais rendre de verdict n'en est pas un.
+  # Contrat de relais (F13) : seul rc=1 (écart réel, serveur manquant — inject-mcp-tools.sh
+  # l'a déjà comparé à l'attendu) est un signal fort sur stderr. rc=3 (INDÉTERMINÉ : pas de
+  # .mcp.json, aucun serveur déclaré, rien à comparer) n'est PAS un écart — jamais d'ERROR pour
+  # une absence de cible, best-effort informatif seulement. rc=0 = conforme, aucun log requis.
+  if [ -z "$DRY_RUN" ]; then
+    local verify_out verify_rc
+    verify_out="$(bash "$injector" --target "$found" --mcp-json "./.mcp.json" --force --verify 2>&1 >/dev/null)"
+    verify_rc=$?
+    if [ "$verify_rc" -eq 1 ]; then
+      err "gsd-executor : vérification MCP (--verify) signale un écart réel (serveur manquant) :"
+      err "$verify_out"
+    elif [ "$verify_rc" -eq 3 ]; then
+      log "gsd-executor : vérification MCP indéterminée (rien à comparer — voir détail) :"
+      log "$verify_out"
+    fi
+  fi
+}
+
+# ---------- Garde-fou init (BOOT-04) ----------
+
+# Détecte un codebase dans le cwd (fichiers de code courants à la racine ou un niveau sous src/).
+detect_codebase() {
+  find . -maxdepth 2 \
+    \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.py' \
+    -o -name '*.go' -o -name '*.swift' -o -name '*.rs' -o -name '*.java' \) \
+    2>/dev/null | grep -q .
+}
+
+# IMPORTANT : ne lance JAMAIS gsd-new-project (interactif). Se contente d'inviter à confirmer.
+guard_init() {
+  if detect_codebase; then
+    if [ -n "$AUTO_MAP" ]; then
+      log "Codebase détecté + VF_ENSURE_AUTO_MAP=1 → gsd-map-codebase est lançable (non-interactif)."
+    else
+      log "Projet dev détecté — l'agent proposera l'init (gsd-new-project sur confirmation seulement)."
+    fi
+  fi
+}
+
+# ---------- Main ----------
+main() {
+  log "Bootstrap dépendances (mode=$([ -n "$DRY_RUN" ] && echo dry-run || echo apply))"
+  ensure_gsd
+  ensure_superpowers
+  ensure_codex_preconditions_if_applicable
+  # ADR-051 : après l'install GSD, patcher le tools: de gsd-executor avec les serveurs MCP du lab.
+  patch_gsd_executor_mcp
+  guard_init
+
+  # Résumé final clair de l'état des deux piliers.
+  local gsd_state sp_state
+  gsd_state=$(detect_gsd && echo "présent" || echo "manquant (étape manuelle affichée)")
+  sp_state=$(detect_superpowers && echo "présent" || echo "manquant (étape manuelle affichée)")
+  log "Résumé : GSD=$gsd_state ; Superpowers=$sp_state"
+  return 0
+}
+
+# ---------- Parsing minimal des arguments ----------
+# Historique : ce script recevait "$@" sans jamais le lire — un rejet strict casserait un
+# appelant non recensé (choix délibéré de rétro-compat, cf. en-tête). Seuls --migrate-engine et
+# -h/--help sont reconnus ; tout le reste est IGNORÉ avec une ligne log, jamais un exit non-zéro.
+for arg in "$@"; do
+  case "$arg" in
+    --migrate-engine) MIGRATE_ENGINE=1 ;;
+    --upgrade-engine) UPGRADE_ENGINE=1 ;;
+    --check-engine-update) CHECK_ENGINE_UPDATE=1 ;;
+    -h | --help)
+      grep '^# ' "$0" | sed 's/^# //'
+      exit 0
+      ;;
+    *) log "argument ignoré (rétro-compat, non reconnu) : $arg" ;;
+  esac
+done
+
+# Mode lecture seule : sonde de fraîcheur puis exit (0 = périmé, 3 = rien à signaler) — jamais main.
+[ -n "$CHECK_ENGINE_UPDATE" ] && check_engine_update
+
+main "$@"

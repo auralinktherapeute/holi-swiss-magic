@@ -1,0 +1,15 @@
+agents/design-orchestrator-references/DA-INIT.md
+agents/design-orchestrator-references/DESIGN-WORKFLOW.md
+agents/design-orchestrator-references/design-toolchain.md
+agents/design-orchestrator-references/design-vocabulary-map.md
+agents/design-orchestrator-references/templates/CLAUDE-design-section.md
+agents/design-orchestrator-references/templates/DESIGN.md
+agents/design-orchestrator.md
+agents/vf-crafter.md
+agents/vf-design-judge.md
+agents/vf-design-manager.md
+commands/design-orchestrator.md
+scripts/ensure-design-deps.sh
+scripts/tests/test-design-orchestrator.sh
+skills/vf-design/SKILL.md
+skills/vf-sketch/SKILL.md

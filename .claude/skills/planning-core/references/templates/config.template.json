@@ -1,0 +1,28 @@
+{
+  "planning_version": "2.0",
+  "project_code": "[CODE]",
+  "scope": "lab",
+  "type": null,
+  "profile": "leger",
+  "domain": "[dev | contenu | vente | dossier | design | recherche | autre]",
+  "domain_extension": null,
+  "options": {
+    "requirements_tracking": false,
+    "phases_trace": false,
+    "milestones_archive": false,
+    "verification_step": false,
+    "gates": false
+  },
+  "compartments": {
+    "enabled": false,
+    "root": "projects",
+    "autonomy_threshold": {
+      "min_age_days": 3,
+      "min_tasks": 5
+    }
+  },
+  "memory_bridge": {
+    "enabled": true,
+    "registries_path": ".claude/memory"
+  }
+}

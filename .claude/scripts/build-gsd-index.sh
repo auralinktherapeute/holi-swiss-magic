@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+# build-gsd-index.sh — Générateur d'index factuel des skills GSD installés (dev-orchestrator)
+#
+# Iron Law (D4 — anti-hallucination) : aucun nom de skill n'est écrit en dur.
+# L'index est exclusivement extrait du frontmatter des SKILL.md présents sur disque.
+#
+# Usage:
+#   ./build-gsd-index.sh                      # écrit l'index dans references/ (défaut dev)
+#   VF_INDEX_OUT=/chemin/index.md ./build-gsd-index.sh   # écrit à un chemin arbitraire (D7, hook post-install)
+#   VF_GSD_SKILLS_DIR=/tmp/fixtures ./build-gsd-index.sh # source surchargeable (tests)
+#
+# Variables d'environnement :
+#   VF_GSD_SKILLS_DIR    (défaut $HOME/.claude/skills) — racine des skills à scanner
+#   VF_INDEX_OUT         (défaut references/gsd-skills-index.md) — fichier de sortie ; dossier parent créé si besoin
+#   VF_GSD_WORKFLOWS_DIR (défaut : cascade dual-layout) — source secondaire ; fixe AUSSI le moteur
+#                        dont la VERSION est lue pour l'en-tête (son dossier parent)
+#   VF_GSD_CORE_PACKAGE  (défaut : nom + VERSION lus sur le moteur résolu) — étiquette de
+#                        provenance de l'en-tête ; surcharge réservée aux tests
+#
+# Comportement : idempotent (overwrite complet à chaque run). Si aucun skill gsd-* trouvé,
+# écrit un header avec message clair et exit 0 (l'index sera régénéré après install GSD).
+#
+# Référence : IDX-01 (index factuel), IDX-02 (ré-exécutable + paramétrable), D4, D7
+
+set -euo pipefail
+
+# ---------- Variables ----------
+SKILLS_DIR="${VF_GSD_SKILLS_DIR:-$HOME/.claude/skills}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+OUT="${VF_INDEX_OUT:-$SCRIPT_DIR/../references/gsd-skills-index.md}"
+# Fenêtre de compat dual-layout (D-01, 11-CONTEXT.md), même cascade que detect-gsd-engine.sh :
+# projet-local gsd-core > $CLAUDE_CONFIG_DIR|$HOME gsd-core > legacy get-shit-done > défaut.
+# VF_GSD_WORKFLOWS_DIR explicite reste toujours prioritaire (source surchargeable pour les tests).
+default_workflows_dir() {
+  local root claude_home
+  root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  claude_home="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  if [ -d "$root/.claude/gsd-core/workflows" ]; then
+    echo "$root/.claude/gsd-core/workflows"
+  elif [ -d "$claude_home/gsd-core/workflows" ]; then
+    echo "$claude_home/gsd-core/workflows"
+  elif [ -d "$claude_home/get-shit-done/workflows" ]; then
+    echo "$claude_home/get-shit-done/workflows"
+  else
+    echo "$claude_home/gsd-core/workflows"
+  fi
+}
+WORKFLOWS_DIR="${VF_GSD_WORKFLOWS_DIR:-$(default_workflows_dir)}"
+
+# Provenance affichée dans l'en-tête de sortie : nomme le paquet source (stable, reproductible)
+# plutôt que $SKILLS_DIR (chemin de système de fichiers — varie selon la machine/sandbox qui
+# régénère l'index, ex. un tarball extrait en /tmp).
+#
+# La VERSION est LUE sur le moteur résolu, jamais figée dans la logique (même doctrine que
+# build-gsd-capabilities-index.sh, qui l'énonce en tête : « aucune version de moteur n'est figée
+# dans la logique »). Un littéral y contredisait le fichier voisin ET mentait dès le premier
+# correctif publié en amont : l'en-tête a annoncé `@1.9.0` sur un index extrait d'un moteur 1.9.1.
+#
+# Une SEULE règle de résolution, pas une deuxième cascade à maintenir : le moteur est le PARENT
+# du dossier de workflows effectivement utilisé ci-dessus. Ainsi la version affichée décrit
+# toujours l'arbre d'où sortent réellement les entrées de l'index — y compris quand
+# VF_GSD_WORKFLOWS_DIR le déplace. Quand ce parent ne porte pas de VERSION lisible (fixture de
+# test, tarball non installé — le fichier VERSION est écrit à l'install, pas empaqueté), l'en-tête
+# dit « (version inconnue) » : ignorer une version est acceptable, en AFFIRMER une fausse ne
+# l'est pas.
+#
+# Le nom du paquet suit la même lecture : sur la disposition legacy, l'engin n'est pas
+# `@opengsd/gsd-core` et l'index ne doit pas prétendre le contraire.
+GSD_CORE_ROOT="$(dirname "$WORKFLOWS_DIR")"
+
+# Lecture BORNÉE en amont (200 octets — jamais un `cat` intégral d'un fichier de taille
+# arbitraire) puis validation contre une classe de caractères restreinte, avant toute impression.
+# Port du garde de check-gsd-engine.sh (T-19-01-04) : la VERSION est une entrée NON MAÎTRISÉE.
+sanitize_version() { # <raw>
+  local v="$1"
+  if [ "${#v}" -gt 80 ]; then
+    printf '%s' "(version inconnue)"
+    return 1
+  fi
+  if printf '%s' "$v" | grep -Eq '^[0-9A-Za-z._-]{1,80}$'; then
+    printf '%s' "$v"
+    return 0
+  fi
+  printf '%s' "(version inconnue)"
+  return 1
+}
+
+resolve_core_package() {
+  local pkg_name raw
+  case "$(basename "$GSD_CORE_ROOT")" in
+    get-shit-done) pkg_name="get-shit-done-cc" ;;
+    *)             pkg_name="@opengsd/gsd-core" ;;
+  esac
+  raw="$(head -c 200 "$GSD_CORE_ROOT/VERSION" 2>/dev/null || true)"
+  # Normalisation avant validation : le fichier VERSION porte un saut de ligne final.
+  raw="$(printf '%s' "$raw" | tr -d '\r\n')"
+  printf '%s@%s' "$pkg_name" "$(sanitize_version "$raw")"
+}
+GSD_CORE_PACKAGE="${VF_GSD_CORE_PACKAGE:-$(resolve_core_package)}"
+
+# ---------- Helpers ----------
+log() {
+  echo "[build-gsd-index.sh] $*" >&2
+}
+
+# Extrait la valeur d'un champ frontmatter (name / description) d'un SKILL.md.
+# Lit uniquement le bloc frontmatter (jusqu'au 2e délimiteur ---) et strip les guillemets.
+extract_frontmatter_field() {
+  local file="$1" field="$2"
+  awk -v field="$field" '
+    NR == 1 && $0 ~ /^---[[:space:]]*$/ { in_fm = 1; next }
+    in_fm && $0 ~ /^---[[:space:]]*$/   { exit }
+    in_fm {
+      # match "field:" en début de ligne
+      if ($0 ~ "^" field ":[[:space:]]*") {
+        sub("^" field ":[[:space:]]*", "", $0)
+        print $0
+        exit
+      }
+    }
+  ' "$file"
+}
+
+# Retire les guillemets simples/doubles englobants et les pipes (sécurité table markdown).
+clean_value() {
+  local v="$1"
+  v="${v%\"}"; v="${v#\"}"
+  v="${v%\'}"; v="${v#\'}"
+  v="${v//|/\\|}"
+  # trim trailing whitespace
+  v="${v%"${v##*[![:space:]]}"}"
+  printf '%s' "$v"
+}
+
+# ---------- Génération de l'index ----------
+mkdir -p "$(dirname "$OUT")"
+
+generated_at="$(date -Iseconds 2>/dev/null || date "+%Y-%m-%dT%H:%M:%S%z")"
+
+# Collecte des lignes de table dans un tmp (pour compter avant d'écrire l'en-tête).
+rows_tmp="$(mktemp)"
+trap 'rm -f "$rows_tmp"' EXIT
+
+skill_count=0
+shopt -s nullglob
+for skill_md in "$SKILLS_DIR"/gsd-*/SKILL.md; do
+  name="$(extract_frontmatter_field "$skill_md" "name")"
+  desc="$(extract_frontmatter_field "$skill_md" "description")"
+  # Fallback du nom : dossier parent si frontmatter sans name
+  if [ -z "$name" ]; then
+    name="$(basename "$(dirname "$skill_md")")"
+  fi
+  name="$(clean_value "$name")"
+  desc="$(clean_value "$desc")"
+  [ -z "$desc" ] && desc="—"
+  printf '| %s | %s |\n' "$name" "$desc" >> "$rows_tmp"
+  skill_count=$((skill_count + 1))
+done
+shopt -u nullglob
+
+# ---------- Écriture de la sortie ----------
+{
+  echo "# GSD Skills Index (auto-généré — NE PAS ÉDITER)"
+  echo "> Généré le $generated_at par build-gsd-index.sh depuis $GSD_CORE_PACKAGE"
+  echo ""
+  if [ "$skill_count" -eq 0 ]; then
+    echo "_Aucun skill \`gsd-*\` trouvé sur disque. L'index sera régénéré après installation des skills GSD._"
+  else
+    echo "| Skill | Description |"
+    echo "|-------|-------------|"
+    sort "$rows_tmp"
+  fi
+
+  # Source secondaire optionnelle : workflows GSD (facultatif, ne bloque pas si absent).
+  if [ -d "$WORKFLOWS_DIR" ]; then
+    shopt -s nullglob
+    workflows=("$WORKFLOWS_DIR"/*.md)
+    shopt -u nullglob
+    if [ "${#workflows[@]}" -gt 0 ]; then
+      echo ""
+      echo "## Workflows GSD (source secondaire)"
+      echo ""
+      for wf in "${workflows[@]}"; do echo "- $(basename "$wf" .md)"; done | sort
+    fi
+  fi
+} > "$OUT"
+
+log "Index généré : $OUT ($skill_count skill(s) gsd-*)"

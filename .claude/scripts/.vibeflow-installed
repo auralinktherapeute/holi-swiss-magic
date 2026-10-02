@@ -1,0 +1,9 @@
+audit-architecture=v1.0.3
+conductor=v1.46.0
+consolidator=v1.10.0
+design-orchestrator=v1.5.11
+dev-orchestrator=v2.26.0
+infrastructure-audit=v1.3.2
+planning-core=v2.8.0
+skill-creator=v1.1.1
+validator=v1.3.5

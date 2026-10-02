@@ -1,0 +1,501 @@
+# Référence — Contrats de mission (équipe manager)
+
+> Source unique des contrats qui relient la conversation principale et les managers d'équipe
+> (`vf-dev-manager`, `vf-design-manager`) au mode autonome (`vf-auto`). Consommée par :
+> `AGENT.md` (router), `skills/vf-auto/SKILL.md`, `agents/vf-dev-manager.md`,
+> `design-orchestrator/agents/vf-design-manager.md`. **DRY : ne dupliquer ces contrats nulle
+> part — y renvoyer.** Spec d'origine : docs/superpowers/specs/2026-07-09-dev-manager-team-design.md
+> (DM1-DM6) ; champs et digest croisés dev ↔ design : Phase 15 (`15-CONTEXT.md` D-01..D-11).
+
+## Brief de mission (main → manager)
+
+Le dispatcheur (router ou vf-auto) passe au manager un brief **minimal**. Le disque
+(`.planning/`) reste la source de vérité : le brief ne porte QUE ce qui n'y est pas.
+
+```
+MISSION
+- Périmètre : <phases ciblées (numéros) OU objectif libre>
+- Mode : superviser (checkpoints humains) | autonome (les panels tranchent)
+- Design : auto (défaut) | force | off
+- Livrable : specs (défaut) | specs+implementation
+- Contraintes session : <décisions déjà prises en conversation qui engagent la mission — 2-3 lignes max>
+- Budget : <optionnel : temps / tentatives ; sinon défauts du manager>
+```
+
+### Champs croisés dev ↔ design (D-02, D-05)
+
+- **`design: auto|force|off`** (défaut `auto`) — gouverne l'étage design croisé d'une **mission
+  dev** (`vf-dev-manager`). `auto` = jugement du manager au plan de bataille (objectif de
+  l'étape dans la ROADMAP, présence d'un `DESIGN.md`/UI-SPEC, nature des livrables) ; `force`
+  impose les nœuds `craft:<écran>`/`critique:<écran>` même sur un cas limite ; `off` les
+  interdit explicitement, quel que soit le jugement du manager. Produit par : le dispatcheur
+  (routeur `vibeflow-head`, `vf-auto`, ou mapping langage naturel). Consommé par : `vibeflow-head`,
+  `vf-auto`, `vf-dev-manager`. **Absent → `auto`** (comportement actuel, zéro surprise).
+- **`livrable: specs|specs+implementation`** (défaut `specs`) — porté par le brief d'une
+  **mission design** (`vf-design-manager`). `specs` = comportement actuel du module (aucun
+  changement) ; `specs+implementation` = opt-in, le manager dispatche `vf-coder` pour incarner
+  les specs du crafter, avec double juge parallèle (doctrine détaillée :
+  `mission-cross-team.md` §Étage implémentation (mission design)). Produit par : le dispatcheur
+  d'une mission design (`vibeflow-design` — le propose quand le projet a du code — ou
+  l'utilisateur). Consommé par : `vf-design-manager` uniquement. **Absent → `specs`** (zéro
+  surprise).
+
+Le brief peut aussi être du **langage naturel brut** (« finis la milestone, la nuit ») : le
+manager le mappe lui-même vers périmètre/mode/contraintes via la carte d'intention
+(`intent-routing.md`) — il demande (AskUserQuestion) seulement si le périmètre reste
+inexploitable. Le manager relit lui-même `.planning/ROADMAP.md`, `.planning/STATE.md`,
+`.planning/PROJECT.md` — le brief ne les paraphrase jamais.
+
+## Digest de mission (manager → workers)
+
+Le disque reste la source de vérité, mais chaque mandat de worker **embarque un digest ≤ 30
+lignes** qui amortit les relectures intégrales de `.planning/` à chaque étage (audit
+2026-07-25 : 100-200k tokens de pure relecture par étape sans lui) :
+
+```
+DIGEST (cache — le disque fait foi)
+- Mission : <objectif en 1 ligne> · Mode : <superviser|autonome>
+- Étape courante : <n° + objectif + critères de succès>
+- Périmètre de fichiers du nœud : <déclaré au dag add>
+- NE charge PAS : <périmètres gelés des autres nœuds en vol, dérivés de `dag.sh status --frozen`>
+- Décisions actives : <2-5 lignes — panels tranchés, contraintes session>
+- Verdicts amont utiles : <revue/audit/test pertinents pour ce mandat>
+- Conventions cibles : <2-3 lignes du CLAUDE.md projet qui engagent ce mandat>
+```
+
+### Composition du négatif (bullet « NE charge PAS », G1)
+
+1. **D'où vient la donnée** — deux champs que le socle émet déjà, jamais recalculés : (a) le
+   périmètre déclaré du nœud, tenu par le manager puisqu'il l'a posé au `dag add` ; (b) la table
+   des périmètres gelés des autres nœuds, dérivée par `dag.sh status --frozen`
+   (`[{ id, status, scope }]`, clé toujours présente, déterministe — T20/T21/T24).
+2. **L'opération** : périmètres gelés des **autres** nœuds moins le périmètre du nœud courant —
+   la liste des chemins que ce mandat ne doit ni ouvrir ni écrire, tenus par un mandat en vol.
+3. **Qui la compose** : le **manager**, à la rédaction du mandat. Aucun nouveau code n'entre dans
+   le plan de bataille pour cela — la comparaison de périmètres ne se réimplémente jamais
+   localement ; le négatif se **rédige** depuis des champs émis, il ne se **recalcule** pas.
+4. **Cas dégénérés** : aucun autre nœud gelé → valeur explicite d'absence, jamais une bullet vide
+   ni supprimée ; table des gelés indisponible → la bullet le dit et le worker retombe sur la
+   seule règle qui vaut toujours (le disque fait foi).
+5. **Statut** : un **cache**, comme le reste du digest — elle n'autorise ni n'interdit rien à
+   elle seule ; la clause de clôture ci-dessous continue de gouverner.
+
+**Variantes croisées (D-10)** — le format ne change pas, seul le contenu des bullets
+`Conventions cibles` / `Verdicts amont utiles` s'adapte à la direction du mandat :
+- mandat dev → `vf-crafter`/`vf-design-judge` (étage design en mission dev) : `Conventions
+  cibles` embarque la DA en 3-5 lignes (tokens clés, personnalité — même format que le digest
+  design existant, cf. `vf-design-manager.md` §Orchestration par écran), en plus du CLAUDE.md.
+- mandat design → `vf-coder`/`vf-reviewer` (étage implémentation en mission design) :
+  `Conventions cibles` embarque les conventions code cibles (CLAUDE.md du projet, conventions de
+  commit, périmètre de fichiers du nœud) ET pointe la spec du crafter (chemin sur disque) comme
+  **source du cadrage** — l'entrée de `vf-coder` devient cette spec, pas la ROADMAP (sa chaîne
+  `gsd-discuss-phase` s'y ancre).
+
+Le worker lit le digest D'ABORD, et ne relit du disque que ce que son mandat exige
+(index-first). Un digest contredit par le disque → le disque gagne, et le worker le signale.
+
+## Isolation de branche (ADR-059) et d'arbre de travail (ADR-064) — toute mission d'équipe
+
+> **Un écrivain = un worktree (ADR-064).** La branche seule ne suffit pas : deux acteurs peuvent la
+> partager depuis un même arbre, et c'est exactement ce qui s'est produit le 2026-07-31 — une
+> mission et une session conversationnelle écrivant sur `feat/phase-22-hygiene-doc` sans le savoir,
+> 3 commits hors périmètre dans la PR d'une mission qui ne les avait pas produits. Dès que tu
+> travailles **en parallèle** d'un autre acteur sur ce dépôt, prends **ton propre arbre**
+> (`isolation: worktree` au dispatch, ou `git worktree add`). L'isolation devient physique au lieu
+> de reposer sur la bonne volonté de celui qui écrit.
+>
+> **Avant de committer sur une branche que tu n'as pas créée**, tu peux constater qui la pilote :
+> `"$S"/check-branch-claim.sh` (exit **3** = personne d'autre · **0** = revendiquée depuis un autre
+> arbre, le signal nomme l'owner et l'étape · **4** = rien n'a pu être vérifié). C'est **advisory** :
+> deux sessions volontairement sur la même branche est un cas légitime, le gate ne bloque rien et
+> ne décide rien.
+
+**Une mission d'équipe ne commite jamais sur la branche par défaut.** Dès qu'un manager est
+dispatché (`vf-dev-manager`, `vf-design-manager`), il crée **d'abord** une branche dédiée, y tient
+tous ses commits, et termine par une **PR laissée ouverte** — le merge appartient à l'utilisateur
+(ADR-031). Le travail conversationnel direct (un correctif, une doc, un cadrage mené dans le fil)
+**reste hors de cette règle** : sans elle, chaque échange créerait une branche.
+
+**Pourquoi** : une mission autonome produit des dizaines de commits sans supervision. Sur la
+branche par défaut, le seul recours après coup est un `revert` en masse d'un historique déjà
+poussé et potentiellement déjà consommé par d'autres. Sur une branche, le recours est de ne pas
+merger. La PR donne en prime le point de relecture groupée qu'un rapport de fin de mission ne
+remplace pas.
+
+**Protocole, dans l'ordre :**
+
+1. **Avant le premier commit** — vérifier que l'arbre est propre, puis créer la branche depuis la
+   branche par défaut à jour. Convention de nom : `feat/<périmètre-en-kebab>` (précédents du dépôt
+   VibeFlow : `feat/phase-13-pont-vf-ingest`, `feat/v3-team-kernel`). Une mission = une branche,
+   même quand elle couvre plusieurs étapes.
+2. **Pendant** — tous les commits de la mission et de ses workers y vont. Le manager ne bascule
+   jamais de branche en cours de route et ne merge jamais lui-même.
+3. **À la fin** — pousser la branche et ouvrir la PR (`gh pr create`), titre et corps dérivés du
+   rapport de mission. **Ne jamais merger, ne jamais fermer.** Le rapport rendu à la conversation
+   principale cite l'URL de la PR.
+
+**Replis, dans cet ordre — une mission n'échoue JAMAIS pour cette règle :**
+
+| Situation | Comportement |
+|---|---|
+| Pas un dépôt git | Aucune branche. Le manager le **dit** dans son rapport et travaille en place. |
+| Dépôt git, aucun remote | Branche créée quand même, **pas de PR**. Le rapport donne le nom de la branche et la commande de merge. |
+| Remote présent, `gh` absent ou non authentifié | Branche créée et **poussée**, PR impossible. Le rapport donne l'URL de création de PR. |
+| Arbre sale au démarrage | **Ne rien stasher.** Le manager remonte à l'utilisateur avant de créer la branche — c'est une halt condition, pas une décision d'autonomie. |
+| `CLAUDE.md` du projet cible impose un autre flux | Le projet cible **prime** (contrat de brief : ses conventions de livraison font foi). |
+
+**Ce que cette règle ne couvre pas** : l'isolation des **vagues parallèles à l'intérieur** d'une
+mission, qui partagent le même arbre de travail. Une branche par mission ne les sépare pas entre
+elles — seul `isolation: worktree` le ferait, et c'est une décision distincte, non tranchée ici.
+
+## Contrat `estimate:`/`actuals:` (calibration amont, gsd-core 1.9.0)
+
+`gsd-planner` (1.9.0) écrit un bloc `estimate:` dans le frontmatter du `PLAN.md` qu'il produit
+(`tokens`, `raw_tokens`, `tasks`, `confidence`) ; `gsd-executor`, **quand le plan portait un
+`estimate:`**, écrit en retour un bloc `actuals:` dans le frontmatter du `SUMMARY.md` (`tokens`,
+`tasks`, `commits`). Trois règles amont, non négociables, à ne jamais affaiblir en les
+retranscrivant :
+
+- **`confidence` est DÉRIVÉE du nombre d'échantillons, jamais auto-évaluée** — un agent ne « se
+  sent » pas confiant, il compte ses échantillons.
+- **Même échelle des deux côtés** : `actuals.tokens` se mesure en `chars/4` sur les fichiers
+  réellement changés, **jamais** un compteur du harness — sinon on mesure les méthodes de mesure,
+  pas l'écart.
+- **Aucun arrondi flatteur** — un nombre flatté corrompt toute projection ultérieure.
+
+Ces deux blocs sont produits **directement sur disque** par `gsd-planner`/`gsd-executor` — rien à
+faire côté VibeFlow pour qu'ils existent. Le risque n'est pas leur absence, c'est leur **perte
+silencieuse** au passage `vf-coder` → `vf-dev-manager` → conversation principale : ni le bloc typé
+de `vf-coder` (Pattern C, `mission-flow.md`) ni le gabarit « Rapport de mission » ci-dessous ne les
+mentionnaient avant cette entrée.
+
+**Propagation retenue** — le disque reste la source de vérité, mais le bloc typé de `vf-coder`
+gagne deux champs **optionnels**, frères de `statut`/`findings`/`noeuds_debloques` :
+
+```
+"estimate": { "tokens": …, "raw_tokens": …, "tasks": …, "confidence": "low|med|high" },
+"actuals":  { "tokens": …, "tasks": …, "commits": … }
+```
+
+Présents **uniquement** quand le `PLAN.md`/`SUMMARY.md` du mandat les portait — absents sinon
+(aucune valeur inventée, même conditionnalité que l'amont). `vf-coder` les **recopie verbatim**
+depuis le frontmatter qu'il a produit ou lu : il ne recalcule, n'arrondit ni ne réinterprète jamais
+ces nombres — ce serait précisément l'arrondi flatteur que l'amont proscrit. `vf-dev-manager` fait
+de même en les relayant dans son « Rapport de mission » : simple concaténation par sprint, aucune
+statistique agrégée de son cru — la boucle de calibration reste amont, notre seul devoir est de ne
+pas couper le fil.
+
+## Contrat de checkpoint amont (gsd-core 1.9.0)
+
+`gsd-executor` (1.9.0) peut refuser d'auto-approuver un checkpoint : soit `gate="blocking-human"`
+porté par le `PLAN.md`, soit une **précondition** amont non satisfaite (cf.
+`gsd-core/references/checkpoints.md` règles 5/6 ; `$HOME/.claude/agents/gsd-executor.md`
+§Préconditions/checkpoints — sources amont, non recopiées ici). Le bloc typé de `vf-coder` gagne
+un champ **optionnel** `gate`, frère de `statut`/`findings`/`noeuds_debloques` : présent
+**uniquement** quand un checkpoint est survenu pendant le mandat, portant la valeur amont
+**recopiée verbatim** — jamais calculée, jamais déduite du **type** de checkpoint côté VibeFlow
+(un pilotage sur le type seul annulerait le refus que l'amont vient d'exprimer, un étage plus
+haut).
+
+**Règle unique de mapping** (une règle, deux motifs, ADR-030) : `gate="blocking-human"` **OU**
+précondition amont non satisfaite ⇒ `statut: "human_needed"`. Un refus d'auto-approbation amont
+est un refus, quel qu'en soit le motif.
+
+**Minimum de reprise (D-03, élargi par A-3)** : quand le statut est celui d'escalade humaine, le
+bloc typé porte un champ optionnel `reprise` dont les sous-champs sont exactement `plan_id`,
+`checkpoint` (le **type** de checkpoint amont), `gate`, `attendu` (ce que le moteur déclare
+attendre, recopié verbatim), `reponse_humaine` (la réponse donnée par l'humain, recopiée verbatim ;
+absent tant qu'il n'a pas répondu) et `taches_faites` (l'état d'avancement du mandat interrompu,
+tel que mesuré) — **rien d'autre**. Les deux derniers sont un ajout gouverné, pas un relâchement de
+la garde ADR-030 : le distinguo qui les autorise est écrit juste en dessous.
+
+**Pourquoi les deux derniers, et pourquoi ce n'est PAS la duplication que ADR-030 interdit.** Les
+quatre premiers décrivent tous *la question*. Un manager qui redispatche « avec l'attendu »
+redispatche donc la question qu'il vient de reposer : le worker neuf retombe sur le même
+checkpoint et rend `human_needed` — ping-pong sur un gate bloquant. L'amont exige d'ailleurs la
+réponse de l'utilisateur pour reprendre. **Distinguo à ne jamais réduire** : la garde
+anti-duplication ADR-030 vise la recopie de **doctrine amont** — les intitulés du contrat de
+retour **interne** de l'exécuteur, que le skill d'exécution orchestre déjà lui-même (il présente le
+checkpoint puis relance une continuation) — et **pas** le transport d'un **état de reprise** d'un
+mandat vers son successeur. Une doctrine recopiée se relit à sa source ; un état mesuré, lui, n'est
+nulle part ailleurs et se perd si personne ne le transporte. On continue de désigner le contrat
+amont **par son rôle**, sans en reproduire les intitulés de bloc.
+
+**Continuation (D-10, forme minimale ici)** : la reprise se fait en redispatchant un **nouveau**
+`vf-coder` avec le champ `reprise` ; le skill d'exécution reprend de lui-même au premier plan sans
+rapport de plan, et son garde-fou de reprise sûre refuse de relancer un exécuteur sur des commits
+de production orphelins en offrant trois recours. Doctrine de voie unique qui encadre ce constat :
+`GSD-PIPELINE.md` §9.
+
+**Verdicts de hooks moteur (D-15, plan 23-06)** : le bloc typé de `vf-coder` gagne un **troisième**
+champ optionnel frère de `gate`/`reprise` : `verdicts`, avec exactement trois sous-champs —
+`code_review`, `nyquist`, `secure` — dont les valeurs sont `pass`, `fail` ou `absent`. Mêmes règles
+que les champs frères, à écrire explicitement parce que c'est là que la fidélité se perd : les
+valeurs sont celles **déjà rendues par les hooks du moteur**, recopiées verbatim ; VibeFlow ne
+rejoue **aucun** de ces étages pour les produire ; un verdict qu'on n'a pas vu passer vaut `absent`,
+**jamais** `pass`. **Fait dimensionnant** : le workflow d'exécution du moteur rend à lui seul le
+point de hook de post-exécution **et** celui de post-vérification — donc **un seul appel** du skill
+`gsd-execute-phase` déclenche revue de code, validation nyquist et audit de sécurité. C'est ce fait,
+pas une préférence, qui justifie que le manager cesse de redemander ce qui est déjà fait.
+
+## Confiance d'un jugement (`confiance`, 2026-09-24)
+
+Le bloc typé (Pattern C, `team-kernel.md`) gagne un champ **optionnel** `confiance`, frère de
+`statut`/`findings`/`noeuds_debloques`, et chaque entrée de `findings` peut porter le sien : un
+nombre entre 0 et 1, la marge que celui qui rend le verdict s'accorde. Absent = **aucune
+information**, jamais un 1.0 implicite. Inspiré du contrat des modèles de décision typée (choix +
+probabilité, seuil tenu par le code, pas par le modèle — `docs/research/2026-09-24-jev-system-one.md`).
+
+**Ce qu'il qualifie, et ce qu'il ne qualifie jamais.** `confiance` ne s'attache qu'à un
+**jugement** — revue (`vf-reviewer`), audit (`vf-auditer`), critique scorée (`vf-design-judge`),
+allocation d'équipe par le head (`head-governance.md` §1). Une **preuve machine** (suite de tests,
+gate, `check-mission-exit.sh`) n'en porte pas : elle est verte ou rouge, et un `passed` qui repose
+sur une preuve machine reste un `passed` quel que soit le nombre écrit à côté. Le champ est un
+signal d'**aiguillage**, jamais une preuve, et jamais une probabilité calibrée : un chiffre
+auto-déclaré par un modèle de langage n'a été calibré contre rien.
+
+**Règle unique** — `SEUIL_CONFIANCE = 0.6` (valeur empruntée au seul retour d'exploitation publié,
+0,45 → 0,6 après mesure ; remontée ou abaissée uniquement par arbitrage humain daté, jamais par un
+manager en cours de mission). Un `passed` de jugement porté avec `confiance < SEUIL_CONFIANCE`
+**n'est pas un vert** : le manager le requalifie en `gaps_found` avec un finding unique
+`{ severity: "info", action: "ask-user", ref: <ce qui rend le verdict incertain, recopié du rapport> }`
+— l'escalade humaine impérative sur `ask-user` fait le reste, aucun mécanisme neuf. Un
+`gaps_found`/`blocked`/`human_needed` n'est jamais requalifié à la hausse par une confiance élevée.
+
+**Journal, pas recalcul.** Le manager recopie **verbatim** les confiances reçues dans son
+« Rapport de mission » (bullet `Confiances (si portées)`), jamais une moyenne de son cru : c'est
+la seule matière qui permettra un jour de mesurer si le seuil est bien placé (confiance déclarée
+vs verdict humain final). Tant que cette mesure n'existe pas, le champ reste **optionnel** et un
+worker qui ne le porte pas n'est pas en faute.
+
+## Décompte de budget épuisé (D-26, D-27, D-28, plan 23-07)
+
+Le bloc typé de `vf-dev-manager` (Pattern C, `mission-flow.md`) gagne un **quatrième** champ
+optionnel frère de `gate`/`reprise`/`verdicts` : `decompte`, présent **uniquement** avec le statut
+`blocked` — tours de revue consommés, tours de comblement consommés, findings restés non résolus.
+Mêmes règles que les champs frères : recopié/compté par celui qui pilote la boucle, jamais estimé,
+absent quand le statut n'est pas `blocked`. Doctrine complète (grain étape, budget partagé, garde
+contre le contournement mécanique, invisibilité amont nommée) : `mission-flow.md` §Pattern E §6
+Épuisement du budget — ne pas la reformuler ici (ADR-030).
+
+## Retour « bloqué : profondeur » (arbitrages B1/B2, 2026-09-17)
+
+**Constat mesuré** (sonde en session principale, 2026-09-17). Aux profondeurs 1 et 2, l'outil
+`Agent` est visible et un lancement est accepté. À la profondeur 3, `Agent` et `Task` sont
+**absents**, quel que soit le type d'agent : `ToolSearch` `select:Agent,Task` rend « No matching
+deferred tools found. ». L'allowlist `Agent(type, …)` du frontmatter n'est **pas appliquée à
+l'appel** : `vf-coder` a lancé `gsd-executor` et `gsd-planner`, absents de sa liste ; `gsd-executor`
+lancé avec `isolation: "worktree"` démarre. Limite **observée, non documentée par Anthropic** :
+elle peut changer avec une version de Claude Code — une nouvelle sonde la re-mesure.
+
+**Incidents fondateurs.** Phase 40.1 : head dispatché en `Task` (1) → `vf-dev-manager` (2) →
+`vf-coder` (3), sans outil de lancement. 2026-09-17 : un `vf-coder` à la profondeur 1 n'a pas tenté
+`gsd-quick --validate`, croyant à tort que son allowlist l'en empêchait.
+
+**B1 — place du head** (arbitrage Samuel, AskUserQuestion session principale, 2026-09-17) : le head
+est incarné dans la session principale (via `/vf-dev`), jamais dispatché comme sous-agent (`Task`).
+Profondeurs visées : manager 1, `vf-coder` 2, briques GSD 3.
+
+**B2 — `vf-coder` sans l'outil `Agent`** (arbitrage Samuel, AskUserQuestion session principale,
+2026-09-17) : `vf-coder` vérifie d'abord la présence de l'outil `Agent`. Présent →
+`gsd-quick --validate` obligatoire sur le chemin court, le pipeline GSD sur un mandat d'étape — son
+allowlist ne le bride pas. Absent → il s'arrête sans coder à la main et rend « bloqué : profondeur »,
+mandat intact, pour que son dispatcheur relance au bon niveau.
+
+**Le contrat.** Le bloc typé (Pattern C, `mission-flow.md`) garde ses quatre statuts : **aucun
+cinquième**. Le retour porte `"statut": "blocked"` plus deux champs **optionnels** frères de
+`statut`/`findings`/`noeuds_debloques` :
+
+```
+"cause": "profondeur",
+"mandat": "<le mandat reçu, recopié intact>"
+```
+
+Présents **uniquement** sur ce retour — absents de tout autre `blocked`. `mandat` est recopié
+verbatim (même règle que les champs frères : jamais résumé, jamais reformulé) ; aucun commit n'a été
+produit, puisque rien n'a été codé.
+
+**La conduite du dispatcheur.** Relancer le mandat au bon niveau — jamais le coder à la place, jamais
+le redispatcher au même niveau, qui reproduirait la même profondeur. Côté manager : `vf-dev-manager.md`
+§Contrôle de flux (remonter le mandat intact). Côté head : relance depuis la session principale (B1).
+
+## Étage revue — deux objets disjoints (ADR-060 / ADR-061)
+
+La revue de **diff de code** (`vf-reviewer` → `gsd-code-reviewer`, nœud `revue-N` posé
+systématiquement par le manager, ADR-060) et la revue **cross-AI de plans** amont (`gsd-review`,
+lanes déclarées par `review-lane-descriptor.cjs`, ADR-2782 Phase 1, opt-in utilisateur via
+`--reviews`) sont deux étages **disjoints** — objet revu, moment du cycle et déclencheur diffèrent
+sur les trois axes. Arbitrage complet, avec le critère écrit : `docs/ADR.md` ADR-061 — qui couvre
+désormais aussi, sur les mêmes axes, le hook de revue de code du moteur face au nœud `revue-N`, et
+le hook d'audit de sécurité face à l'auditeur VibeFlow (Phase 23, plan 23-06). Aucun câblage
+automatique de `gsd-review` dans le DAG de mission — décision distincte, non prise ici.
+
+## `.planning/STATE.md` — ne jamais « réparer » via `gsd-tools state` (ADR-063)
+
+Un frontmatter `.planning/STATE.md` erroné (compteurs régressés, `current_phase` faux) se corrige
+**uniquement par édition manuelle directe du fichier**. N'invoque **jamais** `gsd-tools state
+<verbe>` (ni aucun appel qui le déclenche) dans l'intention de corriger un état déjà écrit : cette
+commande force `resync: true` de façon non désactivable depuis cette voie d'appel, ce qui
+**régénère** la régression que tu essaies de corriger au lieu de la réparer — cause détaillée en
+`docs/ADR.md` ADR-063. Le corps du fichier ne porte par ailleurs jamais plus d'une ligne `^Phase:`
+(sections archivées en `**Phase archivée :** N …`), invariant gardé par
+`plugin/conductor/scripts/check-state-integrity.sh`.
+
+## Traçabilité des arbitrages humains dans les commits (adoptée le 2026-09-10)
+
+> **La règle canonique vit dans le `CLAUDE.md` du dépôt, § Conventions transverses.** Cette section
+> n'en est pas une seconde énonciation : elle porte le **motif** et l'**obligation de relais** propre
+> aux missions d'équipe. En cas d'écart, `CLAUDE.md` fait foi.
+
+Forme attendue :
+
+```
+(arbitrage Samuel, AskUserQuestion session principale, 2026-09-09)
+```
+
+**Pourquoi.** « arbitrage Samuel » a exactement la **même forme** qu'il soit vrai ou fabriqué : rien
+dans le commit ne permet de le vérifier, et c'est le lecteur d'après qui paie. Ce lab a déjà connu un
+arbitrage fabriqué de cette façon. Nommer le canal et la date rend l'affirmation **vérifiable** au
+lieu de croyable.
+
+**Le piège particulier** : quand le résultat coïncide avec ce que le relecteur recommandait lui-même,
+la vérification d'origine est précisément ce qu'on omet. Cas réel du 2026-09-09 (commit `8fc4b45`,
+Phase 39) : l'attribution était **exacte**, mais elle n'était pas vérifiable depuis le commit — c'est
+la vérification a posteriori, et non le texte, qui l'a établie.
+
+**Portée** : convention de **rédaction**, applicable aux agents comme aux humains. **Aucun gate
+machine** — la variante outillée a été explicitement écartée à l'adoption. Un manager qui relaie un
+arbitrage dans un mandat de worker transmet aussi le canal et la date, pour que le worker puisse les
+reprendre.
+
+## Contrat de preuves E6 (verdict → head)
+
+Un vert du manager n'est accepté par le head que s'il porte une **preuve machine** (D-03). Le head
+ne rejoue QUE le gate dont la preuve manque — jamais un étage entier, jamais la revue.
+
+Le bloc typé de `vf-coder` (Pattern C, `mission-flow.md`) gagne un champ **optionnel** frère de
+`statut`/`findings`/`noeuds_debloques`/`gate`/`verdicts` : `preuves`, un **tableau PLAT** d'objets
+— pas un objet par type de verdict, `verdict` sert de discriminant. Chaque élément porte :
+
+```
+{ "verdict": "recette|revue|audit|gate:<nom>", "commande": "…", "exit_code": 0, "sha": "…" }
+```
+
+**Le cas du verdict relayé** : un verdict qui n'a pas de commande rejouable — typiquement un hook
+du moteur GSD relayé verbatim — porte `verdict` et `preuve` valant `amont`, **à la place** du
+triplet, et **n'est JAMAIS rejoué** (D-05). N'invente jamais une commande pour un tel verdict.
+**Distinguo à ne jamais confondre** : `preuve` au singulier est cette marque de substitution ;
+`preuves` au pluriel est le tableau qui la contient.
+
+Trois règles non négociables, à ne jamais affaiblir en les retranscrivant :
+
+- **`commande` est la commande CANONIQUE** que ce type de verdict porte — la suite de tests du
+  module concerné, `check-agents.sh --strict`, etc. — **jamais une liste locale, jamais le job
+  `gates` complet de `ci.yml`** (D-12, leçon « liste de gates ≠ référence »).
+- **`sha` est le HEAD de la branche AU MOMENT où le verdict a été rendu** — un verdict PASS sur un
+  SHA vaut tant que le HEAD de la branche est ce SHA, et cesse de valoir au commit suivant (D-15).
+- **Relayé verbatim, jamais recalculé, jamais agrégé, aucun arrondi flatteur** — même règle que
+  `estimate`/`actuals`.
+
+**L'ancrage machine sur disque.** Le rapport DÉTAILLÉ écrit sous `.planning/missions/` porte une
+section de titre `## Preuves E6` contenant UN bloc clôturé de langage `json` dont l'objet racine a
+la clé `preuves`, portant le même tableau, verbatim. C'est cette section — et elle seule — que le
+gate de sortie lit pour son contrôle E6 : c'est un CONTRAT entre deux fichiers, pas une convention
+de rédaction.
+
+**L'absence n'est jamais un vert** (D-06) : section absente, bloc absent, JSON illisible ou tableau
+vide rendent le contrôle **indéterminé**, jamais conforme.
+
+**La conduite du head**, en une ligne de renvoi, jamais recopiée ici : une seule preuve manquante se
+rejoue ; deux ou plus signalent que le contrat n'a pas été appliqué — mandat de clôture ciblée au
+manager et source consignée pour amendement (D-14). Doctrine complète : `head-governance.md` §3.
+
+## Rapport de mission (manager → main)
+
+Retour **compact**. Le détail vit sur disque, pas dans la conversation.
+
+```
+RAPPORT DE MISSION
+- Verdict global : ✅ | partiel | bloqué
+- Par sprint : fait / verdicts (recette, revue, audit + hooks moteur relayés verbatim) / commits (SHA)
+- Calibration (si portée) : estimate vs actuals par sprint — recopiés verbatim, jamais recalculés
+- Confiances (si portées) : par verdict de jugement, `confiance` recopiée verbatim + requalifications sous `SEUIL_CONFIANCE` — jamais une moyenne
+- Décisions prises en autonomie (et par quel panel)
+- Blocages & points nécessitant l'utilisateur
+- Décompte (si bloqué) : tours consommés par boucle + findings non résolus — recopié verbatim, jamais recalculé
+- Décompte (mission), minds dispatchés : <n> — compté sur les mandats émis, jamais estimé
+- Décompte (mission), tours consommés : <n> — recopié verbatim des blocs typés, jamais recalculé
+- Décompte (mission), gates rejoués (E6) : <n> — vaut 0 à la remise du rapport, complété par le head après le gate de sortie
+- Rapport détaillé : <chemin du fichier écrit sur disque>
+```
+
+## Signaux « mission » (détection côté router)
+
+≥ 1 signal déclenche la **PROPOSITION** du manager — jamais le dispatch d'office :
+
+- **multi-phases explicite** : « phases 3 à 5 », « toute la milestone », « enchaîne les sprints » ;
+- **durée / absence** : « la nuit », « pendant que je suis pas là », « demain matin je veux… » ;
+- **étages multiples combinés** : la demande couvre build + test + revue/audit d'un coup ;
+- **longue haleine estimée** : la demande couvre plus d'une étape de la feuille de route.
+
+Tâche simple sans signal → **équipe dispatchée sans question** (zéro friction sur le quotidien) :
+`Task(vf-coder)` si un commit, `Task(vf-dev-manager)` sinon — jamais un geste `gsd-*` en direct
+côté head (A1, `head-governance.md`).
+
+## Seuil de bascule (vf-auto)
+
+`SEUIL_EQUIPE = 3` — N = étapes restantes ciblées, comptées via `gsd-tools roadmap analyze`.
+
+Résolution — cascade de résolution, jamais un chemin en dur (D1 ; forme **dérivée**, pas reprise
+telle quelle, de `gsd-core/workflows/_runtime-launcher.snippet.sh`, gsd-core 1.9.0 — divergences
+listées en D5 ci-dessous) :
+```sh
+GSD_TOOLS="${GSD_TOOLS:-}"
+if   [ -n "$GSD_TOOLS" ] && [ -f "$GSD_TOOLS" ]; then gsd_run() { node "$GSD_TOOLS" "$@"; }
+elif [ -f "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core/bin/gsd-tools.cjs" ]; then
+     GSD_TOOLS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/gsd-core/bin/gsd-tools.cjs"
+     gsd_run() { node "$GSD_TOOLS" "$@"; }
+elif command -v gsd-tools >/dev/null 2>&1; then GSD_TOOLS="$(command -v gsd-tools)"; gsd_run() { "$GSD_TOOLS" "$@"; }
+else echo "ERROR: gsd-tools.cjs introuvable. Installer : npx -y "@opengsd/gsd-core@^1" --claude --global" >&2; exit 1; fi
+```
+`gsd_run roadmap analyze` remplace l'ancien appel direct. **Prérequis non garanti** : si
+`gsd_run` ne peut pas se résoudre (bloc `else` ci-dessus), fallback documenté — compter les cases
+non cochées du périmètre dans `.planning/ROADMAP.md` : `grep -c '^- \[ \]'` ou équivalent ; jamais
+de blocage silencieux sur l'outil manquant.
+
+**Test du succès sur le JSON, jamais sur `$?` (D2)** : `gsd-tools` sort exit 0 même en erreur
+métier. Le fallback grep ci-dessus se déclenche donc aussi si la sortie JSON de `gsd_run roadmap
+analyze` contient un champ `.error` — pas seulement si le binaire est introuvable. Ne jamais tester
+uniquement le code de sortie du processus.
+
+**Rester sur le dist-tag stable, jamais le canal de pré-version amont (D4)** : le canal de
+pré-version est périmé (1.7.0-rc.6, antérieur au tag stable = 1.9.0) — n'utiliser que `@latest`
+dans le message d'erreur ci-dessus et partout ailleurs dans ce document.
+
+Écarts assumés vs le snippet officiel amont (D5) : (a) les runtimes non-Claude du snippet sont
+retirés (VibeFlow est un plugin Claude Code) ; (b) `command -v gsd-tools` est placé après les
+chemins fichiers (le payload installé prime sur un bin npm global potentiellement d'une autre
+version) — **divergence connue** : `dag.sh` (`resolve_gsd_tools_cmd()`, ~l. 129-138) place `PATH`
+*avant* `CLAUDE_CONFIG_DIR`, ordre inverse de cette cascade-ci ; sur un poste où plusieurs versions
+sont installées, le manager (shell) et `dag.sh` (Python) peuvent donc résoudre deux binaires
+différents pour « la même » cascade — aucun des deux ordres n'est corrigé ici, seule la divergence
+est actée ; (c) ce document n'écrit jamais dans `CLAUDE_ENV_FILE` ; (d) **aucun candidat dérivé
+d'une racine de dépôt** (`git rev-parse --show-toplevel`, `pwd`, ou toute variable qui en hérite,
+p. ex. l'ancien `_GSD_ROOT`) — un tel candidat résout un chemin **tracké dans l'arbre de travail
+courant**, donc posable par quiconque peut y écrire un fichier (checkout d'une branche ou d'une PR
+hostile). `git rev-parse --show-toplevel` n'est **pas** une frontière de confiance : c'est un autre
+chemin dérivé de l'endroit où l'on se trouve, et son repli `|| pwd` retombait littéralement sur le
+CWD qu'on cherche justement à exclure. Retrait arbitré sur le même motif que le vecteur RCE fermé
+dans `plugin/conductor/scripts/dag.sh` (5ᵉ passage du motif de confinement de chemin sur ce dépôt) —
+doctrine : ADR-070 (`docs/ADR.md`), pas recopiée ici. **Conséquence assumée, contournement qui
+reste** : un lab qui vendorise le moteur à sa propre racine (`<repo>/gsd-core/...`) perd la
+résolution automatique de ce candidat — poser `GSD_TOOLS=<chemin absolu>` en variable
+d'environnement (désormais vérifiée en tête de cascade, avant même `CLAUDE_CONFIG_DIR`).
+
+Application du seuil :
+
+- **N < SEUIL_EQUIPE ET aucun signal de durée** → moteur direct (boucle autonome inline, moins chère).
+- **N ≥ SEUIL_EQUIPE OU signal de durée** → équipe (`Task(vf-dev-manager)` avec le brief ci-dessus).
+
+Le signal de durée **GAGNE** en cas d'ambiguïté (N=2 mais « la nuit » → équipe). Seuil ajustable
+ici et ici seulement.

@@ -1,0 +1,4 @@
+# .worktreeinclude — chemins ignorés par git recopiés dans chaque worktree d'agent (posé par VibeFlow, SOBR-03).
+# Copie figée à la création du worktree ; un git worktree add manuel n'est pas couvert.
+.claude/hooks/
+.claude/scripts/

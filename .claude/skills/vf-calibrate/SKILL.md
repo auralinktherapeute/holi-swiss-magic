@@ -1,0 +1,200 @@
+---
+name: vf-calibrate
+description: "Utiliser quand le framework VibeFlow a évolué et qu'un lab doit être remis à niveau — « mets à jour VibeFlow », « le framework a bougé », « recalibre mon lab », « est-ce que ma structure est à jour ? », ou quand le surfaçage d'ouverture de session signale un retard. Détecte l'écart de version framework ↔ lab, lit les changements (dont structure/doctrine), propose une migration, et la pilote SOUS validation humaine. Détecte aussi une divergence de RUNTIME (Claude vs Codex/OpenCode/kimi-code) et propose soit une bascule (migration soustractive) soit une coexistence — TOUJOURS annoncée comme distincte de la propagation de version. ✘ pas pour **installer** une version plus récente du plugin et des modules (le geste « télécharge et pose la nouvelle version ») → /vf-update · ✘ pas pour créer un lab qui n'existe pas encore → /vf-new-lab · ✘ pas pour auditer la conformité méthodologique d'un lab déjà à niveau → /vf-audit. Invocable par l'utilisateur ET par `vibeflow-conductor`."
+---
+
+# vf-calibrate — Propagation d'update & migration de lab
+
+> **Mission** : faire en sorte qu'un lab installé **voie** les évolutions du framework et soit
+> **recalibré proprement** — y compris quand la *structure* ou la *doctrine* change (pas juste des
+> fichiers de module).
+>
+> **Iron Law** : *« Détecter et proposer la migration ; jamais l'appliquer sans validation humaine. »*
+> (ADR-031 — une migration de doctrine peut casser des rules contextuelles.)
+
+---
+
+## Deux natures — à annoncer AVANT toute action
+
+Ce skill porte **deux natures distinctes**, jamais mélangées dans une seule sortie sans étiquette
+(D-38-A, Phase 38, MIGR-02) :
+
+1. **Propagation ADDITIVE de version framework** — la séquence 1-5 ci-dessous (inchangée) : le
+   framework a bougé, le lab doit rattraper des fichiers de module, éventuellement une
+   restructuration/doctrine. Rien n'est retiré du lab, tout est ajouté/rafraîchi.
+2. **Migration SOUSTRACTIVE de runtime** — le lab bascule (ou coexiste) entre `claude` et un autre
+   runtime (Codex/OpenCode/kimi-code…). Décrit dans « Migration de runtime » ci-dessous.
+
+**La toute première ligne de sortie de ce skill, quel que soit le déclencheur, ANNONCE
+explicitement dans laquelle des deux l'utilisateur se trouve** — `[vf-calibrate:propagation]` ou
+`[vf-calibrate:migration-runtime]` — jamais un texte qui laisse deviner. Un utilisateur qui lit la
+sortie doit savoir, avant toute écriture, s'il regarde un rattrapage de version ou une bascule de
+runtime.
+
+---
+
+## Pourquoi ce skill existe
+
+Un `vibeflow-update.sh update` réécrit des fichiers de module. Ça suffit pour un bugfix, **pas** pour
+une évolution de **structure/doctrine** (nouveau principe, nouveau registre, restructuration) — là, le
+lab doit être **migré**, pas écrasé. Ce skill comble ce trou et reproduit l'effet GSD : *l'utilisateur
+voit que le framework a bougé et son lab se recalibre*.
+
+## Séquence
+
+### 1. Détecter l'écart
+
+```sh
+.claude/scripts/framework-version.sh drift
+```
+
+Compare la version framework enregistrée dans le lab (`.claude/.vibeflow-framework-version`) à la
+version courante du plugin. 3 cas :
+- **À jour** → rien à faire (le confirmer).
+- **Retard mineur (PATCH/MINOR)** → modules à rafraîchir, pas de migration structurelle.
+- **Retard majeur (MAJOR)** ou changement de doctrine → **migration** requise (étape 3).
+
+### 2. Lire ce qui a changé
+
+Lire les `CHANGELOG.md` des modules concernés + l'historique du framework. **Classer** chaque
+changement : *bugfix / nouvelle capacité / **breaking-doctrine*** (structure, registres, principes).
+Détail dans `references/migration-playbook.md`.
+
+> **Cas planning v2 (compartiments)** — si planning-core passe en v2 (topologie *steering lab + plan
+> conditionnel typé*), c'est un *breaking-doctrine* : appliquer la **recette §2bis** du
+> `migration-playbook.md` (détection de dette via `detect-planning-debt.sh` → typage deliverable/
+> continuous → récupération de l'existant en `_archive/` → désengorgement mémoire → `INDEX.md`).
+> **Sans perte de données** : on promeut ou on archive, jamais on supprime.
+
+### 3. Proposer un plan de migration (jamais l'appliquer en silence)
+
+Pour les changements **structure/doctrine**, produire un plan explicite :
+- ce qui change dans le lab (fichiers, registres, conventions),
+- ce qui est **réversible** (snapshot avant) vs ce qui demande une décision,
+- les rules contextuelles potentiellement impactées (risque de casse).
+
+**Présenter le plan à l'utilisateur. Attendre son feu vert.** (ADR-031.)
+
+### 4. Appliquer sous contrôle
+
+1. **Snapshot avant** (le lab est sauvegardé).
+2. Rafraîchir les modules — **plan avant pose (MANI-02, issue #20)** : d'abord
+   `VIBEFLOW_CACHE="${CLAUDE_PLUGIN_ROOT}" bash "${CLAUDE_PLUGIN_ROOT}/_internal/vibeflow-update.sh" --dry-run update <module>`,
+   dont la sortie (stdout, le plan fichier-par-fichier) est montrée à l'utilisateur — c'est le
+   contenu du plan de migration déjà présenté à l'étape 3, pas un second feu vert. `--dry-run`
+   n'écrit rien et est refusé sur `uninstall`. Puis rafraîchir réellement, inchangé :
+   `VIBEFLOW_CACHE="${CLAUDE_PLUGIN_ROOT}" bash "${CLAUDE_PLUGIN_ROOT}/_internal/vibeflow-update.sh" update <module>` (manuel, par module).
+3. **Ré-affirmer l'allowlist MCP des agents exécutants** (ADR-051) : si le lab a gagné (ou perdu)
+   un serveur MCP — dans son `./.mcp.json` (scope projet) **ou** en scope global `~/.claude.json`
+   (union des deux sources depuis Phase 21, ADR-051-B — un serveur déclaré seulement en scope
+   global, cas courant sur ce parc, déclenche désormais aussi la ré-affirmation) — **sans** bump de
+   module (l'`update` ne re-copie pas les agents à version inchangée), re-jouer l'injection
+   idempotente sur les agents flaggés `vf-mcp-consumer` (allowlist large) ou porteurs de
+   `vf-mcp-tools` (allowlist nommée, ex. `vf-reviewer`) :
+   ```sh
+   .claude/scripts/inject-mcp-tools.sh --target .claude/agents --mcp-json ./.mcp.json
+   ```
+   Le scope global (`--claude-json`, défaut `$HOME/.claude.json`) est lu automatiquement en plus —
+   aucun flag supplémentaire requis dans l'appel ci-dessus, sauf pour cibler un fichier de test.
+   Et, si GSD est présent, ré-affirmer aussi `gsd-executor` (relancer `.claude/scripts/ensure-deps.sh` suffit — il
+   appelle le patch, ou directement `.claude/scripts/inject-mcp-tools.sh --target ~/.claude/agents/gsd-executor.md
+   --mcp-json ./.mcp.json --force`). **Redémarrage de Claude Code requis** ensuite : le `tools:` des
+   agents est lu au démarrage de session.
+4. Appliquer la migration structurelle validée (déléguer au migrateur / `software-architecture`
+   `/restructure` si réorganisation de fichiers).
+5. **Re-stamper** la version framework : `bash .claude/scripts/framework-version.sh stamp`.
+6. **Re-auditer** : déléguer à `vibeflow-validator` (5 phases) pour confirmer l'alignement.
+
+### 5. Synthèse
+
+Rapport court : ce qui a été migré, ce qui reste, prochain audit conseillé.
+
+---
+
+## Surfaçage à l'ouverture de session (opt-in)
+
+`.claude/scripts/framework-version.sh drift --quiet` est conçu pour un **hook SessionStart opt-in** : il
+signale *« le framework a pris de l'avance, lance /vf-calibrate »* sans rien forcer (`|| true`,
+jamais bloquant). Wiring documenté dans `references/migration-playbook.md` — **jamais auto-injecté**
+dans `settings.json` (respect du principe « zéro hook imposé »).
+
+---
+
+## Migration de runtime (coexistence ou bascule)
+
+> `[vf-calibrate:migration-runtime]` — annoncer cette étiquette en première ligne de sortie dès
+> que ce chemin est emprunté (voir « Deux natures » ci-dessus).
+
+### 1. Détecter l'opportunité
+
+```sh
+.claude/scripts/runtime-registry.sh list-installed
+```
+
+vs le runtime réellement détecté sur CE poste (`runtime-cli-dispatch.sh`, lot 2 RUNT-01). Si le
+poste porte un runtime ABSENT de `installed`, c'est une opportunité de coexistence/bascule à
+**proposer**, jamais imposer.
+
+### 2. Coexistence (comportement PAR DÉFAUT, D-38-B)
+
+```sh
+VIBEFLOW_CACHE="${CLAUDE_PLUGIN_ROOT}" bash "${CLAUDE_PLUGIN_ROOT}/_internal/vibeflow-update.sh" --target <chemin dédié> install --all
+.claude/scripts/runtime-registry.sh set-active <nouveau> --confirmed
+```
+
+`--target` pose le lab sous une cible **séparée** pour le nouveau runtime (réutilise l'injection de
+cible du lot 4, jamais une 2e implémentation de pose). `set-active --confirmed` **étend**
+`vf_runtimes.installed` sans jamais retirer l'ancien.
+
+### 3. Bascule (soustractive, explicite — jamais par défaut, ADR-031)
+
+Trois étapes dans cet ordre, **jamais une seule sautée** :
+
+1. **Dry-run** — montré à l'utilisateur avant toute écriture :
+   ```sh
+   .claude/scripts/runtime-registry.sh set-active <nouveau> --dry-run
+   VIBEFLOW_CACHE="${CLAUDE_PLUGIN_ROOT}" bash "${CLAUDE_PLUGIN_ROOT}/_internal/vibeflow-update.sh" --target <cible> --dry-run update --all
+   ```
+2. **Confirmation** — attendre le feu vert explicite de l'utilisateur (ADR-031, comme l'étape 3 de
+   la propagation).
+3. **Écriture réelle** :
+   ```sh
+   VIBEFLOW_CACHE="${CLAUDE_PLUGIN_ROOT}" bash "${CLAUDE_PLUGIN_ROOT}/_internal/vibeflow-update.sh" --target <cible> update --all
+   .claude/scripts/runtime-registry.sh set-active <nouveau> --confirmed
+   ```
+
+### 4. Réversibilité — AVANT toute bascule réelle
+
+```sh
+.claude/scripts/verify-runtime-reversibility.sh --target <cible> --cache "${CLAUDE_PLUGIN_ROOT}"
+```
+
+Si la preuve échoue (exit non-zéro), **ARRÊTER** — ne jamais basculer sur une réversibilité non
+prouvée. Le verdict compare des ENSEMBLES de fichiers (`comm -3`), jamais un compte.
+
+### 5. Coexistence sans hooks — relayer, jamais reformuler
+
+Un runtime coexistant sans gouvernance de hooks est déclaré par le gate de fidélité :
+
+```sh
+.claude/scripts/check-artifact-fidelity.sh --coexistence-report
+```
+
+C'est la source de vérité de ce qui manque au runtime coexistant. **Relayer sa sortie telle
+quelle** — jamais reformuler ce diagnostic dans ce skill.
+
+---
+
+## Garde-fous
+
+- **Jamais d'auto-migration / auto-update** sans validation humaine (ADR-031).
+- **Toujours snapshot avant** toute migration structurelle.
+- **Toujours re-stamper + re-auditer** après migration (sinon drift fantôme).
+- **Distinguer bugfix vs doctrine** : ne pas traiter une restructuration comme un simple `cp`.
+- **Côté maintenance VibeFlow** : ce skill est l'outil par lequel l'équipe peut recalibrer un lab
+  branché en suivant la dernière version — toujours via le même garde-fou de validation.
+
+## Références (on-demand)
+
+- `references/migration-playbook.md` — classification des changements + recettes de migration + wiring hook.
+- `.claude/scripts/framework-version.sh` (matérialisé dans le lab à l'install) — current / recorded / stamp / drift.

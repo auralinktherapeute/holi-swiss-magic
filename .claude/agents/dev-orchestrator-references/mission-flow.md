@@ -1,0 +1,715 @@
+# Mission-flow — discipline de pilotage swarm (ADR-053)
+
+> Source de vérité des 3 patterns de sûreté du contrôle de flux de mission. Le `vf-dev-manager` s'y
+> conforme ; les workers appliquent le **contrat de rapport typé** (Pattern C). Réalisé par **fichiers
+> d'état + discipline** (pas de bus temps réel — hors runtime Claude Code). Scripts : `"$S"/driver-lock.sh`,
+> `"$S"/dag.sh`.
+
+---
+
+## Résolution des scripts (`$S`) — scope-robuste (user OU projet)
+
+Un lab est installé sous **un seul** scope (ID4 : user → `$HOME/.claude`, project/local → `./.claude`).
+Les scripts vivent donc là où le module a été posé — **jamais présumer `./.claude`**. Au tout début de
+mission, résous le dossier une fois et note-le `$S` (premier existant) :
+
+```bash
+S="$( for d in "./.claude/scripts" "$HOME/.claude/scripts" "${CLAUDE_PLUGIN_ROOT:-}/conductor/scripts" "${CLAUDE_PLUGIN_ROOT:-}/dev-orchestrator/scripts"; do
+        [ -f "$d/dag.sh" ] && { printf '%s' "$d"; break; }; done )"
+```
+
+> **Le lab courant PRIME** : `./.claude/scripts` d'abord — sur une machine bi-scope
+> (user + projet), préférer le scope user ferait tourner la mission avec des scripts d'une
+> autre version que celle du lab, silencieusement. Un lab en scope user n'a pas de
+> `./.claude/scripts` : la cascade retombe naturellement sur `$HOME`.
+
+> Depuis la v2.34.0, `dag.sh` et `driver-lock.sh` vivent dans le **team-kernel** hébergé par le
+> conductor (`conductor-references/team-kernel.md`) — transverse à tous les métiers. Le fallback
+> dev-orchestrator reste pour les caches antérieurs.
+
+Toutes les commandes ci-dessous utilisent `"$S"/…`. (Sans cette cascade, un lab installé en scope
+**user** chercherait à tort dans `./.claude/scripts` — script introuvable.)
+
+---
+
+## Pattern A — Lock de driver unique (anti-collision de pilotage)
+
+Empêche deux missions/sessions de piloter la **même étape** en parallèle (corruption des backups isolés
+ADR-048/049). Acquisition **atomique** (`mkdir`). Le manager est l'unique porteur du lock pour sa mission.
+
+**Protocole (obligatoire) :**
+
+1. **Acquérir AVANT de planifier/dispatcher** — dès que la mission est cadrée, avant le premier worker :
+   ```bash
+   "$S"/driver-lock.sh acquire --owner="<session_id|task_id>" --step="<étape ou 'mission'>"
+   ```
+   - `acquired: true` → piloter. `acquired: false` avec `reason: held` (`held_by`) → **une autre
+     mission pilote déjà** : ne pas dispatcher, remonter à l'humain (ou attendre). `acquired: false`
+     avec `reason: stale-requires-takeover` (+ champ `hint`) → lock périmé : PAS un vol implicite,
+     `acquire` ne récupère plus rien lui-même (D-32-02) — exécuter `takeover` (ci-dessous), jamais
+     réinterprété comme un refus terminal.
+2. **Heartbeat ENTRE les étapes** — à chaque relecture ROADMAP/STATE entre deux étapes :
+   ```bash
+   "$S"/driver-lock.sh heartbeat --owner="<id>"
+   ```
+   Sans heartbeat frais, le lock est considéré périmé après `VF_DRIVER_TTL` (défaut 1800 s).
+
+   **Amendement Phase 33 (D-33-E, 2026-08-17)** — le heartbeat doit battre sur une cadence
+   INDÉPENDANTE des transitions de nœud, et PLUS FRÉQUENTE qu'elles. Motif mesuré : émis au même
+   tour qu'un `dag.sh mark` (qui écrit désormais aussi `progress_epoch`, plan 33-02), les deux
+   horloges ne divergent JAMAIS — une mission gelée voit les deux s'arrêter ensemble (verdict
+   abandon, jamais stall détecté à temps), une mission vivante les voit avancer ensemble (jamais de
+   stall à signaler alors qu'elle boucle). Concrètement : émettre le heartbeat aussi À CHAQUE
+   itération d'une boucle d'attente/poll du manager (attente d'un worker, relecture d'état), pas
+   SEULEMENT entre deux étapes explicites — un manager qui surveille un worker unique pendant
+   plusieurs minutes sans jamais rappeler `heartbeat` dans l'intervalle reproduit exactement le
+   couplage de cadence que cet amendement ferme.
+
+3. **Relâcher À LA CLÔTURE — succès, échec OU abandon** (release « RAII » porté par le prompt) :
+   ```bash
+   "$S"/driver-lock.sh release --owner="<id>"
+   ```
+   Le release est un **geste de sortie garanti**, jamais conditionnel. C'est la dernière action avant le
+   rapport de mission.
+
+**Récupération de claim périmé (`takeover`, geste EXPLICITE — LOCK-04)** : un agent LLM peut mourir
+sans release. Le TTL + heartbeat reste le seul filet, mais `acquire` ne récupère plus JAMAIS un lock
+périmé lui-même (D-32-02) — il REFUSE (`reason: stale-requires-takeover`) et nomme la commande dans
+son champ `hint`. Sur ce refus :
+```bash
+"$S"/driver-lock.sh takeover --owner="<id>" --step="<étape>"
+```
+Succès → `acquired: true` avec l'ancien tenant nommé (`previous_owner: "<ancien owner>"`) et la
+génération neuve publiée : consigner la reprise dans `STATE.md ### Decisions`. `reason: still-fresh`
+en retour → le lock n'était pas réellement périmé (course), ne pas insister. Ne jamais forcer un
+`release` d'un owner tiers.
+
+**Reprise de session sur un lock VIVANT (`reclaim`)** : `/clear` ou une reprise de session change
+`CLAUDE_CODE_SESSION_ID` sans changer l'`owner` — le lock est toujours frais, encore tenu par le même
+mandat. `takeover` refuserait ce cas (`still-fresh`) : ce n'est pas son usage. Utiliser :
+```bash
+"$S"/driver-lock.sh reclaim --owner="<id>"
+```
+qui rattache la nouvelle session au lock sans prolonger sa fraîcheur (`heartbeat_epoch` n'est PAS
+réécrit — un `reclaim` n'est pas un battement). `reason: stale-requires-takeover` en retour → le
+lock a expiré entre-temps, basculer sur `takeover`.
+
+**Jeton de fence (LOCK-05)** : après un `takeover`/`reclaim` réussi, la réponse porte une clé
+`generation` — le seul candidat qui INVALIDE l'ancien tenant après une reprise (source canonique et
+détail complet : `conductor-references/team-kernel.md` §Jeton de fence, plan 32-04). Le manager, ou
+le worker qui commite pour son propre compte, ajoute au message du PREMIER commit qui suit un
+trailer `Fence: <generation>` (bloc de trailers, aux côtés de `Co-Authored-By:`/`Claude-Session:`).
+Convention d'agent, jamais posée ni vérifiée par une machine (comme les deux autres trailers du
+dépôt). Audit : `git log --grep='^Fence: ' -E --format='%H %s'` (zéro résultat est valide tant
+qu'aucun commit n'a encore posé le trailer).
+
+---
+
+## Pattern B — DAG de tâches (frontière ready/blocked + ré-entrée)
+
+Le plan de bataille n'est plus une liste ordonnée : c'est un **graphe persistant**
+(`.planning/missions/<date>-<sujet>.dag.json`). Le manager **ne dispatche que la frontière `ready`**.
+
+**Protocole :**
+
+1. **Construire le graphe** au moment du plan de bataille (un nœud par étape/étage, `deps` explicites) :
+   ```bash
+   "$S"/dag.sh init --file="$DAG"
+   "$S"/dag.sh add  --file="$DAG" --id=cadrage --step="cadrage étape 9"
+   "$S"/dag.sh add  --file="$DAG" --id=code --step="dev" --deps=cadrage
+   "$S"/dag.sh add  --file="$DAG" --id=revue --step="revue" --deps=code
+   ```
+   Collision d'id → remap déterministe `id::stage` (pas d'échec).
+2. **Dispatcher la frontière** — au lieu de dérouler linéairement :
+   ```bash
+   "$S"/dag.sh ready --file="$DAG"     # → liste des nœuds dispatchables MAINTENANT
+   ```
+   Marquer `running` au dispatch, `done`/`failed` au retour du worker :
+   ```bash
+   "$S"/dag.sh mark --file="$DAG" --id=code --status=done   # promeut les blocked dont deps sont done
+   ```
+
+   **`stages` — dispatcher tout un étage en un seul message.** En plus de `ready`/`count`
+   (strictement inchangés), `dag.sh ready` porte un champ additif `stages` : la frontière `ready`
+   partitionnée en étages tels qu'aucun nœud ne partage un chemin déclaré dans `scope[]` avec un
+   autre nœud du MÊME étage. `dag.sh` **cable** cette partition — il ne la réimplémente jamais
+   (ADR-069) — via un sous-processus `gsd-tools claude-orchestration emit-workflow`, sans dépendre
+   de l'activation de `claude_orchestration` (`emit-workflow` n'emprunte jamais l'échelle de gates
+   de `detectWorkflowBackend`). Renvoi, pas copie : l'algorithme est `partitionStages`
+   (`~/.claude/gsd-core/bin/lib/claude-orchestration.cjs`), pas décrit ici.
+
+   - **Ce qu'il garantit** : deux ids du MÊME étage (`stages[i]`) ne déclarent jamais un chemin
+     commun dans `scope[]` — un manager peut dispatcher tout un étage dans le même message SANS
+     arbitrer lui-même les périmètres, ce que `team-kernel.md:109` (« Périmètres douteux →
+     séquentiel ou `isolation: worktree` ») laissait jusqu'ici au jugement du manager.
+   - **Ce qu'il ne garantit pas** : la garantie ne vaut que ce que vaut le `scope[]` déclaré à la
+     pose du nœud (`dag.sh add --scope=...`) — un nœud qui écrit un fichier qu'il n'a pas déclaré
+     n'est couvert par rien, la même limite que le périmètre gelé de `dag.sh status` (§1 ci-dessus).
+   - **Dépendance dure introduite** : `dag.sh` n'invoquait jusqu'ici que `python3` ; il dépend
+     désormais aussi d'une résolution fonctionnelle de `node` et de `gsd-tools`, via une cascade à
+     **trois** emplacements — variable d'environnement `GSD_TOOLS` · `gsd-tools` sur le `PATH` ·
+     sous `CLAUDE_CONFIG_DIR` puis `~/.claude`. **Aucun candidat cwd/repo-relatif** (l'ancien
+     `gsd-core/bin/gsd-tools.cjs` sous la racine du dépôt, résolu via `os.getcwd()`, a été RETIRÉ) :
+     un tel candidat résolvait un exécutable à un chemin relatif au répertoire de travail courant
+     puis l'invoquait via `node` sans aucune vérification d'ancrage — un simple fichier tracké
+     (`gsd-core/bin/gsd-tools.cjs` à la racine d'une branche ou d'une PR malveillante) suffisait à
+     faire exécuter du code arbitraire, sans symlink ni PATH compromis, et `dag.sh ready` est
+     invoqué en routine par les cinq managers du team-kernel (5ᵉ passage du motif de confinement de
+     chemin sur ce dépôt). **Conséquence assumée** : un lab qui vendorise le moteur à sa propre
+     racine (`<repo>/gsd-core/...`) perd la résolution automatique de ce candidat — le
+     contournement qui reste est `GSD_TOOLS=<chemin absolu>` en variable d'environnement, posée par
+     l'opérateur du lab (pas déduite du dépôt).
+   - **Le repli** : `stages: null` signifie « non calculé, dégradé » (`node`/`gsd-tools`
+     introuvable ou en échec) — le manager retombe alors sur le régime d'aujourd'hui (son propre
+     jugement, séquentiel en cas de doute). `stages: []` signifie « frontière `ready` vide »,
+     JAMAIS « dégradé » — les deux ne se confondent pas. `ready`/`count` restent, dans tous les
+     cas, strictement inchangés.
+3. **Ré-entrée** — un correctif remonté par la revue/l'audit qui **rouvre** une étape :
+   ```bash
+   "$S"/dag.sh reopen --file="$DAG" --id=code   # code + ses dépendants (revue…) repassent blocked/ready
+   ```
+   Le manager **ré-entre** alors dans la boucle `ready → dispatch` au lieu de continuer tout droit. C'est la
+   boucle `fix → re-revue` de `vf-coder` rendue explicite et robuste.
+
+### Modélisation fine — pipelining N/N+1 (audit 2026-07-25)
+
+Un nœud unique par étape est **trop gros** : il sérialise tout, alors que le cadrage + plan de
+l'étape N+1 ne dépendent le plus souvent que de la **ROADMAP**, pas de l'exécution de N. Modéliser
+**3 nœuds par étape** — `discuss(N) → plan(N) → execute(N)` — plus les nœuds de vérification
+(`test(N)`, `audit(N)`), et laisser la frontière `ready` exposer le parallélisme.
+
+**Dépendances canoniques :**
+
+| Nœud | deps | Conséquence |
+|---|---|---|
+| `discuss(N+1)` | — (la ROADMAP seule) | dispatchable dès que le manager a son plan de bataille |
+| `plan(N+1)` | `discuss(N+1)` | peut être produit **pendant** `execute(N)` → marqué provisoire |
+| `execute(N+1)` | `plan(N+1)` **ET** `execute(N)` | périmètres de code potentiellement chevauchants |
+| `test(N)` ∥ `audit(N)` | `execute(N)` | juges read-only, dispatchés en parallèle |
+
+Exception : si les périmètres de fichiers de N et N+1 sont **déclarés disjoints** au plan de
+bataille, `execute(N+1)` peut s'affranchir de la dep sur `execute(N)` (exécutions chevauchantes).
+
+```bash
+"$S"/dag.sh add --file="$DAG" --id=discuss-10 --step="cadrage étape 10"                    # aucune dep : ready immédiat
+"$S"/dag.sh add --file="$DAG" --id=plan-10    --step="plan étape 10"      --deps=discuss-10
+"$S"/dag.sh add --file="$DAG" --id=exec-10    --step="exécution étape 10" --deps=plan-10,exec-9
+```
+
+**Règle de provisoire (non négociable)** : un `plan(N+1)` produit pendant qu'`execute(N)` tourne
+est marqué **« provisoire »** (plan de bataille + STATE). Au moment de dispatcher `execute(N+1)`,
+si `execute(N)` a modifié les hypothèses — fichiers touchés hors du périmètre prévu, décisions
+structurantes au rapport typé — le manager **re-valide** le plan via le plan-checker existant
+(`gsd-plan-phase` re-vérifie) avant dispatch. **Jamais d'exécution sur un plan provisoire non
+re-validé.** Si les hypothèses n'ont pas bougé, le plan est promu tel quel (constat consigné).
+
+**Garde-fou coût** : le pipelining N/N+1 ne s'active que si la mission compte **≥ 2 étapes
+restantes** ET que le mode le permet — jamais en mode superviser étape-par-étape (le checkpoint
+humain de N barre tout dispatch anticipé de N+1).
+
+---
+
+## Pattern C — Contrat de rapport de worker typé
+
+Les workers (`vf-coder`, `vf-reviewer`, `vf-auditer`, `vf-test-orchestrator`) **rendent le bloc
+typé + le strict nécessaire** : le détail (analyse, findings développés) va **sur disque**
+(`.planning/missions/`, rapports d'étape), pas dans le retour de conversation — le manager
+a consigne de ne piloter que sur le bloc typé, la prose libre est du volume mort (audit
+2026-07-25). Contrôle de flux **déterministe** côté manager :
+
+```json
+{
+  "statut": "passed | gaps_found | human_needed | blocked",
+  "findings": [
+    { "severity": "bloquant | majeur | mineur", "action": "auto-fix | no-op | ask-user", "ref": "fichier:ligne" }
+  ],
+  "noeuds_debloques": ["<id de nœud DAG à passer done, s'il y a lieu>"]
+}
+```
+
+- **`statut`** s'aligne sur les verdicts de `*-VERIFICATION.md` : `passed` (feu vert), `gaps_found` (manques
+  à combler → le manager relance un cycle), `human_needed` (escalade), `blocked` (dépendance non satisfaite).
+- **`action`** par finding (taxonomie ADR-031 raffinée, note §6.2) : `auto-fix` (mécanique, le coder applique
+  seul), `no-op` (informatif), `ask-user` (**défie l'intention/la logique/la sécurité → escalade obligatoire,
+  jamais tranché seul**).
+- **`noeuds_debloques`** : les nœuds DAG que ce retour permet de marquer `done` → le manager fait
+  `dag.sh mark` puis re-dispatche la nouvelle frontière.
+
+### Contrôle de flux du manager — table de pilotage (foyer UNIQUE)
+
+Déterministe, plus d'interprétation de prose. Cette table est l'énoncé **faisant autorité** : le
+`vf-dev-manager` y RENVOIE et ne la reformule pas (ADR-030, une seule voix). Elle a été déportée
+ici depuis l'agent (arbitrage A-4) — l'agent tenait 249/250 lignes du plafond ADR-029, une marge
+d'une ligne que huit plans restants auraient crevée ; rien de son sens n'a bougé au passage.
+
+- **Verdict d'étape (rapport typé, ADR-053)** : le `statut` du rapport de worker — recoupé au
+  `*-VERIFICATION.md` — pilote le flux de façon déterministe : `passed` → `dag.sh mark done` +
+  frontière suivante · `human_needed` — déclenché par `gate="blocking-human"` amont OU par une
+  précondition amont non satisfaite (`mission-contracts.md` §Contrat de checkpoint amont : une
+  règle, deux motifs), ou par tout finding `action: ask-user` — → **escalade départagée par le
+  MODE**, jamais tranchée seule : en mode **superviser**, c'est le manager qui **répond aux
+  attentes humaines** du moteur (checkpoint, garde-fou de reprise sûre) : il pose la question, il
+  attend, puis il redispatche `vf-coder` avec le champ `reprise` — qui transporte la réponse ET
+  les tâches faites, sans quoi le worker neuf retombe sur le même checkpoint
+  (`mission-contracts.md` §Minimum de reprise) —, avec le même filet de repli qu'au §Entrée de
+  l'agent si l'outil de question est indisponible au runtime ; en mode **autonome**, il n'y répond
+  JAMAIS à la place de l'utilisateur, absent par définition (ADR-031) : **GELER le nœud porteur,
+  halte de nœud, jamais de mission**, le laisser `blocked`/`failed`, ne poursuivre QUE les nœuds
+  indépendants, consigner la question au rapport · `gaps_found` → `dag.sh reopen` + UNE relance de
+  comblement via `vf-coder`, puis si les manques persistent : consigner et arbitrer · `blocked` →
+  laisser le nœud `blocked`, traiter la dépendance — sauf `cause: "profondeur"` (`mission-contracts.md`
+  §Retour « bloqué : profondeur ») : remonter le mandat intact, jamais coder à sa place ni
+  redispatcher au même niveau. Findings `action: auto-fix` → repartent à
+  `vf-coder` (jamais corrigés par le manager) ; `no-op` ignorés.
+- **Blocage** (étage en échec répété) : 3 options — réessayer l'étage · sauter l'étape (documenté)
+  · arrêter la mission (rapport partiel). En mode **autonome** : trancher via panel ; en mode
+  **superviser** : demander (AskUserQuestion) — même filet de repli si l'outil est indisponible au
+  runtime : `human_needed` au rapport, jamais d'auto-réponse.
+
+---
+
+## Pattern E — Étage revue de premier rang (D-10 → D-14)
+
+> Généralise le patron déjà écrit pour l'étage design croisé (`mission-cross-team.md` §Étage design,
+> nœud `revue-N` deps=`exec-N`) : la revue cesse d'être un cas particulier de la collaboration
+> dev↔design pour devenir LE patron de l'étage revue de toute mission dev. `mission-cross-team.md`
+> continue de le SPÉCIALISER (formule de « vert » complet du double juge) — il n'est ni dupliqué ni
+> modifié ici.
+
+### 1. Pose du nœud
+
+Pour chaque étape, le manager pose un nœud `revue-N` dépendant du nœud d'exécution de la même
+étape, **systématiquement** — au même titre que test/audit sont posés quand ils s'appliquent, mais
+sans condition : la revue n'est jamais sautée.
+
+```bash
+"$S"/dag.sh add --file="$DAG" --id=revue-N --step="revue code étape N" --deps=exec-N --scope=<globs>
+```
+
+Le périmètre (`--scope`) est déclaré à la pose : c'est ce qui rend calculable le critère (b) de la
+§3 ci-dessous (fichier partagé avec une mission parallèle en vol) — sans déclaration, ce critère
+reste aveugle. `dag.sh status` dérive la table des fichiers gelés depuis ces périmètres déclarés,
+jamais depuis une copie figée (cf. `.planning/MISSION-INVARIANTS.md` §2).
+
+### 2. Dispatch et boucle de correction
+
+`vf-reviewer` est dispatché **EN DIRECT** par le manager, jamais via `vf-coder` — un seul pilote de
+la revue, cohérent avec les allowlists `Agent(...)` des deux agents (ni dispatch direct ni indirect
+manager↔worker↔worker de revue). Sur un rapport typé `gaps_found` :
+
+1. `dag.sh reopen --id=revue-N` — force `review_regime=full` sur le nœud et ses dépendants transitifs
+   (mécanisme machine, cf. §5).
+2. Dispatch `vf-coder` en mandat de **correction CIBLÉE** : les findings remontés, rien d'autre —
+   jamais un cycle cadrage → plan → exécution complet.
+3. Re-dispatch `vf-reviewer` sur le diff corrigé.
+   Un même verdict qui revient deux fois sur ce nœud : édition-à-la-source, pas un 4ᵉ redispatch — règle et seuil au niveau kernel (`team-kernel.md` §Règles d'instanciation, G5).
+
+Budget **3 tours**, au grain **étape** et **partagé** avec les autres boucles de correction de la
+même étape (§6 ci-dessous) — un budget séparé par boucle se contournerait mécaniquement, par
+renommage du problème, ce que ce Pattern dit précisément vouloir empêcher. La valeur ne bouge pas
+(D-25) : elle reste celle mesurée à son rendement actuel, on ne plafonne pas avant d'avoir des
+chiffres réels. Au-delà, escalade humaine — cette boucle s'articule sur la MÊME table de pilotage
+déterministe que le reste du contrôle de flux (Pattern C), une seule règle : `passed` → `mark done`
++ frontière suivante · `gaps_found` → la boucle ci-dessus · `human_needed`/finding `ask-user` →
+escalade.
+
+**Rappel de partition, si ≥ 2 `vf-*` concurrents sur scopes disjoints.** Dès que ce dispatch met
+réellement en jeu deux workers `vf-*` ou plus, en parallèle, sur des périmètres disjoints de CE
+dépôt (`vibeflow-os`), la question de sa partition réelle en `.planning/workstreams/` se repose —
+pointeur : `.planning/STATE.md` § Decisions, D-02.
+
+### 3. Gradation par risque, jamais par volume
+
+Déclencheurs de revue **renforcée**, non négociables — chacun un FAIT constatable sur le diff ou le
+plan de bataille, jamais un jugement au feeling :
+
+(a) un adaptateur d'infrastructure non couvert par les tests ;
+(b) un fichier partagé avec une mission parallèle en vol (table dérivée par `dag.sh status`) ;
+(c) du code que la mutation ne couvre pas ;
+(d) un geste utilisateur ou une géométrie de vue.
+
+Allègement réservé — et seulement — au Domain pur à mutation verte, à la documentation, aux
+catalogues sans ajout de clé. **Défaut sûr : dans le doute, revue pleine** — le classement du lot
+est un point de décision, donc un point d'erreur, et le défaut doit être le sûr. Axe abandonné
+explicitement : la seule gradation d'avant indexait sur le VOLUME (`SEUIL_EQUIPE`, nombre d'étapes
+restantes) — mauvais axe, trois lignes sur un chemin partagé sont minuscules et à très haut risque,
+quatre cents lignes de Domain pur prouvées par mutation sont grosses et à bas risque.
+
+### 4. Revue de jointure
+
+Dès que deux nœuds `exec-*` **incomparables** (aucun lien de dépendance entre eux) partagent un
+descendant, un nœud `join-<N>` séparé est posé, et il lit **l'union** des deux diffs :
+
+```bash
+"$S"/dag.sh add --file="$DAG" --id=join-N --step="revue de jointure" --deps=exec-A,exec-B
+```
+
+Déclencheur = la **TOPOLOGIE** du DAG, jamais l'intersection des périmètres de fichiers : cette
+intersection est vide par construction en parallélisation nominale — on parallélise précisément
+quand les périmètres sont disjoints, un déclencheur fondé dessus ne se déclencherait donc jamais.
+C'est l'étage au meilleur rendement mesuré sur la tranche source de la Phase 20 : 4 bloquants + 9
+majeurs, qu'aucun relecteur cadré sur un seul lot n'aurait vus.
+
+### 5. Garde-fou de comblement
+
+**Aucun allègement ne s'applique jamais à un diff de comblement. Une re-revue reste pleine, quelle
+que soit la nature du lot d'origine.** Garant MACHINE, pas une consigne : `dag.sh reopen` écrit
+lui-même `review_regime=full` sur tout nœud `revue-*`/`join-*` rouvert (et ses dépendants
+transitifs) — une consigne se contourne par interprétation, un champ écrit par l'outil ne se
+contourne pas.
+
+### 6. Épuisement du budget (D-26, D-27, D-28)
+
+Budget épuisé (§2) ⇒ statut de rapport typé `blocked`, assorti d'un **décompte complet** de ce qui
+a été tenté : tours de revue consommés, tours de comblement consommés, findings restés non
+résolus. **Le décompte EST la livraison** : sans lui, un budget partagé ne serait qu'un chiffre
+plus petit, pas une information. Champ porteur : `decompte` (`mission-contracts.md` §Décompte de
+budget épuisé).
+
+**L'invisibilité amont, nommée (D-26).** Le décompte porte les tours d'ÉQUIPE — ceux que VibeFlow
+pilote et compte lui-même. Le nombre de réparations `node_repair` consommées **à l'intérieur d'un
+plan** par le moteur est **invisible** sans parser la prose libre de chaque rapport de plan, format
+non contractuel — fait daté et sourcé : le journal amont est de la prose dans une section markdown,
+aucun gabarit de rapport amont ne porte de champ de comptage. Ne **jamais** fabriquer un total
+agrégé qui laisserait croire à une mesure exhaustive : un manque nommé vaut mieux qu'un chiffre
+inventé.
+
+Aucune proposition de next step n'accompagne le décompte : elle serait produite par l'agent qui
+vient d'échouer plusieurs fois sur le sujet, donc la partie la moins fiable du rapport.
+
+---
+
+## Briques dormantes — moments déclencheurs (D-23, D-24)
+
+Le geste se pose quand **au moins un** de ces déclencheurs tombe. Chacun reste un **FAIT
+constatable** (même gabarit que `docs-flow.md` §Déclencheurs), jamais un jugement au feeling :
+
+| Déclencheur | Constat |
+|---|---|
+| **étape vérifiée et clôturée** | la famille est déjà doctrinée par `docs-flow.md` (Phase 22) ; la ligne se raccorde au nœud documentaire de fin de mission existant plutôt que d'en poser un nouveau — conditions exactes : `docs-flow.md`, ne pas les reformuler ici (ADR-057). Brique : `gsd-extract-learnings`. |
+| **verdict de validation nyquist partiel** | le gate constate aujourd'hui les trous sans les combler ; cette ligne transforme un constat en action. Brique : `gsd-add-tests`. |
+| **le QUOI d'une étape n'est pas stabilisé** | le fichier de spec est lu par le cadrage, qui cesse alors de poser des questions de périmètre. Brique : `gsd-spec-phase`. |
+| **mission ratée, ou blocage à comprendre** | aucune procédure écrite aujourd'hui, le manager improvise. Briques : `gsd-undo` (annulation) / `gsd-forensics` (analyse post-mortem). |
+
+Aucun déclencheur qui ne tombe est un **état normal**, pas un manque.
+
+---
+
+## Pattern F — Étage cadrage porté par le manager (A-1ter geste 2, motif A-13)
+
+**Qui exécute** : le manager, lui-même, dans sa propre fenêtre — seule exception à « il ne produit
+rien lui-même » : le cadrage n'est ni du code, ni un test, ni un audit, c'est une conversation de
+décision, et le manager est le nœud de l'équipe où les décisions de mission se prennent.
+
+**Pourquoi, en FAIT (motif A-13, le seul autorisé ici)** : sur `gsd-core@1.9.0`, le seul mode non
+interactif de la brique de cadrage enchaîne cadrage → plan → exécution dans le même appel — le
+porteur ne reprend la main qu'à la fin du pipeline entier, et pendant ce temps la **règle 5** de
+`checkpoints.md` auto-approuve les `human-verify` et auto-sélectionne la première option des
+`decision`. Le cadrage porté par le manager, **plus aucun mode d'enchaînement n'est passé à cette
+brique** : la règle 5 cesse de s'appliquer au plan et à l'exécution qui suivent — le problème
+disparaît, il n'est pas borné.
+
+**Discipline de flags** : `GSD-PIPELINE.md` §9 porte la table (ne pas la recopier ici, ADR-030).
+
+**Modélisation du nœud** : sous-section de pipelining N/N+1 du Pattern B ci-dessus, qui pose déjà
+le nœud de cadrage et ses dépendances — seul change qui exécute le nœud, pas le graphe.
+
+**Outil de question indisponible** : cas réel, déjà documenté au filet de repli D-09 du manager
+(§Entrée) — `human_needed` remonté, jamais un retour au mode d'enchaînement.
+
+**Ce que le worker ne fait plus** : `vf-coder` n'invoque plus jamais le cadrage lui-même.
+
+---
+
+## Pattern D — Étages croisés dev ↔ design (renvoi)
+
+Doctrine complète (quand insérer l'étage de l'autre métier, forme DAG, budgets, invariants) :
+`dev-orchestrator-references/mission-cross-team.md` (§Étage design (mission dev) / §Étage
+implémentation (mission design) / §Invariants non négociables). Les Patterns A/B/C/E ci-dessus
+s'appliquent tels quels aux nœuds croisés (`craft:<écran>`, `critique:<écran>`, `revue-N`, étage
+implémentation) — le DAG reste métier-agnostique (prouvé T3/T4, `15-ETUDE-collaboration-dev-design.md`) ;
+le nœud `revue-N` du cross-team EST une instance de Pattern E, pas un cas séparé ; le lock reste au
+seul manager de la mission, jamais imbriqué (Pattern A).
+
+## Pattern G — Reprise après coupure : réveiller avant de redispatcher (D-25)
+
+Une coupure d'infrastructure (`Response stalled mid-stream`, `ENOTFOUND`, interruption d'outil) **n'est
+pas la mort du worker**. Le mandat coupé rend un `agentId`, et l'agent **garde son contexte** : ses
+mesures, ses fixtures, ses décisions intermédiaires. Redispatcher depuis zéro jette tout cela et refait
+payer le même travail — mesuré en Phase 24 : trois mandats successifs coupés sur le même lot, dont deux
+étaient arrivés au banc de mutation, et un troisième avait **déjà commité 4 fichiers** que le rapport
+d'échec ne mentionnait pas.
+
+**Ordre imposé, dans cet ordre exact :**
+
+1. **Constater le disque, jamais le rapport.** `git status` + `git log` + `ls` du périmètre. Une
+   interruption d'outil ne prouve pas qu'un worker n'a rien écrit — c'est le premier réflexe, et il a
+   payé quatre fois dans la seule Phase 24 (travail commité non rapporté, travail écrit non commité).
+   Du travail non commité se **récupère et se commite**, il ne se refait pas.
+2. **Réveiller l'agent coupé** — `SendMessage` vers son `agentId`, avec un résumé de ce que le disque
+   montre et la consigne de reprendre où il en était. Son contexte vit encore ; c'est la voie la moins
+   chère et la plus fidèle.
+3. **Redispatcher un mandat neuf seulement si le réveil échoue** ou si `SendMessage` n'est pas fourni au
+   manager. Dans ce cas, **le mandat neuf porte l'état exact du disque** (« voici ce qui est déjà
+   commité, voici ce qui reste ») et l'instruction de **commiter au fil de l'eau** plutôt qu'en fin de
+   course — c'est ce qui limite la perte à la coupure suivante.
+
+**Ne pas s'arrêter pour signaler la coupure** tant que l'arbre reste cohérent : la coupure est un fait
+d'infrastructure, pas une décision à remonter. Elle entre au rapport de mission, pas dans un checkpoint.
+
+---
+
+## Pattern H — Jalons GSD vers l'app Claude : relais SendMessage(main) (D-33-H)
+
+**Le fait mesuré, pas une supposition.** `PushNotification` n'existe pas côté sous-agent — erreur
+littérale obtenue à l'appel réel : « No such tool available: PushNotification. PushNotification is
+disabled for this session, in subagents as well as here. » Tous les managers et workers du
+team-kernel sont des sous-agents : **aucun ne peut jamais pousser directement**, quel que soit son
+mandat ou son mode. Ce n'est **pas** un problème de réglage — la configuration utilisateur est déjà
+activée ; c'est une limite structurelle du runtime.
+
+**Le vecteur unique : le relais.** Au jalon, le manager fait `SendMessage(to: "main")` avec une
+ligne déjà prête à pousser. C'est **la session principale**, jamais un sous-agent, qui appelle
+`PushNotification`. Le manager ne pousse jamais lui-même — il propose une chaîne de caractères, la
+session principale décide et exécute.
+
+**Le contrat de la ligne préparée.** Un seul champ `message`, strictement inférieur à
+200 caractères, **sans markdown**, **pas de `title`** séparé — titre et corps aplatis en une seule
+phrase courte (gabarit : `"Phase <N> terminée — <verdict court>."` ou `"Milestone <nom> clos — next
+step : <étape>."`). L'outil **ne lève jamais d'erreur** : il rend toujours un succès porteur d'un
+`disabledReason` parmi trois valeurs exactes — `config_off`, `user_present`, `no_transport`.
+« requested » n'est jamais « delivered » : **aucun accusé de réception n'existe**. Le manager et la
+session principale qui relaie ne doivent **jamais** attendre de confirmation de livraison.
+
+**Les deux jalons, portés par la doctrine du manager, jamais par un hook amont.** Fin de **phase** :
+au moment où le manager marque une étape finie (§Contrôle de flux, `vf-dev-manager.md`). Fin de
+**milestone** : au moment où la séquence de clôture — audit, `gsd-complete-milestone`, nettoyage —
+est complète (même bullet). Les deux jalons déclenchent le même relais, sans dupliquer ici la
+discipline de marquage déjà écrite ailleurs.
+
+**Pourquoi ni `gsd-ship` ni `gsd-complete-milestone` ne portent ce geste.** `ship:post` dispatche
+lui-même un sous-agent — même limite structurelle que le fait mesuré ci-dessus, il ne peut pas
+pousser davantage que n'importe quel autre sous-agent. `gsd-complete-milestone` n'offre **aucun**
+point d'extension : 0 `render-hooks` sur 815 lignes, aucun `milestone:*` parmi les 12 points de hook
+de `@opengsd/gsd-core`. Conséquence non négociable : **aucun wrapper des skills amont, aucune
+dépendance à un hook inexistant côté `@opengsd/gsd-core`** — la doctrine vit entièrement côté
+managers VibeFlow (`conductor`/`dev-orchestrator`), jamais dans le paquet amont.
+
+**Limite dégradée acceptable, pas une panne.** Le relais exige une session principale pilote. Une
+mission lancée sans elle (cloud agent détaché, run headless) ne poussera jamais — fail-open
+silencieux, symétrique au traitement déjà réservé à `disabledReason` : ni le manager ni la session
+principale ne remontent cela comme un échec à corriger.
+
+**Distinction avec le canal `notify.sh`/WTCH-03.** Ce relais des jalons GSD (fin de phase, fin de milestone)
+n'est **pas** gouverné par le toggle d'opt-in `/vf-notify`, qui gate uniquement le toast
+OS de fin de nœud DAG (`done`/`failed`) émis par `notify.sh`. Le harness fait déjà sa propre gestion
+via `config_off`/`user_present` : VibeFlow n'ajoute aucun toggle superposé sur ce vecteur-ci — les
+deux canaux restent disjoints en code, en doctrine et en gate.
+
+## Pattern I : registre des agents dispatchés et reprise après arrêt sur chien de garde (issue #82)
+
+Le modèle « dispatcher puis terminer son tour » (Pattern G, parade retenue contre les boucles
+d'attente de #81) laisse un angle mort : un parent qui termine son tour avec un enfant en cours
+n'est plus le propriétaire de rien. Si ce parent meurt (chien de garde `Agent stalled: no progress
+for 600s`, coupure réseau, fenêtre fermée), l'enfant continue sans que personne ne l'attende, et
+ni le `dag.json`, ni le verrou, ni le rapport ne portent d'identifiant d'agent : une reprise ne
+peut pas retrouver ses orphelins. Mesuré le 2026-09-22 (issue #82) : un `vf-reviewer` encore
+vivant 39 minutes après la mort de son manager, un `gsd-planner` orphelin dont l'arrêt a réveillé
+un `vf-coder` `completed` depuis 43 minutes, deux chaînes prêtes à écrire dans le même dépôt.
+
+Ce Pattern ne touche pas au modèle de dispatch : il ajoute un registre autour, et une discipline
+de reprise qui commence par l'inventaire. Scripts : `"$S"/driver-lock.sh register | close |
+orphans` (conductor v1.39.0).
+
+### 1. Un seul emplacement canonique : le registre à côté du verrou
+
+`.planning/DRIVER.lock.children.jsonl` (variable `VF_DRIVER_CHILDREN`), écrit et lu par
+`driver-lock.sh` seul, frère du verrou comme le journal des reprises, jamais dans la génération du
+verrou (qui meurt au `takeover`). Pourquoi là, et pas dans le `dag.json` de mission :
+
+- le manager de remplacement touche le verrou AVANT de connaître quoi que ce soit de la mission
+  (`reclaim` ou `takeover` est son premier geste) : l'inventaire vit là où la reprise commence,
+  et ces deux verbes le rendent d'eux-mêmes (`orphans_count`, `orphans`) ;
+- un worker qui dispatche une brique GSD ne connaît pas le chemin du `dag.json` ; le verrou, lui,
+  est à un chemin fixe connu de tous (manager, workers, gate de sortie `check-mission-exit.sh`) ;
+- un identifiant d'agent est un fait de runtime, pas de plan : un nœud est relancé plusieurs fois
+  (`reopen`, correction ciblée), un même nœud porte donc plusieurs agents au fil du temps ;
+- le registre est en JSON Lines append-only : plusieurs workers d'un même étage consignent en
+  parallèle sans mutex, une mort entre deux lignes ne corrompt rien, et l'état courant se dérive
+  (dernière ligne par agent gagne). Le `dag.json`, lui, est réécrit entier à chaque `mark`.
+
+Le `dag.json` reste le plan de bataille ; le registre porte qui tourne pour quel nœud (`--node`).
+Chaque entrée : `agent_id`, `role`, `node`, `parent`, `depth`, `owner` et `generation` du verrou au
+moment du dispatch, `dispatched_at`, `status` (`running`, puis `done`, `failed` ou `stopped`).
+
+### 2. Consigner à chaque dispatch, fermer à chaque retour (manager ET worker)
+
+Aucun hook ne le fait : c'est une étape obligatoire de l'agent, dans le même tour que le `Task`.
+Le résultat de l'outil `Task` porte l'identifiant de l'agent lancé (`agentId`) ; c'est cette
+valeur, telle quelle, qui est consignée.
+
+Manager, juste après chaque `Task(...)`, avant de terminer son tour :
+```bash
+"$S"/driver-lock.sh register --agent="<agentId>" --role="<vf-coder|vf-reviewer|vf-auditer|...>" --node="<id du nœud DAG>"
+```
+Au retour du worker (rapport typé reçu), dans le même tour que `dag.sh mark` :
+```bash
+"$S"/driver-lock.sh close --agent="<agentId>" --status=done     # ou failed
+```
+Worker qui dispatche lui-même (`vf-coder` vers `gsd-planner`, `gsd-plan-checker`, ...) : même
+geste, avec la profondeur explicite et le nœud reçu au digest :
+```bash
+"$S"/driver-lock.sh register --agent="<agentId>" --role="gsd-planner" --node="<nœud du digest>" --depth=2
+```
+`--parent=<agentId du worker>` s'ajoute quand le worker connaît son propre identifiant ; sinon
+`--depth=2` suffit à l'ordre feuille vers racine. Le worker ferme l'entrée de son enfant à son
+retour (`close --status=done|failed`) ; un enfant que le worker laisse tourner en terminant son
+tour reste `running` au registre, et c'est voulu : c'est exactement ce que le manager, ou son
+remplaçant, doit pouvoir retrouver.
+
+`register` refuse bruyamment (exit 1, `registry-unwritable`) si le fichier ne s'écrit pas : un
+dispatch non consigné est l'orphelin introuvable que le registre existe pour empêcher. Le statut
+consigné est déclaratif : la vérité de vie d'un agent reste `ListAgents`, et `close
+--status=stopped` se pose après cette vérification, jamais avant.
+
+### 3. Reprise après arrêt sur chien de garde
+
+Distinct du Pattern G. Pattern G traite la coupure d'un WORKER dont le manager est vivant : on
+réveille. Ici c'est le MANAGER qui est mort (chien de garde, coupure longue, fenêtre fermée) : ses
+nœuds `running` sont morts avec lui, personne ne les attend plus, et ses enfants sont des
+orphelins à arrêter, pas à réveiller. Ordre imposé, dans cet ordre exact :
+
+1. **Repartir de l'état du dépôt, jamais du DAG.** `git log --oneline -20`, `git status`,
+   `git worktree list`. Le `dag.json` d'un manager mort dit ce qu'il croyait en cours, pas ce qui
+   a été produit : un nœud `running` dont le worker a été coupé avec lui est un nœud MORT. Ce que
+   le disque montre commité est acquis ; ce qui est écrit non commité se récupère et se commite ;
+   le reste se redispatche.
+2. **Reprendre le verrou, qui rend l'inventaire.** `reclaim` (même owner, verrou vivant) ou
+   `takeover` (verrou périmé) : la réponse porte `orphans_count` et `orphans` (identifiants,
+   feuille vers racine). Le détail (rôle, nœud, profondeur, âge) :
+   ```bash
+   "$S"/driver-lock.sh orphans
+   ```
+   Le lecteur de statut du verrou (`status`) porte aussi `children_running`, verrou présent ou non.
+3. **Arrêter les orphelins de la feuille vers la racine, en relistant après chaque arrêt, avant
+   tout nouveau dispatch.** Pour chaque identifiant, dans l'ordre rendu : `TaskStop`, puis
+   `ListAgents` pour constater l'arrêt réel (§4 : la réponse de `TaskStop` ne suffit pas), puis
+   seulement :
+   ```bash
+   "$S"/driver-lock.sh close --agent="<agentId>" --status=stopped
+   "$S"/driver-lock.sh orphans     # relister : la liste peut avoir changé
+   ```
+   Un agent qui n'apparaît plus dans `ListAgents` (déjà fini) se ferme de la même façon. Un parent
+   `completed` qui repasse `running` après l'arrêt de son enfant (§4) est un orphelin de plus : il
+   s'arrête à son tour, puis on reliste.
+4. **Supprimer les worktrees jetables restants.** `git worktree list` : tout arbre de travail d'un
+   mandat mort (`agent-<id>`, `worktree-agent-<id>`, ou le dossier posé par `isolation: worktree`)
+   est supprimé après vérification qu'il ne porte rien de non commité à récupérer :
+   `git worktree remove --force <chemin>` puis `git worktree prune`.
+5. **Marquer le DAG, puis redispatcher.** Les nœuds `running` du manager mort passent `failed`
+   (`dag.sh mark --status=failed`) ou sont rouverts (`dag.sh reopen`) selon ce que le disque
+   montre ; seule la frontière `ready` recalculée se redispatche, chaque dispatch consigné (§2),
+   avec le jeton de la génération neuve sur le premier commit (§Jeton de fence).
+
+Tant que `orphans` rend un compte non nul, aucun `Task` neuf : deux chaînes écriraient dans le
+même dépôt, c'est le scénario mesuré de l'issue.
+
+### 4. Deux comportements de Claude Code à connaître, que le plugin ne peut que contourner
+
+- **`TaskStop` peut répondre `Successfully stopped` sans effet immédiat.** Mesuré : un
+  `ListAgents` juste après montrait le planner encore `running` ; le second `TaskStop` l'a passé
+  `killed`. Conséquence : ne consigner `stopped` et ne redispatcher qu'après relecture de
+  `ListAgents`, réitérée si besoin, jamais sur la seule réponse de `TaskStop`.
+- **La fin d'un enfant réveille un parent `completed`.** Mesuré : la notification de fin du
+  planner tué a repassé son parent `vf-coder` (fini depuis 43 minutes) en `running`, et il a
+  repris le mandat du manager mort dans l'arbre du nouveau manager. Conséquence : arrêter de la
+  feuille vers la racine ne suffit pas, il faut RELISTER après chaque arrêt et traiter le parent
+  réveillé comme un orphelin de plus ; côté rapport, un `completed` assorti de « background work of
+  its own still running » n'est pas inerte tant que ses enfants consignés ne sont pas fermés.
+
+Ces deux points sont des limites observées du runtime, non documentées par Anthropic, qui peuvent
+changer avec une version de Claude Code ; la discipline ci-dessus les rend inoffensives plutôt que
+de s'y fier.
+
+### 5. Règle pour les workers
+
+Un worker ne termine jamais son tour avec un enfant en cours sans l'avoir consigné (§2). Le
+transcript de l'agent n'est pas un registre : personne ne le relit à la reprise. Un worker qui
+rend son rapport pendant que son enfant tourne encore le dit dans le bloc typé (`findings`,
+`severity: mineur`, `action: no-op`, `ref: registre <agentId>`), pour que le manager sache qu'un
+`close` reste à poser. À la clôture d'une mission, un `release` avec `children_running` non nul
+relâche quand même (geste RAII) mais garde le registre et le signale ; le gate de sortie
+(`check-mission-exit.sh`, E1) le lit comme un manque : une mission terminée avec un enfant ouvert
+n'est pas une mission inerte.
+
+## Budgets de méthode : ce que la mission laisse derrière elle (v2.67.0)
+
+**Motif.** Une mission produit de la trace (point d'état, rapport, DAG, worktree) et rien ne la
+retire. Mesuré sur un lab client après deux mois : `STATE.md` à 195 Ko, un « Point du … » ajouté en
+tête à chaque mission ; 19 worktrees ouverts sur un dépôt, dont une partie déjà intégrée. Aucun agent
+ne relit plus un STATE de cette taille en entier, et chaque worktree oublié se paie en `pod install`,
+en Metro ou en « quelle branche ? ». La doctrine « STATE ne garde que le courant »
+(`planning-core/references/bridge-memory.md` §Pont 2) existait ; il manquait un seuil et un moment.
+
+**Seuils** (surchargeables, `VF_STATE_BUDGET_KB` et `VF_WORKTREE_BUDGET`) :
+
+- `STATE.md` (et chaque `STATE.md` de workstream) : **8 Ko** au plus.
+- Worktrees actifs : **3 par dépôt** au plus, arbre principal non compté.
+
+**Début de mission : le snapshot.** Juste après l'`acquire` du verrou, le manager pose la référence
+de ce qui existe déjà : `"$S"/check-mission-exit.sh --budget-snapshot` (pris en `--auto --dry-run`, rien n'est écrit ;
+le fichier vit sous le répertoire git commun, `vf-mission-budget.snap`, jamais dans l'arbre : E2 reste
+propre). Sans lui, E7 est INDÉTERMINÉ, jamais sain : il ne saurait pas distinguer ce que la mission a
+créé de ce qui existait (branche d'un autre mainteneur, worktree d'une autre mission). Le snapshot porte
+sa **date** et l'**identité de la mission** (la génération du verrou de driver courant, d'où la consigne de
+le poser APRÈS l'`acquire`) ; il est pris sans écrire (`--auto --dry-run`), de sorte qu'un archivage
+refusé déjà présent au démarrage n'est pas imputé à la mission. E7 est INDÉTERMINÉ si la génération du
+snapshot n'est pas celle du verrou courant, ou si le snapshot n'a pas d'identité. **Limites dites** :
+à la sortie le verrou est en principe relâché, l'identité n'est alors plus recontrôlable (seule la date,
+rappelée sur stderr, situe le snapshot) ; et **un snapshot posé tard masque les objets que la mission avait
+déjà créés avant lui** : le poser dès l'`acquire`, pas plus tard.
+
+**Moment : la clôture, avant le relâchement du verrou.** Le manager lance
+`"$S"/check-method-budget.sh --auto --no-remote --quiet` : l'outil **archive seul** ce qui déborde
+(compartiment de la session, sources commitées, trace dans `.planning/archives/INDEX.tsv`, retour
+arrière `git cat-file blob <ref de l'INDEX>`), ne supprime ni ne commite rien. Le manager **commite
+l'archivage** (ADR-076), puis agit sur les constats restants :
+
+1. **STATE dépassé** : le corps au-delà du budget est archivé par l'outil ; le point de la mission
+   **remplace** la position courante, il ne s'ajoute pas en tête. Le frontmatter GSD et les sections
+   lues par l'outillage (`Current Position`, `Project Reference`) restent en place.
+2. **Worktree RANGEABLE** (branche travaillée puis intégrée dans la branche de référence) **apparu
+   depuis le snapshot de début de mission** : `git worktree remove <chemin>`, **sans `--force`** ; un
+   refus signale un changement non vu, on s'arrête et on le rapporte. Même règle pour la branche
+   locale (`git branch -d`), le stash (patch sous `.planning/archives/stash/` puis `drop`) et la
+   mémoire (`git add`). Ce qui existait AVANT le snapshot n'est jamais imputé ni rangé par la mission ;
+   un objet apparu depuis qui est d'une autre mission ou d'une session en cours (E7 ne sait pas le
+   distinguer) n'est **jamais supprimé** : il est cité au rapport `## Budgets` et E7 reste un manque
+   que le head tranche (`head-governance.md` §3) — c'est un constat, pas un ordre de suppression.
+3. **ORPHELIN** (dossier disparu) : `git worktree prune`. **Branche distante** : geste humain, jamais
+   rangée par la mission.
+4. Les constats restants (dépassement non résorbable par la mission) vont au rapport de mission,
+   section `## Budgets`, pour que le head les relaie.
+
+Le script seul ne bloque rien (rend 0, `--strict` rend 1) ; c'est le contrôle **E7** de
+`check-mission-exit.sh` qui bloque la sortie tant qu'un RANGEABLE, ARCHIVABLE ou ARCHIVAGE REFUSÉ
+**apparu depuis le snapshot**, ou un archivage non commité, reste. E7 est INDÉTERMINÉ (jamais sain)
+si le snapshot manque, si l'archivage n'a pas été tenté (dépôt partitionné, aucun compartiment
+résolu : passer `--ws` ou exporter `GSD_WORKSTREAM`) ou si le script de budget n'est pas vérifiable.
+Un DÉPASSÉ seul se rapporte, il ne bloque pas. Les branches distantes ne sont pas lues ici (le
+contrôle passe `--no-remote`).
+
+**Travail direct.** Le hook `Stop` `guard-fin-de-geste.sh` ne sait pas si la session a conduit une mission :
+il s'applique à **tout arrêt de session** et tient le même rôle qu'E7 avec une autre référence : il archive
+seul, puis **bloque à chaque arrêt** tant qu'il reste du rangement **apparu depuis le snapshot de SA
+session** (E7 : depuis celui de la mission ; les deux se cumulent et peuvent nommer le même objet) ;
+après 3 blocages de suite sans progrès (l'ensemble attribué n'est pas plus petit que le plus bas déjà
+atteint), il laisse sortir avec un message visible de l'utilisateur. Un archivage fait par le même
+arrêt qui bloque est dit à l'utilisateur au premier exit 0 qui suit. Les constats non
+actionnables (archivage refusé ou non tenté, budget dépassé, non vérifiable) sont dits à l'utilisateur
+et ne bloquent jamais (ADR-076).
+
+## Lignes rouges (rappel ADR-053)
+
+Pas de bus UDS / channels / `dm` temps réel (modèle `Task` = dispatch-and-join). Pas de RAII machine : le
+release dépend du prompt → la **récupération de claim périmé est obligatoire**, pas optionnelle.

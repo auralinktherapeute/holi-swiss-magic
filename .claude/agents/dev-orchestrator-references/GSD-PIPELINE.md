@@ -1,0 +1,291 @@
+# Doctrine pipeline — GSD-PIPELINE.md (chargée on-demand)
+
+> Référence interne de `vibeflow-head` et `vf-dev-manager`. Chargée à la demande (règle 1%) —
+> **jamais** dupliquée dans le corps des agents (charte densité, ≤300L). Source des noms de
+> skills : `gsd-skills-index.md` (même dossier d'install :
+> `.claude/agents/dev-orchestrator-references/`).
+>
+> **Vocabulaire** : les briques gsd-* sont l'interface directe des **équipes** dispatchées
+> (`vf-dev-manager`, `vf-coder`) — jamais du head, qui gouverne et lance ces équipes sans les
+> invoquer lui-même (A1, `head-governance.md`). Leur nom peut apparaître dans les échanges — la
+> clarté prime sur la traduction ; rester pédagogue (« la recette » et `gsd-verify-work` peuvent
+> coexister dans une phrase).
+
+---
+
+## 1. Ordre canonique du cycle
+
+L'enchaînement de référence d'un cycle de feature/étape, en briques gsd réelles :
+
+```
+gsd-new-project → gsd-map-codebase → gsd-discuss-phase → gsd-plan-phase → gsd-execute-phase → gsd-verify-work → gsd-code-review → gsd-ship → milestones (gsd-new-milestone / gsd-complete-milestone)
+```
+
+| Étape | Brique gsd | Rôle | En clair |
+|-------|-----------|------|----------|
+| Amorçage projet | `gsd-new-project` | Initialise PROJECT.md (interactif) | démarrage de projet |
+| Cartographie | `gsd-map-codebase` | Analyse parallèle → `.planning/codebase/` | cartographie du code |
+| Cadrage étape | `gsd-discuss-phase` | Récolte le contexte par questions | cadrage |
+| Planification | `gsd-plan-phase` | Produit PLAN.md + boucle de vérif | plan de sprint |
+| Implémentation | `gsd-execute-phase` | Exécute les plans (waves parallèles) | sprint d'implémentation |
+| Validation UAT | `gsd-verify-work` | Valide les features (UAT conversationnel) | recette |
+| Revue de code | `gsd-code-review` | Relit les fichiers modifiés (bugs/sécu) | revue de code |
+| Livraison | `gsd-ship` | Crée la PR + revue + préparation merge — **non emprunté chez VibeFlow**, l'ouverture de PR reste un geste VibeFlow tenu à la main par le manager de mission (ADR-059, ADR-064) | livraison |
+| Clôture milestone | `gsd-new-milestone` / `gsd-complete-milestone` | Ouvre le cycle suivant / archive | jalons |
+
+> **Pourquoi `gsd-ship` reste dans la table sans être emprunté (D-21).** C'est un outil réel du
+> moteur, il garde sa place dans le cycle canonique — mais ADR-059 (une mission = une branche) et
+> ADR-064 (un écrivain = un worktree, claim de driver) priment, et la brique amont ne connaît ni
+> l'une ni l'autre. Le protocole d'isolation et d'ouverture de PR vit dans `mission-contracts.md`
+> §Isolation de branche : il n'est jamais recopié ici.
+
+**Règle d'or** : on ne saute pas `gsd-verify-work` ni `gsd-code-review` sur une feature
+structurante. Le cadrage (`gsd-discuss-phase`) précède toujours la planification
+(`gsd-plan-phase`).
+
+---
+
+## 2. Chemin autonome
+
+`gsd-autonomous` enchaîne **seul** le cycle restant : pour chaque étape, il fait
+`discuss → plan → execute` (+ tests) sans intervention humaine intermédiaire. Le skill
+`vf-auto` est la porte d'entrée de ce mode : il applique le seuil d'équipe
+(`SEUIL_EQUIPE`, cf. `mission-contracts.md`) pour choisir entre `gsd-autonomous` inline
+et la délégation à l'équipe (`Task(vf-dev-manager)`).
+
+**Quand l'employer** :
+- L'utilisateur dit « fais tout », « en autonomie », « laisse tourner la nuit », « débrouille-toi ».
+- Le périmètre est cadré (PROJECT.md + ROADMAP.md existent) et l'utilisateur accepte de ne pas
+  valider chaque étape.
+
+**Quand l'éviter** :
+- Aucun cadrage initial (passer d'abord par `gsd-discuss-phase` / `gsd-plan-phase`).
+- Décision structurante non tranchée (architecture, choix de lib) → clarifier avant (P4).
+
+---
+
+## 3. Escape hatches (court-circuiter le pipeline)
+
+Pour le trivial, ne pas payer le coût du pipeline complet :
+
+| Brique | Quand | Garanties |
+|-------|-------|-----------|
+| `gsd-quick` | Petite tâche bien définie | Commits atomiques + suivi d'état, sans agents optionnels |
+| `gsd-fast` | Tâche triviale (typo, renommage) | Exécution inline, aucun subagent, zéro overhead de planification |
+| `gsd-quick-batch` | Plusieurs tâches de taille `gsd-quick` (≥ 2) | Un coordinateur unique planifie, dispatche et fusionne le lot ; lui seul écrit l'état partagé |
+
+Heuristique : si la tâche tient en un commit et ne touche pas l'architecture → `gsd-fast`/`gsd-quick`.
+Sinon → pipeline complet (au minimum `gsd-plan-phase → gsd-execute-phase → gsd-verify-work`).
+
+---
+
+## 4. Quand faire `/clear`
+
+Repartir d'une fenêtre de contexte fraîche entre deux étapes lourdes pour éviter la pollution :
+
+- Entre deux étapes d'implémentation distinctes (après `gsd-verify-work` / `gsd-ship`).
+- Après une longue session de debug (`gsd-debug`) avant de reprendre l'implémentation.
+- Quand le contexte dépasse ~50% et que l'étape suivante est indépendante.
+
+Ne **pas** `/clear` au milieu d'une étape en cours (perte du fil d'exécution) — préférer
+`gsd-pause-work` / `gsd-resume-work` pour un handoff propre si une pause est nécessaire.
+
+---
+
+## 5. Model profiles (rappel rapide)
+
+Trois rôles, trois profils (configurables via `gsd-config` / `gsd-settings`) :
+
+| Rôle | Profil typique | Usage |
+|------|----------------|-------|
+| **Planner** | modèle fort (opus) | `gsd-discuss-phase`, `gsd-plan-phase` — raisonnement, découpage |
+| **Executor** | modèle équilibré (sonnet) | `gsd-execute-phase` — implémentation des tasks |
+| **Checker** | modèle équilibré (sonnet) | `gsd-verify-work`, `gsd-code-review` — vérification |
+
+Les agents `vibeflow-head` et `vf-dev-manager` tournent en `opus` (détection d'intention +
+pilotage) ; les workers d'équipe (`vf-coder`, `vf-reviewer`, `vf-auditer`) en `sonnet`.
+
+---
+
+## 6. Garde-fous
+
+- **`gsd-new-project` est interactif** (BOOT-04) : il pose de nombreuses questions et écrit
+  PROJECT.md. **Jamais lancé seul / en autonomie.** Le proposer uniquement sur confirmation
+  explicite de l'utilisateur (« je veux démarrer un nouveau projet »).
+- **Toujours déléguer** : les agents ne réimplémentent jamais la logique d'une brique. Une équipe
+  (`vf-dev-manager`, `vf-coder`) détecte l'intention et invoque la brique outillée qui la porte ;
+  le head, lui, détecte et dispatche l'équipe — il n'invoque jamais un `gsd-*` en direct (A1).
+- **Action structurante** : clarifier (P4) avant, vérifier (P5) après. Pas de raccourci sur
+  `gsd-verify-work` / `gsd-code-review` pour une feature non triviale.
+- **Fermer la boucle** : après chaque geste, proposer LE next step depuis `ROADMAP`/`STATE`
+  (rôle actif des agents — pas un menu, une proposition ferme).
+- **L'ouverture de PR est un geste VibeFlow** : jamais déléguée à `gsd-ship` tant qu'ADR-059 (une
+  mission = une branche) et ADR-064 (un écrivain = un worktree) tiennent. Protocole :
+  `mission-contracts.md` §Isolation de branche.
+
+---
+
+## 7. Briques connexes utiles (hors cycle canonique)
+
+| Besoin ponctuel | Brique |
+|-----------------|-------|
+| Débugger un incident persistant (recherche doc d'abord — ADR-045) | `gsd-debug` |
+| Brainstormer une idée en amont | superpowers `brainstorming` (plugin) |
+| Savoir où on en est / la suite | `gsd-progress` |
+| Reprendre une session interrompue | `gsd-resume-work` / `gsd-pause-work` |
+
+> Pour la liste exhaustive et à jour des briques disponibles, consulter
+> `.claude/agents/dev-orchestrator-references/gsd-skills-index.md` ; pour le routage
+> intention → brique, `intent-routing.md` (seule source de routage).
+>
+> **Voie** : comme au §9, `gsd-debug` s'invoque par son **skill**, jamais par un agent nu de debug.
+
+> **Qui décide de ce qui s'exécute — la question du Constat 0.** La bonne question n'était pas
+> « l'agent a-t-il accès aux étages du cycle », mais « qui les déclenche ». Réponse : aux points
+> de hook du cycle, le moteur **insère lui-même** ses étages selon les toggles du lab. Un agent
+> ne les « choisit » pas ; il ne peut qu'en activer la condition. La table point par point
+> (capability, nature, toggle gouvernant, bloquant, conduite sur erreur) vit dans
+> `.claude/agents/dev-orchestrator-references/gsd-capabilities-index.md`. Elle est
+> **auto-générée** depuis le registre du moteur installé — ne jamais l'éditer à la main ; la
+> régénérer avec `build-gsd-capabilities-index.sh`. Elle énumère ce que le moteur **déclare** à
+> la version depuis laquelle elle a été produite, et jamais l'état effectif d'un lab : cet
+> état-là se lit avec `gsd-tools loop render-hooks <point> --raw`, pas dans ce fichier.
+
+---
+
+## 8. Frontière : `model:` (agents vf-*) vs `model_profile` (sous-agents gsd-*)
+
+Deux couches indépendantes, ne pas les confondre :
+- Le frontmatter `model:` des agents `vf-*` (processus Claude Code — `vibeflow-head`, `vf-coder`,
+  `vf-dev-manager`…) fixe le modèle du **processus orchestrateur/worker**.
+- `model_profile` (`.planning/config.json`, défaut `balanced`) fixe le modèle des **sous-agents
+  gsd-*** invoqués par ce processus (`gsd-planner`, `gsd-executor`, `gsd-verifier`…).
+
+La chaîne `vf-coder (sonnet) → gsd-plan-phase → gsd-planner (opus)` est le comportement **voulu**
+— un worker sonnet peu coûteux qui délègue la planification à un sous-agent opus plus capable,
+pas une incohérence à corriger.
+
+---
+
+## 9. Flags de cycle — allowlist stricte
+
+**Fermeture par défaut (D-08).** Seuls les flags **nommés dans la table ci-dessous** sont
+utilisables par un agent du module sur une brique de cycle : **tout flag non nommé est fermé par
+défaut**, y compris ceux que `gsd-core` ajoutera dans une version ultérieure. Le corollaire est ce
+qui a de la valeur ici — un flag nouveau arrive **fermé**, et il s'ouvre par une décision datée
+inscrite dans cette table, jamais par omission. Une liste d'interdits seuls périmerait à la
+première montée de version : elle laisserait gagner l'omission, exactement le pilotage que cette
+doctrine referme.
+
+| Brique de cycle | Flags autorisés | Flags fermés | Motif (fait + source vérifiable) |
+|---|---|---|---|
+| Cadrage — `gsd-discuss-phase` | *(aucun)* | `--auto`, `--chain`, et tout autre | Le mode d'enchaînement déclenche ici le pipeline entier (`chain.md:45-61`, étape 5), donc la règle 5 de `checkpoints.md:11` sur tout ce qui suit, bornée par la règle 6 (`checkpoints.md:12`). La brique est portée par le manager, qui n'en a pas besoin (`mission-flow.md` §Pattern F) — raisonnement complet et coût nommé : note ci-dessous. |
+| Plan — `gsd-plan-phase` | `--research`, `--skip-research` | `--auto`, `--chain`, et tout autre | La gradation de la recherche se décide **ici**, et nulle part ailleurs : `gsd-discuss-phase` n'en consomme aucun flag (sa table `progressive_disclosure` de `discuss-phase.md` n'en liste aucun). Sur une phase neuve et en l'absence des deux, le workflow **prompte** (`plan-phase.md` §5.1) et `vf-coder`, privé d'`AskUserQuestion`, y reste bloqué : le flag n'est donc jamais omis — borne de ce « jamais » en note sous la table. `--auto` et `--chain` fermés en invocation directe, même fait qu'au cadrage (`chain.md:45-61` + règle 5 de `checkpoints.md:11`, bornée par la règle 6 de `checkpoints.md:12`). |
+| Exécution — `gsd-execute-phase` | *(aucun)* | `--auto`, `--chain`, et tout autre | Même fait qu'au cadrage (`chain.md:45-61` + règle 5 de `checkpoints.md:11`, bornée par la règle 6 de `checkpoints.md:12`). De surcroît, exécuter au-delà de la frontière du nœud contredirait le pipelining modélisé dans `mission-flow.md` : le manager tient le DAG, l'exécution ne le déborde pas. |
+
+**`--auto` au cadrage — état ATTEINT (A-1ter geste 2)** : sur cette brique, `--auto` ne posait pas
+seulement un état, il déclenchait le pipeline entier — cadrage → plan → exécution dans le même
+appel (`chain.md:45-61`, étape 5), et la **règle 5** de `checkpoints.md:11` jouait donc sur tout le
+plan et toute l'exécution qui suivaient. La brique est désormais portée par le manager
+(`mission-flow.md` §Pattern F), qui n'a plus besoin de ce mode : la ligne est fermée.
+
+**Voie unique d'invocation (D-09) — corollaire de la fermeture par défaut ci-dessus.** Les briques
+de cycle s'invoquent par leur **skill** ; le dispatch direct des agents nus de planification et
+d'exécution est fermé. **Atteint PAR le skill ≠ dispatché EN DIRECT** : le moteur, dans le skill,
+spawne lui-même le sous-agent en modèle fort avec tous ses étages — comportement **voulu** de la
+§8 ci-dessus, qui le reste. Ce qui est fermé, c'est qu'un agent du module court-circuite le skill
+pour dispatcher ce sous-agent lui-même : même nom, aucun étage, rien qui le signale.
+
+Coût de la voie fermée, en FAIT : l'agent nu fait sauter recherche, cartographie, vérification de
+plan, analyse de manques, gate de dérive, vagues, vérificateur, revue de code, nyquist et audit
+sécurité — un raccourci **muet**, pas seulement coûteux. Bénéfice de la voie ouverte, en FAIT
+aussi : le skill reprend de lui-même au premier plan sans rapport, et son garde-fou de reprise
+sûre refuse de relancer un exécuteur sur des commits de production orphelins, avec trois recours.
+D'où **D-10** : la continuation d'un worker interrompu passe par un **nouveau** worker, voie
+skill, avec le minimum de reprise du bloc typé (`mission-contracts.md` §Contrat de checkpoint
+amont) — aucune exception.
+
+**Gradation de la recherche (D-05) — sur un FAIT constatable, jamais sur un ressenti (ADR-055 §3)** :
+
+- `--research` quand l'étape touche une **lib, un framework, du natif ou une version**, ou un
+  domaine que `.planning/codebase/` ne cartographie pas.
+- `--skip-research` quand l'étape prolonge un périmètre **déjà couvert** par un `RESEARCH.md` ou un
+  `CONTEXT.md` récent du même dossier de phase.
+
+Borne du « le flag n'est jamais omis » de la ligne Plan : la branche de prompt de `plan-phase.md`
+§5.1 est gardée par « **RESEARCH.md missing** » (`plan-phase.md:329-331`). Un `RESEARCH.md` déjà
+présent est réutilisé **sans prompt**, flag ou pas — le garde-fou ne joue donc que sur une phase
+neuve, cas opératoire de `vf-coder`. Sur une phase reprise, c'est à toi de trancher explicitement.
+
+**Toggle ≠ flag** — la confusion la plus probable à la lecture, nommée ici plutôt que laissée au
+lecteur : le toggle `workflow.research` du `config.json` active la **capability** de recherche sur
+le point de hook de pré-plan (le moteur spawne lui-même son chercheur) ; le flag, lui, répond au
+**prompt**. Toggle à vrai ⇒ la recherche a lieu de toute façon, le flag décide seulement si le
+worker se fait interroger. Deux couches distinctes, pas interchangeables.
+
+**Toggle refusé ≠ toggle oublié** : un toggle qu'on choisit de **ne pas poser** se documente avec
+son motif mesuré, sinon l'absence se relit plus tard comme un oubli. Cas traité : `workflow.tdd_mode`
+au §10.1.
+
+**Flags documentaires** : leur doctrine est `docs-flow.md`, jamais recopiée ici (ADR-057).
+Elle fait autorité sur sa famille — une capacité, une seule voix.
+
+---
+
+## 10. Canal `agent_skills` — ce qu'il atteint, et ce qu'il n'atteint pas
+
+### Ce que le canal atteint
+
+`agent_skills` (`.planning/config.json`) est le canal **officiel** par lequel la doctrine d'un lab
+rejoint les agents du moteur : `buildAgentSkillsBlock` (`init.cjs:1731`) injecte des skills du lab
+dans le prompt des agents `gsd-*` via **17 slots**, consommés par **30 workflows** (mesure du
+2026-08-04 contre `@opengsd/gsd-core` 1.9.1).
+
+Nous n'en peuplons **qu'un seul** : celui de `gsd-planner` (`plan-phase.md:74`, injections `:769` et
+`:1247`), avec `software-architecture` (SOLID / SoC / Clean Architecture / Clean Code, puis DRY /
+KISS / YAGNI) et `audit-architecture` (doctrine d'audit multi-couches, ADR-036). La conséquence
+s'écrit telle quelle, sans euphémisme : **la doctrine de dev du lab atteint le plan, elle n'atteint
+pas l'exécution.**
+
+### Pourquoi le slot exécuteur n'est pas atteignable — et l'interdiction qui en découle
+
+L'injection du slot exécuteur ne vit que dans le **prompt de dispatch** d'`execute-phase.md`
+(chargement `:86`, injection `execute-phase.md:715`) ; `execute-plan.md` n'en porte **aucune**. Or
+`gsd-executor` et `gsd-planner` sont sortis de l'allowlist `tools:` de `vf-coder` en Phase 23
+(GSDC-05, voie unique du §9), et le repli documenté quand l'outil de dispatch est indisponible est
+l'**exécution inline séquentielle** (`execute-phase.md:28-31`) — un chemin **sans prompt de
+dispatch, donc sans injection**. Peupler le slot exécuteur serait un **vert à vide** sur notre
+chemin réel : la clé serait posée, le prompt de l'exécuteur inchangé.
+
+**Interdiction.** Ce canal ne doit plus jamais être présenté comme résolu du côté de l'exécuteur.
+Toute affirmation inverse doit **d'abord produire la preuve** que le prompt de dispatch
+d'`execute-phase` est bien emprunté sur le chemin considéré — pas la preuve que la clé existe.
+
+### Pourquoi le digest de mission ne remplace pas ce canal
+
+Le digest borne les conventions à **deux ou trois lignes du `CLAUDE.md` projet**
+(`mission-contracts.md:62`) sous un plafond de **trente lignes** (`:51`), et notre `CLAUDE.md` ne
+contient ni SOLID, ni DRY, ni KISS, ni YAGNI, ni Clean Archi, ni TDD. Le digest ne peut donc
+**structurellement pas** porter la doctrine : c'est un fait de dimension, pas un oubli de rédaction
+qu'un meilleur digest corrigerait.
+
+### 10.1 Refus de `workflow.tdd_mode` — quatre faits mesurés
+
+La clé n'est **pas posée** ; le défaut amont (`false`) s'applique. Motifs, tous mesurés le
+2026-08-04 :
+
+1. **La doctrine TDD est déjà injectée sans condition.** `references/tdd.md` (330 lignes) entre dans
+   le prompt de l'exécuteur quel que soit le toggle (`execute-phase.md:693`) : `tdd_mode` **n'ajoute
+   pas** la doctrine TDD, elle y est déjà.
+2. **Le gate ajouté ne bloque rien.** Le hook `execute:post` de la capability est `blocking: false`,
+   `onError: skip` — il signale, il n'arrête pas.
+3. **Ce que le toggle ajoute réellement se réduit à deux choses** : le planner pose un type de tâche
+   dédié sur les tâches jugées éligibles, et ce gate de fin d'exécution s'installe.
+4. **L'heuristique d'éligibilité amont ne correspond pas à ce dépôt.** Elle classe **par type de
+   tâche** (business logic d'un côté ; UI, config, glue et CRUD de l'autre). Ce dépôt est du bash et
+   du markdown : **aucune des sept catégories amont ne correspond**, si bien qu'elle rangerait la
+   quasi-totalité de nos tâches du mauvais côté — alors que notre pratique réelle écrit le test
+   rouge d'abord, sur un critère **mesurable**
+   (`plugin/software-architecture/references/principles.md:61-63`).
+
+Décision : le canal de doctrine passe par le slot planner ci-dessus, pas par ce toggle.
