@@ -432,14 +432,14 @@ export function BookingWidget({
     }).catch((e) => console.error("[analytics] logTherapistBookingClick failed:", e));
     const { error } = await supabase.from("appointments").insert({
       therapist_id: therapistId,
-      patient_name: parsed.data.name,
-      patient_email: parsed.data.email,
-      patient_phone: parsed.data.phone || null,
+      patient_name: parsed.name,
+      patient_email: parsed.email,
+      patient_phone: parsed.phone || null,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
       duration_minutes: slotMin,
       service_name: selectedService?.name ?? null,
-      notes: parsed.data.notes || null,
+      notes: parsed.notes || null,
       status: "pending",
     });
     setSubmitting(false);
@@ -457,7 +457,7 @@ export function BookingWidget({
       return;
     }
     // eslint-disable-next-line no-console
-    console.log("[booking] confirmation email →", parsed.data.email, { selectedDate, selectedTime });
+    console.log("[booking] confirmation email →", parsed.email, { selectedDate, selectedTime });
     setSuccess(true);
     await clearDraft();
     setStep("slot");
@@ -615,7 +615,7 @@ export function BookingWidget({
                 </div>
                 <div className="flex justify-end"><DraftSavedIndicator status={draftStatus} savedAt={savedAt} /></div>
                 <Button type="submit" disabled={submitting} className="min-h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  {submitting ? t("booking.sending") : "Confirmer la réservation"}
+                  {submitting ? t("booking.sending") : t("booking.confirm_button")}
                 </Button>
               </form>
             </CardContent>
@@ -633,7 +633,7 @@ export function BookingWidget({
       <CardContent className="space-y-6">
         {services.length > 0 && (
           <div>
-            <div className="text-sm font-medium mb-2">1. Choisissez un service</div>
+            <div className="text-sm font-medium mb-2">{t("booking.choose_service_step")}</div>
             <Select
               value={selectedServiceIdx !== null ? String(selectedServiceIdx) : undefined}
               onValueChange={(v) => {
@@ -647,7 +647,7 @@ export function BookingWidget({
                 className="w-full h-11 border-border bg-card/60 hover:bg-card transition-colors"
                 style={accent ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}33` } : undefined}
               >
-                <SelectValue placeholder="Sélectionner un type de séance…">
+                <SelectValue placeholder={t("booking.service_placeholder")}>
                   {selectedService && (
                     <span className="flex items-center gap-2">
                       <span
@@ -656,7 +656,7 @@ export function BookingWidget({
                       />
                       <span className="font-medium">{selectedService.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        · {selectedService.duration ? `${selectedService.duration} min` : "durée libre"}
+                        · {selectedService.duration ? `${selectedService.duration} min` : t("booking.flexible_duration")}
                         {selectedService.price != null ? ` · ${selectedService.price} CHF` : ""}
                       </span>
                     </span>
@@ -673,7 +673,7 @@ export function BookingWidget({
                       />
                       <span className="font-medium">{s.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        · {s.duration ? `${s.duration} min` : "durée libre"}
+                        · {s.duration ? `${s.duration} min` : t("booking.flexible_duration")}
                         {s.price != null ? ` · ${s.price} CHF` : ""}
                       </span>
                     </span>
@@ -696,7 +696,7 @@ export function BookingWidget({
         ) : (
         <div className={services.length > 0 && !selectedService ? "pointer-events-none opacity-40" : ""} aria-disabled={services.length > 0 && !selectedService}>
 
-          {services.length > 0 && <div className="text-sm font-medium mb-2">2. Choisissez une date</div>}
+          {services.length > 0 && <div className="text-sm font-medium mb-2">{t("booking.choose_date_step")}</div>}
           <div className="flex items-center justify-between mb-3">
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
               onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); setStep("slot"); }}>
