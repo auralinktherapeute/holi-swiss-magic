@@ -23,6 +23,7 @@ import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
 import { Route as AdminAmeliorationsSeoRouteImport } from './routes/admin.ameliorations-seo'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminArticlesRouteImport } from './routes/admin.articles'
+import { Route as AdminAutomationRouteImport } from './routes/admin.automation'
 import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as AdminCertificationsOrganismesRouteImport } from './routes/admin.certifications-organismes'
 import { Route as AdminCerveauRouteImport } from './routes/admin.cerveau'
@@ -187,6 +188,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
 const AdminArticlesRoute = AdminArticlesRouteImport.update({
   id: '/articles',
   path: '/articles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAutomationRoute = AdminAutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAvisRoute = AdminAvisRouteImport.update({
@@ -700,6 +706,7 @@ export interface FileRoutesByFullPath {
   '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/articles': typeof AdminArticlesRoute
+  '/admin/automation': typeof AdminAutomationRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/certifications-organismes': typeof AdminCertificationsOrganismesRoute
   '/admin/cerveau': typeof AdminCerveauRoute
@@ -807,6 +814,7 @@ export interface FileRoutesByTo {
   '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/articles': typeof AdminArticlesRoute
+  '/admin/automation': typeof AdminAutomationRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/certifications-organismes': typeof AdminCertificationsOrganismesRoute
   '/admin/cerveau': typeof AdminCerveauRoute
@@ -918,6 +926,7 @@ export interface FileRoutesById {
   '/admin/ameliorations-seo': typeof AdminAmeliorationsSeoRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/articles': typeof AdminArticlesRoute
+  '/admin/automation': typeof AdminAutomationRoute
   '/admin/avis': typeof AdminAvisRoute
   '/admin/certifications-organismes': typeof AdminCertificationsOrganismesRoute
   '/admin/cerveau': typeof AdminCerveauRoute
@@ -1030,6 +1039,7 @@ export interface FileRouteTypes {
     | '/admin/ameliorations-seo'
     | '/admin/analytics'
     | '/admin/articles'
+    | '/admin/automation'
     | '/admin/avis'
     | '/admin/certifications-organismes'
     | '/admin/cerveau'
@@ -1137,6 +1147,7 @@ export interface FileRouteTypes {
     | '/admin/ameliorations-seo'
     | '/admin/analytics'
     | '/admin/articles'
+    | '/admin/automation'
     | '/admin/avis'
     | '/admin/certifications-organismes'
     | '/admin/cerveau'
@@ -1247,6 +1258,7 @@ export interface FileRouteTypes {
     | '/admin/ameliorations-seo'
     | '/admin/analytics'
     | '/admin/articles'
+    | '/admin/automation'
     | '/admin/avis'
     | '/admin/certifications-organismes'
     | '/admin/cerveau'
@@ -1476,6 +1488,13 @@ declare module '@tanstack/react-router' {
       path: '/articles'
       fullPath: '/admin/articles'
       preLoaderRoute: typeof AdminArticlesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/automation': {
+      id: '/admin/automation'
+      path: '/automation'
+      fullPath: '/admin/automation'
+      preLoaderRoute: typeof AdminAutomationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/avis': {
@@ -2231,6 +2250,7 @@ interface AdminRouteChildren {
   AdminAmeliorationsSeoRoute: typeof AdminAmeliorationsSeoRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminArticlesRoute: typeof AdminArticlesRoute
+  AdminAutomationRoute: typeof AdminAutomationRoute
   AdminAvisRoute: typeof AdminAvisRoute
   AdminCertificationsOrganismesRoute: typeof AdminCertificationsOrganismesRoute
   AdminCerveauRoute: typeof AdminCerveauRoute
@@ -2260,6 +2280,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAmeliorationsSeoRoute: AdminAmeliorationsSeoRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminArticlesRoute: AdminArticlesRoute,
+  AdminAutomationRoute: AdminAutomationRoute,
   AdminAvisRoute: AdminAvisRoute,
   AdminCertificationsOrganismesRoute: AdminCertificationsOrganismesRoute,
   AdminCerveauRoute: AdminCerveauRoute,
