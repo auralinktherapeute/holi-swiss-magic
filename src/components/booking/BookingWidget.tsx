@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { CalendarCheck, ChevronLeft, ChevronRight, Clock, MapPin, PenLine, UserRound } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, Clock, MapPin, PenLine, UserRound, type LucideIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -388,7 +388,6 @@ export function BookingWidget({
       toast.error(t("booking.slots_error"));
       return;
     }
-    const parsed = schema.safeParse(form);
     if (!validateForm()) return;
     const parsed = schema.parse(form);
     setSubmitting(true);
@@ -486,7 +485,7 @@ export function BookingWidget({
     { label: t("booking.summary_duration"), value: `${slotMin} min`, icon: Clock },
     selectedService?.price != null ? { label: t("booking.summary_price"), value: `${selectedService.price} CHF`, icon: CalendarCheck } : null,
     locationLabel ? { label: t("booking.summary_location"), value: locationLabel, icon: MapPin } : null,
-  ].filter((row): row is { label: string; value: string; icon: typeof CalendarCheck } => Boolean(row));
+  ].filter((row): row is { label: string; value: string; icon: LucideIcon } => Boolean(row));
   const stepItems = [t("booking.step_slot"), t("booking.step_details"), t("booking.step_confirmation")];
 
   if (step === "details" && selectedDate && selectedTime && (services.length === 0 || selectedService)) {
