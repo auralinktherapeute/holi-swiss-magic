@@ -3,7 +3,7 @@ import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
 import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
 import { CERTIFICATION_RESPONSIBILITY_NOTICE } from "@/lib/certification-labels";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useRef, lazy, Suspense, useEffect } from "react";
+import { useState, useRef, lazy, Suspense, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useServerFn } from "@tanstack/react-start";
@@ -630,6 +630,10 @@ function ProfilePage() {
   const [showTop, setShowTop] = useState(false);
   const [bioExpanded, setBioExpanded] = useState(true);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [bookingDetailsOpen, setBookingDetailsOpen] = useState(false);
+  const handleBookingStepChange = useCallback((step: "slot" | "details") => {
+    setBookingDetailsOpen(step === "details");
+  }, []);
 
   useEffect(() => {
     const handler = () => setShowTop(window.scrollY > 400);
@@ -970,7 +974,7 @@ function ProfilePage() {
         <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
 
           {/* ── COLONNE GAUCHE ── */}
-          <div className="space-y-6 min-w-0 lg:col-span-8">
+          <div className={`space-y-6 min-w-0 lg:col-span-8 ${bookingDetailsOpen ? "lg:order-2" : ""}`}>
 
             {/* À propos — contenu principal : jamais masqué au SSR (initial={false}). */}
             {th.bio && (
@@ -1075,12 +1079,13 @@ function ProfilePage() {
           </div>
 
           {/* ── SIDEBAR DROITE (réservation — partie supérieure uniquement) ── */}
-          <div className="space-y-4 lg:col-span-4 lg:sticky lg:top-4 lg:self-start">
+          <div className={`space-y-4 ${bookingDetailsOpen ? "lg:order-1 lg:col-span-12" : "lg:col-span-4 lg:sticky lg:top-4 lg:self-start"}`}>
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
               <BookingWidget
                 therapistId={th.id}
                 therapistName={fullName}
+                onStepChange={handleBookingStepChange}
                 locationLabel={[
                   th.address,
                   [th.postal_code, th.city].filter(Boolean).join(" "),

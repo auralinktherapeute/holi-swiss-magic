@@ -122,11 +122,13 @@ export function BookingWidget({
   therapistName,
   services = [],
   locationLabel,
+  onStepChange,
 }: {
   therapistId: string;
   therapistName?: string;
   services?: BookingService[];
   locationLabel?: string | null;
+  onStepChange?: (step: BookingStep) => void;
 }) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
@@ -173,6 +175,10 @@ export function BookingWidget({
   const [formTouched, setFormTouched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const autoRestoredRef = useRef(false);
+
+  useEffect(() => {
+    onStepChange?.(step);
+  }, [onStepChange, step]);
 
   const selectedService: BookingService | null =
     selectedServiceIdx !== null && services[selectedServiceIdx] ? services[selectedServiceIdx] : null;
@@ -490,8 +496,8 @@ export function BookingWidget({
 
   if (step === "details" && selectedDate && selectedTime && (services.length === 0 || selectedService)) {
     return (
-      <section className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-6 backdrop-blur-md sm:px-6 lg:px-10" aria-labelledby={`${formId}-title`}>
-        <div className="mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-6xl items-center">
+      <section className="w-full scroll-mt-24" aria-labelledby={`${formId}-title`}>
+        <div className="mx-auto w-full max-w-6xl">
           <Card className="w-full overflow-hidden border-border bg-card/95 shadow-2xl shadow-primary/20">
             <CardHeader className="border-b border-border bg-surface/60 p-5 sm:p-8">
               <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
