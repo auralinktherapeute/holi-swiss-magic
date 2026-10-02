@@ -132,7 +132,7 @@ export function BookingDetailsStep(p: BookingDetailsStepProps) {
               </p>
               {p.draftIndicator && <div className="flex justify-end">{p.draftIndicator}</div>}
               <Button type="submit" disabled={p.submitting} className="min-h-11 w-full bg-primary hover:bg-primary/90">
-                {p.submitting ? t("booking.sending") : "Confirmer la réservation"}
+                {p.submitting ? t("booking.sending") : t("booking.confirm_booking", "Confirmer la réservation")}
               </Button>
             </form>
           </div>
