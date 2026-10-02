@@ -17,7 +17,7 @@ export const CATEGORY_COPY: Record<
       h1: "Thérapeutes bien-être en Suisse",
       intro: "Détente, soin du corps et accompagnement au quotidien : massage, coaching de vie, naturopathie, nutrition, méditation.",
       title: "Thérapeutes bien-être en Suisse | Holiswiss",
-      description: "Trouvez un thérapeute bien-être en Suisse : massage, coaching de vie, naturopathie, nutrition, ostéopathie, méditation. Profils vérifiés, réservation en ligne.",
+      description: "Trouvez un thérapeute bien-être en Suisse : massage, coaching de vie, naturopathie, nutrition, ostéopathie, méditation. Profils validés par Holiswiss, réservation en ligne.",
     },
     de: {
       h1: "Wellness-Therapeuten in der Schweiz",
@@ -29,13 +29,13 @@ export const CATEGORY_COPY: Record<
       h1: "Terapeuti del benessere in Svizzera",
       intro: "Relax, cura del corpo e accompagnamento quotidiano: massaggio, coaching, naturopatia, nutrizione, meditazione.",
       title: "Terapeuti del benessere in Svizzera | Holiswiss",
-      description: "Trova un terapeuta del benessere in Svizzera: massaggio, coaching, naturopatia, nutrizione, osteopatia, meditazione. Profili verificati, prenotazione online.",
+      description: "Trova un terapeuta del benessere in Svizzera: massaggio, coaching, naturopatia, nutrizione, osteopatia, meditazione. Profili convalidati da Holiswiss, prenotazione online.",
     },
     en: {
       h1: "Wellness therapists in Switzerland",
       intro: "Relaxation, body care and everyday support: massage, life coaching, naturopathy, nutrition, meditation.",
       title: "Wellness therapists in Switzerland | Holiswiss",
-      description: "Find a wellness therapist in Switzerland: massage, life coaching, naturopathy, nutrition, osteopathy, meditation. Verified profiles, online booking.",
+      description: "Find a wellness therapist in Switzerland: massage, life coaching, naturopathy, nutrition, osteopathy, meditation. Profiles validated by Holiswiss, online booking.",
     },
   },
   holistique: {
@@ -43,7 +43,7 @@ export const CATEGORY_COPY: Record<
       h1: "Thérapeutes holistiques en Suisse",
       intro: "Approche énergétique, spirituelle et globale : magnétisme, radiesthésie, EMDR, hypnose, soins énergétiques, accompagnement du deuil.",
       title: "Thérapeutes holistiques en Suisse | Holiswiss",
-      description: "Trouvez un thérapeute holistique en Suisse : magnétisme, radiesthésie, EMDR, hypnose, soins énergétiques, guérison spirituelle. Profils vérifiés, réservation en ligne.",
+      description: "Trouvez un thérapeute holistique en Suisse : magnétisme, radiesthésie, EMDR, hypnose, soins énergétiques, guérison spirituelle. Profils validés par Holiswiss, réservation en ligne.",
     },
     de: {
       h1: "Ganzheitliche Therapeuten in der Schweiz",
@@ -55,13 +55,13 @@ export const CATEGORY_COPY: Record<
       h1: "Terapeuti olistici in Svizzera",
       intro: "Approccio energetico, spirituale e globale: magnetismo, radiestesia, EMDR, ipnosi, terapia energetica, accompagnamento al lutto.",
       title: "Terapeuti olistici in Svizzera | Holiswiss",
-      description: "Trova un terapeuta olistico in Svizzera: magnetismo, radiestesia, EMDR, ipnosi, terapia energetica, guarigione spirituale. Profili verificati, prenotazione online.",
+      description: "Trova un terapeuta olistico in Svizzera: magnetismo, radiestesia, EMDR, ipnosi, terapia energetica, guarigione spirituale. Profili convalidati da Holiswiss, prenotazione online.",
     },
     en: {
       h1: "Holistic therapists in Switzerland",
       intro: "Energetic, spiritual and whole-person approach: magnetism, dowsing, EMDR, hypnosis, energy therapy, grief support.",
       title: "Holistic therapists in Switzerland | Holiswiss",
-      description: "Find a holistic therapist in Switzerland: magnetism, dowsing, EMDR, hypnosis, energy therapy, spiritual healing. Verified profiles, online booking.",
+      description: "Find a holistic therapist in Switzerland: magnetism, dowsing, EMDR, hypnosis, energy therapy, spiritual healing. Profiles validated by Holiswiss, online booking.",
     },
   },
 };
