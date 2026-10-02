@@ -7,7 +7,7 @@ import fr from "@/i18n/fr.json";
 import { BookingDetailsStep } from "./BookingDetailsStep";
 
 const inst = i18n.createInstance();
-inst.init({ lng: "fr", resources: { fr: { translation: fr } }, initImmediate: false });
+inst.init({ lng: "fr", resources: { fr: { translation: fr } }, initAsync: false });
 
 const html = renderToStaticMarkup(
   <I18nextProvider i18n={inst}>
