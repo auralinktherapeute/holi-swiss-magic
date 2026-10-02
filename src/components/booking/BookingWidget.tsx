@@ -26,6 +26,7 @@ import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { gridColumnIndex, localDateISO, parseDateOnly, storageDow } from "@/lib/dateUtils";
 import { appointmentsToBusyRanges, filterAvailableSlots, isSlotBlocked } from "@/lib/booking-slots";
+import { bookingConfirmationGate } from "@/lib/booking-confirmation";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Special = { date: string; start_time: string; end_time: string };
@@ -365,11 +366,19 @@ export function BookingWidget({
   };
 
   const openDetailsStep = (time: string) => {
-    if (services.length > 0 && !selectedService) { toast.error(t("booking.choose_service")); return; }
-    if (!selectedDate) { toast.error(t("booking.choose_slot")); return; }
-    if (schedLoading || slotsLoading) { toast.info(t("booking.slots_loading")); return; }
-    if (schedError || slotsError) { toast.error(t("booking.slots_error")); return; }
-    if (!slotsVerified || !slotsForDay.includes(time)) {
+    const gate = bookingConfirmationGate({
+      hasServices: services.length > 0,
+      hasSelectedService: Boolean(selectedService),
+      hasSelectedDate: Boolean(selectedDate),
+      loading: schedLoading || slotsLoading,
+      availabilityError: schedError || slotsError,
+      slotVerified: slotsVerified,
+      slotAvailable: slotsForDay.includes(time),
+    });
+    if (gate === "service_required") { toast.error(t("booking.choose_service")); return; }
+    if (gate === "loading") { toast.info(t("booking.slots_loading")); return; }
+    if (gate === "availability_error") { toast.error(t("booking.slots_error")); return; }
+    if (gate === "slot_required") {
       setSelectedTime(null);
       setStep("slot");
       toast.error(t("booking.choose_slot"));
