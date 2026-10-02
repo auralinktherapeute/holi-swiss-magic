@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, Clock, MapPin, PenLine, UserRound } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,22 +26,14 @@ import { DraftSavedIndicator } from "@/components/drafts/DraftBanner";
 import { useSessionState } from "@/hooks/use-session-state";
 import { gridColumnIndex, localDateISO, parseDateOnly, storageDow } from "@/lib/dateUtils";
 import { appointmentsToBusyRanges, filterAvailableSlots, isSlotBlocked } from "@/lib/booking-slots";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 type Avail = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 type Special = { date: string; start_time: string; end_time: string };
 type Block = { start_date: string; end_date: string };
 type PartialBlock = { start_date: string; end_date: string; start_time: string | null; end_time: string | null };
 type Busy = { startsAt: string; endsAt: string };
+type BookingStep = "slot" | "details";
+type FieldErrors = Partial<Record<"name" | "email" | "phone" | "notes", string>>;
 
 export type BookingService = { name: string; duration?: number; price?: number; format?: string; color?: string; description?: string };
 
@@ -125,10 +117,21 @@ function partialRangesFor(partialBlocks: PartialBlock[], dateISO: string): Busy[
 }
 
 
-export function BookingWidget({ therapistId, therapistName, services = [] }: { therapistId: string; therapistName?: string; services?: BookingService[] }) {
+export function BookingWidget({
+  therapistId,
+  therapistName,
+  services = [],
+  locationLabel,
+}: {
+  therapistId: string;
+  therapistName?: string;
+  services?: BookingService[];
+  locationLabel?: string | null;
+}) {
   const { t } = useTranslation();
   const fetchBookedSlots = useServerFn(getBookedAppointmentSlots);
   const logBookingClick = useServerFn(logTherapistBookingClick);
+  const formId = useId();
   const DAY_LABELS = t("booking.days", { returnObjects: true }) as string[];
   const MONTHS = t("booking.months", { returnObjects: true }) as string[];
   const schema = z.object({
@@ -164,10 +167,11 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
   const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "" });
+  const [step, setStep] = useSessionState<BookingStep>(`${statePrefix}.step`, "slot");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const autoRestoredRef = useRef(false);
 
   const selectedService: BookingService | null =
@@ -190,6 +194,11 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
 
   const updateForm = (patch: Partial<typeof form>) => {
     setForm((prev) => ({ ...prev, ...patch }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(patch) as Array<keyof typeof form>) delete next[key];
+      return next;
+    });
     setFormTouched(true);
   };
 
@@ -209,7 +218,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       // Aucune donnée partielle : mieux vaut « indisponible » qu'un agenda
       // faussement ouvert.
       setAvs([]); setSpecials([]); setBlocks([]); setPartialBlocks([]);
-      setSelectedDate(null); setSelectedTime(null);
+      setSelectedDate(null); setSelectedTime(null); setStep("slot");
       setVerifiedKey(null);
       setSchedError(true); setSchedLoading(false);
     };
@@ -255,6 +264,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
         if (token !== slotsReqRef.current) return;
         setBookedRanges([]); setBusy([]);
         setSelectedTime(null);
+        setStep("slot");
         setSlotsError(true); setSlotsLoading(false);
       });
     return () => { ++slotsReqRef.current; };
@@ -323,42 +333,64 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     if (!selectedTime || !slotsVerified) return;
     if (!slotsForDay.includes(selectedTime)) {
       setSelectedTime(null);
+      setStep("slot");
       toast.info(t("booking.slot_expired"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotsForDay, selectedTime, slotsVerified]);
 
 
-  const openConfirm = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (services.length > 0 && !selectedService) { toast.error("Veuillez choisir un service."); return; }
-    if (!selectedDate || !selectedTime) { toast.error(t("booking.choose_slot")); return; }
-    // Envoi pendant un chargement ou après une panne : on refuse plutôt que de
-    // partir d'une disponibilité non vérifiée.
+  const validateForm = (): boolean => {
+    const parsed = schema.safeParse(form);
+    if (parsed.success) {
+      setFieldErrors({});
+      return true;
+    }
+    const next: FieldErrors = {};
+    for (const issue of parsed.error.issues) {
+      const field = issue.path[0];
+      if (field === "name" || field === "email" || field === "phone" || field === "notes") {
+        next[field] = issue.message;
+      }
+    }
+    setFieldErrors(next);
+    toast.error(parsed.error.issues[0].message);
+    return false;
+  };
+
+  const openDetailsStep = (time: string) => {
+    if (services.length > 0 && !selectedService) { toast.error(t("booking.choose_service")); return; }
+    if (!selectedDate) { toast.error(t("booking.choose_slot")); return; }
     if (schedLoading || slotsLoading) { toast.info(t("booking.slots_loading")); return; }
     if (schedError || slotsError) { toast.error(t("booking.slots_error")); return; }
-    // Le créneau doit appartenir aux créneaux VÉRIFIÉS du triplet courant.
-    if (!slotsVerified || !slotsForDay.includes(selectedTime)) {
+    if (!slotsVerified || !slotsForDay.includes(time)) {
       setSelectedTime(null);
+      setStep("slot");
       toast.error(t("booking.choose_slot"));
       return;
     }
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
-    setConfirmOpen(true);
+    setSelectedTime(time);
+    setFieldErrors({});
+    setStep("details");
+  };
+
+  const submitDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) void confirmBooking();
   };
 
   const confirmBooking = async () => {
     if (!selectedDate || !selectedTime) return;
     if (schedLoading || slotsLoading) { toast.info(t("booking.slots_loading")); return; }
     if (schedError || slotsError || !slotsVerified || !slotsForDay.includes(selectedTime)) {
-      setConfirmOpen(false);
+      setStep("slot");
       setSelectedTime(null);
       toast.error(t("booking.slots_error"));
       return;
     }
     const parsed = schema.safeParse(form);
-    if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
+    if (!validateForm()) return;
+    const parsed = schema.parse(form);
     setSubmitting(true);
 
     // Recontrôle au moment de l'envoi : la page a pu rester ouverte longtemps.
@@ -379,7 +411,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       const stillOpen = openSlotsFor(sched, selectedDate, slotMin).includes(selectedTime);
       if (!stillOpen || isSlotBlocked(selectedTime, selectedDate, slotMin, ranges)) {
         setSubmitting(false);
-        setConfirmOpen(false);
+        setStep("slot");
         setSelectedTime(null);
         setSchedReload((n) => n + 1);
         setSlotsReload((n) => n + 1);
@@ -388,7 +420,6 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       }
     } catch {
       setSubmitting(false);
-      setConfirmOpen(false);
       toast.error(t("booking.slots_error"));
       return;
     }
@@ -413,12 +444,12 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
       status: "pending",
     });
     setSubmitting(false);
-    setConfirmOpen(false);
     if (error) {
       console.error("[booking] appointment insert failed", error);
       // Refus de la garantie posée en base : le créneau vient d'être pris.
       if (/BOOKING_SLOT_CONFLICT/.test(error.message ?? "")) {
         setSelectedTime(null);
+        setStep("slot");
         setSlotsReload((n) => n + 1);
         toast.error(t("booking.slot_taken"));
         return;
@@ -430,6 +461,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
     console.log("[booking] confirmation email →", parsed.data.email, { selectedDate, selectedTime });
     setSuccess(true);
     await clearDraft();
+    setStep("slot");
     toast.success(t("booking.request_sent_toast"));
   };
 
@@ -446,6 +478,153 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
   }
 
   const monthLabel = `${MONTHS[month.getMonth()]} ${month.getFullYear()}`;
+  const summaryRows = [
+    therapistName ? { label: t("booking.summary_therapist"), value: therapistName, icon: UserRound } : null,
+    selectedService ? { label: t("booking.summary_service"), value: selectedService.name, icon: CalendarCheck } : null,
+    selectedDate ? { label: t("booking.summary_date"), value: selectedDate, icon: CalendarCheck } : null,
+    selectedTime ? { label: t("booking.summary_time"), value: selectedTime, icon: Clock } : null,
+    { label: t("booking.summary_duration"), value: `${slotMin} min`, icon: Clock },
+    selectedService?.price != null ? { label: t("booking.summary_price"), value: `${selectedService.price} CHF`, icon: CalendarCheck } : null,
+    locationLabel ? { label: t("booking.summary_location"), value: locationLabel, icon: MapPin } : null,
+  ].filter((row): row is { label: string; value: string; icon: typeof CalendarCheck } => Boolean(row));
+  const stepItems = [t("booking.step_slot"), t("booking.step_details"), t("booking.step_confirmation")];
+
+  if (step === "details" && selectedDate && selectedTime && (services.length === 0 || selectedService)) {
+    return (
+      <section className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-6 backdrop-blur-md sm:px-6 lg:px-10" aria-labelledby={`${formId}-title`}>
+        <div className="mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-6xl items-center">
+          <Card className="w-full overflow-hidden border-border bg-card/95 shadow-2xl shadow-primary/20">
+            <CardHeader className="border-b border-border bg-surface/60 p-5 sm:p-8">
+              <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                <div className="min-w-0 space-y-2">
+                  <p className="text-sm font-medium text-primary">{t("booking.confirmation_title")}</p>
+                  <CardTitle id={`${formId}-title`} className="text-2xl leading-tight sm:text-3xl">
+                    {t("booking.details_title")}
+                  </CardTitle>
+                </div>
+                <ol className="grid gap-2 text-sm sm:grid-cols-3 lg:min-w-[520px]" aria-label={t("booking.steps_label")}>
+                  {stepItems.map((label, index) => {
+                    const active = index === 1;
+                    const done = index === 0;
+                    return (
+                      <li
+                        key={label}
+                        className={`min-h-11 rounded-md border px-3 py-2 ${active || done ? "border-primary/60 bg-primary/15 text-foreground" : "border-border bg-surface/50 text-muted-foreground"}`}
+                        aria-current={active ? "step" : undefined}
+                      >
+                        <span className="block text-xs font-semibold text-primary">{index + 1}</span>
+                        <span className="font-medium">{label}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            </CardHeader>
+
+            <CardContent className="grid gap-0 p-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <aside className="border-b border-border bg-surface/40 p-5 sm:p-8 lg:border-b-0 lg:border-r">
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-sm font-medium text-primary">{t("booking.summary_title")}</p>
+                    <h3 className="mt-1 text-xl font-semibold text-foreground">{selectedService?.name ?? t("booking.title")}</h3>
+                  </div>
+                  <dl className="space-y-3">
+                    {summaryRows.map(({ label, value, icon: Icon }) => (
+                      <div key={label} className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 rounded-md border border-border bg-card/60 p-3">
+                        <div className="grid h-11 w-11 place-items-center rounded-md bg-primary/15 text-primary">
+                          <Icon className="h-5 w-5" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="text-xs font-medium uppercase text-muted-foreground">{label}</dt>
+                          <dd className="mt-1 break-words text-sm font-semibold text-foreground">{value}</dd>
+                        </div>
+                      </div>
+                    ))}
+                  </dl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11 w-full"
+                    onClick={() => setStep("slot")}
+                    disabled={submitting}
+                  >
+                    <PenLine className="h-4 w-4" aria-hidden="true" />
+                    {t("booking.edit_slot")}
+                  </Button>
+                </div>
+              </aside>
+
+              <form onSubmit={submitDetails} className="space-y-5 p-5 sm:p-8" noValidate>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor={`${formId}-name`}>{t("booking.full_name")}</Label>
+                    <Input
+                      id={`${formId}-name`}
+                      value={form.name}
+                      onChange={(e) => updateForm({ name: e.target.value })}
+                      required
+                      maxLength={120}
+                      className="min-h-12 bg-input"
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? `${formId}-name-error` : undefined}
+                    />
+                    {fieldErrors.name && <p id={`${formId}-name-error`} className="text-sm text-destructive" aria-live="polite">{fieldErrors.name}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`${formId}-email`}>{t("booking.email_label")}</Label>
+                    <Input
+                      id={`${formId}-email`}
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => updateForm({ email: e.target.value })}
+                      required
+                      maxLength={200}
+                      className="min-h-12 bg-input"
+                      aria-invalid={Boolean(fieldErrors.email)}
+                      aria-describedby={fieldErrors.email ? `${formId}-email-error` : undefined}
+                    />
+                    {fieldErrors.email && <p id={`${formId}-email-error`} className="text-sm text-destructive" aria-live="polite">{fieldErrors.email}</p>}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`${formId}-phone`}>{t("booking.phone_optional")}</Label>
+                  <Input
+                    id={`${formId}-phone`}
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => updateForm({ phone: e.target.value })}
+                    maxLength={40}
+                    className="min-h-12 bg-input"
+                    aria-invalid={Boolean(fieldErrors.phone)}
+                    aria-describedby={fieldErrors.phone ? `${formId}-phone-error` : undefined}
+                  />
+                  {fieldErrors.phone && <p id={`${formId}-phone-error`} className="text-sm text-destructive" aria-live="polite">{fieldErrors.phone}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`${formId}-notes`}>{t("booking.message_optional")}</Label>
+                  <Textarea
+                    id={`${formId}-notes`}
+                    value={form.notes}
+                    onChange={(e) => updateForm({ notes: e.target.value })}
+                    maxLength={1000}
+                    rows={6}
+                    className="min-h-36 bg-input"
+                    aria-invalid={Boolean(fieldErrors.notes)}
+                    aria-describedby={fieldErrors.notes ? `${formId}-notes-error` : undefined}
+                  />
+                  {fieldErrors.notes && <p id={`${formId}-notes-error`} className="text-sm text-destructive" aria-live="polite">{fieldErrors.notes}</p>}
+                </div>
+                <div className="flex justify-end"><DraftSavedIndicator status={draftStatus} savedAt={savedAt} /></div>
+                <Button type="submit" disabled={submitting} className="min-h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  {submitting ? t("booking.sending") : "Confirmer la réservation"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <Card className="border-border bg-card">
@@ -462,6 +641,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
                 setSelectedServiceIdx(Number(v));
                 setSelectedDate(null);
                 setSelectedTime(null);
+                setStep("slot");
               }}
             >
               <SelectTrigger
@@ -520,12 +700,12 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
           {services.length > 0 && <div className="text-sm font-medium mb-2">2. Choisissez une date</div>}
           <div className="flex items-center justify-between mb-3">
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.prev_month")}
-              onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); }}>
+              onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() - 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); setStep("slot"); }}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="text-sm font-medium capitalize">{monthLabel}</div>
             <Button type="button" size="sm" variant="ghost" aria-label={t("booking.next_month")}
-              onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() + 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); }}>
+              onClick={() => { const d = new Date(month); d.setMonth(d.getMonth() + 1); setMonth(d); setSelectedDate(null); setSelectedTime(null); setStep("slot"); }}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -541,7 +721,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
               if (c.blocked) return <div key={i} className={`${base} bg-muted/30 text-muted-foreground/60 line-through`}>{c.date.getDate()}</div>;
               if (!c.available) return <div key={i} className={`${base} text-muted-foreground/50`}>{c.date.getDate()}</div>;
               return (
-                <button key={i} type="button" onClick={() => { setSelectedDate(c.iso); setSelectedTime(null); }}
+                <button key={i} type="button" onClick={() => { setSelectedDate(c.iso); setSelectedTime(null); setStep("slot"); }}
                   className={`${base} font-medium ${isSel ? "text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
                   style={isSel && accent ? { background: accent, color: "#fff" } : isSel ? undefined : (accent ? { background: `${accent}1a`, color: accent } : undefined)}>
                   {c.date.getDate()}
@@ -582,7 +762,7 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
                         key={s}
                         type="button"
                         aria-pressed={sel}
-                        onClick={() => setSelectedTime(s)}
+                        onClick={() => openDetailsStep(s)}
                         className="min-h-11 min-w-11 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <Badge
@@ -602,74 +782,10 @@ export function BookingWidget({ therapistId, therapistName, services = [] }: { t
 
 
         {selectedDate && selectedTime && (services.length === 0 || selectedService) && (
-          <form onSubmit={openConfirm} className="space-y-3 border-t border-border pt-4">
-            <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
-              <div className="font-medium mb-1">Récapitulatif</div>
-              {selectedService && (
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Service :</span>
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: selectedService.color ?? "hsl(var(--primary))" }} />
-                  <strong>{selectedService.name}</strong>
-                </div>
-              )}
-              <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong> à <strong>{selectedTime}</strong></div>
-              <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong>{selectedService?.price != null && <> · <span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></>}</div>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div><Label htmlFor="bk-name">{t("booking.full_name")}</Label>
-                <Input id="bk-name" value={form.name} onChange={(e) => updateForm({ name: e.target.value })} required maxLength={120} /></div>
-              <div><Label htmlFor="bk-email">{t("auth.email")}</Label>
-                <Input id="bk-email" type="email" value={form.email} onChange={(e) => updateForm({ email: e.target.value })} required maxLength={200} /></div>
-            </div>
-            <div><Label htmlFor="bk-phone">{t("booking.phone_optional")}</Label>
-              <Input id="bk-phone" type="tel" value={form.phone} onChange={(e) => updateForm({ phone: e.target.value })} maxLength={40} /></div>
-            <div><Label htmlFor="bk-notes">{t("booking.message_optional")}</Label>
-              <Textarea id="bk-notes" value={form.notes} onChange={(e) => updateForm({ notes: e.target.value })} maxLength={1000} rows={3} /></div>
-            <div className="flex justify-end"><DraftSavedIndicator status={draftStatus} savedAt={savedAt} /></div>
-            <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90">
-              {submitting ? t("booking.sending") : t("booking.book_at", { date: selectedDate, time: selectedTime })}
-            </Button>
-          </form>
+          <div className="rounded-md border border-primary/40 bg-primary/10 p-3 text-sm text-foreground" aria-live="polite">
+            {t("booking.details_opened")}
+          </div>
         )}
-
-        <AlertDialog open={confirmOpen} onOpenChange={(o) => { if (!submitting) setConfirmOpen(o); }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmer votre rendez-vous</AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-3 text-sm">
-                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-foreground">
-                    {therapistName && <div><span className="text-muted-foreground">Thérapeute :</span> <strong>{therapistName}</strong></div>}
-                    {selectedService && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Service :</span>
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: selectedService.color ?? "hsl(var(--primary))" }} />
-                        <strong>{selectedService.name}</strong>
-                      </div>
-                    )}
-                    {selectedDate && <div><span className="text-muted-foreground">Date :</span> <strong>{selectedDate}</strong></div>}
-                    {selectedTime && <div><span className="text-muted-foreground">Heure :</span> <strong>{selectedTime}</strong></div>}
-                    <div><span className="text-muted-foreground">Durée :</span> <strong>{slotMin} min</strong></div>
-                    {selectedService?.price != null && <div><span className="text-muted-foreground">Tarif :</span> <strong>{selectedService.price} CHF</strong></div>}
-                  </div>
-                  <p className="leading-relaxed">
-                    Ce rendez-vous sera réservé exclusivement pour vous. Un thérapeute se prépare pour vous accueillir — merci de respecter cet engagement ou de l'annuler 24h avant. Merci.
-                  </p>
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={submitting}>Annuler</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={submitting}
-                onClick={(e) => { e.preventDefault(); void confirmBooking(); }}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {submitting ? "Envoi…" : "✅ Confirmer mon rendez-vous"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </CardContent>
     </Card>
   );
