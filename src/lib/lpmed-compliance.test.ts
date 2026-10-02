@@ -121,6 +121,42 @@ describe("findForbiddenTerms", () => {
       expect(findForbiddenTerms("Sans gêne, cette méthode guérit.").length).toBeGreaterThan(0);
     });
   });
+
+  // Bug N7 (audit 2026-10-02d) : les motifs SAFE_IDIOMS eux-mêmes utilisaient
+  // encore `\b` ASCII — un prénom accentué comme « Hélène »/« Irène » placé
+  // juste avant « soigne pas »/« guérit pas » suffisait à faire croire à une
+  // négation réelle. Les contrôles (prénom non accentué) doivent rester
+  // détectés comme avant.
+  describe("prénoms accentués ne sont plus pris pour une négation (régression N7)", () => {
+    it("détecte l'allégation malgré un prénom accentué juste avant", () => {
+      expect(
+        findForbiddenTerms("Hélène soigne pas à pas vos douleurs.").length,
+      ).toBeGreaterThan(0);
+      expect(
+        findForbiddenTerms("La méthode d'Irène guérit pas à pas l'anxiété.").length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("contrôle : un prénom non accentué était déjà détecté", () => {
+      expect(findForbiddenTerms("Marianne soigne pas à pas vos douleurs.").length).toBeGreaterThan(0);
+    });
+  });
+
+  // Bug N8 (audit 2026-10-02d) : `cura di s[ée]` n'avait pas de frontière de
+  // fin, donc « una cura di sei sedute » / « di sette giorni » (où "cura di
+  // se" n'est qu'un préfixe de "sei"/"sette") étaient blanchis à tort.
+  describe("idiome italien sans frontière de fin (régression N8)", () => {
+    it("ne blanchit plus un nombre qui commence par la même lettre", () => {
+      expect(
+        findForbiddenTerms("Una cura di sei sedute contro l'ansia.").length,
+      ).toBeGreaterThan(0);
+      expect(findForbiddenTerms("Una cura di sette giorni.").length).toBeGreaterThan(0);
+    });
+
+    it("continue de blanchir le vrai idiome", () => {
+      expect(findForbiddenTerms("Un rituel di cura di sé, ogni settimana.")).toEqual([]);
+    });
+  });
 });
 
 // Bug 3 (audit 2026-10-02b) : countForbidden (article-clean) comparait des

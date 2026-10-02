@@ -24,11 +24,36 @@
 // générique « un mot de négation dans les ~30-40 caractères qui précèdent »)
 // ouvrait un trou pire que le bug d'origine : « Sans médicaments, notre
 // méthode guérit l'anxiété » n'était plus détecté, parce que « sans » est
-// dans la fenêtre même s'il ne porte pas du tout sur « guérit ». La fenêtre
-// générique est donc supprimée. Les 4 disclaimers réels restent couverts,
-// mais par des motifs EXACTS et serrés (négation directement collée au
-// verbe : « ne soigne pas », « n'est pas un traitement »...), jamais par une
-// proximité approximative qui ne comprend pas la portée grammaticale.
+// dans la fenêtre même s'il ne porte pas du tout sur « guérit » (N4), et le
+// scan réintroduisait le bug 1 dans un nouvel endroit via un `\b` ASCII sur
+// « ne » isolé, qui matchait à tort la fin de « hygiène » (N5). Remplacé par
+// une vérification de CONTENANCE DE SPAN : chaque motif sûr est matché comme
+// phrase complète, et un terme interdit n'est blanchi que s'il tombe
+// ENTIÈREMENT dans un span déjà matché — jamais par proximité approximative.
+//
+// Audit 2026-10-02d, sur cette version span-containment, a trouvé :
+//   - N7 : les motifs sûrs eux-mêmes utilisaient encore `\b` ASCII → « Hélène
+//     soigne pas à pas » et « la méthode d'Irène guérit pas à pas » étaient
+//     blanchis à tort (le même bug de frontière que le bug 1, pour la 3e
+//     fois, maintenant dans les motifs sûrs). Corrigé en appliquant les MÊMES
+//     frontières Unicode (helper `phrase()`) à chaque motif sûr, pas
+//     seulement à `LPMED_FORBIDDEN`.
+//   - N8 : `cura di s[ée]` n'avait pas de frontière de fin → « una cura di
+//     sei sedute » / « di sette giorni » étaient blanchis à tort. Corrigé par
+//     le même helper (toute frontière de fin est désormais systématique).
+//   - N6 (non corrigé ici — limite structurelle, pas un oversight) : les
+//     motifs « négation collée au verbe » ne regardent que ce qui suit
+//     immédiatement, pas la portée de la négation au-delà. Des tournures
+//     comme « ne soigne pas QUE X, mais aussi Y », « pas de guérison durable
+//     SANS Y », « n'est pas un traitement COMME LES AUTRES », ou un
+//     comparatif (« aucun traitement n'agit plus vite que... ») continuent de
+//     passer alors qu'elles allèguent bien un effet thérapeutique. Chaque
+//     nouvelle tournure corrigée en ajoutant un motif ouvre statistiquement
+//     la porte à la suivante (negation scope est un problème de
+//     compréhension du langage, pas un problème de regex) : voir la synthèse
+//     envoyée à l'utilisateur pour la décision produit (accepter ce risque
+//     résiduel documenté, ou ajouter un second palier de jugement LLM — le
+//     B5 de `marketing-qa` — sur le chemin web qui n'en a aujourd'hui aucun).
 
 const TERMS = [
   // FR — soigner
@@ -61,41 +86,51 @@ export const LPMED_FORBIDDEN = new RegExp(
   "giu",
 );
 
+/**
+ * Enveloppe une phrase-source avec les MÊMES frontières Unicode que
+ * `LPMED_FORBIDDEN` (lettre accentuée incluse) — un `\b` ASCII ici a déjà
+ * causé le même bug de frontière deux fois de suite (N5, N7). Un seul
+ * endroit qui sait faire une frontière correcte, jamais un `\b` ad hoc.
+ */
+function phrase(source: string): RegExp {
+  return new RegExp(`(?<![\\p{L}])(?:${source})(?![\\p{L}])`, "iu");
+}
+
 // Phrases qui emploient ce vocabulaire SANS allégation — au contraire, ce
 // sont souvent les disclaimers légaux requis, ou des idiomes génériques qui
 // n'allèguent rien. Chaque motif est EXACT et SERRÉ : la négation doit être
-// directement collée au terme (pas de fenêtre de proximité approximative —
-// voir la note d'audit 2026-10-02c en tête de fichier). Vérifiés sur une
-// petite fenêtre autour de chaque match, mais c'est le motif complet qui
-// doit matcher dans cette fenêtre, jamais un mot de négation isolé.
+// directement collée au terme. Vérifiés par CONTENANCE DE SPAN (voir
+// `computeSafeSpans` / `isWithinSafeSpan` plus bas), jamais par proximité
+// approximative — et N6 (non résolu) reste une limite structurelle : voir la
+// note d'audit 2026-10-02d en tête de fichier.
 const SAFE_IDIOMS: RegExp[] = [
   // Disclaimers réels (marketing-carousels.ts:277 et ses traductions)
-  /aucune?\s+promesse\s+de\s+gu[ée]rison/i,
-  /sans\s+promesse\s+de\s+gu[ée]rison/i,
-  /keine\s+heilversprechen/i,
-  /nessun[ae]?\s+promessa\s+di\s+guarigione/i,
-  /no\s+healing\s+claims?/i,
+  phrase("aucune?\\s+promesse\\s+de\\s+gu[ée]rison"),
+  phrase("sans\\s+promesse\\s+de\\s+gu[ée]rison"),
+  phrase("keine\\s+heilversprechen"),
+  phrase("nessun[ae]?\\s+promessa\\s+di\\s+guarigione"),
+  phrase("no\\s+healing\\s+claims?"),
   // Négation directement sur le verbe — FR
-  /\bne\s+soigne[nz]?\s+pas\b/i,
-  /\bne\s+soignons\s+pas\b/i,
-  /\bne\s+gu[ée]ri[st]?\s+pas\b/i,
-  /\bne\s+gu[ée]rissent\s+pas\b/i,
-  /\bne\s+traite[nz]?\s+pas\b/i,
-  /\bne\s+traitons\s+pas\b/i,
-  /\bn['’]est\s+pas\s+(?:un|une)\s+(?:traitement|diagnostic|prescription)\b/i,
-  /\bpas\s+de\s+(?:promesse\s+de\s+)?(?:gu[ée]rison|traitement|diagnostic|prescription)\b/i,
+  phrase("ne\\s+soigne[nz]?\\s+pas"),
+  phrase("ne\\s+soignons\\s+pas"),
+  phrase("ne\\s+gu[ée]ri[st]?\\s+pas"),
+  phrase("ne\\s+gu[ée]rissent\\s+pas"),
+  phrase("ne\\s+traite[nz]?\\s+pas"),
+  phrase("ne\\s+traitons\\s+pas"),
+  phrase("n['’]est\\s+pas\\s+(?:un|une)\\s+(?:traitement|diagnostic|prescription)"),
+  phrase("pas\\s+de\\s+(?:promesse\\s+de\\s+)?(?:gu[ée]rison|traitement|diagnostic|prescription)"),
   // Négation directement sur le verbe — DE/IT/EN
-  /\bkeine?\s+heilung\b/i,
-  /\bnicht\s+(?:behandelt|geheilt)\b/i,
-  /\bnessun[ao]?\s+(?:cura|trattamento|diagnosi)\b/i,
-  /\bnon\s+(?:cura|tratta|guarisce)\b/i,
-  /\bno\s+(?:cure|treatment|diagnosis)\b/i,
-  /\b(?:does\s+not|doesn['’]t|is\s+not\s+a)\s+(?:cure|treat|heal)\b/i,
+  phrase("keine?\\s+heilung"),
+  phrase("nicht\\s+(?:behandelt|geheilt)"),
+  phrase("nessun[ao]?\\s+(?:cura|trattamento|diagnosi)"),
+  phrase("non\\s+(?:cura|tratta|guarisce)"),
+  phrase("no\\s+(?:cure|treatment|diagnosis)"),
+  phrase("(?:does\\s+not|doesn['’]t|is\\s+not\\s+a)\\s+(?:cure|treat|heal)"),
   // Idiomes génériques de bien-être (pas une allégation thérapeutique)
-  /prendre\s+soin\s+de\s+(soi|vous|vos|eux|elle|lui)/i,
-  /\bsoins?\s+de\s+soi\b/i,
-  /cura\s+di\s+s[ée]/i,
-  /self[\s-]?care/i,
+  phrase("prendre\\s+soin\\s+de\\s+(?:soi|vous|vos|eux|elle|lui)"),
+  phrase("soins?\\s+de\\s+soi"),
+  phrase("cura\\s+di\\s+s[ée]"),
+  phrase("self[\\s-]?care"),
 ];
 
 /**
