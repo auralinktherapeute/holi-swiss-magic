@@ -34,7 +34,7 @@ import {
   cleanInvisible,
   type ArticleTextRecord,
 } from "@/lib/ai-watermarks";
-import { findForbiddenTerms } from "@/lib/lpmed-compliance";
+import { countForbiddenOccurrences } from "@/lib/lpmed-compliance";
 
 const SELECT_COLUMNS = [
   "id",
@@ -47,9 +47,11 @@ const SELECT_COLUMNS = [
 
 /** Vocabulaire interdit par la LPMéd : un thérapeute non médecin ne « soigne »
  *  ni ne « guérit ». La réécriture ne doit jamais en introduire.
- *  Source unique : `@/lib/lpmed-compliance` (réutilisée aussi côté marketing). */
+ *  Source unique : `@/lib/lpmed-compliance` (réutilisée aussi côté marketing).
+ *  Compte NON dédupliqué à dessein : une répétition d'un terme déjà présent
+ *  doit rester détectable dans la comparaison avant/après réécriture. */
 function countForbidden(text: string): number {
-  return findForbiddenTerms(text).length;
+  return countForbiddenOccurrences(text);
 }
 
 function wordCount(s: string): number {

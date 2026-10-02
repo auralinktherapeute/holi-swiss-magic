@@ -459,6 +459,16 @@ export const regenerateProposalStructure = createServerFn({ method: "POST" })
       patch[l.key] = pages.join("\n\n");
     }
 
+    // Même verrou qu'à la création : cette régénération réécrit les captions
+    // via Gemini après coup, donc un texte conforme à l'insertion peut en
+    // ressortir non conforme. Vérifier à nouveau avant d'enregistrer.
+    assertNoHealthClaims({
+      caption: patch.caption as string | undefined,
+      caption_en: patch.caption_en as string | undefined,
+      caption_de: patch.caption_de as string | undefined,
+      caption_it: patch.caption_it as string | undefined,
+    });
+
     const { error } = await sb.from("marketing_proposals").update(patch).eq("id", data.id);
     if (error) throw new Error("Impossible d'enregistrer la nouvelle structure.");
     return { ok: true, pageCount: data.pageCount, presentation: data.presentation };

@@ -1,16 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { assertNoHealthClaims, findForbiddenTerms } from "./lpmed-compliance";
+import { assertNoHealthClaims, countForbiddenOccurrences, findForbiddenTerms } from "./lpmed-compliance";
 
 /**
  * Verrou LPMéd pour les propositions marketing. Avant cette source unique,
  * seul le pipeline /marketing-daily (via l'agent marketing-qa, B5) vérifiait
- * la conformité santé — le chat Gemini de /admin/marketing (saveAnswerAsProposal)
- * et la création manuelle (createMarketingProposal) n'avaient AUCUN contrôle
+ * la conformité santé — le chat Gemini de /admin/marketing (saveAnswerAsProposal),
+ * la création manuelle (createMarketingProposal) et la régénération de
+ * structure (regenerateProposalStructure) n'avaient AUCUN contrôle
  * déterministe. Ces tests figent le comportement attendu : détecter et
  * refuser, jamais corriger.
+ *
+ * L'audit vibeflow-validator du 2026-10-02b a trouvé 3 bugs dans la v1 de ce
+ * module — les groupes de tests ci-dessous correspondent chacun à l'un
+ * d'eux et doivent rester verts pour qu'ils ne reviennent pas.
  */
 describe("findForbiddenTerms", () => {
-  it("détecte les termes interdits en français", () => {
+  it("détecte les termes interdits en français, conjugaisons courantes", () => {
     expect(findForbiddenTerms("Cette séance guérit l'anxiété.")).toContain("guérit");
     expect(findForbiddenTerms("Nous soignons les troubles du sommeil.")).toContain("soignons");
     expect(findForbiddenTerms("Un vrai traitement de fond.").length).toBeGreaterThan(0);
@@ -26,6 +31,71 @@ describe("findForbiddenTerms", () => {
     expect(findForbiddenTerms("Un accompagnement pour le bien-être et l'équilibre.")).toEqual([]);
     expect(findForbiddenTerms(null)).toEqual([]);
     expect(findForbiddenTerms(undefined)).toEqual([]);
+  });
+
+  // Bug 1 (audit 2026-10-02b) : `\b` ne pose pas de frontière après une
+  // lettre accentuée en JS — « soigné »/« traité » ne matchaient jamais.
+  describe("formes accentuées en fin de mot (régression bug 1)", () => {
+    it("détecte les participes passés accentués", () => {
+      expect(findForbiddenTerms("Vous serez soigné.")).toContain("soigné");
+      expect(findForbiddenTerms("Votre stress est traité.")).toContain("traité");
+      expect(findForbiddenTerms("Elle est guérie.")).toContain("guérie");
+    });
+
+    it("ne les manque pas en fin de phrase ni devant une virgule", () => {
+      expect(findForbiddenTerms("soigné,").length).toBeGreaterThan(0);
+      expect(findForbiddenTerms("traité).").length).toBeGreaterThan(0);
+    });
+  });
+
+  // Bug 2 (audit 2026-10-02b) : faux positifs sur les disclaimers légaux
+  // réels déjà en prod (marketing-carousels.ts:277 et ses traductions) et
+  // sur les idiomes de bien-être génériques.
+  describe("négations et idiomes sûrs (régression bug 2)", () => {
+    it("n'alerte pas sur le disclaimer légal réel (FR/DE/IT/EN)", () => {
+      expect(
+        findForbiddenTerms(
+          "Aucune promesse de guérison. Ce point n'est pas négociable.",
+        ),
+      ).toEqual([]);
+      expect(findForbiddenTerms("Keine Heilversprechen.")).toEqual([]);
+      expect(findForbiddenTerms("Nessuna promessa di guarigione.")).toEqual([]);
+      expect(findForbiddenTerms("No healing claims.")).toEqual([]);
+    });
+
+    it("n'alerte pas sur une négation explicite", () => {
+      expect(findForbiddenTerms("Nous ne soignons pas.")).toEqual([]);
+      expect(findForbiddenTerms("Ce n'est pas un traitement médical.")).toEqual([]);
+    });
+
+    it("n'alerte pas sur les idiomes de bien-être génériques", () => {
+      expect(findForbiddenTerms("Prendre soin de soi, chaque semaine.")).toEqual([]);
+      expect(findForbiddenTerms("Un moment de soin de soi.")).toEqual([]);
+      expect(findForbiddenTerms("Un rituel de cura di sé.")).toEqual([]);
+    });
+
+    it("continue d'alerter quand l'allégation n'est PAS niée", () => {
+      // Ces phrases contiennent le même vocabulaire mais sans négation ni
+      // idiome protecteur juste avant — elles doivent rester détectées.
+      expect(findForbiddenTerms("Cette méthode guérit vraiment.").length).toBeGreaterThan(0);
+      expect(findForbiddenTerms("Nous soignons efficacement.").length).toBeGreaterThan(0);
+    });
+  });
+});
+
+// Bug 3 (audit 2026-10-02b) : countForbidden (article-clean) comparait des
+// comptes dédupliqués AVANT/APRÈS réécriture — un mot déjà présent qui se
+// répète n'était plus détecté comme une dégradation.
+describe("countForbiddenOccurrences (régression bug 3 — comptage non dédupliqué)", () => {
+  it("compte chaque occurrence, pas chaque terme distinct", () => {
+    expect(countForbiddenOccurrences("guérit, guérit, guérit")).toBe(3);
+    expect(findForbiddenTerms("guérit, guérit, guérit")).toEqual(["guérit"]);
+  });
+
+  it("détecte qu'une réécriture a réintroduit un terme déjà présent", () => {
+    const before = "Cette approche guérit.";
+    const after = "Cette approche guérit vraiment, elle guérit.";
+    expect(countForbiddenOccurrences(after)).toBeGreaterThan(countForbiddenOccurrences(before));
   });
 });
 
@@ -51,6 +121,17 @@ describe("assertNoHealthClaims", () => {
         caption_it: "Un approccio calmo e strutturato.",
         angle: undefined,
         visual_brief: null,
+      }),
+    ).not.toThrow();
+  });
+
+  it("passe sur le vrai disclaimer légal de marketing-carousels.ts", () => {
+    expect(() =>
+      assertNoHealthClaims({
+        caption:
+          "Nous vérifions la formation, la reconnaissance (RME ou ASCA — à jour, pas expirée), " +
+          "les informations sur la séance et la langue du profil. Aucune promesse de guérison. " +
+          "Ce point n'est pas négociable.",
       }),
     ).not.toThrow();
   });
