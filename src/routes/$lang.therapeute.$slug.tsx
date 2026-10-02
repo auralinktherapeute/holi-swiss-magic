@@ -1081,6 +1081,7 @@ function ProfilePage() {
               <BookingWidget
                 therapistId={th.id}
                 therapistName={fullName}
+                locationLabel={[ (th as any).address, [(th as any).postal_code, (th as any).city].filter(Boolean).join(" ") ].map((x) => (typeof x === "string" ? x.trim() : "")).filter(Boolean).join(", ") || null}
                 services={services.map((s) => ({
                   name: s.name,
                   duration: (s as any).duration_min ?? s.duration,

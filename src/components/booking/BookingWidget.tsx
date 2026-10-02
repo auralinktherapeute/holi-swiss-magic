@@ -2,9 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -315,6 +312,7 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
     if (!selectedTime || !slotsVerified) return;
     if (!slotsForDay.includes(selectedTime)) {
       setSelectedTime(null);
+      setStep("slot");
       toast.info(t("booking.slot_expired"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
