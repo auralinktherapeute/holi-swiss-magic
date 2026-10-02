@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
 import { MARKETING_SKILLS } from "@/content/marketing-skills/registry";
+import { assertNoHealthClaims } from "@/lib/lpmed-compliance";
 
 /**
  * Agent marketing pilotable depuis /admin/marketing.
@@ -311,6 +312,19 @@ N'invente aucun chiffre. Si une langue manque dans la source, produis-la en adap
       status: "en_attente_validation",
     };
     if (!row.caption) throw new Error("Aucune caption exploitable dans cette réponse.");
+
+    // Verrou LPMéd (ADR-style : détecter et refuser, jamais corriger seul).
+    // Ce chemin (chat Gemini → proposition) ne passait jusqu'ici par AUCUNE
+    // vérification de conformité santé avant insertion — contrairement au
+    // pipeline /marketing-daily qui s'appuie sur l'agent marketing-qa (B5).
+    assertNoHealthClaims({
+      angle: row.angle,
+      caption: row.caption,
+      caption_en: row.caption_en,
+      caption_de: row.caption_de,
+      caption_it: row.caption_it,
+      visual_brief: row.visual_brief,
+    });
 
     const { data: created, error } = await sb
       .from("marketing_proposals")

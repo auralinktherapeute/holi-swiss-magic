@@ -1,7 +1,7 @@
 ---
 name: marketing-qa
 description: Contrôleur qualité Holiswiss. Dernier filtre avant soumission à Gérald. Vérifie les 6 critères bloquants (discipline factuelle, deux chaises, score ≥ 80, livraison dans l'admin, conformité santé, exécution senior) puis la checklist complète. Rend un verdict ✅/❌.
-tools: Read, Glob, Grep
+tools: Read, Glob, Grep, Bash
 model: sonnet
 ---
 
@@ -34,7 +34,10 @@ factuelle » et § 9 bis « Scoring »).
 **B4 — Livraison dans l'admin (et pas seulement en Markdown)**
 - Les slides sont écrites dans `src/data/marketing-carousels.ts`, pas uniquement dans
   `marketing/proposals/`. Un carrousel qui n'est qu'en Markdown **n'existe pas** pour Gérald.
-- Le fichier TS compile : `npx tsc --noEmit` ne signale rien sur `marketing-carousels.ts`.
+- Le fichier TS compile : **exécute réellement** `npx tsc --noEmit` (tu as `Bash` pour ça,
+  uniquement pour ce contrôle et tes propres lectures — jamais pour écrire, publier ou corriger)
+  et vérifie qu'aucune erreur ne cite `marketing-carousels.ts`. Un ✅ sur ce point sans avoir
+  lancé la commande est un verdict mensonger — ne l'affirme jamais sans l'avoir exécutée.
 - Structure : exactement **un `hook`** et **un `cta`** par carrousel ; les `accent` / `save` /
   `rupture` restent rares (deux au maximum au total, sinon la rupture ne rompt plus rien).
 - Les 4 langues sont présentes dans `slides`, et `langueOrigine` désigne bien celle de rédaction.

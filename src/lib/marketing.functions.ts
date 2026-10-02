@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "@/lib/admin.functions";
+import { assertNoHealthClaims } from "@/lib/lpmed-compliance";
 
 const PROPOSAL_COLUMNS =
   "id,proposal_date,network,pillar,angle,format,caption,caption_en,caption_de,caption_it,hashtags,hashtags_en,hashtags_de,hashtags_it,visual_brief,visual_prompt,suggested_time,lang,status,correction_note,validated_at,published_at,external_ref,created_at,carousel_page_count,carousel_presentation,carousel_generation_version";
@@ -213,6 +214,14 @@ export const createMarketingProposal = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
+    assertNoHealthClaims({
+      angle: data.angle,
+      caption: data.caption,
+      caption_en: data.caption_en,
+      caption_de: data.caption_de,
+      caption_it: data.caption_it,
+      visual_brief: data.visual_brief,
+    });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await (supabaseAdmin as any)
       .from("marketing_proposals")

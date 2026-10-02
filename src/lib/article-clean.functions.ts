@@ -34,6 +34,7 @@ import {
   cleanInvisible,
   type ArticleTextRecord,
 } from "@/lib/ai-watermarks";
+import { findForbiddenTerms } from "@/lib/lpmed-compliance";
 
 const SELECT_COLUMNS = [
   "id",
@@ -45,12 +46,10 @@ const SELECT_COLUMNS = [
 ].join(",");
 
 /** Vocabulaire interdit par la LPMéd : un thérapeute non médecin ne « soigne »
- *  ni ne « guérit ». La réécriture ne doit jamais en introduire. */
-const LPMED_FORBIDDEN =
-  /\b(soin|soins|soigner|soigne|guérison|guérir|guérit|traitement|traiter|diagnostic|diagnostiquer|prescription|prescrire)\b/gi;
-
+ *  ni ne « guérit ». La réécriture ne doit jamais en introduire.
+ *  Source unique : `@/lib/lpmed-compliance` (réutilisée aussi côté marketing). */
 function countForbidden(text: string): number {
-  return (text.match(LPMED_FORBIDDEN) ?? []).length;
+  return findForbiddenTerms(text).length;
 }
 
 function wordCount(s: string): number {
