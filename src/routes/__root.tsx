@@ -22,7 +22,7 @@ import { CrossTabAuthSync } from "@/components/auth/CrossTabAuthSync";
 import { usePageViewTracking } from "../hooks/use-page-view-tracking";
 import { NotFoundPage } from "../components/layout/NotFoundPage";
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {

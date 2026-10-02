@@ -34,7 +34,7 @@ export const Route = createFileRoute("/intake/$slug")({
   ),
   errorComponent: ({ error }) => (
     <main className="min-h-dvh flex items-center justify-center p-6 bg-[#0F0F23] text-white">
-      <p className="text-red-300">Erreur : {error.message}</p>
+      <p className="text-red-300">Erreur : {error instanceof Error ? error.message : String(error)}</p>
     </main>
   ),
   component: IntakePage,
