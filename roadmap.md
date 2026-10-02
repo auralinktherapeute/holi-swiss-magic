@@ -20,4 +20,4 @@
 - [x] Robots : groupes explicites uniquement si exclusions identiques
 - [x] Tests, typecheck, build, seo:check, sitemap avant/après, SSR 4 langues
 - [x] Carte : clé CARTO sur l'URL des tuiles (TherapistMapInner)
-- [ ] Agent Automation phases 0+1
+- [x] Agent Automation phases 0+1
