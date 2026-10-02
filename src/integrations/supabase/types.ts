@@ -503,6 +503,232 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_decisions: {
+        Row: {
+          created_at: string
+          decided_by: string
+          decision: string
+          id: string
+          modified_payload: Json | null
+          proposal_id: string
+          reason: string | null
+          snooze_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          modified_payload?: Json | null
+          proposal_id: string
+          reason?: string | null
+          snooze_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          modified_payload?: Json | null
+          proposal_id?: string
+          reason?: string | null
+          snooze_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_decisions_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "automation_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_outcomes: {
+        Row: {
+          created_at: string
+          id: string
+          measured_at: string
+          metric: string
+          polarity: string
+          run_id: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          measured_at?: string
+          metric: string
+          polarity: string
+          run_id: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          measured_at?: string
+          metric?: string
+          polarity?: string
+          run_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_outcomes_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "automation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_proposals: {
+        Row: {
+          action_key: string
+          created_at: string
+          id: string
+          level: string
+          payload: Json
+          prepared_preview: Json | null
+          rationale: string | null
+          snoozed_until: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          id?: string
+          level?: string
+          payload?: Json
+          prepared_preview?: Json | null
+          rationale?: string | null
+          snoozed_until?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          id?: string
+          level?: string
+          payload?: Json
+          prepared_preview?: Json | null
+          rationale?: string | null
+          snoozed_until?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      automation_rules: {
+        Row: {
+          action_key: string
+          created_at: string
+          enabled: boolean
+          id: string
+          level: string
+          limits: Json
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          level?: string
+          limits?: Json
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          level?: string
+          limits?: Json
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
+      automation_runs: {
+        Row: {
+          action_key: string
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          decision_id: string | null
+          error: string | null
+          executed_by: string | null
+          id: string
+          level: string
+          proposal_id: string | null
+          rollback_payload: Json | null
+          rolled_back_at: string | null
+          rolled_back_by: string | null
+          status: string
+        }
+        Insert: {
+          action_key: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          decision_id?: string | null
+          error?: string | null
+          executed_by?: string | null
+          id?: string
+          level: string
+          proposal_id?: string | null
+          rollback_payload?: Json | null
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          status: string
+        }
+        Update: {
+          action_key?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          decision_id?: string | null
+          error?: string | null
+          executed_by?: string | null
+          id?: string
+          level?: string
+          proposal_id?: string | null
+          rollback_payload?: Json | null
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "automation_decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "automation_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availabilities: {
         Row: {
           created_at: string
