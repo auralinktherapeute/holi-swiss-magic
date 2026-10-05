@@ -700,6 +700,22 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
 
 type EditLine = InvoiceLineInput & { remise_pct: number; tva_taux: number };
 
+/** Champ prix : garde le texte saisi (« 60. », vide…) pour permettre d'effacer le 0 et de taper des décimales. */
+function PriceInput({ id, value, onChange }: { id: string; value: number; onChange: (v: number) => void }) {
+  const [text, setText] = useState(value ? String(value) : "");
+  useEffect(() => {
+    setText((t) => (Number(t.replace(",", ".")) || 0) === value ? t : (value ? String(value) : ""));
+  }, [value]);
+  return (
+    <Input id={id} type="text" inputMode="decimal" placeholder="0.00" value={text}
+      onChange={(e) => {
+        const raw = e.target.value.replace(/[^0-9.,]/g, "");
+        setText(raw);
+        onChange(Number(raw.replace(",", ".")) || 0);
+      }} />
+  );
+}
+
 function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSaved }: {
   invoiceId: string | null;
   contacts: Contact[]; vatRates: VatRate[];
@@ -778,6 +794,8 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
   });
 
   // Préremplissage non destructif : ne remplace jamais une valeur déjà saisie.
+  // Si aucune adresse n'est encore saisie, le pays de la fiche est aussi repris
+  // (sinon le « CH » par défaut resterait collé à une adresse étrangère).
   useEffect(() => {
     if (!f.client_id) return;
     const c = contacts.find((x) => x.id === f.client_id);
@@ -785,8 +803,12 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
     const src = contactBilling(c);
     setF((s) => {
       const next = { ...s };
+      const noAddress = !String(s.client_adresse ?? "").trim()
+        && !String(s.client_npa ?? "").trim() && !String(s.client_ville ?? "").trim();
       for (const [k, v] of Object.entries(src)) {
-        if (v && !String(next[k] ?? "").trim()) next[k] = v;
+        if (!v) continue;
+        if (k === "client_pays") { if (noAddress) next[k] = v; continue; }
+        if (!String(next[k] ?? "").trim()) next[k] = v;
       }
       return next;
     });
@@ -1030,8 +1052,8 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
                   </div>
                   <div className="col-span-4 sm:col-span-2 space-y-1">
                     <Label htmlFor={`lp-${i}`} className="text-xs">Prix unitaire</Label>
-                    <Input id={`lp-${i}`} type="number" min={0} step={0.05} value={l.prix_unitaire}
-                      onChange={(e) => setLine(i, "prix_unitaire", Number(e.target.value) || 0)} />
+                    <PriceInput id={`lp-${i}`} value={Number(l.prix_unitaire) || 0}
+                      onChange={(v) => setLine(i, "prix_unitaire", v)} />
                   </div>
                   <div className="col-span-3 sm:col-span-1 space-y-1">
                     <Label htmlFor={`lr-${i}`} className="text-xs">Remise %</Label>
