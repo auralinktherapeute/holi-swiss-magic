@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export type BookingFormValues = { name: string; email: string; phone: string; notes: string };
+export type BookingFormValues = {
+  name: string; email: string; phone: string; notes: string;
+  address: string; postal_code: string; city: string; country: string;
+};
 export type BookingFieldErrors = Partial<Record<keyof BookingFormValues, string>>;
 
 export type BookingDetailsStepProps = {
