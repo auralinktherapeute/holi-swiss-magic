@@ -39,7 +39,8 @@ export type BookingDetailsStepProps = {
 export function BookingDetailsStep(p: BookingDetailsStepProps) {
   const { t } = useTranslation();
   const uid = useId();
-  const ids = { name: `${uid}-name`, email: `${uid}-email`, phone: `${uid}-phone`, notes: `${uid}-notes` };
+  const ids = { name: `${uid}-name`, email: `${uid}-email`, phone: `${uid}-phone`, notes: `${uid}-notes`,
+    address: `${uid}-address`, postal_code: `${uid}-npa`, city: `${uid}-city`, country: `${uid}-country` };
   const err = (k: keyof BookingFormValues) =>
     p.errors[k] ? <p id={`${ids[k]}-err`} className="mt-1 text-sm text-destructive" role="alert">{p.errors[k]}</p> : null;
   const aria = (k: keyof BookingFormValues) =>
