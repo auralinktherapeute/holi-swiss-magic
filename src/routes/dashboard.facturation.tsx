@@ -796,11 +796,14 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
   // Préremplissage non destructif : ne remplace jamais une valeur déjà saisie.
   // Si aucune adresse n'est encore saisie, le pays de la fiche est aussi repris
   // (sinon le « CH » par défaut resterait collé à une adresse étrangère).
+  // Le client est retrouvé par sa fiche, ou à défaut par son adresse e-mail.
+  const emailKey = String(f.client_email ?? "").trim().toLowerCase();
   useEffect(() => {
-    if (!f.client_id) return;
-    const c = contacts.find((x) => x.id === f.client_id);
+    const c = (f.client_id && contacts.find((x) => x.id === f.client_id))
+      || (emailKey && contacts.find((x) => (x.email ?? "").trim().toLowerCase() === emailKey))
+      || null;
     if (!c) return;
-    const src = contactBilling(c);
+    const src = { ...contactBilling(c), client_id: c.id };
     setF((s) => {
       const next = { ...s };
       const noAddress = !String(s.client_adresse ?? "").trim()
