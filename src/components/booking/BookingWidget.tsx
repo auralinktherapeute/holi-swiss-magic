@@ -124,6 +124,10 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
     email: z.string().trim().email(t("booking.email_invalid")).max(200),
     phone: z.string().trim().max(40).optional().or(z.literal("")),
     notes: z.string().max(1000).optional().or(z.literal("")),
+    address: z.string().trim().max(200).optional().or(z.literal("")),
+    postal_code: z.string().trim().max(12).optional().or(z.literal("")),
+    city: z.string().trim().max(120).optional().or(z.literal("")),
+    country: z.string().trim().max(80).optional().or(z.literal("")),
   });
   const statePrefix = `booking.${therapistId}`;
   const [selectedServiceIdx, setSelectedServiceIdx] = useSessionState<number | null>(`${statePrefix}.serviceIdx`, null);
@@ -151,7 +155,7 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
 
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
-  const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "" });
+  const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "", address: "", postal_code: "", city: "", country: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
@@ -172,7 +176,7 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
   useEffect(() => {
     if (autoRestoredRef.current || !initialDraft) return;
     autoRestoredRef.current = true;
-    setForm(initialDraft as typeof form);
+    setForm({ name: "", email: "", phone: "", notes: "", address: "", postal_code: "", city: "", country: "", ...(initialDraft as Partial<typeof form>) });
     setFormTouched(true);
     dismissDraft();
   }, [dismissDraft, initialDraft]);
@@ -393,6 +397,10 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
       patient_name: parsed.data.name,
       patient_email: parsed.data.email,
       patient_phone: parsed.data.phone || null,
+      patient_address: parsed.data.address || null,
+      patient_postal_code: parsed.data.postal_code || null,
+      patient_city: parsed.data.city || null,
+      patient_country: parsed.data.country || null,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
       duration_minutes: slotMin,

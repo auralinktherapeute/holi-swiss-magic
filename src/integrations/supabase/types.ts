@@ -212,9 +212,13 @@ export type Database = {
           invoice_id: string | null
           invoiced_at: string | null
           notes: string | null
+          patient_address: string | null
+          patient_city: string | null
+          patient_country: string | null
           patient_email: string | null
           patient_name: string
           patient_phone: string | null
+          patient_postal_code: string | null
           service_name: string | null
           source: string
           start_time: string | null
@@ -238,9 +242,13 @@ export type Database = {
           invoice_id?: string | null
           invoiced_at?: string | null
           notes?: string | null
+          patient_address?: string | null
+          patient_city?: string | null
+          patient_country?: string | null
           patient_email?: string | null
           patient_name: string
           patient_phone?: string | null
+          patient_postal_code?: string | null
           service_name?: string | null
           source?: string
           start_time?: string | null
@@ -264,9 +272,13 @@ export type Database = {
           invoice_id?: string | null
           invoiced_at?: string | null
           notes?: string | null
+          patient_address?: string | null
+          patient_city?: string | null
+          patient_country?: string | null
           patient_email?: string | null
           patient_name?: string
           patient_phone?: string | null
+          patient_postal_code?: string | null
           service_name?: string | null
           source?: string
           start_time?: string | null

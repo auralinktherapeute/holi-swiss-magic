@@ -71,6 +71,13 @@
       "when": 1791231809957,
       "tag": "0009_crm_contact_match_by_name",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791236689184,
+      "tag": "0010_booking_client_address",
+      "breakpoints": true
     }
   ]
 }

@@ -12,7 +12,7 @@ inst.init({ lng: "fr", resources: { fr: { translation: fr } }, initAsync: false 
 const html = renderToStaticMarkup(
   <I18nextProvider i18n={inst}>
     <BookingDetailsStep date="2026-10-15" time="11:30" durationMin={60} serviceName="Séance test"
-      form={{ name: "", email: "", phone: "", notes: "" }} errors={{}} submitting={false}
+      form={{ name: "", email: "", phone: "", notes: "", address: "", postal_code: "", city: "", country: "" }} errors={{}} submitting={false}
       onChange={() => {}} onBack={() => {}} onSubmit={() => {}} />
   </I18nextProvider>,
 );
