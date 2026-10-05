@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar,
-  Phone, Mail, X, ExternalLink,
+  Phone, Mail, X, ExternalLink, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import { upsertTask } from "@/lib/crm-therapist.functions";
 import ClientDocuments from "@/components/dashboard/ClientDocuments";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
+import { EditClientDialog } from "@/components/dashboard/EditClientDialog";
 
 
 export const Route = createFileRoute("/dashboard/clients")({
@@ -244,6 +245,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const [wizard, setWizard] = useState<QuickInvoiceTarget | null>(null);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
+  const [editing, setEditing] = useState(false);
 
   const taskMut = useMutation({
     mutationFn: (vars: { id?: string; title: string; due_at?: string | null; done?: boolean }) =>
@@ -283,10 +285,26 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
             <TabsContent value="apercu" className="mt-4 space-y-4">
               <section className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border border-border p-3">
-                  <div className="text-xs text-muted-foreground">Contact</div>
-                  <div className="text-sm mt-1">{client.email ?? "—"}</div>
-                  <div className="text-sm">{client.phone ?? "—"}</div>
+                <div className="rounded-lg border border-border p-3 sm:col-span-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-xs text-muted-foreground">Coordonnées</div>
+                      <div className="text-sm mt-1 break-words">{client.email || "—"}</div>
+                      <div className="text-sm">{client.phone || "—"}</div>
+                      <div className="text-sm mt-1">
+                        {client.address_line1 || <span className="text-amber-500">Adresse à compléter</span>}
+                        {client.address_line2 ? <>, {client.address_line2}</> : null}
+                      </div>
+                      <div className="text-sm">
+                        {[client.postal_code, client.city].filter(Boolean).join(" ") ||
+                          <span className="text-amber-500">NPA / ville à compléter</span>}
+                        {client.country ? ` · ${client.country}` : ""}
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" className="min-h-11 shrink-0" onClick={() => setEditing(true)}>
+                      <Pencil className="h-4 w-4 mr-1.5" aria-hidden="true" /> Modifier
+                    </Button>
+                  </div>
                 </div>
                 <div className="rounded-lg border border-border p-3">
                   <div className="text-xs text-muted-foreground">Solde dû</div>
