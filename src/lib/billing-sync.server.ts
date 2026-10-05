@@ -20,7 +20,7 @@ export async function syncProfileServicesToBilling(
 
   const { data: existing } = await client
     .from("billing_services")
-    .select("id, name, internal_code")
+    .select("id, name, internal_code, currency")
     .eq("therapist_id", therapistId);
 
   const rows = (existing ?? []) as any[];
@@ -45,9 +45,13 @@ export async function syncProfileServicesToBilling(
     };
     const match = (code ? byCode.get(code) : undefined) ?? byName.get(name.toLowerCase());
     if (match) {
+      // Ne jamais réappliquer un prix du profil dans une autre devise
+      // (ex. 120 CHF → 120 EUR) : le tarif confirmé à la facturation est conservé.
+      const sameCurrency = (match.currency ?? "CHF") === (t?.currency ?? "CHF");
+      const { price: _p, ...noPrice } = base;
       const { error } = await client
         .from("billing_services")
-        .update({ ...base, internal_code: match.internal_code ?? code })
+        .update({ ...(sameCurrency ? base : noPrice), internal_code: match.internal_code ?? code })
         .eq("id", match.id);
       if (!error) synced++;
     } else {

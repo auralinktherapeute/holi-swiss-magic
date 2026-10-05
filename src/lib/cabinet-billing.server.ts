@@ -1,3 +1,4 @@
+import { resolveEffectiveCurrency } from "@/lib/currency-consent";
 // Logique serveur du pont RDV → facture (« Factures manquantes »).
 // Aucune server function ici : uniquement des helpers appelés par cabinet.functions.ts.
 
@@ -116,16 +117,18 @@ export async function createDraftFromAppointment(
 
   let clientName = (appt.patient_name as string) ?? "Client";
   let clientEmail = (appt.patient_email ?? null) as string | null;
+  let clientCurrency: string | null = null;
   if (appt.client_id) {
     const { data: c } = await supabase
       .from("crm_client_contacts")
-      .select("first_name,last_name,email")
+      .select("first_name,last_name,email,billing_currency")
       .eq("id", appt.client_id)
       .eq("therapist_id", therapistId)
       .maybeSingle();
     if (c) {
       clientName = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || clientName;
       clientEmail = c.email ?? clientEmail;
+      clientCurrency = (c as any).billing_currency ?? null;
     }
   }
 
@@ -147,7 +150,7 @@ export async function createDraftFromAppointment(
       statut_paiement: "en_attente",
       montant_ht: 0,
       montant_total: 0,
-      currency: settings.devise_defaut === "EUR" ? "EUR" : "CHF",
+      currency: resolveEffectiveCurrency(clientCurrency, settings.devise_defaut).currency,
       reference_type: "none",
       client_nom: clientName,
       client_email: clientEmail,

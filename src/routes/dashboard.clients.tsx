@@ -25,6 +25,8 @@ import ClientDocuments from "@/components/dashboard/ClientDocuments";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 import { EditClientDialog } from "@/components/dashboard/EditClientDialog";
+import { ClientCurrencyBlock } from "@/components/dashboard/ClientCurrencyBlock";
+import { formatAmount, resolveEffectiveCurrency } from "@/lib/currency-consent";
 
 
 export const Route = createFileRoute("/dashboard/clients")({
@@ -309,7 +311,11 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 <div className="rounded-lg border border-border p-3">
                   <div className="text-xs text-muted-foreground">Solde dû</div>
                   <div className={`text-lg font-semibold ${data.balance_due > 0 ? "text-destructive" : ""}`}>
-                    {money(data.balance_due)}
+                    {((dd.balances_by_currency ?? []) as { currency: string; amount: number }[]).length === 0
+                      ? formatAmount(0, resolveEffectiveCurrency(client.billing_currency, dd.practice_currency).currency)
+                      : (dd.balances_by_currency as { currency: string; amount: number }[]).map((b) => (
+                          <div key={b.currency}>{formatAmount(b.amount, b.currency)}</div>
+                        ))}
                   </div>
                 </div>
                 <div className="rounded-lg border border-border p-3">
@@ -321,6 +327,13 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
                   <div className="text-lg font-semibold">{dd.invoices?.length ?? 0}</div>
                 </div>
               </section>
+
+              <ClientCurrencyBlock
+                clientId={id}
+                clientName={fullName}
+                clientCurrency={client.billing_currency ?? null}
+                practiceCurrency={dd.practice_currency ?? null}
+              />
 
               <section className="rounded-lg border border-border p-3 space-y-2">
                 <div className="flex items-center justify-between gap-3">
