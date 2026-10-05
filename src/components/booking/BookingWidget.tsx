@@ -176,7 +176,7 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
   useEffect(() => {
     if (autoRestoredRef.current || !initialDraft) return;
     autoRestoredRef.current = true;
-    setForm(initialDraft as typeof form);
+    setForm({ name: "", email: "", phone: "", notes: "", address: "", postal_code: "", city: "", country: "", ...(initialDraft as Partial<typeof form>) });
     setFormTouched(true);
     dismissDraft();
   }, [dismissDraft, initialDraft]);
