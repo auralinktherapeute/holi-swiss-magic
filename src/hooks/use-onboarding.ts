@@ -8,6 +8,17 @@ export const SHOW_CHECKLIST_EVENT = "holiswiss:show-checklist";
 
 export type StartTourDetail = { mode: "resume" | "restart" };
 
+export type ProgressPatch = {
+  tourStep?: number;
+  tourStarted?: boolean;
+  tourPaused?: boolean;
+  tourCompleted?: boolean;
+  tourRestart?: boolean;
+  checklistCollapsed?: boolean;
+  checklistReopened?: boolean;
+  event?: "currency_confirmed" | "public_page_viewed" | "booking_checked";
+};
+
 /** Même clé que le layout : une seule requête partagée. */
 export function useOnboardingState(enabled = true) {
   const fetchState = useServerFn(getOnboardingState);
@@ -24,7 +35,7 @@ export function useUpdateOnboardingProgress() {
   const update = useServerFn(updateOnboardingProgress);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Parameters<typeof update>[0]["data"]) => update({ data }),
+    mutationFn: (data: ProgressPatch) => update({ data }),
     onSettled: () => qc.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY }),
   });
 }
