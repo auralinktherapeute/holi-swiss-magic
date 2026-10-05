@@ -29,7 +29,17 @@ export interface SetupSignals {
   activeAvailabilities: number;
   iban?: string | null;
   billingStreet?: string | null;
+  /** Devise du cabinet enregistrée dans les paramètres de facturation (null si aucun paramétrage). */
+  practiceCurrency?: string | null;
+  /** Statut de la fiche (`active` = publiée dans l'annuaire). */
+  status?: string | null;
+  slug?: string | null;
+  /** Nombre de réservations réelles, tous statuts. */
+  appointments?: number;
 }
+
+const VALID_CURRENCIES = ["CHF", "EUR"];
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export type SetupChecklist = Record<SetupStep, boolean>;
 
@@ -48,10 +58,13 @@ export function computeSetupChecklist(
       s.specialties.length > 0 &&
       filled(s.address, 4),
     services: s.activeServicesWithPrice > 0 || s.packages > 0,
-    currency: s.practiceCurrencyConsents > 0 || has("currency_confirmed"),
+    currency:
+      VALID_CURRENCIES.includes(String(s.practiceCurrency ?? "").toUpperCase()) ||
+      s.practiceCurrencyConsents > 0 ||
+      has("currency_confirmed"),
     availability: s.activeAvailabilities > 0,
-    publicPage: has("public_page_viewed"),
-    booking: has("booking_checked"),
+    publicPage: (s.status === "active" && !!s.slug && SLUG_RE.test(s.slug)) || has("public_page_viewed"),
+    booking: (s.appointments ?? 0) > 0 || has("booking_checked"),
     billing: filled(s.iban, 6) && filled(s.billingStreet, 2),
   };
 }

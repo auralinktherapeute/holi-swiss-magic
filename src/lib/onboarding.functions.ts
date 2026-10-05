@@ -35,7 +35,7 @@ export const getOnboardingState = createServerFn({ method: "GET" })
 
     const { data: t } = await supabaseAdmin
       .from("therapists")
-      .select("id, first_name, slug, bio, short_bio, specialties, address, onboarding_complete")
+      .select("id, first_name, slug, status, bio, short_bio, specialties, address, onboarding_complete")
       .eq("user_id", context.userId)
       .maybeSingle();
 
@@ -49,10 +49,10 @@ export const getOnboardingState = createServerFn({ method: "GET" })
       };
     }
 
-    const [inv, avail, svc, pkg, consents, prog] = await Promise.all([
+    const [inv, avail, svc, pkg, consents, appts, prog] = await Promise.all([
       supabaseAdmin
         .from("therapist_invoice_settings")
-        .select("iban_ou_qr_iban,adresse_rue")
+        .select("iban_ou_qr_iban,adresse_rue,devise_defaut")
         .eq("therapist_id", t.id)
         .maybeSingle(),
       supabaseAdmin
@@ -75,6 +75,10 @@ export const getOnboardingState = createServerFn({ method: "GET" })
         .select("id", { count: "exact", head: true })
         .eq("therapist_id", t.id)
         .is("client_id", null),
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("therapist_id", t.id),
       // Progression lue sous RLS, comme le thérapeute lui-même.
       context.supabase
         .from("therapist_onboarding_progress")
@@ -97,6 +101,10 @@ export const getOnboardingState = createServerFn({ method: "GET" })
         activeAvailabilities: avail.count ?? 0,
         iban: inv.data?.iban_ou_qr_iban,
         billingStreet: inv.data?.adresse_rue,
+        practiceCurrency: inv.data?.devise_defaut ?? null,
+        status: t.status,
+        slug: t.slug,
+        appointments: appts.count ?? 0,
       },
       progress?.events,
     );

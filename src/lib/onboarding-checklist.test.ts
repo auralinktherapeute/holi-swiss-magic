@@ -66,6 +66,44 @@ describe("checklist du cabinet", () => {
   });
 });
 
+describe("signaux réels devise / page publique / réservations", () => {
+  const full = {
+    bio: "Une présentation assez longue pour compter.",
+    specialties: ["reiki"],
+    address: "Rue du Lac 1",
+    activeServicesWithPrice: 2,
+    packages: 0,
+    practiceCurrencyConsents: 0,
+    activeAvailabilities: 5,
+    iban: "CH9300762011623852957",
+    billingStreet: "Rue du Lac 1",
+    practiceCurrency: "CHF",
+    status: "active",
+    slug: "henry-gerald",
+    appointments: 4,
+  };
+  it("cabinet entièrement configuré : 7/7 sans aucun événement manuel", () => {
+    expect(countDone(computeSetupChecklist(full, {}))).toBe(7);
+  });
+  it("aucune devise effective : étape non cochée", () => {
+    expect(computeSetupChecklist({ ...full, practiceCurrency: null }, {}).currency).toBe(false);
+    expect(computeSetupChecklist({ ...full, practiceCurrency: "USD" }, {}).currency).toBe(false);
+  });
+  it("EUR est une devise valide", () => {
+    expect(computeSetupChecklist({ ...full, practiceCurrency: "EUR" }, {}).currency).toBe(true);
+  });
+  it("profil non publié ou sans slug : page publique non cochée", () => {
+    expect(computeSetupChecklist({ ...full, status: "pending" }, {}).publicPage).toBe(false);
+    expect(computeSetupChecklist({ ...full, status: "suspended" }, {}).publicPage).toBe(false);
+    expect(computeSetupChecklist({ ...full, slug: null }, {}).publicPage).toBe(false);
+    expect(computeSetupChecklist({ ...full, slug: "Mauvais slug!" }, {}).publicPage).toBe(false);
+  });
+  it("aucune réservation : parcours non coché, sauf test manuel", () => {
+    expect(computeSetupChecklist({ ...full, appointments: 0 }, {}).booking).toBe(false);
+    expect(computeSetupChecklist({ ...full, appointments: 0 }, { booking_checked: "2026-10-05" }).booking).toBe(true);
+  });
+});
+
 describe("guide en 8 étapes", () => {
   it("reprend à la dernière étape atteinte, bornée", () => {
     expect(resumeTourStep(null)).toBe(0);
