@@ -167,6 +167,7 @@ export const updateContactDetails = createServerFn({ method: "POST" })
     }
     payload.first_name = rest.first_name;
     if (payload.last_name === null) payload.last_name = "";
+    if (payload.country === null) delete payload.country; // colonne NOT NULL
     const { data: row, error } = await (context.supabase as any)
       .from("crm_client_contacts")
       .update(payload)
