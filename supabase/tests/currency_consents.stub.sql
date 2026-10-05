@@ -1,0 +1,27 @@
+CREATE ROLE anon NOLOGIN; CREATE ROLE authenticated NOLOGIN; CREATE ROLE service_role NOLOGIN BYPASSRLS;
+CREATE SCHEMA auth;
+CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ select nullif(current_setting('request.jwt.claims', true)::json->>'sub','')::uuid $$;
+GRANT USAGE ON SCHEMA auth TO authenticated, anon; GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated, anon;
+GRANT USAGE ON SCHEMA public TO authenticated, anon, service_role;
+CREATE TYPE public.app_role AS ENUM ('admin','moderator','therapist','user');
+CREATE TABLE public.user_roles(user_id uuid, role app_role);
+CREATE TABLE public.therapists(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid, created_at timestamptz default now());
+CREATE FUNCTION public.has_role(_u uuid,_r app_role) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ select exists(select 1 from public.user_roles where user_id=_u and role=_r) $$;
+CREATE FUNCTION public.is_therapist_owner(_t uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ select exists(select 1 from public.therapists where id=_t and user_id=auth.uid()) $$;
+CREATE TABLE public.therapist_invoice_settings(therapist_id uuid PRIMARY KEY, devise_defaut text NOT NULL DEFAULT 'CHF');
+CREATE TABLE public.billing_services(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), therapist_id uuid, name text, price numeric NOT NULL DEFAULT 0, currency text NOT NULL DEFAULT 'CHF', is_active boolean DEFAULT true, position int DEFAULT 0, updated_at timestamptz);
+CREATE TABLE public.crm_client_contacts(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), therapist_id uuid, first_name text, last_name text DEFAULT '', updated_at timestamptz);
+CREATE TABLE public.appointments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), therapist_id uuid, client_id uuid, patient_name text);
+CREATE TABLE public.therapist_invoices(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), therapist_id uuid, currency text, montant_total numeric);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+ALTER TABLE public.therapist_invoice_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY own ON public.therapist_invoice_settings FOR ALL TO authenticated USING (is_therapist_owner(therapist_id)) WITH CHECK (is_therapist_owner(therapist_id));
+ALTER TABLE public.crm_client_contacts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY own ON public.crm_client_contacts FOR ALL TO authenticated USING (is_therapist_owner(therapist_id)) WITH CHECK (is_therapist_owner(therapist_id));
+-- données fictives
+INSERT INTO therapists(id,user_id) VALUES ('00000000-0000-0000-0000-00000000000a','10000000-0000-0000-0000-00000000000a'),('00000000-0000-0000-0000-00000000000b','10000000-0000-0000-0000-00000000000b');
+INSERT INTO therapist_invoice_settings VALUES ('00000000-0000-0000-0000-00000000000a','CHF'),('00000000-0000-0000-0000-00000000000b','CHF');
+INSERT INTO billing_services(id,therapist_id,name,price) VALUES ('20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-00000000000a','Séance test',120);
+INSERT INTO crm_client_contacts(id,therapist_id,first_name,last_name) VALUES ('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-00000000000a','Client','Test');
+INSERT INTO therapist_invoices(therapist_id,currency,montant_total) VALUES ('00000000-0000-0000-0000-00000000000a','CHF',120);
+INSERT INTO appointments(therapist_id,client_id,patient_name) VALUES ('00000000-0000-0000-0000-00000000000a',NULL,'Ancien');
