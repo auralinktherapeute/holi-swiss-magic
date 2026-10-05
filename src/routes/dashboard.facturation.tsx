@@ -1,3 +1,4 @@
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
 import { PracticeCurrencyCard } from "@/components/dashboard/PracticeCurrencyCard";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -52,7 +53,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
