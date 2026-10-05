@@ -493,6 +493,16 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
           open={!!wizard}
           onOpenChange={(o) => { if (!o) setWizard(null); }}
         />
+        {editing && client && (
+          <EditClientDialog
+            client={client}
+            onClose={() => setEditing(false)}
+            onSaved={() => {
+              qc.invalidateQueries({ queryKey: ["cabinet-client", id] });
+              qc.invalidateQueries({ queryKey: ["cabinet-clients"] });
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
