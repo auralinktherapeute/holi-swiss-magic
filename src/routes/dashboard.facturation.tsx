@@ -796,11 +796,14 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
   // Préremplissage non destructif : ne remplace jamais une valeur déjà saisie.
   // Si aucune adresse n'est encore saisie, le pays de la fiche est aussi repris
   // (sinon le « CH » par défaut resterait collé à une adresse étrangère).
+  // Le client est retrouvé par sa fiche, ou à défaut par son adresse e-mail.
+  const emailKey = String(f.client_email ?? "").trim().toLowerCase();
   useEffect(() => {
-    if (!f.client_id) return;
-    const c = contacts.find((x) => x.id === f.client_id);
+    const c = (f.client_id && contacts.find((x) => x.id === f.client_id))
+      || (emailKey && contacts.find((x) => (x.email ?? "").trim().toLowerCase() === emailKey))
+      || null;
     if (!c) return;
-    const src = contactBilling(c);
+    const src = { ...contactBilling(c), client_id: c.id };
     setF((s) => {
       const next = { ...s };
       const noAddress = !String(s.client_adresse ?? "").trim()
@@ -812,7 +815,28 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
       }
       return next;
     });
-  }, [f.client_id, contacts]);
+  }, [f.client_id, emailKey, contacts]);
+
+  // Prix synchronisé avec la prestation : une ligne à 0 dont la description
+  // correspond à une prestation du catalogue (même devise) reçoit son tarif.
+  // Le thérapeute reste libre de modifier le prix ensuite.
+  useEffect(() => {
+    if (!services.length) return;
+    const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\(\d+\s*min\)/i, "").replace(/^[\w.]+\s+—\s+/, "").trim().toLowerCase();
+    setLines((ls) => {
+      let changed = false;
+      const out = ls.map((l) => {
+        if (Number(l.prix_unitaire) > 0 || !l.description.trim()) return l;
+        const d = norm(l.description);
+        const s = services.find((x) => norm(x.name) === d && (x.currency ?? "CHF") === f.currency && Number(x.price) > 0);
+        if (!s) return l;
+        changed = true;
+        return { ...l, prix_unitaire: Number(s.price) };
+      });
+      return changed ? out : ls;
+    });
+  }, [services, lines.map((l) => l.description).join("|"), f.currency]);
 
   /** Écrase les coordonnées avec celles de la fiche patient (action explicite). */
   function refreshFromContact() {
