@@ -132,6 +132,32 @@ export function BookingDetailsStep(p: BookingDetailsStepProps) {
                 {err("phone")}
               </div>
               <div>
+                <Label htmlFor={ids.address}>{t("booking.address_optional", "Adresse (optionnel)")}</Label>
+                <Input id={ids.address} autoComplete="street-address" className="mt-1 min-h-11" value={p.form.address} maxLength={200}
+                  onChange={(e) => p.onChange({ address: e.target.value })} {...aria("address")} />
+                {err("address")}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor={ids.postal_code}>{t("booking.postal_code_optional", "NPA (optionnel)")}</Label>
+                  <Input id={ids.postal_code} autoComplete="postal-code" className="mt-1 min-h-11" value={p.form.postal_code} maxLength={12}
+                    onChange={(e) => p.onChange({ postal_code: e.target.value })} {...aria("postal_code")} />
+                  {err("postal_code")}
+                </div>
+                <div>
+                  <Label htmlFor={ids.city}>{t("booking.city_optional", "Ville (optionnel)")}</Label>
+                  <Input id={ids.city} autoComplete="address-level2" className="mt-1 min-h-11" value={p.form.city} maxLength={120}
+                    onChange={(e) => p.onChange({ city: e.target.value })} {...aria("city")} />
+                  {err("city")}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor={ids.country}>{t("booking.country_optional", "Pays (optionnel)")}</Label>
+                <Input id={ids.country} autoComplete="country-name" className="mt-1 min-h-11" value={p.form.country} maxLength={80}
+                  onChange={(e) => p.onChange({ country: e.target.value })} {...aria("country")} />
+                {err("country")}
+              </div>
+              <div>
                 <Label htmlFor={ids.notes}>{t("booking.message_optional")}</Label>
                 <Textarea id={ids.notes} className="mt-1" rows={4} value={p.form.notes} maxLength={1000}
                   onChange={(e) => p.onChange({ notes: e.target.value })} {...aria("notes")} />
