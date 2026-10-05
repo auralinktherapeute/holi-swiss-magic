@@ -12,6 +12,7 @@ import UnavailabilityManager from "@/components/dashboard/UnavailabilityManager"
 import WeeklyScheduleEditor from "@/components/dashboard/WeeklyScheduleEditor";
 import CalendarSyncPanel from "@/components/dashboard/CalendarSyncPanel";
 import { useHashFocus } from "@/hooks/use-hash-focus";
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
 
 export const Route = createFileRoute("/dashboard/agenda")({
   component: Page,
@@ -57,6 +58,7 @@ function Page() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">{t("agenda_page.title")}</h1>
         <p className="text-muted-foreground mt-1">{t("agenda_page.subtitle")}</p>
+        <div className="mt-1"><ModuleHelp module="agenda" /></div>
       </div>
 
       {!therapistId && (

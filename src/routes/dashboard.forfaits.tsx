@@ -1,3 +1,4 @@
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -71,6 +72,7 @@ function Page() {
           <p className="text-sm text-muted-foreground mt-1">
             Créez des forfaits de séances et suivez la consommation de chaque client.
           </p>
+          <ModuleHelp module="packages" />
         </div>
       </header>
 

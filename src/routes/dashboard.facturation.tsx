@@ -1,3 +1,4 @@
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
 import { PracticeCurrencyCard } from "@/components/dashboard/PracticeCurrencyCard";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -209,6 +210,7 @@ function Page() {
           <p className="text-sm text-muted-foreground">
             Factures suisses conformes, QR-facture et suivi des encaissements.
           </p>
+          <ModuleHelp module="billing" />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setOpenSet(true)} className="min-h-11">

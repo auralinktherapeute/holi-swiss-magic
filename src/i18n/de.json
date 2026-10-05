@@ -1013,5 +1013,147 @@
     "balance": "Offener Saldo",
     "settings_first": "Speichern Sie zuerst Ihre Rechnungseinstellungen.",
     "historical_note": "Bestehende Rechnungen und Buchungen behalten ihre ursprüngliche Währung."
+  },
+  "onboarding": {
+    "help_entry": "Hilfe & Einstieg",
+    "new_badge": "Neu",
+    "help_menu": {
+      "title": "Hilfe & Einstieg",
+      "description": "Hier finden Sie die Tour, die Checkliste und die Hilfen pro Modul.",
+      "resume": "Tour fortsetzen (Schritt {{step}} von 8)",
+      "start": "Tour starten",
+      "restart": "Von vorne beginnen",
+      "show_checklist": "Praxis-Checkliste anzeigen"
+    },
+    "checklist": {
+      "title": "Richten Sie Ihre Praxis ein",
+      "progress": "{{done}}/{{total}} Schritte erledigt",
+      "progress_aria": "Fortschritt: {{done}} von {{total}}",
+      "collapse": "Einklappen",
+      "expand": "Schritte anzeigen",
+      "hide": "Checkliste ausblenden",
+      "all_done": "Alles bereit: Ihre Praxis ist eingerichtet.",
+      "done": "Erledigt",
+      "mark_done": "Geprüft",
+      "keep_chf": "Ich behalte CHF",
+      "steps": {
+        "profile": {
+          "label": "Mein Berufsprofil vervollständigen",
+          "cta": "Profil öffnen"
+        },
+        "services": {
+          "label": "Leistungen und Preise hinzufügen",
+          "cta": "Leistung hinzufügen"
+        },
+        "currency": {
+          "label": "Rechnungswährung wählen",
+          "cta": "Währung wählen"
+        },
+        "availability": {
+          "label": "Verfügbarkeiten einrichten",
+          "cta": "Agenda öffnen"
+        },
+        "publicPage": {
+          "label": "Meine öffentliche Seite prüfen",
+          "cta": "Öffentliche Seite ansehen"
+        },
+        "booking": {
+          "label": "Den Buchungsablauf prüfen",
+          "cta": "Ohne Buchung testen"
+        },
+        "billing": {
+          "label": "Meine Rechnungsstellung einrichten",
+          "cta": "Rechnungseinstellungen"
+        }
+      },
+      "new_tab": "(öffnet in neuem Tab)",
+      "no_slug": "Ihre öffentliche Seite ist verfügbar, sobald das Profil gespeichert ist."
+    },
+    "tour": {
+      "step_of": "Schritt {{current}} von {{total}}",
+      "quit": "Tour beenden",
+      "later": "Später fortsetzen",
+      "back": "Zurück",
+      "finish": "Fertig",
+      "close": "Tour beenden",
+      "steps": [
+        {
+          "title": "Willkommen bei Holiswiss",
+          "body": "Holiswiss bringt Ihnen Sichtbarkeit, Online-Buchungen und die komplette Verwaltung Ihrer Praxis. Diese Tour zeigt Ihnen das Wichtigste in wenigen Minuten.",
+          "next": "Los geht's"
+        },
+        {
+          "title": "Berufsprofil",
+          "body": "Fügen Sie Foto, Vorstellung, Methoden, Adresse und Kontaktdaten hinzu. Das sehen Klientinnen und Klienten zuerst.",
+          "next": "Leistungen ansehen"
+        },
+        {
+          "title": "Leistungen, Preise und Währung",
+          "body": "Beschreiben Sie Ihre Sitzungen mit Dauer und Preis und wählen Sie Ihre Rechnungswährung (CHF oder EUR).",
+          "next": "Agenda entdecken"
+        },
+        {
+          "title": "Agenda und Verfügbarkeiten",
+          "body": "Legen Sie Ihre üblichen Zeiten, Abwesenheiten und Einzeltermine fest. Gebucht werden kann nur in offenen Zeitfenstern.",
+          "next": "Öffentliche Seite ansehen"
+        },
+        {
+          "title": "Öffentliche Seite und Buchung",
+          "body": "Sehen Sie sich Ihr Profil an und gehen Sie die Buchungsschritte wie eine Klientin durch, ohne echte Buchung.",
+          "next": "Klienten entdecken"
+        },
+        {
+          "title": "Klienten und Einwilligungen",
+          "body": "Jede Person hat ihre Akte: Verlauf, Dokumente und Einwilligungen gemäss DSGVO und revDSG.",
+          "next": "Rechnungen entdecken"
+        },
+        {
+          "title": "Rechnungen und Zahlungen",
+          "body": "Erstellen Sie Schweizer QR-Rechnungen, erfassen Sie Zahlungen und behalten Sie offene Beträge im Blick.",
+          "next": "Meine Tätigkeit entwickeln"
+        },
+        {
+          "title": "Ihre Tätigkeit entwickeln",
+          "body": "Pakete, Fragebögen, Artikel, Bewertungen und der Sichtbarkeitswert helfen Ihnen, Klienten zu gewinnen und zu binden. Die Tour bleibt unter «Hilfe & Einstieg» verfügbar.",
+          "next": "Fertig"
+        }
+      ]
+    },
+    "module_help": {
+      "open": "Hilfe: {{module}}",
+      "label": "Hilfe zu diesem Modul",
+      "close": "Schliessen",
+      "restart_tour": "Ganze Tour ansehen",
+      "agenda": {
+        "title": "Agenda",
+        "p1": "Ihre Wochenzeiten bestimmen die buchbaren Zeitfenster.",
+        "p2": "Erfassen Sie Abwesenheiten, um Tage oder Zeiträume zu sperren.",
+        "p3": "Einzeltermine ergänzen Ihre üblichen Zeiten."
+      },
+      "billing": {
+        "title": "Rechnungen",
+        "p1": "Erfassen Sie zuerst IBAN und Adresse in den Rechnungseinstellungen.",
+        "p2": "Leistungen aus dem Katalog füllen den Preis vor, er bleibt änderbar.",
+        "p3": "Erfassen Sie eingegangene Zahlungen, um offene Beträge zu verfolgen."
+      },
+      "packages": {
+        "title": "Pakete",
+        "p1": "Ein Paket bündelt mehrere Sitzungen zu einem Gesamtpreis.",
+        "p2": "Legen Sie eine Gültigkeitsdauer fest.",
+        "p3": "Der Verbrauch jeder Person wird automatisch verfolgt."
+      },
+      "questionnaires": {
+        "title": "Fragebögen",
+        "p1": "Erstellen Sie einen Aufnahme- oder Verlaufsfragebogen.",
+        "p2": "Ordnen Sie ihn einer Sitzung oder einem Paket zu.",
+        "p3": "Die Antworten werden in der Klientenakte abgelegt."
+      },
+      "visibility": {
+        "title": "Sichtbarkeitswert",
+        "p1": "Der Wert misst Qualität und Vollständigkeit Ihres öffentlichen Profils.",
+        "p2": "Folgen Sie den Empfehlungen, um ihn zu verbessern.",
+        "p3": "Der Wert wird nach jeder Profiländerung aktualisiert."
+      }
+    }
   }
 }

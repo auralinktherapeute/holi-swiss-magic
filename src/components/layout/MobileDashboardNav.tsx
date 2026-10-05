@@ -24,10 +24,10 @@ import {
   Gauge,
 
   X,
-  HelpCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { Logo } from "@/components/holiswiss/Logo";
+import { HelpMenu } from "@/components/dashboard/HelpMenu";
 import { signOutCompletely } from "@/lib/auth-utils";
 
 function usePageTitle(): string {
@@ -91,14 +91,7 @@ export function MobileDashboardHeader() {
         {title}
       </h1>
       <div className="flex items-center justify-end gap-1">
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent("holiswiss:start-tour"))}
-          aria-label="Revoir le tutoriel"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-foreground/80 hover:text-foreground"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
+        <HelpMenu compact />
         <Link
           to="/$lang"
           params={{ lang: "fr" }}

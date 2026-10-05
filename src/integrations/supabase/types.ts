@@ -5852,6 +5852,63 @@ export type Database = {
           },
         ]
       }
+      therapist_onboarding_progress: {
+        Row: {
+          checklist_collapsed: boolean
+          checklist_reopened: boolean
+          created_at: string
+          events: Json
+          therapist_id: string
+          tour_completed_at: string | null
+          tour_paused_at: string | null
+          tour_started_at: string | null
+          tour_step: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checklist_collapsed?: boolean
+          checklist_reopened?: boolean
+          created_at?: string
+          events?: Json
+          therapist_id: string
+          tour_completed_at?: string | null
+          tour_paused_at?: string | null
+          tour_started_at?: string | null
+          tour_step?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checklist_collapsed?: boolean
+          checklist_reopened?: boolean
+          created_at?: string
+          events?: Json
+          therapist_id?: string
+          tour_completed_at?: string | null
+          tour_paused_at?: string | null
+          tour_started_at?: string | null
+          tour_step?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_onboarding_progress_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_onboarding_progress_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: true
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapist_org_certification_history: {
         Row: {
           certification_id: string

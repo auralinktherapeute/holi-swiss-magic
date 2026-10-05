@@ -1,3 +1,4 @@
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -71,6 +72,7 @@ function Page() {
           <p className="text-sm text-muted-foreground">
             Créez des questionnaires d'anamnèse ou de bilan pour vos clients.
           </p>
+          <ModuleHelp module="questionnaires" />
         </div>
         <Button onClick={() => { setEditing(null); setOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" /> Nouveau questionnaire
