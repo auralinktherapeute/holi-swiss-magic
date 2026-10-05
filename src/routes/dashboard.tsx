@@ -1,6 +1,12 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  START_TOUR_EVENT,
+  useUpdateOnboardingProgress,
+  type StartTourDetail,
+} from "@/hooks/use-onboarding";
+import { resumeTourStep, shouldAutoOpenTour } from "@/lib/onboarding-checklist";
 import { TherapistNav } from "@/components/layout/TherapistNav";
 import { MobileDashboardHeader, MobileDashboardBottomNav } from "@/components/layout/MobileDashboardNav";
 import { useAuth } from "@/hooks/use-auth";

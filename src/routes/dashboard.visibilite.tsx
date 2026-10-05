@@ -22,6 +22,7 @@ import { SHOWCASE_ACTIONS, SHOWCASE_STATUS_LABEL } from "@/lib/showcase-actions"
 import type { Recommendation } from "@/lib/showcase-recommendations";
 import { type AuditSeverity } from "@/lib/showcase-audit";
 import type { ReportCheck, ShowcaseAuditReport } from "@/lib/showcase-report";
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
 
 export const Route = createFileRoute("/dashboard/visibilite")({ component: Page });
 
@@ -323,6 +324,7 @@ function Page() {
           <p className="mt-1 text-sm text-muted-foreground">
             Qualité et préparation de votre fiche publique à l'indexation.
           </p>
+          <ModuleHelp module="visibility" />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button

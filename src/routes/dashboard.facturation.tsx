@@ -52,6 +52,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
+import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
@@ -209,6 +210,7 @@ function Page() {
           <p className="text-sm text-muted-foreground">
             Factures suisses conformes, QR-facture et suivi des encaissements.
           </p>
+          <ModuleHelp module="billing" />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setOpenSet(true)} className="min-h-11">
