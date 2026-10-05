@@ -1178,6 +1178,16 @@ function InvoiceDetail({ id, onClose, onEdit, onChanged }: {
             <ul className="mt-1 list-disc pl-5 text-xs space-y-0.5">
               {errors.map((e) => <li key={e}>{e}</li>)}
             </ul>
+            {!locked && (
+              <div className="mt-3">
+                <Button className="min-h-11" disabled={busy} onClick={() => onEdit(invoice.id)}>
+                  Compléter la facture (adresse et montant)
+                </Button>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  L'adresse enregistrée sur la fiche client est reprise automatiquement ; le prix de chaque ligne se saisit dans le formulaire.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
