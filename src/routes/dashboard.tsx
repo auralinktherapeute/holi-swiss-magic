@@ -91,16 +91,37 @@ function DashboardLayout() {
     retry: false,
     staleTime: 30_000,
   });
+  const updateProgress = useUpdateOnboardingProgress();
+  const [tourStart, setTourStart] = useState(0);
+  const autoOpened = useRef(false);
   useEffect(() => {
-    if (onboarding && !onboarding.onboarding_complete) {
+    // Ouverture automatique uniquement si le guide n'a jamais été lancé.
+    if (!onboarding || autoOpened.current) return;
+    autoOpened.current = true;
+    if (onboarding.progress === null && onboarding.first_name === null && !onboarding.slug) return;
+    if (shouldAutoOpenTour(onboarding.onboarding_complete, onboarding.progress)) {
+      setTourStart(0);
       setTourOpen(true);
+      updateProgress.mutate({ tourStarted: true, tourStep: 0, tourPaused: false });
     }
-  }, [onboarding]);
+  }, [onboarding, updateProgress]);
+  const progressRef = useRef(onboarding?.progress ?? null);
+  progressRef.current = onboarding?.progress ?? null;
   useEffect(() => {
-    const handler = () => setTourOpen(true);
-    window.addEventListener("holiswiss:start-tour", handler);
-    return () => window.removeEventListener("holiswiss:start-tour", handler);
-  }, []);
+    const handler = (e: Event) => {
+      const mode = (e as CustomEvent<StartTourDetail>).detail?.mode ?? "resume";
+      if (mode === "restart") {
+        setTourStart(0);
+        updateProgress.mutate({ tourRestart: true, tourStarted: true });
+      } else {
+        setTourStart(resumeTourStep(progressRef.current));
+        updateProgress.mutate({ tourStarted: true, tourPaused: false });
+      }
+      setTourOpen(true);
+    };
+    window.addEventListener(START_TOUR_EVENT, handler);
+    return () => window.removeEventListener(START_TOUR_EVENT, handler);
+  }, [updateProgress]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
