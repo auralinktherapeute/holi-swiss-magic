@@ -106,6 +106,10 @@ export interface Database {
           patient_name: string;
           patient_email: string | null;
           patient_phone: string | null;
+          patient_address: string | null;
+          patient_postal_code: string | null;
+          patient_city: string | null;
+          patient_country: string | null;
           appointment_date: string | null;
           appointment_time: string | null;
           duration_minutes: number;
