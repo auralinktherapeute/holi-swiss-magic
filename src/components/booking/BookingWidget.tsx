@@ -124,6 +124,10 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
     email: z.string().trim().email(t("booking.email_invalid")).max(200),
     phone: z.string().trim().max(40).optional().or(z.literal("")),
     notes: z.string().max(1000).optional().or(z.literal("")),
+    address: z.string().trim().max(200).optional().or(z.literal("")),
+    postal_code: z.string().trim().max(12).optional().or(z.literal("")),
+    city: z.string().trim().max(120).optional().or(z.literal("")),
+    country: z.string().trim().max(80).optional().or(z.literal("")),
   });
   const statePrefix = `booking.${therapistId}`;
   const [selectedServiceIdx, setSelectedServiceIdx] = useSessionState<number | null>(`${statePrefix}.serviceIdx`, null);
@@ -151,7 +155,7 @@ export function BookingWidget({ therapistId, therapistName, services = [], locat
 
   const [selectedDate, setSelectedDate] = useSessionState<string | null>(`${statePrefix}.selectedDate`, null);
   const [selectedTime, setSelectedTime] = useSessionState<string | null>(`${statePrefix}.selectedTime`, null);
-  const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "" });
+  const [form, setForm] = useSessionState(`${statePrefix}.form`, { name: "", email: "", phone: "", notes: "", address: "", postal_code: "", city: "", country: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
