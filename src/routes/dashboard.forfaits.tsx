@@ -72,6 +72,7 @@ function Page() {
           <p className="text-sm text-muted-foreground mt-1">
             Créez des forfaits de séances et suivez la consommation de chaque client.
           </p>
+          <ModuleHelp module="packages" />
         </div>
       </header>
 
