@@ -204,6 +204,7 @@ export type Database = {
           cancellation_reason: string | null
           client_id: string | null
           created_at: string
+          currency: string | null
           duration_minutes: number
           end_time: string | null
           expected_price: number | null
@@ -229,6 +230,7 @@ export type Database = {
           cancellation_reason?: string | null
           client_id?: string | null
           created_at?: string
+          currency?: string | null
           duration_minutes?: number
           end_time?: string | null
           expected_price?: number | null
@@ -254,6 +256,7 @@ export type Database = {
           cancellation_reason?: string | null
           client_id?: string | null
           created_at?: string
+          currency?: string | null
           duration_minutes?: number
           end_time?: string | null
           expected_price?: number | null
@@ -1470,6 +1473,7 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          billing_currency: string | null
           canton: string | null
           city: string | null
           consent_at: string | null
@@ -1499,6 +1503,7 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          billing_currency?: string | null
           canton?: string | null
           city?: string | null
           consent_at?: string | null
@@ -1528,6 +1533,7 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          billing_currency?: string | null
           canton?: string | null
           city?: string | null
           consent_at?: string | null
@@ -2089,6 +2095,85 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_tasks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      currency_change_consents: {
+        Row: {
+          acknowledged: boolean
+          actor_user_id: string
+          change_type: string
+          changed_at: string
+          client_id: string | null
+          consented_at: string
+          id: string
+          new_currency: string
+          new_source: string | null
+          old_currency: string
+          old_source: string | null
+          price_confirmations: Json
+          text_language: string
+          text_version: string
+          therapist_id: string
+          warning_text: string
+        }
+        Insert: {
+          acknowledged: boolean
+          actor_user_id: string
+          change_type: string
+          changed_at?: string
+          client_id?: string | null
+          consented_at?: string
+          id?: string
+          new_currency: string
+          new_source?: string | null
+          old_currency: string
+          old_source?: string | null
+          price_confirmations?: Json
+          text_language: string
+          text_version: string
+          therapist_id: string
+          warning_text: string
+        }
+        Update: {
+          acknowledged?: boolean
+          actor_user_id?: string
+          change_type?: string
+          changed_at?: string
+          client_id?: string | null
+          consented_at?: string
+          id?: string
+          new_currency?: string
+          new_source?: string | null
+          old_currency?: string
+          old_source?: string | null
+          price_confirmations?: Json
+          text_language?: string
+          text_version?: string
+          therapist_id?: string
+          warning_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "currency_change_consents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "currency_change_consents_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "currency_change_consents_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "therapists_public"
@@ -6740,6 +6825,28 @@ export type Database = {
           _verified_by: string
         }
         Returns: boolean
+      }
+      change_client_currency: {
+        Args: {
+          _ack: boolean
+          _client: string
+          _lang: string
+          _new: string
+          _version: string
+          _warning: string
+        }
+        Returns: Json
+      }
+      change_practice_currency: {
+        Args: {
+          _ack: boolean
+          _lang: string
+          _new: string
+          _prices: Json
+          _version: string
+          _warning: string
+        }
+        Returns: Json
       }
       city_slug: { Args: { _input: string }; Returns: string }
       claim_founder_seat: {

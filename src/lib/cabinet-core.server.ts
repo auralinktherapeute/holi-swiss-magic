@@ -1,3 +1,4 @@
+import { balancesByCurrency } from "@/lib/currency-consent";
 // Logique serveur du CRM de cabinet (vue d'ensemble, clients, agrégats).
 // Séparé des server functions pour garder celles-ci minces.
 // Règle : projections de colonnes explicites, jamais de `select *` sur des
@@ -335,7 +336,7 @@ export async function buildClientDetail(
 ) {
   const { data: client, error } = await supabase
     .from("crm_client_contacts")
-    .select(`${CLIENT_LIST_COLUMNS},private_notes,date_of_birth,retention_until,address_line1,address_line2,postal_code,city,canton,country`)
+    .select(`${CLIENT_LIST_COLUMNS},private_notes,date_of_birth,retention_until,address_line1,address_line2,postal_code,city,canton,country,billing_currency`)
     .eq("therapist_id", therapistId)
     .eq("id", clientId)
     .maybeSingle();
@@ -408,8 +409,14 @@ export async function buildClientDetail(
     numero_facture: numbers.get(p.invoice_id) ?? "—",
   }));
 
+  const { data: practice } = await supabase
+    .from("therapist_invoice_settings").select("devise_defaut").eq("therapist_id", therapistId).maybeSingle();
+  const openInvoices = invoices.filter((i) => (OPEN_INVOICE_STATUSES as unknown as string[]).includes(i.statut));
+
   return {
     client,
+    practice_currency: (practice?.devise_defaut as string | undefined) ?? null,
+    balances_by_currency: balancesByCurrency(openInvoices),
     appointments: (apptRes.data ?? []) as any[],
     invoices,
     payments,

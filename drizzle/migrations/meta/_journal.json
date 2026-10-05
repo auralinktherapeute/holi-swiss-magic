@@ -57,6 +57,13 @@
       "when": 1790940188605,
       "tag": "0007_agent_automation_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791230391402,
+      "tag": "0008_billing_currency_consents",
+      "breakpoints": true
     }
   ]
 }

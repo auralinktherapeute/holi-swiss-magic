@@ -1,3 +1,4 @@
+import { PracticeCurrencyCard } from "@/components/dashboard/PracticeCurrencyCard";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -651,16 +652,7 @@ function SettingsDialog({ open, onOpenChange, existing, onSaved, upsertFn }: {
           <fieldset className="space-y-3">
             <legend className="text-sm font-semibold">Facturation</legend>
             <div className="grid sm:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="devise">Devise par défaut</Label>
-                <Select value={f.devise_defaut} onValueChange={(v) => set("devise_defaut", v)}>
-                  <SelectTrigger id="devise"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CHF">CHF</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="sm:col-span-3"><PracticeCurrencyCard /></div>
               <Field state={f} set={set} k="delai_paiement_jours" label="Délai de paiement (jours)" type="number" />
               <Field state={f} set={set} k="next_invoice_number" label="Prochain numéro" type="number" />
               <div className="space-y-1">
@@ -998,14 +990,18 @@ function InvoiceEditor({ invoiceId, contacts, vatRates, settings, onClose, onSav
                         description: tp
                           ? `${tp.code} — ${s.name}${s.duration_min ? ` (${s.duration_min} min)` : ""}`
                           : `${s.name}${s.duration_min ? ` (${s.duration_min} min)` : ""}`,
-                        quantite: 1, prix_unitaire: Number(s.price),
+                        // Pas de conversion implicite : tarif d'une autre devise → montant à saisir.
+                        quantite: 1, prix_unitaire: (s.currency ?? "CHF") === f.currency ? Number(s.price) : 0,
                         remise_pct: 0, tva_taux: Number(s.vat_rate ?? defaultRate),
                       }]);
+                      if ((s.currency ?? "CHF") !== f.currency) {
+                        toast.warning(`Tarif d'origine : ${Number(s.price).toFixed(2)} ${s.currency}. Saisissez le montant en ${f.currency}.`);
+                      }
                     }}>
                     <option value="">Insérer une prestation…</option>
                     {services.filter((s) => s.is_active).map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.name} — {Number(s.price).toFixed(2)} CHF
+                        {s.name} — {Number(s.price).toFixed(2)} {s.currency ?? "CHF"}
                       </option>
                     ))}
                   </select>

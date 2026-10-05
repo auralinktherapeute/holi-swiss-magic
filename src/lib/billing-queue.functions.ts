@@ -1,3 +1,4 @@
+import { resolveEffectiveCurrency } from "@/lib/currency-consent";
 // File d'attente de facturation : rendez-vous effectués non facturés,
 // clients à facturer, exclusion motivée et création d'une facture groupée.
 // Le therapist_id est toujours dérivé du jeton, jamais du front-end.
@@ -224,7 +225,7 @@ export const createInvoiceFromAppointments = createServerFn({ method: "POST" })
     if (clientId) {
       const { data: c } = await context.supabase
         .from("crm_client_contacts")
-        .select("id,first_name,last_name,email,address_line1,address_line2,postal_code,city,canton,country,preferred_document_language")
+        .select("id,first_name,last_name,email,address_line1,address_line2,postal_code,city,canton,country,preferred_document_language,billing_currency")
         .eq("therapist_id", therapistId)
         .eq("id", clientId)
         .maybeSingle();
@@ -250,7 +251,7 @@ export const createInvoiceFromAppointments = createServerFn({ method: "POST" })
         statut: "brouillon",
         statut_paiement: "en_attente",
         montant_ht: 0, montant_total: 0,
-        currency: settings.devise_defaut ?? "CHF",
+        currency: resolveEffectiveCurrency(contact?.billing_currency, settings.devise_defaut).currency,
         reference_type: "none",
         client_nom: clientNom || "Client",
         client_adresse: contact?.address_line1 ?? null,

@@ -177,8 +177,10 @@ export const upsertMyInvoiceSettings = createServerFn({ method: "POST" })
     const payload = { ...data, email_pro: data.email_pro || null };
     const existing = await loadSettings(context.supabase, therapistId);
     if (existing) {
+      // La devise ne change que via changePracticeCurrency (pop-up + consentement).
+      const { devise_defaut: _ignored, ...updatePayload } = payload;
       const { error } = await (context.supabase as any)
-        .from("therapist_invoice_settings").update(payload).eq("therapist_id", therapistId);
+        .from("therapist_invoice_settings").update(updatePayload).eq("therapist_id", therapistId);
       if (error) throw new Error(error.message);
     } else {
       const { error } = await (context.supabase as any)
