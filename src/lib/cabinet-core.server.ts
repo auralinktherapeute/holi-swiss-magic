@@ -335,7 +335,7 @@ export async function buildClientDetail(
 ) {
   const { data: client, error } = await supabase
     .from("crm_client_contacts")
-    .select(`${CLIENT_LIST_COLUMNS},private_notes,date_of_birth,retention_until`)
+    .select(`${CLIENT_LIST_COLUMNS},private_notes,date_of_birth,retention_until,address_line1,address_line2,postal_code,city,canton,country`)
     .eq("therapist_id", therapistId)
     .eq("id", clientId)
     .maybeSingle();

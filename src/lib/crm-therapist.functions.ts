@@ -136,6 +136,50 @@ export const upsertContact = createServerFn({ method: "POST" })
     return row as ClientContact;
   });
 
+// Mise à jour partielle des coordonnées : ne touche qu'aux champs fournis
+// (statut, tags, notes restent intacts).
+const opt = (max: number) => z.string().trim().max(max).nullable().optional();
+const ContactDetailsSchema = z.object({
+  id: z.string().uuid(),
+  first_name: z.string().trim().min(1, "Prénom requis").max(80),
+  last_name: opt(80),
+  email: z.union([z.literal(""), z.string().trim().email("E-mail invalide").max(200)]).nullable().optional(),
+  phone: opt(40),
+  date_of_birth: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).nullable().optional(),
+  address_line1: opt(200),
+  address_line2: opt(200),
+  postal_code: opt(20),
+  city: opt(120),
+  canton: opt(60),
+  country: opt(60),
+});
+
+export const updateContactDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ContactDetailsSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { id, ...rest } = data;
+    const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    for (const [k, v] of Object.entries(rest)) {
+      if (v === undefined) continue;
+      payload[k] = typeof v === "string" && v.trim() === "" ? null : v;
+    }
+    payload.first_name = rest.first_name;
+    if (payload.last_name === null) payload.last_name = "";
+    if (payload.country === null) delete payload.country; // colonne NOT NULL
+    const { data: row, error } = await (context.supabase as any)
+      .from("crm_client_contacts")
+      .update(payload)
+      .eq("id", id)
+      .eq("therapist_id", therapistId)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Client introuvable.");
+    return { ok: true };
+  });
+
 export const deleteContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
