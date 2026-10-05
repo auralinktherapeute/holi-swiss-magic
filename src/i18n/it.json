@@ -1013,5 +1013,147 @@
     "balance": "Saldo dovuto",
     "settings_first": "Salva prima le impostazioni di fatturazione.",
     "historical_note": "Le fatture e prenotazioni esistenti mantengono la loro valuta d’origine."
+  },
+  "onboarding": {
+    "help_entry": "Aiuto e primi passi",
+    "new_badge": "Nuovo",
+    "help_menu": {
+      "title": "Aiuto e primi passi",
+      "description": "Ritrovate la guida, la checklist e gli aiuti per modulo.",
+      "resume": "Riprendi la guida (passo {{step}} di 8)",
+      "start": "Avvia la guida",
+      "restart": "Ricomincia dall'inizio",
+      "show_checklist": "Mostra la checklist dello studio"
+    },
+    "checklist": {
+      "title": "Configurate il vostro studio",
+      "progress": "{{done}}/{{total}} passi completati",
+      "progress_aria": "Avanzamento: {{done}} di {{total}}",
+      "collapse": "Riduci",
+      "expand": "Mostra i passi",
+      "hide": "Nascondi la checklist",
+      "all_done": "Tutto pronto: il vostro studio è configurato.",
+      "done": "Completato",
+      "mark_done": "Verificato",
+      "keep_chf": "Mantengo CHF",
+      "steps": {
+        "profile": {
+          "label": "Completare il mio profilo professionale",
+          "cta": "Apri il profilo"
+        },
+        "services": {
+          "label": "Aggiungere prestazioni e tariffe",
+          "cta": "Aggiungi una prestazione"
+        },
+        "currency": {
+          "label": "Scegliere la valuta di fatturazione",
+          "cta": "Scegli la valuta"
+        },
+        "availability": {
+          "label": "Configurare le disponibilità",
+          "cta": "Apri l'agenda"
+        },
+        "publicPage": {
+          "label": "Verificare la mia pagina pubblica",
+          "cta": "Vedi la pagina pubblica"
+        },
+        "booking": {
+          "label": "Verificare il percorso di prenotazione",
+          "cta": "Prova senza prenotare"
+        },
+        "billing": {
+          "label": "Configurare la fatturazione",
+          "cta": "Impostazioni di fatturazione"
+        }
+      },
+      "new_tab": "(si apre in una nuova scheda)",
+      "no_slug": "La pagina pubblica sarà disponibile dopo il salvataggio del profilo."
+    },
+    "tour": {
+      "step_of": "Passo {{current}} di {{total}}",
+      "quit": "Esci dalla guida",
+      "later": "Riprendi più tardi",
+      "back": "Indietro",
+      "finish": "Termina",
+      "close": "Esci dalla guida",
+      "steps": [
+        {
+          "title": "Benvenuti su Holiswiss",
+          "body": "Holiswiss vi offre visibilità, prenotazione online e la gestione completa dello studio. Questa guida vi mostra l'essenziale in pochi minuti.",
+          "next": "Iniziamo"
+        },
+        {
+          "title": "Profilo professionale",
+          "body": "Aggiungete foto, presentazione, metodi, indirizzo e recapiti. È ciò che i clienti vedono per primo.",
+          "next": "Vedi le prestazioni"
+        },
+        {
+          "title": "Prestazioni, tariffe e valuta",
+          "body": "Descrivete le sedute con durata e prezzo, poi scegliete la valuta di fatturazione (CHF o EUR).",
+          "next": "Scopri l'agenda"
+        },
+        {
+          "title": "Agenda e disponibilità",
+          "body": "Definite orari abituali, assenze e fasce puntuali. I clienti prenotano solo nelle fasce aperte.",
+          "next": "Vedi la pagina pubblica"
+        },
+        {
+          "title": "Pagina pubblica e prenotazione",
+          "body": "Visualizzate la vostra scheda e seguite i passi di prenotazione come un cliente, senza creare una prenotazione reale.",
+          "next": "Scopri i clienti"
+        },
+        {
+          "title": "Clienti e consensi",
+          "body": "Ogni cliente ha la sua scheda: storico, documenti e consensi, conformemente al GDPR e alla nLPD.",
+          "next": "Scopri la fatturazione"
+        },
+        {
+          "title": "Fatturazione e pagamenti",
+          "body": "Create fatture QR svizzere, registrate i pagamenti e seguite gli insoluti.",
+          "next": "Sviluppa la mia attività"
+        },
+        {
+          "title": "Sviluppare la vostra attività",
+          "body": "Pacchetti, questionari, articoli, recensioni e punteggio di visibilità vi aiutano ad attirare e fidelizzare i clienti. La guida resta disponibile da «Aiuto e primi passi».",
+          "next": "Termina"
+        }
+      ]
+    },
+    "module_help": {
+      "open": "Aiuto: {{module}}",
+      "label": "Aiuto su questo modulo",
+      "close": "Chiudi",
+      "restart_tour": "Rivedi la guida completa",
+      "agenda": {
+        "title": "Agenda",
+        "p1": "Gli orari settimanali definiscono le fasce prenotabili.",
+        "p2": "Aggiungete assenze per bloccare giorni o periodi.",
+        "p3": "Le fasce puntuali completano gli orari abituali."
+      },
+      "billing": {
+        "title": "Fatturazione",
+        "p1": "Inserite prima IBAN e indirizzo nelle impostazioni di fatturazione.",
+        "p2": "Le prestazioni del catalogo precompilano il prezzo, che resta modificabile.",
+        "p3": "Registrate i pagamenti ricevuti per seguire gli insoluti."
+      },
+      "packages": {
+        "title": "Pacchetti",
+        "p1": "Un pacchetto raggruppa più sedute a un prezzo complessivo.",
+        "p2": "Fissate una durata di validità.",
+        "p3": "Il consumo di ogni cliente è seguito automaticamente."
+      },
+      "questionnaires": {
+        "title": "Questionari",
+        "p1": "Create un questionario di accoglienza o di follow-up.",
+        "p2": "Assegnatelo a una seduta o a un pacchetto.",
+        "p3": "Le risposte sono archiviate nella scheda del cliente."
+      },
+      "visibility": {
+        "title": "Punteggio di visibilità",
+        "p1": "Il punteggio misura qualità e completezza della scheda pubblica.",
+        "p2": "Seguite le raccomandazioni per migliorarlo.",
+        "p3": "Il punteggio si aggiorna dopo ogni modifica del profilo."
+      }
+    }
   }
 }

@@ -1013,5 +1013,147 @@
     "balance": "Balance due",
     "settings_first": "Save your billing settings first.",
     "historical_note": "Existing invoices and bookings keep their original currency."
+  },
+  "onboarding": {
+    "help_entry": "Help & getting started",
+    "new_badge": "New",
+    "help_menu": {
+      "title": "Help & getting started",
+      "description": "Find the guide, the checklist and help for each module.",
+      "resume": "Resume the guide (step {{step}} of 8)",
+      "start": "Start the guide",
+      "restart": "Start over",
+      "show_checklist": "Show the practice checklist"
+    },
+    "checklist": {
+      "title": "Set up your practice",
+      "progress": "{{done}}/{{total}} steps completed",
+      "progress_aria": "Progress: {{done}} of {{total}}",
+      "collapse": "Collapse",
+      "expand": "Show steps",
+      "hide": "Hide the checklist",
+      "all_done": "All set: your practice is configured.",
+      "done": "Done",
+      "mark_done": "I've checked it",
+      "keep_chf": "Keep CHF",
+      "steps": {
+        "profile": {
+          "label": "Complete my professional profile",
+          "cta": "Open my profile"
+        },
+        "services": {
+          "label": "Add my services and prices",
+          "cta": "Add a service"
+        },
+        "currency": {
+          "label": "Choose my billing currency",
+          "cta": "Choose currency"
+        },
+        "availability": {
+          "label": "Set my availability",
+          "cta": "Open the calendar"
+        },
+        "publicPage": {
+          "label": "Check my public page",
+          "cta": "View my public page"
+        },
+        "booking": {
+          "label": "Check the booking flow",
+          "cta": "Test without booking"
+        },
+        "billing": {
+          "label": "Set up my billing",
+          "cta": "Billing settings"
+        }
+      },
+      "new_tab": "(opens in a new tab)",
+      "no_slug": "Your public page will be available once the profile is saved."
+    },
+    "tour": {
+      "step_of": "Step {{current}} of {{total}}",
+      "quit": "Quit the guide",
+      "later": "Resume later",
+      "back": "Back",
+      "finish": "Finish",
+      "close": "Quit the guide",
+      "steps": [
+        {
+          "title": "Welcome to Holiswiss",
+          "body": "Holiswiss gives you visibility, online booking and full management of your practice. This guide shows you the essentials in a few minutes.",
+          "next": "Get started"
+        },
+        {
+          "title": "Professional profile",
+          "body": "Add your photo, introduction, methods, address and contact details. This is what clients see first.",
+          "next": "See services"
+        },
+        {
+          "title": "Services, prices and currency",
+          "body": "Describe your sessions with duration and price, then choose your billing currency (CHF or EUR).",
+          "next": "Discover the calendar"
+        },
+        {
+          "title": "Calendar and availability",
+          "body": "Set your usual hours, absences and one-off slots. Clients can only book open slots.",
+          "next": "See my public page"
+        },
+        {
+          "title": "Public page and booking",
+          "body": "Preview your profile and walk through the booking steps like a client, without creating a real booking.",
+          "next": "Discover clients"
+        },
+        {
+          "title": "Clients and consent",
+          "body": "Each client has a record: history, documents and consent, in line with GDPR and the Swiss nFADP.",
+          "next": "Discover billing"
+        },
+        {
+          "title": "Billing and payments",
+          "body": "Create Swiss QR invoices, record payments and track unpaid invoices.",
+          "next": "Grow my practice"
+        },
+        {
+          "title": "Grow your practice",
+          "body": "Packages, questionnaires, articles, reviews and the visibility score help you attract and retain clients. The guide stays available from “Help & getting started”.",
+          "next": "Finish"
+        }
+      ]
+    },
+    "module_help": {
+      "open": "Help: {{module}}",
+      "label": "Help on this module",
+      "close": "Close",
+      "restart_tour": "Watch the full guide",
+      "agenda": {
+        "title": "Calendar",
+        "p1": "Your weekly hours define the bookable slots.",
+        "p2": "Add absences to block days or periods.",
+        "p3": "One-off slots complement your usual hours."
+      },
+      "billing": {
+        "title": "Billing",
+        "p1": "First enter your IBAN and address in the billing settings.",
+        "p2": "Catalogue services prefill the invoice price, which stays editable.",
+        "p3": "Record payments received to track unpaid invoices."
+      },
+      "packages": {
+        "title": "Packages",
+        "p1": "A package groups several sessions at an overall price.",
+        "p2": "Set a validity period.",
+        "p3": "Each client's usage is tracked automatically."
+      },
+      "questionnaires": {
+        "title": "Questionnaires",
+        "p1": "Create an intake or follow-up questionnaire.",
+        "p2": "Assign it to a session or a package.",
+        "p3": "Answers are stored in the client record."
+      },
+      "visibility": {
+        "title": "Visibility score",
+        "p1": "The score measures the quality and completeness of your public profile.",
+        "p2": "Follow the recommendations to improve it.",
+        "p3": "The score updates after each profile change."
+      }
+    }
   }
 }

@@ -1013,5 +1013,147 @@
     "balance": "Solde dû",
     "settings_first": "Enregistrez d’abord vos paramètres de facturation.",
     "historical_note": "Les factures et réservations existantes gardent leur devise d’origine."
+  },
+  "onboarding": {
+    "help_entry": "Aide & prise en main",
+    "new_badge": "Nouveau",
+    "help_menu": {
+      "title": "Aide & prise en main",
+      "description": "Retrouvez le guide, la checklist et les aides par module.",
+      "resume": "Reprendre le guide (étape {{step}} sur 8)",
+      "start": "Lancer le guide",
+      "restart": "Recommencer depuis le début",
+      "show_checklist": "Afficher la checklist du cabinet"
+    },
+    "checklist": {
+      "title": "Configurez votre cabinet",
+      "progress": "{{done}}/{{total}} étapes terminées",
+      "progress_aria": "Progression : {{done}} sur {{total}}",
+      "collapse": "Réduire",
+      "expand": "Afficher les étapes",
+      "hide": "Masquer la checklist",
+      "all_done": "Tout est prêt : votre cabinet est configuré.",
+      "done": "Terminé",
+      "mark_done": "C'est vérifié",
+      "keep_chf": "Je garde CHF",
+      "steps": {
+        "profile": {
+          "label": "Compléter mon profil professionnel",
+          "cta": "Ouvrir mon profil"
+        },
+        "services": {
+          "label": "Ajouter mes prestations et mes tarifs",
+          "cta": "Ajouter une prestation"
+        },
+        "currency": {
+          "label": "Choisir ma devise de facturation",
+          "cta": "Choisir la devise"
+        },
+        "availability": {
+          "label": "Configurer mes disponibilités",
+          "cta": "Ouvrir l'agenda"
+        },
+        "publicPage": {
+          "label": "Vérifier ma page publique",
+          "cta": "Voir ma page publique"
+        },
+        "booking": {
+          "label": "Vérifier le parcours de réservation",
+          "cta": "Tester sans réserver"
+        },
+        "billing": {
+          "label": "Configurer ma facturation",
+          "cta": "Paramètres de facturation"
+        }
+      },
+      "new_tab": "(s'ouvre dans un nouvel onglet)",
+      "no_slug": "Votre page publique sera disponible une fois le profil enregistré."
+    },
+    "tour": {
+      "step_of": "Étape {{current}} sur {{total}}",
+      "quit": "Quitter le guide",
+      "later": "Reprendre plus tard",
+      "back": "Retour",
+      "finish": "Terminer",
+      "close": "Quitter le guide",
+      "steps": [
+        {
+          "title": "Bienvenue sur Holiswiss",
+          "body": "Holiswiss vous apporte de la visibilité, la réservation en ligne et la gestion complète de votre cabinet. Ce guide vous présente l'essentiel en quelques minutes.",
+          "next": "Commencer"
+        },
+        {
+          "title": "Profil professionnel",
+          "body": "Ajoutez votre photo, votre présentation, vos méthodes, votre adresse et vos coordonnées. C'est ce que les clients voient en premier.",
+          "next": "Voir les prestations"
+        },
+        {
+          "title": "Prestations, tarifs et devise",
+          "body": "Décrivez vos séances avec leur durée et leur prix, puis choisissez votre devise de facturation (CHF ou EUR).",
+          "next": "Découvrir l'agenda"
+        },
+        {
+          "title": "Agenda et disponibilités",
+          "body": "Définissez vos horaires habituels, vos absences et vos créneaux ponctuels. Les clients ne réservent que sur les créneaux ouverts.",
+          "next": "Voir ma page publique"
+        },
+        {
+          "title": "Page publique et réservation",
+          "body": "Prévisualisez votre fiche et parcourez les étapes de réservation comme un client, sans créer de réservation réelle.",
+          "next": "Découvrir les clients"
+        },
+        {
+          "title": "Clients et consentements",
+          "body": "Chaque client a sa fiche : historique, documents et consentements, conformément au RGPD et à la nLPD.",
+          "next": "Découvrir la facturation"
+        },
+        {
+          "title": "Facturation et paiements",
+          "body": "Créez vos factures QR suisses, enregistrez les paiements et suivez les impayés.",
+          "next": "Développer mon activité"
+        },
+        {
+          "title": "Développer votre activité",
+          "body": "Forfaits, questionnaires, articles, avis et score de visibilité vous aident à attirer et fidéliser vos clients. Le guide reste accessible depuis « Aide & prise en main ».",
+          "next": "Terminer"
+        }
+      ]
+    },
+    "module_help": {
+      "open": "Aide : {{module}}",
+      "label": "Aide sur ce module",
+      "close": "Fermer",
+      "restart_tour": "Revoir le guide complet",
+      "agenda": {
+        "title": "Agenda",
+        "p1": "Vos horaires hebdomadaires définissent les créneaux réservables.",
+        "p2": "Ajoutez des absences pour bloquer des jours ou des périodes.",
+        "p3": "Les créneaux ponctuels complètent vos horaires habituels."
+      },
+      "billing": {
+        "title": "Facturation",
+        "p1": "Renseignez d'abord votre IBAN et votre adresse dans les paramètres de facturation.",
+        "p2": "Les prestations du catalogue préremplissent le prix des factures, qui reste modifiable.",
+        "p3": "Enregistrez les paiements reçus pour suivre les impayés."
+      },
+      "packages": {
+        "title": "Forfaits",
+        "p1": "Un forfait regroupe plusieurs séances à un prix global.",
+        "p2": "Fixez une durée de validité.",
+        "p3": "La consommation de chaque client est suivie automatiquement."
+      },
+      "questionnaires": {
+        "title": "Questionnaires",
+        "p1": "Créez un questionnaire d'accueil ou de suivi.",
+        "p2": "Attribuez-le à une séance ou à un forfait.",
+        "p3": "Les réponses sont rangées dans la fiche du client."
+      },
+      "visibility": {
+        "title": "Score de visibilité",
+        "p1": "Le score mesure la qualité et la complétude de votre fiche publique.",
+        "p2": "Suivez les recommandations pour l'améliorer.",
+        "p3": "Le score se met à jour après chaque modification de votre profil."
+      }
+    }
   }
 }

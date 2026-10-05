@@ -78,6 +78,13 @@
       "when": 1791236689184,
       "tag": "0010_booking_client_address",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791238492421,
+      "tag": "0011_therapist_onboarding_progress",
+      "breakpoints": true
     }
   ]
 }
