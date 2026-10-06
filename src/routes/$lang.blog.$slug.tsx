@@ -15,7 +15,15 @@ import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { renderMarkdown } from "@/lib/blog-markdown";
 import { articleDates, CONTENT_DATE_COLUMN, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
-import { articleIndexing, cleanInlineText, type ArticleLang } from "@/lib/article-translation";
+import { articleIndexing, checkTranslation, cleanInlineText, type ArticleLang } from "@/lib/article-translation";
+
+/** Page légère affichée quand la traduction d'un article n'est pas complète. */
+const UNAVAILABLE: Record<"fr" | "de" | "it" | "en", { title: string; text: string; cta: string }> = {
+  fr: { title: "Traduction indisponible", text: "Cet article n'est pas encore disponible dans cette langue.", cta: "Lire la version française" },
+  de: { title: "Übersetzung nicht verfügbar", text: "Dieser Artikel ist noch nicht auf Deutsch verfügbar. Sie können die französische Originalversion lesen.", cta: "Französische Version lesen" },
+  it: { title: "Traduzione non disponibile", text: "Questo articolo non è ancora disponibile in italiano. Potete leggere la versione originale in francese.", cta: "Leggi la versione francese" },
+  en: { title: "Translation unavailable", text: "This article is not yet available in English. You can read the original French version.", cta: "Read the French version" },
+};
 
 
 const SITE = "https://holiswiss.ch";
@@ -85,6 +93,24 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     const lang = (params.lang as Lang) ?? "fr";
     // Variante incomplète : noindex,follow + canonical vers la source FR.
     const indexing = articleIndexing(article, lang as ArticleLang);
+    // Variante étrangère incomplète : page légère « traduction indisponible »,
+    // sans contenu français de repli, sans hreflang ni balisage Article.
+    if (lang !== "fr" && !indexing.complete) {
+      const u = UNAVAILABLE[lang as Lang] ?? UNAVAILABLE.en;
+      return {
+        meta: [
+          { title: `${u.title} | Holiswiss` },
+          { name: "robots", content: "noindex,follow" },
+          { name: "description", content: u.text },
+          { property: "og:title", content: u.title },
+          { property: "og:description", content: u.text },
+          { property: "og:type", content: "website" },
+          { property: "og:url", content: indexing.canonical },
+          { name: "twitter:card", content: "summary" },
+        ],
+        links: [{ rel: "canonical", href: indexing.canonical }],
+      };
+    }
     const rawTitle = cleanInlineText(titleForLang(article, lang)) || "Article";
     const rawExcerpt = excerptForLang(article, lang);
     const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
@@ -229,6 +255,30 @@ function Page() {
             className="inline-flex items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.1)] px-5 py-2.5 text-sm font-medium text-[#d4a5f9] hover:bg-[rgba(184,110,249,0.2)] transition-colors">
             <ArrowLeft className="h-4 w-4" /> {copy.backToBlog}
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Même règle que les métadonnées et le sitemap : jamais de corps français
+  // sous une URL étrangère dont la traduction est incomplète.
+  if (l !== "fr" && !checkTranslation(raw, l).complete) {
+    const u = UNAVAILABLE[l];
+    return (
+      <div className="min-h-screen bg-[#2d1248] flex items-center justify-center">
+        <div className="mx-auto max-w-xl px-4 py-16 text-center">
+          <img src={lotusAsset.url} alt="" className="w-16 h-16 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-3">{u.title}</h1>
+          <p className="text-[#d4c4e0] mb-8">{u.text}</p>
+          <Link to="/$lang/blog/$slug" params={{ lang: "fr", slug: raw.slug as string }} hrefLang="fr" lang="fr"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#b86ef9] px-6 py-3 text-sm font-semibold text-white hover:bg-[#a855f7] transition-colors">
+            {u.cta}
+          </Link>
+          <div className="mt-8">
+            <Link to="/$lang/blog" params={{ lang: l }} className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/70 hover:text-[#d4a5f9]">
+              <ArrowLeft className="h-4 w-4" /> {copy.allArticles}
+            </Link>
+          </div>
         </div>
       </div>
     );
