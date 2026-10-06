@@ -1,37 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-
-const CHANNEL = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
-const KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
+import { autocompleteSwissAddress } from "@/lib/google-places.functions";
 
 type Suggestion = { id: string; primary: string; secondary: string };
-
-let loaderPromise: Promise<void> | null = null;
-function loadGoogleMaps(): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("SSR"));
-  if ((window as any).google?.maps?.importLibrary) return Promise.resolve();
-  if (loaderPromise) return loaderPromise;
-  if (!KEY) return Promise.reject(new Error("Missing Google Maps browser key"));
-  loaderPromise = new Promise<void>((resolve, reject) => {
-    (window as any).__lovableInitMaps = () => resolve();
-    const s = document.createElement("script");
-    const params = new URLSearchParams({
-      key: KEY,
-      v: "weekly",
-      libraries: "places",
-      loading: "async",
-      callback: "__lovableInitMaps",
-    });
-    if (CHANNEL) params.set("channel", CHANNEL);
-    s.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
-    s.async = true;
-    s.onerror = () => reject(new Error("Failed to load Google Maps"));
-    document.head.appendChild(s);
-  });
-  return loaderPromise;
-}
 
 type Props = {
   id?: string;
@@ -43,28 +17,20 @@ type Props = {
 };
 
 export function AddressAutocomplete({ id, value, onChange, placeholder, countries = ["ch"], className }: Props) {
+  const fetchSuggestions = useServerFn(autocompleteSwissAddress);
   const reactId = useId();
   const inputId = id ?? reactId;
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionTokenRef = useRef<any>(null);
+  const sessionTokenRef = useRef<string>("");
+  const requestRef = useRef(0);
   const debounceRef = useRef<number | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let mounted = true;
-    loadGoogleMaps()
-      .then(async () => {
-        const { AutocompleteSessionToken } = (await (window as any).google.maps.importLibrary("places"));
-        if (!mounted) return;
-        sessionTokenRef.current = new AutocompleteSessionToken();
-        setReady(true);
-      })
-      .catch((e) => mounted && setError(e.message));
-    return () => { mounted = false; };
+    sessionTokenRef.current = crypto.randomUUID();
   }, []);
 
   useEffect(() => {
@@ -77,40 +43,35 @@ export function AddressAutocomplete({ id, value, onChange, placeholder, countrie
 
   function handleChange(v: string) {
     onChange(v);
-    if (!ready) return;
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     if (!v.trim() || v.trim().length < 3) {
       setSuggestions([]); setOpen(false); return;
     }
     debounceRef.current = window.setTimeout(async () => {
+      const requestId = ++requestRef.current;
       try {
         setLoading(true);
-        const { AutocompleteSuggestion } = (await (window as any).google.maps.importLibrary("places"));
-        const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: v,
-          sessionToken: sessionTokenRef.current,
-          includedRegionCodes: countries,
-          language: "fr",
+        setError(null);
+        const result = await fetchSuggestions({
+          data: {
+            query: v,
+            sessionToken: sessionTokenRef.current || crypto.randomUUID(),
+            countries,
+          },
         });
-        const mapped: Suggestion[] = (results || [])
-          .map((s: any) => {
-            const p = s.placePrediction;
-            if (!p) return null;
-            return {
-              id: p.placeId,
-              primary: p.mainText?.toString() ?? p.text?.toString() ?? "",
-              secondary: p.secondaryText?.toString() ?? "",
-            };
-          })
-          .filter(Boolean) as Suggestion[];
+        if (requestId !== requestRef.current) return;
+        const mapped: Suggestion[] = result.suggestions;
         setSuggestions(mapped);
         setOpen(mapped.length > 0);
-      } catch (e: any) {
-        setError(e?.message ?? "Erreur d'autocomplétion");
+      } catch (e: unknown) {
+        if (requestId !== requestRef.current) return;
+        setSuggestions([]);
+        setOpen(false);
+        setError(e instanceof Error ? e.message : "Erreur d'autocomplétion");
       } finally {
-        setLoading(false);
+        if (requestId === requestRef.current) setLoading(false);
       }
-    }, 200);
+    }, 300);
   }
 
   function selectSuggestion(s: Suggestion) {
@@ -118,10 +79,7 @@ export function AddressAutocomplete({ id, value, onChange, placeholder, countrie
     onChange(full);
     setOpen(false);
     setSuggestions([]);
-    // Renew session token for billing-optimal sessions
-    (window as any).google?.maps?.importLibrary("places").then(({ AutocompleteSessionToken }: any) => {
-      sessionTokenRef.current = new AutocompleteSessionToken();
-    });
+    sessionTokenRef.current = crypto.randomUUID();
   }
 
   return (
@@ -163,7 +121,7 @@ export function AddressAutocomplete({ id, value, onChange, placeholder, countrie
           ))}
         </ul>
       )}
-      {error && !KEY && (
+      {error && (
         <p className="mt-1 text-xs text-muted-foreground">Autocomplétion indisponible — saisie libre.</p>
       )}
     </div>
