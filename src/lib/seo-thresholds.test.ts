@@ -101,7 +101,7 @@ describe("seo-thresholds — sitemap et routes partagent le même helper", () =>
   // helper : on les retire avant de découper, sinon le test vérifie de la prose.
   const code = (src: string) =>
     src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
-  const SITEMAP = "sitemap[.]xml.ts";
+  const SITEMAP = "../lib/sitemap-build.server.ts";
   const ROUTES: Array<[string, string]> = [
     ["$lang.therapeutes.ville.$citySlug.tsx", "isCityIndexable"],
     ["$lang.therapeutes.canton.$canton.tsx", "isCantonIndexable"],

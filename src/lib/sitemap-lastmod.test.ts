@@ -45,7 +45,7 @@ describe("articleLastmod / paroleLastmod", () => {
 
 describe("sitemap : plus aucune lecture de updated_at pour les contenus éditoriaux", () => {
   const src = readFileSync(
-    fileURLToPath(new URL("../routes/sitemap[.]xml.ts", import.meta.url)),
+    fileURLToPath(new URL("./sitemap-build.server.ts", import.meta.url)),
     "utf8",
   );
 

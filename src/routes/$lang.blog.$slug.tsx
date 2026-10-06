@@ -15,6 +15,7 @@ import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { renderMarkdown } from "@/lib/blog-markdown";
 import { articleDates, CONTENT_DATE_COLUMN, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
+import { articleIndexing, cleanInlineText, type ArticleLang } from "@/lib/article-translation";
 
 
 const SITE = "https://holiswiss.ch";
@@ -82,10 +83,12 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       };
     }
     const lang = (params.lang as Lang) ?? "fr";
-    const rawTitle = titleForLang(article, lang) || "Article";
+    // Variante incomplète : noindex,follow + canonical vers la source FR.
+    const indexing = articleIndexing(article, lang as ArticleLang);
+    const rawTitle = cleanInlineText(titleForLang(article, lang)) || "Article";
     const rawExcerpt = excerptForLang(article, lang);
     const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
-    const description = ((rawExcerpt || fallback) || "Lire l'article sur Holiswiss.").slice(0, 160);
+    const description = cleanInlineText((rawExcerpt || fallback) || "Lire l'article sur Holiswiss.").slice(0, 160);
     // Coupe sur une frontière de mot, et marque écrite « Holiswiss » comme dans
     // le nœud Organization : `slice(0, 60)` produisait des titres tronqués en
     // plein mot, parfois jusqu'à amputer la marque elle-même. Métadonnées
@@ -94,11 +97,12 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     const image = (article["cover_image_url"] as string | undefined) || undefined;
     const meta: Array<Record<string, string>> = [
       { title },
+      { name: "robots", content: indexing.robots },
       { name: "description", content: description },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: url },
+      { property: "og:url", content: indexing.canonical },
       { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
     ];
     if (image) {
@@ -148,20 +152,14 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         },
       ],
     };
-    // Chaque langue a potentiellement son propre slug (slug_de aujourd'hui) : on
-    // ne peut pas réutiliser le hreflangLinks générique qui suppose un chemin
-    // partagé par toutes les langues.
-    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.map((l) => ({
-      rel: "alternate",
-      hreflang: l,
-      href: `${SITE}/${l}/blog/${slugForLang(article, l)}`,
-    }));
-    hreflangs.push({ rel: "alternate", hreflang: "x-default", href: `${SITE}/fr/blog/${article.slug}` });
+    // hreflang réciproques : seulement les variantes réellement traduites,
+    // plus x-default vers FR. Une variante incomplète n'en déclare aucun.
+    const hreflangs = indexing.alternates.map((x) => ({ rel: "alternate", hreflang: x.hreflang, href: x.href }));
 
     return {
       meta,
       links: [
-        { rel: "canonical", href: url },
+        { rel: "canonical", href: indexing.canonical },
         ...hreflangs,
       ],
       scripts: [

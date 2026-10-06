@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, Clock, Tag, Sparkles, Heart, Brain, Wind, ShieldCheck } from "lucide-react";
-import { hreflangLinks } from "@/lib/seo";
 import { buildMetaTitle } from "@/lib/seo-title";
 import { organizationRef, publisherNode } from "@/lib/organization-schema";
 
@@ -14,7 +13,11 @@ const PUBLISHED_AT = "2026-06-18";
 export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")({
   component: Page,
   head: ({ params }) => {
-    const url = `${SITE}/${params.lang}/blog/${SLUG}`;
+    // Contenu rédigé en français uniquement : les variantes /de, /it, /en ne
+    // sont pas des traductions. Elles restent servies (aucune 404) mais en
+    // noindex,follow, canonical vers la source FR, sans hreflang.
+    const isSource = params.lang === "fr";
+    const url = `${SITE}/fr/blog/${SLUG}`;
     // Coupe sur une frontière de mot et graphie de marque unifiée — métadonnées
     // uniquement, aucun texte visible modifié.
     const title = buildMetaTitle(TITLE, "Holiswiss");
@@ -26,10 +29,19 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
         { property: "og:description", content: DESCRIPTION },
         { property: "og:type", content: "article" },
         { property: "og:url", content: url },
+        { name: "robots", content: isSource ? "index,follow" : "noindex,follow" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "keywords", content: "sophrologie, sophrologue, relaxation, gestion du stress, bien-être, Suisse, thérapie holistique" },
       ],
-      links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/blog/${SLUG}`)],
+      links: [
+        { rel: "canonical", href: url },
+        ...(isSource
+          ? [
+              { rel: "alternate", hreflang: "fr", href: url },
+              { rel: "alternate", hreflang: "x-default", href: url },
+            ]
+          : []),
+      ],
       scripts: [
         {
           type: "application/ld+json",
@@ -40,7 +52,7 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
             description: DESCRIPTION,
             mainEntityOfPage: { "@type": "WebPage", "@id": url },
             url,
-            inLanguage: params.lang,
+            inLanguage: "fr",
             datePublished: PUBLISHED_AT,
             dateModified: PUBLISHED_AT,
             author: organizationRef,

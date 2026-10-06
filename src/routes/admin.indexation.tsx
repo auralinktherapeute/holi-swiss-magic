@@ -146,7 +146,7 @@ function Page() {
 
       const parts: string[] = [];
       if (res.submitted > 0) {
-        parts.push(`${res.submitted} thérapeutes pingées (IndexNow HTTP ${res.indexNowStatus})`);
+        parts.push(`${res.submitted} URL — Soumission IndexNow (Bing et moteurs participants) — ceci ne confirme pas l'indexation Google (HTTP ${res.indexNowStatus})`);
       } else {
         parts.push("0 thérapeute à pinger");
       }
@@ -261,7 +261,7 @@ function Page() {
             <Rocket className="h-4 w-4 text-[#b86ef9]" /> Lancer une indexation maintenant
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Ping IndexNow immédiat (ChatGPT/Bing) + détection des nouvelles URLs dans le sitemap +
+            Soumission IndexNow (Bing et moteurs participants) — ceci ne confirme pas l'indexation Google. Suivi Google : Search Console uniquement. + détection des nouvelles URLs dans le sitemap +
             rapport dans l'onglet Comptes rendus + notification WhatsApp/email.
           </p>
         </div>
@@ -403,7 +403,7 @@ function Page() {
       )}
 
       <p className="text-[11px] text-muted-foreground border-t pt-3">
-        Le bouton « Lancer » exécute le cycle complet (IndexNow + sitemap + rapport) sans dépendance à la tâche planifiée.
+        Le bouton « Lancer » exécute le cycle complet (Soumission IndexNow (Bing et moteurs participants) — ceci ne confirme pas l'indexation Google ; sitemap ; rapport) sans dépendance à la tâche planifiée.
         L'inspection GSC (URL Inspection API, quota 2 000/j) n'est pas disponible depuis le dashboard — elle reste
         effectuée par l'agent quotidien quand les MCPs sont disponibles. « Découverte » = Google connaît la page ;
         l'indexation effective reste sa décision.

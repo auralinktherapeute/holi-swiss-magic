@@ -68,6 +68,7 @@ import { Route as PreviewMarketingTopicsRouteImport } from './routes/preview.mar
 import { Route as PreviewNouveauxTherapeutesRouteImport } from './routes/preview.nouveaux-therapeutes'
 import { Route as PreviewTherapeuteALaUneRouteImport } from './routes/preview.therapeute-a-la-une'
 import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
+import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
@@ -418,6 +419,11 @@ const QuestionnaireIdRoute = QuestionnaireIdRouteImport.update({
   path: '/questionnaire/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapsPartRoute = SitemapsPartRouteImport.update({
+  id: '/sitemaps/$part',
+  path: '/sitemaps/$part',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -748,6 +754,7 @@ export interface FileRoutesByFullPath {
   '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
   '/preview/therapeute-a-la-une': typeof PreviewTherapeuteALaUneRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
+  '/sitemaps/$part': typeof SitemapsPartRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/creer-profil/': typeof CreerProfilIndexRoute
@@ -856,6 +863,7 @@ export interface FileRoutesByTo {
   '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
   '/preview/therapeute-a-la-une': typeof PreviewTherapeuteALaUneRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
+  '/sitemaps/$part': typeof SitemapsPartRoute
   '/$lang': typeof LangIndexRoute
   '/admin': typeof AdminIndexRoute
   '/creer-profil': typeof CreerProfilIndexRoute
@@ -968,6 +976,7 @@ export interface FileRoutesById {
   '/preview/nouveaux-therapeutes': typeof PreviewNouveauxTherapeutesRoute
   '/preview/therapeute-a-la-une': typeof PreviewTherapeuteALaUneRoute
   '/questionnaire/$id': typeof QuestionnaireIdRoute
+  '/sitemaps/$part': typeof SitemapsPartRoute
   '/$lang/': typeof LangIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/creer-profil/': typeof CreerProfilIndexRoute
@@ -1081,6 +1090,7 @@ export interface FileRouteTypes {
     | '/preview/nouveaux-therapeutes'
     | '/preview/therapeute-a-la-une'
     | '/questionnaire/$id'
+    | '/sitemaps/$part'
     | '/$lang/'
     | '/admin/'
     | '/creer-profil/'
@@ -1189,6 +1199,7 @@ export interface FileRouteTypes {
     | '/preview/nouveaux-therapeutes'
     | '/preview/therapeute-a-la-une'
     | '/questionnaire/$id'
+    | '/sitemaps/$part'
     | '/$lang'
     | '/admin'
     | '/creer-profil'
@@ -1300,6 +1311,7 @@ export interface FileRouteTypes {
     | '/preview/nouveaux-therapeutes'
     | '/preview/therapeute-a-la-une'
     | '/questionnaire/$id'
+    | '/sitemaps/$part'
     | '/$lang/'
     | '/admin/'
     | '/creer-profil/'
@@ -1375,6 +1387,7 @@ export interface RootRouteChildren {
   PreviewNouveauxTherapeutesRoute: typeof PreviewNouveauxTherapeutesRoute
   PreviewTherapeuteALaUneRoute: typeof PreviewTherapeuteALaUneRoute
   QuestionnaireIdRoute: typeof QuestionnaireIdRoute
+  SitemapsPartRoute: typeof SitemapsPartRoute
   CreerProfilIndexRoute: typeof CreerProfilIndexRoute
   DesinscriptionIndexRoute: typeof DesinscriptionIndexRoute
   AgendaTokenHoliswissDoticsRoute: typeof AgendaTokenHoliswissDoticsRoute
@@ -1803,6 +1816,13 @@ declare module '@tanstack/react-router' {
       path: '/questionnaire/$id'
       fullPath: '/questionnaire/$id'
       preLoaderRoute: typeof QuestionnaireIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemaps/$part': {
+      id: '/sitemaps/$part'
+      path: '/sitemaps/$part'
+      fullPath: '/sitemaps/$part'
+      preLoaderRoute: typeof SitemapsPartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lang/blog/': {
@@ -2367,6 +2387,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreviewNouveauxTherapeutesRoute: PreviewNouveauxTherapeutesRoute,
   PreviewTherapeuteALaUneRoute: PreviewTherapeuteALaUneRoute,
   QuestionnaireIdRoute: QuestionnaireIdRoute,
+  SitemapsPartRoute: SitemapsPartRoute,
   CreerProfilIndexRoute: CreerProfilIndexRoute,
   DesinscriptionIndexRoute: DesinscriptionIndexRoute,
   AgendaTokenHoliswissDoticsRoute: AgendaTokenHoliswissDoticsRoute,
