@@ -73,7 +73,13 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         });
       }
     }
-    return { article };
+    // Traduction incomplète : on ne transmet pas le texte français à la page
+    // (ni visible, ni dans les données embarquées du HTML).
+    const l = (params.lang as Lang) ?? "fr";
+    if (l !== "fr" && !checkTranslation(article, l).complete) {
+      return { article: { slug: article.slug } as Record<string, unknown>, unavailable: true as const };
+    }
+    return { article, unavailable: false as const };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -91,11 +97,10 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       };
     }
     const lang = (params.lang as Lang) ?? "fr";
-    // Variante incomplète : noindex,follow + canonical vers la source FR.
-    const indexing = articleIndexing(article, lang as ArticleLang);
     // Variante étrangère incomplète : page légère « traduction indisponible »,
     // sans contenu français de repli, sans hreflang ni balisage Article.
-    if (lang !== "fr" && !indexing.complete) {
+    if (loaderData?.unavailable) {
+      const indexing = { canonical: `${SITE}/fr/blog/${article.slug as string}` };
       const u = UNAVAILABLE[lang as Lang] ?? UNAVAILABLE.en;
       return {
         meta: [
