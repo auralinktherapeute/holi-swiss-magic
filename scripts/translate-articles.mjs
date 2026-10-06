@@ -33,13 +33,41 @@ async function translate(src, lang) {
 Règles strictes : n'invente aucun fait, chiffre, source, certification, remboursement ni promesse médicale ; conserve le sens, les avertissements, la structure Markdown du corps et les liens internes (/fr/... devient /${lang}/...). Titres et métas sans aucun Markdown. meta_title ≤ 60 caractères, meta_description ≤ 155.
 Réponds UNIQUEMENT en JSON avec les clés ${FIELDS.join(", ")}.
 ${JSON.stringify(src)}`;
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    required: FIELDS,
+    properties: Object.fromEntries(FIELDS.map((f) => [f, { type: "string" }])),
+  };
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
-    headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-pro", response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }),
+    headers: { "Lovable-API-Key": KEY, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+    body: JSON.stringify({
+      model: "openai/gpt-6-astra",
+      stream: true,
+      store: false,
+      reasoning: { effort: "low" },
+      input: prompt,
+      text: { format: { type: "json_schema", name: "translation", strict: true, schema } },
+    }),
   });
-  if (!r.ok) throw new Error(`IA HTTP ${r.status}`);
-  return JSON.parse((await r.json()).choices[0].message.content);
+  if (!r.ok || !r.body) throw new Error(`IA HTTP ${r.status}`);
+  // Flux SSE : on accumule les deltas de texte.
+  let buf = "", text = "";
+  const dec = new TextDecoder();
+  for await (const chunk of r.body) {
+    buf += dec.decode(chunk, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const ev = buf.slice(0, i); buf = buf.slice(i + 2);
+      const line = ev.split("\n").find((l) => l.startsWith("data: "));
+      if (!line || line === "data: [DONE]") continue;
+      const d = JSON.parse(line.slice(6));
+      if (d.type === "response.output_text.delta") text += d.delta;
+      if (d.type === "response.failed" || d.type === "error") throw new Error("IA : échec de génération");
+    }
+  }
+  return JSON.parse(text);
 }
 
 const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
