@@ -6,6 +6,7 @@ import { buildCitySlugResolver, type CityRow } from "@/lib/city-slug";
 import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
 import { articleLastmod, contentDay, paroleLastmod } from "@/lib/sitemap-lastmod";
 import { getCategory } from "@/lib/article-categories";
+import { articleIndexing, completeLangs, articleUrl, TRANSLATION_COLUMNS } from "@/lib/article-translation";
 import {
   isSpecialtyIndexable,
   isSpecialtyCityIndexable,
@@ -83,7 +84,6 @@ const STATIC_PATHS: {
   { path: "/blog", priority: "0.8", changefreq: "weekly", lastmodFrom: "articles" },
   // Route statique hreflangée, contenu en dur : `lastmod` = date du dernier
   // commit réel du fichier de route, pas la date du build.
-  { path: "/blog/qu-est-ce-que-la-sophrologie", priority: "0.7", changefreq: "yearly", lastmod: "2026-08-31" },
   { path: "/fil-holiswiss", priority: "0.7", changefreq: "weekly", lastmodFrom: "fil" },
   { path: "/paroles", priority: "0.8", changefreq: "weekly", lastmodFrom: "paroles" },
   { path: "/evenements", priority: "0.8", changefreq: "daily", lastmodFrom: "events" },
@@ -432,7 +432,7 @@ async function buildSitemap(): Promise<string> {
     // plutôt que de perdre les 150+ URL du blog. Si le repli échoue aussi, on lève.
     const rich = await (holiswissPublic as any)
       .from("articles")
-      .select(`slug, slug_de, category, secondary_tags, published_at, ${CONTENT_DATE_COLUMN}`)
+      .select(`${TRANSLATION_COLUMNS}, category, secondary_tags, published_at, ${CONTENT_DATE_COLUMN}`)
       .eq("status", "validated");
     articlesHaveCategory = !rich.error;
     articles = rich.error
@@ -693,15 +693,14 @@ async function buildSitemap(): Promise<string> {
   for (const a of blogArticles) {
     if (!a.slug) continue;
     const lastmod = articleDay(a);
-    for (const lang of LANGS) {
-      urls.push(
-        urlBlock(
-          `${BASE_URL}/${lang}/blog/${lang === "de" ? a.slug_de || a.slug : a.slug}`,
-          lastmod,
-          "monthly",
-          "0.7",
-        ),
+    // Seules les variantes réellement traduites sont déclarées, chacune avec
+    // ses hreflang réciproques (+ x-default FR) — même règle que la page.
+    const row = a as unknown as Record<string, unknown>;
+    for (const lang of completeLangs(row)) {
+      const alt = articleIndexing(row, lang).alternates.map(
+        (x) => `    <xhtml:link rel="alternate" hreflang="${x.hreflang}" href="${xmlEscape(x.href)}" />`,
       );
+      urls.push(urlBlock(articleUrl(row, lang), lastmod, "monthly", "0.7", alt));
     }
   }
 

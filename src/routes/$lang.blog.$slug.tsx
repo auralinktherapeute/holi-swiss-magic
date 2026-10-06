@@ -88,7 +88,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     const rawTitle = cleanInlineText(titleForLang(article, lang)) || "Article";
     const rawExcerpt = excerptForLang(article, lang);
     const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
-    const description = ((rawExcerpt || fallback) || "Lire l'article sur Holiswiss.").slice(0, 160);
+    const description = cleanInlineText((rawExcerpt || fallback) || "Lire l'article sur Holiswiss.").slice(0, 160);
     // Coupe sur une frontière de mot, et marque écrite « Holiswiss » comme dans
     // le nœud Organization : `slice(0, 60)` produisait des titres tronqués en
     // plein mot, parfois jusqu'à amputer la marque elle-même. Métadonnées
@@ -102,7 +102,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: url },
+      { property: "og:url", content: indexing.canonical },
       { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
     ];
     if (image) {
