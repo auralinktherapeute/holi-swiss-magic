@@ -11,6 +11,7 @@
  *
  * Ne touche jamais : FR, slugs, statut, catégories, profils thérapeutes.
  * Usage : LOVABLE_API_KEY=… bun scripts/translate-articles.mjs [dossier] [--limit N]
+ * Reprise : relancer avec le même dossier traite les N variantes suivantes.
  */
 import { checkTranslation } from "../src/lib/article-translation.ts";
 import { FIL_CATEGORY_SLUGS } from "../src/data/fil-holiswiss.ts";
@@ -71,27 +72,41 @@ ${JSON.stringify(src)}`;
 }
 
 const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
-const out = [];
-const sql = ["-- Généré par scripts/translate-articles.mjs — NE PAS EXÉCUTER sans validation.", "begin;"];
-let n = 0;
-for (const r of rows) {
-  for (const lang of ["de", "it", "en"]) {
-    if (checkTranslation(r, lang).complete || n >= LIMIT) continue;
-    n++;
-    const src = Object.fromEntries(FIELDS.map((f) => [f, r[`${f}_fr`] ?? ""]));
-    const t = await translate(src, lang);
-    const merged = { ...r, ...Object.fromEntries(FIELDS.map((f) => [`${f}_${lang}`, t[f]])) };
-    const check = checkTranslation(merged, lang);
-    out.push({ slug: r.slug, lang, before: Object.fromEntries(FIELDS.map((f) => [f, r[`${f}_${lang}`] ?? null])), after: t, check });
-    if (check.complete) {
-      sql.push(`update public.articles set ${FIELDS.map((f) => `${f}_${lang} = ${q(t[f])}`).join(", ")} where slug = ${q(r.slug)} and status = 'validated';`);
-    } else {
-      sql.push(`-- ${r.slug} [${lang}] écarté : ${check.reasons.join(", ")}`);
-    }
-    console.log(`${r.slug} [${lang}] ${check.complete ? "OK" : "à revoir"}`);
-  }
+// Reprise : les variantes déjà présentes dans translations.json ne sont jamais retraitées.
+const file = Bun.file(`${OUT}/translations.json`);
+const out = (await file.exists()) ? await file.json() : [];
+const done = new Set(out.map((x) => `${x.slug}|${x.lang}`));
+const todo = [];
+for (const r of rows) for (const lang of ["de", "it", "en"]) {
+  if (!checkTranslation(r, lang).complete && !done.has(`${r.slug}|${lang}`)) todo.push([r, lang]);
 }
-sql.push("commit;");
-await Bun.write(`${OUT}/translations.json`, JSON.stringify(out, null, 2));
-await Bun.write(`${OUT}/update.sql`, sql.join("\n"));
-console.log(`${n} variantes préparées → ${OUT}`);
+const batch = todo.slice(0, LIMIT);
+const save = async () => {
+  const sql = ["-- Généré par scripts/translate-articles.mjs — NE PAS EXÉCUTER sans validation.", "begin;"];
+  for (const x of out) {
+    sql.push(x.check.complete
+      ? `update public.articles set ${FIELDS.map((f) => `${f}_${x.lang} = ${q(x.after[f])}`).join(", ")} where slug = ${q(x.slug)} and status = 'validated';`
+      : `-- ${x.slug} [${x.lang}] écarté : ${x.check.reasons.join(", ")}`);
+  }
+  sql.push("commit;");
+  await Bun.write(`${OUT}/translations.json`, JSON.stringify(out, null, 2));
+  await Bun.write(`${OUT}/update.sql`, sql.join("\n"));
+};
+// 3 traductions en parallèle ; une erreur laisse la variante « à traiter » pour le lot suivant.
+for (let i = 0; i < batch.length; i += 3) {
+  await Promise.all(batch.slice(i, i + 3).map(async ([r, lang]) => {
+    try {
+      const src = Object.fromEntries(FIELDS.map((f) => [f, r[`${f}_fr`] ?? ""]));
+      const t = await translate(src, lang);
+      const merged = { ...r, ...Object.fromEntries(FIELDS.map((f) => [`${f}_${lang}`, t[f]])) };
+      const check = checkTranslation(merged, lang);
+      out.push({ slug: r.slug, lang, before: Object.fromEntries(FIELDS.map((f) => [f, r[`${f}_${lang}`] ?? null])), after: t, check });
+      console.log(`${r.slug} [${lang}] ${check.complete ? "OK" : "à revoir"}`);
+    } catch (e) {
+      console.log(`${r.slug} [${lang}] ERREUR ${e.message} — sera repris`);
+    }
+  }));
+  await save();
+}
+await save();
+console.log(`Lot terminé. Restant à traiter : ${todo.length - batch.length + batch.filter(([r, l]) => !out.some((x) => x.slug === r.slug && x.lang === l)).length} / total fichier : ${out.length}`);
