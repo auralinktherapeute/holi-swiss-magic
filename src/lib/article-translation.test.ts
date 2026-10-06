@@ -110,6 +110,21 @@ describe("sitemaps séparés", () => {
   });
 });
 
+describe("variante étrangère incomplète", () => {
+  it("champs vides = incomplète, retirée des hreflang", () => {
+    const a = { ...base, title_de: " ", excerpt_de: "", body_de: "", meta_title_de: "", meta_description_de: "" };
+    expect(checkTranslation(a, "de").complete).toBe(false);
+    expect(articleIndexing(a, "de").robots).toBe("noindex,follow");
+    expect(completeLangs(a)).toEqual(["fr"]);
+    expect(articleIndexing(a, "fr").robots).toBe("index,follow");
+  });
+  it("la page n'affiche jamais le corps français sous une URL étrangère incomplète", () => {
+    const src = readFileSync("src/routes/$lang.blog.$slug.tsx", "utf8");
+    expect(src).toMatch(/l !== "fr" && !checkTranslation\(article, l\)\.complete/);
+    expect(src).toMatch(/if \(loaderData\?\.unavailable/);
+  });
+});
+
 describe("redirections d'anciens slugs", () => {
   it("la page article redirige en 301 un slug de base vers le slug localisé", () => {
     const src = readFileSync("src/routes/$lang.blog.$slug.tsx", "utf8");
