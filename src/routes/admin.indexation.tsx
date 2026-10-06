@@ -146,7 +146,7 @@ function Page() {
 
       const parts: string[] = [];
       if (res.submitted > 0) {
-        parts.push(`${res.submitted} URL — Soumission IndexNow (Bing et moteurs participants) — ceci ne confirme pas l\'indexation Google (HTTP ${res.indexNowStatus})`);
+        parts.push(`${res.submitted} URL — Soumission IndexNow (Bing et moteurs participants) — ceci ne confirme pas l'indexation Google (HTTP ${res.indexNowStatus})`);
       } else {
         parts.push("0 thérapeute à pinger");
       }
