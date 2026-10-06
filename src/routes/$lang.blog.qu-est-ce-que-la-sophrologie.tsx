@@ -37,8 +37,8 @@ export const Route = createFileRoute("/$lang/blog/qu-est-ce-que-la-sophrologie")
         { rel: "canonical", href: url },
         ...(isSource
           ? [
-              { rel: "alternate", hrefLang: "fr", href: url },
-              { rel: "alternate", hrefLang: "x-default", href: url },
+              { rel: "alternate", hreflang: "fr", href: url },
+              { rel: "alternate", hreflang: "x-default", href: url },
             ]
           : []),
       ],
