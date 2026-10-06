@@ -120,8 +120,8 @@ describe("variante étrangère incomplète", () => {
   });
   it("la page n'affiche jamais le corps français sous une URL étrangère incomplète", () => {
     const src = readFileSync("src/routes/$lang.blog.$slug.tsx", "utf8");
-    expect(src).toMatch(/l !== "fr" && !checkTranslation\(raw, l\)\.complete/);
-    expect(src).toMatch(/lang !== "fr" && !indexing\.complete/);
+    expect(src).toMatch(/l !== "fr" && !checkTranslation\(article, l\)\.complete/);
+    expect(src).toMatch(/if \(loaderData\?\.unavailable/);
   });
 });
 

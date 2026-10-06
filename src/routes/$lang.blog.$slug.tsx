@@ -116,6 +116,8 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         links: [{ rel: "canonical", href: indexing.canonical }],
       };
     }
+    // Variante incomplète : noindex,follow + canonical vers la source FR.
+    const indexing = articleIndexing(article, lang as ArticleLang);
     const rawTitle = cleanInlineText(titleForLang(article, lang)) || "Article";
     const rawExcerpt = excerptForLang(article, lang);
     const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
@@ -267,7 +269,7 @@ function Page() {
 
   // Même règle que les métadonnées et le sitemap : jamais de corps français
   // sous une URL étrangère dont la traduction est incomplète.
-  if (l !== "fr" && !checkTranslation(raw, l).complete) {
+  if (loaderData?.unavailable || (l !== "fr" && !checkTranslation(raw, l).complete)) {
     const u = UNAVAILABLE[l];
     return (
       <div className="min-h-screen bg-[#2d1248] flex items-center justify-center">
