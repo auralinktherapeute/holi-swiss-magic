@@ -186,7 +186,7 @@ describe("Sitemap ↔ canonical de la fiche — même fonction, même donnée", 
   // verrouille donc leur source. Si le sitemap ou la fiche recompose la langue
   // à la main, ou ne lit pas les colonnes dont elle dépend, ce test tombe.
   const read = (p: string) => readFileSync(resolve(__dirname, "..", p), "utf8");
-  const sitemap = read("routes/sitemap[.]xml.ts");
+  const sitemap = read("lib/sitemap-build.server.ts");
   const route = read("routes/$lang.therapeute.$slug.tsx");
   const publicFns = read("lib/public.functions.ts");
   const articleFns = read("lib/therapist-articles.functions.ts");

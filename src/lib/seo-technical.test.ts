@@ -87,7 +87,7 @@ describe("robots.txt", () => {
 });
 
 describe("sitemap — séparation blog / fil", () => {
-  const src = readFileSync("src/routes/sitemap[.]xml.ts", "utf8");
+  const src = readFileSync("src/lib/sitemap-build.server.ts", "utf8");
 
   it("les billets du fil ne passent plus par la boucle du blog", () => {
     expect(src).toContain("const blogArticles = articles.filter((a) => !isFil(a));");
@@ -104,8 +104,7 @@ describe("sitemap — séparation blog / fil", () => {
   });
 
   it("déclare la page sophrologie avec un lastmod fixe et véridique", () => {
-    expect(src).toMatch(
-      /path: "\/blog\/qu-est-ce-que-la-sophrologie"[^}]*lastmod: "2026-08-31"/,
-    );
+    // Article rédigé en français uniquement : seule l'URL /fr est déclarée.
+    expect(src).toMatch(/fr\/blog\/qu-est-ce-que-la-sophrologie`;\s*urls\.push\(\s*urlBlock\(soph, "2026-08-31"/);
   });
 });
