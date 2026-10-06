@@ -51,6 +51,47 @@ function GeoButton() {
   );
 }
 
+// Fonds de carte publics sans clé. Principal : OpenStreetMap (attribution obligatoire).
+// Repli automatique après plusieurs tuiles en échec ; si tout échoue, les marqueurs restent sur le fond uni.
+const TILE_PROVIDERS = [
+  {
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    subdomains: "",
+  },
+  {
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+  },
+] as const;
+
+function SafeTileLayer() {
+  const [index, setIndex] = useState(0);
+  const [errors, setErrors] = useState(0);
+  const provider = TILE_PROVIDERS[index];
+  if (!provider) return null;
+  return (
+    <TileLayer
+      key={provider.url}
+      url={provider.url}
+      attribution={provider.attribution}
+      subdomains={provider.subdomains || "abc"}
+      maxZoom={19}
+      eventHandlers={{
+        tileerror: () => {
+          const next = errors + 1;
+          setErrors(next);
+          if (next >= 4) {
+            setErrors(0);
+            setIndex((i) => i + 1);
+          }
+        },
+      }}
+    />
+  );
+}
+
 function FlyToSelected({ therapists, selectedId }: { therapists: TherapistMapTherapist[]; selectedId: string | null }) {
   const map = useMap();
   useEffect(() => {
@@ -96,12 +137,7 @@ export function TherapistMapInner({ therapists, selectedId, onSelect, lang }: Th
         style={{ height: "100%", width: "100%", background: "#0f0a1e" }}
         zoomControl={false}
       >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_46gl_1_e5af20f8c01c61fd606de819"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={19}
-        />
+        <SafeTileLayer />
         <FlyToSelected therapists={positioned} selectedId={selectedId} />
         <GeoButton />
         {positioned.map((t) => (
