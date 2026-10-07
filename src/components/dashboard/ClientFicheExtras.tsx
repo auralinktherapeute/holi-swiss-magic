@@ -41,8 +41,9 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
 }) {
   const qc = useQueryClient();
   const statusFn = useServerFn(updateContactStatus);
-  const delFn = useServerFn(deleteContact);
+  const delFn = useServerFn(trashClient);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [typed, setTyped] = useState("");
   const log = useLogAction();
 
   const status = useMutation({
@@ -51,9 +52,9 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
     onError: () => toast.error("Échec du changement de statut."),
   });
   const del = useMutation({
-    mutationFn: () => delFn({ data: { id: client.id } }),
-    onSuccess: () => { toast.success("Client supprimé."); invalidate(qc); onDeleted(); },
-    onError: () => toast.error("Suppression impossible. Archivez plutôt ce client."),
+    mutationFn: () => delFn({ data: { id: client.id, confirm: "Supprimer" } }),
+    onSuccess: () => { toast.success("Fiche placée dans la corbeille pour 2 mois."); invalidate(qc); qc.invalidateQueries({ queryKey: ["client-trash"] }); onDeleted(); },
+    onError: () => toast.error("Suppression impossible. Réessayez."),
   });
 
   const hasInvoices = counts.invoices > 0;
@@ -73,29 +74,29 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
         <Trash2 className="h-4 w-4 mr-1.5" aria-hidden="true" /> Supprimer
       </Button>
 
-      <Dialog open={confirmDel} onOpenChange={setConfirmDel}>
+      <Dialog open={confirmDel} onOpenChange={(o) => { setConfirmDel(o); if (!o) setTyped(""); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Supprimer ce client ?</DialogTitle></DialogHeader>
           <div className="text-sm space-y-2">
             <p>Éléments liés : {counts.invoices} facture(s), {counts.appointments} rendez-vous, {counts.documents} document(s).</p>
-            {hasInvoices ? (
+            {hasInvoices && (
               <p className="text-destructive">
-                Ce client a des factures : la loi impose de les conserver. La suppression est bloquée —
-                archivez-le à la place.
+                Ce client a des factures : elles seront conservées, comme la loi l'impose, même après la suppression de la fiche.
               </p>
-            ) : (
-              <p className="text-muted-foreground">Cette action est définitive.</p>
             )}
+            <p className="text-muted-foreground">
+              La fiche part dans la corbeille et y reste <strong>2 mois</strong>. Vous pouvez la restaurer pendant ce délai ;
+              ensuite, elle est supprimée définitivement.
+            </p>
+            <Label htmlFor="confirm-del" className="text-xs">Pour confirmer, tapez « Supprimer »</Label>
+            <Input id="confirm-del" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" className="min-h-11" />
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="min-h-11" onClick={() => setConfirmDel(false)}>Annuler</Button>
-            {hasInvoices ? (
-              <ArchiveToggle client={client} />
-            ) : (
-              <Button variant="destructive" className="min-h-11" disabled={del.isPending} onClick={() => del.mutate()}>
-                {del.isPending ? "Suppression…" : "Supprimer définitivement"}
-              </Button>
-            )}
+            {hasInvoices && <ArchiveToggle client={client} />}
+            <Button variant="destructive" className="min-h-11" disabled={typed !== "Supprimer" || del.isPending} onClick={() => del.mutate()}>
+              {del.isPending ? "Suppression…" : "Mettre à la corbeille"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
