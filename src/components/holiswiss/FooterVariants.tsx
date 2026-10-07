@@ -1,3 +1,4 @@
+import { institutionalCopy } from "@/lib/institutional-content";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Check, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function useNavGroups(lang = "fr"): NavGroup[] {
       title: "Holiswiss",
       links: [
         { label: t("nav.pricing"), href: `/${lang}/tarifs` },
+        { label: institutionalCopy(lang).about, href: `/${lang}/a-propos` },
         { label: "FAQ", href: `/${lang}/faq` },
         { label: t("nav.contact"), href: `/${lang}/contact` },
       ],
@@ -69,7 +71,7 @@ function Copyright() {
   const { t } = useTranslation();
   return (
     <p className="text-xs text-[#a89bc4]">
-      © {new Date().getFullYear()} Groupe Holi / Holiswiss · {t("footer.rights")}
+      © {new Date().getFullYear()} Holiswiss · Gérald Henry, micro-entrepreneur, exploitant Holiswiss comme nom commercial · {t("footer.rights")}
     </p>
   );
 }

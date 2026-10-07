@@ -26,8 +26,8 @@
       "cta": "Rechercher"
     },
     "trust": {
-      "verified": "Profils validés par Holiswiss",
-      "reviews": "Avis authentiques",
+      "verified": "Contrôle avant publication",
+      "reviews": "Avis clients",
       "booking": "Réservation en ligne",
       "cantons": "26 cantons"
     },
@@ -47,7 +47,7 @@
       "approaches": "approches",
       "sessions": "séances réservées"
     },
-    "hero_badge": "Nouvelle plateforme suisse du bien-être holistique",
+    "hero_badge": "Annuaire du bien-être en Suisse",
     "subtitle_lead": "Énergéticiens, sophrologues, naturopathes, ostéopathes…",
     "search_placeholder": "Rechercher par ville ou nom du thérapeute…",
     "search_aria": "Rechercher",
@@ -74,7 +74,7 @@
     "newest": {
       "title": "Nouveaux thérapeutes",
       "subtitle": "Ils viennent de rejoindre le réseau Holiswiss",
-      "verified": "Vérifié",
+      "verified": "Contrôle avant publication",
       "book": "Prendre rendez-vous",
       "profile": "Voir le profil",
       "viewAll": "Voir tous les thérapeutes"
@@ -89,7 +89,7 @@
     "subtitle": "Trouvez un praticien près de chez vous",
     "empty": "Aucun thérapeute pour le moment.",
     "per_session": "/ séance",
-    "verified": "Vérifié"
+    "verified": "Contrôle avant publication"
   },
   "profile": {
     "viewProfile": "Voir le profil",
@@ -156,11 +156,11 @@
       },
       {
         "title": "Paiement sécurisé",
-        "desc": "Transactions chiffrées, conformes à la nLPD suisse."
+        "desc": "Transactions chiffrées."
       },
       {
         "title": "Support en français",
-        "desc": "Une équipe suisse à votre écoute."
+        "desc": "Contactez Holiswiss par e-mail."
       }
     ],
     "faq_question": "Une question ?",
@@ -487,10 +487,10 @@
     "ide_verify": "Vérifier sur uid.admin.ch",
     "ide_active": "Statut Pro actif — IDE vérifié",
     "ide_invalid": "Format IDE invalide. Exemple : CHE-123.456.789",
-    "accreditations_label": "Agréments & reconnaissances (ASCA, RME, OrTra TC…)",
-    "accreditations_helper": "Sélectionnez les organisations qui vous reconnaissent. Un badge « Agréé par … » apparaîtra sur votre profil public, ce qui permet à vos patients d'obtenir une prise en charge par leur complémentaire santé.",
+    "accreditations_label": "Affiliations déclarées (ASCA, RME, OrTra TC…)",
+    "accreditations_helper": "Indiquez vos affiliations. Elles sont affichées comme déclarées par vous, sans contrôle dans un registre officiel ni garantie de remboursement.",
     "accreditation_number_placeholder": "N° d'enregistrement (optionnel)",
-    "approved_by": "Agréé par",
+    "approved_by": "Affiliation déclarée par le thérapeute",
     "no_changes": "Aucune modification",
     "section_documents": "Autres documents à partager",
     "documents_subtitle": "Brochures, tarifs, formulaires… Vos diplômes se gèrent plus haut dans « Certifications & diplômes ».",
@@ -560,20 +560,20 @@
     "subtitle": "Développez votre cabinet, on s'occupe du reste. Plus de visibilité, moins d'administratif.",
     "search_placeholder": "Spécialité, ville…",
     "search_btn": "Chercher",
-    "trust_verified": "Praticiens validés par Holiswiss",
+    "trust_verified": "Contrôle avant publication",
     "trust_cantons": "26 cantons",
     "find_btn": "Trouver un thérapeute",
     "signup_free": "S'inscrire gratuitement",
     "stats_practitioners": "praticiens",
     "stats_cantons": "cantons",
     "stats_languages": "langues",
-    "glass_subtitle": "La plateforme suisse du bien-être holistique.",
+    "glass_subtitle": "Annuaire de thérapeutes en Suisse.",
     "glass_placeholder": "Que recherchez-vous ?"
   },
   "therapist_profile": {
     "not_found": "Profil introuvable",
     "back": "← Retour à l'annuaire",
-    "verified": "Vérifié",
+    "verified": "Contrôle avant publication",
     "premium": "Premium",
     "reviews_count": "{{count}} avis",
     "experience": "{{n}} ans d'expérience",
@@ -817,7 +817,7 @@
   },
   "events_page": {
     "title": "Événements bien-être",
-    "subtitle": "Ateliers, retraites, cercles et méditations proposés par les thérapeutes de la communauté HoliSwiss.",
+    "subtitle": "Ateliers, retraites, cercles et méditations proposés par les thérapeutes de la communauté Holiswiss.",
     "empty": "Aucun événement publié pour le moment. Revenez bientôt.",
     "with": "avec",
     "seats": "places",
@@ -844,7 +844,7 @@
       "online": "En ligne",
       "hybrid": "Hybride"
     },
-    "head_title": "Événements bien-être en Suisse | HoliSwiss",
+    "head_title": "Événements bien-être en Suisse | Holiswiss",
     "head_desc": "Ateliers, retraites, cercles et méditations proposés par les thérapeutes holistiques de Suisse. Réservez votre place."
   },
   "newsletter_public": {
@@ -877,8 +877,8 @@
     "home_title": "L'annuaire en chiffres",
     "therapists_one": "{{count}} thérapeute",
     "therapists_other": "{{count}} thérapeutes",
-    "verified_one": "dont {{count}} vérifié",
-    "verified_other": "dont {{count}} vérifiés",
+    "verified_one": "dont {{count}} avec contrôle avant publication",
+    "verified_other": "dont {{count}} avec contrôle avant publication",
     "cantons_one": "{{count}} canton",
     "cantons_other": "{{count}} cantons",
     "cities_one": "{{count}} ville",

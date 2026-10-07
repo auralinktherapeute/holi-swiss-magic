@@ -1,4 +1,5 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { institutionalCopy } from "@/lib/institutional-content";
 import { cantonName } from "@/lib/geo-listings";
 
 const FOOTER_CANTONS = ["GE", "VD", "VS", "FR", "NE", "BE", "ZH", "TI"] as const;
@@ -143,6 +144,7 @@ export function Footer() {
           <div className="min-w-0">
             <h4 className={headingClass}>Holiswiss</h4>
             <ul className="mt-3 space-y-2 text-sm text-[#d4c4e0]">
+              <li><Link to="/$lang/a-propos" params={{ lang }} className={linkClass}>{institutionalCopy(lang).about}</Link></li>
               <li>
                 <Link to="/$lang/tarifs" params={{ lang }} className={linkClass}>
                   {t("nav.pricing")}
@@ -205,7 +207,7 @@ export function Footer() {
 
         <div className="mt-9 border-t border-[rgba(255,255,255,0.08)] pt-5">
           <p className="text-xs text-[#a89bc4]">
-            © {new Date().getFullYear()} Groupe Holi / Holiswiss · {t("footer.rights")}
+            © {new Date().getFullYear()} Holiswiss · {institutionalCopy(lang).publisher} · {t("footer.rights")}
           </p>
         </div>
       </div>

@@ -67,10 +67,9 @@ export const SAME_AS: readonly string[] = [];
  */
 export const LEGAL_ADDRESS = {
   "@type": "PostalAddress",
-  streetAddress: "Impasse Nussbaum",
+  streetAddress: "9 Impasse Nussbaum",
   postalCode: "68300",
   addressLocality: "Saint-Louis",
-  addressRegion: "Alsace",
   addressCountry: "FR",
 } as const;
 
@@ -117,63 +116,15 @@ const WEBSITE_DESCRIPTIONS: Record<Lang, string> = {
  * restent des faits invariants par langue (raison sociale, expertise) — les
  * traduire n'apporterait rien et risquerait de faire diverger l'`@id` fusionné.
  */
-export function getOrganizationNode(lang: Lang) {
+export function getOrganizationNode(_lang: Lang) {
   return {
-    "@type": "Organization",
-    "@id": ORGANIZATION_ID,
-    name: ORGANIZATION_NAME,
-    alternateName: "HoliSwiss",
-    url: SITE_URL,
-    logo: {
-      "@type": "ImageObject",
-      url: LOGO_URL,
-      contentUrl: LOGO_URL,
-      width: LOGO_WIDTH,
-      height: LOGO_HEIGHT,
-      caption: "Logo Holiswiss",
-    },
-    image: LOGO_URL,
-    description: ORGANIZATION_DESCRIPTIONS[lang],
-    slogan: "Trouvez le bon thérapeute, partout en Suisse.",
+    "@type": "Organization", "@id": ORGANIZATION_ID,
+    name: ORGANIZATION_NAME, url: SITE_URL,
+    logo: { "@type": "ImageObject", url: LOGO_URL, contentUrl: LOGO_URL, width: LOGO_WIDTH, height: LOGO_HEIGHT, caption: "Logo Holiswiss" },
     email: "contact@holiswiss.ch",
-    // « Exploitant : Gérald Henry » — /impressum, section « Éditeur du site ».
     founder: { "@type": "Person", name: "Gérald Henry" },
     address: LEGAL_ADDRESS,
-    identifier: {
-      "@type": "PropertyValue",
-      propertyID: "SIREN",
-      value: SIREN,
-    },
-    iso6523Code: `0002:${SIREN}`,
-    ...(SAME_AS.length > 0 ? { sameAs: [...SAME_AS] } : {}),
-    areaServed: {
-      "@type": "Country",
-      name: "Switzerland",
-      alternateName: ["Suisse", "Schweiz", "Svizzera", "CH"],
-    },
-    knowsLanguage: ["fr-CH", "de-CH", "it-CH", "en"],
-    knowsAbout: [
-      "Sophrologie",
-      "Hypnose",
-      "Naturopathie",
-      "Acupuncture",
-      "Ostéopathie",
-      "Réflexologie",
-      "Méditation",
-      "Reiki",
-      "Kinésiologie",
-      "Ayurveda",
-      "Médecine douce",
-      "Thérapie holistique",
-      "Bien-être",
-    ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      email: "contact@holiswiss.ch",
-      contactType: "customer support",
-      availableLanguage: ["French", "German", "Italian", "English"],
-      areaServed: "CH",
-    },
+    areaServed: { "@type": "Country", name: "Switzerland" },
   } as const;
 }
 

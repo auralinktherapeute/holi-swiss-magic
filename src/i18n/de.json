@@ -26,8 +26,8 @@
       "cta": "Suchen"
     },
     "trust": {
-      "verified": "Von Holiswiss geprüfte Profile",
-      "reviews": "Echte Bewertungen",
+      "verified": "Prüfung vor Veröffentlichung",
+      "reviews": "Kundenbewertungen",
       "booking": "Online-Buchung",
       "cantons": "26 Kantone"
     },
@@ -36,7 +36,7 @@
     "how": {
       "title": "So funktioniert es",
       "step1": "Suchen Sie nach Ansatz, Kanton oder Sprache",
-      "step2": "Profile und geprüfte Bewertungen ansehen",
+      "step2": "Profile und moderierte Bewertungen ansehen",
       "step3": "Sitzung einfach online buchen"
     },
     "pricingTeaser": "Wählen Sie Ihr Paket",
@@ -47,7 +47,7 @@
       "approaches": "Ansätze",
       "sessions": "gebuchte Sitzungen"
     },
-    "hero_badge": "Neue Schweizer Plattform für ganzheitliches Wohlbefinden",
+    "hero_badge": "Verzeichnis für Wohlbefinden in der Schweiz",
     "subtitle_lead": "Energetiker, Sophrologen, Naturheilpraktiker, Osteopathen…",
     "search_placeholder": "Suche nach Stadt oder Name des Therapeuten…",
     "search_aria": "Suchen",
@@ -74,7 +74,7 @@
     "newest": {
       "title": "Neue Therapeuten",
       "subtitle": "Sie sind dem Holiswiss-Netzwerk gerade beigetreten",
-      "verified": "Geprüft",
+      "verified": "Prüfung vor Veröffentlichung",
       "book": "Termin buchen",
       "profile": "Profil ansehen",
       "viewAll": "Alle Therapeuten ansehen"
@@ -89,7 +89,7 @@
     "subtitle": "Finden Sie einen Praktizierenden in Ihrer Nähe",
     "empty": "Derzeit keine Therapeuten verfügbar.",
     "per_session": "/ Sitzung",
-    "verified": "Verifiziert"
+    "verified": "Prüfung vor Veröffentlichung"
   },
   "profile": {
     "viewProfile": "Profil ansehen",
@@ -156,11 +156,11 @@
       },
       {
         "title": "Sichere Zahlung",
-        "desc": "Verschlüsselte Transaktionen, konform mit dem Schweizer DSG (nLPD)."
+        "desc": "Verschlüsselte Transaktionen."
       },
       {
         "title": "Support auf Deutsch",
-        "desc": "Ein Schweizer Team für Sie da."
+        "desc": "Kontaktieren Sie Holiswiss per E-Mail."
       }
     ],
     "faq_question": "Eine Frage?",
@@ -487,10 +487,10 @@
     "ide_verify": "Auf uid.admin.ch prüfen",
     "ide_active": "Pro-Status aktiv — UID verifiziert",
     "ide_invalid": "Ungültiges UID-Format. Beispiel: CHE-123.456.789",
-    "accreditations_label": "Anerkennungen (ASCA, EMR, OdA KT…)",
-    "accreditations_helper": "Wählen Sie die Organisationen aus, die Sie anerkennen. Ein Abzeichen « Anerkannt von … » erscheint auf Ihrem öffentlichen Profil — Ihre Patienten können so bei ihrer Zusatzversicherung Rückerstattung erhalten.",
+    "accreditations_label": "Angegebene Mitgliedschaften (ASCA, EMR, OdA KT…)",
+    "accreditations_helper": "Geben Sie Ihre Mitgliedschaften an. Sie werden als Ihre Angaben angezeigt, ohne Prüfung in einem offiziellen Register oder Erstattungsgarantie.",
     "accreditation_number_placeholder": "Registrierungsnummer (optional)",
-    "approved_by": "Anerkannt von",
+    "approved_by": "Von der Fachperson angegebene Mitgliedschaft",
     "no_changes": "Keine Änderungen",
     "section_documents": "Weitere Dokumente zum Teilen",
     "documents_subtitle": "Broschüren, Preislisten, Formulare… Ihre Diplome verwalten Sie oben unter „Zertifikate & Diplome“.",
@@ -560,20 +560,20 @@
     "subtitle": "Entwickeln Sie Ihre Praxis, wir kümmern uns um den Rest. Mehr Sichtbarkeit, weniger Verwaltung.",
     "search_placeholder": "Spezialität, Stadt…",
     "search_btn": "Suchen",
-    "trust_verified": "Von Holiswiss geprüfte Fachpersonen",
+    "trust_verified": "Prüfung vor Veröffentlichung",
     "trust_cantons": "26 Kantone",
     "find_btn": "Therapeut finden",
     "signup_free": "Kostenlos registrieren",
     "stats_practitioners": "Praktiker",
     "stats_cantons": "Kantone",
     "stats_languages": "Sprachen",
-    "glass_subtitle": "Die Schweizer Plattform für ganzheitliches Wohlbefinden.",
+    "glass_subtitle": "Therapeutenverzeichnis in der Schweiz.",
     "glass_placeholder": "Wonach suchen Sie?"
   },
   "therapist_profile": {
     "not_found": "Profil nicht gefunden",
     "back": "← Zurück zum Verzeichnis",
-    "verified": "Verifiziert",
+    "verified": "Prüfung vor Veröffentlichung",
     "premium": "Premium",
     "reviews_count": "{{count}} Bewertungen",
     "experience": "{{n}} Jahre Erfahrung",
@@ -817,7 +817,7 @@
   },
   "events_page": {
     "title": "Wellness-Veranstaltungen",
-    "subtitle": "Workshops, Retreats, Kreise und Meditationen, angeboten von Therapeut:innen der HoliSwiss-Community.",
+    "subtitle": "Workshops, Retreats, Kreise und Meditationen, angeboten von Therapeut:innen der Holiswiss-Community.",
     "empty": "Derzeit sind keine Veranstaltungen veröffentlicht. Schauen Sie bald wieder vorbei.",
     "with": "mit",
     "seats": "Plätze",
@@ -844,7 +844,7 @@
       "online": "Online",
       "hybrid": "Hybrid"
     },
-    "head_title": "Wellness-Veranstaltungen in der Schweiz | HoliSwiss",
+    "head_title": "Wellness-Veranstaltungen in der Schweiz | Holiswiss",
     "head_desc": "Workshops, Retreats, Kreise und Meditationen von holistischen Therapeut:innen in der Schweiz. Reservieren Sie Ihren Platz."
   },
   "newsletter_public": {
@@ -877,8 +877,8 @@
     "home_title": "Das Verzeichnis in Zahlen",
     "therapists_one": "{{count}} Fachperson",
     "therapists_other": "{{count}} Fachpersonen",
-    "verified_one": "davon {{count}} verifiziert",
-    "verified_other": "davon {{count}} verifiziert",
+    "verified_one": "davon {{count}} mit Prüfung vor Veröffentlichung",
+    "verified_other": "davon {{count}} mit Prüfung vor Veröffentlichung",
     "cantons_one": "{{count}} Kanton",
     "cantons_other": "{{count}} Kantone",
     "cities_one": "{{count}} Ort",
@@ -1034,7 +1034,7 @@
       "hide": "Checkliste ausblenden",
       "all_done": "Alles bereit: Ihre Praxis ist eingerichtet.",
       "done": "Erledigt",
-      "mark_done": "Geprüft",
+      "mark_done": "Prüfung vor Veröffentlichung",
       "keep_chf": "Ich behalte CHF",
       "steps": {
         "profile": {

@@ -66,13 +66,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { name: "description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. Profils validés par Holiswiss, avis authentiques, réservation en ligne." },
+      { name: "description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne." },
       { name: "author", content: "Holiswiss" },
       { property: "og:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. Profils validés par Holiswiss, avis authentiques, réservation en ligne." },
+      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Holiswiss" },
       // ⚠️ PAS de `twitter:title` / `twitter:description` ici.
       //
       // TanStack Router fusionne les `meta` par `name`/`property` : une valeur
@@ -87,12 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // (`public/logo.png`, 500 × 500). Avant, c'était une capture d'écran de
       // l'environnement de prévisualisation Lovable, hébergée sur un domaine
       // r2.dev éphémère — une URL qui n'a aucune raison de rester valide.
-      { property: "og:image", content: "https://holiswiss.ch/logo.png" },
-      { property: "og:image:width", content: "500" },
-      { property: "og:image:height", content: "500" },
-      { property: "og:image:alt", content: "Logo Holiswiss" },
-      { name: "twitter:image", content: "https://holiswiss.ch/logo.png" },
-      { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, profil validé Holiswiss, réservation thérapeute" },
+      { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, profil thérapeute Holiswiss, réservation thérapeute" },
       { name: "robots", content: "index, follow" },
       { property: "og:locale", content: "fr_CH" },
       { property: "og:site_name", content: "Holiswiss" },

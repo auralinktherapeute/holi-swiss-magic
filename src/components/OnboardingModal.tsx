@@ -53,7 +53,7 @@ export function OnboardingModal() {
       bullets: [
         tr("Accédez à une patientèle premium recherchant l'expertise suisse.", "Erreichen Sie eine anspruchsvolle Klientel, die Schweizer Expertise sucht.", "Accedete a una clientela premium che cerca l'expertise svizzera.", "Reach a premium clientele seeking Swiss expertise."),
         tr("Simplifiez votre gestion quotidienne avec nos outils intégrés.", "Vereinfachen Sie Ihren Alltag mit integrierten Werkzeugen.", "Semplificate la vostra gestione quotidiana con i nostri strumenti integrati.", "Simplify your daily management with our integrated tools."),
-        tr("Rejoignez un réseau de praticiens certifiés et reconnus.", "Werden Sie Teil eines Netzwerks zertifizierter Fachpersonen.", "Unitevi a una rete di professionisti certificati e riconosciuti.", "Join a network of certified and recognised practitioners."),
+        tr("Découvrez les praticiens de l’annuaire en Suisse.", "Entdecken Sie die Fachpersonen im Verzeichnis in der Schweiz.", "Scoprite i professionisti dell’elenco in Svizzera.", "Discover practitioners in the directory in Switzerland."),
       ],
     },
     {
@@ -61,8 +61,8 @@ export function OnboardingModal() {
       kicker: tr("Étape 02 — Votre profil", "Schritt 02 — Ihr Profil", "Passo 02 — Il vostro profilo", "Step 02 — Your profile"),
       title: tr("Une vitrine premium, prête en quelques minutes.", "Ein Premium-Auftritt, in wenigen Minuten bereit.", "Una vetrina premium, pronta in pochi minuti.", "A premium showcase, ready in minutes."),
       highlight: [
-        { icon: User2, label: tr("Profil vérifié", "Verifiziertes Profil", "Profilo verificato", "Verified profile"), sub: tr("Photo, bio, spécialités, tarifs.", "Foto, Bio, Fachgebiete, Tarife.", "Foto, bio, specialità, tariffe.", "Photo, bio, specialities, rates.") },
-        { icon: ShieldCheck, label: tr("Badges assurances", "Versicherungs-Badges", "Badge assicurazioni", "Insurance badges"), sub: tr("ASCA, RME et reconnaissance suisse.", "ASCA, EMR und Schweizer Anerkennung.", "ASCA, RME e riconoscimento svizzero.", "ASCA, RME and Swiss recognition.") },
+        { icon: User2, label: tr("Profil professionnel", "Berufliches Profil", "Profilo professionale", "Professional profile"), sub: tr("Photo, bio, spécialités, tarifs.", "Foto, Bio, Fachgebiete, Tarife.", "Foto, bio, specialità, tariffe.", "Photo, bio, specialities, rates.") },
+        { icon: ShieldCheck, label: tr("Badges assurances", "Versicherungs-Badges", "Badge assicurazioni", "Insurance badges"), sub: tr("Affiliations déclarées par le thérapeute.", "Von der Fachperson angegebene Mitgliedschaften.", "Affiliazioni dichiarate dal terapeuta.", "Affiliations declared by the therapist.") },
       ],
     },
     {
@@ -80,7 +80,7 @@ export function OnboardingModal() {
       title: tr("Publiez vos articles, gagnez en visibilité.", "Publizieren Sie Ihre Artikel, gewinnen Sie Sichtbarkeit.", "Pubblicate i vostri articoli, guadagnate visibilità.", "Publish your articles, gain visibility."),
       highlight: [
         { icon: PenLine, label: tr("Articles d'auteur", "Autorenartikel", "Articoli d'autore", "Author articles"), sub: tr("Partagez votre approche.", "Teilen Sie Ihren Ansatz.", "Condividete il vostro approccio.", "Share your approach.") },
-        { icon: Star, label: tr("Avis vérifiés", "Verifizierte Bewertungen", "Recensioni verificate", "Verified reviews"), sub: tr("La confiance de vos patients, visible.", "Vertrauen sichtbar gemacht.", "La fiducia dei vostri pazienti, visibile.", "Your patients' trust, made visible.") },
+        { icon: Star, label: tr("Avis clients", "Kundenbewertungen", "Recensioni dei clienti", "Client reviews"), sub: tr("La confiance de vos patients, visible.", "Vertrauen sichtbar gemacht.", "La fiducia dei vostri pazienti, visibile.", "Your patients' trust, made visible.") },
       ],
     },
     {

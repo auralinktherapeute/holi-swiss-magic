@@ -26,8 +26,8 @@
       "cta": "Cerca"
     },
     "trust": {
-      "verified": "Profili convalidati da Holiswiss",
-      "reviews": "Recensioni autentiche",
+      "verified": "Controllo prima della pubblicazione",
+      "reviews": "Recensioni dei clienti",
       "booking": "Prenotazione online",
       "cantons": "26 cantoni"
     },
@@ -47,7 +47,7 @@
       "approaches": "approcci",
       "sessions": "sedute prenotate"
     },
-    "hero_badge": "La nuova piattaforma svizzera del benessere olistico",
+    "hero_badge": "Elenco del benessere in Svizzera",
     "subtitle_lead": "Energeti, sofrologi, naturopati, osteopati…",
     "search_placeholder": "Cerca per città o nome del terapeuta…",
     "search_aria": "Cerca",
@@ -74,7 +74,7 @@
     "newest": {
       "title": "Nuovi terapeuti",
       "subtitle": "Si sono appena uniti alla rete Holiswiss",
-      "verified": "Verificato",
+      "verified": "Controllo prima della pubblicazione",
       "book": "Prenota un appuntamento",
       "profile": "Vedi il profilo",
       "viewAll": "Vedi tutti i terapeuti"
@@ -89,7 +89,7 @@
     "subtitle": "Trova un praticante vicino a te",
     "empty": "Nessun terapeuta al momento.",
     "per_session": "/ seduta",
-    "verified": "Verificato"
+    "verified": "Controllo prima della pubblicazione"
   },
   "profile": {
     "viewProfile": "Vedi profilo",
@@ -156,11 +156,11 @@
       },
       {
         "title": "Pagamento sicuro",
-        "desc": "Transazioni crittografate e conformi alla nLPD svizzera."
+        "desc": "Transazioni crittografate."
       },
       {
         "title": "Supporto in italiano",
-        "desc": "Un team svizzero al tuo servizio."
+        "desc": "Contatta Holiswiss via e-mail."
       }
     ],
     "faq_question": "Una domanda?",
@@ -487,10 +487,10 @@
     "ide_verify": "Verifica su uid.admin.ch",
     "ide_active": "Status Pro attivo — IDI verificato",
     "ide_invalid": "Formato IDI non valido. Esempio: CHE-123.456.789",
-    "accreditations_label": "Riconoscimenti (ASCA, RME, OdA TC…)",
-    "accreditations_helper": "Seleziona le organizzazioni che ti riconoscono. Un badge « Riconosciuto da … » apparirà sul tuo profilo pubblico — i tuoi pazienti potranno ottenere il rimborso dall'assicurazione complementare.",
+    "accreditations_label": "Affiliazioni dichiarate (ASCA, RME, OdA TC…)",
+    "accreditations_helper": "Indica le tue affiliazioni. Sono mostrate come dichiarate da te, senza controllo in un registro ufficiale né garanzia di rimborso.",
     "accreditation_number_placeholder": "Numero di registrazione (opzionale)",
-    "approved_by": "Riconosciuto da",
+    "approved_by": "Affiliazione dichiarata dal terapeuta",
     "no_changes": "Nessuna modifica",
     "section_documents": "Altri documenti da condividere",
     "documents_subtitle": "Brochure, listini, moduli… I tuoi diplomi si gestiscono sopra in «Certificazioni e diplomi».",
@@ -560,20 +560,20 @@
     "subtitle": "Sviluppa il tuo studio, ci occupiamo noi del resto. Più visibilità, meno burocrazia.",
     "search_placeholder": "Specialità, città…",
     "search_btn": "Cerca",
-    "trust_verified": "Professionisti convalidati da Holiswiss",
+    "trust_verified": "Controllo prima della pubblicazione",
     "trust_cantons": "26 cantoni",
     "find_btn": "Trova un terapeuta",
     "signup_free": "Registrati gratis",
     "stats_practitioners": "professionisti",
     "stats_cantons": "cantoni",
     "stats_languages": "lingue",
-    "glass_subtitle": "La piattaforma svizzera del benessere olistico.",
+    "glass_subtitle": "Elenco di terapeuti in Svizzera.",
     "glass_placeholder": "Cosa stai cercando?"
   },
   "therapist_profile": {
     "not_found": "Profilo non trovato",
     "back": "← Torna all'elenco",
-    "verified": "Verificato",
+    "verified": "Controllo prima della pubblicazione",
     "premium": "Premium",
     "reviews_count": "{{count}} recensioni",
     "experience": "{{n}} anni di esperienza",
@@ -817,7 +817,7 @@
   },
   "events_page": {
     "title": "Eventi benessere",
-    "subtitle": "Laboratori, ritiri, cerchi e meditazioni proposti dai terapisti della comunità HoliSwiss.",
+    "subtitle": "Laboratori, ritiri, cerchi e meditazioni proposti dai terapisti della comunità Holiswiss.",
     "empty": "Nessun evento pubblicato al momento. Torna presto.",
     "with": "con",
     "seats": "posti",
@@ -844,7 +844,7 @@
       "online": "Online",
       "hybrid": "Ibrido"
     },
-    "head_title": "Eventi benessere in Svizzera | HoliSwiss",
+    "head_title": "Eventi benessere in Svizzera | Holiswiss",
     "head_desc": "Laboratori, ritiri, cerchi e meditazioni dei terapisti olistici in Svizzera. Prenota il tuo posto."
   },
   "newsletter_public": {
@@ -877,8 +877,8 @@
     "home_title": "L'elenco in cifre",
     "therapists_one": "{{count}} terapeuta",
     "therapists_other": "{{count}} terapeuti",
-    "verified_one": "di cui {{count}} verificato",
-    "verified_other": "di cui {{count}} verificati",
+    "verified_one": "di cui {{count}} con controllo prima della pubblicazione",
+    "verified_other": "di cui {{count}} con controllo prima della pubblicazione",
     "cantons_one": "{{count}} cantone",
     "cantons_other": "{{count}} cantoni",
     "cities_one": "{{count}} città",
@@ -1034,7 +1034,7 @@
       "hide": "Nascondi la checklist",
       "all_done": "Tutto pronto: il vostro studio è configurato.",
       "done": "Completato",
-      "mark_done": "Verificato",
+      "mark_done": "Controllo prima della pubblicazione",
       "keep_chf": "Mantengo CHF",
       "steps": {
         "profile": {

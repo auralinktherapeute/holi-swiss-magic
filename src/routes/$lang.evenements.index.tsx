@@ -29,10 +29,10 @@ export const Route = createFileRoute("/$lang/evenements/")({
   head: ({ params }) => {
     const url = `${SITE}/${params.lang}/evenements`;
     const titles: Record<string, string> = {
-      fr: "Événements bien-être en Suisse | HoliSwiss",
-      de: "Wellness-Veranstaltungen in der Schweiz | HoliSwiss",
-      it: "Eventi benessere in Svizzera | HoliSwiss",
-      en: "Wellness events in Switzerland | HoliSwiss",
+      fr: "Événements bien-être en Suisse | Holiswiss",
+      de: "Wellness-Veranstaltungen in der Schweiz | Holiswiss",
+      it: "Eventi benessere in Svizzera | Holiswiss",
+      en: "Wellness events in Switzerland | Holiswiss",
     };
     const descs: Record<string, string> = {
       fr: "Ateliers, retraites, cercles et méditations proposés par les thérapeutes holistiques de Suisse. Réservez votre place.",

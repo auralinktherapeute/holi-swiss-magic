@@ -1,16 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { seoLinks } from "@/lib/seo";
+import { legalHead, INSTITUTION } from "@/lib/institutional-content";
+import { LegalLanguageNotice } from "@/components/holiswiss/LegalLanguageNotice";
 
 export const Route = createFileRoute("/$lang/impressum/")({
   component: ImpressumPage,
-  head: ({ params }) => ({
-    meta: [
-      { title: "Mentions légales / Impressum — Holiswiss" },
-      { name: "description", content: "Mentions légales / Impressum de Holiswiss : éditeur, hébergement et conditions d'utilisation conformes au droit suisse." },
-      { name: "robots", content: "noindex, follow" },
-    ],
-    links: seoLinks(params.lang, "/impressum"),
-  }),
+  head: () => legalHead("/impressum", "Mentions légales / Impressum — Holiswiss", "Identité de l’éditeur Holiswiss, coordonnées et infrastructure déclarée."),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -23,11 +17,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function ImpressumPage() {
+  const { lang } = Route.useParams();
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+      <LegalLanguageNotice lang={lang} />
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-white">Mentions légales / Impressum</h1>
-        <p className="mt-2 text-sm text-[#b86ef9]">Conformément à la LCD suisse</p>
+        <p className="mt-2 text-sm text-[#b86ef9]">Identité et informations institutionnelles</p>
       </div>
 
       <Section title="Présentation">
@@ -41,9 +37,10 @@ function ImpressumPage() {
 
       <Section title="Éditeur du site">
         <p><strong className="text-white">Nom commercial :</strong> Holiswiss</p>
-        <p><strong className="text-white">Exploitant :</strong> Gérald Henry</p>
+        <p><strong className="text-white">Éditeur / exploitant :</strong> Gérald Henry, micro-entrepreneur en France</p>
+        <p><strong className="text-white">Responsable éditorial :</strong> Gérald Henry</p>
         <p><strong className="text-white">Statut juridique :</strong> Entrepreneur individuel (micro-entreprise) — France</p>
-        <p><strong className="text-white">Adresse :</strong> Impasse Nussbaum, 68300 Saint-Louis, Alsace, France</p>
+        <p><strong className="text-white">Adresse :</strong> 9 Impasse Nussbaum, 68300 Saint-Louis, France</p>
         <p><strong className="text-white">E-mail :</strong>{" "}
           <a href="mailto:contact@holiswiss.ch" className="text-[#b86ef9] hover:underline">contact@holiswiss.ch</a>
         </p>
@@ -52,11 +49,7 @@ function ImpressumPage() {
       </Section>
 
       <Section title="Hébergement et prestataires techniques">
-        <p>
-          Le site Holiswiss s'appuie sur des prestataires techniques sélectionnés pour la qualité et la sécurité de leurs services.
-        </p>
-        <p><strong className="text-white">Base de données et infrastructure :</strong> Supabase, serveurs situés en Europe (région UK)</p>
-        <p><strong className="text-white">Paiements :</strong> Stripe, Inc., 510 Townsend Street, San Francisco, CA 94103, États-Unis</p>
+        <p>{INSTITUTION.infrastructure}</p>
       </Section>
 
       <Section title="Objet de la plateforme">

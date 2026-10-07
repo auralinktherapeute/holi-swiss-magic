@@ -1,5 +1,5 @@
 // Rendu HTML de « La Lettre Holiswiss ».
-// Utilise le gabarit email HoliSwiss existant (aucun second système de template).
+// Utilise le gabarit email Holiswiss existant (aucun second système de template).
 import { escapeHtml, emailShell } from "./email-shell.shared";
 
 export type NewsletterEmailInput = {
@@ -82,7 +82,7 @@ export function renderNewsletterEmail(input: NewsletterEmailInput): {
       &nbsp;·&nbsp;
       <a href="mailto:contact@holiswiss.ch" style="${linkStyle}">contact@holiswiss.ch</a>
       <br/>
-      HoliSwiss — Annuaire des thérapeutes en Suisse · contact@holiswiss.ch
+      Holiswiss — Annuaire des thérapeutes en Suisse · contact@holiswiss.ch
       <br/>
       La désinscription est gratuite et immédiate ; elle n'affecte ni votre compte,
       ni les emails liés à vos rendez-vous et à la sécurité de votre profil.
@@ -123,7 +123,7 @@ export function renderNewsletterText(input: NewsletterEmailInput): string {
     `Gérer mes préférences : ${preferences}`,
     `Se désinscrire : ${unsubscribe}`,
     "Politique de confidentialité : https://holiswiss.ch/fr/confidentialite",
-    "HoliSwiss — Annuaire des thérapeutes en Suisse · contact@holiswiss.ch",
+    "Holiswiss — Annuaire des thérapeutes en Suisse · contact@holiswiss.ch",
   );
   return lines.join("\n");
 }
