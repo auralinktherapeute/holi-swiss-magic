@@ -248,6 +248,7 @@ function Page() {
                 alt={e.title}
                 width={1280}
                 height={800}
+                crossOrigin="anonymous"
                 decoding="async"
                 loading="eager"
                 fetchPriority="high"

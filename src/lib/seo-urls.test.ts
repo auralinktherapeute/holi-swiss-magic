@@ -206,7 +206,8 @@ describe("Sitemap ↔ canonical de la fiche — même fonction, même donnée", 
 
   it("le sitemap et la fiche lisent toutes les colonnes dont dépend la langue", () => {
     expect(sitemap).toContain("${PROFILE_LANG_COLUMNS}");
-    const ficheSelect = publicFns.match(/from\("therapists"\)\s*\.select\(`([^`]*)`\)/)?.[1] ?? "";
+    const ficheSelect =
+      publicFns.match(/from\("therapists"\)\s*\.select\(\s*`([^`]*)`,?\s*\)/)?.[1] ?? "";
     expect(ficheSelect).not.toBe("");
     const eventSelect = publicFns.match(/select\("(id,slug,first_name,last_name,photo_url,city,canton[^"]*)"\)/)?.[1] ?? "";
     expect(eventSelect).not.toBe("");
