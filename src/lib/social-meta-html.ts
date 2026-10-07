@@ -18,6 +18,12 @@ function findMeta(head: string, key: "name" | "property", value: string): string
   return null;
 }
 
+function selfCanonicalIn(head: string, lang: string): boolean {
+  const tag = (head.match(/<link\b[^>]*>/gi) ?? []).find((t) => /rel="canonical"/i.test(t));
+  const href = tag ? attr(tag, "href") ?? "" : "";
+  return new RegExp(`^https://holiswiss\\.ch/${lang}(/|$)`).test(href);
+}
+
 export function completeSocialHtml(html: string, ogLocaleFor: (l: string) => string = (l) => LOCALES[l]): string {
   const headEnd = html.indexOf("</head>");
   if (headEnd === -1) return html;
@@ -29,7 +35,9 @@ export function completeSocialHtml(html: string, ogLocaleFor: (l: string) => str
     const want = ogLocaleFor(lang);
     const tag = findMeta(head, "property", "og:locale");
     if (!tag) add.push(`<meta property="og:locale" content="${want}"/>`);
-    else if (lang !== "fr" && attr(tag, "content") === LOCALES.fr) {
+    // Seulement sur une page canonique d'elle-même dans cette langue : une
+    // variante qui renvoie vers le français (profil, Voix d'experts…) garde fr.
+    else if (lang !== "fr" && attr(tag, "content") === LOCALES.fr && selfCanonicalIn(head, lang)) {
       head = head.replace(tag, tag.replace(/content="[^"]*"/i, `content="${want}"`));
     }
   }
