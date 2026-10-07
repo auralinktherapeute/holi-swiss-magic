@@ -116,7 +116,9 @@ Disallow: /creer-profil
 User-agent: meta-externalagent
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 Sitemap: https://holiswiss.ch/sitemap.xml
