@@ -280,3 +280,35 @@ export const syncCabinetAutoTasks = createServerFn({ method: "POST" })
     return generateAutoTasks(context.supabase, therapistId, context.userId);
   });
 
+
+/** Facture depuis la fiche client : brouillon, émise, ou émise + encaissée (moyen et date confirmés). */
+export const createClientInvoiceFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      client_id: z.string().uuid(),
+      appointment_id: z.string().uuid().optional().nullable(),
+      request_id: z.string().uuid(),
+      action: z.enum(["draft", "issue", "settle"]),
+      payment: z.object({
+        mode: z.enum(["virement", "especes", "carte", "twint", "autre"]),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      }).optional().nullable(),
+      lines: z.array(z.object({
+        description: z.string().trim().min(1).max(500),
+        quantite: z.number().positive().max(1000),
+        prix_unitaire: z.number().min(0).max(100000),
+        tva_taux: z.number().min(0).max(100),
+        duree_min: z.number().int().min(0).max(1440).optional().nullable(),
+        tariff_code: z.string().trim().max(40).optional().nullable(),
+        tariff_label: z.string().trim().max(500).optional().nullable(),
+        tariff_version: z.string().trim().max(60).optional().nullable(),
+      })).min(1).max(30),
+    }).refine((d) => d.action !== "settle" || !!d.payment, { message: "Moyen et date de paiement requis" })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { createClientInvoice } = await import("@/lib/cabinet-billing.server");
+    return createClientInvoice(context.supabase, therapistId, context.userId, data);
+  });

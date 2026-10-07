@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Search, Users, ShieldCheck, ShieldAlert, Receipt, Calendar,
-  Phone, Mail, X, ExternalLink, Pencil,
+  Phone, Mail, X, ExternalLink, Pencil, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import { EditClientDialog } from "@/components/dashboard/EditClientDialog";
 import { ClientActionsBar, NewClientButton, ClientQuestionnaires, ConsentRequestButton, InvoiceReminderButton, ClientJournal, DuplicatesButton, TrashButton } from "@/components/dashboard/ClientFicheExtras";
 import { ClientCurrencyBlock } from "@/components/dashboard/ClientCurrencyBlock";
 import { formatAmount, resolveEffectiveCurrency } from "@/lib/currency-consent";
+import { ClientBillingStats, ClientInvoicesPanel } from "@/components/dashboard/ClientInvoicesPanel";
 
 
 export const Route = createFileRoute("/dashboard/clients")({
@@ -251,6 +252,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
   const client: any = data?.client;
   const [wizard, setWizard] = useState<QuickInvoiceTarget | null>(null);
+  const [freeInvoice, setFreeInvoice] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
   const [editing, setEditing] = useState(false);
@@ -274,7 +276,14 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isLoading ? "Chargement…" : fullName || "Client"}</DialogTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2 pr-8">
+            <DialogTitle>{isLoading ? "Chargement…" : fullName || "Client"}</DialogTitle>
+            {!isLoading && client && (
+              <Button className="min-h-11" onClick={() => setFreeInvoice(true)}>
+                <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" /> Créer une facture
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         {isLoading && <div className="space-y-2"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>}
@@ -345,6 +354,11 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 </div>
               </section>
 
+              <ClientBillingStats
+                clientId={id}
+                currency={resolveEffectiveCurrency(client.billing_currency, dd.practice_currency).currency}
+              />
+
               <ClientCurrencyBlock
                 clientId={id}
                 clientName={fullName}
@@ -385,11 +399,6 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
               </section>
 
               <div className="flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/dashboard/facturation" search={{ vue: "a_facturer" }}>
-                    Facturer une séance <ExternalLink className="h-3.5 w-3.5 ml-1.5" aria-hidden="true" />
-                  </Link>
-                </Button>
                 <Button variant="ghost" size="sm" onClick={onClose}>
                   <X className="h-4 w-4 mr-1.5" aria-hidden="true" /> Fermer
                 </Button>
@@ -438,20 +447,10 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
             </TabsContent>
 
             <TabsContent value="factures" className="mt-4">
-              <Section title="Factures" icon={Receipt} empty="Aucune facture pour ce client.">
-                {(dd.invoices ?? []).map((i: any) => (
-                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-sm">
-                    <span>{i.numero_facture ?? "Brouillon"}</span>
-                    <span className="text-muted-foreground">{shortDate(i.date_emission)}</span>
-                    <span>{money(i.montant_total, i.currency ?? "CHF")}</span>
-                    <span className={i.solde > 0 ? "text-destructive" : "text-muted-foreground"}>
-                      Solde {money(i.solde, i.currency ?? "CHF")}
-                    </span>
-                    <Badge variant="secondary">{i.statut}</Badge>
-                    <InvoiceReminderButton invoice={i} client={client} />
-                  </li>
-                ))}
-              </Section>
+              <ClientInvoicesPanel
+                client={client}
+                currency={resolveEffectiveCurrency(client.billing_currency, dd.practice_currency).currency}
+              />
             </TabsContent>
 
             <TabsContent value="paiements" className="mt-4">
@@ -535,8 +534,9 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
         <QuickInvoiceDialog
           appointment={wizard}
-          open={!!wizard}
-          onOpenChange={(o) => { if (!o) setWizard(null); }}
+          client={client ? { id, name: fullName || "Client", currency: resolveEffectiveCurrency(client.billing_currency, dd.practice_currency).currency } : null}
+          open={!!wizard || freeInvoice}
+          onOpenChange={(o) => { if (!o) { setWizard(null); setFreeInvoice(false); } }}
         />
         {editing && client && (
           <EditClientDialog

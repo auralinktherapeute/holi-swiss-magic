@@ -21,14 +21,11 @@ import {
 import { listMyCrmContactsMinimal } from "@/lib/service-packages.functions";
 import InvoiceReminders from "@/components/dashboard/InvoiceReminders";
 import InvoiceReports from "@/components/dashboard/InvoiceReports";
-import { MissingInvoices } from "@/components/dashboard/MissingInvoices";
 import InvoiceLogoUploader from "@/components/dashboard/InvoiceLogoUploader";
 import BillingServices from "@/components/dashboard/BillingServices";
 import Tariff590Panel from "@/components/dashboard/Tariff590Panel";
 import InvoicePortalLinks from "@/components/dashboard/InvoicePortalLinks";
 import BankReconciliation from "@/components/dashboard/BankReconciliation";
-import AppointmentsToBill from "@/components/dashboard/AppointmentsToBill";
-import ClientsToBill from "@/components/dashboard/ClientsToBill";
 import InvoicePreviewDialog from "@/components/dashboard/InvoicePreviewDialog";
 import AccountingPanel from "@/components/dashboard/AccountingPanel";
 
@@ -59,8 +56,6 @@ import {
 type Vue = "tableau" | "a_facturer" | "clients" | "factures" | "paiements" | "comptabilite" | "prestations" | "tarif590" | "rappels" | "rapports" | "parametres";
 const VUES: { key: Vue; label: string }[] = [
   { key: "tableau", label: "Tableau de bord" },
-  { key: "a_facturer", label: "Rendez-vous à facturer" },
-  { key: "clients", label: "Clients à facturer" },
   { key: "factures", label: "Factures" },
   { key: "paiements", label: "Paiements" },
   { key: "comptabilite", label: "Comptabilité" },
@@ -266,22 +261,6 @@ function Page() {
             </div>
           ))}
         </section>
-      )}
-
-      {vue === "tableau" && !loading && missing.length === 0 && (
-        <MissingInvoices
-          onCreated={(id) => { setPreviewId(id); void refresh(); }}
-        />
-      )}
-
-      {vue === "a_facturer" && (
-        <AppointmentsToBill
-          onInvoiceCreated={(id) => { setPreviewId(id); void refresh(); }}
-        />
-      )}
-
-      {vue === "clients" && (
-        <ClientsToBill onSelect={() => setVue("a_facturer")} />
       )}
 
       {vue === "comptabilite" && <AccountingPanel />}
