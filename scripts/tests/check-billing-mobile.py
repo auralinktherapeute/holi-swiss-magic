@@ -18,7 +18,7 @@ window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type;
 window.__vite_plugin_react_preamble_installed__ = true;
 await import('/src/styles.css');
 const {default: React} = await import('/node_modules/.vite/deps/react.js');
-const {createRoot} = await import('/node_modules/.vite/deps/react-dom_client.js');
+const {default: ReactDOM} = await import('/node_modules/.vite/deps/react-dom_client.js');
 const {QueryClient, QueryClientProvider} = await import('/node_modules/.vite/deps/@tanstack_react-query.js');
 const {createRootRoute, createRouter, RouterProvider, createMemoryHistory} = await import('/node_modules/@tanstack/react-router/dist/esm/index.dev.js');
 const {default: i18n} = await import('/node_modules/.vite/deps/i18next.js');
@@ -36,7 +36,7 @@ function Fixture(){return React.createElement(React.Fragment,null,React.createEl
 function Client(){const [open,setOpen]=React.useState(false);window.showClient=()=>setOpen(true);return open ? React.createElement(TestClientDialog,{id,onClose:()=>setOpen(false)}) : null;}
 const root = createRootRoute({component:Fixture});
 const router = createRouter({routeTree:root,history:createMemoryHistory({initialEntries:['/']})});
-createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client:qc},React.createElement(I18nextProvider,{i18n},React.createElement(RouterProvider,{router}))));
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client:qc},React.createElement(I18nextProvider,{i18n},React.createElement(RouterProvider,{router}))));
 </script></head><body><div id="root"></div></body></html>'''
 
 async def main():
