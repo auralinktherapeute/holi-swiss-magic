@@ -117,8 +117,9 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/$citySlu
         { property: "og:type", content: "website" },
         { property: "og:locale", content: ogLocale(params.lang) },
       ],
-      links: [{ rel: "canonical", href: url }, ...hreflangs],
-      scripts: [
+      // noindex : canonical seule, ni hreflang ni JSON-LD (décision du 07/10/2026).
+      links: [{ rel: "canonical", href: url }, ...(indexable ? hreflangs : [])],
+      scripts: !indexable ? [] : [
         {
           type: "application/ld+json",
           children: JSON.stringify({

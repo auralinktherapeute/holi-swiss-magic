@@ -14,6 +14,8 @@ import {
   isCityIndexable,
   isCantonIndexable,
   isFamilyIndexable,
+  ownDescription,
+  profileFacts,
 } from "./seo-thresholds";
 
 /**
@@ -40,23 +42,56 @@ describe("seo-thresholds — seuils d'indexabilité des pages spécialité", () 
     expect(FAMILY_MIN_THERAPISTS).toBe(2);
   });
 
-  it("retire les pages spécialité à 0 ou 1 praticien, garde celles qui en ont 2", () => {
-    // 07/09/2026 : seuil 1 (spécialités vides retirées). 29/09/2026 : seuil 2.
-    // Mesuré sur qqwud le 29/09 : 15 spécialités au sitemap → 7 (10 retirées
-    // à 1 praticien, 2 ajoutées — gestion-du-stress et meditation, que le
-    // sitemap taisait parce qu'il comptait via les paires géolocalisées).
-    expect(isSpecialtyIndexable(0)).toBe(false);
-    expect(isSpecialtyIndexable(1)).toBe(false);
-    expect(isSpecialtyIndexable(2)).toBe(true);
+  it("spécialité : ≥ 2 fiches ET (≥ 2 villes OU ≥ 3 fiches) ET description propre", () => {
+    const d = "Une description.";
+    expect(isSpecialtyIndexable({ profiles: 1, distinctCities: 1, description: d })).toBe(false);
+    expect(isSpecialtyIndexable({ profiles: 2, distinctCities: 1, description: d })).toBe(false); // méditation
+    expect(isSpecialtyIndexable({ profiles: 2, distinctCities: 2, description: d })).toBe(true);
+    expect(isSpecialtyIndexable({ profiles: 3, distinctCities: 1, description: d })).toBe(true);
+    expect(isSpecialtyIndexable({ profiles: 5, distinctCities: 4, description: "  " })).toBe(false);
+    expect(isSpecialtyIndexable({ profiles: 5, distinctCities: 4, description: null })).toBe(false);
   });
 
-  it("ville, canton, famille : indexables à partir de 2 fiches", () => {
-    for (const f of [isCityIndexable, isCantonIndexable, isFamilyIndexable]) {
-      expect(f(0)).toBe(false);
-      expect(f(1)).toBe(false);
-      expect(f(2)).toBe(true);
-      expect(f(13)).toBe(true);
-    }
+  it("ville : 2 fiches suffisent", () => {
+    expect(isCityIndexable(0)).toBe(false);
+    expect(isCityIndexable(1)).toBe(false);
+    expect(isCityIndexable(2)).toBe(true);
+  });
+
+  it("canton : ≥ 2 fiches ET (≥ 2 villes OU ≥ 3 fiches)", () => {
+    expect(isCantonIndexable({ profiles: 1, distinctCities: 1 })).toBe(false); // BE, BS
+    expect(isCantonIndexable({ profiles: 2, distinctCities: 1 })).toBe(false);
+    expect(isCantonIndexable({ profiles: 2, distinctCities: 2 })).toBe(true);
+    expect(isCantonIndexable({ profiles: 3, distinctCities: 1 })).toBe(true);
+    expect(isCantonIndexable({ profiles: 4, distinctCities: 3 })).toBe(true); // GE
+  });
+
+  it("famille : ≥ 2 fiches, ≥ 2 spécialités représentées, description propre", () => {
+    const d = "Texte.";
+    expect(isFamilyIndexable({ profiles: 1, representedSpecialties: 2, description: d })).toBe(false);
+    expect(isFamilyIndexable({ profiles: 2, representedSpecialties: 1, description: d })).toBe(false);
+    expect(isFamilyIndexable({ profiles: 2, representedSpecialties: 2, description: d })).toBe(true);
+    expect(isFamilyIndexable({ profiles: 6, representedSpecialties: 12, description: "" })).toBe(false);
+  });
+
+  it("description : langue exacte, jamais de repli français", () => {
+    const row = { description_fr: "FR", description_de: " ", description_it: null };
+    expect(ownDescription(row, "fr")).toBe("FR");
+    expect(ownDescription(row, "de")).toBeNull();
+    expect(ownDescription(row, "it")).toBeNull();
+    expect(ownDescription(row, "en")).toBeNull();
+  });
+
+  it("profileFacts : fiches distinctes avec slug, villes normalisées", () => {
+    expect(
+      profileFacts([
+        { id: "a", slug: "a", city: "Genève" },
+        { id: "a", slug: "a", city: "Genève" },
+        { id: "b", slug: "b", city: "geneve" },
+        { id: "c", slug: null, city: "Lausanne" },
+        { id: "d", slug: "d", city: null },
+      ]),
+    ).toEqual({ profiles: 3, distinctCities: 1 });
   });
 
   it("exige deux praticiens pour une paire spécialité × ville", () => {

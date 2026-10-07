@@ -127,8 +127,8 @@ export const listTherapistsByCanton = createServerFn({ method: "GET" })
     }
     // Pivot lu seulement si la page portera une FAQ (indexable) — même seuil que
     // la route et le sitemap.
-    const { isCantonIndexable } = await import("@/lib/seo-thresholds");
-    const specialtyLinks = isCantonIndexable(therapists.length)
+    const { isCantonIndexable, profileFacts } = await import("@/lib/seo-thresholds");
+    const specialtyLinks = isCantonIndexable(profileFacts(therapists))
       ? await loadSpecialtyLinks(supabase, therapists.map((t) => t.id))
       : null;
     const { zurichDay } = await import("@/lib/directory-stats");
@@ -299,6 +299,9 @@ export const listTherapistsByCity = createServerFn({ method: "GET" })
     const { listModified } = await import("@/lib/page-dates");
     return {
       canonicalSlug,
+      // Ville de la liste officielle (`cities`) : une ville inconnue ET sans
+      // fiche active répond 404 ; une ville avec une fiche n'est jamais 404.
+      knownCity: resolver.strict(wanted) !== null,
       therapists,
       cityName: therapists[0]?.city ?? null,
       canton: therapists[0]?.canton ?? null,

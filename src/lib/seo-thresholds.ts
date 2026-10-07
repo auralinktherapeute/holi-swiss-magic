@@ -80,9 +80,9 @@ export function isCategoryIndexable(count: number): boolean {
   return count >= ARTICLE_CATEGORY_MIN_ARTICLES;
 }
 
-/** Une page spécialité mérite-t-elle d'être indexée avec `count` praticiens ? */
-export function isSpecialtyIndexable(count: number): boolean {
-  return count >= SPECIALTY_MIN_THERAPISTS;
+/** Une page spécialité mérite-t-elle d'être indexée ? (règle `isListingIndexable`) */
+export function isSpecialtyIndexable(facts: ListingFacts): boolean {
+  return isListingIndexable("specialty", facts);
 }
 
 /** Une page spécialité × ville mérite-t-elle d'être indexée avec `count` praticiens ? */
@@ -111,17 +111,97 @@ export const FAMILY_MIN_THERAPISTS: number = 2;
 
 /** Une page ville mérite-t-elle d'être indexée avec `count` fiches ? */
 export function isCityIndexable(count: number): boolean {
-  return count >= CITY_MIN_THERAPISTS;
+  return isListingIndexable("city", { profiles: count });
 }
 
-/** Une page canton mérite-t-elle d'être indexée avec `count` fiches ? */
-export function isCantonIndexable(count: number): boolean {
-  return count >= CANTON_MIN_THERAPISTS;
+/** Une page canton mérite-t-elle d'être indexée ? (règle `isListingIndexable`) */
+export function isCantonIndexable(facts: ListingFacts): boolean {
+  return isListingIndexable("canton", facts);
 }
 
-/** Une page famille mérite-t-elle d'être indexée avec `count` praticiens ? */
-export function isFamilyIndexable(count: number): boolean {
-  return count >= FAMILY_MIN_THERAPISTS;
+/** Une page famille mérite-t-elle d'être indexée ? (règle `isListingIndexable`) */
+export function isFamilyIndexable(facts: ListingFacts): boolean {
+  return isListingIndexable("family", facts);
+}
+
+// ── RÈGLE D'INDEXATION DES PAGES D'ANNUAIRE — décision du 07/10/2026 ──────────
+//
+// Validée par Gérald (étape 3/7). UNE règle, lue par les routes ET le sitemap.
+// index,follow seulement si TOUTES les conditions de son type sont remplies :
+//   · tous types : ≥ 2 fiches actives distinctes publiées ;
+//   · spécialité, canton : ≥ 2 villes différentes OU ≥ 3 fiches ;
+//   · famille : ≥ 2 spécialités réellement représentées ;
+//   · ville : 2 fiches suffisent ;
+//   · spécialité, famille : description propre non vide (après trim) dans la
+//     langue de la page — jamais le repli français.
+// Sinon : 200 noindex,follow, hors sitemap, sans JSON-LD ni hreflang.
+export type ListingKind = "specialty" | "canton" | "city" | "family";
+export type ListingFacts = {
+  /** Fiches actives distinctes, avec slug. */
+  profiles: number;
+  /** Villes distinctes parmi ces fiches (spécialité, canton). */
+  distinctCities?: number;
+  /** Spécialités représentées par au moins une fiche active (famille). */
+  representedSpecialties?: number;
+  /** Description propre dans la langue de la page (spécialité, famille). */
+  description?: string | null;
+};
+export const LISTING_MIN_PROFILES = 2;
+export const LISTING_DIVERSITY_MIN_CITIES = 2;
+export const LISTING_DIVERSITY_MIN_PROFILES = 3;
+export const FAMILY_MIN_REPRESENTED_SPECIALTIES = 2;
+
+export function hasOwnDescription(d: unknown): boolean {
+  return typeof d === "string" && d.trim().length > 0;
+}
+
+/** Description dans la langue EXACTE (`description_<lang>`), sans repli. */
+export function ownDescription(row: unknown, lang: string): string | null {
+  const v = (row as Record<string, unknown> | null | undefined)?.[`description_${lang}`];
+  return hasOwnDescription(v) ? (v as string) : null;
+}
+
+export function isListingIndexable(kind: ListingKind, f: ListingFacts): boolean {
+  if (!(f.profiles >= LISTING_MIN_PROFILES)) return false;
+  switch (kind) {
+    case "city":
+      return true;
+    case "canton":
+      return (f.distinctCities ?? 0) >= LISTING_DIVERSITY_MIN_CITIES || f.profiles >= LISTING_DIVERSITY_MIN_PROFILES;
+    case "specialty":
+      return (
+        ((f.distinctCities ?? 0) >= LISTING_DIVERSITY_MIN_CITIES || f.profiles >= LISTING_DIVERSITY_MIN_PROFILES) &&
+        hasOwnDescription(f.description)
+      );
+    case "family":
+      return (f.representedSpecialties ?? 0) >= FAMILY_MIN_REPRESENTED_SPECIALTIES && hasOwnDescription(f.description);
+  }
+}
+
+/** Fiches distinctes (avec slug) et villes distinctes, comptées pareil partout. */
+export function profileFacts(
+  list: ReadonlyArray<{ id?: string | null; slug?: string | null; city?: string | null }>,
+): { profiles: number; distinctCities: number } {
+  const ids = new Set<string>();
+  const cities = new Set<string>();
+  for (const t of list) {
+    if (!t?.slug) continue;
+    const key = t.id ?? t.slug;
+    if (ids.has(key)) continue;
+    ids.add(key);
+    const c = (t.city ?? "")
+      .toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if (c) cities.add(c);
+  }
+  return { profiles: ids.size, distinctCities: cities.size };
+}
+
+/** Langues où la page est indexable : seules elles portent des hreflang. */
+export function indexableLangs<L extends string>(
+  langs: ReadonlyArray<L>,
+  decide: (lang: L) => boolean,
+): L[] {
+  return langs.filter((l) => decide(l));
 }
 
 /** Vrai tant que les seuils n'ont pas été relevés — sert aux tests de garde. */

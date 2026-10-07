@@ -34,6 +34,19 @@ export function canonicalLink(lang: string, pathWithoutLang: string) {
   return { rel: "canonical" as const, href: `${SITE}/${lang}${tail}` };
 }
 
+/**
+ * Restreint des alternates aux langues indexables. Moins de deux langues :
+ * aucun hreflang (x-default inclus). `undefined` = toutes (panne, cas sûr).
+ */
+export function listingAlternates<T extends { hrefLang: string }>(
+  links: T[],
+  langs: readonly string[] | undefined,
+): T[] {
+  if (!langs) return links;
+  if (langs.length < 2) return [];
+  return links.filter((l) => (l.hrefLang === "x-default" ? langs.includes("fr") : langs.includes(l.hrefLang)));
+}
+
 /** Convenience: canonical + hreflang alternates in one array. */
 export function seoLinks(lang: string, pathWithoutLang: string) {
   return [canonicalLink(lang, pathWithoutLang), ...hreflangLinks(pathWithoutLang)];

@@ -14,6 +14,8 @@ import {
   isCityIndexable,
   isCantonIndexable,
   isFamilyIndexable,
+  ownDescription,
+  profileFacts,
 } from "@/lib/seo-thresholds";
 import {
   countTherapistsByCanton,
@@ -226,8 +228,8 @@ export async function buildSitemapBlocks(): Promise<string[]> {
   // ── Familles de spécialités ────────────────────────────────────────────────
   const families = unwrap(
     "sitemap: familles de spécialités",
-    await supabaseAdmin.from("specialty_families").select("id, slug, updated_at"),
-  ) as Array<{ id: string; slug: string; updated_at: string | null }>;
+    await supabaseAdmin.from("specialty_families").select("id, slug, updated_at, description_fr, description_de, description_it, description_en"),
+  ) as Array<{ id: string; slug: string; updated_at: string | null } & Record<string, unknown>>;
 
   // ── Spécialités actives ───────────────────────────────────────────────────
   // Les colonnes de slug localisé peuvent ne pas exister côté base (migration
@@ -239,14 +241,14 @@ export async function buildSitemapBlocks(): Promise<string[]> {
   {
     const rich = await (supabaseAdmin as any)
       .from("specialties")
-      .select("id, family_id, slug, slug_de, slug_it, slug_en, updated_at")
+      .select("id, family_id, slug, slug_de, slug_it, slug_en, updated_at, description_fr, description_de, description_it, description_en")
       .eq("is_active", true);
     specs = rich.error
       ? (unwrap(
           "sitemap: spécialités (repli sans slugs localisés)",
           await (supabaseAdmin as any)
             .from("specialties")
-            .select("id, family_id, slug, updated_at")
+            .select("id, family_id, slug, updated_at, description_fr, description_de, description_it, description_en")
             .eq("is_active", true),
         ) as SpecRow[])
       : (rich.data as SpecRow[]);
@@ -411,6 +413,22 @@ export async function buildSitemapBlocks(): Promise<string[]> {
       .map((s) => ({ id: s.id, family_id: s.family_id ?? null })),
   );
 
+  // Fiches actives par spécialité, et spécialités représentées par famille —
+  // mêmes données que `getSpecialtyPage` / `getFamilyPage` (règle du 07/10/2026).
+  const therapistsBySpec = new Map<string, TherapistRow[]>();
+  const familyOfSpec = new Map<string, string>();
+  for (const s of specs) if (s.id && s.family_id) familyOfSpec.set(s.id, s.family_id);
+  const representedByFamily = new Map<string, Set<string>>();
+  for (const p of pivot) {
+    const t = therapistById.get(p.therapist_id);
+    if (!t || !t.slug) continue;
+    const list = therapistsBySpec.get(p.specialty_id) ?? [];
+    if (!list.includes(t)) list.push(t);
+    therapistsBySpec.set(p.specialty_id, list);
+    const fam = familyOfSpec.get(p.specialty_id);
+    if (fam) (representedByFamily.get(fam) ?? representedByFamily.set(fam, new Set()).get(fam)!).add(p.specialty_id);
+  }
+
   // ── Blog (projet CMS séparé) ──────────────────────────────────────────────
   // Lu AVANT l'assemblage : la page d'accueil et `/blog` ont besoin de la
   // fraîcheur des articles pour leur `lastmod`.
@@ -556,8 +574,13 @@ export async function buildSitemapBlocks(): Promise<string[]> {
   // Familles — seulement celles qui atteignent le seuil (`isFamilyIndexable`,
   // lu aussi par le loader de `$lang.therapeutes.famille.$familySlug.tsx`).
   for (const f of families) {
-    if (!isFamilyIndexable(familyCount.get(f.id) ?? 0)) continue;
+    const famFacts = {
+      profiles: familyCount.get(f.id) ?? 0,
+      representedSpecialties: representedByFamily.get(f.id)?.size ?? 0,
+    };
     for (const lang of LANGS) {
+      // Règle du 07/10/2026, langue par langue (description propre exigée).
+      if (!isFamilyIndexable({ ...famFacts, description: ownDescription(f, lang) })) continue;
       urls.push(
         urlBlock(
           `${BASE_URL}/${lang}/therapeutes/famille/${f.slug}`,
@@ -571,7 +594,8 @@ export async function buildSitemapBlocks(): Promise<string[]> {
 
   // Pages spécialité.
   for (const s of specs) {
-    if (!isSpecialtyIndexable(specCount.get(s.slug) ?? 0)) continue;
+    const sFacts = profileFacts(s.id ? (therapistsBySpec.get(s.id) ?? []) : []);
+    if (!LANGS.some((l) => isSpecialtyIndexable({ ...sFacts, description: ownDescription(s, l) }))) continue;
     // Fraîcheur = la plus récente entre la fiche de la spécialité et les
     // praticiens qu'elle liste : c'est ce que la page affiche qui change.
     const lastmod = newer(
@@ -579,6 +603,7 @@ export async function buildSitemapBlocks(): Promise<string[]> {
       (specCount.get(s.slug) ?? 0) > 0 ? therapistsFreshness : undefined,
     );
     for (const lang of LANGS) {
+      if (!isSpecialtyIndexable({ ...sFacts, description: ownDescription(s, lang) })) continue;
       urls.push(
         urlBlock(
           `${BASE_URL}/${lang}/specialites/${specSlugForLang(s, lang)}`,
@@ -630,12 +655,20 @@ export async function buildSitemapBlocks(): Promise<string[]> {
     const cityCount = countTherapistsByCity(therapists, { strict: strictCitySlug, tolerant: tolerantCitySlug });
     const cantons = new Map<string, string | undefined>();
     const cities = new Map<string, string | undefined>();
+    // Fiches par canton (mêmes filtres que `countTherapistsByCanton`) : la
+    // règle canton exige aussi la diversité des villes.
+    const cantonMembers = new Map<string, TherapistRow[]>();
+    for (const t of therapists) {
+      const code = t.canton ?? "";
+      if (!t.slug || !cantonCount.has(code)) continue;
+      cantonMembers.set(code, [...(cantonMembers.get(code) ?? []), t]);
+    }
     for (const t of therapists) {
       // `lastmod` = fiches que la page AFFICHE : sans slug, elle n'en montre pas.
       if (!t.slug) continue;
       const d = contentDay(t);
       const code = t.canton ?? "";
-      if (isCantonIndexable(cantonCount.get(code) ?? 0)) bump(cantons, code, d);
+      if (cantonCount.has(code) && isCantonIndexable(profileFacts(cantonMembers.get(code) ?? []))) bump(cantons, code, d);
       if (t.city === null) continue;
       const cSlug = tolerantCitySlug(t.city);
       if (cSlug && isCityIndexable(cityCount.get(cSlug) ?? 0)) bump(cities, cSlug, d);
