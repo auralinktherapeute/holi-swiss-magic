@@ -252,7 +252,7 @@ export type DirectoryIntro = {
 
 export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
   fr: {
-    h2: "Trouver un thérapeute holistique en Suisse",
+    h2: "Trouver un thérapeute en Suisse",
     lead: "Holiswiss réunit des thérapeutes et praticiens en médecines douces dans les 26 cantons suisses. Recherchez par spécialité — naturopathie, sophrologie, hypnose, acupuncture, ostéopathie, réflexologie, reiki, méditation — par ville ou par canton, en français, allemand, italien ou anglais, et réservez votre séance en ligne.",
     blocks: [
       {
