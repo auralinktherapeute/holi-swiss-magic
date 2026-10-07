@@ -196,7 +196,17 @@ export function EventFlyer({ data, filename = "flyer-holiswiss.png" }: { data: F
     return () => {
       cancelled = true;
     };
-  }, [data]);
+  }, [
+    data.title,
+    data.category,
+    data.dateLabel,
+    data.timeLabel,
+    data.location,
+    data.priceLabel,
+    data.therapistName,
+    data.coverUrl,
+    data.targetUrl,
+  ]);
 
   const download = async () => {
     if (!canvasRef.current) return;

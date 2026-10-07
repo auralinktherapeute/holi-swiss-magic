@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { ogLocale, profileContentLang } from "@/lib/seo";
 import { publisherNode } from "@/lib/organization-schema";
 import { buildMetaTitle } from "@/lib/seo-title";
-import { useMemo } from "react";
 
 const SITE = "https://holiswiss.ch";
 
@@ -185,18 +184,6 @@ function Page() {
 
   const therapistName = th ? `${th.first_name ?? ""} ${th.last_name ?? ""}`.trim() : null;
   const categoryLabel = t(`events_page.categories.${e.category}`, { defaultValue: e.category });
-  const flyerData = useMemo(() => ({
-    title: e.title,
-    category: categoryLabel,
-    dateLabel: formatDate(e.event_date, lang),
-    timeLabel: e.start_time ? `${e.start_time}${e.end_time ? `–${e.end_time}` : ""}` : null,
-    location: e.location ?? null,
-    priceLabel: e.is_paid ? `${e.price} CHF` : t("events_page.free"),
-    therapistName,
-    coverUrl: e.image_signed_url ?? null,
-    targetUrl: flyerUrl,
-  }), [categoryLabel, e, flyerUrl, lang, t, therapistName]);
-
   return (
     <main className="container mx-auto px-4 py-8 sm:py-12 max-w-5xl">
       <Link to="/$lang/evenements" params={{ lang }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
@@ -295,7 +282,17 @@ function Page() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <h2 className="font-semibold mb-3">{t("events_page.flyer")}</h2>
             <EventFlyer
-              data={flyerData}
+              data={{
+                title: e.title,
+                category: categoryLabel,
+                dateLabel: formatDate(e.event_date, lang),
+                timeLabel: e.start_time ? `${e.start_time}${e.end_time ? `–${e.end_time}` : ""}` : null,
+                location: e.location ?? null,
+                priceLabel: e.is_paid ? `${e.price} CHF` : t("events_page.free"),
+                therapistName,
+                coverUrl: e.image_signed_url ?? null,
+                targetUrl: flyerUrl,
+              }}
               filename={`holiswiss-${e.title.toLowerCase().replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}.png`}
             />
           </div>
