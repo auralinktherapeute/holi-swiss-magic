@@ -387,19 +387,47 @@ async function lockDraft(supabase: any, therapistId: string, actorUserId: string
   return row0.numero_facture as string;
 }
 
+type ClientInvoiceResult = { invoice_id: string; numero_facture: string | null; statut: string; duplicate: boolean };
+
+/** Demandes en cours dans ce processus serveur, par thérapeute + request_id. */
+const inflightClientInvoices = new Map<string, Promise<ClientInvoiceResult>>();
+
+/** Factures portant ce request_id, la plus ancienne en premier (règle de départage déterministe). */
+async function invoicesForRequest(supabase: any, therapistId: string, requestId: string) {
+  const { data, error } = await supabase.from("therapist_invoices")
+    .select("id,numero_facture,statut,created_at").eq("therapist_id", therapistId)
+    .eq("metadata->>request_id", requestId)
+    .order("created_at", { ascending: true }).order("id", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Array<{ id: string; numero_facture: string; statut: string }>;
+}
+
 export async function createClientInvoice(
   supabase: any,
   therapistId: string,
   actorUserId: string,
   input: ClientInvoiceInput,
-): Promise<{ invoice_id: string; numero_facture: string | null; statut: string; duplicate: boolean }> {
+): Promise<ClientInvoiceResult> {
   if (input.action === "settle" && (!input.payment?.mode || !input.payment?.date)) {
     throw new Error("Confirmez le moyen et la date du paiement.");
   }
-  // Anti double-clic : une même demande ne crée jamais deux factures.
-  const { data: prior } = await supabase.from("therapist_invoices")
-    .select("id,numero_facture,statut").eq("therapist_id", therapistId)
-    .eq("metadata->>request_id", input.request_id).maybeSingle();
+  if (!input.request_id) throw new Error("Demande invalide.");
+  const key = `${therapistId}:${input.request_id}`;
+  const running = inflightClientInvoices.get(key);
+  if (running) return running.then((r) => ({ ...r, duplicate: true }));
+  const p = createClientInvoiceOnce(supabase, therapistId, actorUserId, input);
+  inflightClientInvoices.set(key, p);
+  try { return await p; } finally { inflightClientInvoices.delete(key); }
+}
+
+async function createClientInvoiceOnce(
+  supabase: any,
+  therapistId: string,
+  actorUserId: string,
+  input: ClientInvoiceInput,
+): Promise<ClientInvoiceResult> {
+  // Anti double-soumission : une même demande ne crée jamais deux factures.
+  const prior = (await invoicesForRequest(supabase, therapistId, input.request_id))[0];
   if (prior) return { invoice_id: prior.id, numero_facture: prior.numero_facture, statut: prior.statut, duplicate: true };
 
   const { data: c, error: cErr } = await supabase.from("crm_client_contacts")
@@ -445,6 +473,13 @@ export async function createClientInvoice(
     if (error) throw new Error(error.message);
     if (!inv) throw new Error("Création du brouillon impossible.");
     id = inv.id as string;
+    // Réconciliation : si une soumission concurrente a inséré avant nous, on
+    // retire notre brouillon vide (autorisé par ti_delete_guard) et on renvoie le sien.
+    const winner = (await invoicesForRequest(supabase, therapistId, input.request_id))[0];
+    if (winner && winner.id !== id) {
+      await supabase.from("therapist_invoices").delete().eq("id", id).eq("therapist_id", therapistId);
+      return { invoice_id: winner.id, numero_facture: winner.numero_facture, statut: winner.statut, duplicate: true };
+    }
     const totals = await replaceLines(supabase, therapistId, id, toLines(input.lines, emission, null), mode);
     await logInvoiceAudit(supabase, {
       therapistId, invoiceId: id, action: "draft_created_from_client", actorUserId,
