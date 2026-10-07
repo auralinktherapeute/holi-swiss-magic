@@ -126,7 +126,20 @@ async function main() {
     console.error(`✗ sitemap.xml inaccessible (HTTP ${sm.status})`);
     process.exit(1);
   }
-  const urls = [...sm.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  let urls = [...sm.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  // Sitemap index : on suit chaque partie (/sitemaps/<part>.xml).
+  if (/<sitemapindex[\s>]/.test(sm.body)) {
+    const pages = [];
+    for (const part of urls) {
+      const r = await fetchText(part, "follow");
+      if (r.status !== 200) {
+        console.error(`✗ ${part} inaccessible (HTTP ${r.status})`);
+        process.exit(1);
+      }
+      pages.push(...[...r.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+    }
+    urls = [...new Set(pages)];
+  }
   console.log(`sitemap : ${urls.length} URLs`);
 
   let problems = 0;
