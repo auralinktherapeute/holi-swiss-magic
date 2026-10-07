@@ -1481,14 +1481,48 @@ export type Database = {
           },
         ]
       }
+      crm_client_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          contact_id: string
+          created_at: string
+          details: Json
+          id: string
+          therapist_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          contact_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          therapist_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          contact_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          therapist_id?: string
+        }
+        Relationships: []
+      }
       crm_client_contacts: {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          archived_at: string | null
           billing_currency: string | null
           canton: string | null
           city: string | null
           consent_at: string | null
+          consent_expires_at: string | null
+          consent_request_token: string | null
+          consent_requested_at: string | null
           consent_source: string | null
           country: string
           created_at: string
@@ -1499,6 +1533,7 @@ export type Database = {
           last_booking_at: string | null
           last_name: string
           legal_basis: string
+          merged_into_id: string | null
           next_booking_at: string | null
           payment_link: string | null
           phone: string | null
@@ -1515,10 +1550,14 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          archived_at?: string | null
           billing_currency?: string | null
           canton?: string | null
           city?: string | null
           consent_at?: string | null
+          consent_expires_at?: string | null
+          consent_request_token?: string | null
+          consent_requested_at?: string | null
           consent_source?: string | null
           country?: string
           created_at?: string
@@ -1529,6 +1568,7 @@ export type Database = {
           last_booking_at?: string | null
           last_name: string
           legal_basis?: string
+          merged_into_id?: string | null
           next_booking_at?: string | null
           payment_link?: string | null
           phone?: string | null
@@ -1545,10 +1585,14 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          archived_at?: string | null
           billing_currency?: string | null
           canton?: string | null
           city?: string | null
           consent_at?: string | null
+          consent_expires_at?: string | null
+          consent_request_token?: string | null
+          consent_requested_at?: string | null
           consent_source?: string | null
           country?: string
           created_at?: string
@@ -1559,6 +1603,7 @@ export type Database = {
           last_booking_at?: string | null
           last_name?: string
           legal_basis?: string
+          merged_into_id?: string | null
           next_booking_at?: string | null
           payment_link?: string | null
           phone?: string | null

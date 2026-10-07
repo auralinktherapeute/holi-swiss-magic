@@ -85,6 +85,13 @@
       "when": 1791238492421,
       "tag": "0011_therapist_onboarding_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791388185571,
+      "tag": "0012_client_fiche_audit_consent_archive",
+      "breakpoints": true
     }
   ]
 }
