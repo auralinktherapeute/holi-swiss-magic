@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
+import { getMyBookingNote, saveMyBookingNote } from "@/lib/booking-note.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -19,30 +19,20 @@ export default function BookingNoteEditor({ therapistId }: { therapistId: string
 
   const { data, isLoading } = useQuery({
     queryKey: ["therapist-booking-note", therapistId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("therapists")
-        .select("booking_note")
-        .eq("id", therapistId)
-        .maybeSingle();
-      if (error) throw error;
-      return data as { booking_note: string | null } | null;
-    },
+    queryFn: () => getMyBookingNote({ data: { therapistId } }),
     enabled: !!therapistId,
   });
 
   useEffect(() => {
-    if (hasSessionState(stateKey)) return;
+    if (data === undefined) return;
+    if (hasSessionState(stateKey) && value !== "") return;
     setValue(data?.booking_note ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.booking_note, setValue, stateKey]);
 
   const saveMutation = useMutation({
     mutationFn: async (note: string) => {
-      const { error } = await supabase
-        .from("therapists")
-        .update({ booking_note: note.trim() ? note.trim() : null })
-        .eq("id", therapistId);
-      if (error) throw error;
+      await saveMyBookingNote({ data: { therapistId, note } });
     },
     onSuccess: () => {
       toast.success(t("agenda_page.note_saved"));
