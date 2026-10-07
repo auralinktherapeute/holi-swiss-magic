@@ -1,3 +1,4 @@
+import { withSocialHead } from "@/lib/social-meta";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
       return { articles: [] as Array<Record<string, unknown>> };
     }
   },
-  head: ({ params, loaderData }) => {
+  head: withSocialHead(({ params, loaderData }) => {
     const lang = (params.lang as Lang) ?? "fr";
     const cat = getCategory(params.slug);
     const name = cat ? cat[`name_${lang}` as const] || cat.name_fr : params.slug;
@@ -121,7 +122,7 @@ export const Route = createFileRoute("/$lang/blog/categorie/$slug")({
             ]
           : undefined,
     };
-  },
+  }),
 });
 
 /**
