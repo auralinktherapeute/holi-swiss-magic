@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 type Row = Record<string, any>;
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
-function makeDb() {
+function makeDb(opts: { unique?: boolean; skipPrior?: boolean; failInsert?: any } = {}) {
   const tables: Record<string, Row[]> = {
     therapist_invoices: [], therapist_invoice_lines: [], therapist_invoice_payments: [],
     therapist_invoice_audit: [],
@@ -14,7 +14,7 @@ function makeDb() {
     therapist_invoice_settings: [{ therapist_id: "t1", mode_tva: "exclusive", devise_defaut: "CHF",
       delai_paiement_jours: 30, conditions_paiement: null, iban: "CH9300762011623852957" }],
   };
-  let seq = 0, num = 0;
+  let seq = 0, num = 0, priorSkipped = false;
   const get = (r: Row, c: string) => c.includes("->>") ? r[c.split("->>")[0]]?.[c.split("->>")[1]] : r[c];
   function q(table: string) {
     const filters: Array<[string, any]> = [];
@@ -25,8 +25,17 @@ function makeDb() {
     const run = async () => {
       await tick();
       if (op === "insert") {
-        const rows = (Array.isArray(payload) ? payload : [payload]).map((r: Row) => ({
+        const rows: Row[] = (Array.isArray(payload) ? payload : [payload]).map((r: Row) => ({
           id: `${table}-${++seq}`, created_at: new Date(1e12 + seq).toISOString(), ...r }));
+        if (table === "therapist_invoices" && opts.unique) {
+          for (const r of rows) {
+            const rid = r.metadata?.request_id;
+            if (rid != null && tables[table].some((x) => x.therapist_id === r.therapist_id && x.metadata?.request_id === rid)) {
+              return { data: null, error: { code: "23505", message: 'duplicate key value violates unique constraint "ti_therapist_request_id_uniq"' } };
+            }
+          }
+        }
+        if (table === "therapist_invoices" && opts.failInsert) return { data: null, error: opts.failInsert };
         tables[table].push(...rows);
         return { data: rows, error: null };
       }
@@ -36,6 +45,7 @@ function makeDb() {
         tables[table] = tables[table].filter((r) => !del.has(r));
         return { data: null, error: null };
       }
+      if (opts.skipPrior && table === "therapist_invoices" && filters.some(([c]) => c === "metadata->>request_id") && !priorSkipped) { priorSkipped = true; return { data: [], error: null }; }
       let rows = match();
       for (const [c, asc] of [...orders].reverse()) rows = [...rows].sort((a, b) => (a[c] > b[c] ? 1 : a[c] < b[c] ? -1 : 0) * (asc ? 1 : -1));
       return { data: rows, error: null };
@@ -47,7 +57,8 @@ function makeDb() {
       update: (p: any) => ((op = "update"), (payload = p), b),
       delete: () => ((op = "delete"), b),
       maybeSingle: async () => {
-        const { data } = await run();
+        const { data, error } = await run();
+        if (error) return { data: null, error };
         const arr = data ?? [];
         if (arr.length > 1) return { data: null, error: { message: "multiple rows" } };
         return { data: arr[0] ?? null, error: null };
@@ -128,8 +139,8 @@ describe("createClientInvoice — double soumission", () => {
     expect(db.tables.therapist_invoice_payments).toHaveLength(1);
   });
 
-  it("deux envois simultanés dans deux processus serveur distincts : une seule facture", async () => {
-    const db = makeDb();
+  it("deux envois simultanés dans deux processus serveur distincts : une seule facture (index unique)", async () => {
+    const db = makeDb({ unique: true });
     const m1 = await load();
     const m2 = await load();
     const input = { client_id: "c1", lines, action: "draft" as const, request_id: "r-two" };
@@ -149,5 +160,28 @@ describe("createClientInvoice — double soumission", () => {
     const b = await createClientInvoice(db.supabase, "t1", "u1", input);
     expect(b).toMatchObject({ invoice_id: a.invoice_id, duplicate: true });
     expect(db.tables.therapist_invoices).toHaveLength(1);
+  });
+});
+
+describe("createClientInvoice — récupération après 23505", () => {
+  const input = { client_id: "c1", lines, action: "settle" as const, request_id: "r-23505", payment: { mode: "carte" as const, date: "2026-10-07" } };
+
+  it("renvoie la facture existante sans ligne, paiement ni facture en plus", async () => {
+    const db = makeDb({ unique: true, skipPrior: true });
+    db.tables.therapist_invoices.push({ id: "existing", therapist_id: "t1", numero_facture: "2026-0099", statut: "payee",
+      created_at: "2026-01-01T00:00:00Z", metadata: { request_id: "r-23505" } });
+    const { createClientInvoice } = await load();
+    const r = await createClientInvoice(db.supabase, "t1", "u1", input);
+    expect(r).toMatchObject({ invoice_id: "existing", numero_facture: "2026-0099", duplicate: true });
+    expect(db.tables.therapist_invoices).toHaveLength(1);
+    expect(db.tables.therapist_invoice_lines).toHaveLength(0);
+    expect(db.tables.therapist_invoice_payments).toHaveLength(0);
+  });
+
+  it("ne masque pas une autre erreur SQL", async () => {
+    const db = makeDb({ failInsert: { code: "23505", message: 'duplicate key value violates unique constraint "therapist_invoices_numero_uniq"' } });
+    const { createClientInvoice, isRequestIdConflict } = await load();
+    await expect(createClientInvoice(db.supabase, "t1", "u1", { ...input, request_id: "r-other" })).rejects.toThrow("therapist_invoices_numero_uniq");
+    expect(isRequestIdConflict({ code: "42703", message: "ti_therapist_request_id_uniq" })).toBe(false);
   });
 });
