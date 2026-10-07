@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 
-type FlyerData = {
+export type FlyerData = {
   title: string;
   category?: string | null;
   dateLabel: string;
@@ -65,7 +65,9 @@ async function renderFlyer(canvas: HTMLCanvasElement, d: FlyerData) {
       const iw = img.width * ratio;
       const ih = img.height * ratio;
       ctx.drawImage(img, (W - iw) / 2, (H - ih) / 2, iw, ih);
-    } catch {}
+    } catch {
+      // Le fond de secours déjà peint reste visible si l'image n'est pas lisible.
+    }
   }
 
   // Bottom dark gradient overlay (40% height)
@@ -197,13 +199,15 @@ export function EventFlyer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   useEffect(() => {
     let cancelled = false;
     setReady(false);
     (async () => {
       if (!canvasRef.current) return;
-      await renderFlyer(canvasRef.current, data);
+      await renderFlyer(canvasRef.current, dataRef.current);
       if (!cancelled) setReady(true);
     })();
     return () => {
