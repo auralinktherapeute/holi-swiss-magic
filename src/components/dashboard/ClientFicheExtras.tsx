@@ -52,7 +52,7 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
     onError: () => toast.error("Échec du changement de statut."),
   });
   const del = useMutation({
-    mutationFn: () => delFn({ data: { id: client.id, confirm: "Supprimer" } }),
+    mutationFn: () => delFn({ data: { id: client.id, confirm: "SUPPRIMER" } }),
     onSuccess: () => { toast.success("Fiche placée dans la corbeille pour 2 mois."); invalidate(qc); qc.invalidateQueries({ queryKey: ["client-trash"] }); onDeleted(); },
     onError: () => toast.error("Suppression impossible. Réessayez."),
   });
@@ -88,13 +88,13 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
               La fiche part dans la corbeille et y reste <strong>2 mois</strong>. Vous pouvez la restaurer pendant ce délai ;
               ensuite, elle est supprimée définitivement.
             </p>
-            <Label htmlFor="confirm-del" className="text-xs">Pour confirmer, tapez « Supprimer »</Label>
+            <Label htmlFor="confirm-del" className="text-xs">Pour confirmer, tapez « SUPPRIMER »</Label>
             <Input id="confirm-del" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" className="min-h-11" />
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="min-h-11" onClick={() => setConfirmDel(false)}>Annuler</Button>
             {hasInvoices && <ArchiveToggle client={client} />}
-            <Button variant="destructive" className="min-h-11" disabled={typed !== "Supprimer" || del.isPending} onClick={() => del.mutate()}>
+            <Button variant="destructive" className="min-h-11" disabled={typed !== "SUPPRIMER" || del.isPending} onClick={() => del.mutate()}>
               {del.isPending ? "Suppression…" : "Mettre à la corbeille"}
             </Button>
           </DialogFooter>
