@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getSpecialtyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
 import { LANGS, ogLocale } from "@/lib/seo";
-import { isSpecialtyIndexable } from "@/lib/seo-thresholds";
+import { isSpecialtyIndexable, ownDescription, profileFacts } from "@/lib/seo-thresholds";
 import { organizationRef } from "@/lib/organization-schema";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
@@ -62,7 +62,14 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // valides. `head` ne fait plus que relire ce booléen.
     // Seuil unique et partagé avec le sitemap (`seo-thresholds.ts`) : le sitemap
     // ne doit jamais déclarer une page qui émet un noindex.
-    const indexable = isSpecialtyIndexable(page?.therapists?.length ?? 0);
+    // Règle du 07/10/2026 : fiches, diversité de villes et description propre
+    // dans la langue de la page. `indexableLangs` : seules ces langues portent
+    // des hreflang (jamais vers une variante noindex).
+    const facts = profileFacts(page?.therapists ?? []);
+    const indexableLangs = LANGS.filter((l) =>
+      isSpecialtyIndexable({ ...facts, description: ownDescription(page.specialty, l) }),
+    );
+    const indexable = isSpecialtyIndexable({ ...facts, description: ownDescription(page.specialty, params.lang) });
     // FAQ locale : calculée UNE fois ici, depuis la liste affichée (et le bloc
     // de chiffres), reprise telle quelle par le HTML et le JSON-LD FAQPage.
     // Aucune FAQ sur une page en noindex (sous le seuil) ni en panne.
@@ -74,7 +81,7 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
           i18n.getFixedT(lang) as unknown as (key: string, vars?: Record<string, unknown>) => string,
         )
       : null;
-    return { page, indexable, localFaq, unavailable: false as const };
+    return { page, indexable, indexableLangs, localFaq, unavailable: false as const };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -90,14 +97,15 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     const labelCapitalized = label.charAt(0).toUpperCase() + label.slice(1);
     const title = `${labelCapitalized} ${t.titleSuffix}`;
     const description = t.desc(label);
-    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.map((l) => ({
+    const altLangs: readonly string[] = (loaderData as any)?.indexableLangs ?? LANGS;
+    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.filter((l) => altLangs.includes(l)).map((l) => ({
       rel: "alternate",
       hreflang: l,
       href: `https://holiswiss.ch/${l}/specialites/${
         specialty ? specialtySlugForLang(specialty, l) : params.specialtySlug
       }`,
     }));
-    hreflangs.push({
+    if (altLangs.includes("fr")) hreflangs.push({
       rel: "alternate",
       hreflang: "x-default",
       href: `https://holiswiss.ch/fr/specialites/${specialty ? specialty.slug : params.specialtySlug}`,
@@ -143,7 +151,8 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
       ],
-      links: [{ rel: "canonical", href: url }, ...hreflangs],
+      // noindex : canonical seule, aucun hreflang (décision du 07/10/2026).
+      links: [{ rel: "canonical", href: url }, ...(noindex || altLangs.length < 2 ? [] : hreflangs)],
       scripts: unavailable || noindex ? [] : [
         {
           type: "application/ld+json",

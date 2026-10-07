@@ -2,14 +2,15 @@ import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-rout
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getFamilyPage, pickI18n, specialtySlugForLang } from "@/lib/specialties.functions";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { hreflangLinks, listingAlternates, ogLocale } from "@/lib/seo";
 import { organizationRef } from "@/lib/organization-schema";
 import { ChevronRight, MapPin } from "lucide-react";
 import { TherapistAvatar } from "@/components/holiswiss/TherapistAvatar";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
-import { isFamilyIndexable } from "@/lib/seo-thresholds";
+import { isFamilyIndexable, ownDescription, profileFacts } from "@/lib/seo-thresholds";
+import { LANGS } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
   component: Page,
@@ -27,10 +28,21 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
     // Décision d'indexation prise ICI, jamais dans `head` (`seo-thresholds.ts`).
     // Même helper que le sitemap : depuis le 29/09/2026, une famille à moins de
     // 2 praticiens distincts est `noindex,follow` ET absente du sitemap.
+    // Règle du 07/10/2026 : ≥ 2 fiches, ≥ 2 spécialités représentées et
+    // description propre dans la langue de la page (aucun repli français).
+    const facts = {
+      profiles: profileFacts(res.data.therapists).profiles,
+      representedSpecialties: res.data.representedSpecialties,
+    };
+    const family = res.data.family;
+    const indexableLangs = LANGS.filter((l) =>
+      isFamilyIndexable({ ...facts, description: ownDescription(family, l) }),
+    );
     return {
       page: res.data,
       unavailable: false as const,
-      indexable: isFamilyIndexable(res.data.therapists.length),
+      indexable: isFamilyIndexable({ ...facts, description: ownDescription(family, params.lang) }),
+      indexableLangs,
     };
   },
   notFoundComponent: () => <NotFoundPage />,
@@ -79,7 +91,12 @@ export const Route = createFileRoute("/$lang/therapeutes/famille/$familySlug")({
         { name: "twitter:description", content: description },
         ...(noindex ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
-      links: [{ rel: "canonical", href: url }, ...hreflangLinks(`/therapeutes/famille/${params.familySlug}`)],
+      // noindex : canonical seule. Indexable : hreflang entre les seules
+      // langues indexables (jamais vers une variante noindex).
+      links: [{ rel: "canonical", href: url }, ...(noindex ? [] : listingAlternates(
+        hreflangLinks(`/therapeutes/famille/${params.familySlug}`),
+        (loaderData as any)?.indexableLangs,
+      ))],
       scripts: unavailable || noindex ? [] : [
         {
           type: "application/ld+json",

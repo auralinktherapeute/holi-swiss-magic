@@ -1,8 +1,9 @@
-import { createFileRoute, Link, redirect, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect, useParams } from "@tanstack/react-router";
+import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { ChevronRight } from "lucide-react";
 import { listTherapistsByCity } from "@/lib/geo-listings.functions";
 import { cantonName } from "@/lib/geo-listings";
-import { ogLocale, seoLinks, SITE } from "@/lib/seo";
+import { canonicalLink, ogLocale, seoLinks, SITE } from "@/lib/seo";
 import { TherapistCardCompact } from "@/components/holiswiss/TherapistCardCompact";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
@@ -90,6 +91,7 @@ function titleCase(slug: string) {
 
 export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
   component: Page,
+  notFoundComponent: () => <NotFoundPage />,
   loader: async ({ params }) => {
     const res = await loadEssential(() => listTherapistsByCity({ data: { citySlug: params.citySlug } }));
     if (!res.ok) {
@@ -108,7 +110,11 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
     // Alias ou ancien nom de ville → URL canonique (cities.slug), en 301 :
     // /ville/bienne → /ville/biel-bienne, /ville/ge → /ville/geneve. Même règle
     // que le sitemap, qui ne publie que la forme canonique.
-    const { canonicalSlug, specialtyLinks, ...rest } = res.data;
+    const { canonicalSlug, specialtyLinks, knownCity, ...rest } = res.data;
+    // Vrai 404 (07/10/2026) : ville absente de la liste officielle ET sans
+    // aucune fiche active. Les villes de la liste sans praticien restent en
+    // 200 noindex ; une ville portant une fiche n'est jamais 404.
+    if (!knownCity && rest.therapists.length === 0) throw notFound();
     if (canonicalSlug && canonicalSlug !== params.citySlug) {
       throw redirect({
         to: "/$lang/therapeutes/ville/$citySlug",
@@ -181,7 +187,10 @@ export const Route = createFileRoute("/$lang/therapeutes/ville/$citySlug")({
         // Ville sous le seuil (`isCityIndexable`) : hors index, liens suivis.
         ...(noindex ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
-      links: seoLinks(lang, `/therapeutes/ville/${params.citySlug}`),
+      // noindex : canonical seule, aucun hreflang (décision du 07/10/2026).
+      links: noindex
+        ? [canonicalLink(lang, `/therapeutes/ville/${params.citySlug}`)]
+        : seoLinks(lang, `/therapeutes/ville/${params.citySlug}`),
       scripts: noindex || unavailable
         ? []
         : [

@@ -269,15 +269,17 @@ export const getFamilyPage = createServerFn({ method: "GET" })
 
     const specIds = (specs ?? []).map((s: { id: string }) => s.id);
     let therapistIds: string[] = [];
+    let pivotRows: Array<{ therapist_id: string; specialty_id: string }> = [];
     if (specIds.length > 0) {
       const { data: pivot, error: pivotError } = await sb
         .from("therapist_specialties")
-        .select("therapist_id")
+        .select("therapist_id,specialty_id")
         .in("specialty_id", specIds);
       // Panne ≠ famille vide : un `[]` ici donnerait une page à 0 praticien,
       // donc `noindex`. On lève : `loadEssential` répond 503, sans noindex.
       if (pivotError) throw new Error("Impossible de charger les praticiens de la famille.");
-      therapistIds = Array.from(new Set(((pivot ?? []) as Array<{ therapist_id: string }>).map((p) => p.therapist_id)));
+      pivotRows = (pivot ?? []) as Array<{ therapist_id: string; specialty_id: string }>;
+      therapistIds = Array.from(new Set(pivotRows.map((p) => p.therapist_id)));
     }
 
     let therapists: any[] = [];
@@ -293,7 +295,13 @@ export const getFamilyPage = createServerFn({ method: "GET" })
       therapists = ts ?? [];
     }
 
-    return { family, specialties: specs ?? [], therapists };
+    // Spécialités réellement représentées par une fiche active listée (règle
+    // d'indexation famille, `seo-thresholds.ts`).
+    const listed = new Set(therapists.filter((t) => t.slug).map((t) => t.id as string));
+    const representedSpecialties = new Set(
+      pivotRows.filter((p) => listed.has(p.therapist_id)).map((p) => p.specialty_id),
+    ).size;
+    return { family, specialties: specs ?? [], therapists, representedSpecialties };
     });
   });
 
@@ -481,7 +489,7 @@ export const getCategoryPage = createServerFn({ method: "GET" })
     if (specIds.length > 0) {
       const { data: pivot } = await sb
         .from("therapist_specialties")
-        .select("therapist_id")
+        .select("therapist_id,specialty_id")
         .in("specialty_id", specIds);
       const ids = Array.from(
         new Set(((pivot ?? []) as Array<{ therapist_id: string }>).map((p) => p.therapist_id)),

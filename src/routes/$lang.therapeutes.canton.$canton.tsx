@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams, notFound } from "@tanstack/react-rout
 import { ChevronRight } from "lucide-react";
 import { listTherapistsByCanton } from "@/lib/geo-listings.functions";
 import { cantonName, isCantonCode, citySlug } from "@/lib/geo-listings";
-import { ogLocale, seoLinks, SITE } from "@/lib/seo";
+import { canonicalLink, ogLocale, seoLinks, SITE } from "@/lib/seo";
 import { TherapistCardCompact } from "@/components/holiswiss/TherapistCardCompact";
 import { loadEssential } from "@/lib/read-health";
 import { ServiceUnavailableNotice } from "@/components/holiswiss/ServiceUnavailableNotice";
@@ -10,7 +10,7 @@ import { ListingFactsBlock } from "@/components/holiswiss/DirectoryFacts";
 import type { PublicTherapistCard } from "@/lib/geo-listings.functions";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { WEBSITE_ID } from "@/lib/organization-schema";
-import { isCantonIndexable } from "@/lib/seo-thresholds";
+import { isCantonIndexable, profileFacts } from "@/lib/seo-thresholds";
 import i18n, { DEFAULT_LANG, isLang } from "@/lib/i18n";
 import { buildLocalFaqSection, localFaqJsonLd, type LocalFaqSection } from "@/lib/local-faq";
 import { LocalFaq } from "@/components/holiswiss/LocalFaq";
@@ -102,7 +102,8 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
     // Décision d'indexation prise ICI, jamais dans `head` (incident du 25/08).
     // Même helper que le sitemap (`seo-thresholds.ts`) : depuis le 29/09/2026,
     // un canton à moins de 2 fiches est `noindex,follow` ET absent du sitemap.
-    const indexable = isCantonIndexable(res.data.therapists.length);
+    // Règle du 07/10/2026 : ≥ 2 fiches ET (≥ 2 villes OU ≥ 3 fiches).
+    const indexable = isCantonIndexable(profileFacts(res.data.therapists));
     // FAQ locale : calculée UNE fois ici, depuis la liste affichée, puis reprise
     // telle quelle par le HTML et par le JSON-LD FAQPage du `head`. Jamais sur
     // une page noindex : ni section, ni FAQPage.
@@ -162,7 +163,8 @@ export const Route = createFileRoute("/$lang/therapeutes/canton/$canton")({
         { name: "twitter:description", content: description },
         ...(noindex ? [{ name: "robots", content: "noindex,follow" }] : []),
       ],
-      links: seoLinks(lang, `/therapeutes/canton/${code}`),
+      // noindex : canonical seule, aucun hreflang (décision du 07/10/2026).
+      links: noindex ? [canonicalLink(lang, `/therapeutes/canton/${code}`)] : seoLinks(lang, `/therapeutes/canton/${code}`),
       scripts: unavailable || noindex ? [] : [
         {
           type: "application/ld+json",
