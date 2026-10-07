@@ -4,6 +4,7 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { legacyRedirectTarget } from "./lib/legacy-redirects";
 import { sanitizeNotFoundHtml } from "./lib/not-found-seo";
+import { completeSocialHtml } from "./lib/social-meta-html";
 import {
   UNAVAILABLE_MARKER_HEADER,
   UNAVAILABLE_RETRY_AFTER_SECONDS,
@@ -79,6 +80,16 @@ function applyUnavailableMarker(response: Response): Response {
 // spécialité inexistante gardait titre, canonique et fil d'Ariane). On impose
 // ici une réponse cohérente : noindex,follow, aucune canonique ni hreflang,
 // aucune donnée structurée, titre neutre. Le statut 404 est conservé.
+// Pages HTML 200 : balises de partage complétées (voir social-meta-html.ts).
+async function applySocialMeta(response: Response): Promise<Response> {
+  if (response.status !== 200) return response;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
+  const html = completeSocialHtml(await response.text());
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  return new Response(html, { status: 200, statusText: response.statusText, headers });
+}
+
 async function applyNotFoundSeo(response: Response): Promise<Response> {
   if (response.status !== 404) return response;
   if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
@@ -139,8 +150,10 @@ export default {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(
-        await applyNotFoundSeo(
-          applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+        await applySocialMeta(
+          await applyNotFoundSeo(
+            applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+          ),
         ),
       );
     } catch (error) {

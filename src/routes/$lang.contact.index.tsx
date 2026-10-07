@@ -9,7 +9,7 @@ export const Route = createFileRoute("/$lang/contact/")({
       fr: "Contact — Holiswiss",
       de: "Kontakt — Holiswiss",
       it: "Contatto — Holiswiss",
-      en: "Contact — Holiswiss",
+      en: "Contact us — Holiswiss",
     };
     const descs: Record<string, string> = {
       fr: "Une question, une suggestion ou un partenariat ? Contactez l'équipe Holiswiss à contact@holiswiss.ch. Nous répondons sous 48 heures.",

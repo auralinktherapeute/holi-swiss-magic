@@ -6,6 +6,7 @@
  * à `FIL_CATEGORY_SLUGS`. Ces fonctions ne font que projeter les lignes
  * existantes dans la forme `FilPost` attendue par les pages publiques.
  */
+import { checkTranslation, completeLangs } from "@/lib/article-translation";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
@@ -45,8 +46,17 @@ function toPost(row: Record<string, any>, lang: FilLang, withBody = false): FilP
     updatedAt: (row[CONTENT_DATE_COLUMN] as string | null) ?? null,
     author: null,
     featured: row.is_featured === true,
-    seoTitle: (row.meta_title_fr as string) || undefined,
-    seoDescription: (row.meta_description_fr as string) || undefined,
+    // Métadonnées de LA langue servie, jamais celles du français : avant, les
+    // versions DE/IT/EN affichaient le meta title / la description FR.
+    seoTitle: ((row[`meta_title_${lang}`] as string) || "").trim() || undefined,
+    seoDescription: ((row[`meta_description_${lang}`] as string) || "").trim() || undefined,
+    ...(withBody
+      ? {
+          // Même règle « traduction complète » que le blog (pages + sitemap).
+          completeLangs: completeLangs(row),
+          translationComplete: lang === "fr" || checkTranslation(row, lang).complete,
+        }
+      : {}),
   };
 }
 

@@ -725,7 +725,8 @@ export async function buildSitemapBlocks(): Promise<string[]> {
   for (const a of filArticles) {
     if (!a.slug) continue;
     const lastmod = articleDay(a);
-    for (const lang of LANGS) {
+    // Uniquement les langues réellement traduites (même règle que la page).
+    for (const lang of completeLangs(a as Record<string, unknown>)) {
       urls.push(
         urlBlock(`${BASE_URL}/${lang}/fil-holiswiss/${a.slug}`, lastmod, "monthly", "0.6"),
       );
