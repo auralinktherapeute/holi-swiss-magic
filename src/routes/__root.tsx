@@ -71,6 +71,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
       { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://holiswiss.ch/logo.png" },
+      { property: "og:image:width", content: "500" },
+      { property: "og:image:height", content: "500" },
+      { property: "og:image:alt", content: "Logo Holiswiss" },
+      { name: "twitter:image", content: "https://holiswiss.ch/logo.png" },
       { name: "twitter:card", content: "summary" },
       // ⚠️ PAS de `twitter:title` / `twitter:description` ici.
       //
