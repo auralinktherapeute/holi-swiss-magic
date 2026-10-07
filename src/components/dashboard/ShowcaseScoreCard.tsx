@@ -146,7 +146,7 @@ export function ShowcaseScoreCard() {
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <ScoreBar
               label="Visibilité"
-              hint="Ce qui aide Google et les moteurs IA à comprendre et indexer votre fiche."
+              hint="Ce qui aide les moteurs à comprendre votre fiche — sans garantir ni indexation, ni position Google, ni recommandation par une IA."
               value={data.totals.visibilite}
             />
             <ScoreBar

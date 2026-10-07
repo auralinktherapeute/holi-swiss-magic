@@ -42,3 +42,9 @@
 - [x] Rectifier les affirmations institutionnelles sensibles et la graphie des pages publiques et modèles futurs, sans changer les données des praticiens
 - [x] Tester les pages publiques et produire le rapport, sans publication ni écriture : 98 tests ciblés et 706 tests complets réussis ; 20 pages contrôlées ordinateur/mobile
 - [ ] Harmonisation complémentaire éventuelle dans les zones protégées exclues et documents historiques : nécessite de concilier les contraintes de préservation
+
+## Étape 5B (aperçu)
+- [x] Lecture serveur du suivi d'indexation, métriques datées, vue « Ma page publique », score vitrine unique
+- [ ] Contrôle visuel connecté admin/thérapeute — attend un compte de test admin et thérapeute
+- [ ] Publication puis redéploiement de run-indexation — attend ton accord
+- [ ] Fermeture lecture publique du projet dédié + RPC à PIN + écran Améliorations SEO encore lu depuis le navigateur — attend un accès en écriture séparé

@@ -23,6 +23,7 @@ import type { Recommendation } from "@/lib/showcase-recommendations";
 import { type AuditSeverity } from "@/lib/showcase-audit";
 import type { ReportCheck, ShowcaseAuditReport } from "@/lib/showcase-report";
 import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
+import { MyPageVisibilityCard } from "@/components/dashboard/MyPageVisibilityCard";
 
 export const Route = createFileRoute("/dashboard/visibilite")({ component: Page });
 
@@ -322,7 +323,7 @@ function Page() {
         <div>
           <h1 className="text-2xl font-bold">Visibilité de ma vitrine</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Qualité et préparation de votre fiche publique à l'indexation.
+            Qualité de votre fiche publique. Elle aide les moteurs à comprendre la fiche, sans garantir ni indexation, ni position Google, ni recommandation par une IA.
           </p>
           <ModuleHelp module="visibility" />
         </div>
@@ -345,6 +346,8 @@ function Page() {
           )}
         </div>
       </header>
+
+      <MyPageVisibilityCard checks={checks} />
 
       {recalculating && (
         <div

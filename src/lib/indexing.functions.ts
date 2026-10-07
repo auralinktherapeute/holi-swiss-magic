@@ -59,11 +59,6 @@ export const INDEXNOW_KEY = "41c3cce6c762af43d78a7895dfc0afe3";
 const SITE = "https://holiswiss.ch";
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
 
-// Base de suivi des agents (gpld) — lecture seule avec la clé anon publique
-// (même source que le tableau /admin/indexation côté client).
-const AGENTS_URL = "https://gpldaaqwvwopttachrma.supabase.co";
-const AGENTS_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbGRhYXF3dndvcHR0YWNocm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODIyOTAsImV4cCI6MjA5NjU1ODI5MH0.BKuw_l2YrTZXTDHFlMcTC0yoH003_naKeoJXYs61fQg";
-
 /** Une URL poussée il y a moins de N jours n'est pas resoumise. */
 const COOLDOWN_DAYS = 10;
 /** Taille du lot, alignée sur celle de l'edge function `run-indexation`. */
@@ -91,6 +86,8 @@ async function fetchQueue(scope: "therapists" | "unindexed" | "all"): Promise<st
   const cooldown = new Date(Date.now() - COOLDOWN_DAYS * 86400_000).toISOString();
   const scoped =
     scope === "therapists" ? "&page_type=eq.therapist" : scope === "unindexed" ? "&status=neq.indexed" : "";
+  // Clé du projet dédié chargée côté serveur uniquement (jamais dans le bundle navigateur).
+  const { AGENTS_URL, AGENTS_ANON } = await import("@/lib/indexation-source.server");
   const res = await fetch(
     `${AGENTS_URL}/rest/v1/indexed_urls?select=url&archived_at=is.null${scoped}` +
       `&or=(last_submitted_at.is.null,last_submitted_at.lt."${cooldown}")` +
