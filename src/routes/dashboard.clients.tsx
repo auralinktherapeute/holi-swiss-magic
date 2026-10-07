@@ -274,12 +274,12 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2 pr-8">
-            <DialogTitle>{isLoading ? "Chargement…" : fullName || "Client"}</DialogTitle>
+      <DialogContent className="flex max-w-3xl max-h-[90dvh] flex-col overflow-hidden p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-center gap-2 pr-8 sm:flex sm:justify-between">
+            <DialogTitle className="min-w-0 break-words text-left">{isLoading ? "Chargement…" : fullName || "Client"}</DialogTitle>
             {!isLoading && client && (
-              <Button className="min-h-11" onClick={() => setFreeInvoice(true)}>
+              <Button className="min-h-11 shrink-0 justify-self-start" onClick={() => setFreeInvoice(true)}>
                 <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" /> Créer une facture
               </Button>
             )}
@@ -289,8 +289,8 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
         {isLoading && <div className="space-y-2"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>}
 
         {!isLoading && data && (
-          <Tabs defaultValue="apercu">
-            <TabsList className="flex-wrap h-auto">
+          <Tabs defaultValue="apercu" className="min-h-0 min-w-0 overflow-y-auto">
+            <TabsList className="flex w-full flex-wrap h-auto justify-start gap-1">
               <TabsTrigger value="apercu">Vue d'ensemble</TabsTrigger>
               <TabsTrigger value="rdv">Rendez-vous</TabsTrigger>
               <TabsTrigger value="factures">Factures</TabsTrigger>
