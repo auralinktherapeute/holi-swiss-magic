@@ -32,11 +32,11 @@ export function completeSocialMeta(lang: string | undefined, meta: Meta[] | unde
 }
 
 /** Enveloppe un `head()` de route pour compléter ses balises de partage. */
-export function withSocialHead<C extends { params?: unknown }, R>(fn: (ctx: C) => R): (ctx: C) => R {
-  return (ctx: C) => {
-    const res = fn(ctx) as unknown as Head;
-    if (!res || typeof res !== "object") return res as unknown as R;
-    const lang = (ctx.params as { lang?: string } | undefined)?.lang;
-    return { ...res, meta: completeSocialMeta(lang, res.meta) } as unknown as R;
-  };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function withSocialHead<F extends (ctx: any) => any>(fn: F): F {
+  return ((ctx: { params?: { lang?: string } }) => {
+    const res = fn(ctx) as Head;
+    if (!res || typeof res !== "object") return res;
+    return { ...res, meta: completeSocialMeta(ctx?.params?.lang, res.meta) };
+  }) as F;
 }
