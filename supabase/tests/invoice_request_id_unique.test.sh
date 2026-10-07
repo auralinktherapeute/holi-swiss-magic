@@ -10,13 +10,13 @@ pg_ctl -D "$D" -o "-p $PORT -k $D -c listen_addresses=''" -l "$D/log" -w start >
 P="psql -h $D -p $PORT -U postgres -v ON_ERROR_STOP=1 -qAt"
 $P -c "CREATE TABLE public.therapist_invoices(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), therapist_id uuid, metadata jsonb DEFAULT '{}'::jsonb);"
 $P -f "$ROOT/drizzle/migrations/0015_therapist_invoices_request_id_unique.sql"
-$P -f "$ROOT/drizzle/migrations/0015_therapist_invoices_request_id_unique.sql"   # idempotent
+$P -f "$ROOT/drizzle/migrations/0015_therapist_invoices_request_id_unique.sql" 2>/dev/null   # idempotent
 T1=00000000-0000-0000-0000-00000000000a; T2=00000000-0000-0000-0000-00000000000b
 ok(){ echo "OK  $1"; }; ko(){ echo "ÉCHEC $1"; exit 1; }
 # 1. Deux transactions concurrentes, même thérapeute + même request_id
 INS="BEGIN; INSERT INTO therapist_invoices(therapist_id,metadata) VALUES ('$T1','{\"request_id\":\"r-same\"}'); SELECT pg_sleep(1); COMMIT;"
-( $P -c "$INS" >"$D/a.out" 2>&1; echo $? >"$D/a.rc" ) &
-( sleep 0.2; $P -c "$INS" >"$D/b.out" 2>&1; echo $? >"$D/b.rc" ) &
+( rc=0; $P -c "$INS" >"$D/a.out" 2>&1 || rc=$?; echo $rc >"$D/a.rc" ) &
+( sleep 0.2; rc=0; $P -c "$INS" >"$D/b.out" 2>&1 || rc=$?; echo $rc >"$D/b.rc" ) &
 wait
 n=$($P -c "SELECT count(*) FROM therapist_invoices WHERE metadata->>'request_id'='r-same'")
 [ "$n" = 1 ] && ok "concurrence : une seule facture (count=$n)" || ko "concurrence count=$n"
