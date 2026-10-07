@@ -1545,6 +1545,7 @@ export type Database = {
           session_type: string | null
           tags: string[]
           therapist_id: string
+          trashed_at: string | null
           updated_at: string
         }
         Insert: {
@@ -1580,6 +1581,7 @@ export type Database = {
           session_type?: string | null
           tags?: string[]
           therapist_id: string
+          trashed_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -1615,6 +1617,7 @@ export type Database = {
           session_type?: string | null
           tags?: string[]
           therapist_id?: string
+          trashed_at?: string | null
           updated_at?: string
         }
         Relationships: [
