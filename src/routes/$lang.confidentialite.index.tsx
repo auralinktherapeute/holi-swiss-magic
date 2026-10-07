@@ -1,16 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { seoLinks } from "@/lib/seo";
+import { legalHead, INSTITUTION } from "@/lib/institutional-content";
+import { LegalLanguageNotice } from "@/components/holiswiss/LegalLanguageNotice";
 
 export const Route = createFileRoute("/$lang/confidentialite/")({
   component: ConfidentialitePage,
-  head: ({ params }) => ({
-    meta: [
-      { title: "Politique de confidentialité — Holiswiss" },
-      { name: "description", content: "Politique de confidentialité de Holiswiss conforme à la nLPD (Suisse) : données collectées, finalités et droits." },
-      { name: "robots", content: "noindex, follow" },
-    ],
-    links: seoLinks(params.lang, "/confidentialite"),
-  }),
+  head: () => legalHead("/confidentialite", "Politique de confidentialité — Holiswiss", "Politique de confidentialité de Holiswiss : données collectées, finalités et droits."),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -32,15 +26,18 @@ function TableRow({ label, value }: { label: string; value: string }) {
 }
 
 function ConfidentialitePage() {
+  const { lang } = Route.useParams();
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+      <LegalLanguageNotice lang={lang} />
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-white">Politique de confidentialité</h1>
-        <p className="mt-2 text-sm text-[#b86ef9]">Conforme à la nLPD (Suisse, en vigueur depuis le 1er septembre 2023)</p>
+        <p className="mt-2 text-sm text-[#b86ef9]">Données collectées, finalités et droits</p>
       </div>
 
       <Section title="1. Responsable du traitement">
-        <p><strong className="text-white">Groupe Holi</strong> — représenté par Gérald Henry</p>
+        <p><strong className="text-white">Gérald Henry</strong>, micro-entrepreneur en France, exploitant Holiswiss comme nom commercial.</p>
+        <p>Adresse : {INSTITUTION.address}. SIREN : {INSTITUTION.siren}.</p>
         <p>Contact : <a href="mailto:contact@holiswiss.ch" className="text-[#b86ef9] hover:underline">contact@holiswiss.ch</a></p>
       </Section>
 
@@ -104,32 +101,8 @@ function ConfidentialitePage() {
         </ul>
       </Section>
 
-      <Section title="5. Transferts de données à l'étranger">
-        <p>Certains prestataires peuvent traiter vos données hors de Suisse :</p>
-        <div className="mt-3 rounded-xl border border-[rgba(184,110,249,0.2)] overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-[#3d1a5c]">
-              <tr>
-                <th className="py-2 px-4 text-left text-white font-semibold">Prestataire</th>
-                <th className="py-2 px-4 text-left text-white font-semibold">Pays</th>
-                <th className="py-2 px-4 text-left text-white font-semibold">Rôle</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[rgba(184,110,249,0.1)]">
-              <tr>
-                <td className="py-2 px-4 text-white">Supabase</td>
-                <td className="py-2 px-4">Royaume-Uni (eu-west-2)</td>
-                <td className="py-2 px-4">Base de données</td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 text-white">Stripe</td>
-                <td className="py-2 px-4">USA</td>
-                <td className="py-2 px-4">Paiements (certifié PCI-DSS)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-3">Ces transferts sont encadrés par des garanties appropriées (clauses contractuelles types, Privacy Shield ou décision d'adéquation).</p>
+      <Section title="5. Infrastructure déclarée">
+        <p>{INSTITUTION.infrastructure}</p>
       </Section>
 
       <Section title="6. Cookies et traceurs">

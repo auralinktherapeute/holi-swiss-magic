@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { institutionalCopy } from "@/lib/institutional-content";
 import { ExternalLink } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -25,19 +27,21 @@ export function OrgCertificationBadges({
   items: OrgCertificationBadge[];
   className?: string;
 }) {
+  const { i18n } = useTranslation();
+  const affiliation = institutionalCopy(i18n.language.split("-")[0]).affiliation;
   if (!items?.length) return null;
 
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
       {items.map((c) => {
         const color = c.badge_color || "#b86ef9";
-        const label = (c.certification_label || "").trim().replace(/\{organization\}/gi, c.display_name);
+        const label = `${affiliation} : ${c.display_name}`;
         return (
           <Popover key={c.id}>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                aria-label={`Certification ${c.display_name}`}
+                aria-label={`${affiliation} : ${c.display_name}`}
                 className="flex min-h-11 items-center gap-2 rounded-xl border px-2 py-1.5 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                 style={{ borderColor: `${color}59`, background: `${color}1a`, boxShadow: `0 0 14px ${color}26` }}
               >

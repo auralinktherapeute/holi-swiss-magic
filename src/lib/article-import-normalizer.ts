@@ -50,7 +50,7 @@ export function normalizeImportArticle(input: Record<string, unknown>) {
   const excerpt = cleanStr(input.excerpt_fr || (input as any).excerpt || (input as any).summary).slice(0, 500);
   const body = cleanStr(
     input.body_fr || (input as any).body || (input as any).markdown || (input as any).content,
-  ) || `## ${title}\n\nArticle importé depuis l'Agent Articles GEO/SEO HoliSwiss. À relire et compléter avant publication.`;
+  ) || `## ${title}\n\nArticle importé depuis l'Agent Articles GEO/SEO Holiswiss. À relire et compléter avant publication.`;
   const category = resolveCategoryImport(input, title);
   return {
     slug,

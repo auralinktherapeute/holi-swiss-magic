@@ -1,3 +1,4 @@
+import { institutionalCopy } from "@/lib/institutional-content";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
@@ -66,10 +67,10 @@ export const Route = createFileRoute("/$lang/")({
       en: "Holiswiss — Holistic therapists across Switzerland",
     };
     const descs: Record<string, string> = {
-      fr: "Trouvez un thérapeute près de chez vous : sophrologie, hypnose, naturopathie, méditation. Recherche dans les 26 cantons, profils validés par Holiswiss, réservation en ligne.",
-      de: "Finden Sie Therapeut:innen in Ihrer Nähe: Sophrologie, Hypnose, Naturheilkunde, Meditation. Suche in allen 26 Kantonen, von Holiswiss geprüfte Profile, Online-Buchung.",
-      it: "Trova terapeuti vicino a te: sofrologia, ipnosi, naturopatia, meditazione. Ricerca nei 26 cantoni, profili convalidati da Holiswiss, prenotazione online.",
-      en: "Find holistic therapists near you: sophrology, hypnosis, naturopathy, meditation. Search across all 26 cantons, profiles validated by Holiswiss, online booking.",
+      fr: "Trouvez un thérapeute près de chez vous : sophrologie, hypnose, naturopathie, méditation. Recherche dans les 26 cantons, réservation en ligne.",
+      de: "Finden Sie Therapeut:innen in Ihrer Nähe: Sophrologie, Hypnose, Naturheilkunde, Meditation. Suche in allen 26 Kantonen, Online-Buchung.",
+      it: "Trova terapeuti vicino a te: sofrologia, ipnosi, naturopatia, meditazione. Ricerca nei 26 cantoni, prenotazione online.",
+      en: "Find holistic therapists near you: sophrology, hypnosis, naturopathy, meditation. Search across all 26 cantons, online booking.",
     };
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;
@@ -132,6 +133,7 @@ function HomePage() {
       <HeroVariants />
 
       {/* Promesse plateforme : agenda + CRM + visibilité + RDV + avis */}
+      <div className="mx-auto max-w-5xl px-4 py-6 text-sm text-muted-foreground"><p>{institutionalCopy(lang).method}</p><p className="mt-2">{institutionalCopy(lang).limit}</p></div>
       <PlatformPromiseBand />
 
       {/* Thérapeute à la Une — sélection manuelle depuis l'admin */}

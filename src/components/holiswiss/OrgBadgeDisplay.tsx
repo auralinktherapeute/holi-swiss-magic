@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { institutionalCopy } from "@/lib/institutional-content";
 import { ExternalLink } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { OrgCertificationBadge } from "./OrgCertificationBadges";
@@ -41,8 +43,10 @@ export function useOrgBadgeVariant(): OrgBadgeVariant {
 const SEAL_RING = "linear-gradient(135deg,#d4af37,#b87333)";
 
 function BadgeDetails({ c }: { c: OrgCertificationBadge }) {
+  const { i18n } = useTranslation();
+  const affiliation = institutionalCopy(i18n.language.split("-")[0]).affiliation;
   const color = c.badge_color || "#b86ef9";
-  const label = (c.certification_label || "").trim().replace(/\{organization\}/gi, c.display_name);
+  const label = affiliation;
   return (
     <PopoverContent className="w-64 border-white/10 bg-[#1a1035] text-white">
       <p className="text-sm font-semibold">{c.display_name}</p>
@@ -99,6 +103,8 @@ export function OrgBadgeDisplay({
   variant?: OrgBadgeVariant;
   className?: string;
 }) {
+  const { i18n } = useTranslation();
+  const affiliation = institutionalCopy(i18n.language.split("-")[0]).affiliation;
   if (!items?.length || variant === 2) return null;
 
   if (variant === 1) {
@@ -109,7 +115,7 @@ export function OrgBadgeDisplay({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                aria-label={`Certification ${c.display_name}`}
+                aria-label={`${affiliation} : ${c.display_name}`}
                 className="group flex min-h-11 flex-col items-center gap-1.5 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
               >
                 <Seal c={c} sizeClass="h-28 w-28" />
@@ -136,7 +142,7 @@ export function OrgBadgeDisplay({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                aria-label={`Certification ${c.display_name}`}
+                aria-label={`${affiliation} : ${c.display_name}`}
                 className="flex min-h-11 max-w-56 items-center gap-3 rounded-full border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-4 text-left transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
               >
                 <Seal c={c} sizeClass="h-11 w-11" />
@@ -144,7 +150,7 @@ export function OrgBadgeDisplay({
                   <span className="text-xs font-semibold text-white/90">{c.display_name}</span>
                   {(c.certification_label || "").trim() && (
                     <span className="max-w-40 truncate text-[10px] text-white/55">
-                      {(c.certification_label || "").trim().replace(/\{organization\}/gi, c.display_name)}
+                      {affiliation}
                     </span>
                   )}
                 </span>
@@ -167,7 +173,7 @@ export function OrgBadgeDisplay({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                aria-label={`Certification ${c.display_name}`}
+                aria-label={`${affiliation} : ${c.display_name}`}
                 className="group flex min-h-11 flex-col items-center rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
               >
                 <span
@@ -194,6 +200,8 @@ export function OrgBadgeDisplay({
  * À rendre dans le conteneur rond de la photo (parent positionné).
  */
 export function OrgBadgeHalo({ items }: { items: OrgCertificationBadge[] }) {
+  const { i18n } = useTranslation();
+  const affiliation = institutionalCopy(i18n.language.split("-")[0]).affiliation;
   if (!items?.length) return null;
   return (
     <span className="absolute left-14 top-14 z-20 flex flex-col items-center">
@@ -202,7 +210,7 @@ export function OrgBadgeHalo({ items }: { items: OrgCertificationBadge[] }) {
           <PopoverTrigger asChild>
             <button
               type="button"
-              aria-label={`Certification ${c.display_name}`}
+              aria-label={`${affiliation} : ${c.display_name}`}
               className="block rounded-full shadow-xl transition-transform duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             >
               <Seal c={c} sizeClass="h-16 w-16" />

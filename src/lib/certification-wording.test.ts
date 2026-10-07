@@ -39,16 +39,16 @@ describe("terminologie des validations publiques", () => {
     });
   }
 
-  it("le JSON-LD Organization parle de validation manuelle, pas de certification", () => {
-    expect(getOrganizationNode("fr").description).toMatch(/validation manuelle/i);
-    expect(getOrganizationNode("fr").description).not.toMatch(/certifi/i);
+  it("le JSON-LD Organization se limite aux faits institutionnels validés", () => {
+    expect(getOrganizationNode("fr").founder.name).toBe("Gérald Henry");
+    expect(getOrganizationNode("fr")).not.toHaveProperty("description");
   });
 
   it("les descriptions Organization DE/IT/EN ne généralisent pas non plus la certification", () => {
     const langs: Lang[] = ["de", "it", "en"];
     for (const lang of langs) {
-      const description = getOrganizationNode(lang).description;
-      for (const re of FORBIDDEN) expect(description).not.toMatch(re);
+      const node = JSON.stringify(getOrganizationNode(lang));
+      for (const re of FORBIDDEN) expect(node).not.toMatch(re);
     }
   });
 

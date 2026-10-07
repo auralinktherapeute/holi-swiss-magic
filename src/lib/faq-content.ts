@@ -14,7 +14,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   fr: [
     {
       q: "Qu'est-ce que Holiswiss ?",
-      a: "Holiswiss est un annuaire suisse de thérapeutes spécialisés en approches complémentaires. La plateforme permet aux particuliers de trouver un praticien qualifié en naturopathie, hypnose, sophrologie, massage bien-être, reiki, acupuncture, réflexologie et bien d'autres disciplines, dans toute la Suisse.",
+      a: "Holiswiss est un annuaire suisse de thérapeutes spécialisés en approches complémentaires. La plateforme permet aux particuliers de trouver un praticien en naturopathie, hypnose, sophrologie, massage bien-être, reiki, acupuncture, réflexologie et bien d'autres disciplines, dans toute la Suisse.",
     },
     {
       q: "Comment trouver un thérapeute près de chez moi en Suisse ?",
@@ -22,11 +22,11 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Les thérapies complémentaires sont-elles remboursées en Suisse ?",
-      a: "Elles ne sont généralement pas couvertes par l'assurance de base (LAMal), mais de nombreuses assurances complémentaires (CSS, Helsana, Swica, Visana, Sanitas, Assura) remboursent partiellement ou totalement les séances si le praticien est certifié ASCA, RME ou EMR. Vérifiez vos conditions auprès de votre caisse maladie.",
+      a: "Elles ne sont généralement pas couvertes par l'assurance de base (LAMal), mais de nombreuses assurances complémentaires (CSS, Helsana, Swica, Visana, Sanitas, Assura) remboursent partiellement ou totalement les séances si le praticien est reconnu par son assurance selon les conditions du contrat. Vérifiez vos conditions auprès de votre caisse maladie.",
     },
     {
       q: "Comment devenir thérapeute référencé sur Holiswiss ?",
-      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse, chaque profil étant validé manuellement par Holiswiss avant publication.",
+      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse, avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute. Ce contrôle ne certifie ni diplômes, méthodes, résultats ni affiliations déclarées.",
     },
     {
       q: "Quelles approches complémentaires sont disponibles sur Holiswiss ?",
@@ -49,7 +49,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   de: [
     {
       q: "Was ist Holiswiss?",
-      a: "Holiswiss ist ein Schweizer Verzeichnis von Therapeut:innen für komplementäre Ansätze. Die Plattform hilft Privatpersonen, qualifizierte Fachpersonen in Naturheilkunde, Hypnose, Sophrologie, Wellnessmassage, Reiki, Akupunktur, Reflexzonenmassage und vielen weiteren Disziplinen in der ganzen Schweiz zu finden.",
+      a: "Holiswiss ist ein Schweizer Verzeichnis von Therapeut:innen für komplementäre Ansätze. Die Plattform hilft Privatpersonen, Fachpersonen in Naturheilkunde, Hypnose, Sophrologie, Wellnessmassage, Reiki, Akupunktur, Reflexzonenmassage und vielen weiteren Disziplinen in der ganzen Schweiz zu finden.",
     },
     {
       q: "Wie finde ich eine Therapeutin oder einen Therapeuten in meiner Nähe in der Schweiz?",
@@ -61,7 +61,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Wie werde ich als Therapeut:in auf Holiswiss gelistet?",
-      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; jedes Profil wird vor der Veröffentlichung von Holiswiss manuell geprüft.",
+      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; Gérald Henry prüft vor Veröffentlichung den Namen und die Kontaktdaten und führt anschliessend ausnahmslos ein Telefongespräch mit der Fachperson. Diese Prüfung zertifiziert weder Diplome, Methoden, Ergebnisse noch angegebene Mitgliedschaften.",
     },
     {
       q: "Welche komplementären Ansätze sind auf Holiswiss verfügbar?",
@@ -84,7 +84,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   it: [
     {
       q: "Cos'è Holiswiss?",
-      a: "Holiswiss è una directory svizzera di terapeuti specializzati in approcci complementari. La piattaforma permette ai privati di trovare un professionista qualificato in naturopatia, ipnosi, sofrologia, massaggio benessere, reiki, agopuntura, riflessologia e molte altre discipline in tutta la Svizzera.",
+      a: "Holiswiss è una directory svizzera di terapeuti specializzati in approcci complementari. La piattaforma permette ai privati di trovare un professionista in naturopatia, ipnosi, sofrologia, massaggio benessere, reiki, agopuntura, riflessologia e molte altre discipline in tutta la Svizzera.",
     },
     {
       q: "Come trovare un terapeuta vicino a me in Svizzera?",
@@ -92,11 +92,11 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Le terapie complementari sono rimborsate in Svizzera?",
-      a: "Generalmente non sono coperte dall'assicurazione di base (LAMal), ma molte assicurazioni complementari (CSS, Helsana, Swica, Visana, Sanitas, Assura) rimborsano parzialmente o totalmente le sedute se il professionista è certificato ASCA, RME o EMR. Verifica le condizioni con la tua cassa malati.",
+      a: "Generalmente non sono coperte dall'assicurazione di base (LAMal), ma molte assicurazioni complementari (CSS, Helsana, Swica, Visana, Sanitas, Assura) rimborsano parzialmente o totalmente le sedute se il professionista è riconosciuto dalla propria assicurazione secondo le condizioni del contratto. Verifica le condizioni con la tua cassa malati.",
     },
     {
       q: "Come diventare terapeuta su Holiswiss?",
-      a: "I terapeuti possono iscriversi alla lista d'attesa tramite la pagina «Espace thérapeutes» su holiswiss.ch. Le iscrizioni saranno aperte progressivamente ai professionisti certificati che esercitano in Svizzera.",
+      a: "I terapeuti possono iscriversi alla lista d'attesa tramite la pagina «Espace thérapeutes» su holiswiss.ch. Le iscrizioni saranno aperte progressivamente ai professionisti che esercitano in Svizzera. Prima della pubblicazione, Gérald Henry controlla il nome e i recapiti, poi parla sistematicamente per telefono con il terapeuta. Questo controllo non certifica diplomi, metodi, risultati o affiliazioni dichiarate.",
     },
     {
       q: "Quali approcci complementari sono disponibili su Holiswiss?",
@@ -119,7 +119,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   en: [
     {
       q: "What is Holiswiss?",
-      a: "Holiswiss is a Swiss directory of therapists specialising in complementary approaches. The platform helps individuals find qualified practitioners in naturopathy, hypnosis, sophrology, wellness massage, reiki, acupuncture, reflexology and many other disciplines across Switzerland.",
+      a: "Holiswiss is a Swiss directory of therapists specialising in complementary approaches. The platform helps individuals find practitioners in naturopathy, hypnosis, sophrology, wellness massage, reiki, acupuncture, reflexology and many other disciplines across Switzerland.",
     },
     {
       q: "How do I find a therapist near me in Switzerland?",
@@ -131,7 +131,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "How do I become a listed therapist on Holiswiss?",
-      a: "Therapists can join the waiting list through the «Therapist area» page on holiswiss.ch. Onboarding is opened progressively to certified practitioners working in Switzerland.",
+      a: "Therapists can join the waiting list through the «Therapist area» page on holiswiss.ch. Onboarding is opened progressively to practitioners working in Switzerland. Before publication, Gérald Henry checks the name and contact details, then systematically speaks with the therapist by telephone. This does not certify diplomas, methods, therapeutic results or declared affiliations. Professional information is provided under the practitioners’ responsibility.",
     },
     {
       q: "Which complementary approaches are available on Holiswiss?",
@@ -166,16 +166,16 @@ const BLOG_FAQ_FR: Record<string, FaqItem[]> = {
   ],
   naturopathie: [
     { q: "Qu'est-ce que la naturopathie ?", a: "La naturopathie est une approche globale qui s'appuie sur l'alimentation, la phytothérapie, l'hygiène de vie et la gestion du stress pour soutenir les capacités d'auto-régulation du corps." },
-    { q: "La naturopathie est-elle remboursée en Suisse ?", a: "Oui, par de nombreuses assurances complémentaires (CSS, Helsana, Swica, Visana, Sanitas, Assura) si le naturopathe est certifié ASCA, RME ou EMR. Vérifiez votre contrat." },
+    { q: "La naturopathie est-elle remboursée en Suisse ?", a: "Oui, par de nombreuses assurances complémentaires (CSS, Helsana, Swica, Visana, Sanitas, Assura) si le naturopathe est reconnu par son assurance selon les conditions du contrat. Vérifiez votre contrat." },
     { q: "Comment se déroule une première consultation en naturopathie ?", a: "La première séance dure 60 à 90 minutes. Le naturopathe explore votre hygiène de vie, vos antécédents et vos objectifs, puis propose un plan personnalisé (alimentation, plantes, micronutrition, gestion du stress)." },
   ],
   massage: [
-    { q: "Le massage bien-être est-il remboursé en Suisse ?", a: "Le massage bien-être peut être partiellement remboursé par les assurances complémentaires lorsque le praticien est certifié ASCA, RME ou EMR. Le massage médical/thérapeutique relève d'un autre cadre." },
+    { q: "Le massage bien-être est-il remboursé en Suisse ?", a: "Le massage bien-être peut être partiellement remboursé par les assurances complémentaires lorsque le praticien est reconnu par son assurance selon les conditions du contrat. Le massage médical/thérapeutique relève d'un autre cadre." },
     { q: "Quelle est la différence entre massage bien-être et massage thérapeutique ?", a: "Le massage bien-être vise la détente et la gestion du stress. Le massage thérapeutique cible une problématique précise (douleurs musculaires, sportives) et requiert souvent une formation médicale ou paramédicale." },
     { q: "À quelle fréquence faire un massage bien-être ?", a: "Une séance toutes les 3 à 4 semaines est idéale pour maintenir détente et bien-être. En période de stress intense, un rythme hebdomadaire ou bi-mensuel apporte un soutien rapide." },
   ],
   "massage-bien-etre": [
-    { q: "Le massage bien-être est-il remboursé en Suisse ?", a: "Oui, partiellement par les assurances complémentaires si le praticien est certifié ASCA, RME ou EMR. Vérifiez les conditions auprès de votre caisse maladie." },
+    { q: "Le massage bien-être est-il remboursé en Suisse ?", a: "Oui, partiellement par les assurances complémentaires si le praticien est reconnu par son assurance selon les conditions du contrat. Vérifiez les conditions auprès de votre caisse maladie." },
     { q: "Combien de temps dure une séance ?", a: "Une séance dure généralement 60 minutes, avec des formats courts de 30 minutes ou longs de 90 minutes selon les besoins." },
     { q: "À quelle fréquence faire un massage bien-être ?", a: "Une séance toutes les 3 à 4 semaines maintient détente et équilibre. En période de stress, un rythme hebdomadaire est conseillé." },
   ],
@@ -196,7 +196,7 @@ const BLOG_FAQ_FR: Record<string, FaqItem[]> = {
   ],
   reflexologie: [
     { q: "Qu'est-ce que la réflexologie ?", a: "La réflexologie est une technique manuelle qui stimule des zones réflexes (pieds, mains, oreilles) correspondant aux organes du corps pour favoriser détente et équilibre." },
-    { q: "La réflexologie est-elle remboursée en Suisse ?", a: "Oui, par les assurances complémentaires si le praticien est certifié ASCA, RME ou EMR." },
+    { q: "La réflexologie est-elle remboursée en Suisse ?", a: "Oui, par les assurances complémentaires si le praticien est reconnu par son assurance selon les conditions du contrat." },
     { q: "Combien de séances de réflexologie sont nécessaires ?", a: "Un cycle de 4 à 6 séances rapprochées est courant, puis un entretien mensuel ou saisonnier." },
   ],
   yoga: [
@@ -257,11 +257,11 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "Comment choisir votre praticien",
-        p: "Comparez les profils validés par Holiswiss : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis authentiques d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
+        p: "Comparez les profils : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis clients d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
       },
       {
         h3: "Remboursement et certifications",
-        p: "Les thérapies complémentaires ne relèvent généralement pas de l'assurance de base (LAMal), mais de nombreuses assurances complémentaires remboursent tout ou partie des séances lorsque le praticien est certifié ASCA, RME ou EMR. Vérifiez les conditions auprès de votre caisse maladie.",
+        p: "Les thérapies complémentaires ne relèvent généralement pas de l'assurance de base (LAMal), mais de nombreuses assurances complémentaires remboursent tout ou partie des séances lorsque le praticien est reconnu par son assurance selon les conditions du contrat. Vérifiez les conditions auprès de votre caisse maladie.",
       },
     ],
   },
@@ -271,11 +271,11 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "So wählen Sie Ihre Fachperson",
-        p: "Vergleichen Sie geprüfte Profile: Fachgebiete, Ansatz, gesprochene Sprachen, Preise und Formate (in der Praxis oder online). Echte Bewertungen anderer Patientinnen und Patienten sowie die interaktive Karte helfen Ihnen, eine Fachperson in Ihrer Nähe zu finden – in Zürich, Bern, Basel, Genf, Lausanne, Luzern, St. Gallen oder Lugano.",
+        p: "Vergleichen Sie Profile: Fachgebiete, Ansatz, gesprochene Sprachen, Preise und Formate (in der Praxis oder online). Bewertungen anderer Patientinnen und Patienten sowie die interaktive Karte helfen Ihnen, eine Fachperson in Ihrer Nähe zu finden – in Zürich, Bern, Basel, Genf, Lausanne, Luzern, St. Gallen oder Lugano.",
       },
       {
         h3: "Rückerstattung und Zertifizierungen",
-        p: "Komplementärtherapien werden in der Regel nicht von der Grundversicherung (KVG) übernommen, viele Zusatzversicherungen erstatten die Sitzungen jedoch ganz oder teilweise, wenn die Fachperson ASCA-, EMR- oder RME-zertifiziert ist. Prüfen Sie die Bedingungen bei Ihrer Krankenkasse.",
+        p: "Komplementärtherapien werden in der Regel nicht von der Grundversicherung (KVG) übernommen, viele Zusatzversicherungen erstatten die Sitzungen jedoch ganz oder teilweise, wenn die Fachperson nach den Vertragsbedingungen von der Versicherung anerkannt ist. Prüfen Sie die Bedingungen bei Ihrer Krankenkasse.",
       },
     ],
   },
@@ -285,11 +285,11 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "Come scegliere il professionista",
-        p: "Confronta i profili convalidati da Holiswiss: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni autentiche di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
+        p: "Confronta i profili: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni dei clienti di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
       },
       {
         h3: "Rimborso e certificazioni",
-        p: "Le terapie complementari generalmente non rientrano nell'assicurazione di base (LAMal), ma molte assicurazioni complementari rimborsano in tutto o in parte le sedute se il professionista è certificato ASCA, RME o EMR. Verifica le condizioni con la tua cassa malati.",
+        p: "Le terapie complementari generalmente non rientrano nell'assicurazione di base (LAMal), ma molte assicurazioni complementari rimborsano in tutto o in parte le sedute se il professionista è riconosciuto dalla propria assicurazione secondo le condizioni del contratto. Verifica le condizioni con la tua cassa malati.",
       },
     ],
   },
@@ -299,11 +299,11 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "How to choose your practitioner",
-        p: "Compare profiles validated by Holiswiss: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
+        p: "Compare profiles: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
       },
       {
         h3: "Reimbursement and certifications",
-        p: "Complementary therapies are generally not covered by basic insurance (LAMal), but many supplementary insurers reimburse sessions fully or partially when the practitioner is ASCA-, RME- or EMR-certified. Check the conditions with your health insurer.",
+        p: "Complementary therapies are generally not covered by basic insurance (LAMal), but many supplementary insurers reimburse sessions fully or partially when the practitioner is recognised by their insurer under the policy conditions. Check the conditions with your health insurer.",
       },
     ],
   },
@@ -378,7 +378,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Les thérapeutes de Holiswiss sont-ils vérifiés ?",
-      a: "Chaque inscription est validée manuellement par Holiswiss avant publication : Holiswiss contrôle le profil, mais ne certifie pas le praticien. Le profil présente la spécialité, l'approche, les langues, les tarifs et, lorsqu'un justificatif a réellement été examiné, les certifications déclarées (ASCA, RME, EMR), ainsi que des avis authentiques de patients.",
+      a: "Avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute. Ce contrôle ne constitue pas une certification des diplômes, des méthodes, des résultats thérapeutiques ou des affiliations déclarées. Les informations professionnelles sont fournies sous la responsabilité des praticiens.",
     },
     {
       q: "Dans quelles langues puis-je chercher un thérapeute ?",
@@ -386,7 +386,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Combien coûte une séance et est-elle remboursée ?",
-      a: "Les tarifs figurent sur chaque profil. Les séances ne sont généralement pas couvertes par la LAMal, mais de nombreuses assurances complémentaires remboursent tout ou partie si le praticien est certifié ASCA, RME ou EMR.",
+      a: "Les tarifs figurent sur chaque profil. Les séances ne sont généralement pas couvertes par la LAMal, mais de nombreuses assurances complémentaires remboursent tout ou partie si le praticien est reconnu par son assurance selon les conditions du contrat.",
     },
     {
       q: "Quelles spécialités puis-je trouver sur Holiswiss ?",
@@ -404,7 +404,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Sind die Therapeuten von Holiswiss geprüft?",
-      a: "Ja. Die Profile sind geprüft und zeigen Fachgebiet, Ansatz, Sprachen, Preise und gegebenenfalls Zertifizierungen (ASCA, EMR, RME) sowie echte Patientenbewertungen.",
+      a: "Vor der Veröffentlichung prüft Gérald Henry den Namen und die Kontaktdaten und führt anschliessend ausnahmslos ein Telefongespräch mit der Fachperson. Diese Prüfung zertifiziert weder Diplome, Methoden, therapeutische Ergebnisse noch angegebene Mitgliedschaften. Die beruflichen Angaben werden unter der Verantwortung der Fachpersonen bereitgestellt.",
     },
     {
       q: "In welchen Sprachen kann ich suchen?",
@@ -412,7 +412,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Was kostet eine Sitzung und wird sie erstattet?",
-      a: "Die Preise stehen in jedem Profil. Sitzungen werden in der Regel nicht von der Grundversicherung übernommen, viele Zusatzversicherungen erstatten sie jedoch ganz oder teilweise, wenn die Fachperson ASCA-, EMR- oder RME-zertifiziert ist.",
+      a: "Die Preise stehen in jedem Profil. Sitzungen werden in der Regel nicht von der Grundversicherung übernommen, viele Zusatzversicherungen erstatten sie jedoch ganz oder teilweise, wenn die Fachperson nach den Vertragsbedingungen von der Versicherung anerkannt ist.",
     },
     {
       q: "Welche Fachgebiete finde ich auf Holiswiss?",
@@ -430,7 +430,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "I terapeuti di Holiswiss sono verificati?",
-      a: "Ogni iscrizione è convalidata manualmente da Holiswiss prima della pubblicazione: Holiswiss controlla il profilo, ma non certifica il professionista. Il profilo presenta specialità, approccio, lingue, tariffe e, quando un documento giustificativo è stato effettivamente esaminato, le certificazioni dichiarate (ASCA, RME, EMR), oltre a recensioni autentiche dei pazienti.",
+      a: "Prima della pubblicazione, Gérald Henry controlla il nome e i recapiti, poi parla sistematicamente per telefono con il terapeuta. Questo controllo non certifica diplomi, metodi, risultati terapeutici o affiliazioni dichiarate. Le informazioni professionali sono fornite sotto la responsabilità dei professionisti.",
     },
     {
       q: "In quali lingue posso cercare?",
@@ -438,7 +438,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Quanto costa una seduta ed è rimborsata?",
-      a: "Le tariffe sono indicate in ogni profilo. Le sedute generalmente non sono coperte dall'assicurazione di base, ma molte assicurazioni complementari le rimborsano in tutto o in parte se il professionista è certificato ASCA, RME o EMR.",
+      a: "Le tariffe sono indicate in ogni profilo. Le sedute generalmente non sono coperte dall'assicurazione di base, ma molte assicurazioni complementari le rimborsano in tutto o in parte se il professionista è riconosciuto dalla propria assicurazione secondo le condizioni del contratto.",
     },
     {
       q: "Quali specialità trovo su Holiswiss?",
@@ -456,7 +456,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Are Holiswiss therapists verified?",
-      a: "Every registration is validated manually by Holiswiss before publication: Holiswiss checks the profile but does not certify the practitioner. The profile shows specialty, approach, languages, prices and, where supporting documents have actually been reviewed, the declared certifications (ASCA, RME, EMR), as well as authentic patient reviews.",
+      a: "Before publication, Gérald Henry checks the name and contact details, then systematically speaks with the therapist by telephone. This does not certify diplomas, methods, therapeutic results or declared affiliations. Professional information is provided under the practitioners’ responsibility.",
     },
     {
       q: "In which languages can I search?",
@@ -464,7 +464,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "How much does a session cost and is it reimbursed?",
-      a: "Prices are shown on each profile. Sessions are generally not covered by basic insurance, but many supplementary insurers reimburse them fully or partially when the practitioner is ASCA-, RME- or EMR-certified.",
+      a: "Prices are shown on each profile. Sessions are generally not covered by basic insurance, but many supplementary insurers reimburse them fully or partially when the practitioner is recognised by their insurer under the policy conditions.",
     },
     {
       q: "What specialties can I find on Holiswiss?",

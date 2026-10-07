@@ -7,6 +7,7 @@
  * `subscription_plan`.
  */
 
+import { institutionalCopy } from "./institutional-content";
 import { certificationStateLabel, certificationTrustState } from "./certification-labels";
 
 export type CertificationStatus = "declared" | "verified" | "rejected" | "expired";
@@ -137,7 +138,7 @@ export function buildTrustBadges(input: {
     badges.push({ key: "pro", kind: "pro", label: d.pro, description: d.proDesc, verified: true });
   }
   if (input.verified) {
-    badges.push({ key: "verified", kind: "verified", label: d.verified, description: d.verifiedDesc, verified: true });
+    badges.push({ key: "verified", kind: "verified", label: institutionalCopy(input.lang ?? "fr").methodLabel, description: `${institutionalCopy(input.lang ?? "fr").method} ${institutionalCopy(input.lang ?? "fr").limit}`, verified: true });
   }
 
   const now = Date.now();
@@ -175,12 +176,12 @@ export function buildTrustBadges(input: {
   for (const a of input.accreditations ?? []) {
     const org = (a?.org ?? "").trim();
     if (!org) continue;
-    const note = ORG_NOTES[org.toUpperCase()] ?? d.certOf(org);
+    const note = institutionalCopy(input.lang ?? "fr").affiliation;
     badges.push({
       key: `acc-${org}`,
       kind: "accreditation",
       // Déclaratif : jamais présenté comme vérifié.
-      label: a.number ? `${org} · ${a.number}` : org,
+      label: `${note} : ${org}${a.number ? ` · ${a.number}` : ""}`,
       description: `${note} ${d.declaredSuffix}`,
       verified: false,
     });

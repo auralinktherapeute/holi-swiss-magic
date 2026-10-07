@@ -91,7 +91,8 @@ const STATIC_PATHS: {
   { path: "/evenements", priority: "0.8", changefreq: "daily", lastmodFrom: "events" },
   { path: "/tarifs", priority: "0.7", changefreq: "monthly", lastmod: "2026-07-04" },
   { path: "/faq", priority: "0.6", changefreq: "monthly", lastmod: "2026-08-17" },
-  { path: "/contact", priority: "0.5", changefreq: "yearly", lastmod: "2026-07-19" },
+  { path: "/contact", priority: "0.5", changefreq: "yearly" },
+  { path: "/a-propos", priority: "0.5", changefreq: "yearly" },
   // ⚠️ `/impressum`, `/conditions` et `/confidentialite` ont été RETIRÉS le
   // 08/09/2026. Leurs routes émettent délibérément `noindex, follow`
   // (`$lang.impressum.index.tsx` & co., ligne 10) — c'est le bon choix : des

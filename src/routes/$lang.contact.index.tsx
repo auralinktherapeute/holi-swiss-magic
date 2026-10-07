@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { institutionalCopy } from "@/lib/institutional-content";
 import { hreflangLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/contact/")({
@@ -12,10 +13,10 @@ export const Route = createFileRoute("/$lang/contact/")({
       en: "Contact us — Holiswiss",
     };
     const descs: Record<string, string> = {
-      fr: "Une question, une suggestion ou un partenariat ? Contactez l'équipe Holiswiss à contact@holiswiss.ch. Nous répondons sous 48 heures.",
-      de: "Eine Frage, ein Vorschlag oder eine Partnerschaft? Kontaktieren Sie das Holiswiss-Team unter contact@holiswiss.ch. Antwort innerhalb von 48 Stunden.",
-      it: "Una domanda, un suggerimento o una partnership? Contatta il team Holiswiss su contact@holiswiss.ch. Rispondiamo entro 48 ore.",
-      en: "A question, suggestion or partnership? Contact the Holiswiss team at contact@holiswiss.ch. We reply within 48 hours.",
+      fr: "Une question, une suggestion ou un partenariat ? Contactez l'équipe Holiswiss à contact@holiswiss.ch.",
+      de: "Eine Frage, ein Vorschlag oder eine Partnerschaft? Kontaktieren Sie das Holiswiss-Team unter contact@holiswiss.ch.",
+      it: "Una domanda, un suggerimento o una partnership? Contatta il team Holiswiss su contact@holiswiss.ch.",
+      en: "A question, suggestion or partnership? Contact the Holiswiss team at contact@holiswiss.ch.",
     };
     const title = titles[lang] ?? titles.fr;
     const description = descs[lang] ?? descs.fr;
@@ -28,6 +29,9 @@ export const Route = createFileRoute("/$lang/contact/")({
         { property: "og:description", content: description },
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/contact")],
       scripts: [
@@ -43,15 +47,7 @@ export const Route = createFileRoute("/$lang/contact/")({
             inLanguage: lang,
             isPartOf: { "@id": "https://holiswiss.ch/#website" },
             about: { "@id": "https://holiswiss.ch/#organization" },
-            mainEntity: {
-              "@type": "Organization",
-              "@id": "https://holiswiss.ch/#organization",
-              name: "Holiswiss",
-              email: "contact@holiswiss.ch",
-              url: "https://holiswiss.ch",
-              areaServed: "CH",
-              availableLanguage: ["French", "German", "Italian", "English"],
-            },
+            mainEntity: { "@id": "https://holiswiss.ch/#organization" },
           }),
         },
       ],
@@ -77,7 +73,7 @@ type Copy = {
 const COPY: Record<string, Copy> = {
   fr: {
     h1: ["Comment pouvons-nous ", "vous aider ?"],
-    intro: "Choisissez ce qui vous correspond ; nous répondons à tous les messages sous 48 heures.",
+    intro: "Choisissez ce qui vous correspond.",
     patient: {
       tag: "Vous cherchez un thérapeute",
       title: "Trouver le bon praticien",
@@ -93,13 +89,13 @@ const COPY: Record<string, Copy> = {
       pricing: "Tarifs",
     },
     other: { tag: "Presse, partenariat, autre", title: "Écrire à l'équipe", body: "Pour tout le reste, un e-mail suffit." },
-    delay: "Réponse sous 48 heures",
+    delay: "Contact par e-mail",
     langs: "Français · Deutsch · Italiano · English",
     publisher: "Éditeur du site : Impressum",
   },
   de: {
     h1: ["Wie können wir ", "Ihnen helfen?"],
-    intro: "Wählen Sie, was auf Sie zutrifft – wir beantworten jede Nachricht innerhalb von 48 Stunden.",
+    intro: "Wählen Sie, was auf Sie zutrifft.",
     patient: {
       tag: "Sie suchen einen Therapeuten",
       title: "Die passende Fachperson finden",
@@ -115,13 +111,13 @@ const COPY: Record<string, Copy> = {
       pricing: "Preise",
     },
     other: { tag: "Presse, Partnerschaft, Sonstiges", title: "Dem Team schreiben", body: "Für alles andere genügt eine E-Mail." },
-    delay: "Antwort innerhalb von 48 Stunden",
+    delay: "Kontakt per E-Mail",
     langs: "Français · Deutsch · Italiano · English",
     publisher: "Herausgeber der Website: Impressum",
   },
   it: {
     h1: ["Come possiamo ", "aiutarvi?"],
-    intro: "Scegliete ciò che fa per voi: rispondiamo a tutti i messaggi entro 48 ore.",
+    intro: "Scegliete ciò che fa per voi.",
     patient: {
       tag: "Cercate un terapeuta",
       title: "Trovare il professionista giusto",
@@ -137,13 +133,13 @@ const COPY: Record<string, Copy> = {
       pricing: "Tariffe",
     },
     other: { tag: "Stampa, partnership, altro", title: "Scrivere al team", body: "Per tutto il resto basta un'e-mail." },
-    delay: "Risposta entro 48 ore",
+    delay: "Contatto via e-mail",
     langs: "Français · Deutsch · Italiano · English",
     publisher: "Editore del sito: Impressum",
   },
   en: {
     h1: ["How can we ", "help you?"],
-    intro: "Choose what fits you best — we reply to every message within 48 hours.",
+    intro: "Choose what fits you best.",
     patient: {
       tag: "Looking for a therapist",
       title: "Find the right practitioner",
@@ -159,7 +155,7 @@ const COPY: Record<string, Copy> = {
       pricing: "Pricing",
     },
     other: { tag: "Press, partnership, other", title: "Write to the team", body: "For anything else, an e-mail is all it takes." },
-    delay: "Reply within 48 hours",
+    delay: "Contact by email",
     langs: "Français · Deutsch · Italiano · English",
     publisher: "Site publisher: Impressum",
   },
@@ -216,6 +212,7 @@ function Page() {
 
       <footer className="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-t border-[rgba(168,85,247,0.25)] pt-4 text-sm text-white/50">
         <span>{c.delay}</span>
+        <Link to="/$lang/a-propos" params={{ lang }} className="text-accent">{institutionalCopy(lang).about}</Link>
         <span>{c.langs}</span>
         <Link to="/$lang/impressum" params={{ lang }} className="hover:text-white">{c.publisher}</Link>
       </footer>

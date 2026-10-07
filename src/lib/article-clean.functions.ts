@@ -152,7 +152,7 @@ export const cleanArticleAiMarks = createServerFn({ method: "POST" })
         headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
       });
 
-      const system = `Vous êtes secrétaire de rédaction pour HoliSwiss (annuaire suisse de thérapeutes holistiques).
+      const system = `Vous êtes secrétaire de rédaction pour Holiswiss (annuaire suisse de thérapeutes holistiques).
 Votre travail : resserrer le style d'un article rédigé en français, sans en changer le fond. Vous chassez les tournures formulaires, les transitions toutes faites et les emphases creuses — le travail ordinaire d'une relecture éditoriale.
 
 À PRÉSERVER ABSOLUMENT, même si cela vous paraît répétitif : les intertitres formulés en question, les listes à puces, les tableaux, les phrases définitionnelles « X est Y », et la réponse directe placée juste sous chaque intertitre. Ces formes sont ce qui rend un passage citable par les moteurs de réponse (ChatGPT, AI Overviews, Perplexity) : les effacer coûterait de la visibilité. Vous ne touchez ni au titre, ni au chapô, ni aux métadonnées.

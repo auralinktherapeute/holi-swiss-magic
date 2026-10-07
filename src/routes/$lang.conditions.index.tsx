@@ -1,16 +1,10 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { seoLinks } from "@/lib/seo";
+import { legalHead, INSTITUTION } from "@/lib/institutional-content";
+import { LegalLanguageNotice } from "@/components/holiswiss/LegalLanguageNotice";
 
 export const Route = createFileRoute("/$lang/conditions/")({
   component: ConditionsPage,
-  head: ({ params }) => ({
-    meta: [
-      { title: "Conditions générales d'utilisation — Holiswiss" },
-      { name: "description", content: "Conditions générales d'utilisation (CGU/CGV) de la plateforme Holiswiss, annuaire suisse de thérapeutes en approches complémentaires." },
-      { name: "robots", content: "noindex, follow" },
-    ],
-    links: seoLinks(params.lang, "/conditions"),
-  }),
+  head: () => legalHead("/conditions", "Conditions générales d’utilisation — Holiswiss", "Conditions d’utilisation de Holiswiss, annuaire de thérapeutes en Suisse."),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -27,13 +21,14 @@ function ConditionsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+      <LegalLanguageNotice lang={lang} />
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-white">Conditions générales d'utilisation</h1>
         <p className="mt-2 text-sm text-[#b86ef9]">CGU / CGV — Holiswiss, plateforme d'annuaire de praticiens en bien-être</p>
       </div>
 
       <Section title="1. Objet et acceptation">
-        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de la plateforme <strong className="text-white">Holiswiss</strong> (holiswiss.ch), éditée par Groupe Holi.</p>
+        <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de la plateforme <strong className="text-white">Holiswiss</strong> (holiswiss.ch), éditée par Gérald Henry, micro-entrepreneur en France, exploitant Holiswiss comme nom commercial. Adresse : {INSTITUTION.address}. SIREN : {INSTITUTION.siren}.</p>
         <p>L'accès au site implique l'acceptation pleine et entière des présentes CGU. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser la plateforme.</p>
       </Section>
 

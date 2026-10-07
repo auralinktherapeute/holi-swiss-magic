@@ -29,7 +29,7 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     const e = (loaderData as any)?.event;
     const url = `${SITE}/${params.lang}/evenements/${params.id}`;
     if (!e) {
-      return { meta: [{ title: "Événement — HoliSwiss" }], links: [{ rel: "canonical", href: url }] };
+      return { meta: [{ title: "Événement — Holiswiss" }], links: [{ rel: "canonical", href: url }] };
     }
     // Langue de rédaction de la fiche de l'organisateur (puis canton, langues
     // parlées) — même fonction que le sitemap, qui publie donc la même URL.
@@ -92,7 +92,7 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
         : { "@type": "Place", name: e.location || "Suisse", address: e.location || "Suisse" },
       image: e.image_signed_url ? [e.image_signed_url] : undefined,
       // `organizer` porte désormais l'`@id` de l'Organization officielle : avant,
-      // c'était un second nœud « HoliSwiss » sans identifiant, qui fragmentait
+      // c'était un second nœud « Holiswiss » sans identifiant, qui fragmentait
       // l'entité au lieu de la renforcer.
       organizer: publisherNode,
       ...(offers ? { offers } : {}),

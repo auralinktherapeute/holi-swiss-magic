@@ -69,6 +69,7 @@ import { Route as PreviewNouveauxTherapeutesRouteImport } from './routes/preview
 import { Route as PreviewTherapeuteALaUneRouteImport } from './routes/preview.therapeute-a-la-une'
 import { Route as QuestionnaireIdRouteImport } from './routes/questionnaire.$id'
 import { Route as SitemapsPartRouteImport } from './routes/sitemaps.$part'
+import { Route as LangAProposIndexRouteImport } from './routes/$lang.a-propos.index'
 import { Route as LangBlogIndexRouteImport } from './routes/$lang.blog.index'
 import { Route as LangBlogSlugRouteImport } from './routes/$lang.blog.$slug'
 import { Route as LangBlogQuEstCeQueLaSophrologieRouteImport } from './routes/$lang.blog.qu-est-ce-que-la-sophrologie'
@@ -424,6 +425,11 @@ const SitemapsPartRoute = SitemapsPartRouteImport.update({
   path: '/sitemaps/$part',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangAProposIndexRoute = LangAProposIndexRouteImport.update({
+  id: '/a-propos/',
+  path: '/a-propos/',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangBlogIndexRoute = LangBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -776,6 +782,7 @@ export interface FileRoutesByFullPath {
   '/api/public/certified-therapists': typeof ApiPublicCertifiedTherapistsRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
+  '/$lang/a-propos/': typeof LangAProposIndexRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -885,6 +892,7 @@ export interface FileRoutesByTo {
   '/api/public/certified-therapists': typeof ApiPublicCertifiedTherapistsRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
+  '/$lang/a-propos': typeof LangAProposIndexRoute
   '/$lang/blog': typeof LangBlogIndexRoute
   '/$lang/conditions': typeof LangConditionsIndexRoute
   '/$lang/confidentialite': typeof LangConfidentialiteIndexRoute
@@ -998,6 +1006,7 @@ export interface FileRoutesById {
   '/api/public/certified-therapists': typeof ApiPublicCertifiedTherapistsRoute
   '/api/public/moderate-message': typeof ApiPublicModerateMessageRoute
   '/dashboard/salons/$slug': typeof DashboardSalonsSlugRoute
+  '/$lang/a-propos/': typeof LangAProposIndexRoute
   '/$lang/blog/': typeof LangBlogIndexRoute
   '/$lang/conditions/': typeof LangConditionsIndexRoute
   '/$lang/confidentialite/': typeof LangConfidentialiteIndexRoute
@@ -1112,6 +1121,7 @@ export interface FileRouteTypes {
     | '/api/public/certified-therapists'
     | '/api/public/moderate-message'
     | '/dashboard/salons/$slug'
+    | '/$lang/a-propos/'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -1221,6 +1231,7 @@ export interface FileRouteTypes {
     | '/api/public/certified-therapists'
     | '/api/public/moderate-message'
     | '/dashboard/salons/$slug'
+    | '/$lang/a-propos'
     | '/$lang/blog'
     | '/$lang/conditions'
     | '/$lang/confidentialite'
@@ -1333,6 +1344,7 @@ export interface FileRouteTypes {
     | '/api/public/certified-therapists'
     | '/api/public/moderate-message'
     | '/dashboard/salons/$slug'
+    | '/$lang/a-propos/'
     | '/$lang/blog/'
     | '/$lang/conditions/'
     | '/$lang/confidentialite/'
@@ -1825,6 +1837,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapsPartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/a-propos/': {
+      id: '/$lang/a-propos/'
+      path: '/a-propos'
+      fullPath: '/$lang/a-propos/'
+      preLoaderRoute: typeof LangAProposIndexRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/blog/': {
       id: '/$lang/blog/'
       path: '/blog'
@@ -2190,6 +2209,7 @@ interface LangRouteChildren {
   LangTherapeutesSlugRoute: typeof LangTherapeutesSlugRoute
   LangTherapeutesBienEtreRoute: typeof LangTherapeutesBienEtreRoute
   LangTherapeutesHolistiqueRoute: typeof LangTherapeutesHolistiqueRoute
+  LangAProposIndexRoute: typeof LangAProposIndexRoute
   LangBlogIndexRoute: typeof LangBlogIndexRoute
   LangConditionsIndexRoute: typeof LangConditionsIndexRoute
   LangConfidentialiteIndexRoute: typeof LangConfidentialiteIndexRoute
@@ -2229,6 +2249,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangTherapeutesSlugRoute: LangTherapeutesSlugRoute,
   LangTherapeutesBienEtreRoute: LangTherapeutesBienEtreRoute,
   LangTherapeutesHolistiqueRoute: LangTherapeutesHolistiqueRoute,
+  LangAProposIndexRoute: LangAProposIndexRoute,
   LangBlogIndexRoute: LangBlogIndexRoute,
   LangConditionsIndexRoute: LangConditionsIndexRoute,
   LangConfidentialiteIndexRoute: LangConfidentialiteIndexRoute,

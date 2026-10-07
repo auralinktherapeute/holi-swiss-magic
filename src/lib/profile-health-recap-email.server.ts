@@ -2,7 +2,7 @@
 // Cadrage positif. N'inclut JAMAIS la citabilité IA (admin-only).
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-const FROM = "HoliSwiss <contact@holiswiss.ch>";
+const FROM = "Holiswiss <contact@holiswiss.ch>";
 const SITE_URL = "https://holiswiss.ch";
 const LOGO_URL = `${SITE_URL}/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png`;
 
@@ -30,7 +30,7 @@ function esc(s: string): string {
 
 export function buildProfileHealthRecap(args: ProfileHealthRecapArgs): { subject: string; html: string } {
   const dashUrl = `${SITE_URL}/dashboard/profil`;
-  const subject = `${args.firstName ? esc(args.firstName) + ", v" : "V"}otre récapitulatif de visibilité HoliSwiss (${args.score}/100)`;
+  const subject = `${args.firstName ? esc(args.firstName) + ", v" : "V"}otre récapitulatif de visibilité Holiswiss (${args.score}/100)`;
 
   const strengthsHtml = args.strengths.length
     ? args.strengths
@@ -74,14 +74,14 @@ export function buildProfileHealthRecap(args: ProfileHealthRecapArgs): { subject
 <body style="margin:0;padding:0;background:#1a0a2e;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:600px;margin:0 auto;padding:32px 20px;">
     <div style="text-align:center;padding-bottom:20px;">
-     <img src="${LOGO_URL}" alt="HoliSwiss" width="56" height="56" style="display:inline-block;" />
+     <img src="${LOGO_URL}" alt="Holiswiss" width="56" height="56" style="display:inline-block;" />
       <div style="font-size:20px;font-weight:700;color:#ffffff;margin-top:8px;">Holi<span style="color:#b86ef9;">Swiss</span></div>
     </div>
 
     <div style="background:#2d1248;border:1px solid rgba(184,110,249,0.25);border-radius:16px;padding:28px 24px;color:#ffffff;">
       <h1 style="margin:0 0 8px;font-size:22px;color:#ffffff;">Bonjour ${esc(args.firstName || "")},</h1>
       <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.85);">
-        Voici votre récapitulatif de visibilité sur HoliSwiss. Score global :
+        Voici votre récapitulatif de visibilité sur Holiswiss. Score global :
         <strong style="color:#5cc8fa;font-size:16px;">${args.score}/100</strong>.
         Quelques actions ciblées suffisent pour progresser rapidement.
       </p>
@@ -109,7 +109,7 @@ export function buildProfileHealthRecap(args: ProfileHealthRecapArgs): { subject
     </div>
 
     <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.45);margin-top:20px;">
-      HoliSwiss — Thérapeutes holistiques en Suisse · <a href="${SITE_URL}" style="color:#b86ef9;text-decoration:none;">holiswiss.ch</a>
+      Holiswiss — Thérapeutes holistiques en Suisse · <a href="${SITE_URL}" style="color:#b86ef9;text-decoration:none;">holiswiss.ch</a>
     </p>
   </div>
 </body>

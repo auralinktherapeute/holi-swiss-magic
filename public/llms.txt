@@ -1,6 +1,6 @@
-# Holiswiss — Plateforme suisse de thérapies holistiques
+# Holiswiss — Annuaire de thérapeutes en Suisse de thérapies holistiques
 
-> Plateforme suisse dédiée aux thérapies holistiques et médecines douces, qui
+> Annuaire de thérapeutes en Suisse dédiée aux thérapies holistiques et médecines douces, qui
 > connecte patients et praticiens dans toute la Suisse (recherche couvrant les
 > 26 cantons), en 4 langues
 > (français, allemand, italien, anglais).
@@ -9,18 +9,17 @@
 Holiswiss est un annuaire suisse de thérapeutes holistiques et de praticiens
 en médecines douces. Il aide les patients à trouver un praticien près
 de chez eux, dans toute la Suisse (recherche couvrant les 26 cantons ; langues :
-FR, DE, IT, EN), et à réserver une séance en ligne. Chaque inscription est
-validée manuellement par Holiswiss avant publication ; Holiswiss ne certifie pas
-les praticiens. La mention « certification vérifiée » n'apparaît que sur un
+FR, DE, IT, EN), et à réserver une séance en ligne. Avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute. Ce contrôle ne certifie ni diplômes, méthodes, résultats thérapeutiques ni affiliations déclarées. La mention « certification vérifiée » n'apparaît que sur un
 justificatif réellement examiné, et une inscription à un registre professionnel
 n'est affichée comme confirmée qu'après un contrôle manuel daté.
 
-Entité : Holiswiss (holiswiss.ch). Pays : Suisse (CH). Contact : contact@holiswiss.ch.
+Éditeur, fondateur et responsable éditorial : Gérald Henry, micro-entrepreneur en France, exploitant Holiswiss comme nom commercial. Adresse : 9 Impasse Nussbaum, 68300 Saint-Louis, France. SIREN : 103 987 061. Contact : contact@holiswiss.ch.
+Infrastructure applicative : Lovable et Supabase. Gestion du nom de domaine : IONOS.
 
 ## Ce que propose Holiswiss
 - Annuaire de thérapeutes, avec recherche par spécialité, canton et langue
 - Réservation de séances en ligne
-- Profils validés manuellement par Holiswiss, avec avis authentiques
+- Fiches professionnelles fournies sous la responsabilité des praticiens et avis clients
 - Carte interactive dont la recherche couvre les 26 cantons suisses
 - Contenu et interface en 4 langues (FR, DE, IT, EN)
 
@@ -38,6 +37,7 @@ médecine douce et de bien-être.
 - [Événements](/fr/evenements): Ateliers, retraites et conférences bien-être en Suisse.
 - [Tarifs praticiens](/fr/tarifs): Abonnements pour les thérapeutes.
 - [FAQ](/fr/faq): Trouver un thérapeute, remboursement LAMal/ASCA/RME, spécialités, réservation.
+- [À propos](/fr/a-propos): Identité et contrôle avant publication.
 - [Contact](/fr/contact): Nous contacter par e-mail.
 
 ## Hauptseiten — Deutsch (DE)
@@ -48,6 +48,7 @@ médecine douce et de bien-être.
 - [Veranstaltungen](/de/evenements): Workshops, Retreats und Konferenzen in der Schweiz.
 - [Preise für Praktizierende](/de/tarifs): Abonnements für Therapeut:innen.
 - [FAQ](/de/faq): Therapeut:in finden, Rückerstattung LAMal/ASCA/RME, Fachgebiete, Buchung.
+- [Über uns](/de/a-propos): Identität und Prüfung vor Veröffentlichung.
 - [Kontakt](/de/contact): Per E-Mail kontaktieren.
 
 ## Pagine principali — Italiano (IT)
@@ -58,6 +59,7 @@ médecine douce et de bien-être.
 - [Eventi](/it/evenements): Workshop, ritiri e conferenze benessere in Svizzera.
 - [Tariffe per professionisti](/it/tarifs): Abbonamenti per i terapeuti.
 - [FAQ](/it/faq): Trovare un terapeuta, rimborso LAMal/ASCA/RME, specialità, prenotazione.
+- [Chi siamo](/it/a-propos): Identità e controllo prima della pubblicazione.
 - [Contatti](/it/contact): Contattaci via e-mail.
 
 ## Main pages — English (EN)
@@ -68,6 +70,7 @@ médecine douce et de bien-être.
 - [Events](/en/evenements): Workshops, retreats and conferences across Switzerland.
 - [Pricing for practitioners](/en/tarifs): Subscriptions for therapists.
 - [FAQ](/en/faq): Finding a therapist, LAMal/ASCA/RME reimbursement, specialties, booking.
+- [About](/en/a-propos): Identity and pre-publication checks.
 - [Contact](/en/contact): Reach us by email.
 
 ## Requêtes auxquelles Holiswiss répond
@@ -84,5 +87,5 @@ médecine douce et de bien-être.
 ## Contact
 Site : https://holiswiss.ch
 Email : contact@holiswiss.ch
-Pays : Suisse (CH)
+Marché desservi : Suisse ; exploitant en France
 Langues : FR, DE, IT, EN

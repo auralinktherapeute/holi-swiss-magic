@@ -102,7 +102,7 @@ export const generateArticleViaAgent = createServerFn({ method: "POST" })
       slug: z.string(),
     });
 
-    const system = `Vous êtes rédacteur SEO/GEO pour HoliSwiss, annuaire suisse de thérapeutes en approches complémentaires.
+    const system = `Vous êtes rédacteur SEO/GEO pour Holiswiss, annuaire suisse de thérapeutes en approches complémentaires.
 Règles strictes (LPMéd) : interdit d'utiliser "soin", "guérison", "traitement", "diagnostic", "prescription".
 Privilégier : "accompagnement", "approche", "pratique", "bien-être", "équilibre".
 Cible géographique : Suisse romande (Genève, Lausanne, Neuchâtel, Fribourg, Valais).
@@ -238,7 +238,7 @@ export const optimizeArticleSeoGeo = createServerFn({ method: "POST" })
       image_alt_text: z.string().optional(),
     });
 
-    const system = `Vous êtes l'optimiseur SEO/GEO de HoliSwiss (annuaire suisse de thérapeutes holistiques).
+    const system = `Vous êtes l'optimiseur SEO/GEO de Holiswiss (annuaire suisse de thérapeutes holistiques).
 Vous réécrivez des articles en FRANÇAIS pour satisfaire des critères MESURÉS PAR UN PROGRAMME, au caractère près.
 Règles strictes (LPMéd) : interdit d'utiliser "soin", "guérison", "traitement", "diagnostic", "prescription".
 Privilégier : "accompagnement", "approche", "pratique", "bien-être", "équilibre".
@@ -423,7 +423,7 @@ async function translateArticleRow(articleId: string): Promise<{ updated: string
     const existingBody = ((row as any)[`body_${t.code}`] ?? "").toString().trim();
     if (existingTitle && existingBody) continue;
 
-    const system = `Tu es traducteur SEO/GEO pour HoliSwiss. Traduis fidèlement vers le ${t.label}.
+    const system = `Tu es traducteur SEO/GEO pour Holiswiss. Traduis fidèlement vers le ${t.label}.
 Règles : conserver le markdown (## titres, listes), garder les noms propres suisses (Genève, Lausanne…), respecter la LPMéd (pas de "guérison/traitement/diagnostic"). Adapte les expressions idiomatiques.
 IMPORTANT : tu réponds UNIQUEMENT avec la traduction demandée, sans préambule, sans guillemets englobants, sans commentaire.`;
 
