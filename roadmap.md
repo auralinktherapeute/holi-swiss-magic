@@ -48,3 +48,13 @@
 - [ ] Contrôle visuel connecté admin/thérapeute — attend un compte de test admin et thérapeute
 - [ ] Publication puis redéploiement de run-indexation — attend ton accord
 - [ ] Fermeture lecture publique du projet dédié + RPC à PIN + écran Améliorations SEO encore lu depuis le navigateur — attend un accès en écriture séparé
+
+# Étape 6B — performance et robots (aperçu)
+
+- [ ] Vérifier le redimensionnement réel des images signées avec repli sûr
+- [ ] Optimiser les images thérapeutes et événement sans remplacer les sources
+- [ ] Ajouter le logo léger et le favicon
+- [ ] Ajouter noindex,nofollow aux espaces privés et compléter robots.txt
+- [ ] Stabiliser les deux zones visuelles mesurées
+- [ ] Ajouter les tests ciblés, lancer tous les contrôles et le crawl des 358 URL
+- [ ] Contrôler visuellement les sept familles ordinateur/mobile et mesurer les écarts
