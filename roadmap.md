@@ -1,12 +1,5 @@
 # Reconstruction rendez-vous
 
-## Étape 2D — facturation mobile, sans publication
-
-- [x] Ajouter Clients près de Facturation dans le menu mobile uniquement
-- [x] Limiter les fenêtres client et facture à l’écran avec défilement interne
-- [ ] Tester les interfaces avec des données fictives à 390 px et sur ordinateur, sans soumission
-- [ ] Relancer tous les tests et vérifier les contrôles automatiques
-
 - [x] Auditer le schéma, les routes, les requêtes, les statuts et la RLS
 - [x] Réparer la synchronisation rendez-vous → client et l'audit des statuts
 - [x] Corriger les rendez-vous historiques mal rattachés ou non rattachés
