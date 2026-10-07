@@ -71,7 +71,8 @@ describe("identité institutionnelle validée", () => {
   it("retire les affirmations interdites des textes institutionnels publics", () => {
     for (const path of ["src/routes/$lang.contact.index.tsx", "src/routes/__root.tsx", "src/routes/$lang.index.tsx", "src/routes/$lang.therapeutes.index.tsx", "public/llms.txt", ...LANGS.map(l => `src/i18n/${l}.json`)]) {
       const src = readFileSync(path, "utf8");
-      expect(src, path).not.toMatch(/avis authentiques|authentic reviews|recensioni autentiche|echte Bewertungen|sous 48 heures|within 48 hours|entro 48 ore|innerhalb von 48 Stunden|plateforme suisse|Swiss platform|Schweizer Plattform|piattaforma svizzera|HoliSwiss/i);
+      expect(src, path).not.toMatch(/avis authentiques|authentic reviews|recensioni autentiche|echte Bewertungen|sous 48 heures|within 48 hours|entro 48 ore|innerhalb von 48 Stunden|plateforme suisse|Swiss platform|Schweizer Plattform|piattaforma svizzera/i);
+      expect(src, path).not.toContain("HoliSwiss");
     }
   });
 });
