@@ -37,7 +37,8 @@
 
 # Étape 4B — identité institutionnelle (aperçu uniquement)
 
-- [ ] Créer À propos FR/DE/IT/EN et son référencement, liens et sitemap
-- [ ] Corriger identité légale, avertissements et Organization
-- [ ] Rectifier les affirmations sensibles et la graphie publique sans changer les données des praticiens
-- [ ] Tester les pages publiques et produire le rapport, sans publication ni écriture
+- [x] Créer À propos FR/DE/IT/EN et son référencement, liens et sitemap
+- [x] Corriger identité légale, avertissements et Organization
+- [x] Rectifier les affirmations institutionnelles sensibles et la graphie des pages publiques et modèles futurs, sans changer les données des praticiens
+- [x] Tester les pages publiques et produire le rapport, sans publication ni écriture : 98 tests ciblés et 706 tests complets réussis ; 20 pages contrôlées ordinateur/mobile
+- [ ] Harmonisation complémentaire éventuelle dans les zones protégées exclues et documents historiques : nécessite de concilier les contraintes de préservation
