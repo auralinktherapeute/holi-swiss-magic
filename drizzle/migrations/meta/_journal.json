@@ -99,6 +99,13 @@
       "when": 1791390089143,
       "tag": "0013_client_trash",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791402897191,
+      "tag": "0014_therapist_invoices_delete_guard",
+      "breakpoints": true
     }
   ]
 }

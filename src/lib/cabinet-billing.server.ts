@@ -332,3 +332,159 @@ export async function settleAppointmentPaid(
   const state = await refreshPaymentState(supabase, therapistId, id);
   return { invoice_id: id, numero_facture: numero, paid: state.paid, solde: state.solde };
 }
+
+/* ---------- Facture depuis la fiche client (avec ou sans rendez-vous) ---------- */
+
+export type ClientInvoiceLine = {
+  description: string;
+  quantite: number;
+  prix_unitaire: number;
+  tva_taux: number;
+  duree_min?: number | null;
+  tariff_code?: string | null;
+  tariff_label?: string | null;
+  tariff_version?: string | null;
+};
+
+export type ClientInvoiceInput = {
+  client_id: string;
+  appointment_id?: string | null;
+  lines: ClientInvoiceLine[];
+  action: "draft" | "issue" | "settle";
+  payment?: { mode: "virement" | "especes" | "carte" | "twint" | "autre"; date: string } | null;
+  request_id: string;
+};
+
+/** Numérote, référence et verrouille un brouillon (même règle que l'encaissement direct). */
+async function lockDraft(supabase: any, therapistId: string, actorUserId: string, id: string, extra: Record<string, unknown>) {
+  const { buildQrReference, buildScorReference, isQrIban, creditorAccount } = await import("@/lib/swiss-invoice");
+  const { loadOwnInvoice } = await import("@/lib/invoice-core.server");
+  const settings = await loadSettings(supabase, therapistId);
+  const invoice = await loadOwnInvoice(supabase, therapistId, id);
+  if (invoice.locked_at || !settings) return invoice.numero_facture as string;
+  const { data: reserved, error: eNum } = await supabase.rpc("reserve_next_invoice_number", { _therapist_id: therapistId });
+  if (eNum) throw new Error(eNum.message);
+  const row0 = Array.isArray(reserved) ? reserved[0] : reserved;
+  if (!row0) throw new Error("Impossible de réserver un numéro de facture.");
+  const account = creditorAccount(settings);
+  let referenceType = (invoice.reference_type ?? "none") as "qrr" | "scor" | "none";
+  if (isQrIban(account)) referenceType = "qrr";
+  else if (referenceType === "qrr") referenceType = "scor";
+  const digits = String(row0.numero_facture).replace(/\D/g, "") || String(row0.seq);
+  const reference = referenceType === "qrr" ? buildQrReference(digits)
+    : referenceType === "scor" ? buildScorReference(String(row0.numero_facture)) : null;
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("therapist_invoices").update({
+    numero_facture: row0.numero_facture, annee_facturation: row0.annee,
+    reference_type: referenceType, qr_reference: reference,
+    statut: "validee", locked_at: now, billing_snapshot_at: now,
+  }).eq("id", id).eq("therapist_id", therapistId);
+  if (error) throw new Error(error.message);
+  await logInvoiceAudit(supabase, {
+    therapistId, invoiceId: id, action: "invoice_validated", actorUserId,
+    after: { numero: row0.numero_facture, reference, referenceType, ...extra },
+  });
+  return row0.numero_facture as string;
+}
+
+export async function createClientInvoice(
+  supabase: any,
+  therapistId: string,
+  actorUserId: string,
+  input: ClientInvoiceInput,
+): Promise<{ invoice_id: string; numero_facture: string | null; statut: string; duplicate: boolean }> {
+  if (input.action === "settle" && (!input.payment?.mode || !input.payment?.date)) {
+    throw new Error("Confirmez le moyen et la date du paiement.");
+  }
+  // Anti double-clic : une même demande ne crée jamais deux factures.
+  const { data: prior } = await supabase.from("therapist_invoices")
+    .select("id,numero_facture,statut").eq("therapist_id", therapistId)
+    .eq("metadata->>request_id", input.request_id).maybeSingle();
+  if (prior) return { invoice_id: prior.id, numero_facture: prior.numero_facture, statut: prior.statut, duplicate: true };
+
+  const { data: c, error: cErr } = await supabase.from("crm_client_contacts")
+    .select("id,first_name,last_name,email,billing_currency,address_line1,postal_code,city")
+    .eq("id", input.client_id).eq("therapist_id", therapistId).maybeSingle();
+  if (cErr) throw new Error(cErr.message);
+  if (!c) throw new Error("Client introuvable.");
+
+  const settings = await loadSettings(supabase, therapistId);
+  if (!settings) throw new Error("Configurez d'abord vos réglages de facturation.");
+  const mode = (settings.mode_tva ?? "exclusive") as VatMode;
+  const emission = new Date().toISOString().slice(0, 10);
+
+  let id: string;
+  if (input.appointment_id) {
+    const first = input.lines[0]!;
+    ({ id } = await createDraftFromAppointment(supabase, therapistId, actorUserId, {
+      appointment_id: input.appointment_id, prix_unitaire: first.prix_unitaire,
+      tva_taux: first.tva_taux, description: first.description,
+    }));
+    const { data: inv } = await supabase.from("therapist_invoices").select("metadata,date_prestation").eq("id", id).maybeSingle();
+    await supabase.from("therapist_invoices").update({
+      metadata: { ...(inv?.metadata ?? {}), request_id: input.request_id },
+    }).eq("id", id).eq("therapist_id", therapistId);
+    await replaceLines(supabase, therapistId, id, toLines(input.lines, inv?.date_prestation ?? emission, input.appointment_id), mode);
+  } else {
+    const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || "Client";
+    const echeance = new Date(Date.now() + (settings.delai_paiement_jours ?? 30) * 86400000).toISOString().slice(0, 10);
+    const { data: inv, error } = await supabase.from("therapist_invoices").insert({
+      therapist_id: therapistId, client_id: c.id, appointment_id: null,
+      numero_facture: `BROUILLON-${Date.now().toString(36).toUpperCase()}`,
+      annee_facturation: Number(emission.slice(0, 4)),
+      statut: "brouillon", statut_paiement: "en_attente",
+      montant_ht: 0, montant_total: 0,
+      currency: resolveEffectiveCurrency((c as any).billing_currency ?? null, settings.devise_defaut).currency,
+      reference_type: "none",
+      client_nom: name, client_email: c.email ?? null,
+      client_adresse: c.address_line1 ?? null, client_npa: c.postal_code ?? null, client_ville: c.city ?? null,
+      client_pays: "CH", conditions_paiement: settings.conditions_paiement ?? null,
+      date_emission: emission, date_prestation: emission, date_echeance: echeance,
+      metadata: { client_name: name, from_client_fiche: true, request_id: input.request_id },
+    }).select("id").maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!inv) throw new Error("Création du brouillon impossible.");
+    id = inv.id as string;
+    const totals = await replaceLines(supabase, therapistId, id, toLines(input.lines, emission, null), mode);
+    await logInvoiceAudit(supabase, {
+      therapistId, invoiceId: id, action: "draft_created_from_client", actorUserId,
+      after: { client_id: c.id, total: totals.montant_total, lignes: input.lines.length },
+    });
+  }
+
+  if (input.action === "draft") return { invoice_id: id, numero_facture: null, statut: "brouillon", duplicate: false };
+
+  const numero = await lockDraft(supabase, therapistId, actorUserId, id, { encaissement_direct: input.action === "settle" });
+
+  if (input.action === "settle" && input.payment) {
+    const { loadOwnInvoice, refreshPaymentState } = await import("@/lib/invoice-core.server");
+    const fresh = await loadOwnInvoice(supabase, therapistId, id);
+    const montant = Number(fresh.montant_total ?? 0);
+    if (montant > 0) {
+      const { error } = await supabase.from("therapist_invoice_payments").insert({
+        invoice_id: id, therapist_id: therapistId, montant,
+        date_paiement: input.payment.date, mode_paiement: input.payment.mode,
+        is_refund: false, notes: "Encaissement confirmé depuis la fiche client", created_by: actorUserId,
+      });
+      if (error) throw new Error(error.message);
+      await logInvoiceAudit(supabase, {
+        therapistId, invoiceId: id, action: "payment_recorded", actorUserId,
+        after: { montant, mode: input.payment.mode, date: input.payment.date },
+      });
+    }
+    const state = await refreshPaymentState(supabase, therapistId, id);
+    return { invoice_id: id, numero_facture: numero, statut: state.statut, duplicate: false };
+  }
+  return { invoice_id: id, numero_facture: numero, statut: "validee", duplicate: false };
+}
+
+function toLines(lines: ClientInvoiceLine[], date: string, appointmentId: string | null): InvoiceLineInput[] {
+  return lines.map((l, i) => ({
+    description: l.description, date_prestation: date,
+    quantite: l.quantite, prix_unitaire: l.prix_unitaire, remise_pct: 0, tva_taux: l.tva_taux,
+    appointment_id: i === 0 ? appointmentId : null,
+    duree_min: l.duree_min ?? null,
+    tariff_system: l.tariff_code ? "tarif590" : null,
+    tariff_code: l.tariff_code ?? null, tariff_label: l.tariff_label ?? null, tariff_version: l.tariff_version ?? null,
+  } as InvoiceLineInput));
+}
