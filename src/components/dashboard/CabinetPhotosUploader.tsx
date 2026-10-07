@@ -109,7 +109,15 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {photos.map((p) => (
             <div key={p.id} className="group relative aspect-square overflow-hidden rounded-lg ring-1 ring-white/10">
-              <img src={p.signedUrl} alt="Cabinet" className="h-full w-full object-cover" />
+              <img
+                src={p.signedUrl}
+                alt="Cabinet"
+                width={320}
+                height={320}
+                decoding="async"
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
               <button
                 type="button"
                 onClick={() => remove(p.id)}

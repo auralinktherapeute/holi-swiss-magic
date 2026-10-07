@@ -222,7 +222,7 @@ function estimateReadTime(text: string): number {
 function SkeletonPage() {
   return (
     <div className="min-h-screen bg-[#2d1248]">
-      <div className="w-full h-80 bg-[#3d1a5c] animate-pulse" />
+      <div className="h-72 w-full bg-[#3d1a5c] animate-pulse md:h-96" />
       <div className="mx-auto max-w-3xl px-4 py-12 space-y-5">
         <div className="h-8 w-3/4 rounded bg-[#3d1a5c] animate-pulse" />
         <div className="h-4 w-1/2 rounded bg-[#3d1a5c] animate-pulse" />

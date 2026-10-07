@@ -20,7 +20,9 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 # Assistants IA explicitement bienvenus (recherche générative + entraînement).
@@ -34,61 +36,81 @@ Disallow: /creer-profil
 User-agent: GPTBot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: Applebot-Extended
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: Bingbot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: CCBot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: Amazonbot
 Allow: /
 Disallow: /admin/
+Disallow: /admin
 Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /creer-profil
 
 User-agent: meta-externalagent

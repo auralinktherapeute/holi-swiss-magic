@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createSignedImageUrl } from "@/lib/storage-image";
 
 // Server functions pour activer les 3 nouveaux critères de l'agent Santé de Profil :
 // galerie photos cabinet, certifications, réponses aux avis. Chaque écriture
@@ -63,8 +64,13 @@ export const listMyCabinetPhotos = createServerFn({ method: "GET" })
         let signedUrl = m.url as string;
         const p = pathFrom(m.url, "therapist-photos");
         if (p) {
-          const { data: s } = await sb.storage.from("therapist-photos").createSignedUrl(p, 3600);
-          if (s?.signedUrl) signedUrl = s.signedUrl;
+          const transformed = await createSignedImageUrl(
+            sb.storage.from("therapist-photos"),
+            p,
+            3600,
+            "thumbnail",
+          );
+          if (transformed) signedUrl = transformed;
         }
         return { id: m.id as string, signedUrl };
       }),

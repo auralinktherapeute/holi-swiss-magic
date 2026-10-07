@@ -7,6 +7,7 @@ import "@/styles/admin-design-system.css";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
+  head: () => ({ meta: [{ name: "robots", content: "noindex,nofollow" }] }),
   beforeLoad: async () => {
     // La garde de route ne tranche que sur l'existence de la session locale.
     // Le rôle est vérifié par RequireRole et par chaque fonction serveur. Une

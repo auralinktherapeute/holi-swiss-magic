@@ -27,6 +27,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
+  head: () => ({ meta: [{ name: "robots", content: "noindex,nofollow" }] }),
   beforeLoad: async () => {
     // Seule la session locale est vérifiée ici pour éviter toute déconnexion
     // intempestive lors de la navigation. Les server functions appelées

@@ -262,7 +262,7 @@ function SpecialtyPage() {
         <span className="text-white">{specName}</span>
       </nav>
 
-      <header className="mb-8">
+      <header className="mb-8 min-h-28 sm:min-h-32">
         <h1 className="text-3xl font-semibold text-white sm:text-4xl">{specName} {t.inSwitzerland}</h1>
         {specDesc && (
           <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base leading-relaxed">

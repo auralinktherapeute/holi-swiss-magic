@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { swissDayWindow } from "@/lib/booking-slots";
 import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
+import { createSignedImageUrl } from "@/lib/storage-image";
 
 
 export const getWaitingListCount = createServerFn({ method: "GET" }).handler(async () => {
@@ -99,6 +100,19 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     }
 
     const therapistId = therapist.id as string;
+    let therapistPhoto = therapist.photo_url as string | null;
+    if (therapistPhoto) {
+      const photoPath = therapistPhoto.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/)?.[1];
+      if (photoPath) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        therapistPhoto = await createSignedImageUrl(
+          supabaseAdmin.storage.from("therapist-photos"),
+          decodeURIComponent(photoPath),
+          60 * 60 * 24 * 7,
+          "profile",
+        ) ?? therapistPhoto;
+      }
+    }
 
     // Lectures SECONDAIRES : indépendantes, donc menées en parallèle, et
     // tolérantes — un échec dégrade la section concernée sans priver le
@@ -181,10 +195,12 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
             ((evs ?? []) as any[]).map(async (e) => {
               let image: string | null = null;
               if (e.image_url) {
-                const { data: signed } = await supabaseAdmin.storage
-                  .from("event-images")
-                  .createSignedUrl(e.image_url, 60 * 60 * 24 * 7);
-                image = signed?.signedUrl ?? null;
+                image = await createSignedImageUrl(
+                  supabaseAdmin.storage.from("event-images"),
+                  e.image_url,
+                  60 * 60 * 24 * 7,
+                  "event",
+                );
               }
               const { image_url, ...rest } = e;
               return { ...rest, image_signed_url: image };
@@ -230,7 +246,14 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
       ),
     ]);
 
-    return { therapist, reviews, certifications, articles, events, orgCertifications };
+    return {
+      therapist: { ...therapist, photo_url: therapistPhoto },
+      reviews,
+      certifications,
+      articles,
+      events,
+      orgCertifications,
+    };
   });
 
 
@@ -381,10 +404,12 @@ export const listPublishedEvents = createServerFn({ method: "GET" }).handler(asy
     events.map(async (e: any) => {
       let image: string | null = null;
       if (e.image_url) {
-        const { data: signed } = await supabaseAdmin.storage
-          .from("event-images")
-          .createSignedUrl(e.image_url, 60 * 60 * 24 * 7);
-        image = signed?.signedUrl ?? null;
+        image = await createSignedImageUrl(
+          supabaseAdmin.storage.from("event-images"),
+          e.image_url,
+          60 * 60 * 24 * 7,
+          "event",
+        );
       }
       const t = therapists[e.therapist_id];
       return {
@@ -419,10 +444,12 @@ export const getPublishedEvent = createServerFn({ method: "GET" })
 
     let image: string | null = null;
     if ((e as any).image_url) {
-      const { data: signed } = await supabaseAdmin.storage
-        .from("event-images")
-        .createSignedUrl((e as any).image_url, 60 * 60 * 24 * 7);
-      image = signed?.signedUrl ?? null;
+      image = await createSignedImageUrl(
+        supabaseAdmin.storage.from("event-images"),
+        (e as any).image_url,
+        60 * 60 * 24 * 7,
+        "event",
+      );
     }
     const { data: t } = await supabaseAdmin
       .from("therapists")

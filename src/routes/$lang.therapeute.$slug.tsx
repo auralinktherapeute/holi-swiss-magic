@@ -837,6 +837,8 @@ function ProfilePage() {
                       photoUrl={th.photo_url}
                       alt={fullName}
                       fallback={fullName[0]}
+                      variant="profile"
+                      priority
                       className="h-full w-full object-cover"
                       fallbackClassName="flex h-full w-full items-center justify-center text-4xl font-bold text-[#b86ef9]"
                     />
