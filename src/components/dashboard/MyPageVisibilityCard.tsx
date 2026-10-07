@@ -60,7 +60,7 @@ export function MyPageVisibilityCard({ checks }: { checks: ReportCheck[] }) {
           />
           <Row
             title="Validation administrative"
-            value={isLoading ? "Chargement…" : data == null ? "Donnée indisponible" : data.adminValidated ? "Contrôle Holiswiss effectué" : "Pas encore effectuée"}
+            value={isLoading ? "Chargement…" : data == null ? "Donnée indisponible" : data.adminValidated ? "Marquée validée par l'administration" : "Non marquée"}
             note="Contrôle du nom et des coordonnées, puis échange téléphonique. Ce n'est pas une certification."
           />
           <Row title="État Search Console (Google)" value={scValue} note={scNote} />
