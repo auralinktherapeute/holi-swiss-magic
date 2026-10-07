@@ -57,7 +57,8 @@ function makeDb(opts: { unique?: boolean; skipPrior?: boolean; failInsert?: any 
       update: (p: any) => ((op = "update"), (payload = p), b),
       delete: () => ((op = "delete"), b),
       maybeSingle: async () => {
-        const { data } = await run();
+        const { data, error } = await run();
+        if (error) return { data: null, error };
         const arr = data ?? [];
         if (arr.length > 1) return { data: null, error: { message: "multiple rows" } };
         return { data: arr[0] ?? null, error: null };
@@ -138,8 +139,8 @@ describe("createClientInvoice — double soumission", () => {
     expect(db.tables.therapist_invoice_payments).toHaveLength(1);
   });
 
-  it("deux envois simultanés dans deux processus serveur distincts : une seule facture", async () => {
-    const db = makeDb();
+  it("deux envois simultanés dans deux processus serveur distincts : une seule facture (index unique)", async () => {
+    const db = makeDb({ unique: true });
     const m1 = await load();
     const m2 = await load();
     const input = { client_id: "c1", lines, action: "draft" as const, request_id: "r-two" };
