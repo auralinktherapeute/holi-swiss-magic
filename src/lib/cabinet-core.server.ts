@@ -277,6 +277,7 @@ export async function buildClientList(
     .from("crm_client_contacts")
     .select(CLIENT_LIST_COLUMNS)
     .eq("therapist_id", therapistId)
+    .is("trashed_at", null)
     .order("last_name", { ascending: true })
     .limit(500);
   if (filters.status) q = q.eq("relation_status", filters.status);

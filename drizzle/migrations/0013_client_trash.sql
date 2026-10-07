@@ -1,0 +1,2 @@
+ALTER TABLE public.crm_client_contacts ADD COLUMN IF NOT EXISTS trashed_at timestamptz;
+CREATE INDEX IF NOT EXISTS crm_client_contacts_trashed_idx ON public.crm_client_contacts (therapist_id, trashed_at) WHERE trashed_at IS NOT NULL;

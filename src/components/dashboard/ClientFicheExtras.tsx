@@ -11,11 +11,11 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   findClientDuplicates, getClientJournal, logClientAction, mergeClients,
-  previewConsentRequest, sendConsentRequest, setClientArchived,
+  previewConsentRequest, sendConsentRequest, setClientArchived, trashClient, restoreClient, listTrash,
 } from "@/lib/client-fiche.functions";
 import { sendInvoiceReminder } from "@/lib/therapist-invoices.functions";
 
-import { deleteContact, updateContactStatus, upsertContact } from "@/lib/crm-therapist.functions";
+import { updateContactStatus, upsertContact } from "@/lib/crm-therapist.functions";
 import {
   emailQuestionnaireToClient, listMyQuestionnaires, listResponsesForContact,
 } from "@/lib/questionnaires.functions";
@@ -41,8 +41,9 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
 }) {
   const qc = useQueryClient();
   const statusFn = useServerFn(updateContactStatus);
-  const delFn = useServerFn(deleteContact);
+  const delFn = useServerFn(trashClient);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [typed, setTyped] = useState("");
   const log = useLogAction();
 
   const status = useMutation({
@@ -51,9 +52,9 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
     onError: () => toast.error("Échec du changement de statut."),
   });
   const del = useMutation({
-    mutationFn: () => delFn({ data: { id: client.id } }),
-    onSuccess: () => { toast.success("Client supprimé."); invalidate(qc); onDeleted(); },
-    onError: () => toast.error("Suppression impossible. Archivez plutôt ce client."),
+    mutationFn: () => delFn({ data: { id: client.id, confirm: "Supprimer" } }),
+    onSuccess: () => { toast.success("Fiche placée dans la corbeille pour 2 mois."); invalidate(qc); qc.invalidateQueries({ queryKey: ["client-trash"] }); onDeleted(); },
+    onError: () => toast.error("Suppression impossible. Réessayez."),
   });
 
   const hasInvoices = counts.invoices > 0;
@@ -73,29 +74,29 @@ export function ClientActionsBar({ client, counts, onDeleted }: {
         <Trash2 className="h-4 w-4 mr-1.5" aria-hidden="true" /> Supprimer
       </Button>
 
-      <Dialog open={confirmDel} onOpenChange={setConfirmDel}>
+      <Dialog open={confirmDel} onOpenChange={(o) => { setConfirmDel(o); if (!o) setTyped(""); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Supprimer ce client ?</DialogTitle></DialogHeader>
           <div className="text-sm space-y-2">
             <p>Éléments liés : {counts.invoices} facture(s), {counts.appointments} rendez-vous, {counts.documents} document(s).</p>
-            {hasInvoices ? (
+            {hasInvoices && (
               <p className="text-destructive">
-                Ce client a des factures : la loi impose de les conserver. La suppression est bloquée —
-                archivez-le à la place.
+                Ce client a des factures : elles seront conservées, comme la loi l'impose, même après la suppression de la fiche.
               </p>
-            ) : (
-              <p className="text-muted-foreground">Cette action est définitive.</p>
             )}
+            <p className="text-muted-foreground">
+              La fiche part dans la corbeille et y reste <strong>2 mois</strong>. Vous pouvez la restaurer pendant ce délai ;
+              ensuite, elle est supprimée définitivement.
+            </p>
+            <Label htmlFor="confirm-del" className="text-xs">Pour confirmer, tapez « Supprimer »</Label>
+            <Input id="confirm-del" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" className="min-h-11" />
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="min-h-11" onClick={() => setConfirmDel(false)}>Annuler</Button>
-            {hasInvoices ? (
-              <ArchiveToggle client={client} />
-            ) : (
-              <Button variant="destructive" className="min-h-11" disabled={del.isPending} onClick={() => del.mutate()}>
-                {del.isPending ? "Suppression…" : "Supprimer définitivement"}
-              </Button>
-            )}
+            {hasInvoices && <ArchiveToggle client={client} />}
+            <Button variant="destructive" className="min-h-11" disabled={typed !== "Supprimer" || del.isPending} onClick={() => del.mutate()}>
+              {del.isPending ? "Suppression…" : "Mettre à la corbeille"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -415,6 +416,49 @@ export function DuplicatesButton() {
               {merge.isPending ? "Fusion…" : "Fusionner"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** Corbeille : fiches supprimées, conservées 2 mois puis effacées. */
+export function TrashButton() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listTrash);
+  const restoreFn = useServerFn(restoreClient);
+  const [open, setOpen] = useState(false);
+  const q = useQuery({ queryKey: ["client-trash"], queryFn: () => listFn(), enabled: open });
+  const restore = useMutation({
+    mutationFn: (id: string) => restoreFn({ data: { id } }),
+    onSuccess: () => { toast.success("Fiche restaurée."); invalidate(qc); qc.invalidateQueries({ queryKey: ["client-trash"] }); },
+    onError: () => toast.error("Restauration impossible."),
+  });
+  const fmt = (d: string) => new Date(d).toLocaleDateString("fr-CH", { day: "2-digit", month: "long", year: "numeric" });
+  return (
+    <>
+      <Button variant="outline" className="min-h-11" onClick={() => setOpen(true)}>
+        <Trash2 className="h-4 w-4 mr-1.5" aria-hidden="true" /> Corbeille
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Corbeille</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Les fiches supprimées restent ici 2 mois, puis sont effacées définitivement. Les factures sont toujours conservées.
+          </p>
+          {q.isLoading && <p className="text-sm">Chargement…</p>}
+          {q.data?.length === 0 && <p className="text-sm text-muted-foreground">La corbeille est vide.</p>}
+          <ul className="space-y-2">
+            {(q.data ?? []).map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-2 border border-border/60 rounded-lg p-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{c.first_name} {c.last_name}</p>
+                  <p className="text-xs text-muted-foreground">Supprimée le {fmt(c.trashed_at)} · effacée le {fmt(c.purge_at)}</p>
+                </div>
+                <Button size="sm" variant="outline" className="min-h-11" disabled={restore.isPending} onClick={() => restore.mutate(c.id)}>Restaurer</Button>
+              </li>
+            ))}
+          </ul>
         </DialogContent>
       </Dialog>
     </>

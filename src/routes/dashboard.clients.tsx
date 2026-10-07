@@ -25,7 +25,7 @@ import ClientDocuments from "@/components/dashboard/ClientDocuments";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 import { EditClientDialog } from "@/components/dashboard/EditClientDialog";
-import { ClientActionsBar, NewClientButton, ClientQuestionnaires, ConsentRequestButton, InvoiceReminderButton, ClientJournal, DuplicatesButton } from "@/components/dashboard/ClientFicheExtras";
+import { ClientActionsBar, NewClientButton, ClientQuestionnaires, ConsentRequestButton, InvoiceReminderButton, ClientJournal, DuplicatesButton, TrashButton } from "@/components/dashboard/ClientFicheExtras";
 import { ClientCurrencyBlock } from "@/components/dashboard/ClientCurrencyBlock";
 import { formatAmount, resolveEffectiveCurrency } from "@/lib/currency-consent";
 
@@ -104,6 +104,7 @@ function ClientsPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <DuplicatesButton />
+          <TrashButton />
           <NewClientButton onCreated={(cid) => setOpenId(cid)} />
         </div>
       </header>
