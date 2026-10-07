@@ -84,18 +84,32 @@ export const getMyPageIndexStatus = createServerFn({ method: "GET" })
       .select("slug,status,verified")
       .eq("user_id", context.userId)
       .maybeSingle();
-    const profile = me as { slug: string | null; status: string | null; verified: boolean | null } | null;
+    const profile = me as {
+      slug: string | null;
+      status: string | null;
+      verified: boolean | null;
+    } | null;
     if (!profile) return null;
     const published = profile.status === "active" && !!profile.slug;
     const base = { published, adminValidated: profile.verified === true };
-    if (!published) return { ...base, page: buildMyPageStatus({ published: false, row: null, fetchFailed: false, now }) };
+    if (!published)
+      return {
+        ...base,
+        page: buildMyPageStatus({ published: false, row: null, fetchFailed: false, now }),
+      };
 
     const { fetchOneUrlStatus } = await import("@/lib/indexation-source.server");
     try {
       const row = await fetchOneUrlStatus(myPageUrl(profile.slug as string));
-      return { ...base, page: buildMyPageStatus({ published: true, row, fetchFailed: false, now }) };
+      return {
+        ...base,
+        page: buildMyPageStatus({ published: true, row, fetchFailed: false, now }),
+      };
     } catch (e) {
       console.error("indexation: état de page indisponible", e instanceof Error ? e.message : e);
-      return { ...base, page: buildMyPageStatus({ published: true, row: null, fetchFailed: true, now }) };
+      return {
+        ...base,
+        page: buildMyPageStatus({ published: true, row: null, fetchFailed: true, now }),
+      };
     }
   });

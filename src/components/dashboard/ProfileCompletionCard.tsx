@@ -32,7 +32,9 @@ export function ProfileCompletionCard(_props: { profile?: unknown }) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-[#b86ef9]" aria-hidden />
-            <h2 className="text-sm font-semibold text-foreground">Qualité de ma fiche (score vitrine)</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              Qualité de ma fiche (score vitrine)
+            </h2>
           </div>
           <span className="text-lg font-bold text-foreground">
             {isLoading ? "…" : score == null ? "Donnée indisponible" : `${score} / 100`}
@@ -50,12 +52,17 @@ export function ProfileCompletionCard(_props: { profile?: unknown }) {
               <li key={a.checkId} className="flex items-center gap-2 text-xs text-foreground/85">
                 <Circle className="h-3 w-3 shrink-0 text-[#b86ef9]/60" aria-hidden />
                 {a.label}
-                <span className="ml-auto shrink-0 text-[10px] font-semibold text-[#5cc8fa]">+{a.points} pts</span>
+                <span className="ml-auto shrink-0 text-[10px] font-semibold text-[#5cc8fa]">
+                  +{a.points} pts
+                </span>
               </li>
             ))}
           </ul>
         )}
-        <Link to="/dashboard/visibilite" className="mt-3 inline-block text-xs font-medium underline underline-offset-2">
+        <Link
+          to="/dashboard/visibilite"
+          className="mt-3 inline-block text-xs font-medium underline underline-offset-2"
+        >
           Voir le détail de ma vitrine
         </Link>
       </CardContent>

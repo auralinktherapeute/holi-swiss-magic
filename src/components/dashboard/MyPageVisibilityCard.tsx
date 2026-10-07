@@ -36,14 +36,11 @@ export function MyPageVisibilityCard({ checks }: { checks: ReportCheck[] }) {
   });
 
   const page = data?.page;
-  const scValue = isLoading
-    ? "Chargement…"
-    : isError || !page
-      ? "Donnée indisponible"
-      : page.label;
-  const scNote = isError || !page
-    ? "Le suivi Search Console n'a pas pu être lu."
-    : `${page.explanation} ${page.lastCheckedAt ? `Mesure du ${fmt(page.lastCheckedAt)}.` : "Aucune date de mesure."}${page.stale ? " Mesure de plus de 30 jours." : ""}`;
+  const scValue = isLoading ? "Chargement…" : isError || !page ? "Donnée indisponible" : page.label;
+  const scNote =
+    isError || !page
+      ? "Le suivi Search Console n'a pas pu être lu."
+      : `${page.explanation} ${page.lastCheckedAt ? `Mesure du ${fmt(page.lastCheckedAt)}.` : "Aucune date de mesure."}${page.stale ? " Mesure de plus de 30 jours." : ""}`;
 
   const byId = new Map(checks.map((c) => [c.id, c]));
 
@@ -56,11 +53,27 @@ export function MyPageVisibilityCard({ checks }: { checks: ReportCheck[] }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <Row
             title="Publication de la fiche"
-            value={isLoading ? "Chargement…" : data == null ? "Donnée indisponible" : data.published ? "Publiée" : "Non publiée"}
+            value={
+              isLoading
+                ? "Chargement…"
+                : data == null
+                  ? "Donnée indisponible"
+                  : data.published
+                    ? "Publiée"
+                    : "Non publiée"
+            }
           />
           <Row
             title="Validation administrative"
-            value={isLoading ? "Chargement…" : data == null ? "Donnée indisponible" : data.adminValidated ? "Marquée validée par l'administration" : "Non marquée"}
+            value={
+              isLoading
+                ? "Chargement…"
+                : data == null
+                  ? "Donnée indisponible"
+                  : data.adminValidated
+                    ? "Marquée validée par l'administration"
+                    : "Non marquée"
+            }
             note="Contrôle du nom et des coordonnées, puis échange téléphonique. Ce n'est pas une certification."
           />
           <Row title="État Search Console (Google)" value={scValue} note={scNote} />
@@ -71,7 +84,8 @@ export function MyPageVisibilityCard({ checks }: { checks: ReportCheck[] }) {
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Une soumission aux moteurs (IndexNow) ne vaut jamais indexation : seul Search Console la constate.
+          Une soumission aux moteurs (IndexNow) ne vaut jamais indexation : seul Search Console la
+          constate.
         </p>
 
         <div>

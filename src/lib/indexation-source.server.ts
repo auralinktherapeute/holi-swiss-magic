@@ -41,7 +41,9 @@ export function fetchReports(fetcher: typeof fetch = fetch) {
 
 /** Une seule URL, colonnes minimales — pour la vue thérapeute. */
 export async function fetchOneUrlStatus(url: string, fetcher: typeof fetch = fetch) {
-  const rows = await getJson<Pick<IndexedUrlRow, "status" | "coverage_state" | "last_checked_at">[]>(
+  const rows = await getJson<
+    Pick<IndexedUrlRow, "status" | "coverage_state" | "last_checked_at">[]
+  >(
     `indexed_urls?select=status,coverage_state,last_checked_at&url=eq.${encodeURIComponent(url)}&limit=1`,
     fetcher,
   );

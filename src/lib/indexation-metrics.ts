@@ -93,7 +93,8 @@ export function computeIndexationMetrics(input: {
   const active = urls ? urls.filter((u) => !u.archived_at) : null;
   const expectedSet = expectedUrls ? new Set(expectedUrls.map(normalizeUrl)) : null;
   const activeSet = active ? new Set(active.map((u) => normalizeUrl(u.url))) : null;
-  const cnt = (f: (r: IndexedUrlRow) => boolean): Metric => (active ? active.filter(f).length : null);
+  const cnt = (f: (r: IndexedUrlRow) => boolean): Metric =>
+    active ? active.filter(f).length : null;
   const staleLimit = now - STALE_CHECK_DAYS * 86400_000;
 
   return {
@@ -113,7 +114,9 @@ export function computeIndexationMetrics(input: {
     unknownToGoogle: cnt((r) => !isError(r) && r.status !== "indexed" && isUnknown(r)),
     errors: cnt(isError),
     neverChecked: cnt((r) => !r.last_checked_at),
-    staleChecked: cnt((r) => !!r.last_checked_at && new Date(r.last_checked_at).getTime() < staleLimit),
+    staleChecked: cnt(
+      (r) => !!r.last_checked_at && new Date(r.last_checked_at).getTime() < staleLimit,
+    ),
     lastCheckedAt: urls ? maxIso(urls.map((r) => r.last_checked_at)) : null,
     lastReportAt: reports && reports.length ? maxIso(reports.map((r) => r.run_at)) : null,
   };
@@ -128,10 +131,14 @@ export function indexationWarnings(input: {
 }): string[] {
   const w: string[] = [];
   const { m, reports, now } = input;
-  if (input.trackingError) w.push("Suivi d'indexation inaccessible : données Search Console indisponibles.");
-  if (input.sitemapError) w.push("Plan du site non calculable : nombre d'URL attendu indisponible.");
+  if (input.trackingError)
+    w.push("Suivi d'indexation inaccessible : données Search Console indisponibles.");
+  if (input.sitemapError)
+    w.push("Plan du site non calculable : nombre d'URL attendu indisponible.");
   if (m.lastReportAt && now - new Date(m.lastReportAt).getTime() > STALE_REPORT_HOURS * 3600_000) {
-    w.push(`Dernier rapport ancien (plus de ${STALE_REPORT_HOURS} h) : les chiffres peuvent être périmés.`);
+    w.push(
+      `Dernier rapport ancien (plus de ${STALE_REPORT_HOURS} h) : les chiffres peuvent être périmés.`,
+    );
   }
   const lastCron = (reports ?? []).find((r) => r.trigger === "cron");
   if (lastCron?.summary_md && /sitemap suspect/i.test(lastCron.summary_md)) {
@@ -167,15 +174,43 @@ export type MyPageIndexStatus = {
 };
 
 const MY_PAGE_COPY: Record<MyPageState, { label: string; explanation: string }> = {
-  indexed: { label: "Indexée par Google", explanation: "Search Console a constaté que votre page est dans l'index Google." },
-  crawled_not_indexed: { label: "Explorée, non indexée", explanation: "Google a visité votre page mais ne l'a pas encore ajoutée à son index." },
-  discovered_not_indexed: { label: "Découverte, pas encore explorée", explanation: "Google connaît l'adresse de votre page mais ne l'a pas encore visitée." },
-  unknown_to_google: { label: "Pas encore connue de Google", explanation: "Search Console ne connaît pas encore cette adresse." },
-  problem: { label: "Problème signalé", explanation: "Search Console signale un obstacle sur cette page ; l'équipe Holiswiss en est informée par son suivi." },
-  pending: { label: "Contrôle en attente", explanation: "Votre page est suivie mais son état Google n'a pas encore été constaté." },
-  not_published: { label: "Donnée indisponible", explanation: "Votre fiche n'est pas publiée : aucun état Google ne peut être mesuré." },
-  not_tracked: { label: "État inconnu", explanation: "Votre page n'est pas encore dans le suivi Search Console." },
-  unavailable: { label: "Donnée indisponible", explanation: "Le suivi Search Console est momentanément inaccessible." },
+  indexed: {
+    label: "Indexée par Google",
+    explanation: "Search Console a constaté que votre page est dans l'index Google.",
+  },
+  crawled_not_indexed: {
+    label: "Explorée, non indexée",
+    explanation: "Google a visité votre page mais ne l'a pas encore ajoutée à son index.",
+  },
+  discovered_not_indexed: {
+    label: "Découverte, pas encore explorée",
+    explanation: "Google connaît l'adresse de votre page mais ne l'a pas encore visitée.",
+  },
+  unknown_to_google: {
+    label: "Pas encore connue de Google",
+    explanation: "Search Console ne connaît pas encore cette adresse.",
+  },
+  problem: {
+    label: "Problème signalé",
+    explanation:
+      "Search Console signale un obstacle sur cette page ; l'équipe Holiswiss en est informée par son suivi.",
+  },
+  pending: {
+    label: "Contrôle en attente",
+    explanation: "Votre page est suivie mais son état Google n'a pas encore été constaté.",
+  },
+  not_published: {
+    label: "Donnée indisponible",
+    explanation: "Votre fiche n'est pas publiée : aucun état Google ne peut être mesuré.",
+  },
+  not_tracked: {
+    label: "État inconnu",
+    explanation: "Votre page n'est pas encore dans le suivi Search Console.",
+  },
+  unavailable: {
+    label: "Donnée indisponible",
+    explanation: "Le suivi Search Console est momentanément inaccessible.",
+  },
 };
 
 export function myPageUrl(slug: string): string {
@@ -192,7 +227,9 @@ export function buildMyPageStatus(input: {
     state,
     ...MY_PAGE_COPY[state],
     lastCheckedAt,
-    stale: !!lastCheckedAt && input.now - new Date(lastCheckedAt).getTime() > STALE_CHECK_DAYS * 86400_000,
+    stale:
+      !!lastCheckedAt &&
+      input.now - new Date(lastCheckedAt).getTime() > STALE_CHECK_DAYS * 86400_000,
   });
   if (!input.published) return make("not_published");
   if (input.fetchFailed) return make("unavailable");
@@ -200,7 +237,8 @@ export function buildMyPageStatus(input: {
   if (!r) return make("not_tracked");
   if (!r.last_checked_at) return make("pending");
   const at = r.last_checked_at;
-  if (ERROR_STATUSES.includes(r.status) || /soft 404/i.test(r.coverage_state ?? "")) return make("problem", at);
+  if (ERROR_STATUSES.includes(r.status) || /soft 404/i.test(r.coverage_state ?? ""))
+    return make("problem", at);
   if (r.status === "indexed") return make("indexed", at);
   if (r.status === "crawled_not_indexed") return make("crawled_not_indexed", at);
   if (r.status === "discovered_not_crawled") return make("discovered_not_indexed", at);
