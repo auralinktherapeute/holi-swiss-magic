@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { rewriteLegacyHref } from "@/lib/legacy-redirects";
 import { parseArticleMarkdown, type ArticleBlock, type InlineToken } from "@/lib/article-markdown";
 
 function Inline({ tokens }: { tokens: InlineToken[] }) {
@@ -9,11 +10,12 @@ function Inline({ tokens }: { tokens: InlineToken[] }) {
         if (tk.type === "em") return <em key={i}>{tk.value}</em>;
         if (tk.type === "underline") return <u key={i}>{tk.value}</u>;
         if (tk.type === "link") {
-          const external = /^https?:\/\//i.test(tk.href);
+          const href = rewriteLegacyHref(tk.href);
+          const external = /^https?:\/\//i.test(href);
           return (
             <a
               key={i}
-              href={tk.href}
+              href={href}
               className="underline underline-offset-2 hover:opacity-80"
               {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >

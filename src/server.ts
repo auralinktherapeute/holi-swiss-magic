@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { legacyRedirectTarget } from "./lib/legacy-redirects";
 import {
   UNAVAILABLE_MARKER_HEADER,
   UNAVAILABLE_RETRY_AFTER_SECONDS,
@@ -109,6 +110,16 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      // Anciennes adresses internes publiées dans des articles → 301 canonique.
+      if (request.method === "GET" || request.method === "HEAD") {
+        const url = new URL(request.url);
+        const target = legacyRedirectTarget(url.pathname);
+        if (target) {
+          return withSecurityHeaders(
+            new Response(null, { status: 301, headers: { Location: target + url.search } }),
+          );
+        }
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(
