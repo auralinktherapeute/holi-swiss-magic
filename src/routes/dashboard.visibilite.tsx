@@ -23,6 +23,7 @@ import type { Recommendation } from "@/lib/showcase-recommendations";
 import { type AuditSeverity } from "@/lib/showcase-audit";
 import type { ReportCheck, ShowcaseAuditReport } from "@/lib/showcase-report";
 import { ModuleHelp } from "@/components/dashboard/ModuleHelp";
+import { MyPageVisibilityCard } from "@/components/dashboard/MyPageVisibilityCard";
 
 export const Route = createFileRoute("/dashboard/visibilite")({ component: Page });
 
@@ -345,6 +346,8 @@ function Page() {
           )}
         </div>
       </header>
+
+      <MyPageVisibilityCard checks={checks} />
 
       {recalculating && (
         <div
