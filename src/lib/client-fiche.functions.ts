@@ -6,9 +6,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function therapistOf(supabase: any, userId: string) {
   const { data } = await supabase.from("therapists")
-    .select("id, first_name, last_name, email").eq("user_id", userId).maybeSingle();
+    .select("id, first_name, last_name").eq("user_id", userId).maybeSingle();
   if (!data) throw new Error("Profil thérapeute introuvable.");
-  return data as { id: string; first_name: string; last_name: string; email: string | null };
+  let email: string | null = null;
+  try {
+    const { data: c } = await supabase.rpc("get_my_therapist_contact");
+    const row = Array.isArray(c) ? c[0] : c;
+    email = row?.email ?? null;
+  } catch { /* e-mail facultatif */ }
+  return { ...(data as any), email } as { id: string; first_name: string; last_name: string; email: string | null };
 }
 
 async function ownContact(supabase: any, therapistId: string, id: string) {
