@@ -155,6 +155,7 @@ function DashboardLayout() {
         <InactivityLogout redirectTo="/fr/connexion" />
         <OnboardingTour
           open={tourOpen}
+          initialStep={tourStart}
           onClose={() => {
             setTourOpen(false);
             qc.invalidateQueries({ queryKey: ["onboarding-state"] });

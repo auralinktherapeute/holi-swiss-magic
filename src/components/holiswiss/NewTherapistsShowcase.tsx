@@ -10,9 +10,8 @@ import type { HomeTherapist } from "@/lib/home-links";
  *
  * Les fiches viennent du loader de l'accueil (`getHomeDirectoryLinks`) : elles
  * sont dans le HTML serveur, donc chaque carte est un lien crawlable. Chaque
- * lien pointe vers l'URL CANONIQUE de la fiche (`profileLang`), pas vers la
- * langue de l'accueil — sinon l'accueil DE lierait une URL canonicalisée
- * ailleurs.
+ * lien garde la langue consultée (sinon le site entier basculait en
+ * français) ; la fiche déclare elle-même sa canonique (stratégie inchangée).
  */
 export function NewTherapistsShowcase({ therapists }: { therapists: ReadonlyArray<HomeTherapist> }) {
   const { t } = useTranslation();
@@ -44,7 +43,7 @@ export function NewTherapistsShowcase({ therapists }: { therapists: ReadonlyArra
             >
               <Link
                 to="/$lang/therapeute/$slug"
-                params={{ lang: th.profileLang, slug: th.slug }}
+                params={{ lang, slug: th.slug }}
                 className="relative block aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#3d1a5c] to-[#1a1035]"
                 aria-label={`${th.first_name} ${th.last_name}`}
               >
@@ -88,7 +87,7 @@ export function NewTherapistsShowcase({ therapists }: { therapists: ReadonlyArra
                 <div className="mt-auto flex gap-2 pt-3">
                   <Link
                     to="/$lang/therapeute/$slug"
-                    params={{ lang: th.profileLang, slug: th.slug }}
+                    params={{ lang, slug: th.slug }}
                     className="nt-shine inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#b86ef9] px-3 py-2 text-xs font-semibold text-white shadow-md shadow-[#b86ef9]/30 transition-colors hover:bg-[#a855f7]"
                   >
                     <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
@@ -96,7 +95,7 @@ export function NewTherapistsShowcase({ therapists }: { therapists: ReadonlyArra
                   </Link>
                   <Link
                     to="/$lang/therapeute/$slug"
-                    params={{ lang: th.profileLang, slug: th.slug }}
+                    params={{ lang, slug: th.slug }}
                     className="nt-shine inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-[rgba(184,110,249,0.35)] px-3 py-2 text-xs font-semibold text-[#d4a5f9] transition-colors hover:border-[#b86ef9] hover:text-white"
                     aria-label={t("home.newest.profile", "Voir le profil")}
                   >
