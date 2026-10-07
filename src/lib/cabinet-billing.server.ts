@@ -402,6 +402,17 @@ async function invoicesForRequest(supabase: any, therapistId: string, requestId:
   return (data ?? []) as Array<{ id: string; numero_facture: string; statut: string }>;
 }
 
+/** Violation d'unicité (23505) sur l'index anti-doublon request_id — et uniquement celle-là. */
+export function isRequestIdConflict(error: any): boolean {
+  return error?.code === "23505" && String(error?.message ?? "").includes("ti_therapist_request_id_uniq");
+}
+
+async function existingForRequest(supabase: any, therapistId: string, requestId: string, original: any): Promise<ClientInvoiceResult> {
+  const winner = (await invoicesForRequest(supabase, therapistId, requestId))[0];
+  if (!winner) throw new Error(original?.message ?? "Facture introuvable.");
+  return { invoice_id: winner.id, numero_facture: winner.numero_facture, statut: winner.statut, duplicate: true };
+}
+
 export async function createClientInvoice(
   supabase: any,
   therapistId: string,
@@ -449,9 +460,15 @@ async function createClientInvoiceOnce(
       tva_taux: first.tva_taux, description: first.description,
     }));
     const { data: inv } = await supabase.from("therapist_invoices").select("metadata,date_prestation").eq("id", id).maybeSingle();
-    await supabase.from("therapist_invoices").update({
+    const { error: ridErr } = await supabase.from("therapist_invoices").update({
       metadata: { ...(inv?.metadata ?? {}), request_id: input.request_id },
     }).eq("id", id).eq("therapist_id", therapistId);
+    if (ridErr) {
+      if (!isRequestIdConflict(ridErr)) throw new Error(ridErr.message);
+      // Brouillon concurrent pour la même demande : on retire le nôtre (jamais émis, sans paiement).
+      await supabase.from("therapist_invoices").delete().eq("id", id).eq("therapist_id", therapistId);
+      return existingForRequest(supabase, therapistId, input.request_id, ridErr);
+    }
     await replaceLines(supabase, therapistId, id, toLines(input.lines, inv?.date_prestation ?? emission, input.appointment_id), mode);
   } else {
     const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || "Client";
@@ -470,16 +487,13 @@ async function createClientInvoiceOnce(
       date_emission: emission, date_prestation: emission, date_echeance: echeance,
       metadata: { client_name: name, from_client_fiche: true, request_id: input.request_id },
     }).select("id").maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      // La base est l'autorité : l'index ti_therapist_request_id_uniq refuse une 2e facture pour la même demande.
+      if (isRequestIdConflict(error)) return existingForRequest(supabase, therapistId, input.request_id, error);
+      throw new Error(error.message);
+    }
     if (!inv) throw new Error("Création du brouillon impossible.");
     id = inv.id as string;
-    // Réconciliation : si une soumission concurrente a inséré avant nous, on
-    // retire notre brouillon vide (autorisé par ti_delete_guard) et on renvoie le sien.
-    const winner = (await invoicesForRequest(supabase, therapistId, input.request_id))[0];
-    if (winner && winner.id !== id) {
-      await supabase.from("therapist_invoices").delete().eq("id", id).eq("therapist_id", therapistId);
-      return { invoice_id: winner.id, numero_facture: winner.numero_facture, statut: winner.statut, duplicate: true };
-    }
     const totals = await replaceLines(supabase, therapistId, id, toLines(input.lines, emission, null), mode);
     await logInvoiceAudit(supabase, {
       therapistId, invoiceId: id, action: "draft_created_from_client", actorUserId,
