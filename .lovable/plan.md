@@ -1,24 +1,20 @@
-# Confirmation dédiée de réservation
+# Étape 6B — performance visuelle et robots
 
-## Objectif
-Remplacer le formulaire étroit et la boîte de dialogue actuels par une étape de confirmation plein écran intégrée au profil, sans changer la création de réservation ni la base de données.
+## Périmètre
+- Vérifier réellement, en lecture seule, si les images signées peuvent être redimensionnées ; conserver automatiquement l’original en cas d’échec.
+- Centraliser les variantes des photos thérapeutes, stabiliser leurs dimensions et éviter les signatures répétées dans un même affichage.
+- Réutiliser une seule adresse signée par image d’événement, avec dimensions réservées et priorité uniquement pour l’image principale.
+- Générer un logo WebP léger de 128 px et un favicon dérivé du logo, sans remplacer les originaux.
+- Ajouter `noindex,nofollow` aux espaces admin et thérapeute, puis compléter `robots.txt` pour les variantes avec ou sans barre finale.
+- Stabiliser uniquement les deux zones mesurées sur les pages spécialité et article, sans modifier leur contenu ni la mise en page générale.
 
-## Modifications prévues
-- Conserver `BookingWidget` comme propriétaire de la prestation, de la date, de l’heure, des coordonnées et des contrôles de disponibilité.
-- Au clic sur un créneau encore disponible, ouvrir l’étape « Coordonnées » dans une grande carte centrée : récapitulatif à gauche, formulaire à droite sur ordinateur, une colonne sur mobile.
-- Ajouter l’indicateur « Créneau — Coordonnées — Confirmation », le retour « Modifier le créneau » sans perdre la prestation, et le bouton final exact « Confirmer la réservation ».
-- Afficher le thérapeute, la prestation, la date, l’heure, la durée, le tarif et le lieu uniquement à partir des données réelles déjà chargées sur le profil.
-- Garder la validation Zod, la relecture fraîche des disponibilités, la protection contre les réponses obsolètes et la contrainte anti-double réservation avant l’insertion existante.
-- Afficher les erreurs de nom et d’e-mail près de leurs champs, avec labels visibles, focus clavier et annonce accessible.
-- Ajouter les traductions FR/DE/IT/EN nécessaires sans modifier les autres contenus.
+## Contrôles
+- Tests ciblés : repli image originale, adresse événement unique, attributs d’images, robots privés et favicon.
+- Suite complète, vérification TypeScript et compilation automatique de l’aperçu.
+- Exploration des 358 adresses, contrôle visuel ordinateur/mobile des sept familles demandées, puis mesures indicatives locales comparées à l’audit 6A.
+- Aucun parcours connecté sans session appropriée ; aucune publication, écriture de données, migration, indexation ou action métier.
 
-## Vérifications
-- Tests ciblés : ouverture après sélection, aucune création avant le clic final, retour conservant la prestation, libellé final et structure accessible.
-- Tests existants liés aux créneaux et à la réservation.
-- Compilation complète.
-- Contrôle visuel desktop et mobile dans l’aperçu, sans utiliser de données personnelles réelles.
-
-## Limites de portée
-- Aucune migration, aucun changement de schéma, aucune nouvelle fonction serveur.
-- Aucun changement des règles de disponibilité ou de réservation.
-- Aucune publication.
+## Sécurité et retour arrière
+- Changements limités aux utilitaires d’images, affichages concernés, métadonnées privées, `robots.txt` et nouveaux fichiers d’image.
+- Aucun changement d’accès, de données, de contenu éditorial ou de service externe.
+- Retour arrière possible fichier par fichier ; les images originales restent intactes.
