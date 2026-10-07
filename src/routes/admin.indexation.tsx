@@ -6,19 +6,11 @@ import {
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runFullIndexation } from "@/lib/indexing.functions";
+import { getIndexationDashboard, requestUrlRecheck } from "@/lib/indexation-dashboard.functions";
+import type { IndexationMetrics } from "@/lib/indexation-metrics";
+import { IndexationMetricsPanel } from "@/components/admin/IndexationMetricsPanel";
 
 export const Route = createFileRoute("/admin/indexation")({ component: Page });
-
-// Données hébergées sur le projet Supabase des agents (lecture publique, actions par PIN)
-const AGENTS_SUPABASE_URL = "https://gpldaaqwvwopttachrma.supabase.co";
-const AGENTS_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbGRhYXF3dndvcHR0YWNocm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODIyOTAsImV4cCI6MjA5NjU1ODI5MH0.BKuw_l2YrTZXTDHFlMcTC0yoH003_naKeoJXYs61fQg";
-
-const HEADERS = {
-  apikey: AGENTS_ANON_KEY,
-  Authorization: `Bearer ${AGENTS_ANON_KEY}`,
-  "Content-Type": "application/json",
-};
 
 type IndexedUrl = {
   id: string;
@@ -107,22 +99,30 @@ function Page() {
   const [tab, setTab] = useState<"all" | "indexed" | "waiting" | "problems" | "archived" | "reports">("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
+  const fetchDashboard = useServerFn(getIndexationDashboard);
+  const recheckFn = useServerFn(requestUrlRecheck);
+  const [metrics, setMetrics] = useState<IndexationMetrics | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Lecture serveur uniquement : le navigateur ne contacte plus le projet dédié.
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const [u, r] = await Promise.all([
-        fetch(`${AGENTS_SUPABASE_URL}/rest/v1/indexed_urls?select=id,url,lang,page_type,status,coverage_state,last_crawl_at,last_checked_at,priority,check_count,archived_at,archive_reason,last_submitted_at&order=priority.asc,last_submitted_at.asc.nullsfirst,url.asc&limit=2000`, { headers: HEADERS }),
-        fetch(`${AGENTS_SUPABASE_URL}/rest/v1/indexing_reports?select=*&order=run_at.desc&limit=20`, { headers: HEADERS }),
-      ]);
-      if (!u.ok || !r.ok) throw new Error(`HTTP ${u.status}/${r.status}`);
-      setUrls((await u.json()) as IndexedUrl[]);
-      setReports((await r.json()) as Report[]);
+      const d = await fetchDashboard();
+      setUrls(d.urls as IndexedUrl[]);
+      setReports(d.reports as Report[]);
+      setMetrics(d.metrics);
+      setWarnings(d.warnings);
     } catch (e) {
-      toast.error(`Chargement impossible : ${e instanceof Error ? e.message : "erreur"}`);
+      setMetrics(null);
+      setLoadError(e instanceof Error ? e.message : "erreur");
+      toast.error("Chargement impossible : donnée indisponible");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchDashboard]);
 
   useEffect(() => {
     load();
@@ -172,13 +172,8 @@ function Page() {
     const pin = askPin();
     if (!pin) return;
     try {
-      const r = await fetch(`${AGENTS_SUPABASE_URL}/rest/v1/rpc/request_url_recheck`, {
-        method: "POST",
-        headers: HEADERS,
-        body: JSON.stringify({ p_url_id: urlId, p_pin: pin }),
-      });
-      const ok = (await r.json()) as boolean;
-      if (!r.ok || !ok) {
+      const { ok } = await recheckFn({ data: { urlId, pin } });
+      if (!ok) {
         sessionStorage.removeItem("seo_validation_pin");
         toast.error("PIN invalide");
         return;
@@ -253,6 +248,8 @@ function Page() {
           <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all" style={{ width: `${Math.max(pct, 2)}%` }} />
         </div>
       </div>
+
+      <IndexationMetricsPanel metrics={metrics} warnings={warnings} loading={loading} error={loadError} />
 
       {/* Lancement manuel d'un cycle d'indexation */}
       <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4 flex items-center justify-between gap-4 flex-wrap">
@@ -404,8 +401,7 @@ function Page() {
 
       <p className="text-[11px] text-muted-foreground border-t pt-3">
         Le bouton « Lancer » exécute le cycle complet (Soumission IndexNow (Bing et moteurs participants) — ceci ne confirme pas l'indexation Google ; sitemap ; rapport) sans dépendance à la tâche planifiée.
-        L'inspection GSC (URL Inspection API, quota 2 000/j) n'est pas disponible depuis le dashboard — elle reste
-        effectuée par l'agent quotidien quand les MCPs sont disponibles. « Découverte » = Google connaît la page ;
+        L'inspection Search Console est effectuée par le cycle serveur quotidien ; ce tableau la lit sans la déclencher. « Découverte » = Google connaît la page ;
         l'indexation effective reste sa décision.
       </p>
     </div>
