@@ -13,15 +13,15 @@
 # et étaient donc inertes : seules les variantes /fr/ étaient réellement
 # couvertes, les pages DE, IT et EN restaient crawlables. Les motifs ci-dessous
 # couvrent toutes les langues, présentes et futures.
+# Pages d'accès (connexion, inscription, mot de passe) : volontairement NON
+# bloquées ici depuis le 07/10/2026. Bloquées, les robots ne pouvaient pas lire
+# leur balise « noindex,follow » et pouvaient indexer l'adresse seule. Elles
+# portent désormais cette balise dans leur HTML, ce qui suffit à les exclure.
 User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 # Assistants IA explicitement bienvenus (recherche générative + entraînement).
 #
@@ -36,109 +36,65 @@ Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: Applebot-Extended
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: Bingbot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: CCBot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: Amazonbot
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 User-agent: meta-externalagent
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /creer-profil
-Disallow: /*/connexion
-Disallow: /*/inscription
-Disallow: /*/mot-de-passe-oublie
-Disallow: /*/reinitialiser-mot-de-passe
 
 Sitemap: https://holiswiss.ch/sitemap.xml

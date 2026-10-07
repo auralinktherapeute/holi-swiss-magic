@@ -73,6 +73,32 @@ function applyUnavailableMarker(response: Response): Response {
   });
 }
 
+// Vraie page introuvable (404 HTML) : les métadonnées de la page demandée
+// peuvent avoir été émises avant que le contenu soit déclaré absent (ex. une
+// spécialité inexistante gardait titre, canonique et fil d'Ariane). On impose
+// ici une réponse cohérente : noindex,follow, aucune canonique ni hreflang,
+// aucune donnée structurée, titre neutre. Le statut 404 est conservé.
+export function sanitizeNotFoundHtml(html: string): string {
+  let out = html
+    .replace(/<link[^>]*rel="(?:canonical|alternate)"[^>]*\/?>/gi, "")
+    .replace(/<script[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<meta[^>]*name="robots"[^>]*\/?>/gi, "")
+    .replace(/<meta[^>]*property="og:url"[^>]*\/?>/gi, "")
+    .replace(/<title>[\s\S]*?<\/title>/i, "<title>Page introuvable — Holiswiss</title>");
+  out = out.replace(/<head([^>]*)>/i, '<head$1><meta name="robots" content="noindex,follow"/>');
+  return out;
+}
+
+async function applyNotFoundSeo(response: Response): Promise<Response> {
+  if (response.status !== 404) return response;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
+  const html = sanitizeNotFoundHtml(await response.text());
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.set("X-Robots-Tag", "noindex, follow");
+  return new Response(html, { status: 404, statusText: "Not Found", headers });
+}
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -123,7 +149,9 @@ export default {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(
-        applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+        await applyNotFoundSeo(
+          applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+        ),
       );
     } catch (error) {
       console.error(error);
