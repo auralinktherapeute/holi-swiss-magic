@@ -64,6 +64,7 @@
 
 import { accessToken, inspect, toStatus } from "./gsc.ts";
 import { preflightAll } from "./preflight.ts";
+import { readSitemapUrls } from "./sitemap-read.ts";
 import {
   buildStateSection,
   fmtCount,
