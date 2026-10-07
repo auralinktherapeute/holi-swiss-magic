@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import { createSignedImageUrl, imageVariantTransform } from "./storage-image";
 
 describe("createSignedImageUrl", () => {
@@ -42,5 +43,5 @@ describe("attributs d'images prioritaires", () => {
 });
 
 function requireSource(path: string): string {
-  return require("node:fs").readFileSync(path, "utf8");
+  return readFileSync(path, "utf8");
 }
