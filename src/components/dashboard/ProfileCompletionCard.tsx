@@ -1,19 +1,30 @@
-import { CheckCircle2, Circle, TrendingUp } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Circle, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { computeProfileCompletion, type CompletionInput } from "@/lib/profile-completion";
+import { getMyShowcaseReport } from "@/lib/therapist-health.functions";
+import type { ShowcaseAuditReport } from "@/lib/showcase-report";
 
 /**
- * Carte « Profil complété à X % » — se met à jour en direct pendant
- * l'édition du profil et liste les actions restantes les plus rentables.
- * Un profil complet = une fiche publique plus riche = meilleur SEO/GEO.
+ * Carte « Qualité de ma fiche » de l'écran Profil.
+ * Score unique : celui de la vitrine (même requête que /dashboard/visibilite),
+ * recalculé côté serveur après chaque enregistrement (`refreshShowcaseAfterSave`).
+ * L'ancienne formule locale concurrente a été retirée.
+ * La prop `profile` est conservée pour compatibilité d'appel ; elle n'est plus utilisée.
  */
-export function ProfileCompletionCard({ profile }: { profile: CompletionInput }) {
-  const { percent, missing } = computeProfileCompletion(profile);
-  const done = percent >= 100;
+export function ProfileCompletionCard(_props: { profile?: unknown }) {
+  const load = useServerFn(getMyShowcaseReport);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["my-showcase-report"],
+    queryFn: () => load(),
+    staleTime: 60_000,
+  });
 
-  const tone =
-    percent >= 80 ? "text-emerald-300" : percent >= 50 ? "text-orange-300" : "text-red-300";
+  const report = (data?.report ?? null) as ShowcaseAuditReport | null;
+  const score = typeof data?.score === "number" ? data.score : null;
+  const actions = report?.priorityActions ?? [];
 
   return (
     <Card className="border-[rgba(184,110,249,0.25)] bg-[#2d1248]/70">
@@ -21,38 +32,32 @@ export function ProfileCompletionCard({ profile }: { profile: CompletionInput })
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-[#b86ef9]" aria-hidden />
-            <h2 className="text-sm font-semibold text-foreground">Visibilité de votre profil</h2>
+            <h2 className="text-sm font-semibold text-foreground">Qualité de ma fiche (score vitrine)</h2>
           </div>
-          <span className={`text-lg font-bold ${tone}`}>{percent} %</span>
+          <span className="text-lg font-bold text-foreground">
+            {isLoading ? "…" : score == null ? "Donnée indisponible" : `${score} / 100`}
+          </span>
         </div>
-
-        <Progress value={percent} className="mt-3 h-2" />
+        {score != null && <Progress value={score} className="mt-3 h-2" />}
         <p className="mt-2 text-xs text-muted-foreground">
-          {done
-            ? "Excellent — votre profil est complet et optimisé pour Google et les moteurs IA."
-            : "Un profil complet apparaît mieux dans les recherches Google et les recommandations des IA."}
+          {isError
+            ? "Le score n'a pas pu être chargé."
+            : "La qualité de la fiche aide les moteurs à la comprendre, sans garantir ni indexation, ni position Google, ni recommandation par une IA. Mis à jour après chaque enregistrement."}
         </p>
-
-        {!done && (
+        {actions.length > 0 && (
           <ul className="mt-4 space-y-1.5">
-            {missing.slice(0, 4).map((item) => (
-              <li key={item.key} className="flex items-center gap-2 text-xs text-foreground/85">
+            {actions.slice(0, 4).map((a) => (
+              <li key={a.checkId} className="flex items-center gap-2 text-xs text-foreground/85">
                 <Circle className="h-3 w-3 shrink-0 text-[#b86ef9]/60" aria-hidden />
-                {item.label}
-                <span className="ml-auto shrink-0 text-[10px] font-semibold text-[#5cc8fa]">+{item.weight} %</span>
+                {a.label}
+                <span className="ml-auto shrink-0 text-[10px] font-semibold text-[#5cc8fa]">+{a.points} pts</span>
               </li>
             ))}
-            {missing.length > 4 && (
-              <li className="text-[11px] text-muted-foreground">…et {missing.length - 4} autre(s) action(s)</li>
-            )}
           </ul>
         )}
-
-        {done && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-emerald-300">
-            <CheckCircle2 className="h-4 w-4" aria-hidden /> Toutes les sections sont remplies
-          </div>
-        )}
+        <Link to="/dashboard/visibilite" className="mt-3 inline-block text-xs font-medium underline underline-offset-2">
+          Voir le détail de ma vitrine
+        </Link>
       </CardContent>
     </Card>
   );
