@@ -11,11 +11,11 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   findClientDuplicates, getClientJournal, logClientAction, mergeClients,
-  previewConsentRequest, sendConsentRequest, setClientArchived,
+  previewConsentRequest, sendConsentRequest, setClientArchived, trashClient, restoreClient, listTrash,
 } from "@/lib/client-fiche.functions";
 import { sendInvoiceReminder } from "@/lib/therapist-invoices.functions";
 
-import { deleteContact, updateContactStatus, upsertContact } from "@/lib/crm-therapist.functions";
+import { updateContactStatus, upsertContact } from "@/lib/crm-therapist.functions";
 import {
   emailQuestionnaireToClient, listMyQuestionnaires, listResponsesForContact,
 } from "@/lib/questionnaires.functions";
@@ -416,6 +416,49 @@ export function DuplicatesButton() {
               {merge.isPending ? "Fusion…" : "Fusionner"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** Corbeille : fiches supprimées, conservées 2 mois puis effacées. */
+export function TrashButton() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listTrash);
+  const restoreFn = useServerFn(restoreClient);
+  const [open, setOpen] = useState(false);
+  const q = useQuery({ queryKey: ["client-trash"], queryFn: () => listFn(), enabled: open });
+  const restore = useMutation({
+    mutationFn: (id: string) => restoreFn({ data: { id } }),
+    onSuccess: () => { toast.success("Fiche restaurée."); invalidate(qc); qc.invalidateQueries({ queryKey: ["client-trash"] }); },
+    onError: () => toast.error("Restauration impossible."),
+  });
+  const fmt = (d: string) => new Date(d).toLocaleDateString("fr-CH", { day: "2-digit", month: "long", year: "numeric" });
+  return (
+    <>
+      <Button variant="outline" className="min-h-11" onClick={() => setOpen(true)}>
+        <Trash2 className="h-4 w-4 mr-1.5" aria-hidden="true" /> Corbeille
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Corbeille</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Les fiches supprimées restent ici 2 mois, puis sont effacées définitivement. Les factures sont toujours conservées.
+          </p>
+          {q.isLoading && <p className="text-sm">Chargement…</p>}
+          {q.data?.length === 0 && <p className="text-sm text-muted-foreground">La corbeille est vide.</p>}
+          <ul className="space-y-2">
+            {(q.data ?? []).map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-2 border border-border/60 rounded-lg p-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{c.first_name} {c.last_name}</p>
+                  <p className="text-xs text-muted-foreground">Supprimée le {fmt(c.trashed_at)} · effacée le {fmt(c.purge_at)}</p>
+                </div>
+                <Button size="sm" variant="outline" className="min-h-11" disabled={restore.isPending} onClick={() => restore.mutate(c.id)}>Restaurer</Button>
+              </li>
+            ))}
+          </ul>
         </DialogContent>
       </Dialog>
     </>
