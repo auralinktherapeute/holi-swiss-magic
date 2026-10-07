@@ -60,6 +60,10 @@ export type FilPost = {
   featured?: boolean;
   seoTitle?: string;
   seoDescription?: string;
+  /** Langues dont la traduction est complète (page détail uniquement). */
+  completeLangs?: ReadonlyArray<"fr" | "de" | "it" | "en">;
+  /** Faux si la langue servie n'est pas réellement traduite (page détail). */
+  translationComplete?: boolean;
 };
 
 /** Libellés d'interface de la rubrique, dans les 4 langues du site. */

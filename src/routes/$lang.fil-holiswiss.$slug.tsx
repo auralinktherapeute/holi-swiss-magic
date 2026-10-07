@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { ArticleContent } from "@/components/articles/ArticleContent";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
-import { hreflangLinks, ogLocale } from "@/lib/seo";
+import { ogLocale } from "@/lib/seo";
 import {
   FIL_COPY,
   asFilLang,
@@ -51,12 +51,22 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
     const title = post.seoTitle || `${post.title} — Holiswiss`;
     const description = post.seoDescription || post.excerpt;
     const url = `https://holiswiss.ch/${l}/fil-holiswiss/${post.slug}`;
+    const frUrl = `https://holiswiss.ch/fr/fil-holiswiss/${post.slug}`;
+    // Variante étrangère incomplète : noindex,follow + canonique FR, sans
+    // hreflang. Complète : hreflang uniquement entre versions complètes.
+    const incomplete = post.translationComplete === false;
+    const alt = (post.completeLangs ?? ["fr"]).map((x) => ({
+      rel: "alternate" as const,
+      hrefLang: x,
+      href: `https://holiswiss.ch/${x}/fil-holiswiss/${post.slug}`,
+    }));
     // Dates réelles (Zurich), même calcul que la ligne visible de la page.
     const dates = articleDates(post.date, post.updatedAt);
     return {
       meta: [
         { title },
         { name: "description", content: description },
+        ...(incomplete ? [{ name: "robots", content: "noindex,follow" }] : []),
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
@@ -74,10 +84,12 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/$slug")({
             ]
           : []),
       ],
-      links: [
-        { rel: "canonical", href: url },
-        ...hreflangLinks(`/fil-holiswiss/${post.slug}`),
-      ],
+      links: incomplete
+        ? [{ rel: "canonical", href: frUrl }]
+        : [
+            { rel: "canonical", href: url },
+            ...(alt.length > 1 ? [...alt, { rel: "alternate" as const, hrefLang: "x-default", href: frUrl }] : []),
+          ],
       scripts: [
         {
           type: "application/ld+json",
