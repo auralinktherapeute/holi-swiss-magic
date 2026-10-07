@@ -219,19 +219,19 @@ export function QuickInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!busy) onOpenChange(o); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-w-2xl max-h-[90dvh] flex-col overflow-hidden p-4 sm:p-6">
+        <DialogHeader className="shrink-0 pr-8 text-left">
           <DialogTitle>{appointment ? "Facturer la séance" : "Créer une facture"}</DialogTitle>
-          <DialogDescription>{subtitle}</DialogDescription>
+          <DialogDescription className="break-words">{subtitle}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="min-h-0 min-w-0 overflow-y-auto space-y-4">
           {lines.map((l, idx) => {
             const p = parsed[idx]!;
             return (
-              <fieldset key={l.key} className="rounded-lg border border-border/60 p-3 space-y-3">
+              <fieldset key={l.key} className="min-w-0 rounded-lg border border-border/60 p-3 space-y-3">
                 <legend className="px-1 text-xs text-muted-foreground">Ligne {idx + 1}</legend>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor={`qi-svc-${l.key}`}>Prestation</Label>
                     <Select value={l.serviceId} onValueChange={(v) => applyService(l.key, v)}>
@@ -350,7 +350,7 @@ export function QuickInvoiceDialog({
           )}
         </div>
 
-        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+        <DialogFooter className="shrink-0 max-h-[45dvh] overflow-y-auto flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
           <Button variant="outline" className="min-h-11" disabled={busy} onClick={() => onOpenChange(false)}>Annuler</Button>
           {!settleOpen && (
             <>

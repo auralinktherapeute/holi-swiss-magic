@@ -45,6 +45,7 @@ function usePageTitle(): string {
     ["/dashboard/forfaits", "Forfaits"],
     ["/dashboard/questionnaires", "Questionnaires"],
     ["/dashboard/facturation", "Facturation"],
+    ["/dashboard/clients", "Clients"],
     ["/dashboard/visibilite", "Score de visibilité"],
 
     ["/dashboard/abonnement", t("dashboard.subscription")],
@@ -123,6 +124,7 @@ export function MobileDashboardBottomNav() {
     { to: "/dashboard/forfaits", icon: Package, label: "Forfaits" },
     { to: "/dashboard/questionnaires", icon: ClipboardList, label: "Questionnaires" },
     { to: "/dashboard/facturation", icon: Receipt, label: "Facturation" },
+    { to: "/dashboard/clients", icon: Users, label: "Clients" },
     { to: "/dashboard/visibilite", icon: Gauge, label: "Score de visibilité" },
     { to: "/dashboard/avis", icon: Star, label: t("dashboard.reviews") },
     { to: "/dashboard/evenements", icon: CalendarDays, label: t("dashboard.events") },
@@ -179,7 +181,7 @@ export function MobileDashboardBottomNav() {
               </SheetTrigger>
               <SheetContent
                 side="bottom"
-                className="rounded-t-2xl border-border bg-surface p-0 pb-[env(safe-area-inset-bottom)]"
+                className="max-h-[90dvh] overflow-y-auto rounded-t-2xl border-border bg-surface p-0 pb-[env(safe-area-inset-bottom)]"
               >
                 <SheetHeader className="flex flex-row items-center justify-between px-5 pt-5">
                   <SheetTitle className="text-base">Menu</SheetTitle>
