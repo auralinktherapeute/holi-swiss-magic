@@ -269,7 +269,7 @@ const TRASH_DAYS = 60;
 
 export const trashClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), confirm: z.literal("Supprimer") }).parse(i))
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), confirm: z.literal("SUPPRIMER") }).parse(i))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     const t = await therapistOf(sb, context.userId);
