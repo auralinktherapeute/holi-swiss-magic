@@ -1,3 +1,4 @@
+import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, redirect, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -95,7 +96,7 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
       unavailable: false as const,
     };
   },
-  head: ({ params, loaderData }) => {
+  head: withSocialHead(({ params, loaderData }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Trouver un thérapeute en Suisse — Holiswiss",
@@ -189,7 +190,7 @@ export const Route = createFileRoute("/$lang/therapeutes/")({
         },
       ],
     };
-  },
+  }),
 });
 
 type Therapist = DirectorySearchRow;

@@ -1,3 +1,4 @@
+import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { getCategoryPage } from "@/lib/specialties.functions";
 import { CategoryTherapistsPage, categoryCopy } from "@/components/holiswiss/CategoryTherapistsPage";
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/$lang/therapeutes/holistique")({
     if (!res.ok) return { page: null, unavailable: true as const };
     return { page: res.data, unavailable: false as const };
   },
-  head: ({ params }) => {
+  head: withSocialHead(({ params }) => {
     const copy = categoryCopy("holistique", params.lang);
     const url = `https://holiswiss.ch/${params.lang}/therapeutes/holistique`;
     return {
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/$lang/therapeutes/holistique")({
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/therapeutes/holistique")],
     };
-  },
+  }),
 });
 
 function Page() {

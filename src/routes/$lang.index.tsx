@@ -1,3 +1,4 @@
+import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
@@ -57,7 +58,7 @@ export const Route = createFileRoute("/$lang/")({
     ]);
     return { ...chips, directoryStats, directoryLinks, latestArticles };
   },
-  head: ({ params, loaderData }) => {
+  head: withSocialHead(({ params, loaderData }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Holiswiss — Thérapeutes holistiques en Suisse",
@@ -103,7 +104,7 @@ export const Route = createFileRoute("/$lang/")({
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/")],
       scripts: [{ type: "application/ld+json", children: JSON.stringify(webPage) }],
     };
-  },
+  }),
 });
 
 /**

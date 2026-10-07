@@ -1,3 +1,4 @@
+import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Clock, MapPin, Video, Users } from "lucide-react";
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/$lang/evenements/")({
       return { events: [] as unknown as Events };
     }
   },
-  head: ({ params }) => {
+  head: withSocialHead(({ params }) => {
     const url = `${SITE}/${params.lang}/evenements`;
     const titles: Record<string, string> = {
       fr: "Événements bien-être en Suisse | HoliSwiss",
@@ -54,7 +55,7 @@ export const Route = createFileRoute("/$lang/evenements/")({
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/evenements")],
     };
-  },
+  }),
 });
 
 const LOCALE_MAP: Record<string, string> = { fr: "fr-CH", de: "de-CH", it: "it-CH", en: "en-GB" };

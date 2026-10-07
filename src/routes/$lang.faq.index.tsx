@@ -1,3 +1,4 @@
+import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { FAQ_PAGE } from "@/lib/faq-page-content";
 import { asFaqLang } from "@/lib/faq-content";
@@ -31,7 +32,7 @@ const CRUMB_HOME: Record<string, string> = { fr: "Accueil", de: "Startseite", it
 
 export const Route = createFileRoute("/$lang/faq/")({
   component: FaqPage,
-  head: ({ params }) => {
+  head: withSocialHead(({ params }) => {
     const lang = params.lang;
     const meta = META[lang] ?? META.fr;
     const url = `https://holiswiss.ch/${lang}/faq`;
@@ -74,7 +75,7 @@ export const Route = createFileRoute("/$lang/faq/")({
         { type: "application/ld+json", children: JSON.stringify(breadcrumbLd) },
       ],
     };
-  },
+  }),
 });
 
 function FaqPage() {
