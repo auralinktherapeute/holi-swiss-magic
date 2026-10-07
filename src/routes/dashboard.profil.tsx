@@ -408,11 +408,36 @@ function ProfilePage() {
         .select(THERAPIST_PROFILE_SELECT)
         .eq("user_id", user.id)
         .maybeSingle() as any;
-      // Fetch the owner's phone via a controlled security-definer RPC.
-      const { data: contact, error: contactError } = await (supabase as any).rpc("get_my_therapist_contact");
+      // Les lectures sensibles exigent un jeton de session : sans lui, la
+      // requête part en rôle anonyme et la base répond « permission denied »
+      // (cause des échecs relevés le 22/09). On ne tente alors rien et on
+      // marque la lecture comme échouée — jamais de champ vide présenté
+      // comme « chargé ».
+      const { data: sess } = await supabase.auth.getSession();
+      const hasToken = Boolean(sess.session?.access_token);
+      const { data: contact, error: contactError } = hasToken
+        ? await (supabase as any).rpc("get_my_therapist_contact")
+        : { data: null, error: new Error("no_session") };
       const contactFailed = Boolean(contactError);
+      if (contactError) console.warn("[profil] lecture téléphone en échec", contactError.message ?? contactError);
       setPhoneLoadFailed(contactFailed);
       const ownerPhone: string = (Array.isArray(contact) ? contact[0]?.phone : contact?.phone) ?? "";
+      // IDE (table privée) lu AVANT le court-circuit « brouillon de session »,
+      // pour que l'état d'échec soit toujours connu au moment d'enregistrer.
+      let ideFailed = true;
+      let ideValue = "";
+      if (data && hasToken) {
+        const { data: privateIds, error: privateIdsError } = await supabase
+          .from("therapist_private_identifiers" as any)
+          .select("ide")
+          .eq("therapist_id", data.id)
+          .eq("user_id", user.id)
+          .maybeSingle() as any;
+        ideFailed = Boolean(privateIdsError);
+        if (privateIdsError) console.warn("[profil] lecture IDE en échec", privateIdsError.message);
+        ideValue = privateIds?.ide ?? "";
+      }
+      setIdeLoadFailed(Boolean(data) && ideFailed);
       if (data) {
         (data as any).phone = ownerPhone;
         setProfileStatus((data as any).status ?? null);
