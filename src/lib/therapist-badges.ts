@@ -181,7 +181,7 @@ export function buildTrustBadges(input: {
       key: `acc-${org}`,
       kind: "accreditation",
       // Déclaratif : jamais présenté comme vérifié.
-      label: a.number ? `${org} · ${a.number}` : org,
+      label: `${note} : ${org}${a.number ? ` · ${a.number}` : ""}`,
       description: `${note} ${d.declaredSuffix}`,
       verified: false,
     });

@@ -44,6 +44,7 @@ describe("identité institutionnelle validée", () => {
     it(`${lang} : affiliations déclaratives et contrôle jamais généralisé au diplôme`, () => {
       const badges = buildTrustBadges({ lang, verified: true, accreditations: [{ org: "ASCA", number: "123" }], certifications: [{ name: "Diplôme", verification_status: "declared" }] });
       expect(badges.find(b => b.kind === "accreditation")?.description).toContain(institutionalCopy(lang).affiliation);
+      expect(badges.find(b => b.kind === "accreditation")?.label).toBe(`${institutionalCopy(lang).affiliation} : ASCA · 123`);
       expect(badges.find(b => b.kind === "accreditation")?.verified).toBe(false);
       expect(badges.find(b => b.kind === "certification")?.verified).toBe(false);
       expect(badges.find(b => b.kind === "verified")?.description).toContain(institutionalCopy(lang).limit);
