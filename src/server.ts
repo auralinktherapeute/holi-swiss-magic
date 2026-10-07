@@ -2,6 +2,8 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { legacyRedirectTarget } from "./lib/legacy-redirects";
+import { sanitizeNotFoundHtml } from "./lib/not-found-seo";
 import {
   UNAVAILABLE_MARKER_HEADER,
   UNAVAILABLE_RETRY_AFTER_SECONDS,
@@ -72,6 +74,21 @@ function applyUnavailableMarker(response: Response): Response {
   });
 }
 
+// Vraie page introuvable (404 HTML) : les métadonnées de la page demandée
+// peuvent avoir été émises avant que le contenu soit déclaré absent (ex. une
+// spécialité inexistante gardait titre, canonique et fil d'Ariane). On impose
+// ici une réponse cohérente : noindex,follow, aucune canonique ni hreflang,
+// aucune donnée structurée, titre neutre. Le statut 404 est conservé.
+async function applyNotFoundSeo(response: Response): Promise<Response> {
+  if (response.status !== 404) return response;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
+  const html = sanitizeNotFoundHtml(await response.text());
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.set("X-Robots-Tag", "noindex, follow");
+  return new Response(html, { status: 404, statusText: "Not Found", headers });
+}
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -109,10 +126,22 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      // Anciennes adresses internes publiées dans des articles → 301 canonique.
+      if (request.method === "GET" || request.method === "HEAD") {
+        const url = new URL(request.url);
+        const target = legacyRedirectTarget(url.pathname);
+        if (target) {
+          return withSecurityHeaders(
+            new Response(null, { status: 301, headers: { Location: target + url.search } }),
+          );
+        }
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(
-        applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+        await applyNotFoundSeo(
+          applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+        ),
       );
     } catch (error) {
       console.error(error);

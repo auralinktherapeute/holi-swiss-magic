@@ -64,6 +64,7 @@
 
 import { accessToken, inspect, toStatus } from "./gsc.ts";
 import { preflightAll } from "./preflight.ts";
+import { readSitemapUrls } from "./sitemap-read.ts";
 import {
   buildStateSection,
   fmtCount,
@@ -206,22 +207,17 @@ Deno.serve(async (req) => {
   // ── 2. Sitemap : le périmètre fait autorité ───────────────────────────────
   let sitemapUrls: Set<string> | null = null;
   try {
-    const resp = await fetch(`${SITE}/sitemap.xml`, {
-      headers: { "User-Agent": UA },
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!resp.ok) {
-      errors.push(`Sitemap HTTP ${resp.status}`);
-    } else {
-      const xml = await resp.text();
-      const locs = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)]
-        .map((m) => m[1].trim())
-        .filter((u) => u.startsWith(SITE));
-      if (locs.length < SITEMAP_FLOOR) {
+    // Sitemap index (/sitemap.xml → 7 parties) : on suit chaque partie.
+    const read = await readSitemapUrls(SITE, (url) =>
+      fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) }),
+    );
+    errors.push(...read.errors);
+    if (read.urls) {
+      if (read.urls.size < SITEMAP_FLOOR) {
         // Un sitemap amputé archiverait le site entier : on refuse de s'en servir.
-        errors.push(`Sitemap suspect (${locs.length} URLs < ${SITEMAP_FLOOR}) — réconciliation ignorée`);
+        errors.push(`Sitemap suspect (${read.urls.size} URLs < ${SITEMAP_FLOOR}) — réconciliation ignorée`);
       } else {
-        sitemapUrls = new Set(locs);
+        sitemapUrls = read.urls;
       }
     }
   } catch (e) {

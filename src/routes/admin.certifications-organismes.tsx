@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import OrganizationLogoUploader from "@/components/admin/OrganizationLogoUploader";
+import { supabase } from "@/integrations/supabase/client";
+import OrganizationLogoUploader, { pathFromSignedUrl } from "@/components/admin/OrganizationLogoUploader";
 import {
   Dialog,
   DialogContent,
@@ -108,6 +109,8 @@ type OrgForm = {
   code: string;
   display_name: string;
   logo_url: string;
+  /** Logo enregistré à l'ouverture du formulaire (pour nettoyer l'ancien fichier après sauvegarde). */
+  original_logo_url?: string;
   badge_color: string;
   certification_label: string;
   website_url: string;
@@ -152,7 +155,15 @@ function OrganizationsScreen() {
         },
       }),
 
-    onSuccess: () => {
+    onSuccess: async (_res, f) => {
+      // Sauvegarde réussie : l'ancien fichier n'est plus référencé, on le retire.
+      const oldPath = f.original_logo_url && f.original_logo_url !== f.logo_url
+        ? pathFromSignedUrl(f.original_logo_url)
+        : null;
+      if (oldPath) {
+        const { error } = await supabase.storage.from("organization-logos").remove([oldPath]);
+        if (error) console.warn("[logos] ancien fichier non supprimé", error.message);
+      }
       toast.success("Organisme enregistré");
       setForm(null);
       qc.invalidateQueries({ queryKey: ["admin-cert-orgs"] });
@@ -244,6 +255,7 @@ function OrganizationsScreen() {
                         code: o.code,
                         display_name: o.display_name,
                         logo_url: o.logo_url ?? "",
+                        original_logo_url: o.logo_url ?? "",
                         badge_color: o.badge_color ?? "#b86ef9",
                         certification_label: (o as any).certification_label ?? "",
                         website_url: (o as any).website_url ?? "",

@@ -121,7 +121,7 @@ export function NearbyTherapistsSwiss({ therapists: list }: { therapists: Readon
                       </button>
                       <Link
                         to="/$lang/therapeute/$slug"
-                        params={{ lang: th.profileLang, slug: th.slug }}
+                        params={{ lang, slug: th.slug }}
                         className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[#1a1035] text-[#b86ef9] transition group-hover:border-[#b86ef9] group-hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]"
                         aria-label={`${t("home.nearby.viewProfile", "Voir le profil")} — ${fullName}`}
                       >
@@ -145,7 +145,7 @@ export function NearbyTherapistsSwiss({ therapists: list }: { therapists: Readon
                     <li key={th.id}>
                       <Link
                         to="/$lang/therapeute/$slug"
-                        params={{ lang: th.profileLang, slug: th.slug }}
+                        params={{ lang, slug: th.slug }}
                         className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[rgba(184,110,249,0.22)] bg-[rgba(255,255,255,0.06)] px-3 py-1 text-xs text-white/85 transition hover:border-[#b86ef9]/70 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b86ef9]"
                       >
                         <span className="font-medium">

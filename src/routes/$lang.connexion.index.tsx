@@ -25,8 +25,12 @@ import {
 } from "@/lib/auth-utils";
 
 export const Route = createFileRoute("/$lang/connexion/")({
-  head: () => ({
+  // Page d'accès : noindex,follow + canonique vers elle-même (robots.txt la
+  // laisse explorer pour que ce noindex soit lu).
+  head: ({ params }) => ({
+    links: [{ rel: "canonical", href: `https://holiswiss.ch/${params.lang}/connexion` }],
     meta: [
+      { name: "robots", content: "noindex,follow" },
       { title: "Connexion thérapeute — Holiswiss" },
       { name: "description", content: "Connectez-vous à votre espace thérapeute Holiswiss." },
       { property: "og:title", content: "Connexion thérapeute — Holiswiss" },

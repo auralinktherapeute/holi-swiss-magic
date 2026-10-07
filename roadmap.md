@@ -21,3 +21,11 @@
 - [x] Tests, typecheck, build, seo:check, sitemap avant/après, SSR 4 langues
 - [x] Carte : clé CARTO sur l'URL des tuiles (TherapistMapInner)
 - [x] Agent Automation phases 0+1
+
+# Étape 1/7 — corrections critiques (aperçu, 07/10/2026)
+
+- [x] A1–A5 régressions surveillance (profil, indexation, guide, langue, logos)
+- [x] B anciennes adresses → 301 + liens d'articles réécrits
+- [x] C vraies 404 noindex,follow sans canonique ni données structurées
+- [x] D pages d'accès noindex,follow + robots.txt
+- [ ] Outil d'indexation : nouvelle version à déployer (attend l'accord de Gérald)

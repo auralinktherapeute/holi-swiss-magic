@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/$lang/mot-de-passe-oublie/")({
+  head: ({ params }) => ({
+    links: [{ rel: "canonical", href: `https://holiswiss.ch/${params.lang}/mot-de-passe-oublie` }],
+    meta: [
+      { title: "Mot de passe oublié — Holiswiss" },
+      { name: "robots", content: "noindex,follow" },
+    ],
+  }),
   component: ForgotPasswordPage,
 });
 
