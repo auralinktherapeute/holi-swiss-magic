@@ -29,3 +29,8 @@
 - [x] C vraies 404 noindex,follow sans canonique ni données structurées
 - [x] D pages d'accès noindex,follow + robots.txt
 - [ ] Outil d'indexation : nouvelle version à déployer (attend l'accord de Gérald)
+
+# Étape 2/7 — multilingue (aperçu, 07/10/2026)
+
+- [x] Audit matrice, Fil localisé, balises de partage, Contact EN, tests
+- [ ] Décision : profils / Voix d'experts / événements multilingues autonomes (attend Gérald)
