@@ -25,7 +25,7 @@ function makeDb(opts: { unique?: boolean; skipPrior?: boolean; failInsert?: any 
     const run = async () => {
       await tick();
       if (op === "insert") {
-        const rows = (Array.isArray(payload) ? payload : [payload]).map((r: Row) => ({
+        const rows: Row[] = (Array.isArray(payload) ? payload : [payload]).map((r: Row) => ({
           id: `${table}-${++seq}`, created_at: new Date(1e12 + seq).toISOString(), ...r }));
         if (table === "therapist_invoices" && opts.unique) {
           for (const r of rows) {
