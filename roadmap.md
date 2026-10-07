@@ -34,3 +34,10 @@
 
 - [x] Audit matrice, Fil localisé, balises de partage, Contact EN, tests
 - [ ] Décision : profils / Voix d'experts / événements multilingues autonomes (attend Gérald)
+
+# Étape 4B — identité institutionnelle (aperçu uniquement)
+
+- [ ] Créer À propos FR/DE/IT/EN et son référencement, liens et sitemap
+- [ ] Corriger identité légale, avertissements et Organization
+- [ ] Rectifier les affirmations sensibles et la graphie publique sans changer les données des praticiens
+- [ ] Tester les pages publiques et produire le rapport, sans publication ni écriture
