@@ -257,3 +257,53 @@ export const mergeClients = createServerFn({ method: "POST" })
     await audit(sb, t.id, drop.id, context.userId, "merged", { role: "archived", into: keep.id });
     return { ok: true, moved };
   });
+
+// ── Corbeille (60 jours) ───────────────────────────────────────────────────
+const TRASH_DAYS = 60;
+
+export const trashClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid(), confirm: z.literal("Supprimer") }).parse(i))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const t = await therapistOf(sb, context.userId);
+    await ownContact(sb, t.id, data.id);
+    const { error } = await sb.from("crm_client_contacts")
+      .update({ trashed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", data.id).eq("therapist_id", t.id);
+    if (error) throw new Error(error.message);
+    await audit(sb, t.id, data.id, context.userId, "archived", { trashed: true });
+    return { ok: true };
+  });
+
+export const restoreClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const t = await therapistOf(sb, context.userId);
+    const { error } = await sb.from("crm_client_contacts")
+      .update({ trashed_at: null, updated_at: new Date().toISOString() })
+      .eq("id", data.id).eq("therapist_id", t.id);
+    if (error) throw new Error(error.message);
+    await audit(sb, t.id, data.id, context.userId, "unarchived", { restored_from_trash: true });
+    return { ok: true };
+  });
+
+/** Liste la corbeille et supprime définitivement les fiches de plus de 60 jours. */
+export const listTrash = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase as any;
+    const t = await therapistOf(sb, context.userId);
+    const limit = new Date(Date.now() - TRASH_DAYS * 86400000).toISOString();
+    await sb.from("crm_client_contacts").delete().eq("therapist_id", t.id).lt("trashed_at", limit);
+    const { data, error } = await sb.from("crm_client_contacts")
+      .select("id, first_name, last_name, email, trashed_at")
+      .eq("therapist_id", t.id).not("trashed_at", "is", null).order("trashed_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r: any) => ({
+      ...r,
+      purge_at: new Date(new Date(r.trashed_at).getTime() + TRASH_DAYS * 86400000).toISOString(),
+    })) as { id: string; first_name: string; last_name: string; email: string | null; trashed_at: string; purge_at: string }[];
+  });

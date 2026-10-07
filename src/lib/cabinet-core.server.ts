@@ -279,6 +279,7 @@ export async function buildClientList(
     .eq("therapist_id", therapistId)
     .order("last_name", { ascending: true })
     .limit(500);
+    .is("trashed_at", null)
   if (filters.status) q = q.eq("relation_status", filters.status);
   if (filters.search?.trim()) {
     const s = `%${filters.search.trim()}%`;
