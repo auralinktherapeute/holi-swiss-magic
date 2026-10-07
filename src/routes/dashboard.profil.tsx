@@ -513,14 +513,7 @@ function ProfilePage() {
         setTrainerSubjects((data as any).trainer_subjects ?? "");
         setTrainerInstitution((data as any).trainer_institution ?? "");
         setTrainerSince((data as any).trainer_since ? String((data as any).trainer_since) : "");
-        const { data: privateIds, error: privateIdsError } = await supabase
-          .from("therapist_private_identifiers" as any)
-          .select("ide")
-          .eq("therapist_id", data.id)
-          .eq("user_id", user.id)
-          .maybeSingle() as any;
-        setIdeLoadFailed(Boolean(privateIdsError));
-        if (!privateIdsError) setIde(privateIds?.ide ?? "");
+        if (!ideFailed) setIde(ideValue);
 
         const { data: docs } = await supabase
           .from("therapist_documents" as any)
