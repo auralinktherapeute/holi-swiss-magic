@@ -150,8 +150,10 @@ export default {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(
-        await applySocialMeta(await applyNotFoundSeo(
-          applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+        await applySocialMeta(
+          await applyNotFoundSeo(
+            applyUnavailableMarker(await normalizeCatastrophicSsrResponse(response)),
+          ),
         ),
       );
     } catch (error) {
