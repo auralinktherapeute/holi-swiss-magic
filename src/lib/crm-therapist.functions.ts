@@ -503,3 +503,25 @@ export const getMySegmentation = createServerFn({ method: "GET" })
 
 // ── Views (kept for backward compat) ─────────────────────────────────────────
 export { RemindersView, NotesView, SegmentationView } from "@/components/crm/TherapistCrmViews";
+
+// Changement de statut seul (n'écrase aucun autre champ). Ajout isolé.
+export const updateContactStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      relation_status: z.enum(["prospect", "new", "active", "followup", "inactive"]),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const therapistId = await getTherapistId(context.supabase, context.userId);
+    const { data: row, error } = await (context.supabase as any)
+      .from("crm_client_contacts")
+      .update({ relation_status: data.relation_status, updated_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("therapist_id", therapistId)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Client introuvable.");
+    return { ok: true };
+  });
