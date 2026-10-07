@@ -25,6 +25,7 @@ import ClientDocuments from "@/components/dashboard/ClientDocuments";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 import { EditClientDialog } from "@/components/dashboard/EditClientDialog";
+import { ClientActionsBar, NewClientButton, ClientQuestionnaires } from "@/components/dashboard/ClientFicheExtras";
 import { ClientCurrencyBlock } from "@/components/dashboard/ClientCurrencyBlock";
 import { formatAmount, resolveEffectiveCurrency } from "@/lib/currency-consent";
 
@@ -101,6 +102,7 @@ function ClientsPage() {
             Vos clients, leur historique de rendez-vous, leurs factures et leur consentement.
           </p>
         </div>
+        <NewClientButton onCreated={(cid) => setOpenId(cid)} />
       </header>
 
       <Card>
@@ -283,9 +285,19 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
               <TabsTrigger value="taches">Tâches</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="questionnaires">Questionnaires</TabsTrigger>
             </TabsList>
 
             <TabsContent value="apercu" className="mt-4 space-y-4">
+              <ClientActionsBar
+                client={client}
+                counts={{
+                  invoices: dd.invoices?.length ?? 0,
+                  appointments: dd.appointments?.length ?? 0,
+                  documents: dd.documents?.length ?? 0,
+                }}
+                onDeleted={onClose}
+              />
               <section className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-border p-3 sm:col-span-2">
                   <div className="flex items-start justify-between gap-3">
@@ -490,6 +502,10 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
             <TabsContent value="documents" className="mt-4">
               <ClientDocuments clientId={id} />
+            </TabsContent>
+
+            <TabsContent value="questionnaires" className="mt-4">
+              <ClientQuestionnaires client={client} />
             </TabsContent>
           </Tabs>
         )}
