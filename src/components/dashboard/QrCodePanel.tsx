@@ -18,7 +18,7 @@ type Variant = {
 };
 
 const VARIANTS: Variant[] = [
-  { key: "profil", label: "Mon profil HoliSwiss", caption: "Scannez pour accéder à mon profil", pathPrefix: "/therapeute/" },
+  { key: "profil", label: "Mon profil Holiswiss", caption: "Scannez pour accéder à mon profil", pathPrefix: "/therapeute/" },
   { key: "intake", label: "Prendre rendez-vous", caption: "Scannez pour prendre rendez-vous", pathPrefix: "/intake/" },
 ];
 
@@ -77,7 +77,7 @@ async function renderFramedCanvas(url: string, caption: string): Promise<HTMLCan
   ctx.font = "600 28px Inter, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("HoliSwiss", W / 2, 40);
+  ctx.fillText("Holiswiss", W / 2, 40);
   // qr
   const qr = await renderQrCanvas(url, 400, true);
   ctx.drawImage(qr, (W - 400) / 2, 110);

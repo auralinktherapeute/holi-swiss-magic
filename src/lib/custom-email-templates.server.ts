@@ -31,7 +31,7 @@ export type TemplateOverrides = Partial<Record<TemplateId, Partial<TemplateConte
  */
 export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateContent> = {
   invitation: {
-    subject: "Votre place sur HoliSwiss est prête",
+    subject: "Votre place sur Holiswiss est prête",
     body: `Bonjour {{PRENOM}},
 
 Vous vous êtes inscrit(e) sur notre liste d'attente en tant que thérapeute **{{SPECIALITE}}**.
@@ -48,10 +48,10 @@ Cette invitation est personnelle et valable 30 jours.`,
     cta_label: "Créer mon profil gratuitement",
   },
   welcome: {
-    subject: "Bienvenue dans la communauté HoliSwiss",
+    subject: "Bienvenue dans la communauté Holiswiss",
     body: `Bonjour {{PRENOM}},
 
-Nous sommes ravis de vous compter parmi les thérapeutes HoliSwiss.
+Nous sommes ravis de vous compter parmi les thérapeutes Holiswiss.
 
 Voici les prochaines étapes pour créer votre profil :
 - Ajoutez votre photo professionnelle
@@ -61,7 +61,7 @@ Voici les prochaines étapes pour créer votre profil :
     cta_label: "Accéder à mon espace thérapeute",
   },
   profile_live: {
-    subject: "Votre profil HoliSwiss est maintenant visible",
+    subject: "Votre profil Holiswiss est maintenant visible",
     body: `Bonjour {{PRENOM}},
 
 Félicitations ! Votre profil est désormais en ligne et visible par tous les patients en Suisse.
@@ -76,7 +76,7 @@ Quelques conseils pour optimiser votre visibilité :
     subject: "Quelques minutes pour compléter votre profil",
     body: `Bonjour {{PRENOM}},
 
-Votre profil HoliSwiss est presque prêt — il ne manque que quelques éléments pour qu'il soit publié.
+Votre profil Holiswiss est presque prêt — il ne manque que quelques éléments pour qu'il soit publié.
 
 Ce qui reste à compléter :
 - Photo de profil
@@ -87,14 +87,14 @@ Cela prend moins de 5 minutes et vous permet d'être trouvé(e) par les patients
     cta_label: "Compléter mon profil",
   },
   official_launch: {
-    subject: "HoliSwiss est officiellement lancé",
+    subject: "Holiswiss est officiellement lancé",
     body: `Bonjour {{PRENOM}},
 
-Ça y est — **HoliSwiss est officiellement lancé en Suisse** !
+Ça y est — **Holiswiss est officiellement lancé en Suisse** !
 
 En tant que membre des premiers inscrits, vous bénéficiez à vie du badge exclusif **Thérapeute Fondateur** sur votre profil.
 
-Aidez-nous à faire connaître HoliSwiss en partageant votre profil à vos patients et confrères.`,
+Aidez-nous à faire connaître Holiswiss en partageant votre profil à vos patients et confrères.`,
     cta_label: "Voir mon profil en ligne",
   },
   la_pratique_en_lumiere: {
@@ -146,7 +146,7 @@ Belle continuation dans votre pratique.`,
     cta_label: "Modifier mon profil",
   },
   custom: {
-    subject: "Un message de HoliSwiss",
+    subject: "Un message de Holiswiss",
     body: `Bonjour {{PRENOM}},
 `,
     cta_label: "",
@@ -187,17 +187,17 @@ function injectVars(text: string, vars: WaitlistVars): string {
 
 function header(): string {
   return `<tr><td style="background:linear-gradient(135deg,#7C3AED 0%,#5B21B6 100%);padding:36px 24px 28px;text-align:center;">
-    <img src="${LOGO_URL}" alt="HoliSwiss" width="80" height="80" style="display:block;margin:0 auto 14px;width:80px;height:80px;">
-    <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">HoliSwiss</h1>
+    <img src="${LOGO_URL}" alt="Holiswiss" width="80" height="80" style="display:block;margin:0 auto 14px;width:80px;height:80px;">
+    <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Holiswiss</h1>
     <p style="margin:6px 0 0;color:#ddd6fe;font-size:13px;">La référence suisse des thérapies holistiques</p>
   </td></tr>`;
 }
 
 function footer(): string {
   return `<tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:22px;text-align:center;color:#6b7280;font-size:12px;line-height:1.7;">
-    <div style="margin-bottom:8px;color:#374151;">Avec bienveillance,<br><strong>L'équipe HoliSwiss</strong></div>
+    <div style="margin-bottom:8px;color:#374151;">Avec bienveillance,<br><strong>L'équipe Holiswiss</strong></div>
     <div><a href="mailto:contact@holiswiss.ch" style="color:#7C3AED;text-decoration:none;">contact@holiswiss.ch</a> · <a href="${SITE_URL}" style="color:#7C3AED;text-decoration:none;">holiswiss.ch</a></div>
-    <div style="margin-top:10px;color:#9ca3af;">© 2026 HoliSwiss · Suisse</div>
+    <div style="margin-top:10px;color:#9ca3af;">© 2026 Holiswiss · Suisse</div>
   </td></tr>`;
 }
 

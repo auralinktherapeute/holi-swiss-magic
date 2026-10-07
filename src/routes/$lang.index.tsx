@@ -1,3 +1,4 @@
+import { institutionalCopy } from "@/lib/institutional-content";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, ShieldCheck, Star, CalendarCheck, Check, Sparkles } from "lucide-react";
@@ -132,6 +133,7 @@ function HomePage() {
       <HeroVariants />
 
       {/* Promesse plateforme : agenda + CRM + visibilité + RDV + avis */}
+      <div className="mx-auto max-w-5xl px-4 py-6 text-sm text-muted-foreground"><p>{institutionalCopy(lang).method}</p><p className="mt-2">{institutionalCopy(lang).limit}</p></div>
       <PlatformPromiseBand />
 
       {/* Thérapeute à la Une — sélection manuelle depuis l'admin */}

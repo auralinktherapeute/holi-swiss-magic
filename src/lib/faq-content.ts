@@ -14,7 +14,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   fr: [
     {
       q: "Qu'est-ce que Holiswiss ?",
-      a: "Holiswiss est un annuaire suisse de thérapeutes spécialisés en approches complémentaires. La plateforme permet aux particuliers de trouver un praticien qualifié en naturopathie, hypnose, sophrologie, massage bien-être, reiki, acupuncture, réflexologie et bien d'autres disciplines, dans toute la Suisse.",
+      a: "Holiswiss est un annuaire suisse de thérapeutes spécialisés en approches complémentaires. La plateforme permet aux particuliers de trouver un praticien en naturopathie, hypnose, sophrologie, massage bien-être, reiki, acupuncture, réflexologie et bien d'autres disciplines, dans toute la Suisse.",
     },
     {
       q: "Comment trouver un thérapeute près de chez moi en Suisse ?",
@@ -26,7 +26,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Comment devenir thérapeute référencé sur Holiswiss ?",
-      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse, chaque profil étant validé manuellement par Holiswiss avant publication.",
+      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse, avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute. Ce contrôle ne certifie ni diplômes, méthodes, résultats ni affiliations déclarées.",
     },
     {
       q: "Quelles approches complémentaires sont disponibles sur Holiswiss ?",
@@ -49,7 +49,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   de: [
     {
       q: "Was ist Holiswiss?",
-      a: "Holiswiss ist ein Schweizer Verzeichnis von Therapeut:innen für komplementäre Ansätze. Die Plattform hilft Privatpersonen, qualifizierte Fachpersonen in Naturheilkunde, Hypnose, Sophrologie, Wellnessmassage, Reiki, Akupunktur, Reflexzonenmassage und vielen weiteren Disziplinen in der ganzen Schweiz zu finden.",
+      a: "Holiswiss ist ein Schweizer Verzeichnis von Therapeut:innen für komplementäre Ansätze. Die Plattform hilft Privatpersonen, Fachpersonen in Naturheilkunde, Hypnose, Sophrologie, Wellnessmassage, Reiki, Akupunktur, Reflexzonenmassage und vielen weiteren Disziplinen in der ganzen Schweiz zu finden.",
     },
     {
       q: "Wie finde ich eine Therapeutin oder einen Therapeuten in meiner Nähe in der Schweiz?",
@@ -61,7 +61,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Wie werde ich als Therapeut:in auf Holiswiss gelistet?",
-      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; jedes Profil wird vor der Veröffentlichung von Holiswiss manuell geprüft.",
+      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; Gérald Henry prüft vor Veröffentlichung den Namen und die Kontaktdaten und führt anschliessend ausnahmslos ein Telefongespräch mit der Fachperson. Diese Prüfung zertifiziert weder Diplome, Methoden, Ergebnisse noch angegebene Mitgliedschaften.",
     },
     {
       q: "Welche komplementären Ansätze sind auf Holiswiss verfügbar?",
@@ -84,7 +84,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   it: [
     {
       q: "Cos'è Holiswiss?",
-      a: "Holiswiss è una directory svizzera di terapeuti specializzati in approcci complementari. La piattaforma permette ai privati di trovare un professionista qualificato in naturopatia, ipnosi, sofrologia, massaggio benessere, reiki, agopuntura, riflessologia e molte altre discipline in tutta la Svizzera.",
+      a: "Holiswiss è una directory svizzera di terapeuti specializzati in approcci complementari. La piattaforma permette ai privati di trovare un professionista in naturopatia, ipnosi, sofrologia, massaggio benessere, reiki, agopuntura, riflessologia e molte altre discipline in tutta la Svizzera.",
     },
     {
       q: "Come trovare un terapeuta vicino a me in Svizzera?",
@@ -96,7 +96,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Come diventare terapeuta su Holiswiss?",
-      a: "I terapeuti possono iscriversi alla lista d'attesa tramite la pagina «Espace thérapeutes» su holiswiss.ch. Le iscrizioni saranno aperte progressivamente ai professionisti certificati che esercitano in Svizzera.",
+      a: "I terapeuti possono iscriversi alla lista d'attesa tramite la pagina «Espace thérapeutes» su holiswiss.ch. Le iscrizioni saranno aperte progressivamente ai professionisti che esercitano in Svizzera. Prima della pubblicazione, Gérald Henry controlla il nome e i recapiti, poi parla sistematicamente per telefono con il terapeuta. Questo controllo non certifica diplomi, metodi, risultati o affiliazioni dichiarate.",
     },
     {
       q: "Quali approcci complementari sono disponibili su Holiswiss?",
@@ -119,7 +119,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
   en: [
     {
       q: "What is Holiswiss?",
-      a: "Holiswiss is a Swiss directory of therapists specialising in complementary approaches. The platform helps individuals find qualified practitioners in naturopathy, hypnosis, sophrology, wellness massage, reiki, acupuncture, reflexology and many other disciplines across Switzerland.",
+      a: "Holiswiss is a Swiss directory of therapists specialising in complementary approaches. The platform helps individuals find practitioners in naturopathy, hypnosis, sophrology, wellness massage, reiki, acupuncture, reflexology and many other disciplines across Switzerland.",
     },
     {
       q: "How do I find a therapist near me in Switzerland?",
@@ -257,7 +257,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "Comment choisir votre praticien",
-        p: "Comparez les profils validés par Holiswiss : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis authentiques d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
+        p: "Comparez les profils : spécialités, approche, langues parlées, tarifs et modalités (en cabinet ou à distance). Les avis clients d'autres patients et la carte interactive vous aident à trouver un thérapeute proche de chez vous, à Genève, Lausanne, Zurich, Berne, Bâle, Fribourg, Neuchâtel, Sion ou Lugano.",
       },
       {
         h3: "Remboursement et certifications",
@@ -271,7 +271,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "So wählen Sie Ihre Fachperson",
-        p: "Vergleichen Sie geprüfte Profile: Fachgebiete, Ansatz, gesprochene Sprachen, Preise und Formate (in der Praxis oder online). Echte Bewertungen anderer Patientinnen und Patienten sowie die interaktive Karte helfen Ihnen, eine Fachperson in Ihrer Nähe zu finden – in Zürich, Bern, Basel, Genf, Lausanne, Luzern, St. Gallen oder Lugano.",
+        p: "Vergleichen Sie Profile: Fachgebiete, Ansatz, gesprochene Sprachen, Preise und Formate (in der Praxis oder online). Bewertungen anderer Patientinnen und Patienten sowie die interaktive Karte helfen Ihnen, eine Fachperson in Ihrer Nähe zu finden – in Zürich, Bern, Basel, Genf, Lausanne, Luzern, St. Gallen oder Lugano.",
       },
       {
         h3: "Rückerstattung und Zertifizierungen",
@@ -285,7 +285,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "Come scegliere il professionista",
-        p: "Confronta i profili convalidati da Holiswiss: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni autentiche di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
+        p: "Confronta i profili: specialità, approccio, lingue parlate, tariffe e modalità (in studio o a distanza). Le recensioni dei clienti di altri pazienti e la mappa interattiva ti aiutano a trovare un terapeuta vicino a te, a Lugano, Bellinzona, Ginevra, Losanna, Zurigo o Berna.",
       },
       {
         h3: "Rimborso e certificazioni",
@@ -299,7 +299,7 @@ export const DIRECTORY_INTRO: Record<FaqLang, DirectoryIntro> = {
     blocks: [
       {
         h3: "How to choose your practitioner",
-        p: "Compare profiles validated by Holiswiss: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
+        p: "Compare profiles: specialties, approach, languages spoken, prices and formats (in person or online). Authentic reviews from other patients and the interactive map help you find a therapist near you — in Geneva, Lausanne, Zurich, Bern, Basel, Lucerne, Lugano or beyond.",
       },
       {
         h3: "Reimbursement and certifications",
@@ -378,7 +378,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Les thérapeutes de Holiswiss sont-ils vérifiés ?",
-      a: "Chaque inscription est validée manuellement par Holiswiss avant publication : Holiswiss contrôle le profil, mais ne certifie pas le praticien. Le profil présente la spécialité, l'approche, les langues, les tarifs et, lorsqu'un justificatif a réellement été examiné, les certifications déclarées (ASCA, RME, EMR), ainsi que des avis authentiques de patients.",
+      a: "Chaque inscription est validée manuellement par Holiswiss avant publication : Holiswiss contrôle le profil, mais ne certifie pas le praticien. Le profil présente la spécialité, l'approche, les langues, les tarifs et, lorsqu'un justificatif a réellement été examiné, les certifications déclarées (ASCA, RME, EMR), ainsi que des avis clients de patients.",
     },
     {
       q: "Dans quelles langues puis-je chercher un thérapeute ?",
@@ -430,7 +430,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "I terapeuti di Holiswiss sono verificati?",
-      a: "Ogni iscrizione è convalidata manualmente da Holiswiss prima della pubblicazione: Holiswiss controlla il profilo, ma non certifica il professionista. Il profilo presenta specialità, approccio, lingue, tariffe e, quando un documento giustificativo è stato effettivamente esaminato, le certificazioni dichiarate (ASCA, RME, EMR), oltre a recensioni autentiche dei pazienti.",
+      a: "Ogni iscrizione è convalidata manualmente da Holiswiss prima della pubblicazione: Holiswiss controlla il profilo, ma non certifica il professionista. Il profilo presenta specialità, approccio, lingue, tariffe e, quando un documento giustificativo è stato effettivamente esaminato, le certificazioni dichiarate (ASCA, RME, EMR), oltre a recensioni dei clienti dei pazienti.",
     },
     {
       q: "In quali lingue posso cercare?",

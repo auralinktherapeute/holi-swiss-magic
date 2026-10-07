@@ -1,7 +1,7 @@
 const LOGO_URL =
   "https://holiswiss.ch/__l5e/assets-v1/9ed4a73c-cb78-460c-aa00-d6966417b47d/lotus-transparent.png";
 const SITE_URL = "https://holiswiss.ch";
-const FROM = "HoliSwiss <contact@holiswiss.ch>";
+const FROM = "Holiswiss <contact@holiswiss.ch>";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
 function escapeHtml(s: string): string {
@@ -22,15 +22,15 @@ export function buildInvitationEmail(args: {
   const specialite = args.specialty ? escapeHtml(args.specialty) : "holistique";
   const link = args.invitationLink;
 
-  const subject = "✨ Votre place sur HoliSwiss est prête";
+  const subject = "✨ Votre place sur Holiswiss est prête";
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head>
 <body style="margin:0;padding:0;background:#080514;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#080514;padding:24px 12px;">
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#0f0a1e;border-radius:16px;overflow:hidden;border:1px solid rgba(184,110,249,0.25);">
         <tr><td style="background:linear-gradient(135deg,#1a0533,#0f0a1e);padding:36px 24px 28px;text-align:center;">
-          <img src="${LOGO_URL}" alt="HoliSwiss" width="96" style="display:block;margin:0 auto 14px;max-width:96px;height:auto;">
-          <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.5px;">HoliSwiss</h1>
+          <img src="${LOGO_URL}" alt="Holiswiss" width="96" style="display:block;margin:0 auto 14px;max-width:96px;height:auto;">
+          <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.5px;">Holiswiss</h1>
           <p style="margin:6px 0 0;color:rgba(184,110,249,0.85);font-size:13px;">La référence suisse des thérapies holistiques</p>
         </td></tr>
         <tr><td style="padding:32px 28px;color:rgba(255,255,255,0.92);font-size:15px;line-height:1.7;">
@@ -60,9 +60,9 @@ export function buildInvitationEmail(args: {
           <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.7);">Des questions ? Répondez directement à cet email — nous sommes là pour vous accompagner. 🤝</p>
         </td></tr>
         <tr><td style="background:#080514;padding:22px;text-align:center;color:rgba(255,255,255,0.55);font-size:12px;line-height:1.7;">
-          <div style="margin-bottom:8px;color:rgba(255,255,255,0.75);">Avec bienveillance,<br><strong>L'équipe HoliSwiss</strong></div>
+          <div style="margin-bottom:8px;color:rgba(255,255,255,0.75);">Avec bienveillance,<br><strong>L'équipe Holiswiss</strong></div>
           <div><a href="mailto:contact@holiswiss.ch" style="color:rgba(184,110,249,0.85);text-decoration:none;">contact@holiswiss.ch</a> · <a href="${SITE_URL}" style="color:rgba(184,110,249,0.85);text-decoration:none;">holiswiss.ch</a></div>
-          <div style="margin-top:10px;color:rgba(255,255,255,0.4);">© 2026 HoliSwiss · Suisse</div>
+          <div style="margin-top:10px;color:rgba(255,255,255,0.4);">© 2026 Holiswiss · Suisse</div>
           <div style="margin-top:6px;color:rgba(255,255,255,0.35);font-size:11px;">Vous recevez cet email car vous êtes inscrit(e) sur notre liste d'attente.</div>
         </td></tr>
       </table>
@@ -115,23 +115,23 @@ export async function sendWelcomeEmail(args: {
   const resendKey = process.env.RESEND_API_KEY;
   if (!lovableKey || !resendKey) return;
   const prenom = args.firstName ? escapeHtml(args.firstName) : "";
-  const subject = "🎉 Bienvenue sur HoliSwiss";
+  const subject = "🎉 Bienvenue sur Holiswiss";
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#080514;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#080514;padding:24px 12px;"><tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#0f0a1e;border-radius:16px;overflow:hidden;border:1px solid rgba(184,110,249,0.25);">
       <tr><td style="background:linear-gradient(135deg,#1a0533,#0f0a1e);padding:32px;text-align:center;">
-        <img src="${LOGO_URL}" alt="HoliSwiss" width="80" style="display:block;margin:0 auto 12px;max-width:80px;height:auto;">
+        <img src="${LOGO_URL}" alt="Holiswiss" width="80" style="display:block;margin:0 auto 12px;max-width:80px;height:auto;">
         <h1 style="margin:0;color:#ffffff;font-size:22px;">Votre compte est créé !</h1>
       </td></tr>
       <tr><td style="padding:28px;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.7;">
         <p>Bonjour ${prenom},</p>
-        <p>Votre compte thérapeute HoliSwiss est désormais actif. Complétez votre profil pour devenir visible auprès des patients suisses.</p>
+        <p>Votre compte thérapeute Holiswiss est désormais actif. Complétez votre profil pour devenir visible auprès des patients suisses.</p>
         <p style="text-align:center;margin:28px 0;">
           <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:14px 28px;border-radius:999px;background:linear-gradient(135deg,#b86ef9,#5cc8fa);color:#fff;font-weight:700;text-decoration:none;">Accéder à mon tableau de bord →</a>
         </p>
       </td></tr>
-      <tr><td style="background:#080514;padding:18px;text-align:center;color:rgba(255,255,255,0.45);font-size:12px;">© 2026 HoliSwiss · <a href="${SITE_URL}" style="color:rgba(184,110,249,0.7);text-decoration:none;">holiswiss.ch</a></td></tr>
+      <tr><td style="background:#080514;padding:18px;text-align:center;color:rgba(255,255,255,0.45);font-size:12px;">© 2026 Holiswiss · <a href="${SITE_URL}" style="color:rgba(184,110,249,0.7);text-decoration:none;">holiswiss.ch</a></td></tr>
     </table>
   </td></tr></table>
 </body></html>`;

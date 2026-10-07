@@ -56,7 +56,7 @@ export const SAME_AS: readonly string[] = [];
 
 /**
  * Adresse de l'éditeur, telle qu'elle est **publiée sur /impressum** :
- * « Impasse Nussbaum, 68300 Saint-Louis, Alsace, France ».
+ * « 9 Impasse Nussbaum, 68300 Saint-Louis, France ».
  *
  * Holiswiss est exploité depuis la France (entrepreneur individuel) et dessert
  * la Suisse : `address` décrit l'éditeur, `areaServed` décrit le marché. Avant,
@@ -72,34 +72,6 @@ export const LEGAL_ADDRESS = {
   addressLocality: "Saint-Louis",
   addressCountry: "FR",
 } as const;
-
-/**
- * SIREN 103 987 061, publié sur /impressum. Exprimé aussi en ISO 6523
- * (`iso6523Code`), le format d'identifiant que la documentation Organization de
- * Google cite explicitement : l'ICD `0002` désigne le répertoire SIRENE français.
- * C'est le crochet le plus dur dont dispose un moteur pour réconcilier
- * « Holiswiss » avec un registre officiel.
- */
-const SIREN = "103987061";
-
-/**
- * `description` d'Organization/WebSite par langue.
- *
- * Avant le 25/09/2026, les deux nœuds n'exposaient qu'un texte français, servi
- * tel quel sur les pages /de, /it et /en (le JSON-LD racine était statique,
- * calculé une fois pour toutes les langues). `certification-wording.test.ts`
- * interdit déjà, dans ce fichier même, toute mention de certification associée
- * aux thérapeutes (DE/IT/EN inclus) : la formulation ci-dessous reprend donc
- * « geprüft » / « convalidat[o/i] » / « validated by », le même vocabulaire
- * que les meta description de `$lang.index.tsx` et
- * `$lang.therapeutes.index.tsx` — jamais le mot associé à une certification.
- */
-const ORGANIZATION_DESCRIPTIONS: Record<Lang, string> = {
-  fr: "Plateforme suisse de mise en relation avec des thérapeutes holistiques et praticiens en médecines douces, inscrits après validation manuelle par Holiswiss, avec une recherche couvrant les 26 cantons et 4 langues.",
-  de: "Schweizer Plattform, die mit ganzheitlichen Therapeut:innen und Praktizierenden für Naturheilkunde verbindet – alle Profile werden von Holiswiss manuell geprüft, mit einer Suche in allen 26 Kantonen und 4 Sprachen.",
-  it: "Piattaforma svizzera che mette in contatto con terapeuti olistici e professionisti delle medicine dolci, iscritti dopo una convalida manuale da parte di Holiswiss, con una ricerca che copre i 26 cantoni e 4 lingue.",
-  en: "Swiss platform connecting people with holistic therapists and natural-medicine practitioners, listed only after manual validation by Holiswiss, with search covering all 26 cantons and 4 languages.",
-};
 
 const WEBSITE_DESCRIPTIONS: Record<Lang, string> = {
   fr: "Annuaire suisse des thérapeutes holistiques et praticiens bien-être — 26 cantons, 4 langues (FR/DE/IT/EN).",

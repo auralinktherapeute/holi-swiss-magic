@@ -9,10 +9,10 @@ export type TemplateId =
 
 export const TEMPLATE_OPTIONS: { id: TemplateId; label: string; needsCustom?: boolean }[] = [
   { id: "invitation", label: "Invitation à créer votre profil" },
-  { id: "welcome", label: "Bienvenue sur HoliSwiss" },
+  { id: "welcome", label: "Bienvenue sur Holiswiss" },
   { id: "profile_live", label: "Votre profil est en ligne" },
   { id: "reminder_complete", label: "Rappel — Complétez votre profil" },
-  { id: "official_launch", label: "Lancement officiel HoliSwiss" },
+  { id: "official_launch", label: "Lancement officiel Holiswiss" },
   { id: "la_pratique_en_lumiere", label: "Newsletter — La pratique en lumière" },
   { id: "custom", label: "Message personnalisé", needsCustom: true },
 ];

@@ -42,6 +42,7 @@ import {
   profileSourceLang,
   resolveProfileLang,
 } from "@/lib/seo";
+import { institutionalCopy } from "@/lib/institutional-content";
 import { TrustBadges } from "@/components/holiswiss/TrustBadges";
 import { CertificationsShowcase } from "@/components/holiswiss/CertificationsShowcase";
 import { buildTrustBadges, isProPlan } from "@/lib/therapist-badges";
@@ -1164,6 +1165,11 @@ function ProfilePage() {
               </motion.section>
             )}
 
+            <section className="rounded-2xl border border-white/10 p-5 text-sm text-white/70">
+              <h2 className="mb-2 font-semibold text-white">{institutionalCopy(lang).methodLabel}</h2>
+              <p>{institutionalCopy(lang).method}</p>
+              <p className="mt-2">{institutionalCopy(lang).limit}</p>
+            </section>
             {/* Accréditations */}
             {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
               <motion.div initial={false}>

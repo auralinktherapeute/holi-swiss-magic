@@ -212,7 +212,7 @@ function Page() {
 
           <h2 className="text-2xl font-bold text-white mt-10 mb-4">Trouver un sophrologue qualifié en Suisse</h2>
           <p>
-            HoliSwiss référence des sophrologues dans toute la Suisse romande, alémanique et
+            Holiswiss référence des sophrologues dans toute la Suisse romande, alémanique et
             tessinoise ; chaque inscription est validée manuellement avant publication. Chaque profil
             indique les certifications, langues parlées, tarifs et avis modérés pour vous aider à
             choisir le praticien adapté à vos besoins.

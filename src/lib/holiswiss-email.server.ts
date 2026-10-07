@@ -3,7 +3,7 @@
 import { escapeHtml, emailShell } from "./email-shell.shared";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-export const FROM = "HoliSwiss <contact@holiswiss.ch>";
+export const FROM = "Holiswiss <contact@holiswiss.ch>";
 const shell = emailShell;
 
 async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; status: number; error?: string; id?: string | null }> {
@@ -131,7 +131,7 @@ export async function sendInvoiceEmail(args: {
     <p style="text-align:center;margin:24px 0;">
       <a href="${args.viewUrl}" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#7c3aed;color:#fff;font-weight:600;text-decoration:none;">Voir la facture en ligne</a>
     </p>
-    <p style="margin:16px 0 0;font-size:13px;color:#666;">Émise par ${escapeHtml(args.therapistName)}<br/>Via HoliSwiss</p>
+    <p style="margin:16px 0 0;font-size:13px;color:#666;">Émise par ${escapeHtml(args.therapistName)}<br/>Via Holiswiss</p>
   `;
   const payload: Record<string, unknown> = { to: args.to, subject, html: shell(inner) };
   if (args.attachmentHtmlBase64) {
@@ -178,12 +178,12 @@ export async function sendInvoicePortalEmail(args: {
   secureLink: string;
   message?: string | null;
 }) {
-  const subject = `Votre facture HoliSwiss est disponible — ${args.invoiceNumber}`;
+  const subject = `Votre facture Holiswiss est disponible — ${args.invoiceNumber}`;
   const due = args.dueDate
     ? new Date(args.dueDate).toLocaleDateString("fr-CH")
     : null;
   const inner = `
-    <h2 style="margin:0 0 12px;color:#1c1c1e;font-size:20px;">Votre facture HoliSwiss est disponible</h2>
+    <h2 style="margin:0 0 12px;color:#1c1c1e;font-size:20px;">Votre facture Holiswiss est disponible</h2>
     <p style="margin:0 0 14px;">Bonjour${args.patientName ? ` ${escapeHtml(args.patientName)}` : ""},</p>
     <p style="margin:0 0 14px;"><strong>${escapeHtml(args.therapistName)}</strong> a émis la facture <strong>${escapeHtml(args.invoiceNumber)}</strong> d'un montant de <strong>${args.amount.toFixed(2)} ${escapeHtml(args.currency)}</strong>${due ? `, à régler d'ici le <strong>${escapeHtml(due)}</strong>` : ""}.</p>
     ${args.message ? `<div style="background:#faf7f2;border-left:3px solid #7c3aed;padding:12px 14px;margin:14px 0;border-radius:4px;">${escapeHtml(args.message).replace(/\n/g, "<br/>")}</div>` : ""}

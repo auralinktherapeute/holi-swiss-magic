@@ -97,7 +97,7 @@ export function NewsletterSendPreview(props: Props) {
     newsletterName,
     subject,
     preheader,
-    senderName = "HoliSwiss",
+    senderName = "Holiswiss",
     senderAddress,
     replyTo = "contact@holiswiss.ch",
     segmentLabel,
