@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createSignedImageUrl } from "@/lib/storage-image";
 
 // Server functions pour activer les 3 nouveaux critères de l'agent Santé de Profil :
 // galerie photos cabinet, certifications, réponses aux avis. Chaque écriture
@@ -8,7 +9,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function getOwnedTherapist(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.from("therapists").select("id").eq("user_id", userId).maybeSingle();
+  const { data, error } = await supabaseAdmin
+    .from("therapists")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
   if (error) throw new Error("Impossible de vérifier le profil thérapeute.");
   if (!data) throw new Error("Complétez d'abord votre profil.");
   return { sb: supabaseAdmin as any, therapistId: data.id as string };
@@ -38,7 +43,9 @@ function isMissingSchema(error: any): boolean {
 }
 
 function pathFrom(url: string, bucket: string): string | null {
-  const m = url.match(new RegExp(`/storage/v1/object/(?:public|sign|authenticated)/${bucket}/([^?]+)`));
+  const m = url.match(
+    new RegExp(`/storage/v1/object/(?:public|sign|authenticated)/${bucket}/([^?]+)`),
+  );
   return m ? decodeURIComponent(m[1]) : null;
 }
 
@@ -63,8 +70,13 @@ export const listMyCabinetPhotos = createServerFn({ method: "GET" })
         let signedUrl = m.url as string;
         const p = pathFrom(m.url, "therapist-photos");
         if (p) {
-          const { data: s } = await sb.storage.from("therapist-photos").createSignedUrl(p, 3600);
-          if (s?.signedUrl) signedUrl = s.signedUrl;
+          const transformed = await createSignedImageUrl(
+            sb.storage.from("therapist-photos"),
+            p,
+            3600,
+            "thumbnail",
+          );
+          if (transformed) signedUrl = transformed;
         }
         return { id: m.id as string, signedUrl };
       }),
@@ -77,7 +89,9 @@ export const addCabinetPhoto = createServerFn({ method: "POST" })
   .inputValidator(z.object({ url: z.string().min(1).max(2000) }))
   .handler(async ({ context, data }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { error } = await sb.from("therapist_media").insert({ therapist_id: therapistId, url: data.url, kind: "cabinet" });
+    const { error } = await sb
+      .from("therapist_media")
+      .insert({ therapist_id: therapistId, url: data.url, kind: "cabinet" });
     if (error) throw new Error(error.message);
     await recompute(sb, therapistId);
     return { ok: true };
@@ -88,12 +102,27 @@ export const deleteCabinetPhoto = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string().uuid() }))
   .handler(async ({ context, data }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { data: row } = await sb.from("therapist_media").select("url").eq("id", data.id).eq("therapist_id", therapistId).maybeSingle();
-    const { error } = await sb.from("therapist_media").delete().eq("id", data.id).eq("therapist_id", therapistId);
+    const { data: row } = await sb
+      .from("therapist_media")
+      .select("url")
+      .eq("id", data.id)
+      .eq("therapist_id", therapistId)
+      .maybeSingle();
+    const { error } = await sb
+      .from("therapist_media")
+      .delete()
+      .eq("id", data.id)
+      .eq("therapist_id", therapistId);
     if (error) throw new Error(error.message);
     if (row?.url) {
       const p = pathFrom(row.url, "therapist-photos");
-      if (p) { try { await sb.storage.from("therapist-photos").remove([p]); } catch { /* ignore */ } }
+      if (p) {
+        try {
+          await sb.storage.from("therapist-photos").remove([p]);
+        } catch {
+          /* ignore */
+        }
+      }
     }
     await recompute(sb, therapistId);
     return { ok: true };
@@ -120,7 +149,9 @@ export const listMyCertifications = createServerFn({ method: "GET" })
       (data ?? []).map(async (ce: any) => {
         let fileUrl: string | null = null;
         if (ce.file_url) {
-          const { data: s } = await sb.storage.from("therapist-docs").createSignedUrl(ce.file_url, 3600);
+          const { data: s } = await sb.storage
+            .from("therapist-docs")
+            .createSignedUrl(ce.file_url, 3600);
           fileUrl = s?.signedUrl ?? null;
         }
         return {
@@ -129,7 +160,7 @@ export const listMyCertifications = createServerFn({ method: "GET" })
           issuer: ce.issuer as string | null,
           year: ce.year as number | null,
           fileUrl,
-          status: ((ce.verification_status ?? "declared") as string) as
+          status: (ce.verification_status ?? "declared") as string as
             | "declared"
             | "verified"
             | "rejected"
@@ -213,8 +244,10 @@ export const addCertification = createServerFn({ method: "POST" })
         verified_at: null,
         verified_by: null,
         // Version acceptée ; l'horodatage définitif est posé par la base (trigger).
-        declaration_version: data.declaration_accepted === true ? CERTIFICATION_DECLARATION_VERSION : null,
-        declaration_accepted_at: data.declaration_accepted === true ? new Date().toISOString() : null,
+        declaration_version:
+          data.declaration_accepted === true ? CERTIFICATION_DECLARATION_VERSION : null,
+        declaration_accepted_at:
+          data.declaration_accepted === true ? new Date().toISOString() : null,
       })
       .select("id")
       .maybeSingle();
@@ -273,10 +306,25 @@ export const deleteCertification = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string().uuid() }))
   .handler(async ({ context, data }) => {
     const { sb, therapistId } = await getOwnedTherapist(context.userId);
-    const { data: row } = await sb.from("therapist_certifications").select("file_url").eq("id", data.id).eq("therapist_id", therapistId).maybeSingle();
-    const { error } = await sb.from("therapist_certifications").delete().eq("id", data.id).eq("therapist_id", therapistId);
+    const { data: row } = await sb
+      .from("therapist_certifications")
+      .select("file_url")
+      .eq("id", data.id)
+      .eq("therapist_id", therapistId)
+      .maybeSingle();
+    const { error } = await sb
+      .from("therapist_certifications")
+      .delete()
+      .eq("id", data.id)
+      .eq("therapist_id", therapistId);
     if (error) throw new Error(error.message);
-    if (row?.file_url) { try { await sb.storage.from("therapist-docs").remove([row.file_url]); } catch { /* ignore */ } }
+    if (row?.file_url) {
+      try {
+        await sb.storage.from("therapist-docs").remove([row.file_url]);
+      } catch {
+        /* ignore */
+      }
+    }
     await recompute(sb, therapistId);
     return { ok: true };
   });
@@ -299,7 +347,9 @@ export const listMyReviews = createServerFn({ method: "GET" })
     // La réponse du praticien n'existe pas encore partout : on la tente à part.
     const enriched = await sb
       .from("reviews")
-      .select("id,rating,comment,author_name,created_at,status,therapist_reply,therapist_reply_at,therapist_reply_status")
+      .select(
+        "id,rating,comment,author_name,created_at,status,therapist_reply,therapist_reply_at,therapist_reply_status",
+      )
       .eq("therapist_id", therapistId)
       .eq("status", "approved")
       .order("created_at", { ascending: false });
@@ -324,7 +374,8 @@ export const replyToReview = createServerFn({ method: "POST" })
       .select("id")
       .maybeSingle();
     if (error) {
-      if (isMissingSchema(error)) throw new Error("La réponse aux avis n'est pas encore activée sur cette plateforme.");
+      if (isMissingSchema(error))
+        throw new Error("La réponse aux avis n'est pas encore activée sur cette plateforme.");
       throw new Error(error.message);
     }
     if (!row) throw new Error("Avis introuvable.");
@@ -389,7 +440,9 @@ export const listPendingTherapistReplies = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("reviews")
-      .select("id,rating,comment,author_name,created_at,therapist_id,therapist_reply,therapist_reply_submitted_at,therapists(first_name,last_name,slug)")
+      .select(
+        "id,rating,comment,author_name,created_at,therapist_id,therapist_reply,therapist_reply_submitted_at,therapists(first_name,last_name,slug)",
+      )
       .eq("therapist_reply_status", "pending")
       .not("therapist_reply", "is", null)
       .order("therapist_reply_submitted_at", { ascending: false });

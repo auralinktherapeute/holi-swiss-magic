@@ -10,7 +10,6 @@ import {
 import { useEffect, useMemo, type ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 
-
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import i18nClient, { createI18nForLang, detectLangFromPath } from "../lib/i18n";
@@ -66,10 +65,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { name: "description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne." },
+      {
+        name: "description",
+        content:
+          "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne.",
+      },
       { name: "author", content: "Holiswiss" },
       { property: "og:title", content: "Holiswiss — Trouvez le bon thérapeute, partout en Suisse" },
-      { property: "og:description", content: "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne." },
+      {
+        property: "og:description",
+        content:
+          "Annuaire suisse des thérapeutes et praticiens bien-être. Recherche dans les 26 cantons · 4 langues. avis clients, réservation en ligne.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://holiswiss.ch/logo.png" },
       { property: "og:image:width", content: "500" },
@@ -91,16 +98,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // (`public/logo.png`, 500 × 500). Avant, c'était une capture d'écran de
       // l'environnement de prévisualisation Lovable, hébergée sur un domaine
       // r2.dev éphémère — une URL qui n'a aucune raison de rester valide.
-      { name: "keywords", content: "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, profil thérapeute Holiswiss, réservation thérapeute" },
+      {
+        name: "keywords",
+        content:
+          "thérapeute holistique Suisse, sophrologie, hypnose Suisse, naturopathie, médecine douce Suisse, bien-être, profil thérapeute Holiswiss, réservation thérapeute",
+      },
       { name: "robots", content: "index, follow" },
       { property: "og:locale", content: "fr_CH" },
       { property: "og:site_name", content: "Holiswiss" },
       { name: "google-site-verification", content: "d9t25eV3fX7zo8MSf8MpCrcbPMfyayZR68oY3i4yXeg" },
     ],
     links: [
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Playfair+Display:ital,wght@1,400;1,500&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Playfair+Display:ital,wght@1,400;1,500&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,

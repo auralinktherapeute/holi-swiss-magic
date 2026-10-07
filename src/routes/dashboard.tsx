@@ -8,7 +8,10 @@ import {
 } from "@/hooks/use-onboarding";
 import { resumeTourStep, shouldAutoOpenTour } from "@/lib/onboarding-checklist";
 import { TherapistNav } from "@/components/layout/TherapistNav";
-import { MobileDashboardHeader, MobileDashboardBottomNav } from "@/components/layout/MobileDashboardNav";
+import {
+  MobileDashboardHeader,
+  MobileDashboardBottomNav,
+} from "@/components/layout/MobileDashboardNav";
 import { useAuth } from "@/hooks/use-auth";
 import { isLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +30,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
+  head: () => ({ meta: [{ name: "robots", content: "noindex,nofollow" }] }),
   beforeLoad: async () => {
     // Seule la session locale est vérifiée ici pour éviter toute déconnexion
     // intempestive lors de la navigation. Les server functions appelées

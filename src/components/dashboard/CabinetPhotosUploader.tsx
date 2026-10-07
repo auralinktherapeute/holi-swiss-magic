@@ -3,9 +3,20 @@ import { Camera, Loader2, Trash2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { listMyCabinetPhotos, addCabinetPhoto, deleteCabinetPhoto } from "@/lib/therapist-profile-extra.functions";
+import {
+  listMyCabinetPhotos,
+  addCabinetPhoto,
+  deleteCabinetPhoto,
+} from "@/lib/therapist-profile-extra.functions";
 
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif"];
+const ACCEPTED = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+];
 const BUCKET = "therapist-photos";
 
 /** Galerie de photos du cabinet (upload multiple + prévisualisation). userId = auth.users.id */
@@ -51,9 +62,12 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
           toast.error(`"${file.name}" : max 5 Mo.`);
           continue;
         }
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const ext =
+          (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         const path = `${userId}/cabinet/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: false, contentType: file.type });
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(path, file, { upsert: false, contentType: file.type });
         if (upErr) {
           toast.error(`Upload refusé : ${upErr.message}`);
           continue;
@@ -84,7 +98,9 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold text-white">Photos du cabinet</h3>
-          <p className="text-xs text-[#a89bc4]">Montrez votre espace de travail (jusqu'à plusieurs photos, max 5 Mo).</p>
+          <p className="text-xs text-[#a89bc4]">
+            Montrez votre espace de travail (jusqu'à plusieurs photos, max 5 Mo).
+          </p>
         </div>
         <button
           type="button"
@@ -95,11 +111,20 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
           Ajouter des photos
         </button>
-        <input ref={inputRef} type="file" multiple accept={ACCEPTED.join(",")} className="hidden" onChange={onFiles} />
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept={ACCEPTED.join(",")}
+          className="hidden"
+          onChange={onFiles}
+        />
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-white/50"><Loader2 className="h-4 w-4 animate-spin" /> Chargement…</div>
+        <div className="flex items-center gap-2 text-white/50">
+          <Loader2 className="h-4 w-4 animate-spin" /> Chargement…
+        </div>
       ) : photos.length === 0 ? (
         <div className="grid place-items-center rounded-xl border border-dashed border-white/15 py-8 text-center text-white/40">
           <Camera className="mb-2 h-6 w-6" />
@@ -108,8 +133,19 @@ export default function CabinetPhotosUploader({ userId }: { userId: string }) {
       ) : (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {photos.map((p) => (
-            <div key={p.id} className="group relative aspect-square overflow-hidden rounded-lg ring-1 ring-white/10">
-              <img src={p.signedUrl} alt="Cabinet" className="h-full w-full object-cover" />
+            <div
+              key={p.id}
+              className="group relative aspect-square overflow-hidden rounded-lg ring-1 ring-white/10"
+            >
+              <img
+                src={p.signedUrl}
+                alt="Cabinet"
+                width={320}
+                height={320}
+                decoding="async"
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
               <button
                 type="button"
                 onClick={() => remove(p.id)}

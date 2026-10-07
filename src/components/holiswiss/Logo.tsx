@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { SUPPORTED_LANGS, DEFAULT_LANG } from "@/lib/i18n";
-import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
+import lotusAsset from "@/assets/lotus-128.webp.asset.json";
 
 export function Logo({ size = 48 }: { size?: number }) {
   // Derive lang from URL — identical on SSR and client (avoids hydration mismatch).
@@ -19,6 +19,7 @@ export function Logo({ size = 48 }: { size?: number }) {
         alt="Holiswiss"
         width={size}
         height={size}
+        decoding="async"
         className="shrink-0 transition-transform group-hover:scale-105"
         style={{
           width: "clamp(32px, 9vw, " + size + "px)",

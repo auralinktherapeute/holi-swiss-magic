@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { createSignedImageUrl, type ImageVariant } from "@/lib/storage-image";
+
+const resolvedPhotoUrls = new Map<string, Promise<string>>();
 
 /**
  * Extract the object path from a Supabase storage URL (public or signed) for
@@ -6,7 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function pathFromTherapistPhotoUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  const m = url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/);
+  const m = url.match(
+    /\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/,
+  );
   return m ? decodeURIComponent(m[1]) : null;
 }
 
@@ -16,13 +21,27 @@ export function pathFromTherapistPhotoUrl(url: string | null | undefined): strin
  * URLs no longer work — we re-issue a signed URL using the storage policy that
  * lets anon read photos belonging to active therapists.
  */
-export async function resolveTherapistPhotoUrl(url: string | null | undefined): Promise<string> {
+export async function resolveTherapistPhotoUrl(
+  url: string | null | undefined,
+  variant: Extract<ImageVariant, "thumbnail" | "profile"> = "thumbnail",
+): Promise<string> {
   if (!url) return "";
   const path = pathFromTherapistPhotoUrl(url);
   if (!path) return url;
-  const { data, error } = await supabase.storage
-    .from("therapist-photos")
-    .createSignedUrl(path, 60 * 60 * 24 * 7);
-  if (error || !data?.signedUrl) return url;
-  return data.signedUrl;
+  // Une URL déjà signée par le serveur est réutilisée telle quelle : cela
+  // évite une seconde signature et une seconde adresse pour la même image.
+  if (/\/storage\/v1\/object\/sign\/therapist-photos\//.test(url)) return url;
+
+  const cacheKey = `${variant}:${path}`;
+  const cached = resolvedPhotoUrls.get(cacheKey);
+  if (cached) return cached;
+
+  const pending = createSignedImageUrl(
+    supabase.storage.from("therapist-photos"),
+    path,
+    60 * 60 * 24 * 7,
+    variant,
+  ).then((signedUrl) => signedUrl ?? url);
+  resolvedPhotoUrls.set(cacheKey, pending);
+  return pending;
 }

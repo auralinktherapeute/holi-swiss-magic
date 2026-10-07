@@ -17,12 +17,72 @@ import { buildLocalFaqSection, localFaqJsonLd, type LocalFaqSection } from "@/li
 import { LocalFaq } from "@/components/holiswiss/LocalFaq";
 
 const T = {
-  fr: { home: "Accueil", therapists: "Thérapeutes", inSwitzerland: "en Suisse", loading: "Chargement…", notFound: "Spécialité introuvable.", back: "Retour à l'annuaire", none: "Aucun thérapeute référencé en", forNow: "pour le moment.", nearby: "Autres spécialités de la même famille", listHeading: (n: number, s: string) => `${n} ${n > 1 ? "profils de thérapeutes" : "profil de thérapeute"} — ${s}`, titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss", desc: (l: string) => `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.` },
-  de: { home: "Startseite", therapists: "Therapeuten", inSwitzerland: "in der Schweiz", loading: "Wird geladen…", notFound: "Spezialität nicht gefunden.", back: "Zurück zum Verzeichnis", none: "Noch keine Therapeuten für", forNow: "eingetragen.", nearby: "Weitere Spezialitäten derselben Familie", listHeading: (n: number, s: string) => `${n} Therapeutenprofil${n > 1 ? "e" : ""} — ${s}`, titleSuffix: "in der Schweiz — Therapeutenverzeichnis | Holiswiss", desc: (l: string) => `Finden Sie eine Fachperson für ${l} in der Schweiz: von Holiswiss geprüfte Profile, Preise, Bewertungen. In wenigen Klicks buchen.` },
-  it: { home: "Home", therapists: "Terapeuti", inSwitzerland: "in Svizzera", loading: "Caricamento…", notFound: "Specialità non trovata.", back: "Torna alla directory", none: "Nessun terapeuta registrato in", forNow: "per il momento.", nearby: "Altre specialità della stessa famiglia", listHeading: (n: number, s: string) => `${n} ${n > 1 ? "profili di terapeuti" : "profilo di terapeuta"} — ${s}`, titleSuffix: "in Svizzera — Elenco dei terapeuti | Holiswiss", desc: (l: string) => `Trova un professionista di ${l} in Svizzera: profili convalidati da Holiswiss, tariffe, recensioni. Prenota in pochi clic.` },
-  en: { home: "Home", therapists: "Therapists", inSwitzerland: "in Switzerland", loading: "Loading…", notFound: "Specialty not found.", back: "Back to directory", none: "No therapists listed in", forNow: "yet.", nearby: "Other specialties in the same family", listHeading: (n: number, s: string) => `${n} therapist profile${n > 1 ? "s" : ""} — ${s}`, titleSuffix: "in Switzerland — Therapist directory | Holiswiss", desc: (l: string) => `Find a ${l} practitioner in Switzerland: profiles validated by Holiswiss, prices, reviews. Book in a few clicks.` },
+  fr: {
+    home: "Accueil",
+    therapists: "Thérapeutes",
+    inSwitzerland: "en Suisse",
+    loading: "Chargement…",
+    notFound: "Spécialité introuvable.",
+    back: "Retour à l'annuaire",
+    none: "Aucun thérapeute référencé en",
+    forNow: "pour le moment.",
+    nearby: "Autres spécialités de la même famille",
+    listHeading: (n: number, s: string) =>
+      `${n} ${n > 1 ? "profils de thérapeutes" : "profil de thérapeute"} — ${s}`,
+    titleSuffix: "en Suisse — Annuaire des thérapeutes | Holiswiss",
+    desc: (l: string) =>
+      `Trouvez un praticien de ${l} en Suisse : profils validés par Holiswiss, tarifs, avis. Prenez rendez-vous en quelques clics.`,
+  },
+  de: {
+    home: "Startseite",
+    therapists: "Therapeuten",
+    inSwitzerland: "in der Schweiz",
+    loading: "Wird geladen…",
+    notFound: "Spezialität nicht gefunden.",
+    back: "Zurück zum Verzeichnis",
+    none: "Noch keine Therapeuten für",
+    forNow: "eingetragen.",
+    nearby: "Weitere Spezialitäten derselben Familie",
+    listHeading: (n: number, s: string) => `${n} Therapeutenprofil${n > 1 ? "e" : ""} — ${s}`,
+    titleSuffix: "in der Schweiz — Therapeutenverzeichnis | Holiswiss",
+    desc: (l: string) =>
+      `Finden Sie eine Fachperson für ${l} in der Schweiz: von Holiswiss geprüfte Profile, Preise, Bewertungen. In wenigen Klicks buchen.`,
+  },
+  it: {
+    home: "Home",
+    therapists: "Terapeuti",
+    inSwitzerland: "in Svizzera",
+    loading: "Caricamento…",
+    notFound: "Specialità non trovata.",
+    back: "Torna alla directory",
+    none: "Nessun terapeuta registrato in",
+    forNow: "per il momento.",
+    nearby: "Altre specialità della stessa famiglia",
+    listHeading: (n: number, s: string) =>
+      `${n} ${n > 1 ? "profili di terapeuti" : "profilo di terapeuta"} — ${s}`,
+    titleSuffix: "in Svizzera — Elenco dei terapeuti | Holiswiss",
+    desc: (l: string) =>
+      `Trova un professionista di ${l} in Svizzera: profili convalidati da Holiswiss, tariffe, recensioni. Prenota in pochi clic.`,
+  },
+  en: {
+    home: "Home",
+    therapists: "Therapists",
+    inSwitzerland: "in Switzerland",
+    loading: "Loading…",
+    notFound: "Specialty not found.",
+    back: "Back to directory",
+    none: "No therapists listed in",
+    forNow: "yet.",
+    nearby: "Other specialties in the same family",
+    listHeading: (n: number, s: string) => `${n} therapist profile${n > 1 ? "s" : ""} — ${s}`,
+    titleSuffix: "in Switzerland — Therapist directory | Holiswiss",
+    desc: (l: string) =>
+      `Find a ${l} practitioner in Switzerland: profiles validated by Holiswiss, prices, reviews. Book in a few clicks.`,
+  },
 } as const;
-function tr(lang: string) { return (T as any)[lang] ?? T.fr; }
+function tr(lang: string) {
+  return (T as any)[lang] ?? T.fr;
+}
 
 // Route déclarée en `.index` (et non `$specialtySlug.tsx`) : en routage à plat
 // TanStack, `a.$b.tsx` devient le PARENT de `a.$b.$c.tsx`. La page spécialité
@@ -40,8 +100,16 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // Même contrat que les pages ville, canton et famille : une panne de
     // lecture n'est ni une 404 ni une page mince. `loadEssential` pose le 503
     // (réessayable) et la page ne reçoit AUCUN noindex (indexable: true).
-    const res = await loadEssential(() => getSpecialtyPage({ data: { slug: params.specialtySlug } }));
-    if (!res.ok) return { page: null, indexable: true, localFaq: null as LocalFaqSection | null, unavailable: true as const };
+    const res = await loadEssential(() =>
+      getSpecialtyPage({ data: { slug: params.specialtySlug } }),
+    );
+    if (!res.ok)
+      return {
+        page: null,
+        indexable: true,
+        localFaq: null as LocalFaqSection | null,
+        unavailable: true as const,
+      };
     const page = res.data;
     if (!page) throw notFound();
     // La spécialité peut avoir été retrouvée via son slug de base alors qu'un
@@ -69,7 +137,10 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     const indexableLangs = LANGS.filter((l) =>
       isSpecialtyIndexable({ ...facts, description: ownDescription(page.specialty, l) }),
     );
-    const indexable = isSpecialtyIndexable({ ...facts, description: ownDescription(page.specialty, params.lang) });
+    const indexable = isSpecialtyIndexable({
+      ...facts,
+      description: ownDescription(page.specialty, params.lang),
+    });
     // FAQ locale : calculée UNE fois ici, depuis la liste affichée (et le bloc
     // de chiffres), reprise telle quelle par le HTML et le JSON-LD FAQPage.
     // Aucune FAQ sur une page en noindex (sous le seuil) ni en panne.
@@ -78,7 +149,10 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
       ? buildLocalFaqSection(
           page.therapists,
           { kind: "specialty", place: pickI18n(page.specialty, lang, "name"), lang },
-          i18n.getFixedT(lang) as unknown as (key: string, vars?: Record<string, unknown>) => string,
+          i18n.getFixedT(lang) as unknown as (
+            key: string,
+            vars?: Record<string, unknown>,
+          ) => string,
         )
       : null;
     return { page, indexable, indexableLangs, localFaq, unavailable: false as const };
@@ -98,18 +172,21 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     const title = `${labelCapitalized} ${t.titleSuffix}`;
     const description = t.desc(label);
     const altLangs: readonly string[] = (loaderData as any)?.indexableLangs ?? LANGS;
-    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.filter((l) => altLangs.includes(l)).map((l) => ({
+    const hreflangs: Array<{ rel: "alternate"; hreflang: string; href: string }> = LANGS.filter(
+      (l) => altLangs.includes(l),
+    ).map((l) => ({
       rel: "alternate",
       hreflang: l,
       href: `https://holiswiss.ch/${l}/specialites/${
         specialty ? specialtySlugForLang(specialty, l) : params.specialtySlug
       }`,
     }));
-    if (altLangs.includes("fr")) hreflangs.push({
-      rel: "alternate",
-      hreflang: "x-default",
-      href: `https://holiswiss.ch/fr/specialites/${specialty ? specialty.slug : params.specialtySlug}`,
-    });
+    if (altLangs.includes("fr"))
+      hreflangs.push({
+        rel: "alternate",
+        hreflang: "x-default",
+        href: `https://holiswiss.ch/fr/specialites/${specialty ? specialty.slug : params.specialtySlug}`,
+      });
     // `noindex,follow` : la page reste utile au maillage (elle pointe vers les
     // listings et les spécialités sœurs) mais ne prétend plus mériter l'index
     // tant qu'elle n'a personne à montrer. `follow` — pas `none` — pour que le
@@ -125,9 +202,13 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
     // encore sa CollectionPage et son ItemList.
     const noindex = !unavailable && !indexable;
     // Liste RÉELLE du loader : jamais d'ItemList inventé ni vide.
-    const list = (((loaderData as any)?.page?.therapists ?? []) as Array<{
-      slug: string | null; first_name: string | null; last_name: string | null;
-    }>).filter((x) => x.slug);
+    const list = (
+      ((loaderData as any)?.page?.therapists ?? []) as Array<{
+        slug: string | null;
+        first_name: string | null;
+        last_name: string | null;
+      }>
+    ).filter((x) => x.slug);
     const localFaq = (loaderData as any)?.localFaq as LocalFaqSection | null | undefined;
     // FAQPage seulement là où la CollectionPage existe (liste non vide) et
     // jamais sur une page noindex. `#page` : @id de la CollectionPage ci-dessous.
@@ -152,52 +233,72 @@ export const Route = createFileRoute("/$lang/specialites/$specialtySlug/")({
         { name: "twitter:description", content: description },
       ],
       // noindex : canonical seule, aucun hreflang (décision du 07/10/2026).
-      links: [{ rel: "canonical", href: url }, ...(noindex || altLangs.length < 2 ? [] : hreflangs)],
-      scripts: unavailable || noindex ? [] : [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: t.home, item: `https://holiswiss.ch/${params.lang}` },
-              { "@type": "ListItem", position: 2, name: t.therapists, item: `https://holiswiss.ch/${params.lang}/therapeutes` },
-              { "@type": "ListItem", position: 3, name: labelCapitalized, item: url },
-            ],
-          }),
-        },
-        ...(list.length === 0 ? [] : [{
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "@id": `${url}#page`,
-            url,
-            name: title,
-            description,
-            inLanguage: params.lang,
-            isPartOf: { "@id": "https://holiswiss.ch/#website" },
-            publisher: organizationRef,
-            // Même valeur que le « Mis à jour le » visible (fiches listées ici).
-            ...((loaderData as any)?.page?.lastModified
-              ? { dateModified: (loaderData as any).page.lastModified.iso }
-              : {}),
-            mainEntity: {
-              "@type": "ItemList",
-              name: title,
-              numberOfItems: list.length,
-              itemListElement: list.map((x, i) => ({
-                "@type": "ListItem",
-                position: i + 1,
-                name: `${x.first_name ?? ""} ${x.last_name ?? ""}`.trim(),
-                url: `https://holiswiss.ch/${params.lang}/therapeute/${x.slug}`,
-              })),
-            },
-          }),
-        }]),
-        // Un seul FAQPage par page, texte identique à la section visible.
-        ...(faqLd ? [{ type: "application/ld+json", children: JSON.stringify(faqLd) }] : []),
+      links: [
+        { rel: "canonical", href: url },
+        ...(noindex || altLangs.length < 2 ? [] : hreflangs),
       ],
+      scripts:
+        unavailable || noindex
+          ? []
+          : [
+              {
+                type: "application/ld+json",
+                children: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "BreadcrumbList",
+                  itemListElement: [
+                    {
+                      "@type": "ListItem",
+                      position: 1,
+                      name: t.home,
+                      item: `https://holiswiss.ch/${params.lang}`,
+                    },
+                    {
+                      "@type": "ListItem",
+                      position: 2,
+                      name: t.therapists,
+                      item: `https://holiswiss.ch/${params.lang}/therapeutes`,
+                    },
+                    { "@type": "ListItem", position: 3, name: labelCapitalized, item: url },
+                  ],
+                }),
+              },
+              ...(list.length === 0
+                ? []
+                : [
+                    {
+                      type: "application/ld+json",
+                      children: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "CollectionPage",
+                        "@id": `${url}#page`,
+                        url,
+                        name: title,
+                        description,
+                        inLanguage: params.lang,
+                        isPartOf: { "@id": "https://holiswiss.ch/#website" },
+                        publisher: organizationRef,
+                        // Même valeur que le « Mis à jour le » visible (fiches listées ici).
+                        ...((loaderData as any)?.page?.lastModified
+                          ? { dateModified: (loaderData as any).page.lastModified.iso }
+                          : {}),
+                        mainEntity: {
+                          "@type": "ItemList",
+                          name: title,
+                          numberOfItems: list.length,
+                          itemListElement: list.map((x, i) => ({
+                            "@type": "ListItem",
+                            position: i + 1,
+                            name: `${x.first_name ?? ""} ${x.last_name ?? ""}`.trim(),
+                            url: `https://holiswiss.ch/${params.lang}/therapeute/${x.slug}`,
+                          })),
+                        },
+                      }),
+                    },
+                  ]),
+              // Un seul FAQPage par page, texte identique à la section visible.
+              ...(faqLd ? [{ type: "application/ld+json", children: JSON.stringify(faqLd) }] : []),
+            ],
     };
   },
 });
@@ -222,13 +323,17 @@ function SpecialtyPage() {
   });
 
   if (query.isLoading) {
-    return <div className="min-h-[60vh] flex items-center justify-center text-white/60">{t.loading}</div>;
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-white/60">{t.loading}</div>
+    );
   }
   if (!query.data) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 text-white">
         <p>{t.notFound}</p>
-        <Link to="/$lang/therapeutes" params={{ lang }} className="text-[#5cc8fa] underline">{t.back}</Link>
+        <Link to="/$lang/therapeutes" params={{ lang }} className="text-[#5cc8fa] underline">
+          {t.back}
+        </Link>
       </div>
     );
   }
@@ -243,9 +348,13 @@ function SpecialtyPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <nav aria-label="breadcrumb" className="mb-6 flex items-center gap-1 text-xs text-white/50">
-        <Link to="/$lang" params={{ lang }} className="hover:text-white">{t.home}</Link>
+        <Link to="/$lang" params={{ lang }} className="hover:text-white">
+          {t.home}
+        </Link>
         <ChevronRight className="h-3 w-3" />
-        <Link to="/$lang/therapeutes" params={{ lang }} className="hover:text-white">{t.therapists}</Link>
+        <Link to="/$lang/therapeutes" params={{ lang }} className="hover:text-white">
+          {t.therapists}
+        </Link>
         {family && (
           <>
             <ChevronRight className="h-3 w-3" />
@@ -262,8 +371,10 @@ function SpecialtyPage() {
         <span className="text-white">{specName}</span>
       </nav>
 
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold text-white sm:text-4xl">{specName} {t.inSwitzerland}</h1>
+      <header className="mb-8 min-h-28 sm:min-h-32">
+        <h1 className="text-3xl font-semibold text-white sm:text-4xl">
+          {specName} {t.inSwitzerland}
+        </h1>
         {specDesc && (
           <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base leading-relaxed">
             {specDesc}
@@ -299,14 +410,21 @@ function SpecialtyPage() {
               >
                 <div className="flex gap-3">
                   <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-[#b86ef9]/30">
-                    <TherapistAvatar photoUrl={t.photo_url} alt={`${t.first_name} ${t.last_name}`} fallback={t.first_name?.[0] ?? "?"} />
+                    <TherapistAvatar
+                      photoUrl={t.photo_url}
+                      alt={`${t.first_name} ${t.last_name}`}
+                      fallback={t.first_name?.[0] ?? "?"}
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{t.first_name} {t.last_name}</p>
+                    <p className="truncate text-sm font-semibold text-white">
+                      {t.first_name} {t.last_name}
+                    </p>
                     {t.title && <p className="truncate text-xs text-[#b86ef9]">{t.title}</p>}
                     {t.city && (
                       <p className="mt-1 flex items-center gap-1 text-xs text-white/50">
-                        <MapPin className="h-3 w-3" />{t.city}
+                        <MapPin className="h-3 w-3" />
+                        {t.city}
                       </p>
                     )}
                   </div>

@@ -7,6 +7,8 @@ interface Props {
   fallback?: string;
   className?: string;
   fallbackClassName?: string;
+  variant?: "thumbnail" | "profile";
+  priority?: boolean;
 }
 
 /**
@@ -19,6 +21,8 @@ export function TherapistAvatar({
   fallback,
   className = "h-full w-full object-cover",
   fallbackClassName = "flex h-full w-full items-center justify-center text-lg font-bold text-[#b86ef9]",
+  variant = "thumbnail",
+  priority = false,
 }: Props) {
   const [src, setSrc] = useState<string>("");
   const [failed, setFailed] = useState(false);
@@ -28,13 +32,13 @@ export function TherapistAvatar({
     setFailed(false);
     setSrc("");
     if (!photoUrl) return;
-    resolveTherapistPhotoUrl(photoUrl).then((u) => {
+    resolveTherapistPhotoUrl(photoUrl, variant).then((u) => {
       if (!cancelled) setSrc(u);
     });
     return () => {
       cancelled = true;
     };
-  }, [photoUrl]);
+  }, [photoUrl, variant]);
 
   if (!photoUrl || failed || !src) {
     return <div className={fallbackClassName}>{fallback ?? alt.charAt(0).toUpperCase()}</div>;
@@ -46,7 +50,11 @@ export function TherapistAvatar({
       alt={alt}
       className={className}
       onError={() => setFailed(true)}
-      loading="lazy"
+      width={variant === "profile" ? 768 : 320}
+      height={variant === "profile" ? 768 : 320}
+      decoding="async"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
     />
   );
 }

@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 
-type FlyerData = {
+export type FlyerData = {
   title: string;
   category?: string | null;
   dateLabel: string;
@@ -65,7 +65,9 @@ async function renderFlyer(canvas: HTMLCanvasElement, d: FlyerData) {
       const iw = img.width * ratio;
       const ih = img.height * ratio;
       ctx.drawImage(img, (W - iw) / 2, (H - ih) / 2, iw, ih);
-    } catch {}
+    } catch {
+      // Le fond de secours déjà peint reste visible si l'image n'est pas lisible.
+    }
   }
 
   // Bottom dark gradient overlay (40% height)
@@ -170,7 +172,14 @@ async function renderFlyer(canvas: HTMLCanvasElement, d: FlyerData) {
   ctx.fillText(label, qrX + qrBoxSize / 2 - lw / 2, qrY - 36);
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -180,23 +189,41 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-export function EventFlyer({ data, filename = "flyer-holiswiss.png" }: { data: FlyerData; filename?: string }) {
+export function EventFlyer({
+  data,
+  filename = "flyer-holiswiss.png",
+}: {
+  data: FlyerData;
+  filename?: string;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   useEffect(() => {
     let cancelled = false;
     setReady(false);
     (async () => {
       if (!canvasRef.current) return;
-      await renderFlyer(canvasRef.current, data);
+      await renderFlyer(canvasRef.current, dataRef.current);
       if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
     };
-  }, [data]);
+  }, [
+    data.title,
+    data.category,
+    data.dateLabel,
+    data.timeLabel,
+    data.location,
+    data.priceLabel,
+    data.therapistName,
+    data.coverUrl,
+    data.targetUrl,
+  ]);
 
   const download = async () => {
     if (!canvasRef.current) return;
@@ -225,7 +252,11 @@ export function EventFlyer({ data, filename = "flyer-holiswiss.png" }: { data: F
       </div>
       <div className="flex justify-center">
         <Button type="button" onClick={download} disabled={!ready || busy}>
-          {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          {busy ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
           Télécharger le flyer (PNG)
         </Button>
       </div>

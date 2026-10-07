@@ -84,6 +84,25 @@ describe("robots.txt", () => {
   it("déclare le sitemap", () => {
     expect(txt).toContain("Sitemap: https://holiswiss.ch/sitemap.xml");
   });
+
+  it("bloque admin et dashboard avec et sans barre finale dans chaque groupe", () => {
+    for (const rules of groups().values()) {
+      expect(rules).toEqual(
+        expect.arrayContaining(["/admin", "/admin/", "/dashboard", "/dashboard/"]),
+      );
+    }
+  });
+
+  it("pose noindex,nofollow sur les deux espaces privés", () => {
+    for (const file of ["src/routes/admin.tsx", "src/routes/dashboard.tsx"]) {
+      expect(readFileSync(file, "utf8")).toContain('content: "noindex,nofollow"');
+    }
+  });
+
+  it("déclare un favicon réellement présent", () => {
+    expect(readFileSync("src/routes/__root.tsx", "utf8")).toContain('href: "/favicon.ico"');
+    expect(readFileSync("public/favicon.ico")).not.toHaveLength(0);
+  });
 });
 
 describe("sitemap — séparation blog / fil", () => {
@@ -105,6 +124,8 @@ describe("sitemap — séparation blog / fil", () => {
 
   it("déclare la page sophrologie avec un lastmod fixe et véridique", () => {
     // Article rédigé en français uniquement : seule l'URL /fr est déclarée.
-    expect(src).toMatch(/fr\/blog\/qu-est-ce-que-la-sophrologie`;\s*urls\.push\(\s*urlBlock\(soph, "2026-08-31"/);
+    expect(src).toMatch(
+      /fr\/blog\/qu-est-ce-que-la-sophrologie`;\s*urls\.push\(\s*urlBlock\(soph, "2026-08-31"/,
+    );
   });
 });

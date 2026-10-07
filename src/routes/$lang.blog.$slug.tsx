@@ -1,7 +1,13 @@
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, useParams, Link, redirect, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getArticleBySlug, titleForLang, bodyForLang, excerptForLang, slugForLang } from "@/lib/articles.functions";
+import {
+  getArticleBySlug,
+  titleForLang,
+  bodyForLang,
+  excerptForLang,
+  slugForLang,
+} from "@/lib/articles.functions";
 import { ArrowLeft, CalendarDays, Clock, Tag } from "lucide-react";
 import { LANGS } from "@/lib/seo";
 import { FaqSection } from "@/components/holiswiss/FaqSection";
@@ -9,22 +15,53 @@ import { blogFaqForCategory, FAQ_TITLES, asFaqLang } from "@/lib/faq-content";
 import { categoryLabel } from "@/lib/article-categories";
 import { blogCopy } from "@/lib/blog-copy";
 import { redirectTargetForSlug } from "@/lib/blog-redirects";
-import { publisherNode, organizationRef, LOGO_URL, ORGANIZATION_NAME } from "@/lib/organization-schema";
+import {
+  publisherNode,
+  organizationRef,
+  LOGO_URL,
+  ORGANIZATION_NAME,
+} from "@/lib/organization-schema";
 import { buildMetaTitle } from "@/lib/seo-title";
 import { NotFoundPage } from "@/components/layout/NotFoundPage";
 import { renderMarkdown } from "@/lib/blog-markdown";
-import { articleDates, CONTENT_DATE_COLUMN, formatPublishedDate, visibleArticleUpdate } from "@/lib/page-dates";
+import {
+  articleDates,
+  CONTENT_DATE_COLUMN,
+  formatPublishedDate,
+  visibleArticleUpdate,
+} from "@/lib/page-dates";
 import { LastUpdated } from "@/components/holiswiss/LastUpdated";
-import { articleIndexing, checkTranslation, cleanInlineText, type ArticleLang } from "@/lib/article-translation";
+import {
+  articleIndexing,
+  checkTranslation,
+  cleanInlineText,
+  type ArticleLang,
+} from "@/lib/article-translation";
 
 /** Page légère affichée quand la traduction d'un article n'est pas complète. */
-const UNAVAILABLE: Record<"fr" | "de" | "it" | "en", { title: string; text: string; cta: string }> = {
-  fr: { title: "Traduction indisponible", text: "Cet article n'est pas encore disponible dans cette langue.", cta: "Lire la version française" },
-  de: { title: "Übersetzung nicht verfügbar", text: "Dieser Artikel ist noch nicht auf Deutsch verfügbar. Sie können die französische Originalversion lesen.", cta: "Französische Version lesen" },
-  it: { title: "Traduzione non disponibile", text: "Questo articolo non è ancora disponibile in italiano. Potete leggere la versione originale in francese.", cta: "Leggi la versione francese" },
-  en: { title: "Translation unavailable", text: "This article is not yet available in English. You can read the original French version.", cta: "Read the French version" },
-};
-
+const UNAVAILABLE: Record<"fr" | "de" | "it" | "en", { title: string; text: string; cta: string }> =
+  {
+    fr: {
+      title: "Traduction indisponible",
+      text: "Cet article n'est pas encore disponible dans cette langue.",
+      cta: "Lire la version française",
+    },
+    de: {
+      title: "Übersetzung nicht verfügbar",
+      text: "Dieser Artikel ist noch nicht auf Deutsch verfügbar. Sie können die französische Originalversion lesen.",
+      cta: "Französische Version lesen",
+    },
+    it: {
+      title: "Traduzione non disponibile",
+      text: "Questo articolo non è ancora disponibile in italiano. Potete leggere la versione originale in francese.",
+      cta: "Leggi la versione francese",
+    },
+    en: {
+      title: "Translation unavailable",
+      text: "This article is not yet available in English. You can read the original French version.",
+      cta: "Read the French version",
+    },
+  };
 
 const SITE = "https://holiswiss.ch";
 
@@ -77,7 +114,10 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     // (ni visible, ni dans les données embarquées du HTML).
     const l = (params.lang as Lang) ?? "fr";
     if (l !== "fr" && !checkTranslation(article, l).complete) {
-      return { article: { slug: article.slug } as Record<string, unknown>, unavailable: true as const };
+      return {
+        article: { slug: article.slug } as Record<string, unknown>,
+        unavailable: true as const,
+      };
     }
     return { article, unavailable: false as const };
   },
@@ -89,7 +129,10 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       return {
         meta: [
           { title: "Article — Holiswiss" },
-          { name: "description", content: "Conseils, dossiers et actualités sur les thérapies holistiques en Suisse." },
+          {
+            name: "description",
+            content: "Conseils, dossiers et actualités sur les thérapies holistiques en Suisse.",
+          },
           { name: "robots", content: "noindex,follow" },
           { property: "og:url", content: url },
         ],
@@ -120,8 +163,13 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     const indexing = articleIndexing(article, lang as ArticleLang);
     const rawTitle = cleanInlineText(titleForLang(article, lang)) || "Article";
     const rawExcerpt = excerptForLang(article, lang);
-    const fallback = bodyForLang(article, lang).replace(/[#*_>\-]/g, " ").replace(/\s+/g, " ").trim();
-    const description = cleanInlineText((rawExcerpt || fallback) || "Lire l'article sur Holiswiss.").slice(0, 160);
+    const fallback = bodyForLang(article, lang)
+      .replace(/[#*_>\-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const description = cleanInlineText(
+      rawExcerpt || fallback || "Lire l'article sur Holiswiss.",
+    ).slice(0, 160);
     // Coupe sur une frontière de mot, et marque écrite « Holiswiss » comme dans
     // le nœud Organization : `slice(0, 60)` produisait des titres tronqués en
     // plein mot, parfois jusqu'à amputer la marque elle-même. Métadonnées
@@ -161,7 +209,10 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
       // toujours la marque. On pointe l'Organization par son `@id` plutôt que
       // d'en redéclarer une deuxième, divergente. Le jour où un article porte un
       // auteur nommé, c'est ici qu'un nœud Person prend le relais (E-E-A-T).
-      author: authorName && authorName !== ORGANIZATION_NAME ? { "@type": "Person", name: authorName } : organizationRef,
+      author:
+        authorName && authorName !== ORGANIZATION_NAME
+          ? { "@type": "Person", name: authorName }
+          : organizationRef,
       publisher: publisherNode,
       // `image` est un champ requis du résultat enrichi Article. Sans visuel de
       // couverture, on retombe sur le lotus Holiswiss — qui est réellement
@@ -187,14 +238,15 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     };
     // hreflang réciproques : seulement les variantes réellement traduites,
     // plus x-default vers FR. Une variante incomplète n'en déclare aucun.
-    const hreflangs = indexing.alternates.map((x) => ({ rel: "alternate", hreflang: x.hreflang, href: x.href }));
+    const hreflangs = indexing.alternates.map((x) => ({
+      rel: "alternate",
+      hreflang: x.hreflang,
+      href: x.href,
+    }));
 
     return {
       meta,
-      links: [
-        { rel: "canonical", href: indexing.canonical },
-        ...hreflangs,
-      ],
+      links: [{ rel: "canonical", href: indexing.canonical }, ...hreflangs],
       scripts: [
         {
           type: "application/ld+json",
@@ -222,11 +274,17 @@ function estimateReadTime(text: string): number {
 function SkeletonPage() {
   return (
     <div className="min-h-screen bg-[#2d1248]">
-      <div className="w-full h-80 bg-[#3d1a5c] animate-pulse" />
+      <div className="h-72 w-full bg-[#3d1a5c] animate-pulse md:h-96" />
       <div className="mx-auto max-w-3xl px-4 py-12 space-y-5">
         <div className="h-8 w-3/4 rounded bg-[#3d1a5c] animate-pulse" />
         <div className="h-4 w-1/2 rounded bg-[#3d1a5c] animate-pulse" />
-        {[...Array(10)].map((_, i) => <div key={i} className="h-4 rounded bg-[#3d1a5c] animate-pulse" style={{ width: `${70 + Math.random() * 30}%` }} />)}
+        {[...Array(10)].map((_, i) => (
+          <div
+            key={i}
+            className="h-4 rounded bg-[#3d1a5c] animate-pulse"
+            style={{ width: `${70 + Math.random() * 30}%` }}
+          />
+        ))}
       </div>
     </div>
   );
@@ -258,8 +316,11 @@ function Page() {
           <img src={lotusAsset.url} alt="" className="w-20 h-20 mx-auto mb-4" />
           <p className="text-2xl font-bold text-white mb-2">{copy.notFoundTitle}</p>
           <p className="text-[#d4c4e0] mb-8">{copy.notFoundSubtitle}</p>
-          <Link to="/$lang/blog" params={{ lang: l }}
-            className="inline-flex items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.1)] px-5 py-2.5 text-sm font-medium text-[#d4a5f9] hover:bg-[rgba(184,110,249,0.2)] transition-colors">
+          <Link
+            to="/$lang/blog"
+            params={{ lang: l }}
+            className="inline-flex items-center gap-2 rounded-xl border border-[rgba(184,110,249,0.4)] bg-[rgba(184,110,249,0.1)] px-5 py-2.5 text-sm font-medium text-[#d4a5f9] hover:bg-[rgba(184,110,249,0.2)] transition-colors"
+          >
             <ArrowLeft className="h-4 w-4" /> {copy.backToBlog}
           </Link>
         </div>
@@ -277,12 +338,21 @@ function Page() {
           <img src={lotusAsset.url} alt="" className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-3">{u.title}</h1>
           <p className="text-[#d4c4e0] mb-8">{u.text}</p>
-          <Link to="/$lang/blog/$slug" params={{ lang: "fr", slug: raw.slug as string }} hrefLang="fr" lang="fr"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#b86ef9] px-6 py-3 text-sm font-semibold text-white hover:bg-[#a855f7] transition-colors">
+          <Link
+            to="/$lang/blog/$slug"
+            params={{ lang: "fr", slug: raw.slug as string }}
+            hrefLang="fr"
+            lang="fr"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#b86ef9] px-6 py-3 text-sm font-semibold text-white hover:bg-[#a855f7] transition-colors"
+          >
             {u.cta}
           </Link>
           <div className="mt-8">
-            <Link to="/$lang/blog" params={{ lang: l }} className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/70 hover:text-[#d4a5f9]">
+            <Link
+              to="/$lang/blog"
+              params={{ lang: l }}
+              className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/70 hover:text-[#d4a5f9]"
+            >
               <ArrowLeft className="h-4 w-4" /> {copy.allArticles}
             </Link>
           </div>
@@ -291,8 +361,8 @@ function Page() {
     );
   }
 
-  const title   = titleForLang(raw, l);
-  const body    = bodyForLang(raw, l);
+  const title = titleForLang(raw, l);
+  const body = bodyForLang(raw, l);
   const excerpt = excerptForLang(raw, l);
   const readTime = body ? estimateReadTime(body) : null;
   const isFrFallback = l !== "fr" && !(raw[`body_${l}`] as string);
@@ -300,21 +370,26 @@ function Page() {
 
   return (
     <div className="min-h-screen bg-[#2d1248]">
-
       {/* ── Hero image ── */}
       {article.cover_image_url && (
         <div className="relative w-full h-72 md:h-96 overflow-hidden">
-          <img src={article.cover_image_url} alt={(article.image_alt_text as string | undefined) || title} className="w-full h-full object-cover" />
+          <img
+            src={article.cover_image_url}
+            alt={(article.image_alt_text as string | undefined) || title}
+            className="w-full h-full object-cover"
+          />
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#2d1248] via-[#2d1248]/40 to-transparent" />
         </div>
       )}
 
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-
         {/* Retour */}
-        <Link to="/$lang/blog" params={{ lang: l }}
-          className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/70 hover:text-[#d4a5f9] transition-colors mb-8">
+        <Link
+          to="/$lang/blog"
+          params={{ lang: l }}
+          className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/70 hover:text-[#d4a5f9] transition-colors mb-8"
+        >
           <ArrowLeft className="h-4 w-4" /> {copy.navBlog}
         </Link>
 
@@ -337,15 +412,22 @@ function Page() {
           )}
           {article.published_at && (
             <span className="text-sm text-[#d4c4e0]/60 flex items-center gap-1">
-              <CalendarDays className="h-4 w-4" />{formatDate(article.published_at, l)}
+              <CalendarDays className="h-4 w-4" />
+              {formatDate(article.published_at, l)}
             </span>
           )}
           {readTime && (
             <span className="text-sm text-[#d4c4e0]/60 flex items-center gap-1">
-              <Clock className="h-4 w-4" />{copy.readTime(readTime)}
+              <Clock className="h-4 w-4" />
+              {copy.readTime(readTime)}
             </span>
           )}
-          <LastUpdated as="span" modified={updated} lang={l} className="text-sm text-[#d4c4e0]/60" />
+          <LastUpdated
+            as="span"
+            modified={updated}
+            lang={l}
+            className="text-sm text-[#d4c4e0]/60"
+          />
         </div>
 
         {/* Titre */}
@@ -386,12 +468,8 @@ function Page() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#b86ef9]/30 to-[#5cc8fa]/20 ring-1 ring-[#b86ef9]/30 mb-4">
             <img src={lotusAsset.url} alt="" className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">
-            {copy.ctaTitle}
-          </h3>
-          <p className="text-[#d4c4e0] text-sm mb-6 max-w-sm mx-auto">
-            {copy.ctaSubtitle}
-          </p>
+          <h3 className="text-xl font-bold text-white mb-2">{copy.ctaTitle}</h3>
+          <p className="text-[#d4c4e0] text-sm mb-6 max-w-sm mx-auto">{copy.ctaSubtitle}</p>
           <Link
             to="/$lang/therapeutes"
             params={{ lang: l }}
@@ -403,8 +481,11 @@ function Page() {
 
         {/* Retour blog */}
         <div className="mt-10 text-center">
-          <Link to="/$lang/blog" params={{ lang: l }}
-            className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/60 hover:text-[#d4a5f9] transition-colors">
+          <Link
+            to="/$lang/blog"
+            params={{ lang: l }}
+            className="inline-flex items-center gap-1.5 text-sm text-[#d4c4e0]/60 hover:text-[#d4a5f9] transition-colors"
+          >
             <ArrowLeft className="h-4 w-4" /> {copy.allArticles}
           </Link>
         </div>
