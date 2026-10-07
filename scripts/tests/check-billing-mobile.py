@@ -47,7 +47,7 @@ async def main():
         page = await context.new_page()
         blocked = []
         errors = []
-        page.on('pageerror', lambda e: errors.append(str(e)))
+        page.on('pageerror', lambda e: (errors.append(str(e)), print('PAGE ERROR:', str(e))))
         async def isolate(route):
             url = route.request.url
             if not url.startswith('http://localhost:8080/') or '/_serverFn/' in url or route.request.method != 'GET':
