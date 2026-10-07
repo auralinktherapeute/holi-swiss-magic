@@ -66,6 +66,9 @@ async def main():
             await route.continue_()
         await context.route('**/*', isolate)
         await page.goto('http://localhost:8080/__billing-test')
+        await page.wait_for_timeout(3000)
+        print('BODY:', await page.locator('body').inner_text())
+        await page.screenshot(path=str(OUT/'debug.png'))
         await page.get_by_role('button',name='Ouvrir fiche fictive').wait_for()
         for width,height in [(390,844),(390,600),(1280,1800)]:
             await page.set_viewport_size({'width':width,'height':height})
