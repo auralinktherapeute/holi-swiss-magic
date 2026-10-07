@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Check, Sparkles, Crown, Star, ArrowRight } from "lucide-react";
@@ -37,7 +36,7 @@ const PRICING_FAQ: Record<string, { q: string; a: string }[]> = {
 
 export const Route = createFileRoute("/$lang/tarifs/")({
   component: PricingPage,
-  head: withSocialHead(({ params }) => {
+  head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Tarifs Holiswiss — Plans pour thérapeutes",
@@ -80,7 +79,7 @@ export const Route = createFileRoute("/$lang/tarifs/")({
         },
       ],
     };
-  }),
+  },
 });
 
 function PricingPage() {

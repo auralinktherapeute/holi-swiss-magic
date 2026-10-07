@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -38,7 +37,7 @@ export const Route = createFileRoute("/$lang/blog/")({
       return { articles: [] as Array<Record<string, unknown>> };
     }
   },
-  head: withSocialHead(({ params }) => {
+  head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Blog bien-être & thérapies holistiques — Holiswiss",
@@ -67,7 +66,7 @@ export const Route = createFileRoute("/$lang/blog/")({
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/blog")],
     };
-  }),
+  },
 });
 
 type Lang = "fr" | "de" | "it" | "en";

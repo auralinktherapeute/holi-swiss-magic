@@ -1,10 +1,9 @@
-import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { hreflangLinks } from "@/lib/seo";
 
 export const Route = createFileRoute("/$lang/contact/")({
   component: Page,
-  head: withSocialHead(({ params }) => {
+  head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Contact — Holiswiss",
@@ -57,7 +56,7 @@ export const Route = createFileRoute("/$lang/contact/")({
         },
       ],
     };
-  }),
+  },
 });
 
 const EMAIL = "contact@holiswiss.ch";

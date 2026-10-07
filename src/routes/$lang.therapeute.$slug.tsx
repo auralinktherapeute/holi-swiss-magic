@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, useParams, Link, notFound } from "@tanstack/react-router";
 import { buildGeneratedSeoTitle, resolveSeoTitle } from "@/lib/seo-title";
 import { resolveSeoDescription, truncateSeoDescription } from "@/lib/seo-description";
@@ -125,7 +124,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     };
   },
 
-  head: withSocialHead(({ params, loaderData }) => {
+  head: ({ params, loaderData }) => {
     const t = loaderData?.therapist as
       | {
           id?: string;
@@ -480,7 +479,7 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
         },
       ],
     };
-  }),
+  },
 });
 
 type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string; short_description?: string; kind?: "session" | "package"; visible?: boolean };

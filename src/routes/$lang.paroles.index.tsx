@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { listPublishedTherapistArticles } from "@/lib/therapist-articles.functions";
@@ -22,7 +21,7 @@ export const Route = createFileRoute("/$lang/paroles/")({
       return { items: [] as unknown as Items };
     }
   },
-  head: withSocialHead(({ params }) => {
+  head: ({ params }) => {
     const lang = params.lang;
     const titles: Record<string, string> = {
       fr: "Voix d'experts — Paroles de thérapeutes | Holiswiss",
@@ -51,7 +50,7 @@ export const Route = createFileRoute("/$lang/paroles/")({
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/paroles")],
     };
-  }),
+  },
 });
 
 function formatDate(iso: string | null, lang: string) {

@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, CalendarDays, Sparkles } from "lucide-react";
@@ -28,7 +27,7 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/")({
     // publication n'a rien à indexer. Il redevient indexable dès la première.
     return { posts, indexable: posts.length > 0, unavailable: false as const };
   },
-  head: withSocialHead(({ params, loaderData }) => {
+  head: ({ params, loaderData }) => {
     const l = asFilLang(params.lang);
     const copy = FIL_COPY[l];
     const url = `https://holiswiss.ch/${l}/fil-holiswiss`;
@@ -46,7 +45,7 @@ export const Route = createFileRoute("/$lang/fil-holiswiss/")({
       ],
       links: [{ rel: "canonical", href: url }, ...hreflangLinks("/fil-holiswiss")],
     };
-  }),
+  },
 });
 
 function Page() {

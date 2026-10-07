@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, useParams, Link, redirect, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -83,7 +82,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     return { article, unavailable: false as const };
   },
   notFoundComponent: () => <NotFoundPage />,
-  head: withSocialHead(({ params, loaderData }) => {
+  head: ({ params, loaderData }) => {
     const article = loaderData?.article as Record<string, unknown> | null | undefined;
     const url = `${SITE}/${params.lang}/blog/${params.slug}`;
     if (!article) {
@@ -203,7 +202,7 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         },
       ],
     };
-  }),
+  },
 });
 
 type Lang = "fr" | "de" | "it" | "en";

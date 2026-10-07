@@ -1,4 +1,3 @@
-import { withSocialHead } from "@/lib/social-meta";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { VisibilityPillar } from "@/components/holiswiss/VisibilityPillar";
 import { pillarHead } from "@/lib/visibility-pillar-content";
@@ -8,6 +7,6 @@ export const Route = createFileRoute("/$lang/visibilita-terapeuti-svizzera/")({
   beforeLoad: ({ params }) => {
     if (params.lang !== "it") throw notFound();
   },
-  head: withSocialHead(() => pillarHead("it")),
+  head: () => pillarHead("it"),
   component: () => <VisibilityPillar lang="it" />,
 });
