@@ -44,6 +44,7 @@
 - [ ] Harmonisation complémentaire éventuelle dans les zones protégées exclues et documents historiques : nécessite de concilier les contraintes de préservation
 
 ## Étape 5B (aperçu)
+
 - [x] Lecture serveur du suivi d'indexation, métriques datées, vue « Ma page publique », score vitrine unique
 - [ ] Contrôle visuel connecté admin/thérapeute — attend un compte de test admin et thérapeute
 - [ ] Publication puis redéploiement de run-indexation — attend ton accord

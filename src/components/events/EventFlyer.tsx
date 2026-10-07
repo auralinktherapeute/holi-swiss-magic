@@ -170,7 +170,14 @@ async function renderFlyer(canvas: HTMLCanvasElement, d: FlyerData) {
   ctx.fillText(label, qrX + qrBoxSize / 2 - lw / 2, qrY - 36);
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -180,7 +187,13 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-export function EventFlyer({ data, filename = "flyer-holiswiss.png" }: { data: FlyerData; filename?: string }) {
+export function EventFlyer({
+  data,
+  filename = "flyer-holiswiss.png",
+}: {
+  data: FlyerData;
+  filename?: string;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -235,7 +248,11 @@ export function EventFlyer({ data, filename = "flyer-holiswiss.png" }: { data: F
       </div>
       <div className="flex justify-center">
         <Button type="button" onClick={download} disabled={!ready || busy}>
-          {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          {busy ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
           Télécharger le flyer (PNG)
         </Button>
       </div>

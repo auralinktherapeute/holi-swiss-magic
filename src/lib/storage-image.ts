@@ -42,7 +42,7 @@ export async function createSignedImageUrl(
   if (!transformed.error && transformed.data?.signedUrl) return transformed.data.signedUrl;
 
   const original = await bucket.createSignedUrl(path, expiresIn);
-  return original.error ? null : original.data?.signedUrl ?? null;
+  return original.error ? null : (original.data?.signedUrl ?? null);
 }
 
 export function imageVariantTransform(variant: ImageVariant): Transform {

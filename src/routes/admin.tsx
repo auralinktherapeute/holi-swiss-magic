@@ -24,7 +24,10 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   return (
     <RequireRole role="admin" redirectTo="/fr/connexion">
-      <div className="adm-root" style={{ display: "flex", minHeight: "100dvh", background: "#0f0a1e" }}>
+      <div
+        className="adm-root"
+        style={{ display: "flex", minHeight: "100dvh", background: "#0f0a1e" }}
+      >
         <AdminNav />
         <main style={{ flex: 1, overflowX: "hidden" }}>
           <Outlet />

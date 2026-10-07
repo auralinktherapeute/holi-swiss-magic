@@ -17,7 +17,9 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     // Un id malformé (URL erronée) → 404 propre. Mais on ne masque PLUS les
     // vraies erreurs (ex. requête invalide) en « introuvable » : elles remontent
     // à l'errorComponent, sinon un bug serveur ressemble à un événement absent.
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      params.id,
+    );
     if (!isUuid) throw notFound();
     const res = await getPublishedEvent({ data: { id: params.id } });
     if (!res.event) throw notFound();
@@ -29,7 +31,10 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     const e = (loaderData as any)?.event;
     const url = `${SITE}/${params.lang}/evenements/${params.id}`;
     if (!e) {
-      return { meta: [{ title: "Événement — Holiswiss" }], links: [{ rel: "canonical", href: url }] };
+      return {
+        meta: [{ title: "Événement — Holiswiss" }],
+        links: [{ rel: "canonical", href: url }],
+      };
     }
     // Langue de rédaction de la fiche de l'organisateur (puis canton, langues
     // parlées) — même fonction que le sitemap, qui publie donc la même URL.
@@ -39,7 +44,11 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     // d'un mot (« Atelier de respiration consci »). Marque écrite « Holiswiss »,
     // comme partout ailleurs dans le graphe — uniquement dans les métadonnées.
     const title = buildMetaTitle(e.title, "Holiswiss");
-    const description = (e.short_description || e.long_description || `Événement bien-être en Suisse.`).slice(0, 160);
+    const description = (
+      e.short_description ||
+      e.long_description ||
+      `Événement bien-être en Suisse.`
+    ).slice(0, 160);
     const meta: Array<Record<string, string>> = [
       { title },
       { name: "description", content: description },
@@ -58,9 +67,7 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
       meta.push({ property: "og:image", content: e.image_signed_url });
       meta.push({ name: "twitter:image", content: e.image_signed_url });
     }
-    const startDate = e.start_time
-      ? `${e.event_date}T${e.start_time}`
-      : e.event_date;
+    const startDate = e.start_time ? `${e.event_date}T${e.start_time}` : e.event_date;
     // `endDate` seulement si `end_time` existe réellement en base.
     const endDate = e.event_date && e.end_time ? `${e.event_date}T${e.end_time}` : null;
     // La table events n'a pas de colonne is_online : l'état « en ligne » se
@@ -70,9 +77,21 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
     // « Gratuit »). Aucun prix déduit : sans montant renseigné, pas d'offre.
     const offers =
       e.is_paid === true && e.price != null
-        ? { "@type": "Offer", price: String(e.price), priceCurrency: "CHF", url: canonicalUrl, availability: "https://schema.org/InStock" }
+        ? {
+            "@type": "Offer",
+            price: String(e.price),
+            priceCurrency: "CHF",
+            url: canonicalUrl,
+            availability: "https://schema.org/InStock",
+          }
         : e.is_paid === false
-          ? { "@type": "Offer", price: "0", priceCurrency: "CHF", url: canonicalUrl, availability: "https://schema.org/InStock" }
+          ? {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "CHF",
+              url: canonicalUrl,
+              availability: "https://schema.org/InStock",
+            }
           : null;
     const eventLd: Record<string, unknown> = {
       "@context": "https://schema.org",
@@ -98,16 +117,34 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
       ...(offers ? { offers } : {}),
       url: canonicalUrl,
     };
-    const bcHome: Record<string, string> = { fr: "Accueil", de: "Startseite", it: "Home", en: "Home" };
+    const bcHome: Record<string, string> = {
+      fr: "Accueil",
+      de: "Startseite",
+      it: "Home",
+      en: "Home",
+    };
     const bcEvents: Record<string, string> = {
-      fr: "Événements", de: "Veranstaltungen", it: "Eventi", en: "Events",
+      fr: "Événements",
+      de: "Veranstaltungen",
+      it: "Eventi",
+      en: "Events",
     };
     const breadcrumbLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: bcHome[contentLang] ?? bcHome.fr, item: `${SITE}/${contentLang}` },
-        { "@type": "ListItem", position: 2, name: bcEvents[contentLang] ?? bcEvents.fr, item: `${SITE}/${contentLang}/evenements` },
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: bcHome[contentLang] ?? bcHome.fr,
+          item: `${SITE}/${contentLang}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: bcEvents[contentLang] ?? bcEvents.fr,
+          item: `${SITE}/${contentLang}/evenements`,
+        },
         { "@type": "ListItem", position: 3, name: e.title, item: canonicalUrl },
       ],
     };
@@ -140,8 +177,15 @@ export const Route = createFileRoute("/$lang/evenements/$id")({
 const LOCALE_MAP: Record<string, string> = { fr: "fr-CH", de: "de-CH", it: "it-CH", en: "en-GB" };
 function formatDate(d: string, lang: string) {
   try {
-    return new Date(d).toLocaleDateString(LOCALE_MAP[lang] ?? "fr-CH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  } catch { return d; }
+    return new Date(d).toLocaleDateString(LOCALE_MAP[lang] ?? "fr-CH", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return d;
+  }
 }
 
 function NotFound() {
@@ -178,15 +222,20 @@ function Page() {
   const th = data?.therapist;
   if (!e) return null;
 
-  const flyerUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/${lang}/evenements/${id}`
-    : `${SITE}/${lang}/evenements/${id}`;
+  const flyerUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/${lang}/evenements/${id}`
+      : `${SITE}/${lang}/evenements/${id}`;
 
   const therapistName = th ? `${th.first_name ?? ""} ${th.last_name ?? ""}`.trim() : null;
   const categoryLabel = t(`events_page.categories.${e.category}`, { defaultValue: e.category });
   return (
     <main className="container mx-auto px-4 py-8 sm:py-12 max-w-5xl">
-      <Link to="/$lang/evenements" params={{ lang }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
+      <Link
+        to="/$lang/evenements"
+        params={{ lang }}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+      >
         <ArrowLeft className="h-4 w-4" /> {t("events_page.back")}
       </Link>
 
@@ -215,12 +264,18 @@ function Page() {
             {therapistName && th?.slug && (
               <p className="text-muted-foreground">
                 {t("events_page.with")}{" "}
-                <Link to="/$lang/therapeute/$slug" params={{ lang, slug: th.slug }} className="text-primary hover:underline font-medium">
+                <Link
+                  to="/$lang/therapeute/$slug"
+                  params={{ lang, slug: th.slug }}
+                  className="text-primary hover:underline font-medium"
+                >
                   {therapistName}
                 </Link>
               </p>
             )}
-            {e.short_description && <p className="text-lg text-muted-foreground">{e.short_description}</p>}
+            {e.short_description && (
+              <p className="text-lg text-muted-foreground">{e.short_description}</p>
+            )}
           </header>
 
           <ul className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -231,7 +286,10 @@ function Page() {
             {e.start_time && (
               <li className="flex items-center gap-2 rounded-lg border border-border p-3">
                 <Clock className="h-4 w-4 text-primary" />
-                <span>{e.start_time}{e.end_time ? `–${e.end_time}` : ""}</span>
+                <span>
+                  {e.start_time}
+                  {e.end_time ? `–${e.end_time}` : ""}
+                </span>
               </li>
             )}
             {e.location && (
@@ -249,14 +307,18 @@ function Page() {
             {e.seats && (
               <li className="flex items-center gap-2 rounded-lg border border-border p-3">
                 <Users className="h-4 w-4 text-primary" />
-                <span>{e.seats} {t("events_page.seats")}</span>
+                <span>
+                  {e.seats} {t("events_page.seats")}
+                </span>
               </li>
             )}
             <li className="flex items-center gap-2 rounded-lg border border-border p-3">
               <span className="font-semibold">
                 {e.is_paid ? `${e.price} CHF` : t("events_page.free")}
               </span>
-              {e.price_description && <span className="text-muted-foreground">· {e.price_description}</span>}
+              {e.price_description && (
+                <span className="text-muted-foreground">· {e.price_description}</span>
+              )}
             </li>
           </ul>
 
@@ -286,14 +348,19 @@ function Page() {
                 title: e.title,
                 category: categoryLabel,
                 dateLabel: formatDate(e.event_date, lang),
-                timeLabel: e.start_time ? `${e.start_time}${e.end_time ? `–${e.end_time}` : ""}` : null,
+                timeLabel: e.start_time
+                  ? `${e.start_time}${e.end_time ? `–${e.end_time}` : ""}`
+                  : null,
                 location: e.location ?? null,
                 priceLabel: e.is_paid ? `${e.price} CHF` : t("events_page.free"),
                 therapistName,
                 coverUrl: e.image_signed_url ?? null,
                 targetUrl: flyerUrl,
               }}
-              filename={`holiswiss-${e.title.toLowerCase().replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}.png`}
+              filename={`holiswiss-${e.title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/gi, "-")
+                .slice(0, 40)}.png`}
             />
           </div>
         </aside>

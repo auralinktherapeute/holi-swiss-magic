@@ -12,8 +12,16 @@ import { logTherapistProfileView } from "@/lib/analytics.functions";
 import { getCurrentAnalyticsSessionId } from "@/hooks/use-session-tracking";
 import { cn } from "@/lib/utils";
 import {
-  MapPin, Star, BadgeCheck, Globe, Share2,
-  Shield, ChevronUp, Calendar, ArrowRight, FileText,
+  MapPin,
+  Star,
+  BadgeCheck,
+  Globe,
+  Share2,
+  Shield,
+  ChevronUp,
+  Calendar,
+  ArrowRight,
+  FileText,
 } from "lucide-react";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { getTherapistBySlug } from "@/lib/public.functions";
@@ -51,12 +59,22 @@ import { LastUpdated } from "@/components/holiswiss/LastUpdated";
 import { CONTENT_DATE_COLUMN, pageModified, type PageModified } from "@/lib/page-dates";
 
 const LANG_FLAG: Record<string, string> = {
-  fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", en: "🇬🇧", es: "🇪🇸", pt: "🇵🇹",
-  ru: "🇷🇺", ar: "🇸🇦", zh: "🇨🇳", ja: "🇯🇵", nl: "🇳🇱", tr: "🇹🇷",
+  fr: "🇫🇷",
+  de: "🇩🇪",
+  it: "🇮🇹",
+  en: "🇬🇧",
+  es: "🇪🇸",
+  pt: "🇵🇹",
+  ru: "🇷🇺",
+  ar: "🇸🇦",
+  zh: "🇨🇳",
+  ja: "🇯🇵",
+  nl: "🇳🇱",
+  tr: "🇹🇷",
 };
 
 const TherapistMiniMap = lazy(() =>
-  import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap }))
+  import("@/components/map/TherapistMap").then((m) => ({ default: m.TherapistMap })),
 );
 
 const SITE = "https://holiswiss.ch";
@@ -102,10 +120,8 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       profileSourceLang(therapist.profile_translations),
     );
     const tFaq = i18n.getFixedT(faqLang);
-    const autoFaqs = buildTherapistAutoFaq(
-      therapist,
-      certifications ?? [],
-      (key, vars) => String(tFaq(key, vars as never)),
+    const autoFaqs = buildTherapistAutoFaq(therapist, certifications ?? [], (key, vars) =>
+      String(tFaq(key, vars as never)),
     );
     return {
       therapist,
@@ -302,12 +318,14 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
 
     // hasCredential : uniquement les certifications réellement vérifiées et
     // affichées sur la page. Aucune donnée déclarative n'est balisée.
-    const verifiedCerts = (((loaderData as any)?.certifications ?? []) as Array<{
-      name?: string | null;
-      issuer?: string | null;
-      verification_status?: string | null;
-      expires_at?: string | null;
-    }>).filter(
+    const verifiedCerts = (
+      ((loaderData as any)?.certifications ?? []) as Array<{
+        name?: string | null;
+        issuer?: string | null;
+        verification_status?: string | null;
+        expires_at?: string | null;
+      }>
+    ).filter(
       (c) =>
         c?.verification_status === "verified" &&
         (c.name ?? "").trim().length > 0 &&
@@ -352,7 +370,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       .filter((s) => s && s.visible !== false && (s.name ?? "").trim().length > 0)
       .slice(0, 20)
       .map((s, i) => {
-        const price = typeof s.price_chf === "number" ? s.price_chf : typeof s.price === "number" ? s.price : undefined;
+        const price =
+          typeof s.price_chf === "number"
+            ? s.price_chf
+            : typeof s.price === "number"
+              ? s.price
+              : undefined;
         const node: Record<string, unknown> = {
           "@type": "Service",
           "@id": `${url}#service-${i}`,
@@ -382,7 +405,12 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       "@type": "BreadcrumbList",
       "@id": `${url}#breadcrumb`,
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: copy.breadcrumbHome, item: `${SITE}/${params.lang}` },
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: copy.breadcrumbHome,
+          item: `${SITE}/${params.lang}`,
+        },
         {
           "@type": "ListItem",
           position: 2,
@@ -432,26 +460,34 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
     // page ; les secondes dans la langue où le praticien les a écrites, d'où
     // `inLanguage` porté par question et, sur le nœud, seulement s'il n'y a
     // que des questions générées.
-    const faqList = ((loaderData as any)?.faqs ?? []) as Array<{ question: string; answer: string }>;
+    const faqList = ((loaderData as any)?.faqs ?? []) as Array<{
+      question: string;
+      answer: string;
+    }>;
     const autoFaqList: AutoFaqItem[] = loaderData?.autoFaqs ?? [];
-    const faqNode = autoFaqList.length + faqList.length > 0 ? [{
-      "@type": "FAQPage",
-      "@id": `${url}#faq`,
-      ...(faqList.length === 0 ? { inLanguage: pageLang } : {}),
-      mainEntity: [
-        ...autoFaqList.map((f) => ({
-          "@type": "Question",
-          name: f.question,
-          inLanguage: pageLang,
-          acceptedAnswer: { "@type": "Answer", text: f.answer },
-        })),
-        ...faqList.map((f) => ({
-          "@type": "Question",
-          name: f.question,
-          acceptedAnswer: { "@type": "Answer", text: f.answer },
-        })),
-      ],
-    }] : [];
+    const faqNode =
+      autoFaqList.length + faqList.length > 0
+        ? [
+            {
+              "@type": "FAQPage",
+              "@id": `${url}#faq`,
+              ...(faqList.length === 0 ? { inLanguage: pageLang } : {}),
+              mainEntity: [
+                ...autoFaqList.map((f) => ({
+                  "@type": "Question",
+                  name: f.question,
+                  inLanguage: pageLang,
+                  acceptedAnswer: { "@type": "Answer", text: f.answer },
+                })),
+                ...faqList.map((f) => ({
+                  "@type": "Question",
+                  name: f.question,
+                  acceptedAnswer: { "@type": "Answer", text: f.answer },
+                })),
+              ],
+            },
+          ]
+        : [];
 
     // ProfilePage : la page elle-même, seul nœud où `dateModified` est valide
     // (ni Person ni HealthAndBeautyBusiness ne l'acceptent). Même valeur que
@@ -468,7 +504,14 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
       breadcrumb: { "@id": `${url}#breadcrumb` },
       ...(modified ? { dateModified: modified.iso } : {}),
     };
-    const graph: Array<Record<string, unknown>> = [profilePage, person, ...businessNodes, ...serviceNodes, ...faqNode, breadcrumbs];
+    const graph: Array<Record<string, unknown>> = [
+      profilePage,
+      person,
+      ...businessNodes,
+      ...serviceNodes,
+      ...faqNode,
+      breadcrumbs,
+    ];
     const ld = { "@context": "https://schema.org", "@graph": graph };
     return {
       meta,
@@ -483,7 +526,19 @@ export const Route = createFileRoute("/$lang/therapeute/$slug")({
   },
 });
 
-type ServiceEntry = { name: string; duration?: number; duration_min?: number; price?: number; price_chf?: number; format?: string; color?: string; description?: string; short_description?: string; kind?: "session" | "package"; visible?: boolean };
+type ServiceEntry = {
+  name: string;
+  duration?: number;
+  duration_min?: number;
+  price?: number;
+  price_chf?: number;
+  format?: string;
+  color?: string;
+  description?: string;
+  short_description?: string;
+  kind?: "session" | "package";
+  visible?: boolean;
+};
 type AccreditationEntry = { org: string; number?: string };
 
 // Sections secondaires (événements, voix d'experts, FAQ automatique et FAQ du
@@ -543,7 +598,11 @@ function ContentCard({
       initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: compact ? 6 : 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: index * (compact ? 0.05 : 0.08), ease: [0.16, 1, 0.3, 1] }}
+      transition={{
+        duration: 0.4,
+        delay: index * (compact ? 0.05 : 0.08),
+        ease: [0.16, 1, 0.3, 1],
+      }}
       whileHover={shouldReduceMotion ? undefined : { y: compact ? -4 : -6 }}
       className="group"
     >
@@ -552,10 +611,14 @@ function ContentCard({
         params={params}
         className={cn(
           "flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:border-[rgba(184,110,249,0.45)] hover:bg-[rgba(255,255,255,0.055)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b86ef9]",
-          compact ? "hover:shadow-[0_10px_24px_-12px_rgba(0,0,0,0.45)]" : "hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)]"
+          compact
+            ? "hover:shadow-[0_10px_24px_-12px_rgba(0,0,0,0.45)]"
+            : "hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)]",
         )}
       >
-        <div className={cn("relative overflow-hidden", compact ? "aspect-[16/9]" : "aspect-[16/10]")}>
+        <div
+          className={cn("relative overflow-hidden", compact ? "aspect-[16/9]" : "aspect-[16/10]")}
+        >
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -565,15 +628,24 @@ function ContentCard({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2d1248] via-[#231040] to-[#1a0a2e]">
-              <PlaceholderIcon className={cn("text-[rgba(184,110,249,0.35)]", compact ? "h-7 w-7" : "h-10 w-10")} />
+              <PlaceholderIcon
+                className={cn("text-[rgba(184,110,249,0.35)]", compact ? "h-7 w-7" : "h-10 w-10")}
+              />
             </div>
           )}
-          <div className={cn("pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(10,4,20,0.88)] to-transparent", compact ? "h-14" : "h-24")} />
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(10,4,20,0.88)] to-transparent",
+              compact ? "h-14" : "h-24",
+            )}
+          />
           {badge && (
-            <span className={cn(
-              "absolute left-3 top-3 rounded-full bg-[rgba(184,110,249,0.92)] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm",
-              compact ? "px-2 py-0.5 text-[9px]" : "px-2.5 py-1 text-[10px]"
-            )}>
+            <span
+              className={cn(
+                "absolute left-3 top-3 rounded-full bg-[rgba(184,110,249,0.92)] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm",
+                compact ? "px-2 py-0.5 text-[9px]" : "px-2.5 py-1 text-[10px]",
+              )}
+            >
               {badge}
             </span>
           )}
@@ -581,34 +653,55 @@ function ContentCard({
 
         <div className={cn("flex flex-1 flex-col", compact ? "p-3" : "p-4")}>
           {meta && (
-            <div className={cn("flex items-center gap-2 text-[rgba(255,255,255,0.55)]", compact ? "mb-1.5 text-[10px]" : "mb-2 text-xs")}>
-              <Calendar className={cn("shrink-0 text-[rgba(184,110,249,0.7)]", compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
+            <div
+              className={cn(
+                "flex items-center gap-2 text-[rgba(255,255,255,0.55)]",
+                compact ? "mb-1.5 text-[10px]" : "mb-2 text-xs",
+              )}
+            >
+              <Calendar
+                className={cn(
+                  "shrink-0 text-[rgba(184,110,249,0.7)]",
+                  compact ? "h-3 w-3" : "h-3.5 w-3.5",
+                )}
+              />
               <span className="truncate">{meta}</span>
             </div>
           )}
 
-          <h3 className={cn(
-            "line-clamp-2 font-semibold leading-snug text-white transition-colors group-hover:text-[#d5b0ff]",
-            compact ? "mb-1.5 text-sm" : "mb-2 text-base"
-          )}>
+          <h3
+            className={cn(
+              "line-clamp-2 font-semibold leading-snug text-white transition-colors group-hover:text-[#d5b0ff]",
+              compact ? "mb-1.5 text-sm" : "mb-2 text-base",
+            )}
+          >
             {title}
           </h3>
 
           {description && (
-            <p className={cn(
-              "line-clamp-2 flex-1 leading-relaxed text-[rgba(255,255,255,0.62)]",
-              compact ? "mb-3 text-xs" : "mb-4 text-sm line-clamp-3"
-            )}>
+            <p
+              className={cn(
+                "line-clamp-2 flex-1 leading-relaxed text-[rgba(255,255,255,0.62)]",
+                compact ? "mb-3 text-xs" : "mb-4 text-sm line-clamp-3",
+              )}
+            >
               {description}
             </p>
           )}
 
-          <div className={cn(
-            "mt-auto flex items-center gap-1.5 font-semibold text-[#b86ef9] transition-colors group-hover:text-[#d5b0ff]",
-            compact ? "text-xs" : "text-sm"
-          )}>
+          <div
+            className={cn(
+              "mt-auto flex items-center gap-1.5 font-semibold text-[#b86ef9] transition-colors group-hover:text-[#d5b0ff]",
+              compact ? "text-xs" : "text-sm",
+            )}
+          >
             <span>{cta}</span>
-            <ArrowRight className={cn("transition-transform duration-300 group-hover:translate-x-1", compact ? "h-3 w-3" : "h-4 w-4")} />
+            <ArrowRight
+              className={cn(
+                "transition-transform duration-300 group-hover:translate-x-1",
+                compact ? "h-3 w-3" : "h-4 w-4",
+              )}
+            />
           </div>
         </div>
       </Link>
@@ -649,12 +742,14 @@ function ProfilePage() {
   const { data: rawTh, isLoading } = useQuery({
     queryKey: ["therapist", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = (await supabase
         .from("therapists")
-        .select("id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,is_trainer,trainer_subjects,trainer_institution,trainer_since,profile_translations")
+        .select(
+          "id,user_id,slug,first_name,last_name,title,meta_title,meta_description,short_bio,bio,photo_url,specialties,approaches,languages,address,postal_code,city,canton,country,latitude,longitude,consultation_modes,price_min,price_max,currency,insurance_accepted,website,status,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,is_trainer,trainer_subjects,trainer_institution,trainer_since,profile_translations",
+        )
         .eq("slug", slug)
         .eq("status", "active")
-        .maybeSingle() as any;
+        .maybeSingle()) as any;
       if (error) throw error;
       return data;
     },
@@ -696,7 +791,9 @@ function ProfilePage() {
 
       const enriched = await (supabase as any)
         .from("reviews")
-        .select("id,rating,comment,author_name,created_at,therapist_reply,therapist_reply_at,therapist_reply_status")
+        .select(
+          "id,rating,comment,author_name,created_at,therapist_reply,therapist_reply_at,therapist_reply_status",
+        )
         .eq("therapist_id", th!.id)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
@@ -754,25 +851,40 @@ function ProfilePage() {
   });
   const sessions = services.filter((s) => (s as any).kind !== "package");
   const packages = services.filter((s) => (s as any).kind === "package");
-  const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations) ? th.accreditations : [];
+  const accreditations: AccreditationEntry[] = Array.isArray(th.accreditations)
+    ? th.accreditations
+    : [];
   const specialties: string[] = Array.isArray(th.specialties) ? th.specialties : [];
   const languages: string[] = Array.isArray(th.languages) ? th.languages : [];
-  const gallery: string[] = Array.isArray(th.gallery_urls) ? th.gallery_urls.filter((u: any) => typeof u === "string" && u.length > 0) : [];
+  const gallery: string[] = Array.isArray(th.gallery_urls)
+    ? th.gallery_urls.filter((u: any) => typeof u === "string" && u.length > 0)
+    : [];
   // Régression corrigée : `is_premium` n'existe pas en production — le plan
   // réel est porté par `subscription_plan`.
   const isPro = isProPlan(th.subscription_plan);
   const showGallery = isPro && gallery.length > 0;
   const certifications = ((loaderData as any)?.certifications ?? []) as any[];
-  const orgCertifications = ((loaderData as any)?.orgCertifications ?? []) as OrgCertificationBadge[];
+  const orgCertifications = ((loaderData as any)?.orgCertifications ??
+    []) as OrgCertificationBadge[];
 
   const therapistArticles = ((loaderData as any)?.articles ?? []) as Array<{
-    id: string; slug: string; titre: string; extrait: string | null;
-    image_couverture: string | null; date_publication: string | null;
+    id: string;
+    slug: string;
+    titre: string;
+    extrait: string | null;
+    image_couverture: string | null;
+    date_publication: string | null;
   }>;
   const therapistEvents = ((loaderData as any)?.events ?? []) as Array<{
-    id: string; title: string; category: string | null; event_date: string | null;
-    start_time: string | null; location: string | null; is_paid: boolean | null;
-    price: number | null; image_signed_url: string | null;
+    id: string;
+    title: string;
+    category: string | null;
+    event_date: string | null;
+    start_time: string | null;
+    location: string | null;
+    is_paid: boolean | null;
+    price: number | null;
+    image_signed_url: string | null;
   }>;
 
   const trustBadges = buildTrustBadges({
@@ -802,15 +914,17 @@ function ProfilePage() {
     count: reviews?.filter((r: any) => r.rating === n).length ?? 0,
   }));
 
-  const reviewLocale = ({ de: "de-CH", it: "it-CH", en: "en-GB" } as Record<string, string>)[lang] ?? "fr-CH";
+  const reviewLocale =
+    ({ de: "de-CH", it: "it-CH", en: "en-GB" } as Record<string, string>)[lang] ?? "fr-CH";
 
   return (
     <div className="min-h-screen bg-[#0f0a1e] pb-20">
-
       {/* ── HERO ── */}
       <div
         className="relative overflow-hidden"
-        style={{ background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)" }}
+        style={{
+          background: "radial-gradient(ellipse at top, #3d1a5c 0%, #1a1035 50%, #0f0a1e 100%)",
+        }}
       >
         <div className="px-6 pb-8 pt-8 sm:px-8 sm:pt-16 lg:px-12 2xl:px-16 md:min-h-64 md:flex md:items-end">
           <div className="mx-auto w-full max-w-[1440px]">
@@ -820,10 +934,7 @@ function ProfilePage() {
                   rend directement l'état final — auparavant `opacity: 0`
                   laissait photo, nom et h1 invisibles jusqu'à l'hydratation
                   (et pour tout robot qui n'exécute pas le JS). */}
-              <motion.div
-                initial={false}
-                className="relative shrink-0"
-              >
+              <motion.div initial={false} className="relative shrink-0">
                 <div
                   className="h-28 w-28 rounded-full overflow-hidden"
                   style={{
@@ -845,30 +956,37 @@ function ProfilePage() {
                   </div>
                 </div>
                 {isPro && (
-                  <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-sm shadow-lg" title={t("therapist_profile.premium")}>⚡</span>
+                  <span
+                    className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-sm shadow-lg"
+                    title={t("therapist_profile.premium")}
+                  >
+                    ⚡
+                  </span>
                 )}
                 {!isPro && th.verified && (
-                  <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#b86ef9] shadow-lg" title={t("therapist_profile.verified")}>
+                  <span
+                    className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#b86ef9] shadow-lg"
+                    title={t("therapist_profile.verified")}
+                  >
                     <BadgeCheck className="h-4 w-4 text-white" />
                   </span>
                 )}
                 {/* Variante 2 : sceau chevauchant le bas-droit de la photo */}
                 {/* Desktop : sous la photo, selon la variante choisie */}
-                <OrgBadgeDisplay items={orgCertifications} variant={1} className="mt-3 hidden sm:flex" />
+                <OrgBadgeDisplay
+                  items={orgCertifications}
+                  variant={1}
+                  className="mt-3 hidden sm:flex"
+                />
               </motion.div>
-
 
               {/* Certifications par organisme (SVHH…) — masqué si aucune active */}
               <div className="sm:hidden">
                 <OrgBadgeDisplay items={orgCertifications} variant={1} />
               </div>
 
-
               {/* Infos */}
-              <motion.div
-                initial={false}
-                className="flex-1 min-w-0"
-              >
+              <motion.div initial={false} className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl sm:text-3xl font-bold text-white">{fullName}</h1>
                   {th.verified && (
@@ -879,11 +997,14 @@ function ProfilePage() {
                 </div>
 
                 <p className="text-[#b86ef9] font-medium mb-2">
-                  {th.title}{th.city ? ` · ${th.city}${th.canton ? ` (${th.canton})` : ""}` : ""}
+                  {th.title}
+                  {th.city ? ` · ${th.city}${th.canton ? ` (${th.canton})` : ""}` : ""}
                 </p>
 
                 {th.translationNotice && (
-                  <p className="mb-2 text-xs italic text-[rgba(255,255,255,0.6)]" lang={lang}>{th.translationNotice}</p>
+                  <p className="mb-2 text-xs italic text-[rgba(255,255,255,0.6)]" lang={lang}>
+                    {th.translationNotice}
+                  </p>
                 )}
                 {th.short_bio && (
                   <p className="mb-3 max-w-3xl text-sm sm:text-[15px] leading-relaxed text-[rgba(255,255,255,0.78)]">
@@ -898,15 +1019,20 @@ function ProfilePage() {
                   <TrustBadges badges={heroBadges} lang={lang} className="mb-3" />
                 )}
 
-
-                <SocialLinksRow socialLinks={(th as any).social_links} name={fullName} className="mb-3" />
+                <SocialLinksRow
+                  socialLinks={(th as any).social_links}
+                  name={fullName}
+                  className="mb-3"
+                />
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[rgba(255,255,255,0.5)]">
                   {avg && (
                     <span className="flex items-center gap-1.5">
                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                       <span className="text-white font-semibold">{avg}</span>
-                      <span>({t("therapist_profile.reviews_count", { count: reviews?.length })})</span>
+                      <span>
+                        ({t("therapist_profile.reviews_count", { count: reviews?.length })})
+                      </span>
                     </span>
                   )}
                   {th.years_experience && (
@@ -915,13 +1041,20 @@ function ProfilePage() {
                     </span>
                   )}
                   {th.website && (
-                    <a href={th.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[#5cc8fa] transition">
+                    <a
+                      href={th.website}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 hover:text-[#5cc8fa] transition"
+                    >
                       <Globe className="h-3.5 w-3.5" /> {t("therapist_profile.website")}
                     </a>
                   )}
                   {th.price_min && (
                     <span className="flex items-center gap-1 text-[rgba(255,255,255,0.7)]">
-                      💶 {th.price_min}{th.price_max ? `–${th.price_max}` : ""} {th.currency ?? "CHF"} {t("therapist_profile.per_session")}
+                      💶 {th.price_min}
+                      {th.price_max ? `–${th.price_max}` : ""} {th.currency ?? "CHF"}{" "}
+                      {t("therapist_profile.per_session")}
                     </span>
                   )}
                   {/* Date réelle de la fiche, calculée par le loader (SSR). */}
@@ -936,7 +1069,10 @@ function ProfilePage() {
                 {specialties.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {specialties.map((s) => (
-                      <span key={s} className="rounded-full bg-[rgba(184,110,249,0.1)] border border-[rgba(184,110,249,0.25)] px-3 py-1 text-xs text-[rgba(255,255,255,0.7)]">
+                      <span
+                        key={s}
+                        className="rounded-full bg-[rgba(184,110,249,0.1)] border border-[rgba(184,110,249,0.25)] px-3 py-1 text-xs text-[rgba(255,255,255,0.7)]"
+                      >
                         {s}
                       </span>
                     ))}
@@ -945,12 +1081,19 @@ function ProfilePage() {
               </motion.div>
 
               {/* Actions */}
-              <motion.div
-                initial={false}
-                className="flex gap-2 shrink-0"
-              >
-                <button type="button" onClick={share} aria-label={copied ? t("therapist_profile.copied") : t("therapist_profile.share")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition" title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}>
-                  {copied ? <span className="text-[10px] font-bold text-[#5cc8fa]">✓</span> : <Share2 className="h-4 w-4" />}
+              <motion.div initial={false} className="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={share}
+                  aria-label={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.08)] text-[#b86ef9] hover:bg-[rgba(184,110,249,0.15)] transition"
+                  title={copied ? t("therapist_profile.copied") : t("therapist_profile.share")}
+                >
+                  {copied ? (
+                    <span className="text-[10px] font-bold text-[#5cc8fa]">✓</span>
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
                 </button>
                 <FavoriteButton therapistId={th.id} />
                 {(th.city || th.address) && (
@@ -971,16 +1114,17 @@ function ProfilePage() {
       {/* ── LAYOUT PRINCIPAL ── */}
       <div className="mx-auto w-full max-w-[1100px] px-4 sm:px-6 lg:px-8 mt-6">
         <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
-
           {/* ── COLONNE GAUCHE ── */}
           <div className="space-y-6 min-w-0 lg:col-span-8">
-
             {/* À propos — contenu principal : jamais masqué au SSR (initial={false}). */}
             {th.bio && (
-              <motion.section initial={false}
+              <motion.section
+                initial={false}
                 className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
               >
-                <h2 className="mb-4 text-lg font-bold text-white">{t("therapist_profile.about")}</h2>
+                <h2 className="mb-4 text-lg font-bold text-white">
+                  {t("therapist_profile.about")}
+                </h2>
                 <p
                   className={`whitespace-pre-line text-[rgba(255,255,255,0.72)] leading-relaxed text-sm ${
                     bioIsLong && !bioExpanded ? "line-clamp-3" : ""
@@ -993,7 +1137,9 @@ function ProfilePage() {
                     onClick={() => setBioExpanded((v) => !v)}
                     className="mt-3 text-xs font-semibold text-[#b86ef9] hover:text-white transition"
                   >
-                    {bioExpanded ? t("therapist_profile.read_less") : t("therapist_profile.read_more")}
+                    {bioExpanded
+                      ? t("therapist_profile.read_less")
+                      : t("therapist_profile.read_more")}
                   </button>
                 )}
               </motion.section>
@@ -1001,9 +1147,7 @@ function ProfilePage() {
 
             {/* Métadonnées compactes — comblent le vide sous la bio */}
             {(languages.length > 0 || th.city || th.canton) && (
-              <motion.div initial={false}
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-              >
+              <motion.div initial={false} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {languages.length > 0 && (
                   <div className="rounded-2xl border border-white/5 bg-[#1a0a2e]/60 p-5">
                     <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[rgba(255,255,255,0.45)]">
@@ -1019,7 +1163,9 @@ function ProfilePage() {
                             key={code}
                             className="inline-flex items-center gap-2 rounded-full border border-[rgba(184,110,249,0.3)] bg-[rgba(184,110,249,0.1)] px-3 py-1.5 text-sm text-white"
                           >
-                            <span aria-hidden className="text-base leading-none">{flag}</span>
+                            <span aria-hidden className="text-base leading-none">
+                              {flag}
+                            </span>
                             {label}
                           </span>
                         );
@@ -1037,7 +1183,9 @@ function ProfilePage() {
                         <MapPin className="h-4 w-4" />
                       </div>
                       <span className="font-medium">
-                        {th.city}{th.canton ? ` · ${th.canton}` : ""}{th.postal_code ? `, ${th.postal_code}` : ""}
+                        {th.city}
+                        {th.canton ? ` · ${th.canton}` : ""}
+                        {th.postal_code ? `, ${th.postal_code}` : ""}
                       </span>
                     </div>
                   </div>
@@ -1047,12 +1195,20 @@ function ProfilePage() {
 
             {/* Galerie photos (Premium) */}
             {showGallery && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
+              <motion.section
+                variants={FADE_UP}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true }}
                 className="rounded-2xl border border-amber-400/25 bg-gradient-to-br from-[#1a0a2e] to-[#1f1235] p-6"
               >
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">⚡ Premium</span>
-                  <h2 className="text-lg font-bold text-white">{t("therapist_profile.gallery_title")}</h2>
+                  <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                    ⚡ Premium
+                  </span>
+                  <h2 className="text-lg font-bold text-white">
+                    {t("therapist_profile.gallery_title")}
+                  </h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {gallery.slice(0, 6).map((url, i) => (
@@ -1074,17 +1230,23 @@ function ProfilePage() {
                 </div>
               </motion.section>
             )}
-
           </div>
 
           {/* ── SIDEBAR DROITE (réservation — partie supérieure uniquement) ── */}
           <div className="space-y-4 lg:col-span-4 lg:sticky lg:top-4 lg:self-start">
-
             <div className="rounded-2xl border border-[rgba(184,110,249,0.25)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur">
               <BookingWidget
                 therapistId={th.id}
                 therapistName={fullName}
-                locationLabel={[ (th as any).address, [(th as any).postal_code, (th as any).city].filter(Boolean).join(" ") ].map((x) => (typeof x === "string" ? x.trim() : "")).filter(Boolean).join(", ") || null}
+                locationLabel={
+                  [
+                    (th as any).address,
+                    [(th as any).postal_code, (th as any).city].filter(Boolean).join(" "),
+                  ]
+                    .map((x) => (typeof x === "string" ? x.trim() : ""))
+                    .filter(Boolean)
+                    .join(", ") || null
+                }
                 services={services.map((s) => ({
                   name: s.name,
                   duration: (s as any).duration_min ?? s.duration,
@@ -1097,7 +1259,9 @@ function ProfilePage() {
             </div>
 
             <div className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[rgba(13,7,30,0.85)] p-5 backdrop-blur space-y-3">
-              <h3 className="font-semibold text-white text-sm">{t("therapist_profile.contact_title")}</h3>
+              <h3 className="font-semibold text-white text-sm">
+                {t("therapist_profile.contact_title")}
+              </h3>
               {th.phone && (
                 <div>
                   <p className="text-xs text-[rgba(255,255,255,0.4)] mb-1 flex items-center gap-1">
@@ -1116,7 +1280,10 @@ function ProfilePage() {
                 </div>
               )}
               {th.email && (
-                <a href={`mailto:${th.email}`} className="flex items-center gap-2 text-sm text-[rgba(255,255,255,0.6)] hover:text-[#5cc8fa] transition">
+                <a
+                  href={`mailto:${th.email}`}
+                  className="flex items-center gap-2 text-sm text-[rgba(255,255,255,0.6)] hover:text-[#5cc8fa] transition"
+                >
                   {t("therapist_profile.email_send")}
                 </a>
               )}
@@ -1126,278 +1293,341 @@ function ProfilePage() {
 
         {/* ── SECTIONS BASSES (même conteneur, largeur homogène) ── */}
         <div className="mt-6 w-full min-w-0 space-y-6">
+          {/* Services / tarifs */}
+          {services.length > 0 && (
+            <motion.section
+              initial={false}
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+            >
+              <h2 className="mb-1 text-lg font-bold text-white">
+                {t("therapist_profile.services_title")}
+              </h2>
+              <p className="mb-5 text-xs text-[rgba(255,255,255,0.45)]">
+                {t("therapist_profile.services_subtitle", {
+                  defaultValue: "Séances individuelles et forfaits d'accompagnement.",
+                })}
+              </p>
 
-            {/* Services / tarifs */}
-            {services.length > 0 && (
-              <motion.section initial={false}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 className="mb-1 text-lg font-bold text-white">{t("therapist_profile.services_title")}</h2>
-                <p className="mb-5 text-xs text-[rgba(255,255,255,0.45)]">
-                  {t("therapist_profile.services_subtitle", { defaultValue: "Séances individuelles et forfaits d'accompagnement." })}
-                </p>
-
-                {sessions.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[rgba(255,255,255,0.55)]">
-                      <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
-                      {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
-                    </h3>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {sessions.map((s, i) => (
-                        <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
-                      ))}
-                    </div>
+              {sessions.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[rgba(255,255,255,0.55)]">
+                    <Sparkles className="h-3.5 w-3.5 text-[#b86ef9]" />
+                    {t("therapist_profile.sessions_group", { defaultValue: "Séances" })}
+                  </h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {sessions.map((s, i) => (
+                      <ServiceCard key={`s-${i}`} service={s} variant="session" tLang={lang} />
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {packages.length > 0 && (
-                  <div>
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300/90">
-                      <PackageIcon className="h-3.5 w-3.5" />
-                      {t("therapist_profile.packages_group", { defaultValue: "Forfaits d'accompagnement" })}
-                    </h3>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {packages.map((s, i) => (
-                        <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </motion.section>
-            )}
-
-            <section className="rounded-2xl border border-white/10 p-5 text-sm text-white/70">
-              <h2 className="mb-2 font-semibold text-white">{institutionalCopy(lang).methodLabel}</h2>
-              <p>{institutionalCopy(lang).method}</p>
-              <p className="mt-2">{institutionalCopy(lang).limit}</p>
-            </section>
-            {/* Accréditations */}
-            {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
-              <motion.div initial={false}>
-                <CertificationsShowcase
-                  title={t("therapist_profile.certifications_title")}
-                  badges={trustBadges.filter((b) => b.kind === "certification" || b.kind === "accreditation")}
-                  labels={{
-                    expand: t("therapist_profile.certifications_expand", { defaultValue: "Voir tous les diplômes" }),
-                    collapse: t("therapist_profile.certifications_collapse", { defaultValue: "Réduire" }),
-                  }}
-                  notice={[
-                    trustBadges.some((b) => (b.kind === "certification" || b.kind === "accreditation") && !b.verified)
-                      ? t("therapist_profile.declared_notice", {
-                          defaultValue:
-                            "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
-                        })
-                      : null,
-                    t("therapist_profile.certifications_disclaimer", {
-                      defaultValue: CERTIFICATION_RESPONSIBILITY_NOTICE.fr,
-                    }),
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                />
-              </motion.div>
-            )}
-
-
-            {/* Événements & Voix d'experts — côte à côte sur desktop */}
-            <div className="grid gap-5 lg:grid-cols-2">
-              {/* Événements à venir */}
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-4 lg:p-5"
-              >
-                <h2 className="mb-3 text-base font-bold text-white">
-                  {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
-                </h2>
-
-                {therapistEvents.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
-                    <Calendar className="mb-2 h-6 w-6 text-[rgba(184,110,249,0.35)]" />
-                    <p className="max-w-xs text-xs text-[rgba(255,255,255,0.55)]">
-                      {t("therapist_profile.events_empty", { defaultValue: "Aucun événement à venir pour le moment." })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    {therapistEvents.map((e, i) => {
-                      const eventMeta = [
-                        e.event_date
-                          ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
-                              day: "numeric", month: "short", year: "numeric",
-                            })
-                          : null,
-                        e.start_time ? e.start_time.slice(0, 5) : null,
-                      ].filter(Boolean).join(" · ");
-
-                      const eventDescription = [
-                        e.location,
-                        e.is_paid && e.price != null ? `${e.price} CHF` : null,
-                      ].filter(Boolean).join(" · ");
-
-                      return (
-                        <ContentCard
-                          key={e.id}
-                          imageUrl={e.image_signed_url}
-                          alt={e.title}
-                          to="/$lang/evenements/$id"
-                          params={{ lang, id: e.id }}
-                          badge={e.category || t("therapist_profile.event_badge", { defaultValue: "Événement" })}
-                          title={e.title}
-                          meta={eventMeta}
-                          description={eventDescription || null}
-                          cta={t("therapist_profile.event_cta", { defaultValue: "Voir" })}
-                          index={i}
-                          placeholderIcon="calendar"
-                          compact
-                        />
-                      );
+              {packages.length > 0 && (
+                <div>
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300/90">
+                    <PackageIcon className="h-3.5 w-3.5" />
+                    {t("therapist_profile.packages_group", {
+                      defaultValue: "Forfaits d'accompagnement",
                     })}
+                  </h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {packages.map((s, i) => (
+                      <ServiceCard key={`p-${i}`} service={s} variant="package" tLang={lang} />
+                    ))}
                   </div>
+                </div>
+              )}
+            </motion.section>
+          )}
+
+          <section className="rounded-2xl border border-white/10 p-5 text-sm text-white/70">
+            <h2 className="mb-2 font-semibold text-white">{institutionalCopy(lang).methodLabel}</h2>
+            <p>{institutionalCopy(lang).method}</p>
+            <p className="mt-2">{institutionalCopy(lang).limit}</p>
+          </section>
+          {/* Accréditations */}
+          {trustBadges.some((b) => b.kind === "certification" || b.kind === "accreditation") && (
+            <motion.div initial={false}>
+              <CertificationsShowcase
+                title={t("therapist_profile.certifications_title")}
+                badges={trustBadges.filter(
+                  (b) => b.kind === "certification" || b.kind === "accreditation",
                 )}
-              </motion.section>
+                labels={{
+                  expand: t("therapist_profile.certifications_expand", {
+                    defaultValue: "Voir tous les diplômes",
+                  }),
+                  collapse: t("therapist_profile.certifications_collapse", {
+                    defaultValue: "Réduire",
+                  }),
+                }}
+                notice={[
+                  trustBadges.some(
+                    (b) =>
+                      (b.kind === "certification" || b.kind === "accreditation") && !b.verified,
+                  )
+                    ? t("therapist_profile.declared_notice", {
+                        defaultValue:
+                          "Les éléments en gris sont déclarés par le praticien et n'ont pas encore été vérifiés par Holiswiss.",
+                      })
+                    : null,
+                  t("therapist_profile.certifications_disclaimer", {
+                    defaultValue: CERTIFICATION_RESPONSIBILITY_NOTICE.fr,
+                  }),
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              />
+            </motion.div>
+          )}
 
-              {/* Voix d'experts */}
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-4 lg:p-5"
-              >
-                <h2 className="mb-3 text-base font-bold text-white">
-                  {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts" })}
-                </h2>
+          {/* Événements & Voix d'experts — côte à côte sur desktop */}
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* Événements à venir */}
+            <motion.section
+              variants={FADE_UP}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-4 lg:p-5"
+            >
+              <h2 className="mb-3 text-base font-bold text-white">
+                {t("therapist_profile.events_title", { defaultValue: "Événements à venir" })}
+              </h2>
 
-                {therapistArticles.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
-                    <FileText className="mb-2 h-6 w-6 text-[rgba(184,110,249,0.35)]" />
-                    <p className="max-w-xs text-xs text-[rgba(255,255,255,0.55)]">
-                      {t("therapist_profile.articles_empty", { defaultValue: "Aucune publication disponible pour le moment." })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    {therapistArticles.map((a, i) => {
-                      const articleMeta = a.date_publication
-                        ? new Date(a.date_publication).toLocaleDateString(lang, {
-                            day: "numeric", month: "short", year: "numeric",
+              {therapistEvents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
+                  <Calendar className="mb-2 h-6 w-6 text-[rgba(184,110,249,0.35)]" />
+                  <p className="max-w-xs text-xs text-[rgba(255,255,255,0.55)]">
+                    {t("therapist_profile.events_empty", {
+                      defaultValue: "Aucun événement à venir pour le moment.",
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {therapistEvents.map((e, i) => {
+                    const eventMeta = [
+                      e.event_date
+                        ? new Date(`${e.event_date}T00:00:00`).toLocaleDateString(lang, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
                           })
-                        : undefined;
+                        : null,
+                      e.start_time ? e.start_time.slice(0, 5) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
 
-                      return (
-                        <ContentCard
-                          key={a.id}
-                          imageUrl={a.image_couverture}
-                          alt={a.titre}
-                          to="/$lang/paroles/$slug"
-                          params={{ lang, slug: a.slug }}
-                          badge={(a as any).category || null}
-                          title={a.titre}
-                          meta={articleMeta}
-                          description={a.extrait}
-                          cta={t("therapist_profile.article_cta", { defaultValue: "Lire" })}
-                          index={i}
-                          placeholderIcon="article"
-                          compact
-                        />
-                      );
+                    const eventDescription = [
+                      e.location,
+                      e.is_paid && e.price != null ? `${e.price} CHF` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
+
+                    return (
+                      <ContentCard
+                        key={e.id}
+                        imageUrl={e.image_signed_url}
+                        alt={e.title}
+                        to="/$lang/evenements/$id"
+                        params={{ lang, id: e.id }}
+                        badge={
+                          e.category ||
+                          t("therapist_profile.event_badge", { defaultValue: "Événement" })
+                        }
+                        title={e.title}
+                        meta={eventMeta}
+                        description={eventDescription || null}
+                        cta={t("therapist_profile.event_cta", { defaultValue: "Voir" })}
+                        index={i}
+                        placeholderIcon="calendar"
+                        compact
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </motion.section>
+
+            {/* Voix d'experts */}
+            <motion.section
+              variants={FADE_UP}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-4 lg:p-5"
+            >
+              <h2 className="mb-3 text-base font-bold text-white">
+                {t("therapist_profile.articles_title", { defaultValue: "Voix d'experts" })}
+              </h2>
+
+              {therapistArticles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(184,110,249,0.18)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
+                  <FileText className="mb-2 h-6 w-6 text-[rgba(184,110,249,0.35)]" />
+                  <p className="max-w-xs text-xs text-[rgba(255,255,255,0.55)]">
+                    {t("therapist_profile.articles_empty", {
+                      defaultValue: "Aucune publication disponible pour le moment.",
                     })}
-                  </div>
-                )}
-              </motion.section>
-            </div>
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {therapistArticles.map((a, i) => {
+                    const articleMeta = a.date_publication
+                      ? new Date(a.date_publication).toLocaleDateString(lang, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : undefined;
 
+                    return (
+                      <ContentCard
+                        key={a.id}
+                        imageUrl={a.image_couverture}
+                        alt={a.titre}
+                        to="/$lang/paroles/$slug"
+                        params={{ lang, slug: a.slug }}
+                        badge={(a as any).category || null}
+                        title={a.titre}
+                        meta={articleMeta}
+                        description={a.extrait}
+                        cta={t("therapist_profile.article_cta", { defaultValue: "Lire" })}
+                        index={i}
+                        placeholderIcon="article"
+                        compact
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </motion.section>
+          </div>
 
-            {/* Questions pratiques — générées à partir des seules données de la
+          {/* Questions pratiques — générées à partir des seules données de la
                 fiche (voir src/lib/therapist-auto-faq.ts). Texte identique à
                 celui du FAQPage JSON-LD, calculé dans le loader. */}
-            {autoFaqs.length > 0 && (
-              <motion.section
-                variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                aria-labelledby="auto-faq-title"
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 id="auto-faq-title" className="mb-1 text-lg font-bold text-white">
-                  {t("therapist_auto_faq.title")}
-                </h2>
-                <p className="mb-5 text-sm text-[rgba(255,255,255,0.55)]">
-                  {t("therapist_auto_faq.subtitle", { name: fullName })}
-                </p>
-                <dl className="divide-y divide-[rgba(168,85,247,0.18)] border-y border-[rgba(168,85,247,0.18)]">
-                  {autoFaqs.map((f, i) => (
-                    <div key={i} className="grid gap-1.5 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
-                      <dt className="flex items-start gap-3 text-[0.95rem] font-semibold text-white">
-                        <span
-                          aria-hidden="true"
-                          className="mt-[0.45rem] h-1.5 w-1.5 flex-none rounded-full bg-gradient-to-br from-[#a855f7] to-[#22d3ee]"
-                        />
-                        <span>{f.question}</span>
-                      </dt>
-                      <dd className="pl-[1.125rem] text-sm leading-relaxed text-[#d4c4e0] sm:pl-0">{f.answer}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </motion.section>
-            )}
+          {autoFaqs.length > 0 && (
+            <motion.section
+              variants={FADE_UP}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              aria-labelledby="auto-faq-title"
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+            >
+              <h2 id="auto-faq-title" className="mb-1 text-lg font-bold text-white">
+                {t("therapist_auto_faq.title")}
+              </h2>
+              <p className="mb-5 text-sm text-[rgba(255,255,255,0.55)]">
+                {t("therapist_auto_faq.subtitle", { name: fullName })}
+              </p>
+              <dl className="divide-y divide-[rgba(168,85,247,0.18)] border-y border-[rgba(168,85,247,0.18)]">
+                {autoFaqs.map((f, i) => (
+                  <div
+                    key={i}
+                    className="grid gap-1.5 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6"
+                  >
+                    <dt className="flex items-start gap-3 text-[0.95rem] font-semibold text-white">
+                      <span
+                        aria-hidden="true"
+                        className="mt-[0.45rem] h-1.5 w-1.5 flex-none rounded-full bg-gradient-to-br from-[#a855f7] to-[#22d3ee]"
+                      />
+                      <span>{f.question}</span>
+                    </dt>
+                    <dd className="pl-[1.125rem] text-sm leading-relaxed text-[#d4c4e0] sm:pl-0">
+                      {f.answer}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </motion.section>
+          )}
 
-            {/* FAQ — entre les prestations et les avis : le visiteur a compris
+          {/* FAQ — entre les prestations et les avis : le visiteur a compris
                 l'offre et lève ses derniers doutes avant de réserver. Rendue
                 côté serveur, donc lisible par les crawlers sans JavaScript. */}
-            {faqs.length > 0 && (
-              <motion.section
-                variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                aria-labelledby="faq-title"
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <h2 id="faq-title" className="mb-1 text-lg font-bold text-white">
-                  {t("therapist_profile.faq_title", { defaultValue: "Questions fréquentes" })}
-                  <span className="ml-2 text-[#b86ef9]">
-                    {t("therapist_profile.faq_of_therapist", { name: fullName, defaultValue: `— FAQ de ${fullName}` })}
-                  </span>
-                </h2>
-                <p className="mb-5 text-sm text-[#d4c4e0]">
-                  {t("therapist_profile.faq_subtitle", {
-                    defaultValue: "Ce que l'on me demande le plus souvent avant un premier rendez-vous.",
+          {faqs.length > 0 && (
+            <motion.section
+              variants={FADE_UP}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              aria-labelledby="faq-title"
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+            >
+              <h2 id="faq-title" className="mb-1 text-lg font-bold text-white">
+                {t("therapist_profile.faq_title", { defaultValue: "Questions fréquentes" })}
+                <span className="ml-2 text-[#b86ef9]">
+                  {t("therapist_profile.faq_of_therapist", {
+                    name: fullName,
+                    defaultValue: `— FAQ de ${fullName}`,
                   })}
-                </p>
+                </span>
+              </h2>
+              <p className="mb-5 text-sm text-[#d4c4e0]">
+                {t("therapist_profile.faq_subtitle", {
+                  defaultValue:
+                    "Ce que l'on me demande le plus souvent avant un premier rendez-vous.",
+                })}
+              </p>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  {faqs.map((f, i) => (
-                    <details
-                      key={i}
-                      className="group overflow-hidden rounded-xl border border-[rgba(168,85,247,0.25)] bg-[#2d1b4e] transition-colors hover:border-[rgba(168,85,247,0.5)]"
-                    >
-                      <summary className="flex cursor-pointer list-none items-start gap-3 p-4 text-[0.97rem] font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#22d3ee]">
-                        <span
-                          aria-hidden="true"
-                          className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-[rgba(168,85,247,0.16)] text-[#a855f7] transition-transform duration-200 ease-out group-open:rotate-45 group-open:bg-[rgba(34,211,238,0.18)] group-open:text-[#22d3ee]"
-                        >+</span>
-                        <span>{f.question}</span>
-                      </summary>
-                      <p className="mx-4 mb-4 whitespace-pre-wrap text-sm text-[#d4c4e0]">{f.answer}</p>
-                    </details>
-                  ))}
-                </div>
-              </motion.section>
-            )}
+              <div className="grid gap-4 md:grid-cols-2">
+                {faqs.map((f, i) => (
+                  <details
+                    key={i}
+                    className="group overflow-hidden rounded-xl border border-[rgba(168,85,247,0.25)] bg-[#2d1b4e] transition-colors hover:border-[rgba(168,85,247,0.5)]"
+                  >
+                    <summary className="flex cursor-pointer list-none items-start gap-3 p-4 text-[0.97rem] font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#22d3ee]">
+                      <span
+                        aria-hidden="true"
+                        className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-[rgba(168,85,247,0.16)] text-[#a855f7] transition-transform duration-200 ease-out group-open:rotate-45 group-open:bg-[rgba(34,211,238,0.18)] group-open:text-[#22d3ee]"
+                      >
+                        +
+                      </span>
+                      <span>{f.question}</span>
+                    </summary>
+                    <p className="mx-4 mb-4 whitespace-pre-wrap text-sm text-[#d4c4e0]">
+                      {f.answer}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </motion.section>
+          )}
 
-            {/* Avis */}
-            <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-bold text-white">{t("therapist_profile.reviews_title")}</h2>
-                  {avg && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-3xl font-bold text-white">{avg}</span>
-                      <div>
-                        <StarRow rating={Math.round(Number(avg))} size={4} />
-                        <p className="text-xs text-[rgba(255,255,255,0.45)] mt-0.5">{t("therapist_profile.reviews_count", { count: reviews!.length })}</p>
-                      </div>
-                    </div>
-                  )}
+          {/* Avis */}
+          <motion.section
+            variants={FADE_UP}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] p-6"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-white">
+                {t("therapist_profile.reviews_title")}
+              </h2>
+              {avg && (
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-bold text-white">{avg}</span>
+                  <div>
+                    <StarRow rating={Math.round(Number(avg))} size={4} />
+                    <p className="text-xs text-[rgba(255,255,255,0.45)] mt-0.5">
+                      {t("therapist_profile.reviews_count", { count: reviews!.length })}
+                    </p>
+                  </div>
                 </div>
-                <div className="mb-5">
-                  <ReviewForm therapistId={th.id} />
-                </div>
-                {(reviews?.length ?? 0) > 0 && (
-                <>
+              )}
+            </div>
+            <div className="mb-5">
+              <ReviewForm therapistId={th.id} />
+            </div>
+            {(reviews?.length ?? 0) > 0 && (
+              <>
                 <div className="mb-5 space-y-1.5">
                   {dist.map(({ n, count }) => (
                     <div key={n} className="flex items-center gap-2 text-xs">
@@ -1406,7 +1636,9 @@ function ProfilePage() {
                       <div className="flex-1 h-1.5 rounded-full bg-[rgba(255,255,255,0.08)] overflow-hidden">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-[#b86ef9] to-[#5cc8fa] transition-all"
-                          style={{ width: reviews!.length ? `${(count / reviews!.length) * 100}%` : "0%" }}
+                          style={{
+                            width: reviews!.length ? `${(count / reviews!.length) * 100}%` : "0%",
+                          }}
                         />
                       </div>
                       <span className="w-6 text-[rgba(255,255,255,0.4)]">{count}</span>
@@ -1415,62 +1647,83 @@ function ProfilePage() {
                 </div>
                 <div className="space-y-4">
                   {reviews!.map((r: any) => (
-                    <div key={r.id} className="rounded-xl border border-[rgba(184,110,249,0.12)] bg-[rgba(184,110,249,0.04)] p-4">
+                    <div
+                      key={r.id}
+                      className="rounded-xl border border-[rgba(184,110,249,0.12)] bg-[rgba(184,110,249,0.04)] p-4"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#b86ef9] to-[#5cc8fa] flex items-center justify-center text-xs font-bold text-white">
-                            {(r.author_name || t("therapist_profile.anonymous_reviewer"))[0].toUpperCase()}
+                            {(r.author_name ||
+                              t("therapist_profile.anonymous_reviewer"))[0].toUpperCase()}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-white">{r.author_name || t("therapist_profile.anonymous_reviewer")}</span>
+                            <span className="text-xs font-semibold text-white">
+                              {r.author_name || t("therapist_profile.anonymous_reviewer")}
+                            </span>
                             <StarRow rating={r.rating} size={3} />
                           </div>
                         </div>
                         <span className="text-xs text-[rgba(255,255,255,0.35)]">
-                          {new Date(r.created_at).toLocaleDateString(reviewLocale, { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(r.created_at).toLocaleDateString(reviewLocale, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
                         </span>
                       </div>
                       {(r.comment ?? r.body) && (
-                        <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">{r.comment ?? r.body}</p>
+                        <p className="text-sm text-[rgba(255,255,255,0.72)] leading-relaxed">
+                          {r.comment ?? r.body}
+                        </p>
                       )}
                       {r.therapist_reply && r.therapist_reply_status === "approved" && (
                         <div className="mt-3 rounded-lg border-l-2 border-[#5cc8fa] bg-[rgba(92,200,250,0.06)] p-3">
-                          <p className="text-xs font-semibold text-[#5cc8fa]">Réponse du praticien</p>
-                          <p className="mt-0.5 text-sm text-[rgba(255,255,255,0.75)]">{r.therapist_reply}</p>
+                          <p className="text-xs font-semibold text-[#5cc8fa]">
+                            Réponse du praticien
+                          </p>
+                          <p className="mt-0.5 text-sm text-[rgba(255,255,255,0.75)]">
+                            {r.therapist_reply}
+                          </p>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
-                </>
-                )}
-              </motion.section>
-
-            {/* Mini carte */}
-            {th.latitude && th.longitude && (
-              <motion.section variants={FADE_UP} initial="hidden" whileInView="show" viewport={{ once: true }}
-                className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] overflow-hidden"
-              >
-                <div className="p-4 border-b border-[rgba(184,110,249,0.12)]">
-                  <h2 className="text-lg font-bold text-white">{t("therapist_profile.map_title")}</h2>
-                  <p className="text-sm text-[rgba(255,255,255,0.45)] mt-0.5">
-                    <MapPin className="inline h-3.5 w-3.5 mr-1" />{th.city}{th.canton ? ` (${th.canton})` : ""}, {t("therapist_profile.country")}
-                  </p>
-                </div>
-                <div style={{ height: 220 }}>
-                  <Suspense fallback={<div className="h-full bg-[#1a1035] animate-pulse" />}>
-                    <TherapistMiniMap
-                      therapists={[th]}
-                      selectedId={th.id}
-                      onSelect={() => {}}
-                      lang={lang}
-                    />
-                  </Suspense>
-                </div>
-              </motion.section>
+              </>
             )}
-          </div>
+          </motion.section>
 
+          {/* Mini carte */}
+          {th.latitude && th.longitude && (
+            <motion.section
+              variants={FADE_UP}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="rounded-2xl border border-[rgba(184,110,249,0.18)] bg-[#1a0a2e] overflow-hidden"
+            >
+              <div className="p-4 border-b border-[rgba(184,110,249,0.12)]">
+                <h2 className="text-lg font-bold text-white">{t("therapist_profile.map_title")}</h2>
+                <p className="text-sm text-[rgba(255,255,255,0.45)] mt-0.5">
+                  <MapPin className="inline h-3.5 w-3.5 mr-1" />
+                  {th.city}
+                  {th.canton ? ` (${th.canton})` : ""}, {t("therapist_profile.country")}
+                </p>
+              </div>
+              <div style={{ height: 220 }}>
+                <Suspense fallback={<div className="h-full bg-[#1a1035] animate-pulse" />}>
+                  <TherapistMiniMap
+                    therapists={[th]}
+                    selectedId={th.id}
+                    onSelect={() => {}}
+                    lang={lang}
+                  />
+                </Suspense>
+              </div>
+            </motion.section>
+          )}
+        </div>
       </div>
 
       {/* ── Disclaimer ── */}
@@ -1480,7 +1733,8 @@ function ProfilePage() {
 
       {showTop && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="Revenir en haut de la page"
           className="fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-[#b86ef9] text-white shadow-[0_4px_20px_rgba(184,110,249,0.4)] hover:bg-[#a055e8] transition"
@@ -1528,7 +1782,7 @@ function ServiceCard({
   const currency = "CHF";
   const formatKey = s.format as string | undefined;
   const formatLabel = formatKey
-    ? (t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey)
+    ? t(`therapist_profile.format_${formatKey}`, { defaultValue: "" }) || formatKey
     : t("therapist_profile.service_format_default");
   const FormatIcon = formatKey === "online" ? Video : formatKey === "hybrid" ? Users : MapPin;
   const detail = s.description || s.short_description;
@@ -1550,7 +1804,9 @@ function ServiceCard({
           {isPackage && (
             <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-amber-400/15 border border-amber-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
               <PackageIcon className="h-3 w-3" />
-              {t("therapist_profile.service_kind_package", { defaultValue: "Programme d'accompagnement" })}
+              {t("therapist_profile.service_kind_package", {
+                defaultValue: "Programme d'accompagnement",
+              })}
             </span>
           )}
           <h4 className="text-[15px] font-semibold text-white leading-snug">{s.name}</h4>
@@ -1568,7 +1824,9 @@ function ServiceCard({
             </PopoverTrigger>
             <PopoverContent className="w-80 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
               <p className="text-sm font-semibold text-white">{s.name}</p>
-              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">{detail}</p>
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">
+                {detail}
+              </p>
             </PopoverContent>
           </Popover>
         )}
@@ -1588,7 +1846,9 @@ function ServiceCard({
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
             <span className="text-white font-medium">{sessionsCount}</span>
             {t("therapist_profile.package_sessions_short", { defaultValue: "séances" })}
-            {sessionDur ? <span className="text-[rgba(255,255,255,0.45)]">· {sessionDur} min</span> : null}
+            {sessionDur ? (
+              <span className="text-[rgba(255,255,255,0.45)]">· {sessionDur} min</span>
+            ) : null}
           </span>
         ) : (
           duration && (
@@ -1612,7 +1872,8 @@ function ServiceCard({
           {price != null && price !== "" ? (
             <>
               <div className="text-lg font-bold text-white leading-none">
-                {price} <span className="text-xs font-medium text-[rgba(255,255,255,0.5)]">{currency}</span>
+                {price}{" "}
+                <span className="text-xs font-medium text-[rgba(255,255,255,0.5)]">{currency}</span>
               </div>
               {isPackage && (
                 <div className="mt-1 text-[10px] uppercase tracking-wider text-amber-300/80">
@@ -1638,7 +1899,9 @@ function ServiceCard({
             </PopoverTrigger>
             <PopoverContent className="w-80 border-[rgba(184,110,249,0.3)] bg-[#1a0a2e] text-[#e6d7f5]">
               <p className="text-sm font-semibold text-white">{s.name}</p>
-              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">{detail}</p>
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-[rgba(255,255,255,0.78)]">
+                {detail}
+              </p>
             </PopoverContent>
           </Popover>
         )}

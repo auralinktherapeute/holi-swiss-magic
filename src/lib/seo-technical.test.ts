@@ -87,7 +87,9 @@ describe("robots.txt", () => {
 
   it("bloque admin et dashboard avec et sans barre finale dans chaque groupe", () => {
     for (const rules of groups().values()) {
-      expect(rules).toEqual(expect.arrayContaining(["/admin", "/admin/", "/dashboard", "/dashboard/"]));
+      expect(rules).toEqual(
+        expect.arrayContaining(["/admin", "/admin/", "/dashboard", "/dashboard/"]),
+      );
     }
   });
 
@@ -122,6 +124,8 @@ describe("sitemap — séparation blog / fil", () => {
 
   it("déclare la page sophrologie avec un lastmod fixe et véridique", () => {
     // Article rédigé en français uniquement : seule l'URL /fr est déclarée.
-    expect(src).toMatch(/fr\/blog\/qu-est-ce-que-la-sophrologie`;\s*urls\.push\(\s*urlBlock\(soph, "2026-08-31"/);
+    expect(src).toMatch(
+      /fr\/blog\/qu-est-ce-que-la-sophrologie`;\s*urls\.push\(\s*urlBlock\(soph, "2026-08-31"/,
+    );
   });
 });

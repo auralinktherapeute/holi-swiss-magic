@@ -4,7 +4,6 @@ import { swissDayWindow } from "@/lib/booking-slots";
 import { CONTENT_DATE_COLUMN } from "@/lib/page-dates";
 import { createSignedImageUrl } from "@/lib/storage-image";
 
-
 export const getWaitingListCount = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { count, error } = await supabaseAdmin
@@ -29,7 +28,9 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     const therapist = await timedRead("therapist_profile_main", async () => {
       const { data: row, error } = await supabase
         .from("therapists")
-        .select(`id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,status,profile_translations,${CONTENT_DATE_COLUMN}`)
+        .select(
+          `id,user_id,slug,first_name,last_name,title,short_bio,bio,photo_url,city,canton,address,postal_code,country,latitude,longitude,website,price_min,price_max,currency,languages,specialties,approaches,consultation_modes,insurance_accepted,verified,subscription_plan,gallery_urls,services,years_experience,google_reviews_url,accreditations,social_links,status,profile_translations,${CONTENT_DATE_COLUMN}`,
+        )
         .eq("slug", data.slug)
         .eq("status", "active")
         .maybeSingle();
@@ -102,15 +103,18 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     const therapistId = therapist.id as string;
     let therapistPhoto = therapist.photo_url as string | null;
     if (therapistPhoto) {
-      const photoPath = therapistPhoto.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/)?.[1];
+      const photoPath = therapistPhoto.match(
+        /\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/,
+      )?.[1];
       if (photoPath) {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        therapistPhoto = await createSignedImageUrl(
-          supabaseAdmin.storage.from("therapist-photos"),
-          decodeURIComponent(photoPath),
-          60 * 60 * 24 * 7,
-          "profile",
-        ) ?? therapistPhoto;
+        therapistPhoto =
+          (await createSignedImageUrl(
+            supabaseAdmin.storage.from("therapist-photos"),
+            decodeURIComponent(photoPath),
+            60 * 60 * 24 * 7,
+            "profile",
+          )) ?? therapistPhoto;
       }
     }
 
@@ -183,7 +187,9 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
           const today = new Date().toISOString().slice(0, 10);
           const { data: evs, error } = await supabaseAdmin
             .from("events")
-            .select("id,title,short_description,category,event_date,start_time,format,location,is_paid,price,image_url")
+            .select(
+              "id,title,short_description,category,event_date,start_time,format,location,is_paid,price,image_url",
+            )
             .eq("therapist_id", therapistId)
             .eq("status", "published")
             .gte("event_date", today)
@@ -256,8 +262,6 @@ export const getTherapistBySlug = createServerFn({ method: "GET" })
     };
   });
 
-
-
 export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -291,7 +295,6 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
       d.setUTCDate(d.getUTCDate() - 1);
       return d.toISOString().slice(0, 10);
     })();
-
 
     const STATUSES = ["pending", "confirmed", "completed", "blocked"];
     const [overlapRes, legacyRes] = await Promise.all([
@@ -347,10 +350,12 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
     };
     const byId = new Map<string, Row>();
     for (const r of [...((overlapRes.data ?? []) as Row[]), ...((legacyRes.data ?? []) as Row[])]) {
-      byId.set(String(r.id ?? `${r.appointment_date}-${r.appointment_time}-${r.duration_minutes}`), r);
+      byId.set(
+        String(r.id ?? `${r.appointment_date}-${r.appointment_time}-${r.duration_minutes}`),
+        r,
+      );
     }
     const booked = Array.from(byId.values());
-
 
     return {
       // `slots` conservé tel quel : la version du site déjà publiée le lit.
@@ -372,8 +377,6 @@ export const getBookedAppointmentSlots = createServerFn({ method: "POST" })
     };
   });
 
-
-
 export const listPublishedEvents = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const today = new Date().toISOString().slice(0, 10);
@@ -390,7 +393,10 @@ export const listPublishedEvents = createServerFn({ method: "GET" }).handler(asy
   const events = data ?? [];
 
   const therapistIds = Array.from(new Set(events.map((e: any) => e.therapist_id).filter(Boolean)));
-  let therapists: Record<string, { slug: string; first_name: string | null; last_name: string | null }> = {};
+  let therapists: Record<
+    string,
+    { slug: string; first_name: string | null; last_name: string | null }
+  > = {};
   if (therapistIds.length) {
     const { data: ts } = await supabaseAdmin
       .from("therapists")

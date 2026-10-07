@@ -9,7 +9,9 @@ const resolvedPhotoUrls = new Map<string, Promise<string>>();
  */
 export function pathFromTherapistPhotoUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  const m = url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/);
+  const m = url.match(
+    /\/storage\/v1\/object\/(?:public|sign|authenticated)\/therapist-photos\/([^?]+)/,
+  );
   return m ? decodeURIComponent(m[1]) : null;
 }
 

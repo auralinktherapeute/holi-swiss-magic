@@ -90,10 +90,10 @@ function Page() {
   return (
     <main className="container mx-auto px-4 py-10 sm:py-14 max-w-6xl">
       <header className="mb-8 sm:mb-12 text-center">
-        <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">{t("events_page.title")}</h1>
-        <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-          {t("events_page.subtitle")}
-        </p>
+        <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">
+          {t("events_page.title")}
+        </h1>
+        <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">{t("events_page.subtitle")}</p>
       </header>
 
       {isLoading ? (
@@ -134,7 +134,9 @@ function Page() {
                 <div className="p-4 space-y-2">
                   <h2 className="font-semibold text-lg leading-tight line-clamp-2">{e.title}</h2>
                   {e.short_description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{e.short_description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {e.short_description}
+                    </p>
                   )}
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground pt-1">
                     <span className="inline-flex items-center gap-1">
@@ -169,10 +171,16 @@ function Page() {
                   </div>
                   <div className="pt-2 flex items-center justify-between">
                     <span className="text-base font-semibold">
-                      {e.is_paid ? (e.price ? `${e.price} CHF` : t("events_page.price_tbd")) : t("events_page.free")}
+                      {e.is_paid
+                        ? e.price
+                          ? `${e.price} CHF`
+                          : t("events_page.price_tbd")
+                        : t("events_page.free")}
                     </span>
                     {e.therapist_name && (
-                      <span className="text-xs text-muted-foreground">{t("events_page.with")} {e.therapist_name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("events_page.with")} {e.therapist_name}
+                      </span>
                     )}
                   </div>
                 </div>
