@@ -25,7 +25,7 @@ import ClientDocuments from "@/components/dashboard/ClientDocuments";
 import SessionNotesPanel from "@/components/dashboard/SessionNotesPanel";
 import { QuickInvoiceDialog, type QuickInvoiceTarget } from "@/components/dashboard/QuickInvoiceDialog";
 import { EditClientDialog } from "@/components/dashboard/EditClientDialog";
-import { ClientActionsBar, NewClientButton, ClientQuestionnaires } from "@/components/dashboard/ClientFicheExtras";
+import { ClientActionsBar, NewClientButton, ClientQuestionnaires, ConsentRequestButton, InvoiceReminderButton, ClientJournal, DuplicatesButton } from "@/components/dashboard/ClientFicheExtras";
 import { ClientCurrencyBlock } from "@/components/dashboard/ClientCurrencyBlock";
 import { formatAmount, resolveEffectiveCurrency } from "@/lib/currency-consent";
 
@@ -102,7 +102,10 @@ function ClientsPage() {
             Vos clients, leur historique de rendez-vous, leurs factures et leur consentement.
           </p>
         </div>
-        <NewClientButton onCreated={(cid) => setOpenId(cid)} />
+        <div className="flex flex-wrap gap-2">
+          <DuplicatesButton />
+          <NewClientButton onCreated={(cid) => setOpenId(cid)} />
+        </div>
       </header>
 
       <Card>
@@ -286,6 +289,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="questionnaires">Questionnaires</TabsTrigger>
+              <TabsTrigger value="journal">Journal</TabsTrigger>
             </TabsList>
 
             <TabsContent value="apercu" className="mt-4 space-y-4">
@@ -368,6 +372,12 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
                     {client.consent_at ? "Retirer" : "Enregistrer"}
                   </Button>
                 </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ConsentRequestButton client={client} />
+                  {client.consent_expires_at && (
+                    <span className="text-xs text-muted-foreground">Valable jusqu'au {shortDate(client.consent_expires_at)}</span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Base légale : {client.legal_basis === "consent" ? "consentement" : "exécution du contrat de soins"}.
                 </p>
@@ -437,6 +447,7 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
                       Solde {money(i.solde, i.currency ?? "CHF")}
                     </span>
                     <Badge variant="secondary">{i.statut}</Badge>
+                    <InvoiceReminderButton invoice={i} client={client} />
                   </li>
                 ))}
               </Section>
@@ -506,6 +517,10 @@ function ClientDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
             <TabsContent value="questionnaires" className="mt-4">
               <ClientQuestionnaires client={client} />
+            </TabsContent>
+
+            <TabsContent value="journal" className="mt-4">
+              <ClientJournal clientId={id} />
             </TabsContent>
           </Tabs>
         )}
