@@ -42,6 +42,7 @@ import { Route as AdminSanteProfilsRouteImport } from './routes/admin.sante-prof
 import { Route as AdminSeoRouteImport } from './routes/admin.seo'
 import { Route as AdminTherapeutesRouteImport } from './routes/admin.therapeutes'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as ConsentementTokenRouteImport } from './routes/consentement.$token'
 import { Route as CreerProfilIndexRouteImport } from './routes/creer-profil.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardAbonnementRouteImport } from './routes/dashboard.abonnement'
@@ -287,6 +288,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   id: '/utilisateurs',
   path: '/utilisateurs',
   getParentRoute: () => AdminRoute,
+} as any)
+const ConsentementTokenRoute = ConsentementTokenRouteImport.update({
+  id: '/consentement/$token',
+  path: '/consentement/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CreerProfilIndexRoute = CreerProfilIndexRouteImport.update({
   id: '/creer-profil/',
@@ -737,6 +743,7 @@ export interface FileRoutesByFullPath {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/consentement/$token': typeof ConsentementTokenRoute
   '/dashboard/abonnement': typeof DashboardAbonnementRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
@@ -847,6 +854,7 @@ export interface FileRoutesByTo {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/consentement/$token': typeof ConsentementTokenRoute
   '/dashboard/abonnement': typeof DashboardAbonnementRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
@@ -961,6 +969,7 @@ export interface FileRoutesById {
   '/admin/seo': typeof AdminSeoRoute
   '/admin/therapeutes': typeof AdminTherapeutesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/consentement/$token': typeof ConsentementTokenRoute
   '/dashboard/abonnement': typeof DashboardAbonnementRoute
   '/dashboard/agenda': typeof DashboardAgendaRoute
   '/dashboard/articles': typeof DashboardArticlesRoute
@@ -1076,6 +1085,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
+    | '/consentement/$token'
     | '/dashboard/abonnement'
     | '/dashboard/agenda'
     | '/dashboard/articles'
@@ -1186,6 +1196,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
+    | '/consentement/$token'
     | '/dashboard/abonnement'
     | '/dashboard/agenda'
     | '/dashboard/articles'
@@ -1299,6 +1310,7 @@ export interface FileRouteTypes {
     | '/admin/seo'
     | '/admin/therapeutes'
     | '/admin/utilisateurs'
+    | '/consentement/$token'
     | '/dashboard/abonnement'
     | '/dashboard/agenda'
     | '/dashboard/articles'
@@ -1389,6 +1401,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ConsentementTokenRoute: typeof ConsentementTokenRoute
   FactureTokenRoute: typeof FactureTokenRoute
   IntakeSlugRoute: typeof IntakeSlugRoute
   PreviewAmbianceRoute: typeof PreviewAmbianceRoute
@@ -1647,6 +1660,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/utilisateurs'
       preLoaderRoute: typeof AdminUtilisateursRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/consentement/$token': {
+      id: '/consentement/$token'
+      path: '/consentement/$token'
+      fullPath: '/consentement/$token'
+      preLoaderRoute: typeof ConsentementTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/creer-profil/': {
       id: '/creer-profil/'
@@ -2398,6 +2418,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ConsentementTokenRoute: ConsentementTokenRoute,
   FactureTokenRoute: FactureTokenRoute,
   IntakeSlugRoute: IntakeSlugRoute,
   PreviewAmbianceRoute: PreviewAmbianceRoute,
