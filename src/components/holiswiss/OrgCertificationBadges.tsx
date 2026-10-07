@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -40,23 +41,7 @@ export function OrgCertificationBadges({
                 className="flex min-h-11 items-center gap-2 rounded-xl border px-2 py-1.5 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                 style={{ borderColor: `${color}59`, background: `${color}1a`, boxShadow: `0 0 14px ${color}26` }}
               >
-                {c.logo_url ? (
-                  <img
-                    src={c.logo_url}
-                    alt={c.display_name}
-                    loading="lazy"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
-                  />
-                ) : (
-                  <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
-                    style={{ background: `${color}33`, color }}
-                  >
-                    {c.code.slice(0, 4)}
-                  </span>
-                )}
+                <OrgLogo logoUrl={c.logo_url} name={c.display_name} code={c.code} color={color} />
                 <span className="text-xs font-medium leading-tight text-white/85">
                   {label || c.display_name}
                 </span>
@@ -81,5 +66,31 @@ export function OrgCertificationBadges({
         );
       })}
     </div>
+  );
+}
+
+/** Logo avec repli : si l'image publique échoue, on affiche le code de l'organisme. */
+function OrgLogo({ logoUrl, name, code, color }: { logoUrl: string | null; name: string; code: string; color: string }) {
+  const [failed, setFailed] = useState(false);
+  if (logoUrl && !failed) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name}
+        loading="lazy"
+        width={40}
+        height={40}
+        onError={() => setFailed(true)}
+        className="h-10 w-10 shrink-0 rounded-lg bg-white/90 object-contain p-0.5"
+      />
+    );
+  }
+  return (
+    <span
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+      style={{ background: `${color}33`, color }}
+    >
+      {code.slice(0, 4)}
+    </span>
   );
 }

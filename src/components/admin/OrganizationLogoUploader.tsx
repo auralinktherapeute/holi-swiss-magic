@@ -16,7 +16,7 @@ interface Props {
 }
 
 /** Extrait le chemin objet depuis une URL signée Supabase du bucket. */
-function pathFromSignedUrl(url: string): string | null {
+export function pathFromSignedUrl(url: string): string | null {
   const marker = `/${BUCKET}/`;
   const i = url.indexOf(marker);
   if (i === -1) return null;
@@ -100,18 +100,11 @@ export default function OrganizationLogoUploader({ value, onChange }: Props) {
     }
   };
 
-  const removeLogo = async () => {
-    const path = value ? pathFromSignedUrl(value) : null;
-    setBusy(true);
-    try {
-      if (path) await supabase.storage.from(BUCKET).remove([path]);
-      onChange("");
-      toast.success("Logo supprimé.");
-    } catch {
-      onChange("");
-    } finally {
-      setBusy(false);
-    }
+  // Retrait dans le formulaire uniquement : le fichier reste en place tant que
+  // l'organisme n'est pas enregistré (« Annuler » ne casse donc rien). Le
+  // fichier devenu orphelin est supprimé par le formulaire après sauvegarde.
+  const removeLogo = () => {
+    onChange("");
   };
 
   return (
