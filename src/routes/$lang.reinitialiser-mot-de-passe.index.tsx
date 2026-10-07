@@ -9,6 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/$lang/reinitialiser-mot-de-passe/")({
+  head: ({ params }) => ({
+    links: [{ rel: "canonical", href: `https://holiswiss.ch/${params.lang}/reinitialiser-mot-de-passe` }],
+    meta: [
+      { title: "Réinitialiser le mot de passe — Holiswiss" },
+      { name: "robots", content: "noindex,follow" },
+    ],
+  }),
   component: ResetPasswordPage,
 });
 
