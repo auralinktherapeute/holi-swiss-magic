@@ -83,6 +83,41 @@ export const getPublishedArticles = createServerFn({ method: "GET" })
     return { articles: base.data ?? [] };
   });
 
+/**
+ * Articles connexes d'un article — lecture seule, filtrée côté serveur.
+ * Les corps des candidats (nécessaires à la règle de traduction complète)
+ * ne quittent jamais le serveur : seules les 3 à 5 suggestions finales
+ * (id, slug, titre, catégorie) sont renvoyées.
+ */
+export const getRelatedArticles = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({
+      lang: z.enum(["fr", "de", "it", "en"]),
+      id: z.string().nullable().optional(),
+      slug: z.string().nullable().optional(),
+      category: z.string().nullable().optional(),
+      secondary_tags: z.array(z.string()).nullable().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { holiswissPublic: supabase } = await import("@/integrations/supabase/holiswiss-public");
+    const { pickRelatedArticles } = await import("@/lib/related-articles");
+    const { TRANSLATION_COLUMNS } = await import("@/lib/article-translation");
+    const columns =
+      data.lang === "fr"
+        ? ARTICLE_LIST_COLUMNS_FULL
+        : `id,category,secondary_tags,published_at,${TRANSLATION_COLUMNS}`;
+    const { data: rows, error } = await (supabase as any)
+      .from("articles")
+      .select(columns)
+      .eq("status", "validated")
+      .or(FIL_EXCLUDE)
+      .eq("lang", "fr")
+      .order("published_at", { ascending: false });
+    if (error) return { related: [] };
+    return { related: pickRelatedArticles(data, (rows ?? []) as Array<Record<string, unknown>>, data.lang) };
+  });
+
 export const getArticlesByCategory = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string(), lang: z.string().optional() }))
   .handler(async ({ data }) => {
