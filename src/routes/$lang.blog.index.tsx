@@ -227,6 +227,21 @@ function Page() {
           </nav>
         )}
 
+        {/* Guide sophrologie : page statique française, sans lien entrant
+            jusqu'ici (orpheline). Lien rendu au SSR, en français uniquement. */}
+        {l === "fr" && (
+          <p className="mb-10 text-sm text-[#d4c4e0]">
+            Découvrir une méthode :{" "}
+            <Link
+              to="/$lang/blog/qu-est-ce-que-la-sophrologie"
+              params={{ lang: "fr" }}
+              className="font-semibold text-[#d4a5f9] underline underline-offset-4 hover:text-white"
+            >
+              qu'est-ce que la sophrologie ?
+            </Link>
+          </p>
+        )}
+
         {/* Article vedette */}
         {!isLoading && featured && (() => {
           const a = featured as Record<string, unknown>;
