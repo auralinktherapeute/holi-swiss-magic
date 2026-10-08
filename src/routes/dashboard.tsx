@@ -56,16 +56,26 @@ export const Route = createFileRoute("/dashboard")({
       }
       if (healedRole === "therapist") return;
       if (healedRole === "admin") throw redirect({ to: "/admin" });
-      // Session valide mais accès refusé : c'est exactement le blocage vécu par
-      // les nouvelles inscrites. On alerte l'admin avant la redirection.
+      // Session valide sans rôle : on ne bloque plus. Le compte qui ouvre
+      // volontairement l'espace thérapeute reçoit le rôle, et l'admin est
+      // simplement prévenu de cette connexion pour vérification.
+      let granted = false;
+      try {
+        granted = (await ensureTherapistRole({ data: {} })).role === "therapist";
+      } catch {
+        granted = false;
+      }
       void reportTherapistSignupBlocked({
         data: {
           userId: sessionData.session.user.id,
           email: sessionData.session.user.email ?? null,
-          stage: "dashboard_denied",
-          detail: "Session valide mais rôle thérapeute absent.",
+          stage: granted ? "role_missing" : "dashboard_denied",
+          detail: granted
+            ? "Connexion sans rôle thérapeute : accès accordé automatiquement, à vérifier."
+            : "Session valide mais rôle thérapeute absent.",
         },
       }).catch(() => {});
+      if (granted) return;
     }
     throw redirect({ to: "/$lang/connexion", params: { lang: "fr" } });
   },
