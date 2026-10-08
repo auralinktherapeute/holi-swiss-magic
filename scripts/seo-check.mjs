@@ -19,6 +19,8 @@
  * planifiée.
  */
 
+import { extractInternalLinks, evaluateInbound, ARTICLE_MIN_INBOUND } from "./seo/inbound-links.mjs";
+
 const args = process.argv.slice(2);
 const argVal = (name, def) => {
   const hit = args.find((a) => a.startsWith(`--${name}=`));
@@ -167,6 +169,9 @@ async function main() {
   // pour un non-problème apprend surtout à ignorer l'alerte.
   const seenTitles = new Map();
 
+  // Corps déjà téléchargés, réutilisés par le graphe des liens entrants.
+  const bodies = new Map();
+
   const byType = new Map();
   for (const u of urls) {
     const t = pageType(u);
@@ -179,6 +184,7 @@ async function main() {
     const bad = [];
     for (const url of sample) {
       const { status, body } = await fetchText(url, "manual");
+      if (status === 200) bodies.set(url, body);
       const fails = checkPage(url, status, body);
       if (status === 200) {
         const title = (body.match(RE.title)?.[1] ?? "").replace(/\s+/g, " ").trim();
@@ -199,6 +205,31 @@ async function main() {
       console.log(`    ${b.url.slice(BASE.length)}`);
       b.fails.forEach((f) => console.log(`      · ${f}`));
     }
+  }
+
+  // Liens internes entrants — calculés sur TOUTES les URLs du sitemap (un
+  // échantillon ne peut pas dire si une page est orpheline).
+  const linksBy = new Map();
+  for (const url of urls) {
+    let body = bodies.get(url);
+    if (body === undefined) {
+      const r = await fetchText(url, "manual");
+      body = r.status === 200 ? r.body : "";
+      await sleep(Math.min(DELAY, 150));
+    }
+    linksBy.set(url, extractInternalLinks(body, BASE));
+  }
+  const { orphans, weak } = evaluateInbound(urls, linksBy, (u) => pageType(u) === "article", BASE);
+  if (orphans.length) {
+    problems += orphans.length;
+    console.log(`\n✗ ${orphans.length} URL(s) indexable(s) sans aucun lien interne entrant :`);
+    orphans.forEach((u) => console.log(`    ${u.slice(BASE.length)}`));
+  } else {
+    console.log("\n✓ aucune URL indexable orpheline");
+  }
+  if (weak.length) {
+    console.log(`\n⚠ ${weak.length} article(s) avec moins de ${ARTICLE_MIN_INBOUND} liens entrants (avertissement) :`);
+    weak.forEach((w) => console.log(`    ${w.url.slice(BASE.length)} — ${w.count}`));
   }
 
   console.log(`\n${problems === 0 ? "✓ aucun problème" : `✗ ${problems} page(s) en défaut`}`);
