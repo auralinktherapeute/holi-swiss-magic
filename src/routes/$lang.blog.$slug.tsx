@@ -1,7 +1,10 @@
 import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, useParams, Link, redirect, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { RelatedArticles } from "@/components/holiswiss/RelatedArticles";
+import { pickRelatedArticles, type RelatedArticleLink } from "@/lib/related-articles";
 import {
+  getPublishedArticles,
   getArticleBySlug,
   titleForLang,
   bodyForLang,
@@ -119,7 +122,16 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
         unavailable: true as const,
       };
     }
-    return { article, unavailable: false as const };
+    // Articles connexes : même lecture que l'index /blog. Une panne de cette
+    // lecture secondaire n'empêche jamais l'affichage de l'article.
+    let related: RelatedArticleLink[] = [];
+    try {
+      const list = await getPublishedArticles({ data: { lang: "fr" } });
+      related = pickRelatedArticles(article, (list?.articles ?? []) as Array<Record<string, unknown>>, l);
+    } catch {
+      related = [];
+    }
+    return { article, unavailable: false as const, related };
   },
   notFoundComponent: () => <NotFoundPage />,
   head: ({ params, loaderData }) => {
@@ -478,6 +490,11 @@ function Page() {
             {copy.ctaButton} →
           </Link>
         </div>
+
+        <RelatedArticles
+          items={(loaderData && "related" in loaderData ? loaderData.related : undefined) ?? []}
+          lang={l}
+        />
 
         {/* Retour blog */}
         <div className="mt-10 text-center">
