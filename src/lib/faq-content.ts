@@ -26,7 +26,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Comment devenir thérapeute référencé sur Holiswiss ?",
-      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse, avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute. Ce contrôle ne certifie ni diplômes, méthodes, résultats ni affiliations déclarées.",
+      a: "Les thérapeutes peuvent s'inscrire sur la liste d'attente via la page Espace thérapeutes sur holiswiss.ch. L'inscription sera ouverte progressivement aux praticiens exerçant en Suisse. Avant publication, notre modérateur contrôle le nom et les coordonnées. Ce contrôle ne certifie ni diplômes, méthodes, résultats ni affiliations déclarées.",
     },
     {
       q: "Quelles approches complémentaires sont disponibles sur Holiswiss ?",
@@ -61,7 +61,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Wie werde ich als Therapeut:in auf Holiswiss gelistet?",
-      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; Gérald Henry prüft vor Veröffentlichung den Namen und die Kontaktdaten und führt anschliessend ausnahmslos ein Telefongespräch mit der Fachperson. Diese Prüfung zertifiziert weder Diplome, Methoden, Ergebnisse noch angegebene Mitgliedschaften.",
+      a: "Therapeut:innen können sich über die Seite «Espace thérapeutes» auf holiswiss.ch auf der Warteliste eintragen. Die Anmeldung wird schrittweise für Fachpersonen in der Schweiz geöffnet; vor der Veröffentlichung prüft unsere Moderation den Namen und die Kontaktdaten. Diese Prüfung zertifiziert weder Diplome, Methoden, Ergebnisse noch angegebene Mitgliedschaften.",
     },
     {
       q: "Welche komplementären Ansätze sind auf Holiswiss verfügbar?",
@@ -96,7 +96,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Come diventare terapeuta su Holiswiss?",
-      a: "I terapeuti possono iscriversi alla lista d'attesa tramite la pagina «Espace thérapeutes» su holiswiss.ch. Le iscrizioni saranno aperte progressivamente ai professionisti che esercitano in Svizzera. Prima della pubblicazione, Gérald Henry controlla il nome e i recapiti, poi parla sistematicamente per telefono con il terapeuta. Questo controllo non certifica diplomi, metodi, risultati o affiliazioni dichiarate.",
+      a: "I terapeuti possono iscriversi alla lista d'attesa tramite la pagina «Espace thérapeutes» su holiswiss.ch. Le iscrizioni saranno aperte progressivamente ai professionisti che esercitano in Svizzera. Prima della pubblicazione, il nostro moderatore controlla il nome e i recapiti. Questo controllo non certifica diplomi, metodi, risultati o affiliazioni dichiarate.",
     },
     {
       q: "Quali approcci complementari sono disponibili su Holiswiss?",
@@ -131,7 +131,7 @@ export const GLOBAL_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "How do I become a listed therapist on Holiswiss?",
-      a: "Therapists can join the waiting list through the «Therapist area» page on holiswiss.ch. Onboarding is opened progressively to practitioners working in Switzerland. Before publication, Gérald Henry checks the name and contact details, then systematically speaks with the therapist by telephone. This does not certify diplomas, methods, therapeutic results or declared affiliations. Professional information is provided under the practitioners’ responsibility.",
+      a: "Therapists can join the waiting list through the «Therapist area» page on holiswiss.ch. Onboarding is opened progressively to practitioners working in Switzerland. Before publication, our moderator checks the name and contact details. This does not certify diplomas, methods, therapeutic results or declared affiliations. Professional information is provided under the practitioners’ responsibility.",
     },
     {
       q: "Which complementary approaches are available on Holiswiss?",
@@ -378,7 +378,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Les thérapeutes de Holiswiss sont-ils vérifiés ?",
-      a: "Avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute. Ce contrôle ne constitue pas une certification des diplômes, des méthodes, des résultats thérapeutiques ou des affiliations déclarées. Les informations professionnelles sont fournies sous la responsabilité des praticiens.",
+      a: "Avant publication, notre modérateur contrôle le nom et les coordonnées. Ce contrôle ne constitue pas une certification des diplômes, des méthodes, des résultats thérapeutiques ou des affiliations déclarées. Les informations professionnelles sont fournies sous la responsabilité des praticiens.",
     },
     {
       q: "Dans quelles langues puis-je chercher un thérapeute ?",
@@ -404,7 +404,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Sind die Therapeuten von Holiswiss geprüft?",
-      a: "Vor der Veröffentlichung prüft Gérald Henry den Namen und die Kontaktdaten und führt anschliessend ausnahmslos ein Telefongespräch mit der Fachperson. Diese Prüfung zertifiziert weder Diplome, Methoden, therapeutische Ergebnisse noch angegebene Mitgliedschaften. Die beruflichen Angaben werden unter der Verantwortung der Fachpersonen bereitgestellt.",
+      a: "Vor der Veröffentlichung prüft unsere Moderation den Namen und die Kontaktdaten. Diese Prüfung zertifiziert weder Diplome, Methoden, therapeutische Ergebnisse noch angegebene Mitgliedschaften. Die beruflichen Angaben werden unter der Verantwortung der Fachpersonen bereitgestellt.",
     },
     {
       q: "In welchen Sprachen kann ich suchen?",
@@ -430,7 +430,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "I terapeuti di Holiswiss sono verificati?",
-      a: "Prima della pubblicazione, Gérald Henry controlla il nome e i recapiti, poi parla sistematicamente per telefono con il terapeuta. Questo controllo non certifica diplomi, metodi, risultati terapeutici o affiliazioni dichiarate. Le informazioni professionali sono fornite sotto la responsabilità dei professionisti.",
+      a: "Prima della pubblicazione, il nostro moderatore controlla il nome e i recapiti. Questo controllo non certifica diplomi, metodi, risultati terapeutici o affiliazioni dichiarate. Le informazioni professionali sono fornite sotto la responsabilità dei professionisti.",
     },
     {
       q: "In quali lingue posso cercare?",
@@ -456,7 +456,7 @@ export const DIRECTORY_FAQ: Record<FaqLang, FaqItem[]> = {
     },
     {
       q: "Are Holiswiss therapists verified?",
-      a: "Before publication, Gérald Henry checks the name and contact details, then systematically speaks with the therapist by telephone. This does not certify diplomas, methods, therapeutic results or declared affiliations. Professional information is provided under the practitioners’ responsibility.",
+      a: "Before publication, our moderator checks the name and contact details. This does not certify diplomas, methods, therapeutic results or declared affiliations. Professional information is provided under the practitioners’ responsibility.",
     },
     {
       q: "In which languages can I search?",
