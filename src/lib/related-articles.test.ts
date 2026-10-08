@@ -18,15 +18,45 @@ describe("articles connexes", () => {
     expect(r.some((x) => x.id === "cur")).toBe(false);
   });
 
-  it("hors FR : seulement les titres traduits, slug localisé", () => {
-    const l2 = [art("x", "hypnose", [], { title_de: "DE x", slug_de: "de-x" }), art("y", "hypnose")];
-    const r = pickRelatedArticles(cur, l2, "de");
-    expect(r).toEqual([{ id: "x", slug: "de-x", title: "DE x", category: "hypnose" }]);
+  const frBody = "Les bienfaits de la méthode sont nombreux pour votre santé et pour la vie dans une ville suisse. ".repeat(5);
+  const deBody = "Die Methode bietet viele Vorteile für Ihre Gesundheit und das Leben in einer Schweizer Stadt heute. ".repeat(5);
+  const full = (id: string) =>
+    art(id, "hypnose", [], {
+      title_fr: `Titre ${id}`, excerpt_fr: "Un résumé en français pour cette page.", body_fr: frBody,
+      title_de: `Titel ${id}`, excerpt_de: "Eine kurze Zusammenfassung auf Deutsch.", body_de: deBody,
+      meta_title_de: `Meta ${id}`, meta_description_de: "Eine Beschreibung auf Deutsch für Suchmaschinen.",
+      slug_de: `de-${id}`,
+    });
+
+  it("hors FR : traduction complète conservée avec slug et titre localisés", () => {
+    const r = pickRelatedArticles(cur, [full("x")], "de");
+    expect(r).toEqual([{ id: "x", slug: "de-x", title: "Titel x", category: "hypnose" }]);
+  });
+
+  it("hors FR : titre traduit seul (corps, résumé ou méta manquants) exclu", () => {
+    const noBody = { ...full("a"), body_de: "" };
+    const noExcerpt = { ...full("b"), excerpt_de: "" };
+    const noMeta = { ...full("c"), meta_description_de: "" };
+    const titleOnly = art("d", "hypnose", [], { title_de: "Nur Titel", slug_de: "de-d" });
+    const badSlug = { ...full("e"), slug_de: "Mauvais Slug" };
+    expect(pickRelatedArticles(cur, [noBody, noExcerpt, noMeta, titleOnly, badSlug], "de")).toEqual([]);
+  });
+
+  it("utilise la règle centrale isTranslationComplete, pas une copie", () => {
+    const src = readFileSync("src/lib/related-articles.ts", "utf8");
+    expect(src).toMatch(/import \{[^}]*isTranslationComplete[^}]*\} from "@\/lib\/article-translation"/);
+  });
+
+  it("filtrage côté serveur : seules les suggestions finales sont renvoyées", () => {
+    const fn = readFileSync("src/lib/articles.functions.ts", "utf8");
+    expect(fn).toMatch(/getRelatedArticles = createServerFn[\s\S]*?return \{ related: pickRelatedArticles\(/);
+    const page = readFileSync("src/routes/$lang.blog.$slug.tsx", "utf8");
+    expect(page).toMatch(/getRelatedArticles\(/);
+    expect(page).not.toMatch(/pickRelatedArticles\(/);
   });
 
   it("le bloc est rendu par la page article depuis le loader", () => {
     const src = readFileSync("src/routes/$lang.blog.$slug.tsx", "utf8");
-    expect(src).toMatch(/pickRelatedArticles\(/);
     expect(src).toMatch(/<RelatedArticles/);
   });
 });
