@@ -1,10 +1,14 @@
 /**
  * Sélection des « articles connexes » d'une page article — fonction pure.
  * Priorité : même catégorie, puis tags secondaires partagés, puis les plus
- * récents pour compléter. L'article courant est toujours exclu. Hors FR, seuls
- * les articles disposant d'un titre dans la langue sont retenus (jamais un
- * titre français affiché sur /de, /it, /en).
+ * récents pour compléter. L'article courant est toujours exclu. Hors FR, une
+ * cible n'est retenue que si sa variante satisfait la règle centrale
+ * `isTranslationComplete` (même règle que la page article et le sitemap) :
+ * jamais de lien vers une variante noindex canonique vers le français. Les
+ * candidats hors FR doivent donc porter les colonnes `TRANSLATION_COLUMNS`.
  */
+import { isTranslationComplete, slugForArticleLang } from "@/lib/article-translation";
+
 export type RelatedLang = "fr" | "de" | "it" | "en";
 
 export type RelatedArticleLink = {
@@ -37,8 +41,9 @@ export function pickRelatedArticles(
     .map((a, index) => {
       if ((curId && a.id === curId) || (curSlug && a.slug === curSlug)) return null;
       const title = ((lang === "fr" ? a.title_fr : a[`title_${lang}`]) as string | null)?.trim();
-      const slug = ((a[`slug_${lang}`] as string) || (a.slug as string) || "").trim();
+      const slug = slugForArticleLang(a, lang);
       if (!title || !slug) return null;
+      if (lang !== "fr" && !isTranslationComplete(a, lang)) return null;
       const cat = (a.category as string | null) ?? null;
       const tags = tagsOf(a);
       let score = 0;

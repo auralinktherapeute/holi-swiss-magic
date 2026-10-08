@@ -2,9 +2,9 @@ import lotusAsset from "@/assets/lotus-transparent.png.asset.json";
 import { createFileRoute, useParams, Link, redirect, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { RelatedArticles } from "@/components/holiswiss/RelatedArticles";
-import { pickRelatedArticles, type RelatedArticleLink } from "@/lib/related-articles";
+import type { RelatedArticleLink } from "@/lib/related-articles";
 import {
-  getPublishedArticles,
+  getRelatedArticles,
   getArticleBySlug,
   titleForLang,
   bodyForLang,
@@ -126,8 +126,16 @@ export const Route = createFileRoute("/$lang/blog/$slug")({
     // lecture secondaire n'empêche jamais l'affichage de l'article.
     let related: RelatedArticleLink[] = [];
     try {
-      const list = await getPublishedArticles({ data: { lang: "fr" } });
-      related = pickRelatedArticles(article, (list?.articles ?? []) as Array<Record<string, unknown>>, l);
+      const res = await getRelatedArticles({
+        data: {
+          lang: l,
+          id: (article.id as string | null) ?? null,
+          slug: (article.slug as string | null) ?? null,
+          category: (article.category as string | null) ?? null,
+          secondary_tags: (article.secondary_tags as string[] | null) ?? null,
+        },
+      });
+      related = res?.related ?? [];
     } catch {
       related = [];
     }
