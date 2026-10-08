@@ -17,7 +17,9 @@ describe("identité institutionnelle validée", () => {
       const c = institutionalCopy(lang);
       expect(c.identity).toContain("Gérald Henry");
       expect(c.identity).toMatch(/France|Frankreich|Francia/);
-      expect(c.method).toMatch(/téléphone|Telefon|telefono|telephone/);
+      expect(c.method).toMatch(/nom|Namen|nome|name/i);
+      expect(c.method).toMatch(/coordonnées|Kontaktdaten|recapiti|contact details/i);
+      expect(c.limit).toMatch(/registre officiel|offiziellen Register|registro ufficiale|official register/i);
       expect(c.limit.length).toBeGreaterThan(100);
       const h = aboutHead(lang);
       const url = `https://holiswiss.ch/${lang}/a-propos`;

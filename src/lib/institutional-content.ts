@@ -18,7 +18,7 @@ export const INSTITUTIONAL_COPY = {
     identityTitle: "Fondateur et éditeur",
     identity: "Gérald Henry est le fondateur, l’éditeur et le responsable éditorial de Holiswiss. Holiswiss est son nom commercial, exploité en tant que micro-entrepreneur en France.",
     methodTitle: "Avant publication d’une fiche",
-    method: "Avant publication, Gérald Henry contrôle le nom et les coordonnées, puis échange systématiquement par téléphone avec le thérapeute.",
+    method: "Avant publication, notre modérateur contrôle le nom et les coordonnées.",
     limit: "Ce contrôle ne constitue pas une certification des diplômes, des pratiques, des méthodes, des résultats thérapeutiques ou des affiliations déclarées. Il ne confirme pas une inscription dans un registre officiel.",
     responsibilityTitle: "Le rôle de l’annuaire",
     responsibility: "Les informations professionnelles restent fournies sous la responsabilité des praticiens. Holiswiss facilite leur découverte ; l’annuaire ne garantit ni leurs qualifications ni les résultats de leurs prestations.",
